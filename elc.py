@@ -13,7 +13,6 @@ from constraints import *
 from objective   import *
 
 
-#Debugging
 #D.LEVEL = D.INFO
 D.LEVEL = D.NORMAL
 
