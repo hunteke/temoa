@@ -33,8 +33,8 @@ model.tech_new_peak     = Set()
 
 model.period  = Set()
 model.invest_period = Set( within=model.period, initialize=SetPeriod_Init )
-model.munge_period = Set( ordered=True, within=model.period )
-model.munge_period.initialize = SetMungePeriod_Init
+model.operating_period = Set( ordered=True, within=model.period )
+model.operating_period.initialize = SetMungePeriod_Init
 
 # model.segment = Set()
 # model.segment.initialize = SegmentSet_Init
@@ -45,7 +45,7 @@ model.s_slice = Set() # shoulder load subset
 model.p_slice = Set() # peak load subset
 model.slice = Set()
 
-model.inter_period = Param( model.munge_period, initialize=ParamInterPeriod_Init )
+model.inter_period = Param( model.operating_period, initialize=ParamInterPeriod_Init )
 model.fuel_price = Param( model.tech_all, model.period )
 model.tech_life  = Param( model.tech_all, initialize=TechLifeParam_Init )
 model.loan_life  = Param( model.tech_new, initialize=LoanLifeParam_Init )
@@ -83,17 +83,17 @@ model.Total_Cost = Objective( rule=Objective_Rule, sense=minimize )
 
 
 # Constraints
-model.Baseload_Energy_Demand = Constraint( model.b_slice, model.munge_period, rule=Baseload_Energy_Demand )
-model.Shoulder_Energy_Demand = Constraint( model.s_slice, model.munge_period, rule=Shoulder_Energy_Demand )
-model.Peakload_Energy_Demand = Constraint( model.p_slice, model.munge_period, rule=Peakload_Energy_Demand )
+model.Baseload_Energy_Demand = Constraint( model.b_slice, model.operating_period, rule=Baseload_Energy_Demand )
+model.Shoulder_Energy_Demand = Constraint( model.s_slice, model.operating_period, rule=Shoulder_Energy_Demand )
+model.Peakload_Energy_Demand = Constraint( model.p_slice, model.operating_period, rule=Peakload_Energy_Demand )
 
-model.Baseload_Capacity = Constraint( model.b_slice, model.munge_period, rule=Baseload_Capacity_Req )
-model.Shoulder_Capacity = Constraint( model.s_slice, model.munge_period, rule=Shoulder_Capacity_Req )
-model.Peakload_Capacity = Constraint( model.p_slice, model.munge_period, rule=Peakload_Capacity_Req )
+model.Baseload_Capacity = Constraint( model.b_slice, model.operating_period, rule=Baseload_Capacity_Req )
+model.Shoulder_Capacity = Constraint( model.s_slice, model.operating_period, rule=Shoulder_Capacity_Req )
+model.Peakload_Capacity = Constraint( model.p_slice, model.operating_period, rule=Peakload_Capacity_Req )
 
-model.Process_Level_Activity = Constraint( model.tech_all, model.munge_period, model.munge_period, rule=Process_Level_Activity )
+model.Process_Level_Activity = Constraint( model.tech_all, model.operating_period, model.operating_period, rule=Process_Level_Activity )
 
-model.CO2_Emissions_Constraint = Constraint( model.munge_period, rule=CO2_Emissions_Constraint )
+model.CO2_Emissions_Constraint = Constraint( model.operating_period, rule=CO2_Emissions_Constraint )
 
 model.Up_Hydro      = Constraint( rule=Up_Hydro )
 model.Up_Geo        = Constraint( rule=Up_Geo )
