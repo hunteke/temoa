@@ -58,6 +58,9 @@ model.co2_factors      = Param( model.tech_all )
 model.discount_rate    = Param( model.tech_all )
 model.thermal_eff      = Param( model.tech_all )
 
+model.loan_cost     = Param( model.tech_new, rule=ParamLoanCost_Init )
+model.period_spread = Param( model.operating_period, rule=ParamPeriodSpread_Init )
+
 model.xc = Var( model.tech_new, model.invest_period,               within=NonNegativeReals )
 model.xu = Var( model.tech_all, model.invest_period, model.period, within=NonNegativeReals )
 

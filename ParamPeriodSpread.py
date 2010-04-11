@@ -7,3 +7,4 @@ def ParamPeriodSpread_Init ( period, model ):
 	])
 
 	return spread
+
