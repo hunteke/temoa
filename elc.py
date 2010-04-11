@@ -31,7 +31,8 @@ model.inter_period = Param( model.operating_period, initialize=ParamInterPeriod_
 model.fuel_price = Param( model.tech_all, model.period )
 model.tech_life  = Param( model.tech_all, initialize=TechLifeParam_Init )
 model.loan_life  = Param( model.tech_new, initialize=LoanLifeParam_Init )
-model.investment = Param( model.tech_new, model.invest_period, model.period, initialize=InvestmentPeriodParam_Init ) # imat
+
+model.investment = Set( initialize=SetInvestmentPeriod_Init, dimen=3 ) # imat
 model.vintage    = Param( model.tech_all, model.invest_period, model.period, initialize=VintagePeriodParam_Init )    # vmat
 
 model.co2_tot     = Param( model.period )  # Total annual CO2 emissions in MmtCO2
