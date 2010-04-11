@@ -32,11 +32,9 @@ model.tech_new_shoulder = Set()
 model.tech_new_peak     = Set()
 
 model.period  = Set()
-model.invest_period = Set( within=model.period )
+model.invest_period = Set( within=model.period, initialize=SetPeriod_Init )
 model.munge_period = Set( ordered=True, within=model.period )
 model.munge_period.initialize = SetMungePeriod_Init
-
-#model.invest_period.initialize = PeriodSet_Init
 
 # model.segment = Set()
 # model.segment.initialize = SegmentSet_Init
