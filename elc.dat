@@ -1,29 +1,22 @@
 data;
 
-set tech_all := t0_ng_steam t0_dt t0_gt t0_gtcc t0_hydro t0_coal t0_nuclear
-             coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear
-             gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons
-             gt_p gtcc_p hydro_p ;
+set  segment := b  s  p ;
 
 set  tech_existing := t0_ng_steam t0_dt t0_gt t0_gtcc t0_hydro t0_coal t0_nuclear ;
 set  tech_new := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear
                  gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons
                  gt_p gtcc_p hydro_p ;
 
-set  tech_all_base     := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear  t0_ng_steam  t0_gt  t0_hydro  t0_coal  t0_nuclear ;
-set  tech_all_shoulder := gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons t0_gtcc ;
-set  tech_all_peak     := gt_p gtcc_p hydro_p t0_dt ;
-set  tech_new_base     := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear ;
-set  tech_new_shoulder := gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons ;
-set  tech_new_peak     := gt_p gtcc_p hydro_p ;
+set  tech_all_by_seg[b] := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear  t0_ng_steam  t0_gt  t0_hydro  t0_coal  t0_nuclear ;
+set  tech_all_by_seg[s] := gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons t0_gtcc ;
+set  tech_all_by_seg[p] := gt_p gtcc_p hydro_p t0_dt ;
+
+set  tech_new_by_seg[b] := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear ;
+set  tech_new_by_seg[s] := gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons ;
+set  tech_new_by_seg[p] := gt_p gtcc_p hydro_p ;
 
 
 set  period  := 2000 2010 2020 2030 2040 2050 2060 2070 2080 2090 2100 ;
-
-set  slice := b s p;
-set  b_slice := b;
-set  s_slice := s;
-set  p_slice := p;
 
 
 param : co2_tot :=
@@ -93,3 +86,4 @@ param :      cf_max   ratio    co2_factors  discount_rate  thermal_eff :=
  t0_coal      0.5     1         8.14E-04     0.05           0.31
  t0_nuclear   0.5     1         0            0.05           0.30
 	;
+

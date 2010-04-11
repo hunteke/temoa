@@ -1,88 +1,30 @@
 import debug as D
 
-def Baseload_Energy_Demand ( slice, period, model ):
-	"Constraint: Base load utility at least equal to energy demand"
-	D.write( D.INFO, "Baseload_Energy_Demand: (%s, %d)\n" % (slice, period) )
+def Energy_Demand ( seg, period, model ):
+	"Constraint: utility at least equal to energy demand"
+	D.write( D.INFO, "Energy_Demand: (%s, %d)\n" % (seg, period) )
 	M = model
 	ans = sum(
 	  M.xu[t, i, period] * M.vintage[t, i, period]
 
-	  for t in M.tech_all_base
+	  for t in M.tech_all_by_seg[seg]
 	  for i in M.invest_period
-#	  for s in M.segment
 	)
 
-	return ( ans >= M.energy_dmd[slice, period] )
+	return ( ans >= M.energy_dmd[seg, period] )
 
 
-def Shoulder_Energy_Demand ( slice, period, model ):
-	"Shoulder load utility at least equal to energy demand"
-	D.write( D.INFO, "Shoulder_Energy_Demand: (%s, %d)\n" % (slice, period) )
-	M = model
-	ans = sum(
-	  M.xu[t, i, period] * M.vintage[t, i, period]
-
-	  for t in M.tech_all_shoulder
-	  for i in M.invest_period
-#	  for s in M.segment
-	)
-	return ( ans >= M.energy_dmd[slice, period] )
-
-
-def Peakload_Energy_Demand ( slice, period, model ):
-	"Peak load utility at least equal to energy demand"
-	D.write( D.INFO, "Peak_Energy_Demand: (%s, %d)\n" % (slice, period) )
-	M = model
-	ans = sum(
-	  M.xu[t, i, period] * M.vintage[t, i, period]
-
-	  for t in M.tech_all_peak
-	  for i in M.invest_period
-#	  for s in M.segment
-	)
-
-	return ( ans >= M.energy_dmd[slice, period] )
-
-
-def Baseload_Capacity_Req ( slice, period, model ):
-	"Baseload capacity requirement"
-	D.write( D.INFO, "Baseload_Capacity_Req: (%s, %d)\n" % (slice, period) )
+def Capacity_Req ( seg, period, model ):
+	"Capacity requirement"
+	D.write( D.INFO, "Capacity_Req: (%s, %d)\n" % (seg, period) )
 	M = model
 	ans = sum(
 	  M.xc[t, i] * M.vintage[t, i, period]
 
-	  for t in M.tech_new_base
+	  for t in M.tech_new_by_seg[seg]
 	  for i in M.invest_period
 	)
-	return ( ans >= M.power_dmd[slice, period] )
-
-
-def Shoulder_Capacity_Req ( slice, period, model ):
-	"Shoulder capacity requirement"
-	D.write( D.INFO, "Shoulder_Capacity_Req: (%s, %d)\n" % (slice, period) )
-	M = model
-	ans = sum(
-	  M.xc[t, i] * M.vintage[t, i, period]
-
-	  for t in M.tech_new_shoulder
-	  for i in M.invest_period
-	)
-
-	return ( ans >= M.power_dmd[slice, period] )
-
-
-def Peakload_Capacity_Req ( slice, period, model ):
-	"Peak capacity requirement"
-	D.write( D.INFO, "Peak_Capacity_Req: (%s, %d)\n" % (slice, period) )
-	M = model
-	ans = sum(
-	  M.xc[t, i] * M.vintage[t, i, period]
-
-	  for t in M.tech_new_peak
-	  for i in M.invest_period
-	)
-
-	return ( ans >= M.power_dmd[slice, period] )
+	return ( ans >= M.power_dmd[seg, period] )
 
 
 def Process_Level_Activity ( tech, iper, per, model ):
