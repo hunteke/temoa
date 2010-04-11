@@ -1,19 +1,19 @@
 data;
 
-set  segment := b  s  p ;
+set  segment := base  shoulder  peak ;
 
 set  tech_existing := t0_ng_steam t0_dt t0_gt t0_gtcc t0_hydro t0_coal t0_nuclear ;
 set  tech_new := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear
                  gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons
                  gt_p gtcc_p hydro_p ;
 
-set  tech_all_by_seg[b] := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear  t0_ng_steam  t0_gt  t0_hydro  t0_coal  t0_nuclear ;
-set  tech_all_by_seg[s] := gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons t0_gtcc ;
-set  tech_all_by_seg[p] := gt_p gtcc_p hydro_p t0_dt ;
+set  tech_all_by_seg[base]     := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear  t0_ng_steam  t0_gt  t0_hydro  t0_coal  t0_nuclear ;
+set  tech_all_by_seg[shoulder] := gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons t0_gtcc ;
+set  tech_all_by_seg[peak]     := gt_p gtcc_p hydro_p t0_dt ;
 
-set  tech_new_by_seg[b] := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear ;
-set  tech_new_by_seg[s] := gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons ;
-set  tech_new_by_seg[p] := gt_p gtcc_p hydro_p ;
+set  tech_new_by_seg[base]     := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear ;
+set  tech_new_by_seg[shoulder] := gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons ;
+set  tech_new_by_seg[peak]     := gt_p gtcc_p hydro_p ;
 
 
 set  period  := 2000 2010 2020 2030 2040 2050 2060 2070 2080 2090 2100 ;
@@ -45,15 +45,15 @@ param winds_off_max_total :=  800;
 param solar_th_max_total  :=  100;
 
 param power_dmd :  2000   2010   2020   2030   2040   2050   2060   2070   2080   2090   2100  :=
- b                  297    300    310    320    330    340    350    360    370    380    390 
- s                  254    261    272    283    294    305    316    327    338    349    350 
- p                  297    300    310    320    330    340    350    360    370    380    390 
+ base               297    300    310    320    330    340    350    360    370    380    390 
+ shoulder           254    261    272    283    294    305    316    327    338    349    350 
+ peak               297    300    310    320    330    340    350    360    370    380    390 
 	;
 
 param energy_dmd : 2000     2010     2020     2030     2040     2050     2060     2070     2080     2090     2100    :=
- b                  297      300      310      320      330      340      350      360      370      380      390
- s                  173.36   178.13   185.64   193.15   200.66   208.16   215.67   223.18   230.69   238.19   238.88
- p                   15.24    15.39    15.9     16.42    16.93    17.44    17.96    18.47    18.98    19.49    20.01
+ base               297      300      310      320      330      340      350      360      370      380      390
+ shoulder           173.36   178.13   185.64   193.15   200.66   208.16   215.67   223.18   230.69   238.19   238.88
+ peak                15.24    15.39    15.9     16.42    16.93    17.44    17.96    18.47    18.98    19.49    20.01
 	;
 
 
