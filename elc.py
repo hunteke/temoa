@@ -34,7 +34,7 @@ model.loan_life  = Param( model.tech_new, initialize=LoanLifeParam_Init )
 model.investment = Param( model.tech_new, model.invest_period, model.period, initialize=InvestmentPeriodParam_Init ) # imat
 model.vintage    = Param( model.tech_all, model.invest_period, model.period, initialize=VintagePeriodParam_Init )    # vmat
 
-model.co2_tot     = Param( model.period )  # Total 2100 CO2 emissions in MmtCO2
+model.co2_tot     = Param( model.period )  # Total annual CO2 emissions in MmtCO2
 model.cost_target = Param()
 model.global_discount_rate = Param()
 
