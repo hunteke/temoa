@@ -1,4 +1,4 @@
-def SetMungePeriod_Init ( model ):
+def SetOperatingPeriod_Init ( model ):
 	"""
 	Set: The 'munge' set is all the periods the model can *actually*
 	optimize.  This basically means, it's all but the "last" item in

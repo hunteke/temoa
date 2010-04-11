@@ -23,9 +23,9 @@ model.tech_all_by_seg = Set( model.segment )
 model.tech_new_by_seg = Set( model.segment )
 
 model.period  = Set()
+
 model.invest_period = Set( within=model.period, initialize=SetPeriod_Init )
-model.operating_period = Set( ordered=True, within=model.period )
-model.operating_period.initialize = SetMungePeriod_Init
+model.operating_period = Set( ordered=True, within=model.period, initialize=SetOperatingPeriod_Init )
 
 model.inter_period = Param( model.operating_period, initialize=ParamInterPeriod_Init )
 model.fuel_price = Param( model.tech_all, model.period )
