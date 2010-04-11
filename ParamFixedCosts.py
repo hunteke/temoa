@@ -29,3 +29,4 @@ def FixedCostsParam_Init ( tech, iper, per, model ):
 	elif 't0_hydro'    == tech: return  9.4
 	elif 't0_coal'     == tech: return 20.4
 	elif 't0_nuclear'  == tech: return 79.0
+

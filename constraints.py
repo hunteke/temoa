@@ -167,3 +167,4 @@ def Up_Solar_Th ( model ):
 	ans = sum( M.xc['solar_th', i]  for i in M.invest_period )
 
 	return ( 0 <= ans and ans <= M.solar_th_max_total )
+

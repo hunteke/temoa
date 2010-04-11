@@ -5,3 +5,4 @@ def TechSet_Init ( model ):
 	ans.extend( [ i for i in model.tech_peak ] )
 
 	return ans
+

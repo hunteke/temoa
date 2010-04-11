@@ -5,3 +5,4 @@ def SliceSet_Init ( model ):
 	ans.extend( [ i for i in model.p_slice ] ) # peak
 
 	return ans
+

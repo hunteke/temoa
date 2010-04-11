@@ -20,3 +20,4 @@ def write( level, msg ):
 		stderr.write( msg );
 
 debug.write = write
+

@@ -10,3 +10,4 @@ def InvestmentPeriodParam_Init ( tech, iper, per, model ):
 	# given an investment period (iper). 0 otherwise
 	# this effectively creates a binary matrix
 	return ( iper <= per and per < iper + loan_life_time )
+

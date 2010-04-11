@@ -85,3 +85,4 @@ def MarginalCostsParam_Init ( tech, iper, per, model ):
 	D.write( D.INFO, "Technology with no marginal cost: (%s, %d, %d)\n" % (tech, iper, per) )
 
 	return ( 0 )
+

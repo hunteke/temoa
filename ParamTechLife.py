@@ -10,3 +10,4 @@ def TechLifeParam_Init ( tech, model ):
 	elif 'solar_pv' : return 25
 
 	return 10
+

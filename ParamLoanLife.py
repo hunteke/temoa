@@ -9,3 +9,4 @@ def LoanLifeParam_Init ( tech, model ):
 	elif 'solar_pv' : return 15
 
 	return 10
+

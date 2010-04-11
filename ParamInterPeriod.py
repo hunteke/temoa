@@ -12,3 +12,4 @@ def ParamInterPeriod_Init ( period, model ):
 	length = periods[i +1] - periods[ i ]
 
 	return length
+

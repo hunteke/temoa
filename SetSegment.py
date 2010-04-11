@@ -9,3 +9,4 @@ def SegmentSet_Init ( model ):
 	ans = ['Year Round']
 
 	return ans
+

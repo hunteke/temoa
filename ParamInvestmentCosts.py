@@ -24,3 +24,4 @@ def InvestmentCostsParam_Init ( tech, iper, per, model ):
 	elif 'wind_ons'    == tech: return 1923
 
 	D.write( D.INFO, "Warning: Technology with no investment cost: (%s, %d, %d)\n" % ( tech, iper, per ) )
+

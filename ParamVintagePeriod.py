@@ -13,3 +13,4 @@ def VintagePeriodParam_Init ( tech, iper, per, model ):
 	# given an install period (iper).  0 otherwise.
 	# this effectively creates a binary matrix
 	return ( iper <= per and per < iper + tech_life_time )
+

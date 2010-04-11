@@ -9,3 +9,4 @@ def SetMungePeriod_Init ( model ):
 	periods.sort()
 
 	return periods[:-1]
+
