@@ -31,9 +31,9 @@ def Process_Level_Activity ( tech, iper, per, model ):
 	"Constraint: Process Level Activity Constraint"
 	D.write( D.INFO, "Process_Level_Activity: (%s, %d, %d)\n" % (tech, iper, per) )
 	M = model
-	utilization = M.xu[tech, iper, per]
+	utilization = M.xu[tech, iper, per] * M.vintage[tech, iper, per]
 	if ( tech in M.tech_new ):
-		capacity = M.xc[tech, iper] * M.ratio[ tech ] * M.cf_max[ tech ]
+		capacity = M.xc[tech, iper]
 	else:
 		if   tech == 't0_ng_steam' : capacity = 120
 		elif tech == 't0_dt'       : capacity =  25
@@ -45,6 +45,8 @@ def Process_Level_Activity ( tech, iper, per, model ):
 		else:
 			print "Whoops: unknown tech: ", tech
 
+	capacity *= M.ratio[ tech ].value * M.cf_max[ tech ].value
+
 	return ( utilization < capacity )
 
 
@@ -54,6 +56,7 @@ def CO2_Emissions_Constraint ( period, model ):
 	M = model
 	ans = sum(
 	    M.xu[t, i, period]
+	  * M.vintage[t, i, period]
 	  * M.co2_factors[ t ]
 	  * 8760
 
