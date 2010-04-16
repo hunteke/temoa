@@ -14,6 +14,6 @@ def SetInvestmentPeriod_Init ( model ):
 	  for tech in model.tech_new
 	  for iper in model.invest_period
 	  for per in model.period
-	  if ( iper <= per and per < iper + model.loan_life[tech] )
+	  if ( iper <= per and per < iper + model.loan_life[tech].value )
 	]
 
