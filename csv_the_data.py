@@ -73,8 +73,8 @@ def parse_input ( data ):
 		xu_summed_invest[tech][year] += i[4]
 
 	years = sorted( set( [year
-		for year in xu_summed_invest[tech]
-		for tech in xu_summed_invest]) )
+		for tech in xu_summed_invest
+		for year in xu_summed_invest[tech]]) )
 
 	# Done with xu_summed_invest, repurpose it
 	xu_summed = ['Technology']
