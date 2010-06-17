@@ -1,7 +1,14 @@
 import debug as D
 
 def Energy_Demand ( seg, period, model ):
-	"Constraint: utility at least equal to energy demand"
+	"""
+		Energy Demand Constraint: 
+		Ensure utility is at least equal to energy demand
+
+		.. math ::
+			\sum_{per} \sum_{iper} \sum_{tech_all} xu(tech,iper,per) * vintage(tech,iper,per) >= energy_dmd(seg,per)
+
+	"""
 	D.write( D.INFO, "Energy_Demand: (%s, %d)\n" % (seg, period) )
 	M = model
 	ans = sum(
@@ -13,9 +20,14 @@ def Energy_Demand ( seg, period, model ):
 
 	return ( ans >= M.energy_dmd[seg, period] )
 
-
 def Capacity_Req ( seg, period, model ):
-	"Capacity requirement"
+	"""
+		Capacity requirement
+
+		.. math ::
+		   \sum_{per} \sum_{iper} \sum_{tech_new} xc(tech,iper) * vintage(tech,iper,per) >= power_dmd(seg,per)
+
+	"""
 	D.write( D.INFO, "Capacity_Req: (%s, %d)\n" % (seg, period) )
 	M = model
 	ans = sum(
@@ -28,7 +40,15 @@ def Capacity_Req ( seg, period, model ):
 
 
 def Process_Level_Activity ( tech, iper, per, model ):
-	"Constraint: Process Level Activity Constraint"
+	"""
+		Process Level Activity Constraint
+
+		Utilization < Capacity
+
+	.. math ::
+		xu(tech,iper,per) * vintage(tech,iper,per) < xc(tech,iper)	
+
+	"""
 	D.write( D.INFO, "Process_Level_Activity: (%s, %d, %d)\n" % (tech, iper, per) )
 	M = model
 	utilization = M.xu[tech, iper, per] * M.vintage[tech, iper, per]
@@ -51,7 +71,13 @@ def Process_Level_Activity ( tech, iper, per, model ):
 
 
 def CO2_Emissions_Constraint ( period, model ):
-	"Constraint: CO2 emissions must be less than as specified"
+	"""
+		CO2 emissions must be less than specified limit.
+
+	.. math ::
+		\sum_{tech} \sum_{iper} \sum_{per} xu(tech,iper,per) * vintage(tech,iper,per) * co2\_factors(tech) * 8760 <= co2\_total(per)
+
+	"""
 	D.write( D.INFO, "CO2_Emissions_Constraint: %d\n" % period )
 	M = model
 	ans = sum(
