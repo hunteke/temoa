@@ -1,0 +1,41 @@
+.. TEMOA ELC Model  documentation master file, created by
+   sphinx-quickstart on Tue Jun 15 23:58:50 2010.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to TEMOA Model documentation
+============================================
+
+.. toctree::
+   :maxdepth: 2
+
+.. automodule:: objective
+
+**Objective Formulation**
+============================================
+
+.. autofunction:: Objective_Rule(model)
+
+**Model Constraints**    
+============================================
+
+.. automodule:: constraints
+
+.. autofunction:: Energy_Demand ( seg, period, model )
+
+.. autofunction:: Capacity_Req ( seg, period, model )
+
+.. autofunction:: Process_Level_Activity ( tech, iper, per, model )
+
+.. autofunction:: CO2_Emissions_Constraint ( period, model )
+
+.. automodule:: elc
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
+

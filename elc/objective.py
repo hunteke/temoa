@@ -24,7 +24,7 @@ def Objective_Rule ( model ):
 		\\\\
 		& & 
 		\\qquad \\qquad \\qquad \\qquad \\qquad
-		* \\frac{1} {(1+r_{g}^{t(per)+y-t(per0)}} 
+		* \\frac{1} {(1+r_{g}^{t(per)+y-t(per0)})} 
 		\\end{eqnarray*}
 		:nowrap:
 
