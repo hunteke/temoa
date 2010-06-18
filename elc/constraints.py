@@ -26,7 +26,7 @@ def Energy_Demand ( seg, period, model ):
 		Ensure utility is at least equal to energy demand
 
 		.. math ::
-			\sum_{per} \sum_{iper} \sum_{tech_all} xu(tech,iper,per) * vintage(tech,iper,per) >= energy_dmd(seg,per)
+			\sum_{per} \sum_{iper} \sum_{tech\_all} xu(tech,iper,per) * vintage(tech,iper,per) >= energy\_dmd(seg,per)
 
 	"""
 	D.write( D.INFO, "Energy_Demand: (%s, %d)\n" % (seg, period) )
@@ -45,7 +45,7 @@ def Capacity_Req ( seg, period, model ):
 		Capacity requirement
 
 		.. math ::
-		   \sum_{per} \sum_{iper} \sum_{tech_new} xc(tech,iper) * vintage(tech,iper,per) >= power_dmd(seg,per)
+		   \sum_{per} \sum_{iper} \sum_{tech\_new} xc(tech,iper) * vintage(tech,iper,per) >= power\_dmd(seg,per)
 
 	"""
 	D.write( D.INFO, "Capacity_Req: (%s, %d)\n" % (seg, period) )
