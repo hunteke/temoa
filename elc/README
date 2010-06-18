@@ -1,0 +1,18 @@
+Summary
+-------------------------------
+This directory contains prototype U.S. Electricity Sector model.
+Detailed documentation is available from the project website (http://temoaproject.org).
+
+The model specification is done using Pyomo (developed at Sandia National labs).
+
+Prerequisites 
+-------------------------------
+* Python (2.6 or later)
+* COOPR (COmmon Optimization Python Repository) : developed at Sandia National labs https://software.sandia.gov/trac/coopr/
+* GNU Linear Programming Kit (GLPK) 
+
+Run 
+-------------------------------
+Just use 
+"pyomo elc.py elc.dat"
+
