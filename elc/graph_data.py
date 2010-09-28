@@ -1,3 +1,6 @@
+#!/usr/bin/python
+
+
 """
     TEMOA (Tools for Energy Model Optimization and Analysis) 
     Copyright (C) 2010 TEMOA Developer Team 
@@ -16,10 +19,6 @@
     You should have received a copy of the GNU General Public License
     along with TEMOA.  If not, see <http://www.gnu.org/licenses/>.
 """
-
-
-#!/usr/bin/env python
-#!/home/kevin/ram/coopr/bin/python
 
 # This is crap code.  It is not documented because it's only in the
 # repository as a temporary measure, and I do *not* want to encourage
