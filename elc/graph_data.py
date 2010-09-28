@@ -78,7 +78,7 @@ def graph_data ( data ):
 	
 
 	#x = [ i for i in data['xu']['gt_p'] ]
-	x = range(2000,2100,10) # flat out kludge.
+	x = range(2010,2045,5) # flat out kludge.
 	y_xc = []
 	y_xu = []
 
