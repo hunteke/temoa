@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
     TEMOA (Tools for Energy Model Optimization and Analysis) 
     Copyright (C) 2010 TEMOA Developer Team 
@@ -16,9 +18,6 @@
     You should have received a copy of the GNU General Public License
     along with TEMOA.  If not, see <http://www.gnu.org/licenses/>.
 """
-
-
-#!/usr/bin/env python
 
 import re
 import sys
