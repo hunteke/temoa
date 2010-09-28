@@ -75,15 +75,7 @@ def Process_Level_Activity ( tech, iper, per, model ):
 	if ( tech in M.tech_new ):
 		capacity = M.xc[tech, iper]
 	else:
-		if   tech == 't0_ng_steam' : capacity = 120
-		elif tech == 't0_dt'       : capacity =  25
-		elif tech == 't0_gt'       : capacity =  67
-		elif tech == 't0_gtcc'     : capacity =  36
-		elif tech == 't0_hydro'    : capacity =  78
-		elif tech == 't0_coal'     : capacity = 308
-		elif tech == 't0_nuclear'  : capacity = 100
-		else:
-			print "Whoops: unknown tech: ", tech
+		capacity = M.t0_capacity[tech, per]
 
 	capacity *= M.ratio[ tech ].value * M.cf_max[ tech ].value
 
