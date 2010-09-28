@@ -65,6 +65,8 @@ def Objective_Rule ( model ):
 	for p in M.operating_period:
 		for t in M.tech_new:
 			for i in M.invest_period:
+				if i > p: continue # cannot invest before tech exists
+
 				if (t, i, p) in M.investment:
 					cost += ( M.period_spread[ p ] *
 					  M.xc[t, i]
