@@ -1,6 +1,6 @@
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@ import debug as D
 
 def Energy_Demand ( seg, period, model ):
 	"""
-		Energy Demand Constraint: 
+		Energy Demand Constraint:
 		Ensure utility is at least equal to energy demand
 
 		.. math ::
@@ -35,7 +35,7 @@ def Energy_Demand ( seg, period, model ):
 	  M.xu[t, i, period] * M.vintage[t, i, period]
 
 	  for t in M.tech_all_by_seg[seg]
-	  for i in M.invest_period
+	  for i in M.operating_period
 	)
 
 	return ( ans >= M.energy_dmd[seg, period] )
@@ -50,13 +50,19 @@ def Capacity_Req ( seg, period, model ):
 	"""
 	D.write( D.INFO, "Capacity_Req: (%s, %d)\n" % (seg, period) )
 	M = model
-	ans = sum(
-	  M.xc[t, i] * M.vintage[t, i, period]
+	power_production = sum(
+	  M.xc[t, i] * M.vintage[t, i, period] * M.cf_max[ t ]
 
 	  for t in M.tech_new_by_seg[seg]
-	  for i in M.invest_period
+	  for i in M.operating_period
 	)
-	return ( ans >= M.power_dmd[seg, period] )
+	power_production += sum(
+		M.t0_capacity[t, period]
+
+		for t in M.tech_existing_by_seg[ seg ]
+	)
+
+	return ( power_production >= M.power_dmd[seg, period] )
 
 
 def Process_Level_Activity ( tech, iper, per, model ):
@@ -66,7 +72,7 @@ def Process_Level_Activity ( tech, iper, per, model ):
 		Utilization < Capacity
 
 	.. math ::
-		xu(tech,iper,per) * vintage(tech,iper,per) < xc(tech,iper)	
+		xu(tech,iper,per) * vintage(tech,iper,per) < xc(tech,iper)
 
 	"""
 	D.write( D.INFO, "Process_Level_Activity: (%s, %d, %d)\n" % (tech, iper, per) )
@@ -99,7 +105,7 @@ def CO2_Emissions_Constraint ( period, model ):
 	  * 8760
 
 	  for t in M.tech_all
-	  for i in M.invest_period
+	  for i in M.operating_period
 	)
 
 	return ( ans <= M.co2_tot[period] )
@@ -109,45 +115,45 @@ def CO2_Emissions_Constraint ( period, model ):
 def Up_Hydro ( model ):
 	"Constraint: Total installed hydro capacity from all periods not to exceed [Doc ref: ?]"
 	M = model
-	ans = sum(
+	hydro_production = sum(
 	  M.xc['hydro_b', i] +
 	  M.xc['hydro_s', i] +
 	  M.xc['hydro_p', i]
 
-	  for i in M.invest_period
+	  for i in M.operating_period
 	)
 
-	return ( 0 <= ans and ans <= M.hydro_max_total )
+	return ( hydro_production <= M.hydro_max_total )
 
 
 def Up_Geo ( model ):
 	"Constraint: Total installed geothermal capacity from all periods can't exceed 23 GW [Doc ref: ?]"
 	M = model
-	ans = sum( M.xc['geo', i]  for i in M.invest_period )
+	geo_production = sum( M.xc['geo', i]  for i in M.operating_period )
 
-	return ( 0 <= ans and ans <= M.geo_max_total )
+	return ( geo_production <= M.geo_max_total )
 
 
 def Up_Winds_Ons ( model ):
 	"Constraint: Total installed capacity of on-shore wind power from all periods can't exceed 8 TW [Doc ref: ?]"
 	M = model
-	ans = sum( M.xc['wind_ons', i]  for i in M.invest_period )
+	wind_onshore_production = sum( M.xc['wind_ons', i]  for i in M.operating_period )
 
-	return ( 0 <= ans and ans <= M.winds_on_max_total )
+	return ( wind_onshore_production <= M.winds_on_max_total )
 
 
 def Up_Winds_Offs ( model ):
 	"Constraint: Total installed capacity of off-shore wind power from all periods can't exceed 800 GW [Doc ref: ?]"
 	M = model
-	ans = sum( M.xc['wind_offs', i]  for i in M.invest_period )
+	wind_offshore_production = sum( M.xc['wind_offs', i]  for i in M.operating_period )
 
-	return ( 0 <= ans and ans <= M.winds_off_max_total )
+	return ( wind_offshore_production <= M.winds_off_max_total )
 
 
 def Up_Solar_Th ( model ):
 	"Constraint: Total installed capacity of thermal solar power from all periods can't exceed 100 GW [Doc ref: ?]"
 	M = model
-	ans = sum( M.xc['solar_th', i]  for i in M.invest_period )
+	solar_production = sum( M.xc['solar_th', i]  for i in M.operating_period )
 
-	return ( 0 <= ans and ans <= M.solar_th_max_total )
+	return ( solar_production <= M.solar_th_max_total )
 

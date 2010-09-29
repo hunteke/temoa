@@ -1,6 +1,6 @@
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -21,30 +21,30 @@
 import debug as D
 
 def Objective_Rule ( model ):
-	""" 
-	.. math:: 
+	"""
+	.. math::
 		\\begin{eqnarray*}
 		\\lefteqn{
-		\sum_{per} \sum_{tec} \sum_{iper} \sum_{y=0}^{t(per+1) - t(per)} 
+		\sum_{per} \sum_{tec} \sum_{iper} \sum_{y=0}^{t(per+1) - t(per)}
 		\\Bigg(
-		\\left\\{ 
-		c_{i}(tec,iper) 
+		\\left\\{
+		c_{i}(tec,iper)
 		* \\frac { r_{i}(tec)} {1-(1+ r_{i}(tec))^{-r_{i}(tec)} }
-		* imat(tec,iper,per)  
-		+ C_{f}(tec,iper,per) 
-		\\right\\} 
+		* imat(tec,iper,per)
+		+ C_{f}(tec,iper,per)
+		\\right\\}
 		}
 		\\\\
-		& & 
+		& &
 		\\qquad \\qquad \\qquad \\qquad \\qquad \\qquad
-		* x\_cap(tec,iper) 
-		+ C_{m}(tec,iper,per) * vmat(tec,iper,per) 
-		* x\_util(tec,iper,per) 
+		* x\_cap(tec,iper)
+		+ C_{m}(tec,iper,per) * vmat(tec,iper,per)
+		* x\_util(tec,iper,per)
 		\\Bigg)
 		\\\\
-		& & 
+		& &
 		\\qquad \\qquad \\qquad \\qquad \\qquad
-		* \\frac{1} {(1+r_{g}^{t(per)+y-t(per0)})} 
+		* \\frac{1} {(1+r_{g}^{t(per)+y-t(per0)})}
 		\\end{eqnarray*}
 		:nowrap:
 
@@ -53,7 +53,7 @@ def Objective_Rule ( model ):
 	"""
 
 	"""
-	Earlier equation format: 
+	Earlier equation format:
 
 	.. math:: \sum_{per} \sum_{tec} \sum_{iper} \sum_{y=0}^{t(per+1) - t(per)} ( (c_{i}(tec,iper)*(r_{i}(tec)/1-(1+ r_{i}(tec))^{-r_{i}(tec)})*imat(tec,iper,per)+C_{f}(tec,iper,per)   )*x\_cap(tec,iper) + C_{m}(tec,iper,per)*vmat(tec,iper,per)*x\_util(tec,iper,per) ) * 1/(1+r_{g}^{t(per)+y-t(per0)}
 	.. math:: \sum_{p \in operating\_period} \sum_{t \in technologies} \sum_{i \in invest\_period} cost += period\_spread[p] * xc[t,i] * fixed\_costs[t,i,p]
@@ -89,6 +89,7 @@ def Objective_Rule ( model ):
 
 		  for i in M.invest_period
 		  for t in M.tech_all
+		  if i <= p
 		] )
 
 	return cost

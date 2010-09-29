@@ -41,6 +41,7 @@ model.tech_all      = model.tech_new | model.tech_existing
 
 model.tech_all_by_seg = Set( model.segment )
 model.tech_new_by_seg = Set( model.segment )
+model.tech_existing_by_seg = Set( model.segment )
 
 model.period  = Set()
 
