@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -45,8 +45,18 @@ def parse_input ( data ):
 	xu_regex = re.compile( '^xu\[(\w+),(\d+),(\d+)\]$' )
 	xc_regex = re.compile( '^xc\[(\w+),(\d+)\]$' )
 
+	cc_regex = re.compile( '^curr_capacity\[(\w+),(\d+)\]$' )
+	tc_regex = re.compile( '^total_curr_capacity\[(\d+)\]$' )
+	co2_seg_regex = re.compile( '^CO2_seg_per\[(\w+),(\d+)\]$' )
+	co2_regex     = re.compile( '^CO2_per\[(\d+)\]$' )
+
+
 	xc = list()
 	xu = list()
+	cc = list()
+	tc = list()
+	co2_seg = list()
+	co2 = list()
 
 	for k in variables.keys():
 		reg = xc_regex.match( k )
@@ -72,6 +82,48 @@ def parse_input ( data ):
 			xu.append( line )
 			continue
 
+		reg = cc_regex.match( k )
+		if ( reg is not None ):
+			line = [
+			  'total',
+			  reg.group(1),
+			  int( reg.group(2) ),
+			  variables[k]['Value']
+			]
+			cc.append( line )
+			continue
+
+		reg = tc_regex.match( k )
+		if ( reg is not None ):
+			line = [
+			  'total',
+			  int( reg.group(1) ),
+			  variables[k]['Value']
+			]
+			tc.append( line )
+			continue
+
+		reg = co2_seg_regex.match( k )
+		if ( reg is not None ):
+			line = [
+			  'total',
+			  reg.group(1),
+			  int( reg.group(2) ),
+			  variables[k]['Value']
+			]
+			co2_seg.append( line )
+			continue
+
+		reg = co2_regex.match( k )
+		if ( reg is not None ):
+			line = [
+			  'total',
+			  int( reg.group(1) ),
+			  variables[k]['Value']
+			]
+			co2.append( line )
+			continue
+
 	xc_sorted_by_tech  = sorted(xc, key=itemgetter(1))
 	xc_sorted_by_year  = sorted(xc, key=itemgetter(2))
 	xc_sorted_by_value = sorted(xc, key=itemgetter(3))
@@ -80,6 +132,16 @@ def parse_input ( data ):
 	xu_sorted_by_invest = sorted(xu_sorted_by_value,  key=itemgetter(2))
 	xu_sorted_by_year   = sorted(xu_sorted_by_invest, key=itemgetter(3))
 	xu_sorted_by_tech   = sorted(xu_sorted_by_year, key=itemgetter(1))
+
+	cc_sorted_by_seg  = sorted(cc, key=itemgetter(1))
+	cc_sorted_by_year = sorted(cc_sorted_by_seg, key=itemgetter(2))
+
+	tc_sorted_by_year = sorted(tc, key=itemgetter(1))
+
+	co2_seg_sorted_by_year  = sorted(co2_seg, key=itemgetter(1))
+	co2_seg_sorted_by_year = sorted(co2_seg_sorted_by_year, key=itemgetter(2))
+
+	co2_sorted_by_year = sorted(co2, key=itemgetter(1))
 
 	xu_summed_invest = dict()
 	for i in xu_sorted_by_tech:
@@ -113,24 +175,37 @@ def parse_input ( data ):
 	xc_by_year  = cStringIO.StringIO()
 	xc_by_value = cStringIO.StringIO()
 	xu_summed_f = cStringIO.StringIO()
+	curr_cap    = cStringIO.StringIO()
+	t_curr_cap  = cStringIO.StringIO()
+	co2_seg_year = cStringIO.StringIO()
+	co2_year     = cStringIO.StringIO()
 
 	writer = csv.writer( xc_by_tech );  writer.writerows( xc_sorted_by_tech )
 	writer = csv.writer( xc_by_year );  writer.writerows( xc_sorted_by_year )
 	writer = csv.writer( xc_by_value ); writer.writerows( xc_sorted_by_value )
-	writer = csv.writer( xu_summed_f );   writer.writerows( xu_summed )
-	xc_by_tech.reset()
-	xc_by_year.reset()
-	xc_by_value.reset()
-	xu_summed_f.reset()
+	writer = csv.writer( xu_summed_f ); writer.writerows( xu_summed )
+	writer = csv.writer( curr_cap );    writer.writerows( cc_sorted_by_year )
+	writer = csv.writer( t_curr_cap );  writer.writerows( tc_sorted_by_year )
+	writer = csv.writer( co2_seg_year );  writer.writerows( co2_seg_sorted_by_year )
+	writer = csv.writer( co2_year );    writer.writerows( co2_sorted_by_year )
 
 	output  = '"XC, sorted by technology:"\n'
-	output += xc_by_tech.read()
+	output += xc_by_tech.getvalue()
 	output += '\n"XC, sorted by year:"\n'
-	output += xc_by_year.read()
+	output += xc_by_year.getvalue()
 	output += '\n"XC, sorted by value:"\n'
-	output += xc_by_value.read()
+	output += xc_by_value.getvalue()
 	output += '\n"XU, summed across investment period"\n'
-	output += xu_summed_f.read()
+	output += xu_summed_f.getvalue()
+	if len(curr_cap.getvalue()) > 0:
+		output += '\n"Capacities, by seg, year"\n'
+		output += curr_cap.getvalue()
+		output += '\n"Total Capacities, year"\n'
+		output += t_curr_cap.getvalue()
+		output += '\n"CO2, by seg, year"\n'
+		output += co2_seg_year.getvalue()
+		output += '\n"CO2, year"\n'
+		output += co2_year.getvalue()
 
 	return output
 
@@ -160,7 +235,7 @@ def usage ( ):
 	import sys, os
 
 	basename = os.path.basename( sys.argv[0] )
-	
+
 	print """ usage: %(BNAME)s [-i <path>] [-o <path>]
 
    -i <path>   input filename  (ex: '%(IFILE)s', '-')

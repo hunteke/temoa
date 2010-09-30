@@ -1,6 +1,6 @@
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -106,3 +106,17 @@ model.Up_Winds_Ons  = Constraint( rule=Up_Winds_Ons )
 model.Up_Winds_Offs = Constraint( rule=Up_Winds_Offs )
 model.Up_Solar_Th   = Constraint( rule=Up_Solar_Th )
 
+
+###############################################################################
+#                                 Debugging Additions                         #
+###############################################################################
+if D.LEVEL == D.INFO:
+	model.curr_capacity = Var( model.segment, model.invest_period )
+	model.total_curr_capacity = Var( model.invest_period )
+	model.Current_Capacity = Constraint( model.segment, model.invest_period, rule=Current_Capacity )
+	model.Total_Current_Capacity = Constraint( model.invest_period, rule=Total_Current_Capacity )
+
+	model.CO2_seg_per = Var( model.segment, model.invest_period, within=NonNegativeReals )
+	model.CO2_per = Var( model.invest_period, within=NonNegativeReals )
+	model.Attach_CO2_seg_per = Constraint( model.segment, model.invest_period, rule=Attach_CO2_seg_per )
+	model.Attach_CO2_per = Constraint( model.invest_period, rule=Attach_CO2_per )

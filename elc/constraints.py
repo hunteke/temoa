@@ -157,3 +157,58 @@ def Up_Solar_Th ( model ):
 
 	return ( solar_production <= M.solar_th_max_total )
 
+
+###############################################################################
+#                                 Debugging Constraints                       #
+###############################################################################
+def Current_Capacity ( seg, per, model ):
+	M = model
+	power_production = sum(
+	  M.xc[t, i]
+
+	  for t in M.tech_new_by_seg[ seg ]
+	  for i in M.operating_period
+	)
+	power_production += sum(
+		M.t0_capacity[t, per]
+
+		for t in M.tech_existing_by_seg[ seg ]
+	)
+
+	return ( M.curr_capacity[ seg, per ] == power_production )
+
+def Total_Current_Capacity ( per, model ):
+	M = model
+	total_capacity = sum(
+		M.curr_capacity[ s, per ]
+		for s in M.segment
+	)
+
+	return ( M.total_curr_capacity[ per ] == total_capacity )
+
+
+def Attach_CO2_seg_per ( seg, per, model ):
+	M = model
+	co2 = sum(
+	    M.xu[t, i, per] * M.vintage[t, i, per]
+	  * M.co2_factors[ t ]
+	  * 8760
+
+	  for t in M.tech_all_by_seg[ seg ]
+	  for i in M.operating_period
+	)
+
+	return ( M.CO2_seg_per[seg, per] == co2 )
+
+def Attach_CO2_per ( per, model ):
+	M = model
+	co2 = sum(
+	    M.xu[t, i, per] * M.vintage[t, i, per]
+	  * M.co2_factors[ t ]
+	  * 8760
+
+	  for t in M.tech_all
+	  for i in M.operating_period
+	)
+
+	return ( M.CO2_per[ per ] == co2 )
