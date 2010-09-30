@@ -7,7 +7,7 @@ set  tech_new := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear
                  gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons
                  gt_p gtcc_p hydro_p ;
 
-set  tech_all_by_seg[base]     := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear  t0_ng_steam  t0_hydro  t0_coal  t0_nuclear ;
+set  tech_all_by_seg[base]     := coal geo gt_b  gtcc_b gtcc_ccs hydro_b  igcc igcc_ccs nuclear  t0_ng_steam  t0_hydro  t0_coal  t0_nuclear;
 set  tech_all_by_seg[shoulder] := gt_s gtcc_s hydro_s  solar_pv solar_th wind_offs  wind_ons t0_gtcc ;
 set  tech_all_by_seg[peak]     := gt_p gtcc_p hydro_p t0_dt t0_gt;
 
@@ -24,14 +24,14 @@ set  period  := 2010 2015 2020 2025 2030 2035 2040 2045 ;
 
 
 param : co2_tot :=
- 2010      1e70
- 2015      1e70
- 2020      1e70
- 2025      1e70
- 2030      1e70
- 2035      1e70
- 2040      1e70
- 2045      1e70
+ 2010      1e4
+ 2015      1e4
+ 2020      1000
+ 2025      900
+ 2030      800
+ 2035      700
+ 2040      600
+ 2045      500
 	;
 
 
@@ -389,42 +389,42 @@ param  investment_costs  :=    # $/kW
  gtcc_p     2035   2045   948
  gtcc_p     2040   2045   948
  gtcc_p     2045   2045   948
- gtcc_ccs   2010   2010   1e70
- gtcc_ccs   2010   2015   1e70
- gtcc_ccs   2015   2015   1e70
- gtcc_ccs   2010   2020   1e70
- gtcc_ccs   2015   2020   1e70
- gtcc_ccs   2020   2020   1e70
- gtcc_ccs   2010   2025   1e70
- gtcc_ccs   2015   2025   1e70
- gtcc_ccs   2020   2025   1e70
- gtcc_ccs   2025   2025   1e70
- gtcc_ccs   2010   2030   1e70
- gtcc_ccs   2015   2030   1e70
- gtcc_ccs   2020   2030   1e70
- gtcc_ccs   2025   2030   1e70
- gtcc_ccs   2030   2030   1e70
- gtcc_ccs   2010   2035   1e70
- gtcc_ccs   2015   2035   1e70
- gtcc_ccs   2020   2035   1e70
- gtcc_ccs   2025   2035   1e70
- gtcc_ccs   2030   2035   1e70
- gtcc_ccs   2035   2035   1e70
- gtcc_ccs   2010   2040   1e70
- gtcc_ccs   2015   2040   1e70
- gtcc_ccs   2020   2040   1e70
- gtcc_ccs   2025   2040   1e70
- gtcc_ccs   2030   2040   1e70
- gtcc_ccs   2035   2040   1e70
- gtcc_ccs   2040   2040   1e70
- gtcc_ccs   2010   2045   1e70
- gtcc_ccs   2015   2045   1e70
- gtcc_ccs   2020   2045   1e70
- gtcc_ccs   2025   2045   1e70
- gtcc_ccs   2030   2045   1e70
- gtcc_ccs   2035   2045   1e70
- gtcc_ccs   2040   2045   1e70
- gtcc_ccs   2045   2045   1e70
+ gtcc_ccs   2010   2010   10000
+ gtcc_ccs   2010   2015   10000
+ gtcc_ccs   2015   2015   10000
+ gtcc_ccs   2010   2020   10000
+ gtcc_ccs   2015   2020   10000
+ gtcc_ccs   2020   2020   10000
+ gtcc_ccs   2010   2025   10000
+ gtcc_ccs   2015   2025   10000
+ gtcc_ccs   2020   2025   10000
+ gtcc_ccs   2025   2025   10000
+ gtcc_ccs   2010   2030   10000
+ gtcc_ccs   2015   2030   10000
+ gtcc_ccs   2020   2030   10000
+ gtcc_ccs   2025   2030   10000
+ gtcc_ccs   2030   2030   10000
+ gtcc_ccs   2010   2035   10000
+ gtcc_ccs   2015   2035   10000
+ gtcc_ccs   2020   2035   10000
+ gtcc_ccs   2025   2035   10000
+ gtcc_ccs   2030   2035   10000
+ gtcc_ccs   2035   2035   10000
+ gtcc_ccs   2010   2040   10000
+ gtcc_ccs   2015   2040   10000
+ gtcc_ccs   2020   2040   10000
+ gtcc_ccs   2025   2040   10000
+ gtcc_ccs   2030   2040   10000
+ gtcc_ccs   2035   2040   10000
+ gtcc_ccs   2040   2040   10000
+ gtcc_ccs   2010   2045   10000
+ gtcc_ccs   2015   2045   10000
+ gtcc_ccs   2020   2045   10000
+ gtcc_ccs   2025   2045   10000
+ gtcc_ccs   2030   2045   10000
+ gtcc_ccs   2035   2045   10000
+ gtcc_ccs   2040   2045   10000
+ gtcc_ccs   2045   2045   10000
  igcc       2010   2010   2378
  igcc       2010   2015   2378
  igcc       2015   2015   2378
