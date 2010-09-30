@@ -71,9 +71,9 @@ model.solar_th_max_total  = Param()
 model.power_dmd   = Param( model.period, model.segment ) # installed capacity (GW) required
 model.energy_dmd  = Param( model.period, model.segment ) # electricity generation (GWh) required
 
-model.investment_costs = Param( model.tech_new, model.invest_period, model.period, default=1e50 ) # C_i "technology investment cost"
-model.fixed_costs      = Param( model.tech_all, model.invest_period, model.period, default=1e50 ) # C_f "technology fixed cost"
-model.marg_costs       = Param( model.tech_all, model.invest_period, model.period, default=1e50 ) # C_m "technology marginal cost"
+model.investment_costs = Param( model.tech_new, model.invest_period, model.period, default=0 ) # C_i "technology investment cost"
+model.fixed_costs      = Param( model.tech_all, model.invest_period, model.period, default=0 ) # C_f "technology fixed cost"
+model.marg_costs       = Param( model.tech_all, model.invest_period, model.period, default=0 ) # C_m "technology marginal cost"
 model.cf_max           = Param( model.tech_all )
 model.ratio            = Param( model.tech_all )
 model.co2_factors      = Param( model.tech_all )

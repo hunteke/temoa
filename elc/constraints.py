@@ -51,7 +51,7 @@ def Capacity_Req ( seg, period, model ):
 	D.write( D.INFO, "Capacity_Req: (%s, %d)\n" % (seg, period) )
 	M = model
 	power_production = sum(
-	  M.xc[t, i] * M.vintage[t, i, period] * M.cf_max[ t ]
+	  M.xc[t, i] * M.vintage[t, i, period]
 
 	  for t in M.tech_new_by_seg[seg]
 	  for i in M.operating_period
