@@ -1,0 +1,230 @@
+set  Stages  :=  p2000 p2010 p2020 p2030 ;
+
+set  Scenarios  :=
+  Scenario0s0s0
+  Scenario0s0s1
+  Scenario0s0s2
+  Scenario0s0s3
+  Scenario0s0s4
+  Scenario0s1s0
+  Scenario0s1s1
+  Scenario0s1s2
+  Scenario0s1s3
+  Scenario0s1s4
+  Scenario0s2s0
+  Scenario0s2s1
+  Scenario0s2s2
+  Scenario0s2s3
+  Scenario0s2s4
+  Scenario0s3s0
+  Scenario0s3s1
+  Scenario0s3s2
+  Scenario0s3s3
+  Scenario0s3s4
+  Scenario0s4s0
+  Scenario0s4s1
+  Scenario0s4s2
+  Scenario0s4s3
+  Scenario0s4s4
+	;
+
+set  Nodes  :=
+  R
+  Rs0
+  Rs0s0
+  Rs0s0s0
+  Rs0s0s1
+  Rs0s0s2
+  Rs0s0s3
+  Rs0s0s4
+  Rs0s1
+  Rs0s1s0
+  Rs0s1s1
+  Rs0s1s2
+  Rs0s1s3
+  Rs0s1s4
+  Rs0s2
+  Rs0s2s0
+  Rs0s2s1
+  Rs0s2s2
+  Rs0s2s3
+  Rs0s2s4
+  Rs0s3
+  Rs0s3s0
+  Rs0s3s1
+  Rs0s3s2
+  Rs0s3s3
+  Rs0s3s4
+  Rs0s4
+  Rs0s4s0
+  Rs0s4s1
+  Rs0s4s2
+  Rs0s4s3
+  Rs0s4s4
+	;
+
+param  NodeStage  :=
+  R   p2000
+  Rs0   p2010
+  Rs0s0   p2020
+  Rs0s0s0   p2030
+  Rs0s0s1   p2030
+  Rs0s0s2   p2030
+  Rs0s0s3   p2030
+  Rs0s0s4   p2030
+  Rs0s1   p2020
+  Rs0s1s0   p2030
+  Rs0s1s1   p2030
+  Rs0s1s2   p2030
+  Rs0s1s3   p2030
+  Rs0s1s4   p2030
+  Rs0s2   p2020
+  Rs0s2s0   p2030
+  Rs0s2s1   p2030
+  Rs0s2s2   p2030
+  Rs0s2s3   p2030
+  Rs0s2s4   p2030
+  Rs0s3   p2020
+  Rs0s3s0   p2030
+  Rs0s3s1   p2030
+  Rs0s3s2   p2030
+  Rs0s3s3   p2030
+  Rs0s3s4   p2030
+  Rs0s4   p2020
+  Rs0s4s0   p2030
+  Rs0s4s1   p2030
+  Rs0s4s2   p2030
+  Rs0s4s3   p2030
+  Rs0s4s4   p2030
+	;
+
+param  ConditionalProbability  :=
+  R  1
+  Rs0  1
+  Rs0s0  0.2
+  Rs0s0s0  0.2
+  Rs0s0s1  0.2
+  Rs0s0s2  0.2
+  Rs0s0s3  0.2
+  Rs0s0s4  0.2
+  Rs0s1  0.2
+  Rs0s1s0  0.2
+  Rs0s1s1  0.2
+  Rs0s1s2  0.2
+  Rs0s1s3  0.2
+  Rs0s1s4  0.2
+  Rs0s2  0.2
+  Rs0s2s0  0.2
+  Rs0s2s1  0.2
+  Rs0s2s2  0.2
+  Rs0s2s3  0.2
+  Rs0s2s4  0.2
+  Rs0s3  0.2
+  Rs0s3s0  0.2
+  Rs0s3s1  0.2
+  Rs0s3s2  0.2
+  Rs0s3s3  0.2
+  Rs0s3s4  0.2
+  Rs0s4  0.2
+  Rs0s4s0  0.2
+  Rs0s4s1  0.2
+  Rs0s4s2  0.2
+  Rs0s4s3  0.2
+  Rs0s4s4  0.2
+	;
+
+set  Children[R]  :=
+  Rs0
+	;
+
+set  Children[Rs0]  :=
+  Rs0s0
+  Rs0s1
+  Rs0s2
+  Rs0s3
+  Rs0s4
+	;
+
+set  Children[Rs0s0]  :=
+  Rs0s0s0
+  Rs0s0s1
+  Rs0s0s2
+  Rs0s0s3
+  Rs0s0s4
+	;
+
+set  Children[Rs0s1]  :=
+  Rs0s1s0
+  Rs0s1s1
+  Rs0s1s2
+  Rs0s1s3
+  Rs0s1s4
+	;
+
+set  Children[Rs0s2]  :=
+  Rs0s2s0
+  Rs0s2s1
+  Rs0s2s2
+  Rs0s2s3
+  Rs0s2s4
+	;
+
+set  Children[Rs0s3]  :=
+  Rs0s3s0
+  Rs0s3s1
+  Rs0s3s2
+  Rs0s3s3
+  Rs0s3s4
+	;
+
+set  Children[Rs0s4]  :=
+  Rs0s4s0
+  Rs0s4s1
+  Rs0s4s2
+  Rs0s4s3
+  Rs0s4s4
+	;
+
+param  ScenarioLeafNode  :=
+  Scenario0s0s0  Rs0s0s0
+  Scenario0s0s1  Rs0s0s1
+  Scenario0s0s2  Rs0s0s2
+  Scenario0s0s3  Rs0s0s3
+  Scenario0s0s4  Rs0s0s4
+  Scenario0s1s0  Rs0s1s0
+  Scenario0s1s1  Rs0s1s1
+  Scenario0s1s2  Rs0s1s2
+  Scenario0s1s3  Rs0s1s3
+  Scenario0s1s4  Rs0s1s4
+  Scenario0s2s0  Rs0s2s0
+  Scenario0s2s1  Rs0s2s1
+  Scenario0s2s2  Rs0s2s2
+  Scenario0s2s3  Rs0s2s3
+  Scenario0s2s4  Rs0s2s4
+  Scenario0s3s0  Rs0s3s0
+  Scenario0s3s1  Rs0s3s1
+  Scenario0s3s2  Rs0s3s2
+  Scenario0s3s3  Rs0s3s3
+  Scenario0s3s4  Rs0s3s4
+  Scenario0s4s0  Rs0s4s0
+  Scenario0s4s1  Rs0s4s1
+  Scenario0s4s2  Rs0s4s2
+  Scenario0s4s3  Rs0s4s3
+  Scenario0s4s4  Rs0s4s4
+	;
+
+param  StageCostVariable  :=
+  p2000 PeriodCost[2000]
+  p2010 PeriodCost[2010]
+  p2020 PeriodCost[2020]
+  p2030 PeriodCost[2030]
+	;
+
+set  StageVariables[p2000]  :=  xc[*,2000] xu[*,2000,2000] ;
+set  StageVariables[p2010]  :=  xc[*,2010] xu[*,2000,2010] xu[*,2010,2010] ;
+set  StageVariables[p2020]  :=  xc[*,2020] xu[*,2000,2020] xu[*,2010,2020]
+  xu[*,2020,2020] ;
+set  StageVariables[p2030]  :=  xc[*,2030] xu[*,2000,2030] xu[*,2010,2030]
+  xu[*,2020,2030] xu[*,2030,2030] ;
+
+param ScenarioBasedData := False ;
