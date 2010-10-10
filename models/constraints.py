@@ -34,7 +34,7 @@ def Energy_Demand ( seg, period, model ):
 	ans = sum(
 	  M.xu[t, i, period] * M.vintage[t, i, period]
 
-	  for t in M.tech_all_by_seg[ seg ]
+	  for t in M.tech_all_by_seg[seg]
 	  for i in M.invest_period
 	)
 
@@ -50,13 +50,19 @@ def Capacity_Req ( seg, period, model ):
 	"""
 	D.write( D.INFO, "Capacity_Req: (%s, %d)\n" % (seg, period) )
 	M = model
-	ans = sum(
+	power_production = sum(
 	  M.xc[t, i] * M.vintage[t, i, period]
 
-	  for t in M.tech_new_by_seg[ seg ]
-	  for i in M.invest_period
+	  for t in M.tech_new_by_seg[seg]
+	  for i in M.operating_period
 	)
-	return ( ans >= M.power_dmd[period, seg] )
+	power_production += sum(
+		M.t0_capacity[period, t]
+
+		for t in M.tech_existing_by_seg[ seg ]
+	)
+
+	return ( power_production >= M.power_dmd[period, seg] )
 
 
 def Process_Level_Activity ( tech, iper, per, model ):
@@ -75,17 +81,9 @@ def Process_Level_Activity ( tech, iper, per, model ):
 	if ( tech in M.tech_new ):
 		capacity = M.xc[tech, iper]
 	else:
-		if   tech == 't0_ng_steam' : capacity = 120
-		elif tech == 't0_dt'       : capacity =  25
-		elif tech == 't0_gt'       : capacity =  67
-		elif tech == 't0_gtcc'     : capacity =  36
-		elif tech == 't0_hydro'    : capacity =  78
-		elif tech == 't0_coal'     : capacity = 308
-		elif tech == 't0_nuclear'  : capacity = 100
-		else:
-			print "Whoops: unknown tech: ", tech
+		capacity = M.t0_capacity[per, tech]
 
-	capacity *= M.ratio[ tech ].value * M.cf_max[ tech ].value
+	capacity *= M.ratio[ tech ].value * M.cf_max[ tech ]
 
 	return ( utilization < capacity )
 
@@ -107,7 +105,7 @@ def CO2_Emissions_Constraint ( period, model ):
 	  * 8760
 
 	  for t in M.tech_all
-	  for i in M.invest_period
+	  for i in M.operating_period
 	)
 
 	return ( ans <= M.co2_tot[period] )
@@ -117,7 +115,7 @@ def CO2_Emissions_Constraint ( period, model ):
 def Up_Hydro ( model ):
 	"Constraint: Total installed hydro capacity from all periods not to exceed [Doc ref: ?]"
 	M = model
-	ans = sum(
+	hydro_production = sum(
 	  M.xc['hydro_b', i] +
 	  M.xc['hydro_s', i] +
 	  M.xc['hydro_p', i]
@@ -125,37 +123,92 @@ def Up_Hydro ( model ):
 	  for i in M.invest_period
 	)
 
-	return ( 0 <= ans and ans <= M.hydro_max_total )
+	return ( hydro_production <= M.hydro_max_total )
 
 
 def Up_Geo ( model ):
 	"Constraint: Total installed geothermal capacity from all periods can't exceed 23 GW [Doc ref: ?]"
 	M = model
-	ans = sum( M.xc['geo', i]  for i in M.invest_period )
+	geo_production = sum( M.xc['geo', i]  for i in M.invest_period )
 
-	return ( 0 <= ans and ans <= M.geo_max_total )
+	return ( geo_production <= M.geo_max_total )
 
 
 def Up_Winds_Ons ( model ):
 	"Constraint: Total installed capacity of on-shore wind power from all periods can't exceed 8 TW [Doc ref: ?]"
 	M = model
-	ans = sum( M.xc['wind_ons', i]  for i in M.invest_period )
+	wind_onshore_production = sum( M.xc['wind_ons', i]  for i in M.invest_period )
 
-	return ( 0 <= ans and ans <= M.winds_on_max_total )
+	return ( wind_onshore_production <= M.winds_on_max_total )
 
 
 def Up_Winds_Offs ( model ):
 	"Constraint: Total installed capacity of off-shore wind power from all periods can't exceed 800 GW [Doc ref: ?]"
 	M = model
-	ans = sum( M.xc['wind_offs', i]  for i in M.invest_period )
+	wind_offshore_production = sum( M.xc['wind_offs', i]  for i in M.invest_period )
 
-	return ( 0 <= ans and ans <= M.winds_off_max_total )
+	return ( wind_offshore_production <= M.winds_off_max_total )
 
 
 def Up_Solar_Th ( model ):
 	"Constraint: Total installed capacity of thermal solar power from all periods can't exceed 100 GW [Doc ref: ?]"
 	M = model
-	ans = sum( M.xc['solar_th', i]  for i in M.invest_period )
+	solar_production = sum( M.xc['solar_th', i]  for i in M.invest_period )
 
-	return ( 0 <= ans and ans <= M.solar_th_max_total )
+	return ( solar_production <= M.solar_th_max_total )
 
+
+###############################################################################
+#                                 Debugging Constraints                       #
+###############################################################################
+def Current_Capacity ( seg, per, model ):
+	M = model
+	power_production = sum(
+	  M.xc[t, i]
+
+	  for t in M.tech_new_by_seg[ seg ]
+	  for i in M.operating_period
+	)
+	power_production += sum(
+		M.t0_capacity[t, per]
+
+		for t in M.tech_existing_by_seg[ seg ]
+	)
+
+	return ( M.curr_capacity[ seg, per ] == power_production )
+
+def Total_Current_Capacity ( per, model ):
+	M = model
+	total_capacity = sum(
+		M.curr_capacity[ s, per ]
+		for s in M.segment
+	)
+
+	return ( M.total_curr_capacity[ per ] == total_capacity )
+
+
+def Attach_CO2_seg_per ( seg, per, model ):
+	M = model
+	co2 = sum(
+	    M.xu[t, i, per] * M.vintage[t, i, per]
+	  * M.co2_factors[ t ]
+	  * 8760
+
+	  for t in M.tech_all_by_seg[ seg ]
+	  for i in M.operating_period
+	)
+
+	return ( M.CO2_seg_per[seg, per] == co2 )
+
+def Attach_CO2_per ( per, model ):
+	M = model
+	co2 = sum(
+	    M.xu[t, i, per] * M.vintage[t, i, per]
+	  * M.co2_factors[ t ]
+	  * 8760
+
+	  for t in M.tech_all
+	  for i in M.operating_period
+	)
+
+	return ( M.CO2_per[ per ] == co2 )

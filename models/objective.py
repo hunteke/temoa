@@ -50,7 +50,7 @@ def AnnualCost ( per, model ):
 	# Finally, how much did we use?  Have to pay for that too.
 	cost += sum( [
 	    M.xu[t, i, per]
-	  * M.marg_costs[t, i, per]
+	  * M.marg_costs[t, per]
 	  * M.period_spread[ per ]
 
 	  for i in M.invest_period
