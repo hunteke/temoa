@@ -159,9 +159,9 @@ def Up_Solar_Th ( model ):
 
 
 ###############################################################################
-#                                 Debugging Constraints                       #
+#                              Informational Constraints                      #
 ###############################################################################
-def Current_Capacity ( seg, per, model ):
+def INFO_Current_Capacity ( seg, per, model ):
 	M = model
 	power_production = sum(
 	  M.xc[t, i]
@@ -170,14 +170,14 @@ def Current_Capacity ( seg, per, model ):
 	  for i in M.operating_period
 	)
 	power_production += sum(
-		M.t0_capacity[t, per]
+		M.t0_capacity[per, t]
 
 		for t in M.tech_existing_by_seg[ seg ]
 	)
 
 	return ( M.curr_capacity[ seg, per ] == power_production )
 
-def Total_Current_Capacity ( per, model ):
+def INFO_Total_Current_Capacity ( per, model ):
 	M = model
 	total_capacity = sum(
 		M.curr_capacity[ s, per ]
@@ -187,7 +187,7 @@ def Total_Current_Capacity ( per, model ):
 	return ( M.total_curr_capacity[ per ] == total_capacity )
 
 
-def Attach_CO2_seg_per ( seg, per, model ):
+def INFO_CO2_seg_per ( seg, per, model ):
 	M = model
 	co2 = sum(
 	    M.xu[t, i, per] * M.vintage[t, i, per]
@@ -200,7 +200,7 @@ def Attach_CO2_seg_per ( seg, per, model ):
 
 	return ( M.CO2_seg_per[seg, per] == co2 )
 
-def Attach_CO2_per ( per, model ):
+def INFO_CO2_per ( per, model ):
 	M = model
 	co2 = sum(
 	    M.xu[t, i, per] * M.vintage[t, i, per]

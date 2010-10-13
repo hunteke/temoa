@@ -122,11 +122,13 @@ model.ComputeAnnualCosts = Constraint( model.operating_period, rule=setAnnualCos
 ###############################################################################
 if D.LEVEL == D.INFO:
 	model.curr_capacity = Var( model.segment, model.invest_period )
+	model.INFO_Current_Capacity = Constraint( model.segment, model.invest_period, rule=INFO_Current_Capacity )
+
 	model.total_curr_capacity = Var( model.invest_period )
-	model.Current_Capacity = Constraint( model.segment, model.invest_period, rule=Current_Capacity )
-	model.Total_Current_Capacity = Constraint( model.invest_period, rule=Total_Current_Capacity )
+	model.INFO_Total_Current_Capacity = Constraint( model.invest_period, rule=INFO_Total_Current_Capacity )
 
 	model.CO2_seg_per = Var( model.segment, model.invest_period, within=NonNegativeReals )
+	model.INFO_CO2_seg_per = Constraint( model.segment, model.invest_period, rule=INFO_CO2_seg_per )
+
 	model.CO2_per = Var( model.invest_period, within=NonNegativeReals )
-	model.Attach_CO2_seg_per = Constraint( model.segment, model.invest_period, rule=Attach_CO2_seg_per )
-	model.Attach_CO2_per = Constraint( model.invest_period, rule=Attach_CO2_per )
+	model.INFO_CO2_per = Constraint( model.invest_period, rule=INFO_CO2_per )
