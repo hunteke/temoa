@@ -26,8 +26,8 @@ from constraints import *
 from objective   import *
 
 
-#D.LEVEL = D.INFO
-D.LEVEL = D.NORMAL
+D.LEVEL = D.INFO
+#D.LEVEL = D.NORMAL
 
 model = Model( name='TEMOA ELC' )
 
@@ -126,6 +126,9 @@ if D.LEVEL == D.INFO:
 
 	model.total_curr_capacity = Var( model.invest_period )
 	model.INFO_Total_Current_Capacity = Constraint( model.invest_period, rule=INFO_Total_Current_Capacity )
+
+	model.new_capacity_per = Var( model.operating_period )
+	model.INFO_new_capacity_per = Constraint( model.operating_period, rule=INFO_new_capacity_per )
 
 	model.CO2_seg_per = Var( model.segment, model.invest_period, within=NonNegativeReals )
 	model.INFO_CO2_seg_per = Constraint( model.segment, model.invest_period, rule=INFO_CO2_seg_per )

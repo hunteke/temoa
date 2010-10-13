@@ -226,3 +226,14 @@ def INFO_total_CO2 ( model ):
 	)
 
 	return ( M.total_CO2 == co2 )
+
+def INFO_new_capacity_per ( per, model ):
+	M = model
+	new_capacity = sum(
+	    M.xc[t, i] * M.vintage[t, i, per]
+
+	  for t in M.tech_new
+	  for i in M.invest_period
+	)
+
+	return ( M.new_capacity_per[ per ] == new_capacity )
