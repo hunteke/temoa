@@ -86,8 +86,8 @@ model.t0_capacity      = Param( model.operating_period, model.tech_existing )
 model.loan_cost     = Param( model.tech_new, rule=ParamLoanCost_Init )
 model.period_spread = Param( model.operating_period, rule=ParamPeriodSpread_Init )
 
-model.xc = Var( model.tech_new, model.invest_period,               within=NonNegativeReals )
-model.xu = Var( model.tech_all, model.invest_period, model.period, within=NonNegativeReals )
+model.xc = Var( model.tech_new, model.invest_period,               within=NonNegativeReals, bounds=(0, 1e50) )
+model.xu = Var( model.tech_all, model.invest_period, model.period, within=NonNegativeReals, bounds=(0, 1e50) )
 
 model.PeriodCost = Var( model.operating_period, within=NonNegativeReals )
 
