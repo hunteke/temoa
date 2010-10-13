@@ -31,7 +31,7 @@ param urn_price :=
  2040     0.00170
  2045     0.00170
 	;
-	
+
 param coal_price :=
  2010     0.00612
  2015     0.00612
@@ -42,7 +42,7 @@ param coal_price :=
  2040     0.00612
  2045     0.00612
    ;
- 
+
 param diesel_price :=
  2010     0.0418
  2015     0.0418
@@ -53,7 +53,7 @@ param diesel_price :=
  2040     0.0418
  2045     0.0418
 	;
-	
+
 param ng_price :=
  2010     0.0160
  2015     0.0160
@@ -64,7 +64,7 @@ param ng_price :=
  2040     0.0160
  2045     0.0160
 	;
-	
+
 param co2_tot :=
  2010      1e4
  2015      1e4
@@ -88,9 +88,9 @@ param winds_off_max_total :=  800;   # Unit: GW
 param solar_th_max_total  :=  100;   # Unit: GW
 
 
-param power_dmd :  
+param power_dmd :
          base   shoulder   peak :=
-2010      272        233    272       
+2010      272        233    272
 2015      283        242    283
 2020      294        252    294
 2025      306        262    306
@@ -100,7 +100,7 @@ param power_dmd :
 2045      358        307    358
 	;
 
-param energy_dmd : 
+param energy_dmd :
       base   shoulder   peak :=
 2010   272        136   14.0
 2015   283        141   14.5
@@ -114,14 +114,14 @@ param energy_dmd :
 
 
 param  t0_capacity :
-        t0_ng_steam   t0_dt   t0_gt   t0_gtcc   t0_hydro   t0_coal   t0_nuclear :=    
+        t0_ng_steam   t0_dt   t0_gt   t0_gtcc   t0_hydro   t0_coal   t0_nuclear :=
 2010           120       25      67        36         78       308          100
-2015           103       21      57        31         67       264           86 
-2020            86       18      48        26         56       220           71 
-2025            69       14      38        21         45       176           57 
-2030            51       11      29        15         33       132           43 
-2035            34        7      19        10         22        88           29 
-2040            17        4      10         5         11        44           14 
+2015           103       21      57        31         67       264           86
+2020            86       18      48        26         56       220           71
+2025            69       14      38        21         45       176           57
+2030            51       11      29        15         33       132           43
+2035            34        7      19        10         22        88           29
+2040            17        4      10         5         11        44           14
 2045             0        0       0         0          0         0            0
 	;
 
