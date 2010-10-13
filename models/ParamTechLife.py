@@ -1,6 +1,6 @@
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 import debug as D
 
 def TechLifeParam_Init ( tech, model ):
-	D.write( D.INFO, "TechLifeParam_Init parameter initialization\n" )
+	D.write( D.DEBUG, "TechLifeParam_Init parameter initialization\n" )
 
 	# return years (10 years = 1 period)
 	if   'coal'     == tech: return 30

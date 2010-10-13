@@ -1,7 +1,7 @@
 import debug as D
 
 def MarginalCostsParam_Init ( tech, per, model ):
-	D.write( D.INFO, "MarginalCostsParam_Init parameter initialization\n" )
+	D.write( D.DEBUG, "MarginalCostsParam_Init parameter initialization\n" )
 	M = model
 	var_o_m = { # $/kWh
 	  'coal'        : 0.0459,
@@ -31,7 +31,7 @@ def MarginalCostsParam_Init ( tech, per, model ):
 	  'wind_offs'   : 0.0000,
 	  'wind_ons'    : 0.0000,
 	}
-	
+
 	therm_eff = {
 	  'coal'        : 0.39,
 	  'gt_b'        : 0.40,

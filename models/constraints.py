@@ -29,12 +29,12 @@ def Energy_Demand ( seg, period, model ):
 			\sum_{per} \sum_{iper} \sum_{tech\_all} xu(tech,iper,per) * vintage(tech,iper,per) >= energy\_dmd(seg,per)
 
 	"""
-	D.write( D.INFO, "Energy_Demand: (%s, %d)\n" % (seg, period) )
+	D.write( D.DEBUG, "Energy_Demand: (%s, %d)\n" % (seg, period) )
 	M = model
 	ans = sum(
 	  M.xu[t, i, period] * M.vintage[t, i, period]
 
-	  for t in M.tech_all_by_seg[seg]
+	  for t in M.tech_all_by_seg[ seg ]
 	  for i in M.invest_period
 	)
 
@@ -48,12 +48,12 @@ def Capacity_Req ( seg, period, model ):
 		   \sum_{per} \sum_{iper} \sum_{tech\_new} xc(tech,iper) * vintage(tech,iper,per) >= power\_dmd(seg,per)
 
 	"""
-	D.write( D.INFO, "Capacity_Req: (%s, %d)\n" % (seg, period) )
+	D.write( D.DEBUG, "Capacity_Req: (%s, %d)\n" % (seg, period) )
 	M = model
 	power_production = sum(
 	  M.xc[t, i] * M.vintage[t, i, period]
 
-	  for t in M.tech_new_by_seg[seg]
+	  for t in M.tech_new_by_seg[ seg ]
 	  for i in M.operating_period
 	)
 	power_production += sum(
@@ -75,7 +75,7 @@ def Process_Level_Activity ( tech, iper, per, model ):
 		xu(tech,iper,per) * vintage(tech,iper,per) < xc(tech,iper)
 
 	"""
-	D.write( D.INFO, "Process_Level_Activity: (%s, %d, %d)\n" % (tech, iper, per) )
+	D.write( D.DEBUG, "Process_Level_Activity: (%s, %d, %d)\n" % (tech, iper, per) )
 	M = model
 	utilization = M.xu[tech, iper, per] * M.vintage[tech, iper, per]
 	if ( tech in M.tech_new ):
@@ -96,7 +96,7 @@ def CO2_Emissions_Constraint ( period, model ):
 		\sum_{tech} \sum_{iper} \sum_{per} xu(tech,iper,per) * vintage(tech,iper,per) * co2\_factors(tech) * 8760 <= co2\_total(per)
 
 	"""
-	D.write( D.INFO, "CO2_Emissions_Constraint: %d\n" % period )
+	D.write( D.DEBUG, "CO2_Emissions_Constraint: %d\n" % period )
 	M = model
 	ans = sum(
 	    M.xu[t, i, period]

@@ -21,7 +21,7 @@
 import debug as D
 
 def AnnualCost ( per, model ):
-	D.write( D.INFO, "Annual Cost\n" )
+	D.write( D.DEBUG, "Annual Cost\n" )
 	M = model
 
 	cost = 0.0

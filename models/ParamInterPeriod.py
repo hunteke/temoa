@@ -1,6 +1,6 @@
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@ import debug as D
 
 def ParamInterPeriod_Init ( period, model ):
 	"Set: Initialize the inter-period years"
-	D.write( D.INFO, "InterPeriodSet_Init\n" )
+	D.write( D.DEBUG, "InterPeriodSet_Init\n" )
 	M = model
 
 	periods = [ p for p in M.period ]

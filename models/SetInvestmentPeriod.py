@@ -1,6 +1,6 @@
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 import debug as D
 
 def SetInvestmentPeriod_Init ( model ):
-	D.write( D.INFO, "InvestmentPeriod set initialization\n" )
+	D.write( D.DEBUG, "InvestmentPeriod set initialization\n" )
 
 	# Creates a list of tuples.  A tuple only goes in the list if the cell
 	# it "referenced" in the binary matrix would be 1.  This is implemented

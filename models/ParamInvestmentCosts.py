@@ -1,6 +1,6 @@
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 import debug as D
 
 def InvestmentCostsParam_Init ( tech, iper, per, model ):
-	D.write( D.INFO, "InvestmentCosts_Init parameter initialization\n" )
+	D.write( D.DEBUG, "InvestmentCosts_Init parameter initialization\n" )
 
 	if   'coal'        == tech: return 2058
 	elif 'geo'         == tech: return 1711
@@ -43,5 +43,5 @@ def InvestmentCostsParam_Init ( tech, iper, per, model ):
 	elif 'wind_offs'   == tech: return 3851
 	elif 'wind_ons'    == tech: return 1923
 
-	D.write( D.INFO, "Warning: Technology with no investment cost: (%s, %d, %d)\n" % ( tech, iper, per ) )
+	D.write( D.WARN, "Warning: Technology with no investment cost: (%s, %d, %d)\n" % ( tech, iper, per ) )
 

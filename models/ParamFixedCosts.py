@@ -1,6 +1,6 @@
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 import debug as D
 
 def FixedCostsParam_Init ( tech, iper, per, model ):
-	D.write( D.INFO, "FixedCostsParam_Init parameter initialization\n" )
+	D.write( D.DEBUG, "FixedCostsParam_Init parameter initialization\n" )
 
 	if   'coal'        == tech: return 27.5
 	elif 'geo'         == tech: return 165

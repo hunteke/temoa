@@ -1,6 +1,6 @@
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 import debug as D
 
 def VintagePeriodParam_Init ( tech, iper, per, model ):
-	D.write( D.INFO, "VintagePeriod parameter initialization: (%s, %d, %d)\n" % (tech, iper, per) )
+	D.write( D.DEBUG, "VintagePeriod parameter initialization: (%s, %d, %d)\n" % (tech, iper, per) )
 
 	if tech in model.tech_life:
 		# does this get called len(per)*len(iper)*len(M.tech_life) times? (484 currently)
