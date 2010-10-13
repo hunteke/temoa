@@ -212,3 +212,17 @@ def INFO_CO2_per ( per, model ):
 	)
 
 	return ( M.CO2_per[ per ] == co2 )
+
+def INFO_total_CO2 ( model ):
+	M = model
+	co2 = sum(
+	    M.xu[t, i, p] * M.vintage[t, i, p]
+	  * M.co2_factors[ t ]
+	  * 8760
+
+	  for t in M.tech_all
+	  for i in M.operating_period
+	  for p in M.operating_period
+	)
+
+	return ( M.total_CO2 == co2 )

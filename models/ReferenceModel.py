@@ -132,3 +132,6 @@ if D.LEVEL == D.INFO:
 
 	model.CO2_per = Var( model.invest_period, within=NonNegativeReals )
 	model.INFO_CO2_per = Constraint( model.invest_period, rule=INFO_CO2_per )
+
+	model.total_CO2 = Var( within=NonNegativeReals )
+	model.INFO_total_CO2 = Constraint( rule=INFO_total_CO2 )
