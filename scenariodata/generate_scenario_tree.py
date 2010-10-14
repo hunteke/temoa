@@ -113,10 +113,13 @@ class Param ( object ):
 			comment = '# Decision: %s\n\n' % str(comment)
 
 		keys = self.skeys()
-		vals = ( str(self[i].value) for i in self.my_keys )
+		if isinstance( keys, str ):
+			keys = [ keys ]
 
+		vals = ( str(self[i].value) for i in self.my_keys )
 		data = '\n  '.join( (' '.join(i for i in v) for v in zip(keys, vals)) )
 		data = 'param  %s  :=\n  %s\n\t;\n' % (self.name, data)
+
 		return comment + data
 
 
