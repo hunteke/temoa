@@ -63,14 +63,14 @@ class Param ( object ):
 
 		#if isinstance(param.index(), dict)
 
-		if 'period' not in indices:
+		if 'operating_period' not in indices:
 			msg = "Model parameter '%s' does not have a period index.  It is"    \
 			      ' therefore not a stochastic parameter as currently defined'   \
 			      ' for this model.'
 			raise KeyError, msg % name
 
 		# take only the keys about which we care; i.e. /this/ period
-		pidx = indices.index('period')
+		pidx = indices.index('operating_period')
 
 		# we filter out the period because it's inherently known by TreeNode,
 		# which "owns" /this/ Param
