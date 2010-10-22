@@ -1,0 +1,1 @@
+This software uses GPL v3 license.
