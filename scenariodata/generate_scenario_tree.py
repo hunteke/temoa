@@ -18,9 +18,10 @@ wrapper = TextWrapper(
   break_long_words  = False,
   break_on_hyphens  = False,
 )
-SE = sys.stderr.write
+SE = sys.stderr
 instance = None
 
+node_count = 0
 stringify = lambda x: ', '.join(str(i) for i in x)
 
 class Storage ( ):
@@ -168,6 +169,7 @@ class TreeNode ( object ):
 
 
 	def write_dat_files ( self ):
+		global node_count
 		# Step 1: Write my own file.
 		params = self.params.values()
 		data = params[0].as_ampl( self.name )
@@ -176,7 +178,9 @@ class TreeNode ( object ):
 		f = open( self.bname + '.dat', 'w' )
 		f.write( data )
 		f.close()
-		inform('.')
+
+		node_count += 1
+		inform( '\b' * (len(str(node_count -1))+1) + str(node_count) + ' ' )
 
 		# Step 2: Tell my children to write their files
 		for c in self.children:
@@ -266,7 +270,6 @@ def _create_tree ( periods, **kwargs ):
 	decision_list = kwargs.get('decisions')
 
 	p = periods.pop()
-
 	treekwargs = {
 	  'period'   : p,
 	  'name'     : name,
@@ -277,7 +280,9 @@ def _create_tree ( periods, **kwargs ):
 	  'prob'     : prob,
 	}
 	node = TreeNode( **treekwargs )
-	inform('.')
+	global node_count
+	node_count += 1
+	inform( '\b' * (len(str(node_count -1))+1) + str(node_count) + ' ' )
 
 	if periods:
 		decisions = enumerate( decision_list )
@@ -341,7 +346,6 @@ def create_tree ( periods, **kwargs ):
 				rates = stringify( rates[r] )
 				raise ValueError, msg % ( i, type(i), rates[r] )
 
-	periods.sort()
 	periods.reverse()
 
 	decisions = [ types[i] for i in sorted(types.keys()) ]
@@ -361,7 +365,8 @@ def create_tree ( periods, **kwargs ):
 def inform ( x='done.\n' ):
 	global verbose
 	if verbose:
-		SE( x )
+		SE.write( x )
+		SE.flush()
 
 
 def main ( ):
@@ -381,14 +386,16 @@ def main ( ):
 	instance = ins
 
 	inform('Collecting stochastic points (periods) from the model: ')
-	periods = list( ins.operating_period.value )
+	periods = sorted( ins.operating_period.value )
 	inform()
 
-	inform('Building tree: ')
+	inform('Building tree:   ')
 	tree = create_tree( periods[:], **options )
 	inform()
+	global node_count
+	node_count = 0
 
-	inform('Writing scenario "dot dat" files: ')
+	inform('Writing scenario "dot dat" files:   ')
 	tree.write_dat_files()
 	write_scenario_file( periods, tree )
 	inform()
@@ -546,4 +553,4 @@ $ /path/to/coopr/bin/python  %s  ...
 		      'about this error, you can run this program again, and add the' \
 		      ' "--debug" command line flag.'
 		msg = '\n\n' + str(e) + '\n\n' + wrapper.fill(msg) + '\n'
-		SE(msg)
+		SE.write(msg)
