@@ -26,6 +26,7 @@ from constraints import *
 from objective   import *
 
 
+#D.LEVEL = D.DEBUG
 D.LEVEL = D.INFO
 #D.LEVEL = D.NORMAL
 
@@ -139,3 +140,6 @@ if D.LEVEL == D.INFO:
 
 	model.total_CO2 = Var( within=NonNegativeReals )
 	model.INFO_total_CO2 = Constraint( rule=INFO_total_CO2 )
+
+	model.xu_summed_invest = Var( model.tech_all, model.operating_period, within=NonNegativeReals )
+	model.INFO_xu_summed_invest = Constraint( model.tech_all, model.operating_period, rule=INFO_xu_summed_invest )

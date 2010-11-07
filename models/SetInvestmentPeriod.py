@@ -21,6 +21,7 @@
 import debug as D
 
 def SetInvestmentPeriod_Init ( model ):
+	from coopr.pyomo.base.numvalue import value as V
 	D.write( D.DEBUG, "InvestmentPeriod set initialization\n" )
 
 	# Creates a list of tuples.  A tuple only goes in the list if the cell
@@ -29,11 +30,12 @@ def SetInvestmentPeriod_Init ( model ):
 	# function creation, but amounts to the same thing.  See documentation.
 	# [Doc ref: ?] XXX TODO
 
+
 	return [
 	  (tech, iper, per)
 	  for tech in model.tech_new
 	  for iper in model.invest_period
 	  for per in model.period
-	  if ( iper <= per and per < iper + model.loan_life[tech].value )
+	  if ( iper <= per and per < iper + V(model.loan_life[tech]) )
 	]
 

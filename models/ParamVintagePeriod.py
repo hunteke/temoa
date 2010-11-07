@@ -21,11 +21,12 @@
 import debug as D
 
 def VintagePeriodParam_Init ( tech, iper, per, model ):
+	from coopr.pyomo.base.numvalue import value as V
 	D.write( D.DEBUG, "VintagePeriod parameter initialization: (%s, %d, %d)\n" % (tech, iper, per) )
 
 	if tech in model.tech_life:
 		# does this get called len(per)*len(iper)*len(M.tech_life) times? (484 currently)
-		tech_life_time = model.tech_life[ tech ].value
+		tech_life_time = V( model.tech_life[ tech ] )
 	if tech[0:2] == 't0':
 		if iper > 2000: return False
 

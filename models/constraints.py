@@ -19,6 +19,7 @@
 
 
 import debug as D
+from coopr.pyomo.base.numvalue import value as V
 
 def Energy_Demand ( seg, period, model ):
 	"""
@@ -75,7 +76,7 @@ def Process_Level_Activity ( tech, iper, per, model ):
 		xu(tech,iper,per) * vintage(tech,iper,per) < xc(tech,iper)
 
 	"""
-	D.write( D.DEBUG, "Process_Level_Activity: (%s, %d, %d)\n" % (tech, iper, per) )
+	D.write( D.DEBUG, "Process_Level_Activity constraint: (%s, %d, %d)\n" % (tech, iper, per) )
 	M = model
 	utilization = M.xu[tech, iper, per] * M.vintage[tech, iper, per]
 	if ( tech in M.tech_new ):
@@ -83,7 +84,7 @@ def Process_Level_Activity ( tech, iper, per, model ):
 	else:
 		capacity = M.t0_capacity[per, tech]
 
-	capacity *= M.ratio[ tech ].value * M.cf_max[ tech ]
+	capacity *= V(M.ratio[ tech ]) * M.cf_max[ tech ]
 
 	return ( utilization < capacity )
 
@@ -237,3 +238,13 @@ def INFO_new_capacity_per ( per, model ):
 	)
 
 	return ( M.new_capacity_per[ per ] == new_capacity )
+
+def INFO_xu_summed_invest ( tech, per, model ):
+	M = model
+	usage = sum(
+	  M.xu[tech, i, per] * M.vintage[tech, i, per]
+
+	  for i in M.invest_period
+	)
+
+	return ( M.xu_summed_invest[ tech, per ] == usage )

@@ -1,6 +1,6 @@
 """
-    TEMOA (Tools for Energy Model Optimization and Analysis) 
-    Copyright (C) 2010 TEMOA Developer Team 
+    TEMOA (Tools for Energy Model Optimization and Analysis)
+    Copyright (C) 2010 TEMOA Developer Team
 
     This file is part of TEMOA.
     TEMOA is free software: you can redistribute it and/or modify
@@ -17,11 +17,16 @@
     along with TEMOA.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import debug as D
 
 def ParamLoanCost_Init ( tech, model ):
+	from coopr.pyomo.base.numvalue import value as V
+	D.write( D.DEBUG, "ParamLoanCost_Init parameter initialization: (%s)\n" % tech )
+
 	M = model
-	loan_cost = ( M.discount_rate[ tech ].value /
-	    (1 - (1 + M.discount_rate[tech].value)**(-M.loan_life[tech].value ) ) )
+	loan_cost = ( V(M.discount_rate[ tech ]) /
+	    (1 - (1 + V(M.discount_rate[tech]) )**(-V(M.loan_life[tech]) ) )
+	)
 
 	return loan_cost
 
