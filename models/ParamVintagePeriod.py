@@ -28,7 +28,7 @@ def VintagePeriodParam_Init ( tech, iper, per, model ):
 		# does this get called len(per)*len(iper)*len(M.tech_life) times? (484 currently)
 		tech_life_time = V( model.tech_life[ tech ] )
 	if tech[0:2] == 't0':
-		if iper > 2000: return False
+		if iper > 2010: return False
 
 	# returns 1 if the technology is still "alive" in this period
 	# given an install period (iper).  0 otherwise.
