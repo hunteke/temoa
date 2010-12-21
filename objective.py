@@ -1,5 +1,8 @@
 import debug as D
 
+# Objective defined here. 
+# effectively cost minimization is the goal.
+# Test comment again.
 def Objective_Rule ( model ):
 	D.write( D.INFO, "Objective rule\n" )
 	M = model
