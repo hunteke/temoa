@@ -5,6 +5,8 @@ def Objective_Rule ( model ):
 	M = model
 
 	# This is another test comment
+	# This is another test comment
+	# This is another test comment
 	cost = 0.0
 	for p in M.operating_period:
 		for t in M.tech_new:
