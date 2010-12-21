@@ -4,7 +4,6 @@ def Objective_Rule ( model ):
 	D.write( D.INFO, "Objective rule\n" )
 	M = model
 
-	# This is test comment
 	# This is another test comment
 	cost = 0.0
 	for p in M.operating_period:
