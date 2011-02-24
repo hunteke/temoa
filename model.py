@@ -216,7 +216,9 @@ M.all_outputs = Set()
 M.demand_commodity = Set()
 
 # Pyomo currently has a rather large design flaw in it's implementation of set
-# unions, making this temporary necessary.  A bug has been filed.
+# unions, where it is not possible to create a union of more than two sets in 
+# a single statement.  A bug report has been filed with the Coopr devs.
+#   - 24 Feb 2011
 M.tmp_set = M.physical_commodity | M.emissions_commodity
 M.commodity = M.tmp_set | M.demand_commodity
 
