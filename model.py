@@ -208,6 +208,8 @@ M.production_tech = Set()
 M.third           = Set()
 M.tech = M.resource_tech | M.production_tech  # '|' = union.
 
+M.vintage = M.time_period    # copy of time_period; used for technology vintaging
+
 M.emissions_commodity = Set()
 M.physical_commodity = Set()
 M.all_outputs = Set()
@@ -219,7 +221,7 @@ M.tmp_set = M.physical_commodity | M.emissions_commodity
 M.commodity = M.tmp_set | M.demand_commodity
 
 
-M.Efficiency     = Param(M.time_period, M.commodity, M.tech, M.time_period, M.commodity, default=0)
+M.Efficiency     = Param(M.time_period, M.commodity, M.tech, M.vintage, M.commodity, default=0)
 M.Demand         = Param(M.time_period, M.demand_commodity,                 default=0)
 M.ResourceBound  = Param(M.time_period, M.physical_commodity,               default=0)
 M.CommodityProductionCost = Param(M.time_period, M.tech, M.time_period,     default=1)
@@ -231,12 +233,12 @@ M.EmissionsLimit = Param(M.emissions_commodity, default=0)
 
 # Variables
 #   Decision variables
-M.V_FlowIn  = Var(M.time_period, M.commodity, M.tech, M.time_period, M.commodity, domain=NonNegativeReals)
-M.V_FlowOut = Var(M.time_period, M.commodity, M.tech, M.time_period, M.commodity, domain=NonNegativeReals)
+M.V_FlowIn  = Var(M.time_period, M.commodity, M.tech, M.vintage, M.commodity, domain=NonNegativeReals)
+M.V_FlowOut = Var(M.time_period, M.commodity, M.tech, M.vintage, M.commodity, domain=NonNegativeReals)
 
 #   Calculated "dummy" variables
-M.V_Activity = Var(M.time_period, M.tech, M.time_period, M.commodity, domain=NonNegativeReals)
-M.V_Capacity = Var(M.time_period, M.tech, M.time_period, M.commodity, domain=NonNegativeReals)
+M.V_Activity = Var(M.time_period, M.tech, M.vintage, M.commodity, domain=NonNegativeReals)
+M.V_Capacity = Var(M.time_period, M.tech, M.vintage, M.commodity, domain=NonNegativeReals)
 
 
 # Objective
@@ -245,14 +247,14 @@ M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
 # Constraints
 
 #   "Bookkeeping" constraints
-M.ActivityConstraint = Constraint( M.time_period, M.tech, M.time_period, M.commodity, rule=ActivityConstraint_rule )
-M.CapacityConstraint = Constraint( M.time_period, M.tech, M.time_period, M.commodity, rule=CapacityConstraint_rule )
+M.ActivityConstraint = Constraint( M.time_period, M.tech, M.vintage, M.commodity, rule=ActivityConstraint_rule )
+M.CapacityConstraint = Constraint( M.time_period, M.tech, M.vintage, M.commodity, rule=CapacityConstraint_rule )
 
 #   Model Constraints
 #    - in driving order.  (e.g., without Demand, none of the others are
 #      very useful.
 M.DemandConstraint             = Constraint( M.time_period, M.demand_commodity,      rule=DemandConstraint_rule )
-M.ProcessBalanceConstraint     = Constraint( M.time_period, M.commodity, M.tech, M.time_period, M.commodity, rule=ProcessBalanceConstraint_rule )
+M.ProcessBalanceConstraint     = Constraint( M.time_period, M.commodity, M.tech, M.vintage, M.commodity, rule=ProcessBalanceConstraint_rule )
 M.CommodityBalanceConstraint   = Constraint( M.time_period, M.physical_commodity,    rule=CommodityBalanceConstraint_rule )
 M.ResourceExtractionConstraint = Constraint( M.time_period, M.physical_commodity,    rule=ResourceExtractionConstraint_rule )
 
