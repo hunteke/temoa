@@ -16,8 +16,9 @@ Return the set of input energy carriers used by a technology (A_tech) to
 produce a given output carrier (A_output).
 """
 	index = (A_period, A_tech, A_vintage)
-	if A_output in g_processOutputs[ index ]:
-		return g_processInputs[ index ]
+	if index in g_processOutputs:
+		if A_output in g_processOutputs[ index ]:
+			return g_processInputs[ index ]
 
 	return set()
 
@@ -28,8 +29,9 @@ Return the set of output energy carriers used by a technology (A_tech) to
 produce a given input carrier (A_output).
 """
 	index = (A_period, A_tech, A_vintage)
-	if A_input in g_processInputs[ index ]:
-		return g_processOutputs[ index ]
+	if index in g_processInputs:
+		if A_input in g_processInputs[ index ]:
+			return g_processOutputs[ index ]
 
 	return set()
 
@@ -38,29 +40,33 @@ def InitProcessParams ( M ):
 	global g_processInputs
 	global g_processOutputs
 
-	for l_period in M.time_period:
+	for l_vintage in M.time_period:
 		for l_tech in M.tech:
-			for l_vintage in M.time_period:
-				l_inputs = set()
-				l_outputs = set()
-				for l_inp in M.physical_commodity:
-					for l_out in M.all_commidities:
-						index = (l_period, l_inp, l_tech, l_vintage, l_out)
-						if M.Efficiency[ index ] > 0:
-							l_inputs.add(  l_inp )
-							l_outputs.add( l_out )
+			for l_inp in M.physical_commodity:
+				for l_out in M.all_commidities:
+					eindex = (l_inp, l_tech, l_vintage, l_out)
+					if M.Efficiency[eindex] > 0:
+						for l_period in M.time_period:
+							if l_period < l_vintage: continue
 
-				g_processInputs[ l_period, l_tech, l_vintage] = l_inputs
-				g_processOutputs[l_period, l_tech, l_vintage] = l_outputs
+							if value(M.Lifetime[l_tech, l_vintage]) > l_period - l_vintage:
+								pindex = (l_period, l_tech, l_vintage)
+								if pindex not in g_processInputs:
+									g_processInputs[  pindex ] = set()
+									g_processOutputs[ pindex ] = set()
+								g_processInputs[ pindex ].add( l_inp )
+								g_processOutputs[pindex ].add( l_out )
 
 
 def isValidProcess( A_period, A_inp, A_tech, A_vintage, A_out ):
 	"""\
 Returns a boolean indicating whether, in any given period, a technology can take a specified input carrier and convert it to and specified output carrier.
 """
-	if A_inp in g_processInputs[A_period, A_tech, A_vintage]:
-		if A_out in g_processOutputs[A_period, A_tech, A_vintage]:
-			return True
+	index = (A_period, A_tech, A_vintage)
+	if index in g_processInputs and index in g_processOutputs:
+		if A_inp in g_processInputs[ index ]:
+			if A_out in g_processOutputs[ index ]:
+				return True
 
 	return False
 
@@ -75,8 +81,8 @@ def TotalCost_rule ( M ):
 	Objective function.
 	"""
 
-	# There appears to be no other way to hook into Pyomo's model creation, than
-	# by "hijacking" for a time, it's first call to one of our functions.
+	# There appears to be no other way to hook into Pyomo's model creation than
+	# by "hijacking", for a time, it's first call to one of our functions.
 	InitProcessParams( M )
 
 	l_cost = 0
@@ -147,8 +153,10 @@ def CommodityBalanceConstraint_rule ( A_period, A_carrier, M ):
 			# of the flows are 0.  i.e. carrier not requested; nothing makes it.
 			return None
 	elif int is type(l_vflow_out):
-		msg = "Error: Unable to meet an interprocess '%s' transfer in '%s'.  "  \
-		 "Are there missing entries in the Efficiency parameter?\n"
+		msg = "Error: Unable to meet an interprocess '%s' transfer in '%s'.\n"  \
+		  "\tPossible reasons:\n"                                               \
+		  " - Are there missing entries in the Efficiency parameter?\n"         \
+		  " - Does a tech need a longer Lifetime parameter setting?"
 		raise ValueError, msg % (A_carrier, A_period)
 
 	expression = (l_vflow_out >= l_vflow_in)
@@ -164,7 +172,7 @@ def ProcessBalanceConstraint_rule ( A_period, A_inp, A_tech, A_vintage, A_out, M
 	    M.V_FlowOut[A_period, A_inp, A_tech, A_vintage, A_out]
 	      <=
 	    M.V_FlowIn[A_period, A_inp, A_tech, A_vintage, A_out]
-	  * M.Efficiency[A_period, A_inp, A_tech, A_vintage, A_out]
+	  * M.Efficiency[A_inp, A_tech, A_vintage, A_out]
 	)
 
 	return expr
@@ -183,8 +191,10 @@ def DemandConstraint_rule ( A_period, A_comm, M ):
 				l_supply += M.V_FlowOut[A_period, l_input, l_tech, l_vintage, A_comm]
 
 	if int is type( l_supply ):
-		msg = "Error: Demand '%s' in '%s' unable to be met by any technology."\
-		 "  Are there missing entries in the Efficiency parameter?\n"
+		msg = "Error: Demand '%s' in '%s' unable to be met by any technology." \
+		  "\n\tPossible reasons:\n"                                            \
+		  " - Is the Efficiency parameter missing an entry for this demand?\n" \
+		  " - Does a tech that satisfies this demand need a longer Lifetime?\n"
 		raise ValueError, msg % (A_comm, A_period)
 
 	expression = (l_supply >= M.Demand[A_period, A_comm])
@@ -216,14 +226,15 @@ M.all_outputs = Set()
 M.demand_commodity = Set()
 
 # Pyomo currently has a rather large design flaw in it's implementation of set
-# unions, where it is not possible to create a union of more than two sets in 
+# unions, where it is not possible to create a union of more than two sets in
 # a single statement.  A bug report has been filed with the Coopr devs.
 #   - 24 Feb 2011
 M.tmp_set = M.physical_commodity | M.emissions_commodity
 M.all_commidities = M.tmp_set | M.demand_commodity
 
 
-M.Efficiency     = Param(M.time_period, M.all_commidities, M.tech, M.vintage, M.all_commidities, default=0)
+M.Efficiency     = Param(M.all_commidities, M.tech, M.time_period, M.all_commidities, default=0)
+M.Lifetime       = Param(M.tech,        M.time_period,                      default=0) # 20 years
 M.Demand         = Param(M.time_period, M.demand_commodity,                 default=0)
 M.ResourceBound  = Param(M.time_period, M.physical_commodity,               default=0)
 M.CommodityProductionCost = Param(M.time_period, M.tech, M.time_period,     default=1)

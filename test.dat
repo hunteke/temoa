@@ -1,7 +1,7 @@
 data;
 
 
-set time_period  :=  2010 2015 ;
+set time_period  :=  2010 2015 2020 2025 2030 ;
 
 
 set  resource_tech  :=
@@ -45,6 +45,7 @@ param  Demand  :=
  2010 resheating            2
  2010 reslighting           0
  2015 transport_distance   40
+ #2020 transport_distance   30
 	;
 
 param  CommodityProductionCost  :=
@@ -56,17 +57,24 @@ param  CommodityProductionCost  :=
 
 param  ResourceBound  :=
  2010   coal    1000
- 2015   coal    80
+ 2015   coal    40
 	;
 
+
+param  Lifetime  :=
+# tech   # vintage   # lifetime in years
+ imp_coal 2010            1
+ t_coal   2010           10
+ t_elcboiler 2010        30
+ t_elccar 2010           15
+	;
+
+
 param  Efficiency  :=
-# year  # input carrier  # tech       # vintage    # output carrier     # value
- 2010    coal             imp_coal     2010         coal                   1
- 2010    coal             t_coal       2010         electricity            1
- 2010    electricity      t_elcboiler  2010         resheating             1
- 2010    electricity      t_lighting   2010         reslighting            1
- 2010    electricity      t_elccar     2010         transport_distance     1
- 2015    electricity      t_elccar     2010         transport_distance     0.5
- 2015    coal             t_coal       2010         electricity            1
- 2015    coal             imp_coal     2010         coal                   1
+# input carrier  # tech        # vintage  # output carrier     # value
+ coal             imp_coal      2010       coal                   1
+ coal             t_coal        2010       electricity            1
+ electricity      t_elcboiler   2010       resheating             1
+ electricity      t_lighting    2010       reslighting            1
+ electricity      t_elccar      2010       transport_distance     1
 	;
