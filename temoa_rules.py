@@ -153,11 +153,15 @@ def CommodityBalanceConstraint_rule ( A_period, A_carrier, M ):
 			# of the flows are 0.  i.e. carrier not requested; nothing makes it.
 			return None
 	elif int is type(l_vflow_out):
-		msg = "Error: Unable to meet an interprocess '%s' transfer in '%s'.\n"  \
-		  "\tPossible reasons:\n"                                               \
+		msg = "Unable to meet an interprocess '%s' transfer in '%s'.\n"         \
+		  "No flow out.  Constraint flow in:\n   %s\n"                          \
+		  "Possible reasons:\n"                                                 \
+		  " - Is there a missing tech in set 'resource_tech'?\n"                \
+		  " - Is there a missing tech in set 'production_tech'?\n"              \
+		  " - Is there a missing commodity in set 'physical_commodity'?\n"      \
 		  " - Are there missing entries in the Efficiency parameter?\n"         \
 		  " - Does a tech need a longer Lifetime parameter setting?"
-		raise ValueError, msg % (A_carrier, A_period)
+		raise ValueError, msg % (A_carrier, A_period, l_vflow_in)
 
 	expression = (l_vflow_out >= l_vflow_in)
 	return expression
