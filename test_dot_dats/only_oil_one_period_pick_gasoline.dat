@@ -1,0 +1,70 @@
+data;
+
+set time_period  :=  2010;
+
+set  resource_tech  :=
+# Temoa name      Utopia name
+ imp_dsl            # IMPDSL1
+ imp_gsl            # IMPGSL1
+ imp_oil            # IMPOIL1
+	;
+
+set  production_tech  :=
+# Temoa name      Utopia name
+ t_diesel           # E70
+ t_dslboiler        # RHO
+ t_refinery         # SRE
+ t_dslcar           # TXD
+ t_gascar           # TXG
+	;
+
+set  physical_commodity  :=
+# Temoa Name   Utopia Name
+ diesel         # DSL
+ gasoline       # GSL
+ oil            # OIL
+	;
+
+set  demand_commodity  :=
+# Temoa Name          Utopia Name
+ transport_distance    # TX
+	;
+
+
+param  Demand  :=
+ 2010 transport_distance   100
+	;
+
+param  CommodityProductionCost  :=
+ 2010  imp_oil     2010      1
+ 2010  t_refinery  2010      1
+ 2010  diesel      2010      1
+ 2010  gasoline    2010      1
+ 2010  t_dslcar    2010      1
+ 2010  t_gascar    2010      1
+	;
+
+
+param  ResourceBound  :=
+ 2010   oil    1000
+	;
+
+
+param  Lifetime  :=
+# tech       # vintage  # lifetime in years
+ imp_oil      2010       10
+ t_dslcar     2010       10
+ t_gascar     2010       10
+ t_dslboiler  2010       30
+ t_refinery   2010       30
+	;
+
+
+param  Efficiency  :=
+# input carrier  # tech        # vintage  # output carrier     # value
+ oil              imp_oil       2010       oil                  1
+ oil              t_refinery    2010       gasoline             1
+ oil              t_refinery    2010       diesel               1
+ diesel           t_dslcar      2010       transport_distance   1
+ gasoline         t_gascar      2010       transport_distance   2
+	;

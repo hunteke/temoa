@@ -1,0 +1,18 @@
+Objective function value: 100.0
+Non-zero variable values for 'TEMOA Entire Energy System Economic Optimization Model'
+   50.0   V_Activity[2010,imp_oil,2010,oil]
+  100.0   V_Activity[2010,t_dslcar,2010,transport_distance]
+   50.0   V_Activity[2010,t_refinery,2010,diesel]
+   50.0   V_Capacity[2010,imp_oil,2010,oil]
+  100.0   V_Capacity[2010,t_dslcar,2010,transport_distance]
+   50.0   V_Capacity[2010,t_refinery,2010,diesel]
+   50.0   V_FlowIn[2010,diesel,t_dslcar,2010,transport_distance]
+   50.0   V_FlowIn[2010,oil,imp_oil,2010,oil]
+   50.0   V_FlowIn[2010,oil,t_refinery,2010,diesel]
+  100.0   V_FlowOut[2010,diesel,t_dslcar,2010,transport_distance]
+   50.0   V_FlowOut[2010,oil,imp_oil,2010,oil]
+   50.0   V_FlowOut[2010,oil,t_refinery,2010,diesel]
+
+Binding constraint values for 'TEMOA Entire Energy System Economic Optimization Model'
+  100.0   DemandConstraint[2010,transport_distance]
+   50.0   ResourceExtractionConstraint[2010,oil]

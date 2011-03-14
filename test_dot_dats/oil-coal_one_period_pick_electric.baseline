@@ -1,0 +1,18 @@
+Objective function value: 31.25
+Non-zero variable values for 'TEMOA Entire Energy System Economic Optimization Model'
+    6.25     V_Activity[2010,imp_coal,2010,coal]
+   25.0      V_Activity[2010,t_coal,2010,electricity]
+  100.0      V_Activity[2010,t_elcboiler,2010,resheating]
+    6.25     V_Capacity[2010,imp_coal,2010,coal]
+   25.0      V_Capacity[2010,t_coal,2010,electricity]
+  100.0      V_Capacity[2010,t_elcboiler,2010,resheating]
+    1.5625   V_FlowIn[2010,coal,imp_coal,2010,coal]
+    6.25     V_FlowIn[2010,coal,t_coal,2010,electricity]
+   25.0      V_FlowIn[2010,electricity,t_elcboiler,2010,resheating]
+    6.25     V_FlowOut[2010,coal,imp_coal,2010,coal]
+   25.0      V_FlowOut[2010,coal,t_coal,2010,electricity]
+  100.0      V_FlowOut[2010,electricity,t_elcboiler,2010,resheating]
+
+Binding constraint values for 'TEMOA Entire Energy System Economic Optimization Model'
+  100.0      DemandConstraint[2010,resheating]
+    1.5625   ResourceExtractionConstraint[2010,coal]

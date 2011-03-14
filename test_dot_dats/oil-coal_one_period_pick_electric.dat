@@ -1,0 +1,74 @@
+data;
+
+set time_period  :=  2010;
+
+set  resource_tech  :=
+# Temoa name      Utopia name
+ imp_dsl            # IMPDSL1
+ imp_oil            # IMPOIL1
+ imp_elc
+ imp_coal
+	;
+
+set  production_tech  :=
+# Temoa name      Utopia name
+ t_dslboiler        # RHO
+ t_refinery         # SRE
+ t_coal
+ t_elcboiler
+	;
+
+set  physical_commodity  :=
+# Temoa Name   Utopia Name
+ diesel         # DSL
+ oil            # OIL
+ electricity    # ELC
+ coal
+	;
+
+set  demand_commodity  :=
+# Temoa Name          Utopia Name
+ resheating
+	;
+
+
+param  Demand  :=
+ 2010  resheating   100
+	;
+
+param  CommodityProductionCost  :=
+ 2010  imp_coal    2010      1
+ 2010  imp_oil     2010      1
+ 2010  t_coal      2010      1
+ 2010  t_refinery  2010      1
+ 2010  t_dslboiler 2010      1
+ 2010  t_elcboiler 2010      1
+	;
+
+
+param  ResourceBound  :=
+ 2010   coal   1000
+ 2010   oil    1000
+	;
+
+
+param  Lifetime  :=
+# tech       # vintage  # lifetime in years
+ imp_coal     2010       10
+ imp_oil      2010       10
+ t_coal       2010       30
+ t_refinery   2010       30
+ t_dslboiler  2010       30
+ t_elcboiler  2010       30
+	;
+
+
+param  Efficiency  :=
+# input carrier  # tech        # vintage  # output carrier     # value
+ coal             imp_coal      2010       coal                 4
+ oil              imp_oil       2010       oil                  1
+ oil              t_refinery    2010       diesel               1
+ coal             t_coal        2010       electricity          4
+ diesel           t_dslboiler   2010       resheating           1
+ electricity      t_elcboiler   2010       resheating           4
+	;
