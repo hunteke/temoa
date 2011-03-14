@@ -72,8 +72,8 @@ create_baseline: (string) (Default: None)
 		results = opt.solve( instance )
 
 		soln = results['Solution']
-		solv = results['Solver']
-		prob = results['Problem']
+		solv = results['Solver']      # currently unused, but may want it later
+		prob = results['Problem']     # currently unused, but may want it later
 
 		obj_value = soln.Objective.obj.Value
 
@@ -107,6 +107,8 @@ create_baseline: (string) (Default: None)
 		run_output.write( "Objective function value: %s\n" % obj_value )
 		run_output.write( "Non-zero variable values for '%s'\n" % instance.name )
 
+		# This padding code make the display of the output values line up at
+		# the period
 		int_padding = max(map( get_int_padding(Vars), var_keys ))
 		dec_padding = max(map( get_dec_padding(Vars), var_keys ))
 		format = "  %%%dd%%-%ds  %%s\n" % (int_padding, dec_padding)
