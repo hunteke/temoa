@@ -43,7 +43,7 @@ def InitProcessParams ( M ):
 	for l_vintage in M.time_period:
 		for l_tech in M.tech:
 			for l_inp in M.physical_commodity:
-				for l_out in M.all_commidities:
+				for l_out in M.all_commodities:
 					eindex = (l_inp, l_tech, l_vintage, l_out)
 					if M.Efficiency[eindex] > 0:
 						for l_period in M.time_period:
