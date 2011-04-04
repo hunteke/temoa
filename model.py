@@ -72,3 +72,39 @@ def create_TEMOA_model ( ):
 	return M
 
 model = create_TEMOA_model()
+
+
+if '__main__' == __name__:
+	from sys import argv, stderr
+
+	from coopr.opt import SolverFactory
+	from coopr.pyomo import ModelData
+
+	from pformat_results import pformat_results
+
+	SE = stderr
+
+	if len( argv ) < 2:
+		SE.write( "No data file (dot dat) specified.  Exiting.\n" )
+		raise SystemExit
+
+	opt = SolverFactory('glpk_experimental')
+	opt.keepFiles = False
+	# opt.options.wlp = "an.lp"    # output GLPK's LP understanding.
+
+	# Recreate the pyomo command's ability to specify multiple "dot dat" files
+	# on the command line
+	mdata = ModelData()
+	for f in argv[1:]:
+		if f[-4:] != '.dat':
+			SE.write( "Expecting a dot dat (data.dat) file, found %s\n" % f )
+			raise SystemExit
+		mdata.add( f )
+	mdata.read( model )
+
+	# Now do the solve and ...
+	instance = model.create( mdata )
+	result = opt.solve( instance )
+
+	# ... print the easier-to-read/parse format
+	print pformat_results( instance, result )
