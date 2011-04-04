@@ -1,5 +1,7 @@
 #!/usr/bin/env lpython
 
+from cStringIO import StringIO
+
 from coopr.pyomo import *
 
 # Global Variables (dictionaries to cache parsing of Efficiency parameter)
@@ -173,9 +175,11 @@ def CommodityBalanceConstraint_rule ( A_period, A_carrier, M ):
 	if type(l_vflow_out) == type(l_vflow_in):
 		if int is type(l_vflow_out):
 			# Tell Pyomo not to create this constraint; it's useless because both
-			# of the flows are 0.  i.e. carrier not requested; nothing makes it.
+			# of the flows are 0.  i.e. carrier not needed and nothing makes it.
 			return None
 	elif int is type(l_vflow_out):
+		flow_in_expr = StringIO()
+		l_vflow_in.pprint( ostream=flow_in_expr )
 		msg = "Unable to meet an interprocess '%s' transfer in '%s'.\n"         \
 		  "No flow out.  Constraint flow in:\n   %s\n"                          \
 		  "Possible reasons:\n"                                                 \
@@ -184,7 +188,7 @@ def CommodityBalanceConstraint_rule ( A_period, A_carrier, M ):
 		  " - Is there a missing commodity in set 'physical_commodity'?\n"      \
 		  " - Are there missing entries in the Efficiency parameter?\n"         \
 		  " - Does a tech need a longer Lifetime parameter setting?"
-		raise ValueError, msg % (A_carrier, A_period, l_vflow_in)
+		raise ValueError, msg % (A_carrier, A_period, flow_in_expr.getvalue() )
 
 	expression = (l_vflow_out >= l_vflow_in)
 	return expression
