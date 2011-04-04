@@ -1,12 +1,12 @@
 #!/usr/bin/env lpython
 
 import argparse
-from cStringIO import StringIO
+from pformat_results import pformat_results
 from optparse import OptionParser, OptionGroup
 import os
 from sys import stderr, argv
 
-from coopr.opt.base import SolverFactory
+from coopr.opt import SolverFactory
 
 from model import create_TEMOA_model as create_model
 
@@ -65,73 +65,13 @@ create_baseline: (string) (Default: None)
 		blue   = '\x1B[1;34m'
 
 	msg = ''
-	run_output = StringIO()
 	failed = True
 	try:
 		instance = M.create( datfile )
-		results = opt.solve( instance )
+		result = opt.solve( instance )
 
-		soln = results['Solution']
-		solv = results['Solver']      # currently unused, but may want it later
-		prob = results['Problem']     # currently unused, but may want it later
+		run_output = pformat_results( instance, result )
 
-		obj_value = soln.Objective.obj.Value
-
-		Vars = soln.Variable
-		Cons = soln.Constraint
-
-		var_keys = sorted(
-		  ii
-		  for ii in Vars
-		  if abs(Vars[ ii ].value) > 1e-16   # i.e. "if it's non-zero"
-		)
-
-		constraint_keys = sorted(
-		  ii
-		  for ii in Cons
-		  if 'c_' == ii[:2]            # all Coopr constraint keys being with c_
-		  if abs(Cons[ ii ].value) > 1e-16    # i.e. "if it's non-zero"
-		)
-
-		def get_int_padding ( ObjSet ):
-			def wrapped ( key ):
-				val = ObjSet[ key ].value
-				return len(str(int(val)))
-			return wrapped
-		def get_dec_padding ( ObjSet ):
-			def wrapped ( key ):
-				val = ObjSet[ key ].value
-				return len(str(val - int(val)))
-			return wrapped
-
-		run_output.write( "Objective function value: %s\n" % obj_value )
-		run_output.write( "Non-zero variable values for '%s'\n" % instance.name )
-
-		# This padding code make the display of the output values line up at
-		# the period
-		int_padding = max(map( get_int_padding(Vars), var_keys ))
-		dec_padding = max(map( get_dec_padding(Vars), var_keys ))
-		format = "  %%%dd%%-%ds  %%s\n" % (int_padding, dec_padding)
-			# Works out to something like "%8d%-11s  %s"
-
-		for key in var_keys:
-			int_part = int(Vars[ key ].value)
-			dec_part = str(Vars[ key ].value - int_part)[1:]
-			run_output.write( format % (int_part, dec_part, key) )
-
-		run_output.write( "\nBinding constraint values for '%s'\n" % instance.name)
-
-		int_padding = max(map( get_int_padding(Cons), constraint_keys ))
-		dec_padding = max(map( get_dec_padding(Cons), constraint_keys ))
-		format = "  %%%dd%%-%ds  %%s\n" % (int_padding, dec_padding)
-			# Works out to something like "%8d%-11s  %s"
-
-		for key in constraint_keys:
-			int_part = int(Cons[ key ].value)
-			dec_part = str(Cons[ key ].value - int_part)[1:]
-			run_output.write( format % (int_part, dec_part, key[4:-1]) )
-
-		del instance, results, soln, prob, solv
 		failed = False
 	except Exception, e:
 		print e
@@ -144,17 +84,17 @@ create_baseline: (string) (Default: None)
 	if not failed:
 		if create_baseline:
 			with open( baseline, 'w' ) as f:
-				f.write(run_output.getvalue())
+				f.write( run_output )
 
 		with open( baseline, 'r' ) as f:
 			baseline_data = f.read()
 
-		if baseline_data == run_output.getvalue():
+		if baseline_data == run_output:
 			test = True
 			msg = '%sOK%s' % (green, normal)
 
 		if return_data:
-			return (test, msg, run_output.getvalue(), baseline_data)
+			return (test, msg, run_output, baseline_data)
 
 	return (test, msg)
 
