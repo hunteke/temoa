@@ -68,7 +68,7 @@ def InitProcessParams ( M ):
 			for l_inp in M.physical_commodity:
 				for l_out in M.all_commodities:
 					eindex = (l_inp, l_tech, l_vintage, l_out)
-					if M.Efficiency[eindex] > 0:
+					if M.Efficiency[ eindex ] > 0:
 						for l_period in M.time_period:
 							if l_period < l_vintage: continue
 
@@ -110,9 +110,9 @@ def TotalCost_rule ( M ):
 
 	l_cost = 0
 
-	for l_period in M.time_period:
+	for l_period in M.future_period:
 		for l_tech in M.tech:
-			for l_vintage in M.time_period:
+			for l_vintage in M.vintage:
 				for l_out in M.physical_commodity:
 					for l_inp in ProcessProduces( l_period, l_tech, l_vintage, l_out ):
 						l_cost += (
