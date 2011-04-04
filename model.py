@@ -27,12 +27,13 @@ def create_TEMOA_model ( ):
 	M.all_commodities = M.tmp_set | M.demand_commodity
 
 
-	M.Efficiency     = Param(M.all_commodities, M.tech, M.time_period, M.all_commodities, default=0)
-	M.Lifetime       = Param(M.tech,        M.time_period,                      default=20) # 20 years
-	M.Demand         = Param(M.time_period, M.demand_commodity,                 default=0)
-	M.ResourceBound  = Param(M.time_period, M.physical_commodity,               default=0)
-	M.CommodityProductionCost = Param(M.time_period, M.tech, M.time_period,     default=1)
-	M.CapacityFactor = Param(M.time_period, M.tech, M.time_period, M.all_commodities, default=1)
+	M.Efficiency       = Param(M.all_commodities, M.tech, M.vintage, M.all_commodities, default=0)
+	M.Lifetime         = Param(M.tech,        M.vintage,                  default=20) # 20 years
+	M.Demand           = Param(M.time_period, M.demand_commodity,         default=0)
+	M.ResourceBound    = Param(M.time_period, M.physical_commodity,       default=0)
+	M.CommodityProductionCost = Param(M.time_period, M.tech, M.vintage,   default=1)
+	M.CapacityFactor   = Param(M.tech, M.vintage,                         default=1)
+
 
 	# Not yet indexed by period or incorporated into the constraints
 	M.EmissionsLimit = Param(M.emissions_commodity, default=0)
