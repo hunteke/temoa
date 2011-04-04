@@ -35,6 +35,21 @@ def init_future_set ( M ):
 ##############################################################################
 # Begin helper functions
 
+def ProcessOutputs ( *index ):
+	"""\
+index = (period, tech, vintage)
+	"""
+	if index in g_processOutputs:
+		return g_processOutputs[ index ]
+	return set()
+
+
+def ProcessInputs ( *index ):
+	if index in g_processInputs:
+		return g_processInputs[ index ]
+	return set()
+
+
 def ProcessProduces ( A_period, A_tech, A_vintage, A_output ):
 	"""\
 Return the set of input energy carriers used by a technology (A_tech) to
@@ -129,22 +144,40 @@ Objective_rule = TotalCost_rule
 ##############################################################################
 #   Constraint rules
 
-def ActivityConstraint_rule ( A_period, A_tech, A_vintage, A_output, M ):
+def ActivityConstraint_rule ( A_period, A_tech, A_vintage, M ):
 	l_activity = 0
-	for l_inp in ProcessProduces( A_period, A_tech, A_vintage, A_output ):
-		l_activity += M.V_FlowOut[A_period, l_inp, A_tech, A_vintage, A_output]
+	index = (A_period, A_tech, A_vintage)
+	for l_inp in ProcessInputs( *index ):
+		for l_out in ProcessOutputs( *index ):
+			l_activity += M.V_FlowOut[A_period, l_inp, A_tech, A_vintage, l_out]
 
-	expr = ( M.V_Activity[A_period, A_tech, A_vintage, A_output] == l_activity )
+	expr = ( M.V_Activity[ index ] == l_activity )
 	return expr
 
 
-def CapacityConstraint_rule ( A_period, A_tech, A_vintage, A_output, M ):
-	l_cf = (
-	    M.V_Capacity[A_period, A_tech, A_vintage, A_output]
-	  * M.CapacityFactor[A_period, A_tech, A_vintage, A_output]
+def CapacityConstraint_rule ( A_period, A_tech, A_vintage, M ):
+	cindex = (A_tech, A_vintage)
+	l_cf = M.V_Capacity[ cindex ] * M.CapacityFactor[ cindex ]
+
+	expr = ( M.V_Activity[ A_period, A_tech, A_vintage ] <= l_cf )
+	return expr
+
+
+def ExistingCapacityConstraint_rule ( A_tech, A_vintage, M ):
+	index = (A_tech, A_vintage)
+	expr = ( M.V_Capacity[ index ] == M.ExistingCapacity[ index ] )
+	return expr
+
+
+def ExistingActivityConstraint_rule ( A_period, A_tech, A_vintage, A_output, M ):
+	aindex = (A_period, A_tech, A_vintage, A_output)
+	cindex = (A_tech, A_vintage, A_output)
+	expr = (
+	  M.V_Activity[ aindex ]
+	    <=
+	  M.V_Capacity[ cindex ] * M.CapacityFactor[ cindex ]
 	)
 
-	expr = ( M.V_Activity[A_period, A_tech, A_vintage, A_output] == l_cf )
 	return expr
 
 
