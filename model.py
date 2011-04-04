@@ -34,6 +34,7 @@ def create_TEMOA_model ( ):
 	M.all_commodities = M.tmp_set | M.demand_commodity
 
 
+	M.ExistingCapacity = Param(M.tech, M.exist_vintage, default=0)
 	M.Efficiency       = Param(M.all_commodities, M.tech, M.vintage, M.all_commodities, default=0)
 	M.Lifetime         = Param(M.tech,        M.vintage,                  default=20) # 20 years
 	M.Demand           = Param(M.time_period, M.demand_commodity,         default=0)
@@ -64,6 +65,8 @@ def create_TEMOA_model ( ):
 	#   "Bookkeeping" constraints
 	M.ActivityConstraint = Constraint( M.optimize_period, M.tech, M.vintage, rule=ActivityConstraint_rule )
 	M.CapacityConstraint = Constraint( M.optimize_period, M.tech, M.vintage, rule=CapacityConstraint_rule )
+
+	M.ExistingCapacityConstraint = Constraint( M.tech, M.exist_vintage, rule=ExistingCapacityConstraint_rule )
 
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
