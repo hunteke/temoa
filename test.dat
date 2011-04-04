@@ -1,8 +1,12 @@
 data;
 
 
-set time_period  :=  2010 2015 2020 2025 2030 ;
+set  time_period    := 1970 1980 1990 2000 2010 2015 2020 2030 2040 2050 2060 ;
 
+param  window_period  :=
+ begin 2010
+ final 2040
+	;
 
 set  resource_tech  :=
 # Temoa name      Utopia name
@@ -52,6 +56,8 @@ param  CommodityProductionCost  :=
  2010 t_elccar      2010      1
  2010 t_elcboiler   2010      1
  2010 t_coal        2010      1
+ 2015 t_coal        2010      1
+ 2015 t_elccar      2010      1
 	;
 
 
@@ -62,19 +68,26 @@ param  ResourceBound  :=
 
 
 param  Lifetime  :=
-# tech   # vintage   # lifetime in years
- imp_coal 2010            1
- t_coal   2010           10
- t_elcboiler 2010        30
- t_elccar 2010           15
+# tech       # vintage   # lifetime in years
+ imp_coal     1980        80
+ t_coal       2000        50
+ t_coal       2010        30
+ t_elcboiler  2010        30
+ t_elccar     2010        15
 	;
 
 
 param  Efficiency  :=
-# input carrier  # tech        # vintage  # output carrier     # value
- coal             imp_coal      2010       coal                   1
+# input carrier  # tech        # vintage  # output carrier     # eff. value
+ coal             imp_coal      1980       coal                   1
+ #coal             imp_coal      2010       coal                   1
  coal             t_coal        2010       electricity            1
  electricity      t_elcboiler   2010       resheating             1
  electricity      t_lighting    2010       reslighting            1
  electricity      t_elccar      2010       transport_distance     1
+	;
+
+param  ExistingCapacity  :=
+# tech        # vintage       # capacity amount
+ t_coal        2000            40
 	;
