@@ -10,7 +10,6 @@ def create_TEMOA_model ( ):
 	M.time_period     = Set( ordered=True, within=Integers )
 	M.resource_tech   = Set()
 	M.production_tech = Set()
-	M.third           = Set()
 	M.tech = M.resource_tech | M.production_tech  # '|' = union.
 
 	M.vintage = M.time_period    # copy of time_period; used for technology vintaging
