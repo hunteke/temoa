@@ -6,6 +6,29 @@ from coopr.pyomo import *
 g_processInputs  = dict()
 g_processOutputs = dict()
 
+##############################################################################
+# Begin validation routines
+
+def init_exist_set ( M ):
+	begin = M.window_period['begin'].value
+	return ( year for year in M.time_period if year < begin )
+
+def init_future_set ( M ):
+	final = M.window_period['final'].value
+	return ( year for year in M.time_period if year > final )
+
+def init_future_set ( M ):
+	begin = M.window_period['begin'].value
+	final = M.window_period['final'].value
+
+	if not (begin < final):
+		msg = "Param window_period 'begin' must be less than 'final'.\n\t%s"
+		raise ValueError, msg % ("(begin, final) = (%s, %s)" % (begin, final))
+
+	return (year for year in M.time_period if begin <= year and year <= final)
+
+# end validation routines
+##############################################################################
 
 ##############################################################################
 # Begin helper functions
