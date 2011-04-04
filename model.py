@@ -12,7 +12,14 @@ def create_TEMOA_model ( ):
 	M.production_tech = Set()
 	M.tech = M.resource_tech | M.production_tech  # '|' = union.
 
+	M.window_period         = Param( Set(initialize=['begin', 'final'] ), within=M.time_period )
+	M.exist_period          = Set( ordered=True, within=M.time_period, initialize=init_exist_set )
+	M.future_period         = Set( ordered=True, within=M.time_period, initialize=init_future_set )
+	M.beyond_horizon_period = Set( ordered=True, within=M.time_period, initialize=init_future_set )
+
 	M.vintage = M.time_period    # copy of time_period; used for technology vintaging
+	M.exist_vintage = M.exist_period
+	M.optimize_period = M.future_period | M.beyond_horizon_period
 
 	M.emissions_commodity = Set()
 	M.physical_commodity = Set()
@@ -45,8 +52,8 @@ def create_TEMOA_model ( ):
 	M.V_FlowOut = Var(M.time_period, M.all_commodities, M.tech, M.vintage, M.all_commodities, domain=NonNegativeReals)
 
 	#   Calculated "dummy" variables
-	M.V_Activity = Var(M.time_period, M.tech, M.vintage, M.all_commodities, domain=NonNegativeReals)
-	M.V_Capacity = Var(M.time_period, M.tech, M.vintage, M.all_commodities, domain=NonNegativeReals)
+	M.V_Activity = Var(M.optimize_period, M.tech, M.vintage, domain=NonNegativeReals)
+	M.V_Capacity = Var(M.tech, M.vintage, domain=NonNegativeReals)
 
 
 	# Objective
@@ -55,8 +62,8 @@ def create_TEMOA_model ( ):
 	# Constraints
 
 	#   "Bookkeeping" constraints
-	M.ActivityConstraint = Constraint( M.time_period, M.tech, M.vintage, M.all_commodities, rule=ActivityConstraint_rule )
-	M.CapacityConstraint = Constraint( M.time_period, M.tech, M.vintage, M.all_commodities, rule=CapacityConstraint_rule )
+	M.ActivityConstraint = Constraint( M.optimize_period, M.tech, M.vintage, rule=ActivityConstraint_rule )
+	M.CapacityConstraint = Constraint( M.optimize_period, M.tech, M.vintage, rule=CapacityConstraint_rule )
 
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
