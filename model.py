@@ -7,7 +7,7 @@ from temoa_rules import *
 def create_TEMOA_model ( ):
 	M = AbstractModel('TEMOA Entire Energy System Economic Optimization Model')
 
-	M.time_period     = Set()
+	M.time_period     = Set( ordered=True, within=Integers )
 	M.resource_tech   = Set()
 	M.production_tech = Set()
 	M.third           = Set()
