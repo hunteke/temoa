@@ -1,4 +1,4 @@
-#!/usr/bin/env pyomo
+#!/usr/bin/env python
 
 __all__ = [ 'create_TEMOA_model', ]
 
@@ -17,8 +17,10 @@ def create_TEMOA_model ( ):
 	M.future_period         = Set( ordered=True, within=M.time_period, initialize=init_future_set )
 	M.beyond_horizon_period = Set( ordered=True, within=M.time_period, initialize=init_future_set )
 
-	M.vintage = M.time_period    # copy of time_period; used for technology vintaging
-	M.exist_vintage = M.exist_period
+	M.vintage    = M.time_period    # intentional copy of time_period, for easier bookkeeping
+	M.exist_vintage  = M.exist_period
+	M.future_vintage = M.vintage - M.exist_vintage
+
 	M.optimize_period = M.future_period | M.beyond_horizon_period
 
 	M.emissions_commodity = Set()
@@ -64,13 +66,13 @@ def create_TEMOA_model ( ):
 
 	#   "Bookkeeping" constraints
 	M.ActivityConstraint = Constraint( M.optimize_period, M.tech, M.vintage, rule=ActivityConstraint_rule )
-	M.CapacityConstraint = Constraint( M.optimize_period, M.tech, M.vintage, rule=CapacityConstraint_rule )
+	M.CapacityConstraint = Constraint( M.optimize_period, M.tech, M.future_vintage, rule=CapacityConstraint_rule )
 
-	M.ExistingCapacityConstraint = Constraint( M.tech, M.exist_vintage, rule=ExistingCapacityConstraint_rule )
+	M.ExistingCapacityConstraint = Constraint( M.optimize_period, M.tech, M.exist_vintage, rule=ExistingCapacityConstraint_rule )
 
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
-	#      very useful.
+	#      very useful.)
 	M.DemandConstraint             = Constraint( M.time_period, M.demand_commodity,      rule=DemandConstraint_rule )
 	M.ProcessBalanceConstraint     = Constraint( M.time_period, M.all_commodities, M.tech, M.vintage, M.all_commodities, rule=ProcessBalanceConstraint_rule )
 	M.CommodityBalanceConstraint   = Constraint( M.time_period, M.physical_commodity,    rule=CommodityBalanceConstraint_rule )
@@ -100,7 +102,7 @@ if '__main__' == __name__:
 
 	opt = SolverFactory('glpk_experimental')
 	opt.keepFiles = False
-	# opt.options.wlp = "an.lp"    # output GLPK's LP understanding.
+	# opt.options.wlp = "an.lp"    # output GLPK's LP understanding of model
 
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
 	# on the command line

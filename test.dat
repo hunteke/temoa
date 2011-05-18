@@ -1,7 +1,7 @@
 data;
 
 
-set  time_period    := 1970 1980 1990 2000 2010 2015 2020 2030 2040 2050 2060 ;
+set  time_period  :=  1970 1980 1990 2000 2010 2015 2020 2030 2040 2050 2060 ;
 
 param  window_period  :=
  begin 2010
@@ -69,7 +69,8 @@ param  ResourceBound  :=
 
 param  Lifetime  :=
 # tech       # vintage   # lifetime in years
- imp_coal     1980        80
+ imp_coal     1980        35
+ imp_coal     2015        30
  t_coal       2000        50
  t_coal       2010        30
  t_elcboiler  2010        30
@@ -80,7 +81,7 @@ param  Lifetime  :=
 param  Efficiency  :=
 # input carrier  # tech        # vintage  # output carrier     # eff. value
  coal             imp_coal      1980       coal                   1
- #coal             imp_coal      2010       coal                   1
+ coal             imp_coal      2015       coal                   1
  coal             t_coal        2010       electricity            1
  electricity      t_elcboiler   2010       resheating             1
  electricity      t_lighting    2010       reslighting            1
