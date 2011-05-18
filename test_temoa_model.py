@@ -52,7 +52,7 @@ create_baseline: (string) (Default: None)
    path to new baseline file.  Will blindly overwrite an existing baseline, so
    be careful!
 force_color:     (boolean) (Default: false)
-   Regardless of whether the output will
+   Regardless of whether the output is to a terminal, enable color escape codes.
 """
 	baseline        = kwargs.pop('baseline', datfile + '.baseline')
 	create_baseline = kwargs.pop('create_baseline', None)
