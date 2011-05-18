@@ -128,14 +128,16 @@ def TotalCost_rule ( M ):
 	l_cost = 0
 
 	for l_period in M.future_period:
-		for l_tech in M.tech:
-			for l_vintage in M.vintage:
-				for l_out in M.physical_commodity:
-					for l_inp in ProcessProduces( (l_period, l_tech, l_vintage), l_out ):
-						l_cost += (
-						    M.V_FlowOut[l_period, l_inp, l_tech, l_vintage, l_out]
-						  * M.CommodityProductionCost[l_period, l_tech, l_vintage]
-						)
+		for l_season in M.time_season:
+			for l_meridian in M.time_of_day:
+				for l_tech in M.tech:
+					for l_vintage in M.vintage:
+						for l_out in M.physical_commodity:
+							for l_inp in ProcessProduces( (l_period, l_tech, l_vintage), l_out ):
+								l_cost += (
+								    M.V_FlowOut[l_period, l_season, l_meridian, l_inp, l_tech, l_vintage, l_out]
+								  * M.CommodityProductionCost[l_period, l_tech, l_vintage]
+								)
 
 	return l_cost
 Objective_rule = TotalCost_rule
@@ -144,19 +146,20 @@ Objective_rule = TotalCost_rule
 ##############################################################################
 #   Constraint rules
 
-def ActivityConstraint_rule ( A_period, A_tech, A_vintage, M ):
-	index = (A_period, A_tech, A_vintage)
+def ActivityConstraint_rule ( A_period, A_season, A_meridian, A_tech, A_vintage, M ):
+	pindex = (A_period, A_tech, A_vintage)
+	aindex = (A_period, A_season, A_meridian, A_tech, A_vintage)
 
 	# No sense in creating a guaranteed unused constraint
-	if not ProcessOutputs( *index ):
+	if not ProcessOutputs( *pindex ):
 		return None
 
 	l_activity = 0
-	for l_inp in ProcessInputs( *index ):
-		for l_out in ProcessOutputs( *index ):
-			l_activity += M.V_FlowOut[A_period, l_inp, A_tech, A_vintage, l_out]
+	for l_inp in ProcessInputs( *pindex ):
+		for l_out in ProcessOutputs( *pindex ):
+			l_activity += M.V_FlowOut[A_period, A_season, A_meridian, l_inp, A_tech, A_vintage, l_out]
 
-	expr = ( M.V_Activity[ index ] == l_activity )
+	expr = ( M.V_Activity[ aindex ] == l_activity )
 	return expr
 
 
@@ -167,10 +170,16 @@ def CapacityConstraint_rule ( A_period, A_tech, A_vintage, M ):
 	if not ProcessOutputs( *pindex ):
 		return None
 
+	vintage_activity = sum(
+	  M.V_Activity[A_period, l_season, l_meridian, A_tech, A_vintage]
+
+	  for l_season in M.time_season
+	  for l_meridian in M.time_of_day
+	)
 	cindex = (A_tech, A_vintage)
 	l_capacity = M.V_Capacity[ cindex ] * M.CapacityFactor[ cindex ]
 
-	expr = ( M.V_Activity[ pindex ] <= l_capacity )
+	expr = ( vintage_activity <= l_capacity )
 	return expr
 
 
@@ -197,24 +206,26 @@ def ResourceExtractionConstraint_rule ( A_period, A_resource, M ):
 	for l_tech in M.resource_tech:
 		for l_vintage in M.time_period:
 			if isValidProcess( A_period, A_resource, l_tech, l_vintage, A_resource ):
-				l_extract += M.V_FlowIn[A_period, A_resource, l_tech, l_vintage, A_resource]
+				for l_season in M.time_season:
+					for l_meridian in M.time_of_day:
+						l_extract += M.V_FlowIn[A_period, l_season, l_meridian, A_resource, l_tech, l_vintage, A_resource]
 
 	expression = (l_extract <= M.ResourceBound[A_period, A_resource])
 	return expression
 
 
-def CommodityBalanceConstraint_rule ( A_period, A_carrier, M ):
+def CommodityBalanceConstraint_rule ( A_period, A_season, A_meridian, A_carrier, M ):
 	l_vflow_out = l_vflow_in = 0
 
 	for l_tech in M.tech:
 		for l_vintage in M.time_period:
 			for l_inp in ProcessProduces( (A_period, l_tech, l_vintage), A_carrier ):
-				l_vflow_out += M.V_FlowOut[A_period, l_inp, l_tech, l_vintage, A_carrier]
+				l_vflow_out += M.V_FlowOut[A_period, A_season, A_meridian, l_inp, l_tech, l_vintage, A_carrier]
 
 	for l_tech in M.production_tech:
 		for l_vintage in M.time_period:
 			for l_out in ProcessConsumes( (A_period, l_tech, l_vintage), A_carrier ):
-				l_vflow_in += M.V_FlowIn[A_period, A_carrier, l_tech, l_vintage, l_out]
+				l_vflow_in += M.V_FlowIn[A_period, A_season, A_meridian, A_carrier, l_tech, l_vintage, l_out]
 
 	if type(l_vflow_out) == type(l_vflow_in):
 		if int is type(l_vflow_out):
@@ -224,7 +235,7 @@ def CommodityBalanceConstraint_rule ( A_period, A_carrier, M ):
 	elif int is type(l_vflow_out):
 		flow_in_expr = StringIO()
 		l_vflow_in.pprint( ostream=flow_in_expr )
-		msg = "Unable to meet an interprocess '%s' transfer in %s.\n"           \
+		msg = "Unable to meet an interprocess '%s' transfer in (%s, %s, %s).\n" \
 		  "No flow out.  Constraint flow in:\n   %s\n"                          \
 		  "Possible reasons:\n"                                                 \
 		  " - Is there a missing period in set 'time_period'?\n"                \
@@ -233,30 +244,32 @@ def CommodityBalanceConstraint_rule ( A_period, A_carrier, M ):
 		  " - Is there a missing commodity in set 'physical_commodity'?\n"      \
 		  " - Are there missing entries in the Efficiency parameter?\n"         \
 		  " - Does a tech need a longer Lifetime parameter setting?"
-		raise ValueError, msg % (A_carrier, A_period, flow_in_expr.getvalue() )
+		raise ValueError, msg % (A_carrier, A_season, A_meridian, A_period,
+		                         flow_in_expr.getvalue() )
 
 	expression = (l_vflow_out >= l_vflow_in)
 	return expression
 
 
-def ProcessBalanceConstraint_rule ( A_period, A_inp, A_tech, A_vintage, A_out, M ):
+def ProcessBalanceConstraint_rule ( A_period, A_season, A_meridian, A_inp, A_tech, A_vintage, A_out, M ):
 	index = (A_period, A_inp, A_tech, A_vintage, A_out)
 	if not isValidProcess( *index ):
 		# No sense in creating a guaranteed unused constraint
 		return None
+	aindex = (A_period, A_season, A_meridian, A_inp, A_tech, A_vintage, A_out)
 
 	expr = (
-	    M.V_FlowOut[ index ]
+	    M.V_FlowOut[ aindex ]
 	      <=
-	    M.V_FlowIn[ index ]
+	    M.V_FlowIn[ aindex ]
 	  * M.Efficiency[A_inp, A_tech, A_vintage, A_out]
 	)
 
 	return expr
 
 
-def DemandConstraint_rule ( A_period, A_comm, M ):
-	index = (A_period, A_comm)
+def DemandConstraint_rule ( A_period, A_season, A_meridian, A_comm, M ):
+	index = (A_period, A_season, A_meridian, A_comm)
 	if not (M.Demand[ index ] > 0):
 		# nothing to be met: don't create a useless constraint like X >= 0
 		return None
@@ -265,14 +278,14 @@ def DemandConstraint_rule ( A_period, A_comm, M ):
 	for l_tech in M.tech:
 		for l_vintage in M.time_period:
 			for l_input in ProcessProduces( (A_period, l_tech, l_vintage), A_comm ):
-				l_supply += M.V_FlowOut[A_period, l_input, l_tech, l_vintage, A_comm]
+				l_supply += M.V_FlowOut[A_period, A_season, A_meridian, l_input, l_tech, l_vintage, A_comm]
 
 	if int is type( l_supply ):
-		msg = "Error: Demand '%s' for %s unable to be met by any technology."  \
-		  "\n\tPossible reasons:\n"                                            \
+		msg = "Error: Demand '%s' for (%s, %s, %s) unable to be met by any "   \
+		  "technology.\n\tPossible reasons:\n"                                 \
 		  " - Is the Efficiency parameter missing an entry for this demand?\n" \
 		  " - Does a tech that satisfies this demand need a longer Lifetime?\n"
-		raise ValueError, msg % (A_comm, A_period)
+		raise ValueError, msg % (A_comm, A_period, A_season, A_meridian)
 
 	expression = (l_supply >= M.Demand[ index ])
 	return expression

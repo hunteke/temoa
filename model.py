@@ -8,6 +8,8 @@ def create_TEMOA_model ( ):
 	M = AbstractModel('TEMOA Entire Energy System Economic Optimization Model')
 
 	M.time_period     = Set( ordered=True, within=Integers )
+	M.time_season     = Set()
+	M.time_of_day     = Set()
 	M.resource_tech   = Set()
 	M.production_tech = Set()
 	M.tech = M.resource_tech | M.production_tech  # '|' = union.
@@ -39,7 +41,7 @@ def create_TEMOA_model ( ):
 	M.ExistingCapacity = Param(M.tech, M.exist_vintage, default=0)
 	M.Efficiency       = Param(M.all_commodities, M.tech, M.vintage, M.all_commodities, default=0)
 	M.Lifetime         = Param(M.tech,        M.vintage,                  default=20) # 20 years
-	M.Demand           = Param(M.time_period, M.demand_commodity,         default=0)
+	M.Demand           = Param(M.time_period, M.time_season, M.time_of_day, M.demand_commodity,   default=0)
 	M.ResourceBound    = Param(M.time_period, M.physical_commodity,       default=0)
 	M.CommodityProductionCost = Param(M.time_period, M.tech, M.vintage,   default=1)
 	M.CapacityFactor   = Param(M.tech, M.vintage,                         default=1)
@@ -51,11 +53,11 @@ def create_TEMOA_model ( ):
 
 	# Variables
 	#   Decision variables
-	M.V_FlowIn  = Var(M.time_period, M.all_commodities, M.tech, M.vintage, M.all_commodities, domain=NonNegativeReals)
-	M.V_FlowOut = Var(M.time_period, M.all_commodities, M.tech, M.vintage, M.all_commodities, domain=NonNegativeReals)
+	M.V_FlowIn  = Var(M.time_period, M.time_season, M.time_of_day, M.all_commodities, M.tech, M.vintage, M.all_commodities, domain=NonNegativeReals)
+	M.V_FlowOut = Var(M.time_period, M.time_season, M.time_of_day, M.all_commodities, M.tech, M.vintage, M.all_commodities, domain=NonNegativeReals)
 
 	#   Calculated "dummy" variables
-	M.V_Activity = Var(M.optimize_period, M.tech, M.vintage, domain=NonNegativeReals)
+	M.V_Activity = Var(M.optimize_period, M.time_season, M.time_of_day, M.tech, M.vintage, domain=NonNegativeReals)
 	M.V_Capacity = Var(M.tech, M.vintage, domain=NonNegativeReals)
 
 
@@ -65,7 +67,7 @@ def create_TEMOA_model ( ):
 	# Constraints
 
 	#   "Bookkeeping" constraints
-	M.ActivityConstraint = Constraint( M.optimize_period, M.tech, M.vintage, rule=ActivityConstraint_rule )
+	M.ActivityConstraint = Constraint( M.optimize_period, M.time_season, M.time_of_day, M.tech, M.vintage, rule=ActivityConstraint_rule )
 	M.CapacityConstraint = Constraint( M.optimize_period, M.tech, M.future_vintage, rule=CapacityConstraint_rule )
 
 	M.ExistingCapacityConstraint = Constraint( M.optimize_period, M.tech, M.exist_vintage, rule=ExistingCapacityConstraint_rule )
@@ -73,9 +75,9 @@ def create_TEMOA_model ( ):
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
 	#      very useful.)
-	M.DemandConstraint             = Constraint( M.time_period, M.demand_commodity,      rule=DemandConstraint_rule )
-	M.ProcessBalanceConstraint     = Constraint( M.time_period, M.all_commodities, M.tech, M.vintage, M.all_commodities, rule=ProcessBalanceConstraint_rule )
-	M.CommodityBalanceConstraint   = Constraint( M.time_period, M.physical_commodity,    rule=CommodityBalanceConstraint_rule )
+	M.DemandConstraint             = Constraint( M.time_period, M.time_season, M.time_of_day, M.demand_commodity,      rule=DemandConstraint_rule )
+	M.ProcessBalanceConstraint     = Constraint( M.time_period, M.time_season, M.time_of_day, M.all_commodities, M.tech, M.vintage, M.all_commodities, rule=ProcessBalanceConstraint_rule )
+	M.CommodityBalanceConstraint   = Constraint( M.time_period, M.time_season, M.time_of_day, M.physical_commodity,    rule=CommodityBalanceConstraint_rule )
 	M.ResourceExtractionConstraint = Constraint( M.time_period, M.physical_commodity,    rule=ResourceExtractionConstraint_rule )
 
 	#   Constraints not yet updated
@@ -102,7 +104,7 @@ if '__main__' == __name__:
 
 	opt = SolverFactory('glpk_experimental')
 	opt.keepFiles = False
-	# opt.options.wlp = "an.lp"    # output GLPK's LP understanding of model
+	# opt.options.wlp = "temoa_model.lp"  # output GLPK LP understanding of model
 
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
 	# on the command line
