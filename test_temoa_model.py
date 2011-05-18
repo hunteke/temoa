@@ -4,13 +4,14 @@ import argparse
 from pformat_results import pformat_results
 from optparse import OptionParser, OptionGroup
 import os
-from sys import stderr, argv
+from sys import stdout, stderr, argv
 
 from coopr.opt import SolverFactory
 
 from model import create_TEMOA_model as create_model
 
 SE = stderr.write
+SO = stdout.write
 basename = argv[0]
 
 opt = SolverFactory('glpk_experimental')  # created once, for aggregation
@@ -50,15 +51,18 @@ baseline:        (string) (Default: equal to datfile)
 create_baseline: (string) (Default: None)
    path to new baseline file.  Will blindly overwrite an existing baseline, so
    be careful!
+force_color:     (boolean) (Default: false)
+   Regardless of whether the output will
 """
 	baseline        = kwargs.pop('baseline', datfile + '.baseline')
 	create_baseline = kwargs.pop('create_baseline', None)
 	return_data     = kwargs.pop('return_data', False)
+	force_color     = kwargs.pop('force_color', False)
 
 	datfile += '.dat'
 
 	red = green = normal = ''
-	if stderr.isatty():
+	if stderr.isatty() or force_color:
 		red    = '\x1B[1;31m'
 		green  = '\x1B[1;32m'
 		normal = '\x1B[0;39m'
@@ -195,5 +199,5 @@ for name, datfile in tests_to_run:
 
 	# Only children processes execute the last part of this loop.
 	test, msg = runTest(M, datfile)
-	print  "%s   %s" % (msg, name)
+	SO( "%s   %s\n" % (msg, name) )
 	break
