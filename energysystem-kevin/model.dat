@@ -1,0 +1,132 @@
+data;
+
+# Special sets, from/to which everything comes/goes.  For now, in the model,
+# but likely can be removed in the near future. ~ 20 Jan 2011
+set  EnergySource   :=  SOURCE ;
+set  EnergySink     :=  SINK   ;
+
+
+# all the forms in which energy can be transferred
+# TODO: get the utopia names to the right of each item in a comment (#)
+set  EnergyCarrier  :=
+ coal               # HCO
+ diesel             # DSL
+ electricity        # ELC
+ gasoline           # GSL
+ hydro              # HYD
+ oil                # OIL
+ uranium            # URN
+ resheating         # LTH
+ transport_distance
+ reslighting
+	;
+
+
+# These resources are *only* input processes
+set  ResourceProcess  :=
+# Temoa name      Utopia name
+ imp_dsl            # IMPDSL1
+ imp_gsl            # IMPGSL1
+ imp_coal           # IMPHCO1
+ imp_oil            # IMPOIL1
+ imp_uranium        # IMPURN1
+	;
+
+# The processes that are both input and output processes.
+set  MiddleProcess  :=
+# Temoa name      Utopia name
+ t_coal             # E01
+ t_nuclear          # E21
+ t_hydro            # E31
+ t_diesel           # E70
+ t_elcboiler        # RHE
+ t_dslboiler        # RHO
+ t_lighting         # RL1
+ t_refinery         # SRE
+ t_dslcar           # TXD
+ t_elccar           # TXE
+ t_gascar           # TXG
+	;
+
+# These processes are only outputs.
+set  DemandProcess  :=
+# Temoa Name          Utopia Name
+ transport_distance    # TX
+ resheating            # RH
+ reslighting           # RL
+	;
+
+
+# This parameter is part of the BinaryMatrix (bimat) in the notes.  The 1 is
+# mandatory and is a proxy for "True", or "enable this connection"
+#
+# X   Y   1  # should be read as "Process X consumes energy carrier Y"
+param  ProcessConsumes  :=
+ imp_coal       coal         1
+ imp_dsl        diesel       1
+ imp_gsl        gasoline     1
+ imp_oil        oil          1
+ imp_uranium    uranium      1
+ t_coal         coal         1
+ t_diesel       diesel       1
+ t_dslboiler    diesel       1
+ t_dslcar       diesel       1
+ t_elcboiler    electricity  1
+ t_elccar       electricity  1
+ t_gascar       gasoline     1
+ t_hydro        hydro        1
+ t_lighting     electricity  1
+ t_nuclear      uranium      1
+ t_refinery     oil          1
+
+ # still part of ProcessConsumes, these last three are currently repeats of the
+ # DemandProcess because this model is yet in the initial "get it working"
+ # stage.
+ transport_distance   transport_distance    1
+ reslighting          reslighting           1
+ resheating           resheating            1
+	;
+
+# Like ProcessConsumes, this parameter is also part of the BinaryMatrix (bimat)
+# in the notes.  The 1 is mandatory and is a proxy for "True", or "enable this
+# connection"
+#
+# X   Y   1  # should be read as "Process X produces energy carrier Y"
+param  ProcessProduces  :=
+ imp_coal       coal                 1
+ imp_dsl        diesel               1
+ imp_gsl        gasoline             1
+ imp_oil        oil                  1
+ imp_uranium    uranium              1
+ t_coal         electricity          1
+ t_diesel       electricity          1
+ t_dslboiler    resheating           1
+ t_dslcar       transport_distance   1
+ t_elcboiler    resheating           1
+ t_elccar       transport_distance   1
+ t_gascar       transport_distance   1
+ t_hydro        electricity          1
+ t_lighting     reslighting          1
+ t_nuclear      electricity          1
+ t_refinery     diesel               1
+ t_refinery     gasoline             1
+	;
+
+
+# The model driver.
+param  Demand  :=
+ transport_distance   50
+ resheating            2
+ reslighting           0
+	;
+
+param  ProcessCost  :=
+ t_elccar            1
+ t_elcboiler         1
+ t_coal              1
+ imp_coal            1
+ imp_oil             1
+ transport_distance  1
+ resheating          1
+	;
+
