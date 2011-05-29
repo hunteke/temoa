@@ -163,19 +163,15 @@ def ActivityConstraint_rule ( A_period, A_season, A_meridian, A_tech, A_vintage,
 	return expr
 
 
-def CapacityConstraint_rule ( A_period, A_tech, A_vintage, M ):
+def CapacityConstraint_rule ( A_period, A_season, A_meridian, A_tech, A_vintage, M ):
 	pindex = (A_period, A_tech, A_vintage)
 
 	# No sense in creating a guaranteed unused constraint
 	if not ProcessOutputs( *pindex ):
 		return None
 
-	vintage_activity = sum(
-	  M.V_Activity[A_period, l_season, l_meridian, A_tech, A_vintage]
+	vintage_activity = M.V_Activity[A_period, A_season, A_meridian, A_tech, A_vintage]
 
-	  for l_season in M.time_season
-	  for l_meridian in M.time_of_day
-	)
 	cindex = (A_tech, A_vintage)
 	l_capacity = M.V_Capacity[ cindex ] * M.CapacityFactor[ cindex ]
 
