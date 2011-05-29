@@ -68,7 +68,7 @@ def create_TEMOA_model ( ):
 
 	#   "Bookkeeping" constraints
 	M.ActivityConstraint = Constraint( M.optimize_period, M.time_season, M.time_of_day, M.tech, M.vintage, rule=ActivityConstraint_rule )
-	M.CapacityConstraint = Constraint( M.optimize_period, M.tech, M.future_vintage, rule=CapacityConstraint_rule )
+	M.CapacityConstraint = Constraint( M.optimize_period, M.time_season, M.time_of_day, M.tech, M.vintage, rule=CapacityConstraint_rule )
 
 	M.ExistingCapacityConstraint = Constraint( M.optimize_period, M.tech, M.exist_vintage, rule=ExistingCapacityConstraint_rule )
 
