@@ -89,17 +89,17 @@ model = create_TEMOA_model()
 
 
 if '__main__' == __name__:
-	from sys import argv, stderr
+	from sys import argv, stderr, stdout
 
 	from coopr.opt import SolverFactory
 	from coopr.pyomo import ModelData
 
 	from pformat_results import pformat_results
 
-	SE = stderr
+	SE, SO = stderr.write, stdout.write
 
 	if len( argv ) < 2:
-		SE.write( "No data file (dot dat) specified.  Exiting.\n" )
+		SE( "No data file (dot dat) specified.  Exiting.\n" )
 		raise SystemExit
 
 	opt = SolverFactory('glpk_experimental')
@@ -111,7 +111,7 @@ if '__main__' == __name__:
 	mdata = ModelData()
 	for f in argv[1:]:
 		if f[-4:] != '.dat':
-			SE.write( "Expecting a dot dat (data.dat) file, found %s\n" % f )
+			SE( "Expecting a dot dat (data.dat) file, found %s\n" % f )
 			raise SystemExit
 		mdata.add( f )
 	mdata.read( model )
@@ -121,4 +121,4 @@ if '__main__' == __name__:
 	result = opt.solve( instance )
 
 	# ... print the easier-to-read/parse format
-	print pformat_results( instance, result )
+	SO( pformat_results( instance, result ) )
