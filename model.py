@@ -27,7 +27,6 @@ def create_TEMOA_model ( ):
 
 	M.emissions_commodity = Set()
 	M.physical_commodity = Set()
-	M.all_outputs = Set()
 	M.demand_commodity = Set()
 
 	# Pyomo currently has a rather large design flaw in it's implementation of set
