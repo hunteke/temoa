@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env lpython
 
-__all__ = [ 'create_TEMOA_model', ]
+__all__ = [ 'temoa_create_model', ]
 
 from temoa_rules import *
 
-def create_TEMOA_model ( ):
+def temoa_create_model ( ):
 	M = AbstractModel('TEMOA Entire Energy System Economic Optimization Model')
 
 	M.time_exist      = Set( ordered=True, within=Integers )
@@ -85,40 +85,16 @@ def create_TEMOA_model ( ):
 	#M.ResourceBalanceConstraint    = Constraint(M.physical_commodity,             rule=ResourceBalanceConstraint_rule)
 	return M
 
-model = create_TEMOA_model()
+model = temoa_create_model()
 
 
 if '__main__' == __name__:
-	from sys import argv, stderr, stdout
+	# Figure out whether this script was called directly, or through Pyomo:
+	# $ ./model.py  test.dat           # called directly
+	# $ lpython  model.py  test.dat    # called directly
+	# $ pyomo    model.py  test.dat    # through Pyomo
 
-	from coopr.opt import SolverFactory
-	from coopr.pyomo import ModelData
-
-	from pformat_results import pformat_results
-
-	SE, SO = stderr.write, stdout.write
-
-	if len( argv ) < 2:
-		SE( "No data file (dot dat) specified.  Exiting.\n" )
-		raise SystemExit
-
-	opt = SolverFactory('glpk_experimental')
-	opt.keepFiles = False
-	# opt.options.wlp = "temoa_model.lp"  # output GLPK LP understanding of model
-
-	# Recreate the pyomo command's ability to specify multiple "dot dat" files
-	# on the command line
-	mdata = ModelData()
-	for f in argv[1:]:
-		if f[-4:] != '.dat':
-			SE( "Expecting a dot dat (data.dat) file, found %s\n" % f )
-			raise SystemExit
-		mdata.add( f )
-	mdata.read( model )
-
-	# Now do the solve and ...
-	instance = model.create( mdata )
-	result = opt.solve( instance )
-
-	# ... print the easier-to-read/parse format
-	SO( pformat_results( instance, result ) )
+	# Calling this script directly enables a cleaner formatting than Pyomo's
+	# default output, but (currently) forces the choice of solver to GLPK.
+	from temoa_lib import temoa_solve
+	temoa_solve( model )

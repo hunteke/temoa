@@ -8,7 +8,7 @@ from sys import stdout, stderr, argv
 
 from coopr.opt import SolverFactory
 
-from model import create_TEMOA_model as create_model
+from model import temoa_create_model
 
 SE = stderr.write
 SO = stdout.write
@@ -148,7 +148,7 @@ if options.datfile:
 
 	create_baseline = options.create
 
-	M = create_model()
+	M = temoa_create_model()
 	name = 'Command line specified test'
 	test, msg, data, baseline = runTest(
 	  M,
@@ -183,7 +183,7 @@ tests_to_run = (
 )
 
 from os import fork, wait
-M = create_model()
+M = temoa_create_model()
 
 for name, datfile in tests_to_run:
 	pid = fork()
