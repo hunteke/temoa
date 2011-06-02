@@ -94,3 +94,13 @@ param  ExistingCapacity  :=
  t_coal        2000            30
  t_coal        2000            40
 	;
+
+
+param  CapacityFactor  :=
+# tech          # vintage     # capacity factor
+ imp_coal         1980           1
+ t_coal           2000           1
+ t_coal           2010           1
+ t_elcboiler      2010           1
+ t_elccar         2010           1
+	;

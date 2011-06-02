@@ -28,9 +28,10 @@ def temoa_create_model ( ):
 	M.commodity_physical  = Set()
 	M.commodity_demand    = Set()
 
-	# Pyomo currently has a rather large design flaw in it's implementation of set
-	# unions, where it is not possible to create a union of more than two sets in
-	# a single statement.  A bug report has been filed with the Coopr devs.
+	# Pyomo currently has a rather large design flaw in it's implementation of
+	# set unions, where it is not possible to create a union of more than two
+	# sets in a single statement.  A bug report has been filed with the Coopr
+	# devs.
 	#   - 24 Feb 2011
 	M.tmp_set = M.commodity_physical | M.commodity_emissions
 	M.commodity_all = M.tmp_set | M.commodity_demand
@@ -38,11 +39,11 @@ def temoa_create_model ( ):
 
 	M.ExistingCapacity = Param(M.tech_all, M.vintage_exist, default=0)
 	M.Efficiency       = Param(M.commodity_all,  M.tech_all,  M.vintage_all,  M.commodity_all,  default=0)
-	M.Lifetime         = Param(M.tech_all,  M.vintage_all,  default=20)         # 20 years
+	M.Lifetime         = Param(M.tech_all,  M.vintage_all,  default=0)          # in years
 	M.Demand           = Param(M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand,  default=0)
 	M.ResourceBound    = Param(M.time_optimize,  M.commodity_physical,  default=0)
-	M.CommodityProductionCost = Param(M.time_optimize,  M.tech_all,  M.vintage_all,  default=1)
-	M.CapacityFactor   = Param(M.tech_all,  M.vintage_all,  default=1)
+	M.CommodityProductionCost = Param(M.time_optimize,  M.tech_all,  M.vintage_all,  default=0)
+	M.CapacityFactor   = Param(M.tech_all,  M.vintage_all,  default=0)
 
 
 	# Not yet indexed by period or incorporated into the constraints
