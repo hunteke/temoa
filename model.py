@@ -5,6 +5,76 @@ __all__ = [ 'temoa_create_model', ]
 from temoa_rules import *
 
 def temoa_create_model ( ):
+	"""\
+Returns an abstract instance of the TEMOA model.  (Abstract because it will yet
+need to be populated with "dot dat" file data.)
+
+Model characteristics:
+
+A '*' next to a Set or Parameter indicates that it is automatically deduced.
+It is not possible to directly set this Set or Parameter in a "dot dat" file.
+
+   SETS
+time_exist   - the periods prior to the model.  Mainly utilized to populate the
+               capacity of installed technologies prior to those the
+               optimization is allowed to alter.
+time_horizon - the periods of interest.  Though the model will optimize through
+               time_future, Temoa will report results only for this set.
+time_future  - the periods following time_horizon.
+*time_optimize - the union of time_horizon and time_future, less the final
+                 period.  The model will optimize over this set.
+*time_all    - the union of time_optimize and time_exist
+*vintage_exist  - copy of time_exist, for unambiguous contextual use
+*vintage_future - copy of time_future, for unambiguous contextual use
+*vintage_all - a copy of time_all, for unambiguous contextual use.
+
+time_season  - the seasons of interest.  For example, winter might have
+               different cooling demand characteristics than summer.
+time_of_day  - the parts of the day of interest.  For example, the night hours
+               might have a different lighting demand than the daylight hours.
+
+tech_resource   - "base" energy resources, like imported coal, imported
+                  electricity, or mined natural gas.
+tech_production - technologies that convert energy, like a coal plant (coal to
+                  electricity), electric boiler (electricity to heat), or
+                  electric car (electricity to vehicle miles traveled)
+*tech_all       - the union of tech_resource and tech_production
+
+commodity_emissions - emission outputs of concern, like co2.
+commodity_physical  - energy carriers, like coal, oil, or electricity
+commodity_demand    - end use demands, like residential heating, commercial
+                      lighting, or vehicle miles traveled
+*commodity_all      - The union of commodity_{emissions, physical, demand}
+
+   PARAMETERS
+ExistingCapacity(tech_all, vintage_exist)
+   [default: 0] ExistingCapacity allows the modeler to define any vintage of
+   existing technology prior to the model optimization periods.
+Efficiency(commodity_all, tech_all, vintage_all, commodity_all)
+   [default: 0] Efficiency allows the modeler to define the efficiency
+   associated with a particular process, identified by an input commodity,
+   technology, vintage, and output commodity.
+Lifetime(tech_all, vintage_all)
+   [default: 0] Lifetime enables the modeler to define the usable lifetime of
+   any particular
+   technology or vintage of technology.
+Demand(time_optimize, time_season, time_of_day, commodity_demand)
+   Demand sets the exogenous amount of a commodity demand in each optimization
+   time period, season, and time of day.  In some sense, this is the parameter
+   that drives everything in the Temoa model.
+ResourceBound(time_optimize, commodity_physical)
+   [default: 0] ResourceBound enables the modeler to set limits on how much of
+   a given resource the model may "mine" or "import" in any given optimization
+   period.
+CommodityProductionCost(time_optimize, tech_all, vintage_all)
+   [default: 0] CommodityProductionCost enables the modeler to set the price
+   per unit to operate a technology.  The modeler may, for example, choose to
+   change the price to operate a vintage of a technology between optimization
+   periods.
+CapacityFactor(tech_all, vintage_all)
+   [default: 0] CapacityFactor enables the modeler to set the capacity factor
+   for any vintage of technology.
+	"""
 	M = AbstractModel('TEMOA Entire Energy System Economic Optimization Model')
 
 	M.time_exist      = Set( ordered=True, within=Integers )
@@ -88,7 +158,7 @@ model = temoa_create_model()
 
 
 if '__main__' == __name__:
-	# Figure out whether this script was called directly, or through Pyomo:
+	# This script was apparently invoked directly, rather than through Pyomo.
 	# $ ./model.py  test.dat           # called directly
 	# $ lpython  model.py  test.dat    # called directly
 	# $ pyomo    model.py  test.dat    # through Pyomo
