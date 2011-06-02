@@ -83,7 +83,7 @@ def InitProcessParams ( M ):
 	global g_processOutputs
 
 	for l_vintage in M.vintage_all:
-		for l_tech in M.tech:
+		for l_tech in M.tech_all:
 			for l_inp in M.physical_commodity:
 				for l_out in M.all_commodities:
 
@@ -136,7 +136,7 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 	for l_period in M.time_optimize:
 		for l_season in M.time_season:
 			for l_meridian in M.time_of_day:
-				for l_tech in M.tech:
+				for l_tech in M.tech_all:
 					for l_vintage in M.vintage_all:
 						for l_out in M.physical_commodity:
 							for l_inp in ProcessProduces( (l_period, l_tech, l_vintage), l_out ):
@@ -223,7 +223,7 @@ Prevent TEMOA from extracting an endless supply of energy from "the ether".
 sum((season,time_of_day,tech,vintage),V_FlowIn[p,*,*,r,*,*r]) <= Param(ResourceBound[p,t,v])
 	"""
 	l_extract = 0
-	for l_tech in M.resource_tech:
+	for l_tech in M.tech_resource:
 		for l_vintage in M.vintage_all:
 			if isValidProcess( A_period, A_resource, l_tech, l_vintage, A_resource ):
 				for l_season in M.time_season:
@@ -243,12 +243,12 @@ sum((inp,tech,vintage),V_FlowOut[p,s,t,*,*,*,c]) >= sum((tech,vintage,out),V_Flo
 	"""
 	l_vflow_out = l_vflow_in = 0
 
-	for l_tech in M.tech:
+	for l_tech in M.tech_all:
 		for l_vintage in M.vintage_all:
 			for l_inp in ProcessProduces( (A_period, l_tech, l_vintage), A_carrier ):
 				l_vflow_out += M.V_FlowOut[A_period, A_season, A_meridian, l_inp, l_tech, l_vintage, A_carrier]
 
-	for l_tech in M.production_tech:
+	for l_tech in M.tech_production:
 		for l_vintage in M.vintage_all:
 			for l_out in ProcessConsumes( (A_period, l_tech, l_vintage), A_carrier ):
 				l_vflow_in += M.V_FlowIn[A_period, A_season, A_meridian, A_carrier, l_tech, l_vintage, l_out]
@@ -313,7 +313,7 @@ sum((inp,tech,vintage),V_FlowOut[p,s,m,*,*,*,commodity]) >= Demand[p,s,m,commodi
 		return None
 
 	l_supply = 0
-	for l_tech in M.tech:
+	for l_tech in M.tech_all:
 		for l_vintage in M.vintage_all:
 			for l_input in ProcessProduces( (A_period, l_tech, l_vintage), A_comm ):
 				l_supply += M.V_FlowOut[A_period, A_season, A_meridian, l_input, l_tech, l_vintage, A_comm]
