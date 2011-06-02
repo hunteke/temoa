@@ -135,13 +135,13 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 
 	for l_period in M.time_optimize:
 		for l_season in M.time_season:
-			for l_meridian in M.time_of_day:
+			for l_time_of_day in M.time_of_day:
 				for l_tech in M.tech_all:
 					for l_vintage in M.vintage_all:
 						for l_out in M.physical_commodity:
 							for l_inp in ProcessProduces( (l_period, l_tech, l_vintage), l_out ):
 								l_cost += (
-								    M.V_FlowOut[l_period, l_season, l_meridian, l_inp, l_tech, l_vintage, l_out]
+								    M.V_FlowOut[l_period, l_season, l_time_of_day, l_inp, l_tech, l_vintage, l_out]
 								  * M.CommodityProductionCost[l_period, l_tech, l_vintage]
 								)
 
@@ -152,15 +152,15 @@ Objective_rule = TotalCost_rule
 ##############################################################################
 #   Constraint rules
 
-def ActivityConstraint_rule ( A_period, A_season, A_meridian, A_tech, A_vintage, M ):
+def ActivityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vintage, M ):
 	"""\
 As V_Activity is a derived variable, the constraint sets V_Activity to the sum over input and output energy carriers of a process.
 
 (for each period, season, time_of_day, tech, vintage)
-V_Activity[p,s,m,t,v] = sum((inp,out), V_FlowOut[p,s,m,inp,t,v,out])
+V_Activity[p,s,d,t,v] = sum((inp,out), V_FlowOut[p,s,d,inp,t,v,out])
 	"""
 	pindex = (A_period, A_tech, A_vintage)
-	aindex = (A_period, A_season, A_meridian, A_tech, A_vintage)
+	aindex = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
 
 	# No sense in creating a guaranteed unused constraint
 	if not ProcessOutputs( *pindex ):
@@ -169,18 +169,18 @@ V_Activity[p,s,m,t,v] = sum((inp,out), V_FlowOut[p,s,m,inp,t,v,out])
 	l_activity = 0
 	for l_inp in ProcessInputs( *pindex ):
 		for l_out in ProcessOutputs( *pindex ):
-			l_activity += M.V_FlowOut[A_period, A_season, A_meridian, l_inp, A_tech, A_vintage, l_out]
+			l_activity += M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, A_tech, A_vintage, l_out]
 
 	expr = ( M.V_Activity[ aindex ] == l_activity )
 	return expr
 
 
-def CapacityConstraint_rule ( A_period, A_season, A_meridian, A_tech, A_vintage, M ):
+def CapacityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vintage, M ):
 	"""\
 V_Capacity is a derived variable; this constraint sets V_Capacity to at least be able to handle the activity in any optimization time slice.  In effect, this sets V_Capacity[p,t,v] to the max of the activity for similar indices: max(Activity[p,*,*t,v])
 
 (for each period, season, time_of_day, tech, vintage)
-V_Capacity[p,t,v] >= V_Activity[p,s,m,t,v]
+V_Capacity[p,t,v] >= V_Activity[p,s,d,t,v]
 	"""
 	pindex = (A_period, A_tech, A_vintage)
 
@@ -188,7 +188,7 @@ V_Capacity[p,t,v] >= V_Activity[p,s,m,t,v]
 	if not ProcessOutputs( *pindex ):
 		return None
 
-	vintage_activity = M.V_Activity[A_period, A_season, A_meridian, A_tech, A_vintage]
+	vintage_activity = M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
 
 	cindex = (A_tech, A_vintage)
 	l_capacity = M.V_Capacity[ cindex ] * M.CapacityFactor[ cindex ]
@@ -227,14 +227,14 @@ sum((season,time_of_day,tech,vintage),V_FlowIn[p,*,*,r,*,*r]) <= Param(ResourceB
 		for l_vintage in M.vintage_all:
 			if isValidProcess( A_period, A_resource, l_tech, l_vintage, A_resource ):
 				for l_season in M.time_season:
-					for l_meridian in M.time_of_day:
-						l_extract += M.V_FlowIn[A_period, l_season, l_meridian, A_resource, l_tech, l_vintage, A_resource]
+					for l_time_of_day in M.time_of_day:
+						l_extract += M.V_FlowIn[A_period, l_season, l_time_of_day, A_resource, l_tech, l_vintage, A_resource]
 
 	expression = (l_extract <= M.ResourceBound[A_period, A_resource])
 	return expression
 
 
-def CommodityBalanceConstraint_rule ( A_period, A_season, A_meridian, A_carrier, M ):
+def CommodityBalanceConstraint_rule ( A_period, A_season, A_time_of_day, A_carrier, M ):
 	"""\
 Ensure that the FlowOut of a produced energy carrier at least meets the demand of the needed FlowIn of that energy carrier.  That is, this constraint maintains energy flows between processes.
 
@@ -246,12 +246,12 @@ sum((inp,tech,vintage),V_FlowOut[p,s,t,*,*,*,c]) >= sum((tech,vintage,out),V_Flo
 	for l_tech in M.tech_all:
 		for l_vintage in M.vintage_all:
 			for l_inp in ProcessProduces( (A_period, l_tech, l_vintage), A_carrier ):
-				l_vflow_out += M.V_FlowOut[A_period, A_season, A_meridian, l_inp, l_tech, l_vintage, A_carrier]
+				l_vflow_out += M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, l_tech, l_vintage, A_carrier]
 
 	for l_tech in M.tech_production:
 		for l_vintage in M.vintage_all:
 			for l_out in ProcessConsumes( (A_period, l_tech, l_vintage), A_carrier ):
-				l_vflow_in += M.V_FlowIn[A_period, A_season, A_meridian, A_carrier, l_tech, l_vintage, l_out]
+				l_vflow_in += M.V_FlowIn[A_period, A_season, A_time_of_day, A_carrier, l_tech, l_vintage, l_out]
 
 	if type(l_vflow_out) == type(l_vflow_in):
 		if int is type(l_vflow_out):
@@ -270,25 +270,25 @@ sum((inp,tech,vintage),V_FlowOut[p,s,t,*,*,*,c]) >= sum((tech,vintage,out),V_Flo
 		  " - Is there a missing commodity in set 'physical_commodity'?\n"      \
 		  " - Are there missing entries in the Efficiency parameter?\n"         \
 		  " - Does a tech need a longer Lifetime parameter setting?"
-		raise ValueError, msg % (A_carrier, A_season, A_meridian, A_period,
+		raise ValueError, msg % (A_carrier, A_season, A_time_of_day, A_period,
 		                         flow_in_expr.getvalue() )
 
 	expression = (l_vflow_out >= l_vflow_in)
 	return expression
 
 
-def ProcessBalanceConstraint_rule ( A_period, A_season, A_meridian, A_inp, A_tech, A_vintage, A_out, M ):
+def ProcessBalanceConstraint_rule ( A_period, A_season, A_time_of_day, A_inp, A_tech, A_vintage, A_out, M ):
 	"""\
 Analogous to CommodityBalance, this constraint ensures that the amount of energy leaving a process is not more than the amount entering it.
 
 (for each period, season, time_of_day, inp_carrier, vintage, out_carrier)
-V_FlowOut[p,s,m,t,v,o] <= V_FlowIn[p,s,m,t,v,o] * Efficiency[i,t,v,o]
+V_FlowOut[p,s,d,t,v,o] <= V_FlowIn[p,s,d,t,v,o] * Efficiency[i,t,v,o]
 	"""
 	index = (A_period, A_inp, A_tech, A_vintage, A_out)
 	if not isValidProcess( *index ):
 		# No sense in creating a guaranteed unused constraint
 		return None
-	aindex = (A_period, A_season, A_meridian, A_inp, A_tech, A_vintage, A_out)
+	aindex = (A_period, A_season, A_time_of_day, A_inp, A_tech, A_vintage, A_out)
 
 	expr = (
 	    M.V_FlowOut[ aindex ]
@@ -300,14 +300,14 @@ V_FlowOut[p,s,m,t,v,o] <= V_FlowIn[p,s,m,t,v,o] * Efficiency[i,t,v,o]
 	return expr
 
 
-def DemandConstraint_rule ( A_period, A_season, A_meridian, A_comm, M ):
+def DemandConstraint_rule ( A_period, A_season, A_time_of_day, A_comm, M ):
 	"""\
 The driving constraint, this rule ensures that supply at least equals demand.
 
 (for each period, season, time_of_day, commodity)
-sum((inp,tech,vintage),V_FlowOut[p,s,m,*,*,*,commodity]) >= Demand[p,s,m,commodity]
+sum((inp,tech,vintage),V_FlowOut[p,s,d,*,*,*,commodity]) >= Demand[p,s,d,commodity]
 	"""
-	index = (A_period, A_season, A_meridian, A_comm)
+	index = (A_period, A_season, A_time_of_day, A_comm)
 	if not (M.Demand[ index ] > 0):
 		# nothing to be met: don't create a useless constraint like X >= 0
 		return None
@@ -316,14 +316,14 @@ sum((inp,tech,vintage),V_FlowOut[p,s,m,*,*,*,commodity]) >= Demand[p,s,m,commodi
 	for l_tech in M.tech_all:
 		for l_vintage in M.vintage_all:
 			for l_input in ProcessProduces( (A_period, l_tech, l_vintage), A_comm ):
-				l_supply += M.V_FlowOut[A_period, A_season, A_meridian, l_input, l_tech, l_vintage, A_comm]
+				l_supply += M.V_FlowOut[A_period, A_season, A_time_of_day, l_input, l_tech, l_vintage, A_comm]
 
 	if int is type( l_supply ):
 		msg = "Error: Demand '%s' for (%s, %s, %s) unable to be met by any "   \
 		  "technology.\n\tPossible reasons:\n"                                 \
 		  " - Is the Efficiency parameter missing an entry for this demand?\n" \
 		  " - Does a tech that satisfies this demand need a longer Lifetime?\n"
-		raise ValueError, msg % (A_comm, A_period, A_season, A_meridian)
+		raise ValueError, msg % (A_comm, A_period, A_season, A_time_of_day)
 
 	expression = (l_supply >= M.Demand[ index ])
 	return expression
