@@ -84,8 +84,8 @@ def InitProcessParams ( M ):
 
 	for l_vintage in M.vintage_all:
 		for l_tech in M.tech_all:
-			for l_inp in M.physical_commodity:
-				for l_out in M.all_commodities:
+			for l_inp in M.commodity_physical:
+				for l_out in M.commodity_all:
 
 					eindex = (l_inp, l_tech, l_vintage, l_out)
 					if M.Efficiency[ eindex ] > 0:
@@ -138,7 +138,7 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 			for l_time_of_day in M.time_of_day:
 				for l_tech in M.tech_all:
 					for l_vintage in M.vintage_all:
-						for l_out in M.physical_commodity:
+						for l_out in M.commodity_physical:
 							for l_inp in ProcessProduces( (l_period, l_tech, l_vintage), l_out ):
 								l_cost += (
 								    M.V_FlowOut[l_period, l_season, l_time_of_day, l_inp, l_tech, l_vintage, l_out]
@@ -267,7 +267,7 @@ sum((inp,tech,vintage),V_FlowOut[p,s,t,*,*,*,c]) >= sum((tech,vintage,out),V_Flo
 		  " - Is there a missing period in set 'time_period'?\n"                \
 		  " - Is there a missing tech in set 'resource_tech'?\n"                \
 		  " - Is there a missing tech in set 'production_tech'?\n"              \
-		  " - Is there a missing commodity in set 'physical_commodity'?\n"      \
+		  " - Is there a missing commodity in set 'commodity_physical'?\n"      \
 		  " - Are there missing entries in the Efficiency parameter?\n"         \
 		  " - Does a tech need a longer Lifetime parameter setting?"
 		raise ValueError, msg % (A_carrier, A_season, A_time_of_day, A_period,

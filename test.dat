@@ -21,18 +21,18 @@ set  tech_production  :=
  t_elccar           # TXE
 	;
 
-set  physical_commodity  :=
+set  commodity_physical  :=
 # Temoa Name   Utopia Name
  coal           # HCO
  electricity    # ELC
 	;
 
-set  emissions_commodity  :=
+set  commodity_emissions  :=
  co2            # CO2
  nox            # NOX
 	;
 
-set  demand_commodity  :=
+set  commodity_demand  :=
 # Temoa Name          Utopia Name
  transport_distance    # TX
  resheating            # RH
