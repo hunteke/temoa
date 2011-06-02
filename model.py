@@ -1,4 +1,4 @@
-#!/usr/bin/env lpython
+#!/usr/bin/env python
 
 __all__ = [ 'temoa_create_model', ]
 
@@ -153,6 +153,7 @@ CapacityFactor(tech_all, vintage_all)
 	#M.EmissionConstraint           = Constraint(M.commodity_emissions,            rule=EmissionConstraint_rule)
 	#M.ResourceBalanceConstraint    = Constraint(M.commodity_physical,             rule=ResourceBalanceConstraint_rule)
 	return M
+
 
 model = temoa_create_model()
 

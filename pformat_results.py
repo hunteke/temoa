@@ -1,3 +1,4 @@
+import sys
 from cStringIO import StringIO
 
 def pformat_results ( pyomo_instance, pyomo_result ):
@@ -14,7 +15,7 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	if str(soln.Status) not in optimal_solutions:
 		return "No solution found."
 
-	obj_value = soln.Objective.obj.Value
+	obj_value = soln.Objective.TotalCost.Value
 
 	Vars = soln.Variable
 	Cons = soln.Constraint
