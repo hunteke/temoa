@@ -9,27 +9,31 @@ g_processInputs  = dict()
 g_processOutputs = dict()
 
 ##############################################################################
-# Begin validation routines
+# Begin validation and initializationroutines
 
-def init_exist_set ( M ):
-	begin = M.window_period['begin'].value
-	return ( year for year in M.time_period if year < begin )
+def validate_periods ( M ):
+	exist = max( M.time_exist )
+	horizonl = min( M.time_horizon )
+	horizonh = max( M.time_horizon )
+	future = min( M.time_future )
 
-def init_future_set ( M ):
-	final = M.window_period['final'].value
-	return ( year for year in M.time_period if year > final )
+	if not ( exist < horizonl ):
+		msg = "All items in time_horizon must be larger that in time_exist.\n"  \
+		      "time_exist max:   %s\ntime_horizon min: %s"
+		raise ValueError, msg % (exist, horizonl)
+	elif not ( horizonh < future ):
+		msg = "All items in time_future must be larger that in time_horizon.\n" \
+		      "time_horizon max:   %s\ntime_future min: %s"
+		raise ValueError, msg % (horizonh, future)
 
-def init_future_set ( M ):
-	begin = M.window_period['begin'].value
-	final = M.window_period['final'].value
+	return tuple()
 
-	if not (begin < final):
-		msg = "Param window_period 'begin' must be less than 'final'.\n\t%s"
-		raise ValueError, msg % ("(begin, final) = (%s, %s)" % (begin, final))
+def init_set_time_optimize ( M ):
+	items = sorted( year for year in M.time_horizon )
+	items.extend( sorted( year for year in M.time_future ) )
+	return items[:-1]
 
-	return (year for year in M.time_period if begin <= year and year <= final)
-
-# end validation routines
+# end validation and initialization routines
 ##############################################################################
 
 ##############################################################################
@@ -78,14 +82,14 @@ def InitProcessParams ( M ):
 	global g_processInputs
 	global g_processOutputs
 
-	for l_vintage in M.time_period:
+	for l_vintage in M.vintage_all:
 		for l_tech in M.tech:
 			for l_inp in M.physical_commodity:
 				for l_out in M.all_commodities:
 
 					eindex = (l_inp, l_tech, l_vintage, l_out)
 					if M.Efficiency[ eindex ] > 0:
-						for l_period in M.time_period:
+						for l_period in M.time_optimize:
 							if l_period < l_vintage: continue
 							l_lifetime = value( M.Lifetime[l_tech, l_vintage] )
 							if l_period > l_vintage + l_lifetime: continue
@@ -117,8 +121,10 @@ Returns a boolean indicating whether, in any given period, a technology can take
 # Begin *_rule definitions
 
 def TotalCost_rule ( M ):
-	"""
-	Objective function.
+	"""\
+Objective function.
+
+This function is currently a simple summation of all items in V_FlowOut multiplied by CommunityProductionCost.  For the time being (i.e. during development), this is intended to make development and debugging simpler.
 	"""
 
 	# There appears to be no other way to hook into Pyomo's model creation than
@@ -127,11 +133,11 @@ def TotalCost_rule ( M ):
 
 	l_cost = 0
 
-	for l_period in M.future_period:
+	for l_period in M.time_optimize:
 		for l_season in M.time_season:
 			for l_meridian in M.time_of_day:
 				for l_tech in M.tech:
-					for l_vintage in M.vintage:
+					for l_vintage in M.vintage_all:
 						for l_out in M.physical_commodity:
 							for l_inp in ProcessProduces( (l_period, l_tech, l_vintage), l_out ):
 								l_cost += (
@@ -147,6 +153,12 @@ Objective_rule = TotalCost_rule
 #   Constraint rules
 
 def ActivityConstraint_rule ( A_period, A_season, A_meridian, A_tech, A_vintage, M ):
+	"""\
+As V_Activity is a derived variable, the constraint sets V_Activity to the sum over input and output energy carriers of a process.
+
+(for each period, season, time_of_day, tech, vintage)
+V_Activity[p,s,m,t,v] = sum((inp,out), V_FlowOut[p,s,m,inp,t,v,out])
+	"""
 	pindex = (A_period, A_tech, A_vintage)
 	aindex = (A_period, A_season, A_meridian, A_tech, A_vintage)
 
@@ -164,6 +176,12 @@ def ActivityConstraint_rule ( A_period, A_season, A_meridian, A_tech, A_vintage,
 
 
 def CapacityConstraint_rule ( A_period, A_season, A_meridian, A_tech, A_vintage, M ):
+	"""\
+V_Capacity is a derived variable; this constraint sets V_Capacity to at least be able to handle the activity in any optimization time slice.  In effect, this sets V_Capacity[p,t,v] to the max of the activity for similar indices: max(Activity[p,*,*t,v])
+
+(for each period, season, time_of_day, tech, vintage)
+V_Capacity[p,t,v] >= V_Activity[p,s,m,t,v]
+	"""
 	pindex = (A_period, A_tech, A_vintage)
 
 	# No sense in creating a guaranteed unused constraint
@@ -179,13 +197,13 @@ def CapacityConstraint_rule ( A_period, A_season, A_meridian, A_tech, A_vintage,
 	return expr
 
 
-def ExistingCapacityConstraint_rule ( A_period, A_tech, A_vintage, M ):
-	pindex = (A_period, A_tech, A_vintage)
+def ExistingCapacityConstraint_rule ( A_tech, A_vintage, M ):
+	"""\
+For vintage periods that the model is not to optimize, explicitly set the capacity values based on dat file input.
 
-	# No sense in creating a guaranteed unused constraint
-	if not ProcessOutputs( *pindex ):
-		return None
-
+(for each tech, vintage)
+V_Capacity[t,v] = Param(Existingcapacity[t,v])
+	"""
 	index = (A_tech, A_vintage)
 
 	# No sense in creating a guaranteed unused constraint
@@ -198,9 +216,15 @@ def ExistingCapacityConstraint_rule ( A_period, A_tech, A_vintage, M ):
 
 
 def ResourceExtractionConstraint_rule ( A_period, A_resource, M ):
+	"""\
+Prevent TEMOA from extracting an endless supply of energy from "the ether".
+
+(for each period, resource)
+sum((season,time_of_day,tech,vintage),V_FlowIn[p,*,*,r,*,*r]) <= Param(ResourceBound[p,t,v])
+	"""
 	l_extract = 0
 	for l_tech in M.resource_tech:
-		for l_vintage in M.time_period:
+		for l_vintage in M.vintage_all:
 			if isValidProcess( A_period, A_resource, l_tech, l_vintage, A_resource ):
 				for l_season in M.time_season:
 					for l_meridian in M.time_of_day:
@@ -211,15 +235,21 @@ def ResourceExtractionConstraint_rule ( A_period, A_resource, M ):
 
 
 def CommodityBalanceConstraint_rule ( A_period, A_season, A_meridian, A_carrier, M ):
+	"""\
+Ensure that the FlowOut of a produced energy carrier at least meets the demand of the needed FlowIn of that energy carrier.  That is, this constraint maintains energy flows between processes.
+
+(for each period, season, time_of_day, energy_carrier)
+sum((inp,tech,vintage),V_FlowOut[p,s,t,*,*,*,c]) >= sum((tech,vintage,out),V_FlowIn[p,s,t,c,*,*,*])
+	"""
 	l_vflow_out = l_vflow_in = 0
 
 	for l_tech in M.tech:
-		for l_vintage in M.time_period:
+		for l_vintage in M.vintage_all:
 			for l_inp in ProcessProduces( (A_period, l_tech, l_vintage), A_carrier ):
 				l_vflow_out += M.V_FlowOut[A_period, A_season, A_meridian, l_inp, l_tech, l_vintage, A_carrier]
 
 	for l_tech in M.production_tech:
-		for l_vintage in M.time_period:
+		for l_vintage in M.vintage_all:
 			for l_out in ProcessConsumes( (A_period, l_tech, l_vintage), A_carrier ):
 				l_vflow_in += M.V_FlowIn[A_period, A_season, A_meridian, A_carrier, l_tech, l_vintage, l_out]
 
@@ -248,6 +278,12 @@ def CommodityBalanceConstraint_rule ( A_period, A_season, A_meridian, A_carrier,
 
 
 def ProcessBalanceConstraint_rule ( A_period, A_season, A_meridian, A_inp, A_tech, A_vintage, A_out, M ):
+	"""\
+Analogous to CommodityBalance, this constraint ensures that the amount of energy leaving a process is not more than the amount entering it.
+
+(for each period, season, time_of_day, inp_carrier, vintage, out_carrier)
+V_FlowOut[p,s,m,t,v,o] <= V_FlowIn[p,s,m,t,v,o] * Efficiency[i,t,v,o]
+	"""
 	index = (A_period, A_inp, A_tech, A_vintage, A_out)
 	if not isValidProcess( *index ):
 		# No sense in creating a guaranteed unused constraint
@@ -265,6 +301,12 @@ def ProcessBalanceConstraint_rule ( A_period, A_season, A_meridian, A_inp, A_tec
 
 
 def DemandConstraint_rule ( A_period, A_season, A_meridian, A_comm, M ):
+	"""\
+The driving constraint, this rule ensures that supply at least equals demand.
+
+(for each period, season, time_of_day, commodity)
+sum((inp,tech,vintage),V_FlowOut[p,s,m,*,*,*,commodity]) >= Demand[p,s,m,commodity]
+	"""
 	index = (A_period, A_season, A_meridian, A_comm)
 	if not (M.Demand[ index ] > 0):
 		# nothing to be met: don't create a useless constraint like X >= 0
@@ -272,7 +314,7 @@ def DemandConstraint_rule ( A_period, A_season, A_meridian, A_comm, M ):
 
 	l_supply = 0
 	for l_tech in M.tech:
-		for l_vintage in M.time_period:
+		for l_vintage in M.vintage_all:
 			for l_input in ProcessProduces( (A_period, l_tech, l_vintage), A_comm ):
 				l_supply += M.V_FlowOut[A_period, A_season, A_meridian, l_input, l_tech, l_vintage, A_comm]
 

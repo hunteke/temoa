@@ -1,14 +1,12 @@
 data;
 
 
-set  time_period  :=  1980 2000 2010 2015 ;# 2020 2030 2040 2050 2060 ;
+set  time_exist   :=  1980  2000 ;
+set  time_horizon :=  2010  2015 ;
+set  time_future  :=  2020  2030 ;
+
 set  time_season  :=  winter  summer  inter ;
 set  time_of_day  :=  day  night ;
-
-param  window_period  :=
- begin 2010
- final 2015
-	;
 
 set  resource_tech  :=
 # Temoa name      Utopia name
@@ -93,5 +91,6 @@ param  Efficiency  :=
 
 param  ExistingCapacity  :=
 # tech        # vintage       # capacity amount
+ t_coal        2000            30
  t_coal        2000            40
 	;

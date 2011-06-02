@@ -7,27 +7,28 @@ from temoa_rules import *
 def create_TEMOA_model ( ):
 	M = AbstractModel('TEMOA Entire Energy System Economic Optimization Model')
 
-	M.time_period     = Set( ordered=True, within=Integers )
+	M.time_exist      = Set( ordered=True, within=Integers )
+	M.time_horizon    = Set( ordered=True, within=Integers )
+	M.time_future     = Set( ordered=True, within=Integers )
+	M.time_validation = Set( initialize=validate_periods )
+
 	M.time_season     = Set()
 	M.time_of_day     = Set()
 	M.resource_tech   = Set()
 	M.production_tech = Set()
 	M.tech = M.resource_tech | M.production_tech  # '|' = union.
 
-	M.window_period         = Param( Set(initialize=['begin', 'final'] ), within=M.time_period )
-	M.exist_period          = Set( ordered=True, within=M.time_period, initialize=init_exist_set )
-	M.future_period         = Set( ordered=True, within=M.time_period, initialize=init_future_set )
-	M.beyond_horizon_period = Set( ordered=True, within=M.time_period, initialize=init_future_set )
+	M.tmp_set_period = M.time_exist | M.time_horizon
+	M.time_all       = M.tmp_set_period | M.time_future
+	M.vintage_all    = M.time_all
+	M.vintage_exist  = M.time_exist
+	M.vintage_future = M.time_future
 
-	M.vintage    = M.time_period    # intentional copy of time_period, for easier bookkeeping
-	M.exist_vintage  = M.exist_period
-	M.future_vintage = M.vintage - M.exist_vintage
-
-	M.optimize_period = M.future_period | M.beyond_horizon_period
+	M.time_optimize = Set( ordered=True, initialize=init_set_time_optimize )
 
 	M.emissions_commodity = Set()
-	M.physical_commodity = Set()
-	M.demand_commodity = Set()
+	M.physical_commodity  = Set()
+	M.demand_commodity    = Set()
 
 	# Pyomo currently has a rather large design flaw in it's implementation of set
 	# unions, where it is not possible to create a union of more than two sets in
@@ -37,13 +38,13 @@ def create_TEMOA_model ( ):
 	M.all_commodities = M.tmp_set | M.demand_commodity
 
 
-	M.ExistingCapacity = Param(M.tech, M.exist_vintage, default=0)
-	M.Efficiency       = Param(M.all_commodities, M.tech, M.vintage, M.all_commodities, default=0)
-	M.Lifetime         = Param(M.tech,        M.vintage,                  default=20) # 20 years
-	M.Demand           = Param(M.time_period, M.time_season, M.time_of_day, M.demand_commodity,   default=0)
-	M.ResourceBound    = Param(M.time_period, M.physical_commodity,       default=0)
-	M.CommodityProductionCost = Param(M.time_period, M.tech, M.vintage,   default=1)
-	M.CapacityFactor   = Param(M.tech, M.vintage,                         default=1)
+	M.ExistingCapacity = Param(M.tech, M.vintage_exist, default=0)
+	M.Efficiency       = Param(M.all_commodities,  M.tech,  M.vintage_all,  M.all_commodities,  default=0)
+	M.Lifetime         = Param(M.tech,  M.vintage_all,  default=20)         # 20 years
+	M.Demand           = Param(M.time_optimize,  M.time_season,  M.time_of_day,  M.demand_commodity,  default=0)
+	M.ResourceBound    = Param(M.time_optimize,  M.physical_commodity,  default=0)
+	M.CommodityProductionCost = Param(M.time_optimize,  M.tech,  M.vintage_all,  default=1)
+	M.CapacityFactor   = Param(M.tech,  M.vintage_all,  default=1)
 
 
 	# Not yet indexed by period or incorporated into the constraints
@@ -52,12 +53,12 @@ def create_TEMOA_model ( ):
 
 	# Variables
 	#   Decision variables
-	M.V_FlowIn  = Var(M.time_period, M.time_season, M.time_of_day, M.all_commodities, M.tech, M.vintage, M.all_commodities, domain=NonNegativeReals)
-	M.V_FlowOut = Var(M.time_period, M.time_season, M.time_of_day, M.all_commodities, M.tech, M.vintage, M.all_commodities, domain=NonNegativeReals)
+	M.V_FlowIn  = Var(M.time_optimize, M.time_season, M.time_of_day, M.all_commodities, M.tech, M.vintage_all, M.all_commodities, domain=NonNegativeReals)
+	M.V_FlowOut = Var(M.time_optimize, M.time_season, M.time_of_day, M.all_commodities, M.tech, M.vintage_all, M.all_commodities, domain=NonNegativeReals)
 
-	#   Calculated "dummy" variables
-	M.V_Activity = Var(M.optimize_period, M.time_season, M.time_of_day, M.tech, M.vintage, domain=NonNegativeReals)
-	M.V_Capacity = Var(M.tech, M.vintage, domain=NonNegativeReals)
+	#   Derived variables
+	M.V_Activity = Var(M.time_optimize, M.time_season, M.time_of_day, M.tech, M.vintage_all, domain=NonNegativeReals)
+	M.V_Capacity = Var(M.tech, M.vintage_all, domain=NonNegativeReals)
 
 
 	# Objective
@@ -66,18 +67,18 @@ def create_TEMOA_model ( ):
 	# Constraints
 
 	#   "Bookkeeping" constraints
-	M.ActivityConstraint = Constraint( M.optimize_period, M.time_season, M.time_of_day, M.tech, M.vintage, rule=ActivityConstraint_rule )
-	M.CapacityConstraint = Constraint( M.optimize_period, M.time_season, M.time_of_day, M.tech, M.vintage, rule=CapacityConstraint_rule )
+	M.ActivityConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech, M.vintage_all, rule=ActivityConstraint_rule )
+	M.CapacityConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech, M.vintage_all, rule=CapacityConstraint_rule )
 
-	M.ExistingCapacityConstraint = Constraint( M.optimize_period, M.tech, M.exist_vintage, rule=ExistingCapacityConstraint_rule )
+	M.ExistingCapacityConstraint = Constraint( M.tech, M.vintage_exist, rule=ExistingCapacityConstraint_rule )
 
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
 	#      very useful.)
-	M.DemandConstraint             = Constraint( M.time_period, M.time_season, M.time_of_day, M.demand_commodity,      rule=DemandConstraint_rule )
-	M.ProcessBalanceConstraint     = Constraint( M.time_period, M.time_season, M.time_of_day, M.all_commodities, M.tech, M.vintage, M.all_commodities, rule=ProcessBalanceConstraint_rule )
-	M.CommodityBalanceConstraint   = Constraint( M.time_period, M.time_season, M.time_of_day, M.physical_commodity,    rule=CommodityBalanceConstraint_rule )
-	M.ResourceExtractionConstraint = Constraint( M.time_period, M.physical_commodity,    rule=ResourceExtractionConstraint_rule )
+	M.DemandConstraint             = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.demand_commodity,      rule=DemandConstraint_rule )
+	M.ProcessBalanceConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.all_commodities, M.tech, M.vintage_all, M.all_commodities, rule=ProcessBalanceConstraint_rule )
+	M.CommodityBalanceConstraint   = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.physical_commodity,    rule=CommodityBalanceConstraint_rule )
+	M.ResourceExtractionConstraint = Constraint( M.time_optimize, M.physical_commodity,    rule=ResourceExtractionConstraint_rule )
 
 	#   Constraints not yet updated
 	#M.EmissionConstraint           = Constraint(M.emissions_commodity,            rule=EmissionConstraint_rule)
