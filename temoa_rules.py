@@ -91,7 +91,8 @@ def ProcessInputs ( *index ):
 	return set()
 
 
-def ProcessProduces ( index, A_output ):
+#def ProcessProduces ( index, A_output ):
+def ProcessInputsByOutput ( index, A_output ):
 	"""\
 Return the set of input energy carriers used by a technology (A_tech) to
 produce a given output carrier (A_output).
@@ -103,7 +104,8 @@ produce a given output carrier (A_output).
 	return set()
 
 
-def ProcessConsumes ( index, A_input ):
+#def ProcessConsumes ( index, A_input ):
+def ProcessOutputsByInput ( index, A_input ):
 	"""\
 Return the set of output energy carriers used by a technology (A_tech) to
 produce a given input carrier (A_output).
@@ -141,7 +143,7 @@ def InitProcessParams ( M ):
 
 def isValidProcess( A_period, A_inp, A_tech, A_vintage, A_out ):
 	"""\
-Returns a boolean indicating whether, in any given period, a technology can take a specified input carrier and convert it to and specified output carrier.
+Returns a boolean (True or False) indicating whether, in any given period, a technology can take a specified input carrier and convert it to and specified output carrier.
 """
 	index = (A_period, A_tech, A_vintage)
 	if index in g_processInputs and index in g_processOutputs:
@@ -176,7 +178,7 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 				for l_tech in M.tech_all:
 					for l_vintage in M.vintage_all:
 						for l_out in M.commodity_physical:
-							for l_inp in ProcessProduces( (l_period, l_tech, l_vintage), l_out ):
+							for l_inp in ProcessInputsByOutput( (l_period, l_tech, l_vintage), l_out ):
 								l_cost += (
 								    M.V_FlowOut[l_period, l_season, l_time_of_day, l_inp, l_tech, l_vintage, l_out]
 								  * M.CommodityProductionCost[l_period, l_tech, l_vintage]
@@ -199,7 +201,8 @@ V_Activity[p,s,d,t,v] = sum((inp,out), V_FlowOut[p,s,d,inp,t,v,out])
 	pindex = (A_period, A_tech, A_vintage)
 	aindex = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
 
-	# No sense in creating a guaranteed unused constraint
+	# The following two lines prevent creating obviously invalid or unnecessary constraints
+	# ex: a coal power plant does not consume wind and produce light.
 	if not ProcessOutputs( *pindex ):
 		return None
 
@@ -217,7 +220,7 @@ def CapacityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vinta
 V_Capacity is a derived variable; this constraint sets V_Capacity to at least be able to handle the activity in any optimization time slice.  In effect, this sets V_Capacity[p,t,v] to the max of the activity for similar indices: max(Activity[p,*,*t,v])
 
 (for each period, season, time_of_day, tech, vintage)
-V_Capacity[p,t,v] >= V_Activity[p,s,d,t,v]
+V_Capacity[p,t,v] * CapacityFactor[p,t,v] >= V_Activity[p,s,d,t,v]
 	"""
 	pindex = (A_period, A_tech, A_vintage)
 
@@ -225,12 +228,12 @@ V_Capacity[p,t,v] >= V_Activity[p,s,d,t,v]
 	if not ProcessOutputs( *pindex ):
 		return None
 
-	vintage_activity = M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
+	l_vintage_activity = M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
 
 	cindex = (A_tech, A_vintage)
 	l_capacity = M.V_Capacity[ cindex ] * M.CapacityFactor[ cindex ]
 
-	expr = ( vintage_activity <= l_capacity )
+	expr = ( l_vintage_activity <= l_capacity )
 	return expr
 
 
@@ -238,7 +241,7 @@ def ExistingCapacityConstraint_rule ( A_tech, A_vintage, M ):
 	"""\
 For vintage periods that the model is not to optimize, explicitly set the capacity values based on dat file input.
 
-(for each tech, vintage)
+(for each tech, vintage_exist)
 V_Capacity[t,v] = Param(Existingcapacity[t,v])
 	"""
 	index = (A_tech, A_vintage)
@@ -257,7 +260,7 @@ def ResourceExtractionConstraint_rule ( A_period, A_resource, M ):
 Prevent TEMOA from extracting an endless supply of energy from "the ether".
 
 (for each period, resource)
-sum((season,time_of_day,tech,vintage),V_FlowIn[p,*,*,r,*,*r]) <= Param(ResourceBound[p,t,v])
+sum((season,time_of_day,tech,vintage),V_FlowIn[p,*,*,r,*,*r]) <= Param(ResourceBound[p,r])
 	"""
 	l_extract = 0
 	for l_tech in M.tech_resource:
@@ -277,17 +280,18 @@ Ensure that the FlowOut of a produced energy carrier at least meets the demand o
 
 (for each period, season, time_of_day, energy_carrier)
 sum((inp,tech,vintage),V_FlowOut[p,s,t,*,*,*,c]) >= sum((tech,vintage,out),V_FlowIn[p,s,t,c,*,*,*])
+sum((inp,tech,vintage),V_FlowOut[period,season,time_of_day,*,*,*,carrier]) >= sum((tech,vintage,out),V_FlowIn[period,season,time_of_day,carrier,*,*,*])
 	"""
 	l_vflow_out = l_vflow_in = 0
 
 	for l_tech in M.tech_all:
 		for l_vintage in M.vintage_all:
-			for l_inp in ProcessProduces( (A_period, l_tech, l_vintage), A_carrier ):
+			for l_inp in ProcessInputsByOutput( (A_period, l_tech, l_vintage), A_carrier ):
 				l_vflow_out += M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, l_tech, l_vintage, A_carrier]
 
 	for l_tech in M.tech_production:
 		for l_vintage in M.vintage_all:
-			for l_out in ProcessConsumes( (A_period, l_tech, l_vintage), A_carrier ):
+			for l_out in ProcessOutputsByInput( (A_period, l_tech, l_vintage), A_carrier ):
 				l_vflow_in += M.V_FlowIn[A_period, A_season, A_time_of_day, A_carrier, l_tech, l_vintage, l_out]
 
 	if type(l_vflow_out) == type(l_vflow_in):
@@ -325,6 +329,7 @@ V_FlowOut[p,s,d,t,v,o] <= V_FlowIn[p,s,d,t,v,o] * Efficiency[i,t,v,o]
 	if not isValidProcess( *index ):
 		# No sense in creating a guaranteed unused constraint
 		return None
+
 	aindex = (A_period, A_season, A_time_of_day, A_inp, A_tech, A_vintage, A_out)
 
 	expr = (
@@ -352,7 +357,7 @@ sum((inp,tech,vintage),V_FlowOut[p,s,d,*,*,*,commodity]) >= Demand[p,s,d,commodi
 	l_supply = 0
 	for l_tech in M.tech_all:
 		for l_vintage in M.vintage_all:
-			for l_input in ProcessProduces( (A_period, l_tech, l_vintage), A_comm ):
+			for l_input in ProcessInputsByOutput( (A_period, l_tech, l_vintage), A_comm ):
 				l_supply += M.V_FlowOut[A_period, A_season, A_time_of_day, l_input, l_tech, l_vintage, A_comm]
 
 	if int is type( l_supply ):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env coopr_python
 
 __all__ = [ 'temoa_create_model', ]
 
@@ -168,3 +168,4 @@ if '__main__' == __name__:
 	# default output, but (currently) forces the choice of solver to GLPK.
 	from temoa_lib import temoa_solve
 	temoa_solve( model )
+
