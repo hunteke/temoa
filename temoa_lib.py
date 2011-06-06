@@ -83,6 +83,122 @@ def DemandConstraintErrorCheck (
 # End Temoa rule "partials"
 ###############################################################################
 
+##############################################################################
+# Begin validation and initialization routines
+
+def validate_periods ( M ):
+	""" Ensure that the time_exist < time_horizon < time_future """
+	exist    = max( M.time_exist )
+	horizonl = min( M.time_horizon )  # horizon "low"
+	horizonh = max( M.time_horizon )  # horizon "high"
+	future   = min( M.time_future )
+
+	if not ( exist < horizonl ):
+		msg = "All items in time_horizon must be larger that in time_exist.\n"  \
+		      "time_exist max:   %s\ntime_horizon min: %s"
+		raise ValueError, msg % (exist, horizonl)
+	elif not ( horizonh < future ):
+		msg = "All items in time_future must be larger that in time_horizon.\n" \
+		      "time_horizon max:   %s\ntime_future min: %s"
+		raise ValueError, msg % (horizonh, future)
+
+	return tuple()
+
+def init_set_time_optimize ( M ):
+	items = sorted( year for year in M.time_horizon )
+	items.extend( sorted( year for year in M.time_future ) )
+	return items[:-1]
+
+# end validation and initialization routines
+##############################################################################
+
+##############################################################################
+# Begin helper functions
+
+# Global Variables (dictionaries to cache parsing of Efficiency parameter)
+g_processInputs  = dict()
+g_processOutputs = dict()
+
+def ProcessOutputs ( *index ):
+	"""\
+index = (period, tech, vintage)
+	"""
+	if index in g_processOutputs:
+		return g_processOutputs[ index ]
+	return set()
+
+
+def ProcessInputs ( *index ):
+	if index in g_processInputs:
+		return g_processInputs[ index ]
+	return set()
+
+
+#def ProcessProduces ( index, A_output ):
+def ProcessInputsByOutput ( index, A_output ):
+	"""\
+Return the set of input energy carriers used by a technology (A_tech) to
+produce a given output carrier (A_output).
+"""
+	if index in g_processOutputs:
+		if A_output in g_processOutputs[ index ]:
+			return g_processInputs[ index ]
+
+	return set()
+
+
+#def ProcessConsumes ( index, A_input ):
+def ProcessOutputsByInput ( index, A_input ):
+	"""\
+Return the set of output energy carriers used by a technology (A_tech) to
+produce a given input carrier (A_output).
+"""
+	if index in g_processInputs:
+		if A_input in g_processInputs[ index ]:
+			return g_processOutputs[ index ]
+
+	return set()
+
+
+def InitProcessParams ( M ):
+	global g_processInputs
+	global g_processOutputs
+
+	for l_vintage in M.vintage_all:
+		for l_tech in M.tech_all:
+			for l_inp in M.commodity_physical:
+				for l_out in M.commodity_all:
+
+					eindex = (l_inp, l_tech, l_vintage, l_out)
+					if M.Efficiency[ eindex ] > 0:
+						for l_period in M.time_optimize:
+							if l_period < l_vintage: continue
+							l_lifetime = value( M.Lifetime[l_tech, l_vintage] )
+							if l_period > l_vintage + l_lifetime: continue
+
+							pindex = (l_period, l_tech, l_vintage)
+							if pindex not in g_processInputs:
+								g_processInputs[  pindex ] = set()
+								g_processOutputs[ pindex ] = set()
+							g_processInputs[ pindex ].add( l_inp )
+							g_processOutputs[pindex ].add( l_out )
+
+
+def isValidProcess( A_period, A_inp, A_tech, A_vintage, A_out ):
+	"""\
+Returns a boolean (True or False) indicating whether, in any given period, a technology can take a specified input carrier and convert it to and specified output carrier.
+"""
+	index = (A_period, A_tech, A_vintage)
+	if index in g_processInputs and index in g_processOutputs:
+		if A_inp in g_processInputs[ index ]:
+			if A_out in g_processOutputs[ index ]:
+				return True
+
+	return False
+
+# End helper functions
+##############################################################################
+
 ###############################################################################
 # Direct invocation methods (when modeler runs via "python model.py ..."
 
