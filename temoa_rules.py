@@ -64,7 +64,7 @@ def CapacityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vinta
 V_Capacity is a derived variable; this constraint sets V_Capacity to at least be able to handle the activity in any optimization time slice.  In effect, this sets V_Capacity[p,t,v] to the max of the activity for similar indices: max(Activity[p,*,*t,v])
 
 (for each period, season, time_of_day, tech, vintage)
-V_Capacity[p,t,v] * CapacityFactor[p,t,v] >= V_Activity[p,s,d,t,v]
+V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 	"""
 	pindex = (A_period, A_tech, A_vintage)
 
