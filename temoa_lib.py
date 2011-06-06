@@ -69,6 +69,17 @@ def CommodityBalanceConstraintErrorCheck (
 		raise ValueError, msg % (A_carrier, A_season, A_time_of_day, A_period,
 		                         flow_in_expr.getvalue() )
 
+
+def DemandConstraintErrorCheck (
+  l_supply, A_comm, A_period, A_season, A_time_of_day
+):
+	if int is type( l_supply ):
+		msg = "Error: Demand '%s' for (%s, %s, %s) unable to be met by any "   \
+		  "technology.\n\tPossible reasons:\n"                                 \
+		  " - Is the Efficiency parameter missing an entry for this demand?\n" \
+		  " - Does a tech that satisfies this demand need a longer Lifetime?\n"
+		raise ValueError, msg % (A_comm, A_period, A_season, A_time_of_day)
+
 # End Temoa rule "partials"
 ###############################################################################
 

@@ -304,12 +304,9 @@ sum((inp,tech,vintage),V_FlowOut[p,s,d,*,*,*,commodity]) >= Demand[p,s,d,commodi
 			for l_input in ProcessInputsByOutput( (A_period, l_tech, l_vintage), A_comm ):
 				l_supply += M.V_FlowOut[A_period, A_season, A_time_of_day, l_input, l_tech, l_vintage, A_comm]
 
-	if int is type( l_supply ):
-		msg = "Error: Demand '%s' for (%s, %s, %s) unable to be met by any "   \
-		  "technology.\n\tPossible reasons:\n"                                 \
-		  " - Is the Efficiency parameter missing an entry for this demand?\n" \
-		  " - Does a tech that satisfies this demand need a longer Lifetime?\n"
-		raise ValueError, msg % (A_comm, A_period, A_season, A_time_of_day)
+	DemandConstraintErrorCheck (
+	  l_supply, A_comm, A_period, A_season, A_time_of_day
+	)
 
 	expression = (l_supply >= M.Demand[ index ])
 	return expression
