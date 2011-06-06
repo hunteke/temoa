@@ -254,25 +254,9 @@ sum((inp,tech,vintage),V_FlowOut[period,season,time_of_day,*,*,*,carrier]) >= su
 			for l_out in ProcessOutputsByInput( (A_period, l_tech, l_vintage), A_carrier ):
 				l_vflow_in += M.V_FlowIn[A_period, A_season, A_time_of_day, A_carrier, l_tech, l_vintage, l_out]
 
-	if type(l_vflow_out) == type(l_vflow_in):
-		if int is type(l_vflow_out):
-			# Tell Pyomo not to create this constraint; it's useless because both
-			# of the flows are 0.  i.e. carrier not needed and nothing makes it.
-			return None
-	elif int is type(l_vflow_out):
-		flow_in_expr = StringIO()
-		l_vflow_in.pprint( ostream=flow_in_expr )
-		msg = "Unable to meet an interprocess '%s' transfer in (%s, %s, %s).\n" \
-		  "No flow out.  Constraint flow in:\n   %s\n"                          \
-		  "Possible reasons:\n"                                                 \
-		  " - Is there a missing period in set 'time_period'?\n"                \
-		  " - Is there a missing tech in set 'resource_tech'?\n"                \
-		  " - Is there a missing tech in set 'production_tech'?\n"              \
-		  " - Is there a missing commodity in set 'commodity_physical'?\n"      \
-		  " - Are there missing entries in the Efficiency parameter?\n"         \
-		  " - Does a tech need a longer Lifetime parameter setting?"
-		raise ValueError, msg % (A_carrier, A_season, A_time_of_day, A_period,
-		                         flow_in_expr.getvalue() )
+	CommodityBalanceConstraintErrorCheck(
+	  l_vflow_out, l_vflow_in, A_carrier, A_season, A_time_of_day, A_period
+	)
 
 	expression = (l_vflow_out >= l_vflow_in)
 	return expression

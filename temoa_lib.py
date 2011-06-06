@@ -42,6 +42,38 @@ explicitly use the Coopr path:
 	raise SystemExit, msg % path
 
 
+###############################################################################
+# Temoa rule "partial" functions (excised from indidivual constraints for
+#   readability)
+
+def CommodityBalanceConstraintErrorCheck (
+  l_vflow_out, l_vflow_in, A_carrier, A_season, A_time_of_day, A_period
+):
+	if type(l_vflow_out) == type(l_vflow_in):
+		if int is type(l_vflow_out):
+			# Tell Pyomo not to create this constraint; it's useless because both
+			# of the flows are 0.  i.e. carrier not needed and nothing makes it.
+			return None
+	elif int is type(l_vflow_out):
+		flow_in_expr = StringIO()
+		l_vflow_in.pprint( ostream=flow_in_expr )
+		msg = "Unable to meet an interprocess '%s' transfer in (%s, %s, %s).\n" \
+		  "No flow out.  Constraint flow in:\n   %s\n"                          \
+		  "Possible reasons:\n"                                                 \
+		  " - Is there a missing period in set 'time_period'?\n"                \
+		  " - Is there a missing tech in set 'resource_tech'?\n"                \
+		  " - Is there a missing tech in set 'production_tech'?\n"              \
+		  " - Is there a missing commodity in set 'commodity_physical'?\n"      \
+		  " - Are there missing entries in the Efficiency parameter?\n"         \
+		  " - Does a tech need a longer Lifetime parameter setting?"
+		raise ValueError, msg % (A_carrier, A_season, A_time_of_day, A_period,
+		                         flow_in_expr.getvalue() )
+
+# End Temoa rule "partials"
+###############################################################################
+
+###############################################################################
+# Direct invocation methods (when modeler runs via "python model.py ..."
 
 def temoa_solve ( model ):
 	from sys import argv, stderr, stdout
@@ -77,3 +109,6 @@ def temoa_solve ( model ):
 
 	# ... print the easier-to-read/parse format
 	SO( pformat_results( instance, result ) )
+
+# End direct invocation methods
+###############################################################################
