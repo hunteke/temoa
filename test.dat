@@ -71,7 +71,6 @@ param  Lifetime  :=
 # tech       # vintage   # lifetime in years
  imp_coal     1980        35
  imp_coal     2015        30
- t_coal       2000        50
  t_coal       2010        30
  t_elcboiler  2010        30
  t_elccar     2010        15
@@ -92,7 +91,6 @@ param  Efficiency  :=
 param  ExistingCapacity  :=
 # tech        # vintage       # capacity amount
  t_coal        2000            30
- t_coal        2000            40
 	;
 
 
