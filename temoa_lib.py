@@ -39,7 +39,7 @@ explicitly use the Coopr path:
 %s
 """
 
-	raise SystemExit, msg % path
+	raise ImportError, msg % path
 
 
 ###############################################################################
