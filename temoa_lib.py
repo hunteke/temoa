@@ -184,7 +184,9 @@ produce a given input carrier (A_output).
 
 def isValidProcess( A_period, A_inp, A_tech, A_vintage, A_out ):
 	"""\
-Returns a boolean (True or False) indicating whether, in any given period, a technology can take a specified input carrier and convert it to and specified output carrier.
+Returns a boolean (True or False) indicating whether, in any given period, a
+technology can take a specified input carrier and convert it to and specified
+output carrier.
 """
 	index = (A_period, A_tech, A_vintage)
 	if index in g_processInputs and index in g_processOutputs:
@@ -242,7 +244,10 @@ optimally padded for easier reading and debugging.
 
 def CreateModelDiagram ( pyomo_instance, fileformat ):
 	"""\
-These first couple versions of CreateModelDiagram do not fully work, and should be thought of merely as "proof of concept" code.  They create Graphviz DOT files and equivalent PDFs, but the graphics are not "correct" representations of the model.  Specifically, there are currently a few artifacts and missing pieces:
+These first couple versions of CreateModelDiagram do not fully work, and should
+be thought of merely as "proof of concept" code.  They create Graphviz DOT files
+and equivalent PDFs, but the graphics are not "correct" representations of the
+model.  Specifically, there are currently a few artifacts and missing pieces:
 
 Artifacts:
  * Though the graph is "roughly" a left-right DAG, certain pieces currently a
@@ -342,7 +347,8 @@ def parse_args ( ):
 	parser.add_argument('dot_dat',
 	  type=str,
 	  nargs='+',
-	  help='AMPL-format data file(s) with which to create a model instance. e.g. "data.dat"'
+	  help='AMPL-format data file(s) with which to create a model instance. '  \
+	       'e.g. "data.dat"'
 	)
 
 	parser.add_argument( '--graph_format',
