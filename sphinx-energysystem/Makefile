@@ -37,7 +37,7 @@ clean:
 	-rm -rf $(BUILDDIR)/* html
 
 html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	coopr_python `which $(SPHINXBUILD)` -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 

@@ -19,18 +19,10 @@ Please refer to the main website (http://temoaproject.org) for more details.
 Objective Formulation
 ============================================
 
-.. autofunction:: objective.Objective_Rule(model)
+.. autofunction:: temoa_rules.TotalCost_rule(model)
 
 Key Model Constraints
 ============================================
-
-.. autofunction:: constraints.Energy_Demand ( seg, period, model )
-
-.. autofunction:: constraints.Capacity_Req ( seg, period, model )
-
-.. autofunction:: constraints.Process_Level_Activity ( tech, iper, per, model )
-
-.. autofunction:: constraints.CO2_Emissions_Constraint ( period, model )
 
 Indices and tables
 ==================
