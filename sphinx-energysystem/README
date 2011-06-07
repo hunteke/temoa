@@ -1,0 +1,23 @@
+/** 
+* @file README
+* @brief Describes configuration files to generate automatic documentation from source.
+* @author Sarat Sreepathi
+* @version 1.0
+* @date 2010-06-16
+*/
+
+Summary
+----------------------------------
+This directory contains configuration files to generate automatic documentation from the model source code. 
+
+Run 
+----------------------------------
+ASSUMPTION: We assume that that model source code is in "../elc" directory from this location.
+If that's not the case, you need to update conf.py line number 19 to reflect the correct path of the model source code.
+
+Execute "./run.sh" in this directory to build the updated documentation from model source code and then upload to the temoaproject.org website.
+The updated documentation can then be viewed from http://temoaproject.org/docs
+
+To just build the updated documentation on the local machine, please run "make html" in this directory.
+
+
