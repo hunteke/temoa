@@ -198,6 +198,26 @@ Returns a boolean (True or False) indicating whether, in any given period, a tec
 ##############################################################################
 
 ###############################################################################
+# Miscellaneous routines
+
+def parse_args ( ):
+	import argparse
+
+	parser = argparse.ArgumentParser()
+
+	parser.add_argument('dot_dat',
+	  type=str,
+	  nargs='+',
+	  help='AMPL-format data file(s) with which to create a model instance. e.g. "data.dat"'
+	)
+
+	options = parser.parse_args()
+	return options
+
+# End miscellaneous routines
+###############################################################################
+
+###############################################################################
 # Direct invocation methods (when modeler runs via "python model.py ..."
 
 def temoa_solve ( model ):
@@ -210,9 +230,8 @@ def temoa_solve ( model ):
 
 	SE, SO = stderr.write, stdout.write
 
-	if len( argv ) < 2:
-		SE( "No data file (dot dat) specified.  Exiting.\n" )
-		raise SystemExit
+	options = parse_args()
+	dot_dats = options.dot_dat
 
 	opt = SolverFactory('glpk_experimental')
 	opt.keepFiles = False
@@ -221,7 +240,7 @@ def temoa_solve ( model ):
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
 	# on the command line
 	mdata = ModelData()
-	for f in argv[1:]:
+	for f in dot_dats:
 		if f[-4:] != '.dat':
 			SE( "Expecting a dot dat (data.dat) file, found %s\n" % f )
 			raise SystemExit
@@ -234,6 +253,7 @@ def temoa_solve ( model ):
 
 	# ... print the easier-to-read/parse format
 	SO( pformat_results( instance, result ) )
+
 
 # End direct invocation methods
 ###############################################################################
