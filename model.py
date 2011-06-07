@@ -23,6 +23,7 @@ time_horizon - the periods of interest.  Though the model will optimize through
 time_future  - the periods following time_horizon.
 *time_optimize - the union of time_horizon and time_future, less the final
                  period.  The model will optimize over this set.
+*time_report - the union of time_exist and time_horizon.
 *time_all    - the union of time_optimize and time_exist
 *vintage_exist  - copy of time_exist, for unambiguous contextual use
 *vintage_future - copy of time_future, for unambiguous contextual use
@@ -80,12 +81,15 @@ CapacityFactor(tech_all, vintage_all)
 	M.time_exist      = Set( ordered=True, within=Integers )
 	M.time_horizon    = Set( ordered=True, within=Integers )
 	M.time_future     = Set( ordered=True, within=Integers )
-	M.time_validation = Set( initialize=validate_periods )
 	M.time_optimize   = Set( ordered=True, initialize=init_set_time_optimize )
+	M.time_report     = M.time_exist | M.time_horizon
 	M.time_all        = M.time_exist | M.time_optimize
 	M.vintage_exist   = M.time_exist   # intentional copy, for unambiguous use
 	M.vintage_future  = M.time_future  # intentional copy, for unambiguous use
 	M.vintage_all     = M.time_all     # intentional copy, for unambiguous use
+
+	# time_validation is an empty set, but is a hack to validate time_* sets
+	M.time_validation = Set( initialize=validate_periods )
 
 	M.time_season     = Set()
 	M.time_of_day     = Set()
