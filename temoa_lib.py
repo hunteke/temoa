@@ -119,47 +119,6 @@ def init_set_time_optimize ( M ):
 g_processInputs  = dict()
 g_processOutputs = dict()
 
-def ProcessOutputs ( *index ):
-	"""\
-index = (period, tech, vintage)
-	"""
-	if index in g_processOutputs:
-		return g_processOutputs[ index ]
-	return set()
-
-
-def ProcessInputs ( *index ):
-	if index in g_processInputs:
-		return g_processInputs[ index ]
-	return set()
-
-
-#def ProcessProduces ( index, A_output ):
-def ProcessInputsByOutput ( index, A_output ):
-	"""\
-Return the set of input energy carriers used by a technology (A_tech) to
-produce a given output carrier (A_output).
-"""
-	if index in g_processOutputs:
-		if A_output in g_processOutputs[ index ]:
-			return g_processInputs[ index ]
-
-	return set()
-
-
-#def ProcessConsumes ( index, A_input ):
-def ProcessOutputsByInput ( index, A_input ):
-	"""\
-Return the set of output energy carriers used by a technology (A_tech) to
-produce a given input carrier (A_output).
-"""
-	if index in g_processInputs:
-		if A_input in g_processInputs[ index ]:
-			return g_processOutputs[ index ]
-
-	return set()
-
-
 def InitProcessParams ( M ):
 	global g_processInputs
 	global g_processOutputs
@@ -182,6 +141,45 @@ def InitProcessParams ( M ):
 								g_processOutputs[ pindex ] = set()
 							g_processInputs[ pindex ].add( l_inp )
 							g_processOutputs[pindex ].add( l_out )
+
+
+def ProcessOutputs ( *index ):
+	"""\
+index = (period, tech, vintage)
+	"""
+	if index in g_processOutputs:
+		return g_processOutputs[ index ]
+	return set()
+
+
+def ProcessInputs ( *index ):
+	if index in g_processInputs:
+		return g_processInputs[ index ]
+	return set()
+
+
+def ProcessInputsByOutput ( index, A_output ):
+	"""\
+Return the set of input energy carriers used by a technology (A_tech) to
+produce a given output carrier (A_output).
+"""
+	if index in g_processOutputs:
+		if A_output in g_processOutputs[ index ]:
+			return g_processInputs[ index ]
+
+	return set()
+
+
+def ProcessOutputsByInput ( index, A_input ):
+	"""\
+Return the set of output energy carriers used by a technology (A_tech) to
+produce a given input carrier (A_output).
+"""
+	if index in g_processInputs:
+		if A_input in g_processInputs[ index ]:
+			return g_processOutputs[ index ]
+
+	return set()
 
 
 def isValidProcess( A_period, A_inp, A_tech, A_vintage, A_out ):
