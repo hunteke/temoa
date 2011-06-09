@@ -56,9 +56,10 @@ param  EmissionsLimit  :=
 	;
 
 param  Demand  :=
- 2010  summer  day  transport_distance   50
- 2010  winter  day  resheating            2
- 2010  summer  day  reslighting           0
+ 2010  summer  day    transport_distance   50
+# 2010  summer  night  transport_distance   25
+ 2010  winter  day    resheating            2
+ 2010  summer  day    reslighting           0
  #2015 transport_distance   40
  #2020 transport_distance   30
 	;
