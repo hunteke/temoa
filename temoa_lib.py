@@ -182,6 +182,20 @@ produce a given input carrier (A_output).
 	return set()
 
 
+def ProcessesByPeriodDemand ( A_period, A_out, M ):
+	"""\
+This function relies on the Model (argument M).  I'd like to update at some point to not rely on th emodel
+"""
+	processes = set()
+	for l_tech in M.tech_all:
+		for l_vin in M.vintage_all:
+			index = (A_period, l_tech, l_vin)
+			if index in g_processOutputs and A_out in g_processOutputs[ index ]:
+					processes.add( (l_tech, l_vin) )
+
+	return processes
+
+
 def isValidProcess( A_period, A_inp, A_tech, A_vintage, A_out ):
 	"""\
 Returns a boolean (True or False) indicating whether, in any given period, a
