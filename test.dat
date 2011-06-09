@@ -39,6 +39,17 @@ set  commodity_demand  :=
  reslighting           # RL
 	;
 
+
+param  SegFrac  :=
+ winter  day    0.0972
+ winter  night  0.1528
+ summer  day    0.15625
+ summer  night  0.09375
+ inter   day    0.25
+ inter   night  0.25
+	;
+
+
 param  EmissionsLimit  :=
  co2 5
  nox 100000
