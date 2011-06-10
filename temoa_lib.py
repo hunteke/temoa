@@ -221,7 +221,7 @@ def _getLen ( key ):
 		return len(obj[ key ])
 	return wrapped
 
-def align_text_nodes ( nodes ):
+def create_text_nodes ( nodes ):
 	"""\
 This routine returns a set of text nodes in Graphviz DOT format, optimally
 padded for easier reading and debugging.
@@ -231,7 +231,7 @@ padded for easier reading and debugging.
 
 	return ''.join(sorted(set( nfmt.format( n, a ) for n, a in nodes )))
 
-def align_text_edges ( edges ):
+def create_text_edges ( edges ):
 	"""\
 This routine returns a set of text edge definitions in Graphviz DOT format,
 optimally padded for easier reading and debugging.
@@ -324,20 +324,36 @@ strict digraph TemoaModel {
 	tattr = 'color=darkseagreen'
 	cattr = 'color=lightsteelblue, shape=circle'
 	aattr = 'color=lightsteelblue, shape=circle'
-	nodes  = [(l_tech, tattr) for l_tech in M.tech_all ]
-	nodes.extend( (l_inp,  cattr) for l_inp in M.commodity_physical )
-	nodes.extend( (l_out,  aattr) for l_out in M.commodity_all )
-	nodes = align_text_nodes( nodes )
-
-	edges = [(l_inp, l_tech, l_out )
+	nodes  = list(set(
+	(
+	  '"(%s, %s, %s)"' % (l_per, l_tech, l_vin),
+	  tattr
+	)
 	  for l_tech in M.tech_all
-	  for l_inp  in M.commodity_physical
-	  for l_out  in M.commodity_physical
+	  for l_inp  in M.commodity_all
+	  for l_out  in M.commodity_all
 	  for l_per  in M.time_horizon
 	  for l_vin  in M.vintage_all
-	  if isValidProcess(l_per, l_inp, l_tech, l_vin, l_out)
+	  if isValidProcess( l_per, l_inp, l_tech, l_vin, l_out )
+	))
+	nodes.extend( (l_inp,  cattr) for l_inp in M.commodity_physical )
+	nodes.extend( (l_out,  aattr) for l_out in M.commodity_all )
+	nodes = create_text_nodes( nodes )
+
+	edges = [
+	(
+	  '"%s"' % l_inp,
+	  '"(%s, %s, %s)"' % (l_per, l_tech, l_vin),
+	  '"%s"' % l_out
+	)
+	  for l_tech in M.tech_all
+	  for l_inp  in M.commodity_all
+	  for l_out  in M.commodity_all
+	  for l_per  in M.time_horizon
+	  for l_vin  in M.vintage_all
+	  if isValidProcess( l_per, l_inp, l_tech, l_vin, l_out )
 	]
-	edges = align_text_edges( edges )
+	edges = create_text_edges( edges )
 
 	dotfile = open( 'model.dot', 'w' )
 	dotfile.write( data % (nodes, edges) )
