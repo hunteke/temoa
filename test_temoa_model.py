@@ -79,12 +79,23 @@ force_color:     (boolean) (Default: false)
 		failed = False
 	except Exception, e:
 		print e
-		msg = "  %sError optimizing test.  Debug with pyomo:  $ lpython %s %s%s"
+		msg = "  %s\n\tError optimizing test.  Debug with pyomo:\n\t$ lpython " \
+		   "%s %s%s"
 		msg %= (blue, basename, datfile, normal)
 		# don't care how it failed, just that it did.  The how is for further
 
 	msg = '%sFAIL%s   (%s)%s' % (red, normal, datfile, msg)
 	test = False
+	if failed:
+		if return_data:
+			baseline_data = None
+			run_output = 'Unable to complete model creation and solve.  Please ' \
+			   'run dot dat file directly with pyomo to further debug:\n\t$ '    \
+			   'pyomo  %s  %s'
+			run_output %= ('model.py', datfile)
+
+			return (test, msg, run_output, baseline_data )
+
 	if not failed:
 		if create_baseline:
 			with open( baseline, 'w' ) as f:
@@ -146,8 +157,6 @@ if options.datfile:
 		SE( msg % datfile )
 		raise SystemExit
 
-	create_baseline = options.create
-
 	M = temoa_create_model()
 	name = 'Command line specified test'
 	test, msg, data, baseline = runTest(
@@ -158,10 +167,13 @@ if options.datfile:
 	)
 
 	print "Result:\n%s\n\nData:\n%s\n" % (msg, data)
-	if not test:
+	if not test and baseline:
 		import difflib
+		bdata, ndata = baseline.split( '\n' ), data.split('\n')
+		bname, nname = "baseline data", "new output"
+		diff = difflib.unified_diff(bdata, ndata, bname, nname, lineterm="")
 		print "Differences:"
-		for line in difflib.unified_diff(baseline.split('\n'), data.split('\n')):
+		for line in diff:
 			print line
 
 	raise SystemExit
@@ -192,12 +204,13 @@ for name, datfile in tests_to_run:
 		# Turns out to be necessary to use a fresh version of the model for each
 		# test.  It seems that successive runs alter the model, despite
 		# "instantiation".  So this forking from a fresh version of the model is
-		# necessary.  Sigh.
+		# necessary.  Sigh.  The upside is that the model need be /created/ but
+		# once, which turns out to be a large portion of the time.
 
 		wait()
 		continue  # as parent, skip actually doing anything with the model.
 
 	# Only children processes execute the last part of this loop.
 	test, msg = runTest(M, datfile)
-	SO( "%s   %s\n" % (msg, name) )
+	SO( "%s   (%s)\n" % (msg, name) )
 	break
