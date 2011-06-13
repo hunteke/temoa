@@ -138,10 +138,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument( '--create', action='store_true', required=False,
   help='Use this run to create the baseline test output against which to '
-       'compare future test runs.  (Only allowed when specifying ')
-# parser.add_argument( '--show', action='store_true', required=False,
-  # help='Show the output of a single test.  This can only be specified with a '
-       # 'single test')
+       'compare future test runs.  (Only allowed when specifying a single ' 'test.)')
 parser.add_argument( 'datfile', type=str, nargs='?', default=None,
   help='A single_file.dat to test.  Do not specify to run the whole suite.')
 
