@@ -1,40 +1,50 @@
 data;
 
-set time_period  :=  2010;
+set  time_horizon  :=  2010 ;
+set  time_future   :=  2015 ;
 
-set  resource_tech  :=
-# Temoa name      Utopia name
- imp_dsl            # IMPDSL1
- imp_oil            # IMPOIL1
- imp_elc
+set  time_season  :=  winter ;
+set  time_of_day  :=  night ;
+
+set  tech_resource  :=
+ imp_dsl
+ imp_oil
  imp_coal
 	;
 
-set  production_tech  :=
-# Temoa name      Utopia name
- t_dslboiler        # RHO
- t_refinery         # SRE
+set  tech_production  :=
+ t_dslboiler
+ t_refinery
  t_coal
  t_elcboiler
 	;
 
-set  physical_commodity  :=
-# Temoa Name   Utopia Name
- diesel         # DSL
- oil            # OIL
- electricity    # ELC
+set  commodity_physical  :=
+ diesel
+ oil
+ electricity
  coal
 	;
 
-set  demand_commodity  :=
-# Temoa Name          Utopia Name
+set  commodity_demand  :=
  resheating
 	;
 
 
-param  Demand  :=
- 2010  resheating   100
+param  SegFrac  :=
+ winter  night  1
 	;
+
+
+param  CapacityToActivity  :=
+ t_coal  summer  day   1
+	;
+
+
+param  Demand  :=
+ 2010  winter  night  resheating   100
+	;
+
 
 param  CommodityProductionCost  :=
  2010  imp_coal    2010      1
@@ -71,4 +81,13 @@ param  Efficiency  :=
  coal             t_coal        2010       electricity          4
  diesel           t_dslboiler   2010       resheating           1
  electricity      t_elcboiler   2010       resheating           4
+	;
+
+
+param  CapacityFactor  :=
+# tech          # vintage     # capacity factor
+ imp_coal         2010           1
+ t_coal           2010           1
+ t_elcboiler      2010           1
+ t_elccar         2010           1
 	;
