@@ -66,16 +66,22 @@ V_Capacity is a derived variable; this constraint sets V_Capacity to at least be
 (for each period, season, time_of_day, tech, vintage)
 V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 	"""
-	pindex = (A_period, A_tech, A_vintage)
+	pindex = (A_period, A_tech, A_vintage)   # "process" index
 
 	# No sense in creating a guaranteed unused constraint
 	if not ProcessOutputs( *pindex ):
 		return None
 
-	l_vintage_activity = M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
+	l_vintage_activity = (
+	    M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
+	  * M.ActivityToCapacity[ A_tech ])
 
-	cindex = (A_tech, A_vintage)
-	l_capacity = M.V_Capacity[ cindex ] * M.CapacityFactor[ cindex ]
+	cindex = (A_tech, A_vintage)   # "capacity" index
+	l_capacity = (
+	    M.V_Capacity[ cindex ]
+	  * M.CapacityFactor[ cindex ]
+	  * M.SegFrac[A_season, A_time_of_day]
+	)
 
 	expr = ( l_vintage_activity <= l_capacity )
 	return expr
