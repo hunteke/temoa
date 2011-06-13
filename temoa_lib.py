@@ -87,11 +87,24 @@ def DemandConstraintErrorCheck (
 # Begin validation and initialization routines
 
 def validate_periods ( M ):
+	from sys import maxint
+
+	if not len( M.time_horizon ):
+		msg = 'Set "time_horizon" is empty!  Please specify at least one '      \
+		      'period in set time_horizon.'
+		raise ValueError, msg
+
+	if not len( M.time_future ):
+		msg = 'Set "time_future" is empty!  Please specify at least one year ' \
+		      'in set time_future, so that the model may ascertain a final '   \
+		      'period length for optimization and economic accounting.'
+		raise ValueError, msg
+
 	""" Ensure that the time_exist < time_horizon < time_future """
-	exist    = max( M.time_exist )
+	exist    = len( M.time_exist ) and max( M.time_exist ) or -maxint
 	horizonl = min( M.time_horizon )  # horizon "low"
 	horizonh = max( M.time_horizon )  # horizon "high"
-	future   = min( M.time_future )
+	future   = len( M.time_future) and min( M.time_future ) or maxint
 
 	if not ( exist < horizonl ):
 		msg = "All items in time_horizon must be larger that in time_exist.\n"  \
