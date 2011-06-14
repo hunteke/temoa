@@ -35,6 +35,52 @@ Objective_rule = TotalCost_rule
 ##############################################################################
 #   Constraint rules
 
+def BaseloadDiurnalConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vintage, M ):
+	"""\
+Ensure that certain (electric baseload) technologies maintain equivalent output at all times during a day.
+
+The math behind this is more computer programmatic in fashion, than
+mathematical.  It involves a minor algorithm that creates an ordering of the
+time_of_day set, and uses that order such that
+
+(for each d element of time_of_day)
+Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
+"""
+
+	# Question: How do I set the different times of day equal to each other?
+	# This approach is the more programmatic one, but is there a simpler
+	# mathematical approach?
+
+	l_times = sorted( M.time_of_day )  # get a sorted list of times of day.
+	  # this is the commonality between invocations of this method, and how
+	  # to find where in the "pecking order" A_time_of_day falls.
+
+	l_numTimes = len( l_times )
+	if l_numTimes < 2:
+		# if there is only 1 time of day, then it is, by definition, equal to
+		# itself.  Therefore, there is no need to create a constraint.
+		return None
+
+	index = l_times.index( A_time_of_day )
+	if 0 == index:
+		# the first index will be the "reference" time_of_day, so similarly do
+		# not create a constraint.
+		return None
+
+	# for the rest of the time_of_days, set them equal to the one before.  i.e.
+	# tod[ 2 ] == tod[ 1 ]
+	# tod[ 3 ] == tod[ 2 ]
+	# tod[ 4 ] == tod[ 3 ]
+	# and so on ...
+	l_prev_time_of_day = l_times[ index -1 ]
+
+	aindex_1 = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
+	aindex_2 = (A_period, A_season, l_prev_time_of_day, A_tech, A_vintage)
+
+	expr = (M.V_Activity[ aindex_1 ] == M.V_Activity[ aindex_2 ])
+	return expr
+
+
 def ActivityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vintage, M ):
 	"""\
 As V_Activity is a derived variable, the constraint sets V_Activity to the sum over input and output energy carriers of a process.

@@ -96,6 +96,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.tech_resource   = Set()
 	M.tech_production = Set()
+	M.tech_baseload   = Set()
 	M.tech_all = M.tech_resource | M.tech_production  # '|' = union operator
 
 	M.commodity_emissions = Set()
@@ -154,6 +155,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.ProcessBalanceConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_all, M.tech_all, M.vintage_all, M.commodity_all, rule=ProcessBalanceConstraint_rule )
 	M.CommodityBalanceConstraint   = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_physical,    rule=CommodityBalanceConstraint_rule )
 	M.ResourceExtractionConstraint = Constraint( M.time_optimize, M.commodity_physical,    rule=ResourceExtractionConstraint_rule )
+
+	M.BaseloadDiurnalConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_baseload, M.vintage_all, rule=BaseloadDiurnalConstraint_rule )
 
 	#   Constraints not yet updated
 	#M.EmissionConstraint           = Constraint(M.commodity_emissions,            rule=EmissionConstraint_rule)

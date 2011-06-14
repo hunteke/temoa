@@ -22,6 +22,11 @@ set  tech_production  :=
 	;
 
 
+set  tech_baseload  :=
+ t_coal
+	;
+
+
 set  commodity_physical  :=
 # Temoa Name   Utopia Name
  coal           # HCO
