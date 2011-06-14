@@ -49,12 +49,7 @@ explicitly use the Coopr path:
 def CommodityBalanceConstraintErrorCheck (
   l_vflow_out, l_vflow_in, A_carrier, A_season, A_time_of_day, A_period
 ):
-	if type(l_vflow_out) == type(l_vflow_in):
-		if int is type(l_vflow_out):
-			# Tell Pyomo not to create this constraint; it's useless because both
-			# of the flows are 0.  i.e. carrier not needed and nothing makes it.
-			return None
-	elif int is type(l_vflow_out):
+	if int is type(l_vflow_out):
 		flow_in_expr = StringIO()
 		l_vflow_in.pprint( ostream=flow_in_expr )
 		msg = "Unable to meet an interprocess '%s' transfer in (%s, %s, %s).\n" \

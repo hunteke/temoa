@@ -191,6 +191,12 @@ sum((inp,tech,vintage),V_FlowOut[period,season,time_of_day,*,*,*,carrier]) >= su
 			for l_out in ProcessOutputsByInput( (A_period, l_tech, l_vintage), A_carrier ):
 				l_vflow_in += M.V_FlowIn[A_period, A_season, A_time_of_day, A_carrier, l_tech, l_vintage, l_out]
 
+	if type(l_vflow_out) == type(l_vflow_in):
+		if int is type(l_vflow_out):
+			# Tell Pyomo not to create this constraint; it's useless because both
+			# of the flows are 0.  i.e. carrier not needed and nothing makes it.
+			return None
+
 	CommodityBalanceConstraintErrorCheck(
 	  l_vflow_out, l_vflow_in, A_carrier, A_season, A_time_of_day, A_period
 	)
