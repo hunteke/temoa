@@ -63,8 +63,9 @@ Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 
 	index = l_times.index( A_time_of_day )
 	if 0 == index:
-		# the first index will be the "reference" time_of_day, so similarly do
-		# not create a constraint.
+		# When index is 0, it means that we've reached the beginning of the array
+		# For the algorithm, this is a terminating condition, so do not create
+		# an effectively useless constraint
 		return None
 
 	# for the rest of the time_of_days, set them equal to the one before.  i.e.
