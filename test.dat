@@ -42,12 +42,12 @@ set  commodity_demand  :=
 
 
 param  SegFrac  :=
- winter  day    0.0972
- winter  night  0.1528
- summer  day    0.15625
- summer  night  0.09375
- inter   day    0.25
- inter   night  0.25
+ winter  day    0.2
+ winter  night  0.2
+ summer  day    1
+ summer  night  0.2
+ inter   day    0.1
+ inter   night  0.1
 	;
 
 
