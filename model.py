@@ -111,6 +111,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.tmp_set = M.commodity_physical | M.commodity_emissions
 	M.commodity_all = M.tmp_set | M.commodity_demand
 
+	M.global_discount_rate = Param( default=0, bounds=(-2.0, 2.0) )
+
 	M.SegFrac = Param(M.time_season, M.time_of_day, default=0)
 
 	M.ExistingCapacity = Param(M.tech_all, M.vintage_exist, default=0)
