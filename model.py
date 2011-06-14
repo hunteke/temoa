@@ -119,7 +119,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.ResourceBound    = Param(M.time_optimize,  M.commodity_physical,  default=0)
 	M.CommodityProductionCost = Param(M.time_optimize,  M.tech_all,  M.vintage_all,  default=0)
 	M.CapacityFactor   = Param(M.tech_all,  M.vintage_all,  default=0)
-
+	M.ActivityToCapacity = Param(M.tech_all, default=1)
 
 	# Not yet indexed by period or incorporated into the constraints
 	M.EmissionsLimit = Param(M.commodity_emissions, default=0)
