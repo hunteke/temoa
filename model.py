@@ -123,7 +123,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.ActivityToCapacity = Param(M.tech_all, default=1)
 
 	# Not yet indexed by period or incorporated into the constraints
-	M.EmissionsLimit = Param(M.commodity_emissions, default=0)
+	M.EmissionsLimit = Param(M.time_optimize, M.commodity_emissions, default=0)
 
 
 	# Variables
