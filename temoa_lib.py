@@ -104,7 +104,7 @@ def validate_periods ( M ):
 	exist    = len( M.time_exist ) and max( M.time_exist ) or -maxint
 	horizonl = min( M.time_horizon )  # horizon "low"
 	horizonh = max( M.time_horizon )  # horizon "high"
-	future   = len( M.time_future) and min( M.time_future ) or maxint
+	future   = min( M.time_future ) or maxint
 
 	if not ( exist < horizonl ):
 		msg = "All items in time_horizon must be larger that in time_exist.\n"  \
