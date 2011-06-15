@@ -62,9 +62,9 @@ param  ActivityToCapacity  :=
 	;
 
 
-param  EmissionsLimit  :=
- co2 5
- nox 100000
+param  EmissionLimit  :=
+ 2010 co2 5
+ 2010 nox 100000
 	;
 
 param  Demand  :=

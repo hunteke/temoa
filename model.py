@@ -125,7 +125,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.ActivityToCapacity = Param(M.tech_all, default=1)
 
 	# Not yet indexed by period or incorporated into the constraints
-	M.EmissionsLimit = Param(M.time_optimize, M.commodity_emissions, default=0)
+	M.EmissionLimit = Param(M.time_optimize, M.commodity_emissions, default=0)
+	M.EmissionActivity = Param(M.commodity_emissions, M.tech_all, M.vintage_all, default=0)
 
 
 	# Variables
@@ -161,7 +162,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.BaseloadDiurnalConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_baseload, M.vintage_all, rule=BaseloadDiurnalConstraint_rule )
 
 	#   Constraints not yet updated
-	#M.EmissionConstraint           = Constraint(M.commodity_emissions,            rule=EmissionConstraint_rule)
+	M.EmissionConstraint           = Constraint( M.time_optimize, M.commodity_emissions, rule=EmissionsConstraint_rule)
 	#M.ResourceBalanceConstraint    = Constraint(M.commodity_physical,             rule=ResourceBalanceConstraint_rule)
 	return M
 

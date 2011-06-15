@@ -82,6 +82,10 @@ Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 	return expr
 
 
+def EmissionsConstraint_rule ( A_period, A_emission, M ):
+	pass
+
+
 def ActivityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vintage, M ):
 	"""\
 As V_Activity is a derived variable, the constraint sets V_Activity to the sum over input and output energy carriers of a process.
