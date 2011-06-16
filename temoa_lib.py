@@ -144,9 +144,10 @@ def InitProcessParams ( M ):
 						for l_period in M.time_optimize:
 							if l_period < l_vintage: continue
 
-							l_loan_life = M.LifetimeLoan[l_tech, l_vintage].value
-							if l_period < l_vintage + l_loan_life:
-								g_processLoans[l_period, l_tech, l_vintage] = True
+							if l_vintage in M.time_optimize:
+								l_loan_life = M.LifetimeLoan[l_tech, l_vintage].value
+								if l_period < l_vintage + l_loan_life:
+									g_processLoans[l_period, l_tech, l_vintage] = True
 
 							l_lifetime = value( M.LifetimeTech[l_tech, l_vintage] )
 							if l_period > l_vintage + l_lifetime: continue
