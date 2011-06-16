@@ -137,63 +137,63 @@ param  EmissionActivity  :=     # TABLE NENV_TSEP, NENV_CAP
 
 
 param  Demand  :=                          # TABLE DM_DEM
-# Temoa                                                        # Utopia percentages
- 1990   inter   day     res_space_heating       3.024     # RH,  12%
- 1990   inter   night   res_space_heating       1.512     # RH,   6%
- 1990   winter  day     res_space_heating      13.77684   # RH,  54.67%
- 1990   winter  night   res_space_heating       6.88716   # RH,  27.33%
+# Temoa                                                     # Utopia percentages
+ 1990   inter   day     res_space_heating       3.024     # RH, 12%
+ 1990   inter   night   res_space_heating       1.512     # RH,  6%
+ 1990   winter  day     res_space_heating      13.77684   # RH, 54.67%
+ 1990   winter  night   res_space_heating       6.88716   # RH, 27.33%
 
- 2000   inter   day     res_space_heating       4.536    # RH,  12%
- 2000   inter   night   res_space_heating       2.268    # RH,   6%
- 2000   winter  day     res_space_heating      20.66526 # RH,  54.67%
- 2000   winter  night   res_space_heating      10.33074 # RH,  27.33%
+ 2000   inter   day     res_space_heating       4.536     # RH, 12%
+ 2000   inter   night   res_space_heating       2.268     # RH,  6%
+ 2000   winter  day     res_space_heating      20.66526   # RH, 54.67%
+ 2000   winter  night   res_space_heating      10.33074   # RH, 27.33%
 
- 2010   inter   day     res_space_heating       6.814    # RH,  12%
- 2010   inter   night   res_space_heating       3.402    # RH,   6%
- 2010   winter  day     res_space_heating      30.99789 # RH,  54.67%
- 2010   winter  night   res_space_heating      15.49611 # RH,  27.33%
+ 2010   inter   day     res_space_heating       6.814     # RH, 12%
+ 2010   inter   night   res_space_heating       3.402     # RH,  6%
+ 2010   winter  day     res_space_heating      30.99789   # RH, 54.67%
+ 2010   winter  night   res_space_heating      15.49611   # RH, 27.33%
 
- 1990   inter   day     res_lighting            0.84    # RL,   15%
- 1990   inter   night   res_lighting            0.28    # RL,    5%
- 1990   summer  day     res_lighting            0.84    # RL,   15%
- 1990   summer  night   res_lighting            0.28    # RL,    5%
- 1990   winter  day     res_lighting            2.8     # RL,   50%
- 1990   winter  night   res_lighting            0.56    # RL,   10%
+ 1990   inter   day     res_lighting            0.84      # RL, 15%
+ 1990   inter   night   res_lighting            0.28      # RL,  5%
+ 1990   summer  day     res_lighting            0.84      # RL, 15%
+ 1990   summer  night   res_lighting            0.28      # RL,  5%
+ 1990   winter  day     res_lighting            2.8       # RL, 50%
+ 1990   winter  night   res_lighting            0.56      # RL, 10%
 
- 2000   inter   day     res_lighting            1.26    # RL,   15%
- 2000   inter   night   res_lighting            0.42    # RL,    5%
- 2000   summer  day     res_lighting            1.25    # RL,   15%
- 2000   summer  night   res_lighting            0.42    # RL,    5%
- 2000   winter  day     res_lighting            4.2     # RL,   50%
- 2000   winter  night   res_lighting            0.84    # RL,   10%
+ 2000   inter   day     res_lighting            1.26      # RL, 15%
+ 2000   inter   night   res_lighting            0.42      # RL,  5%
+ 2000   summer  day     res_lighting            1.25      # RL, 15%
+ 2000   summer  night   res_lighting            0.42      # RL,  5%
+ 2000   winter  day     res_lighting            4.2       # RL, 50%
+ 2000   winter  night   res_lighting            0.84      # RL, 10%
 
- 2010   inter   day     res_lighting            1.89    # RL,   15%
- 2010   inter   night   res_lighting            0.63    # RL,    5%
- 2010   summer  day     res_lighting            1.89    # RL,   15%
- 2010   summer  night   res_lighting            0.63    # RL,    5%
- 2010   winter  day     res_lighting            6.3     # RL,   50%
- 2010   winter  night   res_lighting            1.26    # RL,   10%
+ 2010   inter   day     res_lighting            1.89      # RL, 15%
+ 2010   inter   night   res_lighting            0.63      # RL,  5%
+ 2010   summer  day     res_lighting            1.89      # RL, 15%
+ 2010   summer  night   res_lighting            0.63      # RL,  5%
+ 2010   winter  day     res_lighting            6.3       # RL, 50%
+ 2010   winter  night   res_lighting            1.26      # RL, 10%
 
- 1990   inter   day     auto_transportation     0.86684  # TX,   16.67%
- 1990   inter   night   auto_transportation     0.43316  # TX,    8.33%
- 1990   summer  day     auto_transportation     0.86684  # TX,   16.67%
- 1990   summer  night   auto_transportation     0.43316  # TX,    8.33%
- 1990   winter  day     auto_transportation     1.73316  # TX,   33.33%
- 1990   winter  night   auto_transportation     0.86684  # TX,   16.67%
+ 1990   inter   day     auto_transportation     0.86684   # TX, 16.67%
+ 1990   inter   night   auto_transportation     0.43316   # TX,  8.33%
+ 1990   summer  day     auto_transportation     0.86684   # TX, 16.67%
+ 1990   summer  night   auto_transportation     0.43316   # TX,  8.33%
+ 1990   winter  day     auto_transportation     1.73316   # TX, 33.33%
+ 1990   winter  night   auto_transportation     0.86684   # TX, 16.67%
 
- 2000   inter   day     auto_transportation     1.30026  # TX,   16.67%
- 2000   inter   night   auto_transportation     0.64974  # TX,    8.33%
- 2000   summer  day     auto_transportation     1.30026  # TX,   16.67%
- 2000   summer  night   auto_transportation     0.64974  # TX,    8.33%
- 2000   winter  day     auto_transportation     2.59974  # TX,   33.33%
- 2000   winter  night   auto_transportation     1.30026  # TX,   16.67%
+ 2000   inter   day     auto_transportation     1.30026   # TX, 16.67%
+ 2000   inter   night   auto_transportation     0.64974   # TX,  8.33%
+ 2000   summer  day     auto_transportation     1.30026   # TX, 16.67%
+ 2000   summer  night   auto_transportation     0.64974   # TX,  8.33%
+ 2000   winter  day     auto_transportation     2.59974   # TX, 33.33%
+ 2000   winter  night   auto_transportation     1.30026   # TX, 16.67%
 
- 2010   inter   day     auto_transportation     1.948723  # TX,   16.67%
- 2010   inter   night   auto_transportation     0.973777  # TX,    8.33%
- 2010   summer  day     auto_transportation     1.948723  # TX,   16.67%
- 2010   summer  night   auto_transportation     0.973777  # TX,    8.33%
- 2010   winter  day     auto_transportation     3.8986277 # TX,   33.33%
- 2010   winter  night   auto_transportation     1.948723  # TX,   16.67%
+ 2010   inter   day     auto_transportation     1.948723  # TX, 16.67%
+ 2010   inter   night   auto_transportation     0.973777  # TX,  8.33%
+ 2010   summer  day     auto_transportation     1.948723  # TX, 16.67%
+ 2010   summer  night   auto_transportation     0.973777  # TX,  8.33%
+ 2010   winter  day     auto_transportation     3.8986277 # TX, 33.33%
+ 2010   winter  night   auto_transportation     1.948723  # TX, 16.67%
 	;
 
 
@@ -436,48 +436,3 @@ param  ExistingCapacity  :=           # TABLE TCH_RES
  t_gas_car                    2010            0      # EPS = ???
 	;
 
-param  CapacityFactor  :=
-# tech                      # vintage     # capacity factor
- imp_dsl                      1990           1
- imp_gsl                      1990           1
- imp_hard_coal                1990           1
- imp_crude_oil                1990           1
- imp_uranium                  1990           1
-
- imp_fossil_equiv             1990           1
- imp_water                    1990           1
-
- t_coal_steam                 1990           1
- t_coal_steam                 2000           1
- t_coal_steam                 2010           1
- t_light_water_nuclear        1990           1
- t_light_water_nuclear        2000           1
- t_light_water_nuclear        2010           1
- t_light_water_nuclear        1990           1
- t_light_water_nuclear        2000           1
- t_light_water_nuclear        2010           1
- t_hydro_electric             1990           1
- t_hydro_electric             2000           1
- t_hydro_electric             2010           1
- t_oil_plant                  1990           1
- t_oil_plant                  2000           1
- t_oil_plant                  2010           1
- t_elc_boiler                 1990           1
- t_elc_boiler                 2000           1
- t_elc_boiler                 2010           1
- t_dsl_boiler                 1990           1
- t_dsl_boiler                 2000           1
- t_dsl_boiler                 2010           1
- t_std_incandescent_lighting  1990           1
- t_std_incandescent_lighting  2000           1
- t_std_incandescent_lighting  2010           1
- t_dsl_car                    1990           1
- t_dsl_car                    2000           1
- t_dsl_car                    2010           1
- t_elc_car                    1990           1
- t_elc_car                    2000           1
- t_elc_car                    2010           1
- t_gas_car                    1990           1
- t_gas_car                    2000           1
- t_gas_car                    2010           1
-	;
