@@ -1,0 +1,483 @@
+data ;
+
+
+set  time_horizon  :=  1990  2000  2010 ;
+set  time_future   :=  2020 ;
+
+set  time_season  :=  inter  summer  winter ;
+set  time_of_day  :=  day  night ;
+
+set  tech_resource  :=    # SET SRCENCP
+# Temoa                 # Utopia
+ imp_dsl                  # IMPDSL1
+ imp_gsl                  # IMPGSL1
+ imp_hard_coal            # IMPHCO1
+ imp_crude_oil            # IMPOIL1
+ imp_uranium              # IMPURN1
+
+ imp_fossil_equiv         # doesn't exist
+ imp_water                # doesn't exist
+	;
+
+
+set  tech_production  :=       # SET TCH (partial)
+# Temoa                      # Utopia
+ t_coal_steam                  # E01
+ t_light_water_nuclear         # E21
+ t_hydro_electric              # E31
+ t_oil_plant                   # E70
+ t_elc_boiler                  # RHE
+ t_dsl_boiler                  # RHO
+ t_std_incandescent_lighting   # RL1
+ t_oil_refinery                # SRE
+ t_dsl_car                     # TXD
+ t_elc_car                     # TXE
+ t_gas_car                     # TXG
+	;
+
+
+set  tech_baseload  :=
+# Temoa                   # Utopia
+ t_coal_steam               # E01
+ t_light_water_nuclear      # E21
+ t_hydro_electric           # E31
+	;
+
+
+set  commodity_physical  :=    # SET ENT
+# Temoa                      # Utopia
+ conservation                  # CSV
+ diesel                        # DSL
+ electricity                   # ELC
+ fossil_equiv                  # FEQ
+ gasoline                      # GSL
+ hard_coal                     # HCO
+ water                         # HYD
+ low_temp_heat                 # LTH
+ oil                           # OIL
+ uranium                       # URN
+	;
+
+
+set  commodity_emissions  :=    # SET ENV
+# Temoa                       # Utopia
+ co2                            # CO2
+ nox                            # NOX
+	;
+
+
+set  commodity_demand  :=    # SET DM
+# Temoa                    # Utopia
+ res_space_heating           # RH
+ res_lighting                # RL
+ auto_transportation         # TX
+	;
+
+
+param  SegFrac  :=        # PARAMETER NQHR
+# Temoa                 # Utopia
+ inter  day     0.1667    # I-D
+ inter  night   0.0833    # I-N
+ summer day     0.1667    # S-D
+ summer night   0.0833    # S-N
+ winter day     0.1667    # W-D
+ winter night   0.0833    # W-N
+	;
+
+
+param  ActivityToCapacity  :=          # PARAMETER TCH_CAPU
+# Temoa                              # Utopia
+ t_coal_steam                  31.54   # E01
+ t_light_water_nuclear         31.54   # E21
+ t_hydro_electric              31.54   # E31
+ t_oil_plant                   31.54   # E70
+ t_elc_boiler                   1      # RHE
+ t_dsl_boiler                   1      # RHO
+ t_std_incandescent_lighting    1      # RL1
+ t_oil_refinery                 1      # SRE
+ t_dsl_car                      1      # TXD
+ t_elc_car                      1      # TXE
+ t_gas_car                      1      # TXG
+	;
+
+
+param  GlobalDiscountRate  :=  0.05 ;  # SCALAR DISCOUNT
+
+
+param  EmissionLimit  :=     # TABLE EM_BOUND
+ 1990  co2   1e50    # approximation of infinity, or no limit
+ 1990  nox   1e50    # approximation of infinity, or no limit
+ 2000  c02   1e50    # approximation of infinity, or no limit
+ 2000  nox   1e50    # approximation of infinity, or no limit
+ 2010  co2   1e50    # approximation of infinity, or no limit
+ 2010  nox   1e50    # approximation of infinity, or no limit
+	;
+
+param  EmissionActivity  :=     # TABLE NENV_TSEP, NENV_CAP
+# Emission    # process      # vintage      # amount released per unit activity
+ co2          imp_dsl          1990          0.075
+ co2          imp_dsl          2000          0.075
+ co2          imp_dsl          2010          0.075
+ co2          imp_gas          1990          0.075
+ co2          imp_gas          2000          0.075
+ co2          imp_gas          2010          0.075
+ co2          imp_hard_coal    1990          0.089
+ co2          imp_hard_coal    2000          0.089
+ co2          imp_hard_coal    2010          0.089
+ co2          imp_crude_oil    1990          0.075
+ co2          imp_crude_oil    2000          0.075
+ co2          imp_crude_oil    2010          0.075
+ nox          t_dsl_car        1990          1
+ nox          t_dsl_car        2000          1
+ nox          t_dsl_car        2010          1
+ nox          t_gas_car        1990          1
+ nox          t_gas_car        2000          1
+ nox          t_gas_car        2010          1
+	;
+
+
+param  Demand  :=                          # TABLE DM_DEM
+# Temoa                                                        # Utopia percentages
+ 1990   inter   day     res_space_heating       3.024     # RH,  12%
+ 1990   inter   night   res_space_heating       1.512     # RH,   6%
+ 1990   winter  day     res_space_heating      13.77684   # RH,  54.67%
+ 1990   winter  night   res_space_heating       6.88716   # RH,  27.33%
+
+ 2000   inter   day     res_space_heating       4.536    # RH,  12%
+ 2000   inter   night   res_space_heating       2.268    # RH,   6%
+ 2000   winter  day     res_space_heating      20.66526 # RH,  54.67%
+ 2000   winter  night   res_space_heating      10.33074 # RH,  27.33%
+
+ 2010   inter   day     res_space_heating       6.814    # RH,  12%
+ 2010   inter   night   res_space_heating       3.402    # RH,   6%
+ 2010   winter  day     res_space_heating      30.99789 # RH,  54.67%
+ 2010   winter  night   res_space_heating      15.49611 # RH,  27.33%
+
+ 1990   inter   day     res_lighting            0.84    # RL,   15%
+ 1990   inter   night   res_lighting            0.28    # RL,    5%
+ 1990   summer  day     res_lighting            0.84    # RL,   15%
+ 1990   summer  night   res_lighting            0.28    # RL,    5%
+ 1990   winter  day     res_lighting            2.8     # RL,   50%
+ 1990   winter  night   res_lighting            0.56    # RL,   10%
+
+ 2000   inter   day     res_lighting            1.26    # RL,   15%
+ 2000   inter   night   res_lighting            0.42    # RL,    5%
+ 2000   summer  day     res_lighting            1.25    # RL,   15%
+ 2000   summer  night   res_lighting            0.42    # RL,    5%
+ 2000   winter  day     res_lighting            4.2     # RL,   50%
+ 2000   winter  night   res_lighting            0.84    # RL,   10%
+
+ 2010   inter   day     res_lighting            1.89    # RL,   15%
+ 2010   inter   night   res_lighting            0.63    # RL,    5%
+ 2010   summer  day     res_lighting            1.89    # RL,   15%
+ 2010   summer  night   res_lighting            0.63    # RL,    5%
+ 2010   winter  day     res_lighting            6.3     # RL,   50%
+ 2010   winter  night   res_lighting            1.26    # RL,   10%
+
+ 1990   inter   day     auto_transportation     0.86684  # TX,   16.67%
+ 1990   inter   night   auto_transportation     0.43316  # TX,    8.33%
+ 1990   summer  day     auto_transportation     0.86684  # TX,   16.67%
+ 1990   summer  night   auto_transportation     0.43316  # TX,    8.33%
+ 1990   winter  day     auto_transportation     1.73316  # TX,   33.33%
+ 1990   winter  night   auto_transportation     0.86684  # TX,   16.67%
+
+ 2000   inter   day     auto_transportation     1.30026  # TX,   16.67%
+ 2000   inter   night   auto_transportation     0.64974  # TX,    8.33%
+ 2000   summer  day     auto_transportation     1.30026  # TX,   16.67%
+ 2000   summer  night   auto_transportation     0.64974  # TX,    8.33%
+ 2000   winter  day     auto_transportation     2.59974  # TX,   33.33%
+ 2000   winter  night   auto_transportation     1.30026  # TX,   16.67%
+
+ 2010   inter   day     auto_transportation     1.948723  # TX,   16.67%
+ 2010   inter   night   auto_transportation     0.973777  # TX,    8.33%
+ 2010   summer  day     auto_transportation     1.948723  # TX,   16.67%
+ 2010   summer  night   auto_transportation     0.973777  # TX,    8.33%
+ 2010   winter  day     auto_transportation     3.8986277 # TX,   33.33%
+ 2010   winter  night   auto_transportation     1.948723  # TX,   16.67%
+	;
+
+
+param  CommodityProductionCost  :=       # TABLE NSEP_COST1, TCH_VAROM
+# period   # technology             # vintage   # value
+ 1990       imp_dsl                 1990         10
+ 2000       imp_dsl                 1990         10
+ 2010       imp_dsl                 1990         10
+ 2000       imp_dsl                 2000         10
+ 2010       imp_dsl                 2000         10
+ 2010       imp_dsl                 2010         10
+ 1990       imp_gsl                 1990         15
+ 2000       imp_gsl                 1990         15
+ 2010       imp_gsl                 1990         15
+ 2000       imp_gsl                 2000         15
+ 2010       imp_gsl                 2000         15
+ 2010       imp_gsl                 2010         15
+ 1990       imp_hard_coal           1990          2
+ 2000       imp_hard_coal           1990          2
+ 2010       imp_hard_coal           1990          2
+ 2000       imp_hard_coal           2000          2
+ 2010       imp_hard_coal           2000          2
+ 2010       imp_hard_coal           2010          2
+ 1990       imp_crude_oil           1990          8
+ 2000       imp_crude_oil           1990          8
+ 2010       imp_crude_oil           1990          8
+ 2000       imp_crude_oil           2000          8
+ 2010       imp_crude_oil           2000          8
+ 2010       imp_crude_oil           2010          8
+ 1990       imp_uranium             1990          2
+ 2000       imp_uranium             1990          2
+ 2010       imp_uranium             1990          2
+ 2000       imp_uranium             2000          2
+ 2010       imp_uranium             2000          2
+ 2010       imp_uranium             2010          2
+
+ 1990       imp_fossil_equiv        1990          0
+ 2000       imp_fossil_equiv        1990          0
+ 2010       imp_fossil_equiv        1990          0
+ 2000       imp_fossil_equiv        2000          0
+ 2010       imp_fossil_equiv        2000          0
+ 2010       imp_fossil_equiv        2010          0
+ 1990       imp_fossil_equiv        1990          0
+ 2000       imp_water               1990          0
+ 2010       imp_water               1990          0
+ 2000       imp_water               2000          0
+ 2010       imp_water               2000          0
+ 2010       imp_water               2010          0
+
+ 1990       t_coal_steam            1990          0.3
+ 2000       t_coal_steam            1990          0.3
+ 2010       t_coal_steam            1990          0.3
+ 2000       t_coal_steam            2000          0.3
+ 2010       t_coal_steam            2000          0.3
+ 2010       t_coal_steam            2010          0.3
+ 1990       t_light_water_nuclear   1990          1.5
+ 2000       t_light_water_nuclear   1990          1.5
+ 2010       t_light_water_nuclear   1990          1.5
+ 2000       t_light_water_nuclear   2000          1.5
+ 2010       t_light_water_nuclear   2000          1.5
+ 2010       t_light_water_nuclear   2010          1.5
+ 1990       t_oil_plant             1990          0.4
+ 2000       t_oil_plant             1990          0.4
+ 2010       t_oil_plant             1990          0.4
+ 2000       t_oil_plant             2000          0.4
+ 2010       t_oil_plant             2000          0.4
+ 2010       t_oil_plant             2010          0.4
+ 1990       t_oil_refinery          1990         10
+ 2000       t_oil_refinery          1990         10
+ 2010       t_oil_refinery          1990         10
+ 2000       t_oil_refinery          2000         10
+ 2010       t_oil_refinery          2000         10
+ 2010       t_oil_refinery          2010         10
+	;
+
+
+param  ResourceBound  :=
+ 1990   diesel        1e50  # for now, infinity (no limit)
+ 2000   diesel        1e50  # for now, infinity (no limit)
+ 2010   diesel        1e50  # for now, infinity (no limit)
+ 1990   gasoline      1e50  # for now, infinity (no limit)
+ 2000   gasoline      1e50  # for now, infinity (no limit)
+ 2010   gasoline      1e50  # for now, infinity (no limit)
+ 1990   hard_coal     1e50  # for now, infinity (no limit)
+ 2000   hard_coal     1e50  # for now, infinity (no limit)
+ 2010   hard_coal     1e50  # for now, infinity (no limit)
+ 1990   crude_oil     1e50  # for now, infinity (no limit)
+ 2000   crude_oil     1e50  # for now, infinity (no limit)
+ 2010   crude_oil     1e50  # for now, infinity (no limit)
+ 1990   uranium       1e50  # for now, infinity (no limit)
+ 2000   uranium       1e50  # for now, infinity (no limit)
+ 2010   uranium       1e50  # for now, infinity (no limit)
+
+ 1990   water         1e50  # for now, infinity (no limit)
+ 2000   water         1e50  # for now, infinity (no limit)
+ 2010   water         1e50  # for now, infinity (no limit)
+ 1990   fossil_equiv  1e50  # for now, infinity (no limit)
+ 2000   fossil_equiv  1e50  # for now, infinity (no limit)
+ 2010   fossil_equiv  1e50  # for now, infinity (no limit)
+
+	;
+
+
+param  LifetimeTech  :=   # PARAMETER TCH_LIFE
+# Temoa tech name             # vintage    # value   # Utopia tech name
+ t_coal_steam                   1990         40        # E01
+ t_coal_steam                   2000         40        # E01
+ t_coal_steam                   2010         40        # E01
+ t_light_water_nuclear          1990         40        # E21
+ t_light_water_nuclear          2000         40        # E21
+ t_light_water_nuclear          2010         40        # E21
+ t_hydro_electric               1990        100        # E31
+ t_hydro_electric               2000        100        # E31
+ t_hydro_electric               2010        100        # E31
+ t_oil_plant                    1990         40        # E70
+ t_oil_plant                    2000         40        # E70
+ t_oil_plant                    2010         40        # E70
+ t_elc_boiler                   1990         30        # RHE
+ t_elc_boiler                   2000         30        # RHE
+ t_elc_boiler                   2010         30        # RHE
+ t_dsl_boiler                   1990         30        # RHO
+ t_dsl_boiler                   2000         30        # RHO
+ t_dsl_boiler                   2010         30        # RHO
+ t_std_incandescent_lighting    1990         10        # RL1
+ t_std_incandescent_lighting    2000         10        # RL1
+ t_std_incandescent_lighting    2010         10        # RL1
+ t_oil_refinery                 1990         50        # SRE
+ t_oil_refinery                 2000         50        # SRE
+ t_oil_refinery                 2010         50        # SRE
+ t_dsl_car                      1990         15        # TXD
+ t_dsl_car                      2000         15        # TXD
+ t_dsl_car                      2010         15        # TXD
+ t_elc_car                      1990         15        # TXE
+ t_elc_car                      2000         15        # TXE
+ t_elc_car                      2010         15        # TXE
+ t_gas_car                      1990         15        # TXG
+ t_gas_car                      2000         15        # TXG
+ t_gas_car                      2010         15        # TXG
+
+ # added because /every/ process in TEMOA is a technology
+ imp_dsl         1990     1000
+ imp_dsl         2000     1000
+ imp_dsl         2010     1000
+ imp_gsl         1990     1000
+ imp_gsl         2000     1000
+ imp_gsl         2010     1000
+ imp_hard_coal   1990     1000
+ imp_hard_coal   2000     1000
+ imp_hard_coal   2010     1000
+ imp_crude_oil   1990     1000
+ imp_crude_oil   2000     1000
+ imp_crude_oil   2010     1000
+ imp_uranium     1990     1000
+ imp_uranium     2000     1000
+ imp_uranium     2010     1000
+
+ imp_water         1990     1000
+ imp_water         2000     1000
+ imp_water         2010     1000
+ imp_fossil_equiv  1990     1000
+ imp_fossil_equiv  2000     1000
+ imp_fossil_equiv  2010     1000
+	;
+
+param  Efficiency  :=  # PARAMETER CON_INP2, DMD_EFF
+# input carrier    # tech                       # vintage  # output carrier     # eff. value
+ diesel             imp_dsl                      1990       diesel               1
+ gasoline           imp_gsl                      1990       gasoline             1
+ hard_coal          imp_hard_coal                1990       hard_coal            1
+ crude_oil          imp_crude_oil                1990       crude_oil            1
+ uranium            imp_uranium                  1990       uranium              1
+
+ fossil_equiv       imp_fossil_equiv             1990       fossil_equiv         1
+ water              imp_water                    1990       water                1
+
+ hard_coal          t_coal_steam                 1990       electricity          0.32  # 1/3.125
+ hard_coal          t_coal_steam                 2000       electricity          0.32  # 1/3.125
+ hard_coal          t_coal_steam                 2010       electricity          0.32  # 1/3.125
+ fossil_equiv       t_light_water_nuclear        1990       electricity          0.32  # 1/3.125
+ fossil_equiv       t_light_water_nuclear        2000       electricity          0.32  # 1/3.125
+ fossil_equiv       t_light_water_nuclear        2010       electricity          0.32  # 1/3.125
+ uranium            t_light_water_nuclear        1990       electricity          0.4   # 1/2.5
+ uranium            t_light_water_nuclear        2000       electricity          0.4   # 1/2.5
+ uranium            t_light_water_nuclear        2010       electricity          0.4   # 1/2.5
+ water              t_hydro_electric             1990       electricity          0.32  # 1/3.125
+ water              t_hydro_electric             2000       electricity          0.32  # 1/3.125
+ water              t_hydro_electric             2010       electricity          0.32  # 1/3.125
+ diesel             t_oil_plant                  1990       electricity          0.294 # 1/3.4
+ diesel             t_oil_plant                  2000       electricity          0.294 # 1/3.4
+ diesel             t_oil_plant                  2010       electricity          0.294 # 1/3.4
+ electricity        t_elc_boiler                 1990       res_space_heating    1     # direct translation from DMD_EFF
+ electricity        t_elc_boiler                 2000       res_space_heating    1     # direct translation from DMD_EFF
+ electricity        t_elc_boiler                 2010       res_space_heating    1     # direct translation from DMD_EFF
+ diesel             t_dsl_boiler                 1990       res_space_heating    0.7   # direct translation from DMD_EFF
+ diesel             t_dsl_boiler                 2000       res_space_heating    0.7   # direct translation from DMD_EFF
+ diesel             t_dsl_boiler                 2010       res_space_heating    0.7   # direct translation from DMD_EFF
+ electricity        t_std_incandescent_lighting  1990       res_lighting         1     # direct translation from DMD_EFF
+ electricity        t_std_incandescent_lighting  2000       res_lighting         1     # direct translation from DMD_EFF
+ electricity        t_std_incandescent_lighting  2010       res_lighting         1     # direct translation from DMD_EFF
+ diesel             t_dsl_car                    1990       auto_transportation  0.231 # direct translation from DMD_EFF
+ diesel             t_dsl_car                    2000       auto_transportation  0.231 # direct translation from DMD_EFF
+ diesel             t_dsl_car                    2010       auto_transportation  0.231 # direct translation from DMD_EFF
+ electricity        t_elc_car                    1990       auto_transportation  0.827 # direct translation from DMD_EFF
+ electricity        t_elc_car                    2000       auto_transportation  0.827 # direct translation from DMD_EFF
+ electricity        t_elc_car                    2010       auto_transportation  0.827 # direct translation from DMD_EFF
+ gasoline           t_gas_car                    1990       auto_transportation  0.231 # direct translation from DMD_EFF
+ gasoline           t_gas_car                    2000       auto_transportation  0.231 # direct translation from DMD_EFF
+ gasoline           t_gas_car                    2010       auto_transportation  0.231 # direct translation from DMD_EFF
+	;
+
+
+param  ExistingCapacity  :=           # TABLE TCH_RES
+# tech                       # vintage       # capacity amount
+ t_coal_steam                 1990            0.5
+ t_coal_steam                 2000            0.325
+ t_coal_steam                 2010            0.15
+ t_light_water_nuclear        1990            0      # EPS = ???
+ t_light_water_nuclear        2000            0      # EPS = ???
+ t_light_water_nuclear        2010            0      # EPS = ???
+ t_hydro_electric             1990            0.1
+ t_hydro_electric             2000            0.1
+ t_hydro_electric             2010            0.1
+ t_oil_plant                  1990            0.3
+ t_oil_plant                  2000            0.25
+ t_oil_plant                  2010            0.2
+ t_elc_boiler                 1990            0      # EPS = ???
+ t_elc_boiler                 2000            0      # EPS = ???
+ t_elc_boiler                 2010            0      # EPS = ???
+ t_dsl_boiler                 1990            25
+ t_dsl_boiler                 2000            12.5
+ t_dsl_boiler                 2010            0      # EPS = ???
+ t_std_incandescent_lighting  1990            5.6
+ t_std_incandescent_lighting  2000            0      # EPS = ???
+ t_std_incandescent_lighting  2010            0      # EPS = ???
+ t_dsl_car                    1990            0.6
+ t_dsl_car                    2000            0.2
+ t_dsl_car                    2010            0      # EPS = ???
+ t_gas_car                    1990            4.6
+ t_gas_car                    2000            1.5
+ t_gas_car                    2010            0      # EPS = ???
+	;
+
+param  CapacityFactor  :=
+# tech                      # vintage     # capacity factor
+ imp_dsl                      1990           1
+ imp_gsl                      1990           1
+ imp_hard_coal                1990           1
+ imp_crude_oil                1990           1
+ imp_uranium                  1990           1
+
+ imp_fossil_equiv             1990           1
+ imp_water                    1990           1
+
+ t_coal_steam                 1990           1
+ t_coal_steam                 2000           1
+ t_coal_steam                 2010           1
+ t_light_water_nuclear        1990           1
+ t_light_water_nuclear        2000           1
+ t_light_water_nuclear        2010           1
+ t_light_water_nuclear        1990           1
+ t_light_water_nuclear        2000           1
+ t_light_water_nuclear        2010           1
+ t_hydro_electric             1990           1
+ t_hydro_electric             2000           1
+ t_hydro_electric             2010           1
+ t_oil_plant                  1990           1
+ t_oil_plant                  2000           1
+ t_oil_plant                  2010           1
+ t_elc_boiler                 1990           1
+ t_elc_boiler                 2000           1
+ t_elc_boiler                 2010           1
+ t_dsl_boiler                 1990           1
+ t_dsl_boiler                 2000           1
+ t_dsl_boiler                 2010           1
+ t_std_incandescent_lighting  1990           1
+ t_std_incandescent_lighting  2000           1
+ t_std_incandescent_lighting  2010           1
+ t_dsl_car                    1990           1
+ t_dsl_car                    2000           1
+ t_dsl_car                    2010           1
+ t_elc_car                    1990           1
+ t_elc_car                    2000           1
+ t_elc_car                    2010           1
+ t_gas_car                    1990           1
+ t_gas_car                    2000           1
+ t_gas_car                    2010           1
+	;
