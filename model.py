@@ -86,9 +86,10 @@ CapacityFactor(tech_all, vintage_all)
 	M.time_all        = M.time_exist | M.time_optimize
 	M.vintage_exist   = M.time_exist   # intentional copy, for unambiguous use
 	M.vintage_future  = M.time_future  # intentional copy, for unambiguous use
+	M.vintage_optimize = M.time_optimize # intentional copy, for unambiguous use
 	M.vintage_all     = M.time_all     # intentional copy, for unambiguous use
 
-	# time_validation is an empty set, but is a hack to validate time_* sets
+	# time_validation is an empty set; it is a hack to validate the time_* sets
 	M.time_validation = Set( initialize=validate_periods )
 
 	M.time_season     = Set()
@@ -111,22 +112,36 @@ CapacityFactor(tech_all, vintage_all)
 	M.tmp_set = M.commodity_physical | M.commodity_emissions
 	M.commodity_all = M.tmp_set | M.commodity_demand
 
-	M.global_discount_rate = Param( default=0 )
+	M.GlobalDiscountRate = Param( default=0 )
+	M.PeriodLength = Param( M.time_optimize, initialize=ParamPeriodLength_rule )
+	M.PeriodRate   = Param( M.time_optimize, initialize=ParamPeriodRate_rule )
 
 	M.SegFrac = Param(M.time_season, M.time_of_day, default=0)
 
-	M.ExistingCapacity = Param(M.tech_all, M.vintage_exist, default=0)
-	M.Efficiency       = Param(M.commodity_all,  M.tech_all,  M.vintage_all,  M.commodity_all,  default=0)
-	M.Lifetime         = Param(M.tech_all,  M.vintage_all,  default=0)          # in years
-	M.Demand           = Param(M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand,  default=0)
-	M.ResourceBound    = Param(M.time_optimize,  M.commodity_physical,  default=0)
-	M.CommodityProductionCost = Param(M.time_optimize,  M.tech_all,  M.vintage_all,  default=0)
-	M.CapacityFactor   = Param(M.tech_all,  M.vintage_all,  default=0)
-	M.ActivityToCapacity = Param(M.tech_all, default=1)
+	M.ActivityToCapacity = Param( M.tech_all,  default=1 )
+	M.CapacityFactor     = Param( M.tech_all,  M.vintage_all,  default=1 )
+
+	M.CommodityProductionCost = Param(M.time_optimize,  M.tech_all,  M.vintage_all,  default=0 )
+
+	M.ExistingCapacity = Param(M.tech_all, M.vintage_exist, default=0 )
+
+	M.Efficiency    = Param( M.commodity_all,  M.tech_all,  M.vintage_all,  M.commodity_all,  default=0 )
+	M.Demand        = Param( M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand,  default=0 )
+	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical,  default=0 )
+
+	M.LifetimeTech = Param( M.tech_all,  M.vintage_all,  default=30 )  # in years
+	M.LifetimeLoan = Param( M.tech_all,  M.vintage_optimize,  default=10 )  # in years
+	M.DiscountRate = Param( M.tech_all,  M.vintage_optimize,  default=0.05 )
+
+	M.CostFixed      = Param( M.time_optimize, M.tech_all, M.vintage_optimize, default=0 )
+	M.CostMarginal   = Param( M.time_optimize, M.tech_all, M.vintage_optimize, default=0 )
+	M.CostInvestment = Param( M.tech_all, M.vintage_optimize, default=0 )
+	M.LoanAnnualize  = Param( M.tech_all, M.vintage_optimize, rule=ParamLoanAnnualize_rule )
+
 
 	# Not yet indexed by period or incorporated into the constraints
-	M.EmissionLimit = Param(M.time_optimize, M.commodity_emissions, default=0)
-	M.EmissionActivity = Param(M.commodity_emissions, M.tech_all, M.vintage_all, default=0)
+	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions, default=0 )
+	M.EmissionActivity = Param( M.commodity_emissions, M.tech_all, M.vintage_all, default=0 )
 
 
 	# Variables

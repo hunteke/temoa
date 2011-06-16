@@ -55,12 +55,12 @@ def CommodityBalanceConstraintErrorCheck (
 		msg = "Unable to meet an interprocess '%s' transfer in (%s, %s, %s).\n" \
 		  "No flow out.  Constraint flow in:\n   %s\n"                          \
 		  "Possible reasons:\n"                                                 \
-		  " - Is there a missing period in set 'time_period'?\n"                \
-		  " - Is there a missing tech in set 'resource_tech'?\n"                \
-		  " - Is there a missing tech in set 'production_tech'?\n"              \
+		  " - Is there a missing period in set 'time_horizon'?\n"               \
+		  " - Is there a missing tech in set 'tech_resource'?\n"                \
+		  " - Is there a missing tech in set 'tech_production'?\n"              \
 		  " - Is there a missing commodity in set 'commodity_physical'?\n"      \
 		  " - Are there missing entries in the Efficiency parameter?\n"         \
-		  " - Does a tech need a longer Lifetime parameter setting?"
+		  " - Does a tech need a longer LifetimeTech parameter setting?"
 		raise ValueError, msg % (A_carrier, A_season, A_time_of_day, A_period,
 		                         flow_in_expr.getvalue() )
 
@@ -69,10 +69,11 @@ def DemandConstraintErrorCheck (
   l_supply, A_comm, A_period, A_season, A_time_of_day
 ):
 	if int is type( l_supply ):
-		msg = "Error: Demand '%s' for (%s, %s, %s) unable to be met by any "   \
-		  "technology.\n\tPossible reasons:\n"                                 \
-		  " - Is the Efficiency parameter missing an entry for this demand?\n" \
-		  " - Does a tech that satisfies this demand need a longer Lifetime?\n"
+		msg = "Error: Demand '%s' for (%s, %s, %s) unable to be met by any "    \
+		  "technology.\n\tPossible reasons:\n"                                  \
+		  " - Is the Efficiency parameter missing an entry for this demand?\n"  \
+		  " - Does a tech that satisfies this demand need a longer LifetimeTech?"\
+		  "\n"
 		raise ValueError, msg % (A_comm, A_period, A_season, A_time_of_day)
 
 # End Temoa rule "partials"
@@ -126,10 +127,12 @@ def init_set_time_optimize ( M ):
 # Global Variables (dictionaries to cache parsing of Efficiency parameter)
 g_processInputs  = dict()
 g_processOutputs = dict()
+g_processLoans = dict()
 
 def InitProcessParams ( M ):
 	global g_processInputs
 	global g_processOutputs
+	global g_processInvestment
 
 	for l_vintage in M.vintage_all:
 		for l_tech in M.tech_all:
@@ -140,7 +143,12 @@ def InitProcessParams ( M ):
 					if M.Efficiency[ eindex ] > 0:
 						for l_period in M.time_optimize:
 							if l_period < l_vintage: continue
-							l_lifetime = value( M.Lifetime[l_tech, l_vintage] )
+
+							l_loan_life = M.LifetimeLoan[l_tech, l_vintage].value
+							if l_period < l_vintage + l_loan_life:
+								g_processLoans[l_period, l_tech, l_vintage] = True
+
+							l_lifetime = value( M.LifetimeTech[l_tech, l_vintage] )
 							if l_period > l_vintage + l_lifetime: continue
 
 							pindex = (l_period, l_tech, l_vintage)
@@ -204,7 +212,7 @@ This function relies on the Model (argument M).  I'd like to update at some poin
 	return processes
 
 
-def isValidProcess( A_period, A_inp, A_tech, A_vintage, A_out ):
+def isValidProcess ( A_period, A_inp, A_tech, A_vintage, A_out ):
 	"""\
 Returns a boolean (True or False) indicating whether, in any given period, a
 technology can take a specified input carrier and convert it to and specified
@@ -218,6 +226,13 @@ output carrier.
 
 	return False
 
+
+def loanIsActive ( A_period, A_tech, A_vintage ):
+	"""\
+Return a boolean (True or False) whether a loan is still active in a period.
+This is the implementation of imat in the rest of the documentation.
+"""
+	return (A_period, A_tech, A_vintage) in g_processLoans
 # End helper functions
 ##############################################################################
 
