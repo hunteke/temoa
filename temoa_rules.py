@@ -100,24 +100,20 @@ Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 	# This approach is the more programmatic one, but is there a simpler
 	# mathematical approach?
 
-	l_times = sorted( M.time_of_day )  # get a sorted list of times of day.
+	l_times = list( M.time_of_day )  # convert to Python list.  (Already
+	  # appropriately sorted by the 'order=True' on the Set definition.)  This
 	  # this is the commonality between invocations of this method, and how
 	  # to find where in the "pecking order" A_time_of_day falls.
-
-	l_numTimes = len( l_times )
-	if l_numTimes < 2:
-		# if there is only 1 time of day, then it is, by definition, equal to
-		# itself.  Therefore, there is no need to create a constraint.
-		return None
 
 	index = l_times.index( A_time_of_day )
 	if 0 == index:
 		# When index is 0, it means that we've reached the beginning of the array
-		# For the algorithm, this is a terminating condition, so do not create
+		# For the algorithm, this is a terminating condition: do not create
 		# an effectively useless constraint
 		return None
 
 	# for the rest of the time_of_days, set them equal to the one before.  i.e.
+	# create a set of constraints that look something like:
 	# tod[ 2 ] == tod[ 1 ]
 	# tod[ 3 ] == tod[ 2 ]
 	# tod[ 4 ] == tod[ 3 ]
