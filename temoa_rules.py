@@ -191,11 +191,7 @@ For vintage periods that the model is not to optimize, explicitly set the capaci
 V_Capacity[t,v] = Param(Existingcapacity[t,v])
 	"""
 	index = (A_tech, A_vintage)
-
-	# No sense in creating a guaranteed unused constraint
 	ecapacity = value(M.ExistingCapacity[ index ])
-	if not (ecapacity > 0):
-		return None
 
 	expr = ( M.V_Capacity[ index ] == ecapacity )
 	return expr
