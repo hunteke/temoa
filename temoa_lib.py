@@ -234,6 +234,7 @@ Return a boolean (True or False) whether a loan is still active in a period.
 This is the implementation of imat in the rest of the documentation.
 """
 	return (A_period, A_tech, A_vintage) in g_processLoans
+
 # End helper functions
 ##############################################################################
 
@@ -424,6 +425,7 @@ def parse_args ( ):
 
 def temoa_solve ( model ):
 	from sys import argv, stderr, stdout
+	from time import clock
 
 	from coopr.opt import SolverFactory
 	from coopr.pyomo import ModelData
@@ -439,8 +441,10 @@ def temoa_solve ( model ):
 	opt.keepFiles = False
 	# opt.options.wlp = "temoa_model.lp"  # output GLPK LP understanding of model
 
+	SE( '[        ] Reading data files.'); stderr.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
 	# on the command line
+	dur = clock()
 	mdata = ModelData()
 	for f in dot_dats:
 		if f[-4:] != '.dat':
@@ -448,13 +452,27 @@ def temoa_solve ( model ):
 			raise SystemExit
 		mdata.add( f )
 	mdata.read( model )
+	dur = clock() - dur
+	SE( '\r[%8.2f\n' % dur )
 
+	SE( '[        ] Creating Temoa model instance.'); stderr.flush()
+	dur = clock()
 	# Now do the solve and ...
 	instance = model.create( mdata )
-	result = opt.solve( instance )
+	dur = clock() - dur
 
+	dur = clock()
+	SE( 'done.\r[%8.2f\n' % dur )
+	SE( '[        ] Solving.'); stderr.flush()
+	result = opt.solve( instance )
+	dur = clock() - dur
+	SE( '\r[%8.2f\n' % dur )
+
+	SE( '[        ] Formatting results.' ); stderr.flush()
 	# ... print the easier-to-read/parse format
-	SO( pformat_results( instance, result ) )
+	formatted_results = pformat_results( instance, result )
+	SE( '\r[%8.2f\n' % dur )
+	SO( formatted_results )
 
 	if options.graph_format:
 		SE( 'Creating Temoa model diagram ... ' ); stderr.flush()
