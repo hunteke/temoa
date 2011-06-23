@@ -329,7 +329,6 @@ Notes:
 strict digraph TemoaModel {
 	rankdir = LR;       // The direction of the graph goes from Left to Right
 	color   = black;    // currently unused; cluster outline color
-	dpi     = 300;      // dots-per-inch; for image output
 
 	// Default node attributes, unless otherwise defined
 	node [ shape=box, style=filled, color=lightblue, name=anode ];
