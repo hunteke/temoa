@@ -97,8 +97,9 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.tech_resource   = Set()
 	M.tech_production = Set()
-	M.tech_baseload   = Set()
 	M.tech_all = M.tech_resource | M.tech_production  # '|' = union operator
+	M.tech_baseload   = Set( within=M.tech_all )
+	M.tech_storage    = Set( within=M.tech_all )
 
 	M.commodity_emissions = Set()
 	M.commodity_physical  = Set()
@@ -133,11 +134,13 @@ CapacityFactor(tech_all, vintage_all)
 	M.LifetimeLoan = Param( M.tech_all,  M.vintage_optimize,  default=10 )  # in years
 	M.DiscountRate = Param( M.tech_all,  M.vintage_optimize,  default=0.05 )
 
-	M.CostFixed      = Param( M.time_optimize, M.tech_all, M.vintage_optimize, default=0 )
-	M.CostMarginal   = Param( M.time_optimize, M.tech_all, M.vintage_optimize, default=0 )
-	M.CostInvestment = Param( M.tech_all, M.vintage_optimize, default=0 )
-	M.LoanAnnualize  = Param( M.tech_all, M.vintage_optimize, rule=ParamLoanAnnualize_rule )
+	M.CostFixed     = Param( M.time_optimize, M.tech_all, M.vintage_all, default=0 )
+	M.CostMarginal  = Param( M.time_optimize, M.tech_all, M.vintage_all, default=0 )
+	M.CostInvest    = Param( M.tech_all, M.vintage_optimize, default=0 )
+	M.LoanAnnualize = Param( M.tech_all, M.vintage_optimize, rule=ParamLoanAnnualize_rule )
 
+
+	M.MaxCarrierOutput = Param( M.time_optimize, M.tech_all, M.commodity_physical, default=0 )
 
 	# Not yet indexed by period or incorporated into the constraints
 	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions, default=0 )
@@ -145,13 +148,28 @@ CapacityFactor(tech_all, vintage_all)
 
 
 	# Variables
-	#   Decision variables
+	#   Base decision variables
 	M.V_FlowIn  = Var(M.time_optimize, M.time_season, M.time_of_day, M.commodity_all, M.tech_all, M.vintage_all, M.commodity_all, domain=NonNegativeReals)
 	M.V_FlowOut = Var(M.time_optimize, M.time_season, M.time_of_day, M.commodity_all, M.tech_all, M.vintage_all, M.commodity_all, domain=NonNegativeReals)
 
-	#   Derived variables
+	#   Derived decision variables
 	M.V_Activity = Var(M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, domain=NonNegativeReals)
 	M.V_Capacity = Var(M.tech_all, M.vintage_all, domain=NonNegativeReals)
+
+	#   Additional and derived variables, mainly for reporting purposes
+	M.V_ActivityByPeriodAndTech        = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
+	M.V_ActivityByPeriodTechAndVintage = Var( M.time_optimize, M.tech_all, M.vintage_all, domain=NonNegativeReals )
+
+	M.V_CapacityByPeriodAndTech = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
+
+	M.V_InvestmentByTech           = Var( M.tech_all, domain=NonNegativeReals )
+	M.V_InvestmentByTechAndVintage = Var( M.tech_all, M.vintage_optimize, domain=NonNegativeReals )
+
+	M.V_EmissionActivityTotal            = Var( M.commodity_emissions, domain=Reals )
+	M.V_EmissionActivityByPeriod         = Var( M.commodity_emissions, M.time_optimize, domain=Reals )
+	M.V_EmissionActivityByTech           = Var( M.commodity_emissions, M.tech_all, domain=Reals )
+	M.V_EmissionActivityByPeriodAndTech  = Var( M.commodity_emissions, M.time_optimize, M.tech_all, domain=Reals )
+	M.V_EmissionActivityByTechAndVintage = Var( M.commodity_emissions, M.tech_all, M.vintage_all, domain=Reals )
 
 
 	# Objective
@@ -165,6 +183,21 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.ExistingCapacityConstraint = Constraint( M.tech_all, M.vintage_exist, rule=ExistingCapacityConstraint_rule )
 
+	M.TechActivityByPeriodConstraint           = Constraint( M.time_optimize, M.tech_all, rule=TechActivityByPeriodConstraint_rule )
+	M.TechActivityByPeriodAndVintageConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, rule=TechActivityByPeriodAndVintageConstraint_rule )
+
+	M.CapacityByPeriodAndTechConstraint = Constraint( M.time_optimize, M.tech_all, rule=CapacityByPeriodAndTechConstraint_rule )
+
+	M.InvestmentByTechConstraint           = Constraint( M.tech_all, rule=InvestmentByTechConstraint_rule )
+	M.InvestmentByTechAndVintageConstraint = Constraint( M.tech_all, M.vintage_optimize, rule=InvestmentByTechAndVintageConstraint_rule )
+
+	M.EmissionActivityTotalConstraint            = Constraint( M.commodity_emissions, rule=EmissionActivityTotalConstraint_rule )
+	M.EmissionActivityByPeriodConstraint         = Constraint( M.commodity_emissions, M.time_optimize, rule=EmissionActivityByPeriodConstraint_rule )
+	M.EmissionActivityByTechConstraint           = Constraint( M.commodity_emissions, M.tech_all, rule=EmissionActivityByTechConstraint_rule )
+	M.EmissionActivityByPeriodAndTechConstraint  = Constraint( M.commodity_emissions, M.time_optimize, M.tech_all, rule=EmissionActivityByPeriodAndTechConstraint_rule )
+	M.EmissionActivityByTechAndVintageConstraint = Constraint( M.commodity_emissions, M.tech_all, M.vintage_all, rule=EmissionActivityByTechAndVintageConstraint_rule )
+
+
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
 	#      very useful.)
@@ -175,10 +208,12 @@ CapacityFactor(tech_all, vintage_all)
 	M.ResourceExtractionConstraint = Constraint( M.time_optimize, M.commodity_physical,    rule=ResourceExtractionConstraint_rule )
 
 	M.BaseloadDiurnalConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_baseload, M.vintage_all, rule=BaseloadDiurnalConstraint_rule )
+	M.StorageConstraint = Constraint( M.time_optimize, M.time_season, M.commodity_all, M.tech_storage, M.vintage_all, M.commodity_all, rule=StorageConstraint_rule )
 
+	M.MaxCarrierOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.commodity_physical, rule=MaxCarrierOutputConstraint_rule )
 	#   Constraints not yet updated
 	M.EmissionConstraint           = Constraint( M.time_optimize, M.commodity_emissions, rule=EmissionsConstraint_rule)
-	#M.ResourceBalanceConstraint    = Constraint(M.commodity_physical,             rule=ResourceBalanceConstraint_rule)
+
 	return M
 
 

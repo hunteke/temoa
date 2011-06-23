@@ -24,24 +24,31 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 				if loanIsActive(l_per, l_tech, l_vin):
 					l_icost = (
 					    M.V_Capacity[l_tech, l_vin]
-					  * ( M.CostInvestment[l_tech, l_vin]
+					  * ( M.CostInvest[l_tech, l_vin]
 					    * M.LoanAnnualize[l_tech, l_vin]
 					    + M.CostFixed[l_per, l_tech, l_vin]
 					    )
 					)
 				else:
-					l_icost = (
-					    M.V_Capacity[l_tech, l_vin]
-					  * M.CostFixed[l_per, l_tech, l_vin]
+					l_icost = 0
+					if M.CostFixed[l_per, l_tech, l_vin] > 0:
+						# The if keeps the objective function cleaner in LP output
+						l_icost = (
+						    M.V_Capacity[l_tech, l_vin]
+						  * M.CostFixed[l_per, l_tech, l_vin]
+						)
+
+			for l_vin in M.vintage_all:
+				l_ucost = 0
+				if M.CostMarginal[l_per, l_tech, l_vin].value > 0:
+					# The if keeps the objective function cleaner in LP output
+					l_ucost = sum(
+					    M.V_Activity[l_per, l_season, l_time_of_day, l_tech, l_vin]
+					  * M.CostMarginal[l_per, l_tech, l_vin].value
+
+					  for l_season in M.time_season
+					  for l_time_of_day in M.time_of_day
 					)
-
-				l_ucost = sum(
-				    M.V_Activity[l_per, l_season, l_time_of_day, l_tech, l_vin]
-				  * M.CostMarginal[l_per, l_tech, l_vin]
-
-				  for l_season in M.time_season
-				  for l_time_of_day in M.time_of_day
-				)
 				l_cost += (l_icost + l_ucost) * M.PeriodRate[ l_per ]
 
 	return l_cost
@@ -129,6 +136,43 @@ Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 
 def EmissionsConstraint_rule ( A_period, A_emission, M ):
 	pass
+
+
+def MaxCarrierOutputConstraint_rule ( A_period, A_tech, A_output, M ):
+	index = (A_period, A_tech, A_output)
+	if M.MaxCarrierOutput[ index ] == 0:
+		# if user specified 0, or did not specify a value, then there is no
+		# constraint.  (The default value for this parameter is 0.)
+		return None
+
+	l_flowout = sum(
+	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, l_vin, A_output]
+
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	  for l_vin in M.vintage_all
+	  for l_inp in ProcessInputsByOutput( (A_period, A_tech, l_vin), A_output )
+	)
+	expr = (l_flowout <= M.MaxCarrierOutput[ index ])
+	return expr
+
+
+def StorageConstraint_rule ( A_period, A_season, A_inp, A_tech, A_vintage, A_out, M ):
+	"""\
+	Constraint rule documentation goes here ...
+"""
+	if not isValidProcess( A_period, A_inp, A_tech, A_vintage, A_out ):
+		return None
+
+	l_sum_in_out = sum(
+	    M.V_FlowOut[A_period, A_season, l_tod, A_inp, A_tech, A_vintage, A_out]
+	  - M.V_FlowIn[A_period, A_season, l_tod, A_inp, A_tech, A_vintage, A_out]
+
+	  for l_tod in M.time_of_day
+	)
+
+	expr = ( l_sum_in_out == 0 )
+	return expr
 
 
 def ActivityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vintage, M ):
@@ -319,6 +363,190 @@ sum((inp,tech,vintage),V_FlowOut[p,s,d,*,*,*,commodity]) >= Demand[p,s,d,commodi
 	return expression
 
 # End constraint rules
+##############################################################################
+
+##############################################################################
+# Additional and derived (informational) variable constraints
+
+def TechActivityByPeriodConstraint_rule ( A_per, A_tech, M ):
+	l_sum = sum(
+	  M.V_Activity[A_per, l_season, l_tod, A_tech, l_vin]
+
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	  for l_vin in M.vintage_all
+	  if l_vin <= A_per and A_per <= l_vin + M.LifetimeTech[A_tech, l_vin]
+	)
+
+	if int is type( l_sum ):
+		return None
+
+	expr = (M.V_ActivityByPeriodAndTech[A_per, A_tech] == l_sum)
+	return expr
+
+
+def TechActivityByPeriodAndVintageConstraint_rule ( A_per, A_tech, A_vin, M ):
+	if A_per < A_vin:
+		return None
+	elif A_per <= A_vin or A_vin + M.LifetimeTech[A_tech, A_vin] <= A_per:
+		return None
+
+	l_sum = sum(
+	  M.V_Activity[A_per, l_season, l_tod, A_tech, A_vin]
+
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	if int is type( l_sum ):
+		return None
+
+	expr = (M.V_ActivityByPeriodTechAndVintage[A_per, A_tech, A_vin] == l_sum)
+	return expr
+
+
+def CapacityByPeriodAndTechConstraint_rule ( A_per, A_tech, M ):
+	l_sum = sum(
+	  M.V_Capacity[A_tech, l_vin]
+
+	  for l_vin in M.vintage_all
+	  if l_vin < A_per and A_per <= M.LifetimeTech[A_tech, l_vin] + l_vin
+	)
+
+	if type( l_sum ) is int:
+		return None
+
+	expr = (M.V_CapacityByPeriodAndTech[A_per, A_tech] == l_sum)
+	return expr
+
+
+def InvestmentByTechConstraint_rule ( A_tech, M ):
+	l_sum = sum(
+	    M.V_Capacity[A_tech, l_vin]
+	  * M.CostInvest[A_tech, l_vin].value
+
+	  for l_vin in M.vintage_optimize
+	  if M.CostInvest[A_tech, l_vin].value > 0
+	)
+
+	if int is type( l_sum ):
+		return None
+
+	expr = ( M.V_InvestmentByTech[ A_tech ] == l_sum)
+	return expr
+
+
+def InvestmentByTechAndVintageConstraint_rule ( A_tech, A_vin, M ):
+	index = (A_tech, A_vin)
+
+	l_cost = 0
+
+	if value(M.CostInvest[ index ]) > 0:
+		l_cost = M.V_Capacity[ index ] * value(M.CostInvest[ index ])
+
+	if int is type( l_cost ):
+		return None
+
+	expr = ( M.V_InvestmentByTechAndVintage[ index ] == l_cost)
+	return expr
+
+
+def EmissionActivityTotalConstraint_rule ( A_emission, M ):
+	l_sum = sum(
+	    M.V_Activity[l_period, l_season, l_tod, l_tech, l_vin]
+	  * M.EmissionActivity[A_emission, l_tech, l_vin]
+
+	  for l_period in M.time_optimize
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	  for l_tech in M.tech_all
+	  for l_vin in M.vintage_all
+	  if M.EmissionActivity[A_emission, l_tech, l_vin] > 0
+	)
+
+	if type( l_sum ) is int:
+		return None
+
+	expr = (M.V_EmissionActivityTotal[ A_emission ] == l_sum)
+	return expr
+
+
+def EmissionActivityByPeriodConstraint_rule ( A_emission, A_period, M ):
+	l_sum = sum(
+	    M.V_Activity[A_period, l_season, l_tod, l_tech, l_vin]
+	  * M.EmissionActivity[A_emission, l_tech, l_vin]
+
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	  for l_tech in M.tech_all
+	  for l_vin in M.vintage_all
+	  if M.EmissionActivity[A_emission, l_tech, l_vin] > 0
+	)
+
+	if type( l_sum ) is int:
+		return None
+
+	expr = (M.V_EmissionActivityByPeriod[A_emission, A_period] == l_sum)
+	return expr
+
+
+def EmissionActivityByTechConstraint_rule ( A_emission, A_tech, M ):
+	l_sum = sum(
+	    M.V_Activity[l_period, l_season, l_tod, A_tech, l_vin]
+	  * M.EmissionActivity[A_emission, A_tech, l_vin]
+
+	  for l_period in M.time_optimize
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	  for l_vin in M.vintage_all
+	  if M.EmissionActivity[A_emission, A_tech, l_vin] > 0
+	)
+
+	if type( l_sum ) is int:
+		return None
+
+	expr = (M.V_EmissionActivityByTech[A_emission, A_tech] == l_sum)
+	return expr
+
+
+def EmissionActivityByPeriodAndTechConstraint_rule ( A_emission, A_period, A_tech, M ):
+	l_sum = sum(
+	    M.V_Activity[A_period, l_season, l_tod, A_tech, l_vin]
+	  * M.EmissionActivity[A_emission, A_tech, l_vin]
+
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	  for l_vin in M.vintage_all
+	  if M.EmissionActivity[A_emission, A_tech, l_vin] > 0
+	)
+
+	if type( l_sum ) is int:
+		return None
+
+	index = (A_emission, A_period, A_tech)
+	expr = (M.V_EmissionActivityByPeriodAndTech[ index ] == l_sum)
+	return expr
+
+
+def EmissionActivityByTechAndVintageConstraint_rule ( A_emission, A_tech, A_vintage, M ):
+	l_sum = sum(
+	    M.V_Activity[l_period, l_season, l_tod, A_tech, A_vintage]
+	  * M.EmissionActivity[A_emission, A_tech, A_vintage]
+
+	  for l_period in M.time_optimize
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	  if M.EmissionActivity[A_emission, A_tech, A_vintage] > 0
+	)
+
+	if type( l_sum ) is int:
+		return None
+
+	index = (A_emission, A_tech, A_vintage)
+	expr = (M.V_EmissionActivityByTechAndVintage[ index ] == l_sum)
+	return expr
+
+# End additional and derived (informational) variable constraints
 ##############################################################################
 
 # End *_rule definitions
