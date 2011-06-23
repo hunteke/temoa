@@ -444,7 +444,9 @@ def temoa_solve ( model ):
 	SE( '[        ] Reading data files.'); stderr.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
 	# on the command line
-	dur = clock()
+	begin = clock()
+	duration = lambda: clock() - begin
+
 	mdata = ModelData()
 	for f in dot_dats:
 		if f[-4:] != '.dat':
@@ -452,26 +454,21 @@ def temoa_solve ( model ):
 			raise SystemExit
 		mdata.add( f )
 	mdata.read( model )
-	dur = clock() - dur
-	SE( '\r[%8.2f\n' % dur )
+	SE( '\r[%8.2f\n' % duration() )
 
 	SE( '[        ] Creating Temoa model instance.'); stderr.flush()
-	dur = clock()
 	# Now do the solve and ...
 	instance = model.create( mdata )
-	dur = clock() - dur
+	SE( 'done.\r[%8.2f\n' % duration() )
 
-	dur = clock()
-	SE( 'done.\r[%8.2f\n' % dur )
 	SE( '[        ] Solving.'); stderr.flush()
 	result = opt.solve( instance )
-	dur = clock() - dur
-	SE( '\r[%8.2f\n' % dur )
+	SE( '\r[%8.2f\n' % duration() )
 
 	SE( '[        ] Formatting results.' ); stderr.flush()
 	# ... print the easier-to-read/parse format
 	formatted_results = pformat_results( instance, result )
-	SE( '\r[%8.2f\n' % dur )
+	SE( '\r[%8.2f\n' % duration() )
 	SO( formatted_results )
 
 	if options.graph_format:
