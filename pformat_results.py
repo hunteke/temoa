@@ -1,4 +1,4 @@
-import sys
+from sys import stderr as SE
 from cStringIO import StringIO
 
 def pformat_results ( pyomo_instance, pyomo_result ):
@@ -15,7 +15,15 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	if str(soln.Status) not in optimal_solutions:
 		return "No solution found."
 
-	obj_value = soln.Objective.TotalCost.Value
+	objs = pyomo_instance.objectives()
+	if len( objs ) > 1:
+		msg = '\nWarning: More than one objective.  Using first objective.\n'
+		SE.write( msg )
+
+	# This awkward workaround so as to be generic.  Unfortunately, I don't
+	# know how else to automatically discover the objective name
+	obj_name = objs.keys()[0]
+	obj_value = getattr(soln.Objective, obj_name).Value
 
 	Vars = soln.Variable
 	Cons = soln.Constraint
@@ -23,14 +31,14 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	var_keys = sorted(
 	  ii
 	  for ii in Vars
-	  if abs(Vars[ ii ].value) > 1e-16   # i.e. "if it's non-zero"
+	  if abs(Vars[ ii ].value) > 1e-15   # i.e. "if it's non-zero"
 	)
 
 	constraint_keys = sorted(
 	  ii
 	  for ii in Cons
 	  if 'c_' == ii[:2]            # all Coopr constraint keys begin with c_
-	  if abs(Cons[ ii ].value) > 1e-16    # i.e. "if it's non-zero"
+	  if abs(Cons[ ii ].value) > 1e-15    # i.e. "if it's non-zero"
 	)
 
 	def get_int_padding ( ObjSet ):
@@ -46,12 +54,13 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 
 	run_output = StringIO()
 
-	run_output.write( "Objective function value: %s\n" % obj_value )
+	msg = "Objective function value (%s): %s\n"
+	run_output.write( msg % (obj_name, obj_value) )
 	run_output.write( "Non-zero variable values for '%s'\n" % instance.name )
 
 	if len( var_keys ) > 0:
-		# This padding code make the display of the output values line up at
-		# the period
+		# This padding code is what makes the display of the output values
+		# line up on the decimal point.
 		int_padding = max(map( get_int_padding(Vars), var_keys ))
 		dec_padding = max(map( get_dec_padding(Vars), var_keys ))
 		format = "  %%%ds%%-%ds  %%s\n" % (int_padding, dec_padding)
@@ -64,7 +73,7 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 			if val < 0: int_part = "-%d" % int_part
 			run_output.write( format % (int_part, dec_part, key) )
 
-	if len( constraint_keys ) == 0:
+	if 0 == len( constraint_keys ):
 		# Since not all Coopr solvers give constraint results, must check
 		msg = '\nSelected Coopr solver plugin does not give constraint '        \
 		   'information.\n'
