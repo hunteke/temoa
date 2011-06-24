@@ -213,14 +213,15 @@ V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 		return None
 
 	l_vintage_activity = (
-	    M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
-	  * M.ActivityToCapacity[ A_tech ])
+	  M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
+	)
 
 	cindex = (A_tech, A_vintage)   # "capacity" index
 	l_capacity = (
 	    M.V_Capacity[ cindex ]
 	  * M.CapacityFactor[ cindex ]
 	  * M.SegFrac[A_season, A_time_of_day]
+	  * M.CapacityToActivity[ A_tech ]
 	)
 
 	expr = ( l_vintage_activity <= l_capacity )

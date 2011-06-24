@@ -119,7 +119,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.SegFrac = Param(M.time_season, M.time_of_day, default=0)
 
-	M.ActivityToCapacity = Param( M.tech_all,  default=1 )
+	M.CapacityToActivity = Param( M.tech_all,  default=1 )
 	M.CapacityFactor     = Param( M.tech_all,  M.vintage_all,  default=1 )
 
 	M.CommodityProductionCost = Param(M.time_optimize,  M.tech_all,  M.vintage_all,  default=0 )

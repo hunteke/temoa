@@ -59,7 +59,7 @@ param  SegFrac  :=
 	;
 
 
-param  ActivityToCapacity  :=
+param  CapacityToActivity  :=
  t_coal   31.536    # PJ/yr -> GW
  t_coal   2         # PJ/yr -> GW  # later definition overwrites previous one
 	;

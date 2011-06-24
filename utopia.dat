@@ -93,20 +93,20 @@ param  SegFrac  :=        # PARAMETER NQHR
 	;
 
 
-param  ActivityToCapacity  :=        # PARAMETER TCH_CAPU
-# Temoa                              # Utopia
- t_coal_steam                  31.54   # E01
- t_light_water_nuclear         31.54   # E21
- t_hydro_electric              31.54   # E31
- t_pumped_storage              31.54   # E51
- t_dsl_plant                   31.54   # E70
- t_elc_boiler                   1      # RHE
- t_dsl_boiler                   1      # RHO
- t_std_incandescent_lighting    1      # RL1
- t_oil_refinery                 1      # SRE
- t_dsl_car                      1      # TXD
- t_elc_car                      1      # TXE
- t_gas_car                      1      # TXG
+param  CapacityToActivity  :=         # PARAMETER TCH_CAPU
+# Temoa                               # Utopia
+ t_coal_steam                   31.54   # E01
+ t_light_water_nuclear          31.54   # E21
+ t_hydro_electric               31.54   # E31
+ t_pumped_storage               31.54   # E51
+ t_dsl_plant                    31.54   # E70
+ t_elc_boiler                   1       # RHE
+ t_dsl_boiler                   1       # RHO
+ t_std_incandescent_lighting    1       # RL1
+ t_oil_refinery                 1       # SRE
+ t_dsl_car                      1       # TXD
+ t_elc_car                      1       # TXE
+ t_gas_car                      1       # TXG
 	;
 
 
