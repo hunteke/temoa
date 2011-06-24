@@ -454,10 +454,10 @@ def InvestmentByTechAndVintageConstraint_rule ( A_tech, A_vin, M ):
 
 def EmissionActivityTotalConstraint_rule ( A_emission, M ):
 	l_sum = sum(
-	    M.V_Activity[l_period, l_season, l_tod, l_tech, l_vin]
+	    M.V_Activity[l_per, l_season, l_tod, l_tech, l_vin]
 	  * M.EmissionActivity[A_emission, l_tech, l_vin]
 
-	  for l_period in M.time_optimize
+	  for l_per in M.time_optimize
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	  for l_tech in M.tech_all
@@ -493,10 +493,10 @@ def EmissionActivityByPeriodConstraint_rule ( A_emission, A_period, M ):
 
 def EmissionActivityByTechConstraint_rule ( A_emission, A_tech, M ):
 	l_sum = sum(
-	    M.V_Activity[l_period, l_season, l_tod, A_tech, l_vin]
+	    M.V_Activity[l_per, l_season, l_tod, A_tech, l_vin]
 	  * M.EmissionActivity[A_emission, A_tech, l_vin]
 
-	  for l_period in M.time_optimize
+	  for l_per in M.time_optimize
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	  for l_vin in M.vintage_all
@@ -531,10 +531,10 @@ def EmissionActivityByPeriodAndTechConstraint_rule ( A_emission, A_period, A_tec
 
 def EmissionActivityByTechAndVintageConstraint_rule ( A_emission, A_tech, A_vintage, M ):
 	l_sum = sum(
-	    M.V_Activity[l_period, l_season, l_tod, A_tech, A_vintage]
+	    M.V_Activity[l_per, l_season, l_tod, A_tech, A_vintage]
 	  * M.EmissionActivity[A_emission, A_tech, A_vintage]
 
-	  for l_period in M.time_optimize
+	  for l_per in M.time_optimize
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	  if M.EmissionActivity[A_emission, A_tech, A_vintage] > 0
@@ -545,6 +545,81 @@ def EmissionActivityByTechAndVintageConstraint_rule ( A_emission, A_tech, A_vint
 
 	index = (A_emission, A_tech, A_vintage)
 	expr = (M.V_EmissionActivityByTechAndVintage[ index ] == l_sum)
+	return expr
+
+
+def EnergyConsumptionByTechConstraint_rule ( A_tech, M ):
+	l_sum = sum(
+	  M.V_FlowIn[l_per, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
+
+	  for l_per in M.time_optimize
+	  for l_inp in M.commodity_physical
+	  for l_vin in M.vintage_all
+	  for l_out in ProcessOutputsByInput( (l_per, A_tech, l_vin), l_inp )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	expr = (M.V_EnergyConsumptionByTech[ A_tech ] == l_sum)
+	return expr
+
+
+def EnergyConsumptionByTechAndOutputConstraint_rule ( A_tech, A_out, M ):
+	l_sum = sum(
+	  M.V_FlowIn[l_per, l_season, l_tod, l_inp, A_tech, l_vin, A_out]
+
+	  for l_per in M.time_optimize
+	  for l_vin in M.vintage_all
+	  for l_inp in ProcessInputsByOutput( (l_per, A_tech, l_vin), A_out )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	expr = (M.V_EnergyConsumptionByTechAndOutput[A_tech, A_out] == l_sum)
+	return expr
+
+def EnergyConsumptionByPeriodAndTechConstraint_rule ( A_period, A_tech, M ):
+	l_sum = sum(
+	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
+
+	  for l_inp in M.commodity_physical
+	  for l_vin in M.vintage_all
+	  for l_out in ProcessOutputsByInput( (A_period, A_tech, l_vin), l_inp )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	expr = (M.V_EnergyConsumptionByPeriodAndTech[A_period, A_tech] == l_sum)
+	return expr
+
+
+def EnergyConsumptionByPeriodTechAndOutputConstraint_rule ( A_period, A_tech, A_out, M ):
+	l_sum = sum(
+	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, A_tech, l_vin, A_out]
+
+	  for l_vin in M.vintage_all
+	  for l_inp in ProcessInputsByOutput( (A_period, A_tech, l_vin), A_out )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	index = (A_period, A_tech, A_out)
+	expr = (M.V_EnergyConsumptionByPeriodTechAndOutput[ index ] == l_sum)
+	return expr
+
+
+def EnergyConsumptionByPeriodTechAndVintageConstraint_rule ( A_period, A_tech, A_vintage, M ):
+	l_sum = sum(
+	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, l_out]
+
+	  for l_inp in M.commodity_physical
+	  for l_out in ProcessOutputsByInput( (A_period, A_tech, A_vintage), l_inp )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	index = (A_period, A_tech, A_vintage)
+	expr = (M.V_EnergyConsumptionByPeriodTechAndVintage[ index ] == l_sum)
 	return expr
 
 # End additional and derived (informational) variable constraints
