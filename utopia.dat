@@ -243,9 +243,9 @@ param  MaxCarrierOutput  :=   # roughly NRAT_RTY2
 
 param  LifetimeTech  :=        # PARAMETER TCH_LIFE
 # Temoa tech name             # vintage    # value   # Utopia tech name
- t_coal_steam                   1960         30        # E01, for existing cap.
- t_coal_steam                   1970         30        # E01, for existing cap.
- t_coal_steam                   1980         30        # E01, for existing cap.
+ t_coal_steam                   1960         40        # E01, for existing cap.
+ t_coal_steam                   1970         40        # E01, for existing cap.
+ t_coal_steam                   1980         40        # E01, for existing cap.
  t_coal_steam                   1990         40        # E01
  t_coal_steam                   2000         40        # E01
  t_coal_steam                   2010         40        # E01
@@ -259,37 +259,37 @@ param  LifetimeTech  :=        # PARAMETER TCH_LIFE
  t_pumped_storage               1990        100        # E51
  t_pumped_storage               2000        100        # E51
  t_pumped_storage               2010        100        # E51
- t_dsl_plant                    1960         30        # E70, for existing cap.
- t_dsl_plant                    1970         30        # E70, for existing cap.
- t_dsl_plant                    1980         30        # E70, for existing cap.
+ t_dsl_plant                    1960         40        # E70, for existing cap.
+ t_dsl_plant                    1970         40        # E70, for existing cap.
+ t_dsl_plant                    1980         40        # E70, for existing cap.
  t_dsl_plant                    1990         40        # E70
  t_dsl_plant                    2000         40        # E70
  t_dsl_plant                    2010         40        # E70
  t_elc_boiler                   1990         30        # RHE
  t_elc_boiler                   2000         30        # RHE
  t_elc_boiler                   2010         30        # RHE
- t_dsl_boiler                   1970         20        # RHO, for existing cap.
- t_dsl_boiler                   1980         20        # RHO, for existing cap.
+ t_dsl_boiler                   1970         30        # RHO, for existing cap.
+ t_dsl_boiler                   1980         30        # RHO, for existing cap.
  t_dsl_boiler                   1990         30        # RHO
  t_dsl_boiler                   2000         30        # RHO
  t_dsl_boiler                   2010         30        # RHO
- t_std_incandescent_lighting    1980         10        # RL1, for existing cap.
+ t_std_incandescent_lighting    1980         20        # RL1, for existing cap.
  t_std_incandescent_lighting    1990         10        # RL1
  t_std_incandescent_lighting    2000         10        # RL1
  t_std_incandescent_lighting    2010         10        # RL1
  t_oil_refinery                 1990         50        # SRE
  t_oil_refinery                 2000         50        # SRE
  t_oil_refinery                 2010         50        # SRE
- t_dsl_car                      1970         20        # TXD, for existing cap.
- t_dsl_car                      1980         20        # TXD, for existing cap.
+ t_dsl_car                      1970         30        # TXD, for existing cap.
+ t_dsl_car                      1980         30        # TXD, for existing cap.
  t_dsl_car                      1990         15        # TXD
  t_dsl_car                      2000         15        # TXD
  t_dsl_car                      2010         15        # TXD
  t_elc_car                      1990         15        # TXE
  t_elc_car                      2000         15        # TXE
  t_elc_car                      2010         15        # TXE
- t_gas_car                      1970         20        # TXG, for existing cap.
- t_gas_car                      1980         20        # TXG, for existing cap.
+ t_gas_car                      1970         30        # TXG, for existing cap.
+ t_gas_car                      1980         30        # TXG, for existing cap.
  t_gas_car                      1990         15        # TXG
  t_gas_car                      2000         15        # TXG
  t_gas_car                      2010         15        # TXG
