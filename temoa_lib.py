@@ -133,8 +133,9 @@ def validate_SegFrac ( M ):
 
 
 def init_set_time_optimize ( M ):
-	items = sorted( year for year in M.time_horizon )
-	items.extend( sorted( year for year in M.time_future ) )
+	items = list( M.time_horizon )
+	items.extend( list( M.time_future ) )
+
 	return items[:-1]
 
 # end validation and initialization routines
