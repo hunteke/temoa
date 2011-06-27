@@ -153,12 +153,42 @@ CapacityFactor(tech_all, vintage_all)
 	M.V_Activity = Var(M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, domain=NonNegativeReals)
 	M.V_Capacity = Var(M.tech_all, M.vintage_all, domain=NonNegativeReals)
 
-	#   Additional and derived variables, mainly for reporting purposes
-	#   As these are basically used to export information for modeler
-	#   consumption, these could be taken out of here and put in a
-	#   post-processing step.  This is in fact what we'll likely want to do
-	#   as we grow because Coopr remains fairly inefficient, and each Variable
-	#   represents a fair chunk of memory, among other resources.
+
+	# Objective
+	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
+
+	# Constraints
+
+	#   "Bookkeeping" constraints
+	M.ActivityConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, rule=ActivityConstraint_rule )
+	M.CapacityConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, rule=CapacityConstraint_rule )
+
+	M.ExistingCapacityConstraint = Constraint( M.tech_all, M.vintage_exist, rule=ExistingCapacityConstraint_rule )
+
+	#   Model Constraints
+	#    - in driving order.  (e.g., without Demand, none of the others are
+	#      very useful.)
+	M.DemandConstraint             = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_demand,      rule=DemandConstraint_rule )
+	M.DemandCapacityConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_demand,      rule=DemandCapacityConstraint_rule )
+	M.ProcessBalanceConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_all, M.tech_all, M.vintage_all, M.commodity_all, rule=ProcessBalanceConstraint_rule )
+	M.CommodityBalanceConstraint   = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_physical,    rule=CommodityBalanceConstraint_rule )
+	M.ResourceExtractionConstraint = Constraint( M.time_optimize, M.commodity_physical,    rule=ResourceExtractionConstraint_rule )
+
+	M.BaseloadDiurnalConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_baseload, M.vintage_all, rule=BaseloadDiurnalConstraint_rule )
+	M.StorageConstraint = Constraint( M.time_optimize, M.time_season, M.commodity_all, M.tech_storage, M.vintage_all, M.commodity_all, rule=StorageConstraint_rule )
+
+	M.MaxCarrierOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.commodity_physical, rule=MaxCarrierOutputConstraint_rule )
+	#   Constraints not yet updated
+	M.EmissionConstraint           = Constraint( M.time_optimize, M.commodity_emissions, rule=EmissionsConstraint_rule)
+
+
+	# Additional and derived variables, mainly for reporting purposes.  As
+	# these are basically used to export information for modeler consumption,
+	# these could be taken out of here and put in a post-processing step.  This
+	# is in fact what we'll likely want to do as we grow because Coopr remains
+	# fairly inefficient, and each Variable represents a fair chunk of memory,
+	# among other resources.  Luckily, all told, these are cheap, compared
+	# to the computational cost of the other constraints.
 	M.V_ActivityByPeriodAndTech        = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
 	M.V_ActivityByPeriodTechAndVintage = Var( M.time_optimize, M.tech_all, M.vintage_all, domain=NonNegativeReals )
 
@@ -179,17 +209,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.V_EnergyConsumptionByPeriodTechAndOutput  = Var( M.time_optimize, M.tech_all, M.commodity_all, domain=NonNegativeReals )
 	M.V_EnergyConsumptionByPeriodTechAndVintage = Var( M.time_optimize, M.tech_all, M.vintage_all, domain=NonNegativeReals )
 
-
-	# Objective
-	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
-
-	# Constraints
-
-	#   "Bookkeeping" constraints
-	M.ActivityConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, rule=ActivityConstraint_rule )
-	M.CapacityConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, rule=CapacityConstraint_rule )
-
-	M.ExistingCapacityConstraint = Constraint( M.tech_all, M.vintage_exist, rule=ExistingCapacityConstraint_rule )
+	#   The requisite constraints to set the derived variables above.
 
 	M.TechActivityByPeriodConstraint           = Constraint( M.time_optimize, M.tech_all, rule=TechActivityByPeriodConstraint_rule )
 	M.TechActivityByPeriodAndVintageConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, rule=TechActivityByPeriodAndVintageConstraint_rule )
@@ -211,22 +231,6 @@ CapacityFactor(tech_all, vintage_all)
 	M.EnergyConsumptionByPeriodTechAndOutputConstraint  = Constraint( M.time_optimize, M.tech_all, M.commodity_all, rule=EnergyConsumptionByPeriodTechAndOutputConstraint_rule )
 	M.EnergyConsumptionByPeriodTechAndVintageConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, rule=EnergyConsumptionByPeriodTechAndVintageConstraint_rule )
 
-
-	#   Model Constraints
-	#    - in driving order.  (e.g., without Demand, none of the others are
-	#      very useful.)
-	M.DemandConstraint             = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_demand,      rule=DemandConstraint_rule )
-	M.DemandCapacityConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_demand,      rule=DemandCapacityConstraint_rule )
-	M.ProcessBalanceConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_all, M.tech_all, M.vintage_all, M.commodity_all, rule=ProcessBalanceConstraint_rule )
-	M.CommodityBalanceConstraint   = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_physical,    rule=CommodityBalanceConstraint_rule )
-	M.ResourceExtractionConstraint = Constraint( M.time_optimize, M.commodity_physical,    rule=ResourceExtractionConstraint_rule )
-
-	M.BaseloadDiurnalConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_baseload, M.vintage_all, rule=BaseloadDiurnalConstraint_rule )
-	M.StorageConstraint = Constraint( M.time_optimize, M.time_season, M.commodity_all, M.tech_storage, M.vintage_all, M.commodity_all, rule=StorageConstraint_rule )
-
-	M.MaxCarrierOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.commodity_physical, rule=MaxCarrierOutputConstraint_rule )
-	#   Constraints not yet updated
-	M.EmissionConstraint           = Constraint( M.time_optimize, M.commodity_emissions, rule=EmissionsConstraint_rule)
 
 	# Finally, what follows is various methods to validate inputs.  These are
 	# here because we need to validate the entire Param or Set, not just
