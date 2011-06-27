@@ -403,7 +403,7 @@ def TechActivityByPeriodAndVintageConstraint_rule ( A_per, A_tech, A_vin, M ):
 	return expr
 
 
-def CapacityByPeriodAndTechConstraint_rule ( A_per, A_tech, M ):
+def CapacityAvailableByPeriodAndTechConstraint_rule ( A_per, A_tech, M ):
 	l_sum = sum(
 	  M.V_Capacity[A_tech, l_vin]
 
@@ -413,7 +413,7 @@ def CapacityByPeriodAndTechConstraint_rule ( A_per, A_tech, M ):
 	if type( l_sum ) is int:
 		return None
 
-	expr = (M.V_CapacityByPeriodAndTech[A_per, A_tech] == l_sum)
+	expr = (M.V_CapacityAvailableByPeriodAndTech[A_per, A_tech] == l_sum)
 	return expr
 
 

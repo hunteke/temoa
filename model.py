@@ -162,7 +162,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.V_ActivityByPeriodAndTech        = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
 	M.V_ActivityByPeriodTechAndVintage = Var( M.time_optimize, M.tech_all, M.vintage_all, domain=NonNegativeReals )
 
-	M.V_CapacityByPeriodAndTech = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
+	M.V_CapacityAvailableByPeriodAndTech = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
 
 	M.V_InvestmentByTech           = Var( M.tech_all, domain=NonNegativeReals )
 	M.V_InvestmentByTechAndVintage = Var( M.tech_all, M.vintage_optimize, domain=NonNegativeReals )
@@ -194,7 +194,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.TechActivityByPeriodConstraint           = Constraint( M.time_optimize, M.tech_all, rule=TechActivityByPeriodConstraint_rule )
 	M.TechActivityByPeriodAndVintageConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, rule=TechActivityByPeriodAndVintageConstraint_rule )
 
-	M.CapacityByPeriodAndTechConstraint = Constraint( M.time_optimize, M.tech_all, rule=CapacityByPeriodAndTechConstraint_rule )
+	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.time_optimize, M.tech_all, rule=CapacityAvailableByPeriodAndTechConstraint_rule )
 
 	M.InvestmentByTechConstraint           = Constraint( M.tech_all, rule=InvestmentByTechConstraint_rule )
 	M.InvestmentByTechAndVintageConstraint = Constraint( M.tech_all, M.vintage_optimize, rule=InvestmentByTechAndVintageConstraint_rule )
