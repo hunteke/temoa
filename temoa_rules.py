@@ -58,10 +58,14 @@ Objective_rule = TotalCost_rule
 #   Initializaton rules
 
 def ParamPeriodLength_rule ( period, M ):
-	periods = list( M.time_optimize )
-	periods.append( M.time_future.first() )
+	periods = list( M.time_horizon )
+	periods.extend( list(M.time_future) )
 
 	i = periods.index( period )
+
+	# The +1 won't fail, because this rule is called over time_optimize, which
+	# lacks the last period in time_future.  In fact, this is the whole point of
+	# having at least one period in time_future.
 	l_length = periods[i +1] - periods[ i ]
 
 	return l_length
