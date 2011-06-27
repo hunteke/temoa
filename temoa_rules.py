@@ -373,10 +373,9 @@ def TechActivityByPeriodConstraint_rule ( A_per, A_tech, M ):
 	l_sum = sum(
 	  M.V_Activity[A_per, l_season, l_tod, A_tech, l_vin]
 
+	  for l_vin in ProcessVintages( A_per, A_tech )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
-	  for l_vin in M.vintage_all
-	  if l_vin <= A_per and A_per <= l_vin + M.LifetimeTech[A_tech, l_vin]
 	)
 
 	if int is type( l_sum ):
@@ -387,9 +386,7 @@ def TechActivityByPeriodConstraint_rule ( A_per, A_tech, M ):
 
 
 def TechActivityByPeriodAndVintageConstraint_rule ( A_per, A_tech, A_vin, M ):
-	if A_per < A_vin:
-		return None
-	elif A_per <= A_vin or A_vin + M.LifetimeTech[A_tech, A_vin] <= A_per:
+	if A_per < A_vin or A_vin not in ProcessVintages( A_per, A_tech ):
 		return None
 
 	l_sum = sum(
