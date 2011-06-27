@@ -82,7 +82,7 @@ def DemandConstraintErrorCheck (
 ##############################################################################
 # Begin validation and initialization routines
 
-def validate_periods ( M ):
+def validate_time ( M ):
 	from sys import maxint
 
 	if not len( M.time_horizon ):

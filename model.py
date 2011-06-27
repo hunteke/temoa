@@ -89,9 +89,6 @@ CapacityFactor(tech_all, vintage_all)
 	M.vintage_optimize = M.time_optimize # intentional copy, for unambiguous use
 	M.vintage_all     = M.time_all     # intentional copy, for unambiguous use
 
-	# time_validation is an empty set; it is a hack to validate the time_* sets
-	M.time_validation = Set( initialize=validate_periods )
-
 	M.time_season     = Set()
 	M.time_of_day     = Set()
 
@@ -230,6 +227,14 @@ CapacityFactor(tech_all, vintage_all)
 	M.MaxCarrierOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.commodity_physical, rule=MaxCarrierOutputConstraint_rule )
 	#   Constraints not yet updated
 	M.EmissionConstraint           = Constraint( M.time_optimize, M.commodity_emissions, rule=EmissionsConstraint_rule)
+
+	# Finally, what follows is various methods to validate inputs.  These are
+	# here because we need to validate the entire Param or Set, not just
+	# individual elements within them.
+
+	# these are all empty Sets; hacks to perform validation
+
+	M.validate_time    = Set( initialize=validate_time )
 
 	return M
 
