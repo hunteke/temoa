@@ -152,7 +152,7 @@ g_processLoans = dict()
 def InitProcessParams ( M ):
 	global g_processInputs
 	global g_processOutputs
-	global g_processInvestment
+	global g_processLoans
 
 	for l_vintage in M.vintage_all:
 		for l_tech in M.tech_all:
