@@ -328,7 +328,7 @@ def DemandCapacityConstraint_rule ( A_period, A_season, A_time_of_day, A_comm, M
 """
 
 	l_capacity = sum(
-	  M.V_Capacity[ l_tech, l_vin ]
+	  M.V_Capacity[l_tech, l_vin]
 
 	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_comm, M )
 	)
@@ -336,9 +336,7 @@ def DemandCapacityConstraint_rule ( A_period, A_season, A_time_of_day, A_comm, M
 	dindex = (A_period, A_season, A_time_of_day, A_comm)
 	sindex = (A_season, A_time_of_day)
 
-	l_demandfrac = M.Demand[ dindex ] / M.SegFrac[ sindex ]
-
-	expression = (l_capacity >= l_demandfrac)
+	expression = (l_capacity * M.SegFrac[ sindex ] >= M.Demand[ dindex ])
 	return expression
 
 
