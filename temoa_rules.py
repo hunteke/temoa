@@ -326,7 +326,7 @@ def DemandCapacityConstraint_rule ( A_period, A_season, A_time_of_day, A_comm, M
 	l_capacity = sum(
 	  M.V_Capacity[ l_tech, l_vin ]
 
-	  for l_tech, l_vin in ProcessesByPeriodDemand( A_period, A_comm, M )
+	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_comm, M )
 	)
 
 	dindex = (A_period, A_season, A_time_of_day, A_comm)

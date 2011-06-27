@@ -219,7 +219,7 @@ produce a given input carrier (A_output).
 	return set()
 
 
-def ProcessesByPeriodDemand ( A_period, A_out, M ):
+def ProcessesByPeriodAndOutput ( A_period, A_out, M ):
 	"""\
 This function relies on the Model (argument M).  I'd like to update at some point to not rely on th emodel
 """
