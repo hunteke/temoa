@@ -88,8 +88,8 @@ param  SegFrac  :=        # PARAMETER NQHR
  inter  night   0.0833    # I-N
  summer day     0.1667    # S-D
  summer night   0.0833    # S-N
- winter day     0.1667    # W-D
- winter night   0.0833    # W-N
+ winter day     0.3333    # W-D
+ winter night   0.1667    # W-N
 	;
 
 
