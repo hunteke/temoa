@@ -1,4 +1,5 @@
 from cStringIO import StringIO
+from sys import argv, stderr as SE, stdout as SO
 
 try:
 	from coopr.pyomo import *
@@ -156,6 +157,8 @@ def InitProcessParams ( M ):
 	global g_processVintages
 	global g_processLoans
 
+	l_first_period = min( M.time_horizon )
+
 	for l_vintage in M.vintage_all:
 		for l_tech in M.tech_all:
 			l_process = (l_tech, l_vintage)
@@ -164,6 +167,14 @@ def InitProcessParams ( M ):
 			if l_vintage in M.time_exist:
 				# if existing tech & capacity is 0, don't include it
 				if 0 == M.ExistingCapacity[ l_process ]: continue
+
+				if l_vintage + l_lifetime <= l_first_period:
+					msg = '\nNotice: %s specified as ExistingCapacity, but its '   \
+					   'LifetimeTech parameter does not extend past the beginning '\
+					   'of time_horizon.  (i.e. useless parameter)'                \
+					   '\n\tLifetime:     %s'                                      \
+					   '\n\tFirst period: %s\n'
+					SE.write( msg % (l_process, l_lifetime, l_first_period) )
 
 			for l_inp in M.commodity_physical:
 				for l_out in M.commodity_all:
@@ -477,15 +488,13 @@ def parse_args ( ):
 # Direct invocation methods (when modeler runs via "python model.py ..."
 
 def temoa_solve ( model ):
-	from sys import argv, stderr, stdout
+	from sys import argv
 	from time import clock
 
 	from coopr.opt import SolverFactory
 	from coopr.pyomo import ModelData
 
 	from pformat_results import pformat_results
-
-	SE, SO = stderr.write, stdout.write
 
 	options = parse_args()
 	dot_dats = options.dot_dat
@@ -494,7 +503,7 @@ def temoa_solve ( model ):
 	opt.keepFiles = False
 	# opt.options.wlp = "temoa_model.lp"  # output GLPK LP understanding of model
 
-	SE( '[        ] Reading data files.'); stderr.flush()
+	SE.write( '[        ] Reading data files.'); SE.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
 	# on the command line
 	begin = clock()
@@ -503,36 +512,36 @@ def temoa_solve ( model ):
 	mdata = ModelData()
 	for f in dot_dats:
 		if f[-4:] != '.dat':
-			SE( "Expecting a dot dat (data.dat) file, found %s\n" % f )
+			SE.write( "Expecting a dot dat (data.dat) file, found %s\n" % f )
 			raise SystemExit
 		mdata.add( f )
 	mdata.read( model )
-	SE( '\r[%8.2f\n' % duration() )
+	SE.write( '\r[%8.2f\n' % duration() )
 
-	SE( '[        ] Creating Temoa model instance.'); stderr.flush()
+	SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
 	# Now do the solve and ...
 	instance = model.create( mdata )
-	SE( 'done.\r[%8.2f\n' % duration() )
+	SE.write( '\r[%8.2f\n' % duration() )
 
-	SE( '[        ] Solving.'); stderr.flush()
+	SE.write( '[        ] Solving.'); SE.flush()
 	result = opt.solve( instance )
-	SE( '\r[%8.2f\n' % duration() )
+	SE.write( '\r[%8.2f\n' % duration() )
 
-	SE( '[        ] Formatting results.' ); stderr.flush()
+	SE.write( '[        ] Formatting results.' ); SE.flush()
 	# ... print the easier-to-read/parse format
 	formatted_results = pformat_results( instance, result )
-	SE( '\r[%8.2f\n' % duration() )
-	SO( formatted_results )
+	SE.write( '\r[%8.2f\n' % duration() )
+	SO.write( formatted_results )
 
 	if options.graph_format:
-		SE( 'Creating Temoa model diagram ... ' ); stderr.flush()
+		SE.write( '[        ] Creating Temoa model diagram ... ' ); SE.flush()
 		CreateModelDiagram( instance, options.graph_format )
-		SE( 'done.\n')
+		SE.write( '\r[%8.2f\n' % duration() )
 
-		#SE( 'done.\nCreating Temoa model results diagram ... '); stderr.flush()
+		#SE.write( '[        ] Creating Temoa model results diagram ... '); SE.flush()
 		#instance.load( result )
 		#CreateModelResultsDiagram( instance, options.graph_format )
-		#SE( 'done.\n' )
+		#SE.write( '\r[%8.2f\n' % duration() )
 
 
 # End direct invocation methods
