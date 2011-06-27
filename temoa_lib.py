@@ -147,11 +147,13 @@ def init_set_time_optimize ( M ):
 # Global Variables (dictionaries to cache parsing of Efficiency parameter)
 g_processInputs  = dict()
 g_processOutputs = dict()
+g_processVintages = dict()
 g_processLoans = dict()
 
 def InitProcessParams ( M ):
 	global g_processInputs
 	global g_processOutputs
+	global g_processVintages
 	global g_processLoans
 
 	for l_vintage in M.vintage_all:
@@ -174,8 +176,10 @@ def InitProcessParams ( M ):
 
 							pindex = (l_period, l_tech, l_vintage)
 							if pindex not in g_processInputs:
+								g_processVintages[l_period, l_tech] = set()
 								g_processInputs[  pindex ] = set()
 								g_processOutputs[ pindex ] = set()
+							g_processVintages[l_period, l_tech].add( l_vintage )
 							g_processInputs[ pindex ].add( l_inp )
 							g_processOutputs[pindex ].add( l_out )
 
@@ -231,6 +235,14 @@ This function relies on the Model (argument M).  I'd like to update at some poin
 					processes.add( (l_tech, l_vin) )
 
 	return processes
+
+
+def ProcessVintages ( A_per, A_tech ):
+	index = (A_per, A_tech)
+	if index in g_processVintages:
+		return g_processVintages[ index ]
+
+	return set()
 
 
 def isValidProcess ( A_period, A_inp, A_tech, A_vintage, A_out ):

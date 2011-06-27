@@ -410,8 +410,7 @@ def CapacityByPeriodAndTechConstraint_rule ( A_per, A_tech, M ):
 	l_sum = sum(
 	  M.V_Capacity[A_tech, l_vin]
 
-	  for l_vin in M.vintage_all
-	  if l_vin < A_per and A_per <= M.LifetimeTech[A_tech, l_vin] + l_vin
+	  for l_vin in ProcessVintages( A_per, A_tech )
 	)
 
 	if type( l_sum ) is int:
