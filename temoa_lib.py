@@ -158,21 +158,25 @@ def InitProcessParams ( M ):
 
 	for l_vintage in M.vintage_all:
 		for l_tech in M.tech_all:
+			l_process = (l_tech, l_vintage)
+			l_lifetime = value( M.LifetimeTech[ l_process ] )
+
 			for l_inp in M.commodity_physical:
 				for l_out in M.commodity_all:
 
 					eindex = (l_inp, l_tech, l_vintage, l_out)
 					if M.Efficiency[ eindex ] > 0:
 						for l_period in M.time_optimize:
+							# can't build a vintage before it's been invented
 							if l_period < l_vintage: continue
 
 							if l_vintage in M.time_optimize:
-								l_loan_life = M.LifetimeLoan[l_tech, l_vintage].value
-								if l_period < l_vintage + l_loan_life:
+								l_loan_life = value(M.LifetimeLoan[ l_process ])
+								if l_vintage + l_loan_life > l_period:
 									g_processLoans[l_period, l_tech, l_vintage] = True
 
-							l_lifetime = value( M.LifetimeTech[l_tech, l_vintage] )
-							if l_period > l_vintage + l_lifetime: continue
+							# if tech is no longer "alive", don't include it
+							if l_vintage + l_lifetime <= l_period: continue
 
 							pindex = (l_period, l_tech, l_vintage)
 							if pindex not in g_processInputs:
