@@ -161,6 +161,10 @@ def InitProcessParams ( M ):
 			l_process = (l_tech, l_vintage)
 			l_lifetime = value( M.LifetimeTech[ l_process ] )
 
+			if l_vintage in M.time_exist:
+				# if existing tech & capacity is 0, don't include it
+				if 0 == M.ExistingCapacity[ l_process ]: continue
+
 			for l_inp in M.commodity_physical:
 				for l_out in M.commodity_all:
 
@@ -225,6 +229,20 @@ produce a given input carrier (A_output).
 			return g_processOutputs[ index ]
 
 	return set()
+
+
+def ProcessesByPeriodAndInput ( A_period, A_inp, M ):
+	"""\
+This function relies on the Model (argument M).  I'd like to update at some point to not rely on th emodel
+"""
+	processes = set()
+	for l_tech in M.tech_all:
+		for l_vin in M.vintage_all:
+			index = (A_period, l_tech, l_vin)
+			if index in g_processInputs and A_inp in g_processInputs[ index ]:
+					processes.add( (l_tech, l_vin) )
+
+	return processes
 
 
 def ProcessesByPeriodAndOutput ( A_period, A_out, M ):

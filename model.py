@@ -129,6 +129,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.LifetimeTech = Param( M.tech_all,  M.vintage_all,  default=30 )  # in years
 	M.LifetimeLoan = Param( M.tech_all,  M.vintage_optimize,  default=10 )  # in years
+	M.LifetimeFrac = Param( M.time_optimize, M.tech_all,  M.vintage_all,  rule=ParamLifetimeFrac_rule )
 	M.DiscountRate = Param( M.tech_all,  M.vintage_optimize,  default=0.05 )
 
 	M.CostFixed     = Param( M.time_optimize, M.tech_all, M.vintage_all, default=0 )
@@ -176,6 +177,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.BaseloadDiurnalConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_baseload, M.vintage_all, rule=BaseloadDiurnalConstraint_rule )
 	M.StorageConstraint = Constraint( M.time_optimize, M.time_season, M.commodity_all, M.tech_storage, M.vintage_all, M.commodity_all, rule=StorageConstraint_rule )
+	M.CapacityFractionalLifetimeConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_all, rule=CapacityFractionalLifetimeConstraint_rule )
 
 	M.MaxCarrierOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.commodity_physical, rule=MaxCarrierOutputConstraint_rule )
 	#   Constraints not yet updated

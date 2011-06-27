@@ -81,6 +81,34 @@ def ParamPeriodRate_rule ( period, M ):
 	return l_rate_multiplier
 
 
+def ParamLifetimeFrac_rule ( A_period, A_tech, A_vintage, M ):
+	process = (A_tech, A_vintage)
+
+	l_future_years = sorted( year for year in M.time_horizon )
+	l_future_years.extend( sorted( year for year in M.time_future ) )
+
+	# Because the optimization is run over time_optimize, which is missing the
+	# last period, this min is guaranteed to return a value (period)
+	l_next_period = min( year for year in l_future_years if year > A_period )
+	l_eol_year = A_vintage + M.LifetimeTech[ process ]
+
+	if A_period < l_eol_year and l_eol_year < l_next_period:
+		# Since we're still in the parameter initilization phase (we ARE param
+		# initialization!), we can't use the Process* functions.
+		for l_inp in M.commodity_all:
+			for l_out in M.commodity_all:
+				if M.Efficiency[l_inp, A_tech, A_vintage, l_out] > 0:
+					# if an efficiency exists, that's it, we're done.  Calculate
+					# the fraction and return it to Pyomo
+					l_frac  = l_eol_year - A_period
+					l_frac /= M.PeriodLength[ A_period ]
+					return value(l_frac)
+
+	# Either this is not an End of Life situtation, or this tech combo was not
+	# in the efficiency table.  Either/or: it's not an EOL concern.
+	return 0
+
+
 def ParamLoanAnnualize_rule ( A_tech, A_vintage, M ):
 	l_annualized_rate = ( M.DiscountRate[ A_tech, A_vintage ].value /
 	    (1 - (1 + M.DiscountRate[A_tech, A_vintage].value)
@@ -320,6 +348,53 @@ V_FlowOut[p,s,d,t,v,o] <= V_FlowIn[p,s,d,t,v,o] * Efficiency[i,t,v,o]
 	  * M.Efficiency[A_inp, A_tech, A_vintage, A_out]
 	)
 
+	return expr
+
+
+def CapacityFractionalLifetimeConstraint_rule ( A_period, A_tech, A_vintage, A_com, M ):
+	index = (A_period, A_tech, A_vintage)
+	l_fraction = value(M.LifetimeFrac[ index ])
+
+	if not l_fraction:
+		# If there is no fractional life in this period, there's no need to
+		# create a constraint.
+		return None
+
+	if not ProcessInputsByOutput( index, A_com ):
+		# if this process would not meet the output anyway, don't bother.
+		return None
+
+	if A_com in M.commodity_demand:
+		l_period_demand = sum(
+		  value(M.Demand[A_period, l_season, l_tod, A_com])
+
+		  for l_season in M.time_season
+		  for l_tod in M.time_of_day
+		  if value(M.Demand[A_period, l_season, l_tod, A_com])
+		)
+	elif A_com in M.commodity_physical:
+		l_period_demand = sum(
+		  M.V_FlowIn[A_period, l_season, l_tod, A_com, l_tech, l_vin, l_out]
+
+		  for l_tech, l_vin in ProcessesByPeriodAndInput( A_period, A_com, M )
+		  for l_out in ProcessOutputsByInput( (A_period, l_tech, l_vin), A_com )
+		  for l_season in M.time_season
+		  for l_tod in M.time_of_day
+		)
+	else:
+		# Since this constraint is defined over M.commodity_all, it makes no
+		# sense to create a constraint based on commodity_emissions.
+		return None
+
+	l_dying_capacity_output = sum(
+	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_com]
+
+	  for l_inp in ProcessInputsByOutput( index, A_com )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	expr = (l_dying_capacity_output <= l_fraction * l_period_demand)
 	return expr
 
 
