@@ -235,6 +235,7 @@ CapacityFactor(tech_all, vintage_all)
 	# these are all empty Sets; hacks to perform validation
 
 	M.validate_time    = Set( initialize=validate_time )
+	M.validate_SegFrac = Set( initialize=validate_SegFrac )
 
 	return M
 
