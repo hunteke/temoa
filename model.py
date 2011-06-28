@@ -119,8 +119,6 @@ CapacityFactor(tech_all, vintage_all)
 	M.CapacityToActivity = Param( M.tech_all,  default=1 )
 	M.CapacityFactor     = Param( M.tech_all,  M.vintage_all,  default=1 )
 
-	M.CommodityProductionCost = Param(M.time_optimize,  M.tech_all,  M.vintage_all,  default=0 )
-
 	M.ExistingCapacity = Param(M.tech_all, M.vintage_exist, default=0 )
 
 	M.Efficiency    = Param( M.commodity_all,  M.tech_all,  M.vintage_all,  M.commodity_all,  default=0 )
