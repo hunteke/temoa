@@ -1,0 +1,145 @@
+data;
+
+
+set  time_exist   :=  1960  1970  1980  2000 ; # feel free to mess
+set  time_horizon :=  2010  2015  2020  2030 ; # with any of these,
+set  time_future  :=  2040 ;                   # clearly
+
+set  time_season  :=  spring  summer ;
+set  time_of_day  :=  morning  afternoon  evening  night ;
+
+set  tech_resource  :=
+ imp_coal
+ imp_natgas
+ imp_oil
+ imp_uranium
+
+ resource_wind
+	;
+
+set  tech_production  :=
+ e_coal
+ e_natgascc
+ e_nuclear
+ e_wind
+
+ p_refinery
+
+ r_furnace
+ r_geoth
+ r_ac
+ r_cfl
+ r_incand
+
+ tl_dslcar
+ tl_elccar
+ tl_gascar
+	;
+
+
+set  tech_baseload  :=
+ e_coal
+ e_nuclear
+	;
+
+
+set  commodity_physical  :=
+ coal
+ diesel
+ electricity
+ gasoline
+ natgas
+ oil
+ uranium
+ wind
+	;
+
+set  commodity_emissions  :=
+	;
+
+set  commodity_demand  :=
+ r_cooling
+ r_heating
+ r_lighting
+
+ tl_distance
+	;
+
+
+param  SegFrac  :=
+# time_season  # time_of_day    # value
+ spring         morning         0.5
+ spring         afternoon       0.5
+ spring         evening         0.0
+ spring         night           0.0
+
+ summer         morning         0.0
+ summer         afternoon       0.0
+ summer         evening         0.0
+ summer         night           0.0
+	;
+
+
+param  CapacityToActivity  :=
+# tech_all        # value
+ e_coal            31.536    # GW -> PJ/yr
+ e_nuclear         31.536    # GW -> PJ/yr
+	;
+
+
+param  EmissionLimit  :=
+# time_optimize   # commodity_emission     # value
+ 2010              co2                           5
+ 2010              nox                      100000
+	;
+
+param  Demand  :=
+# time_optimize  # time_season  # time_of_day  # commodity_demand    # value
+ 2010             spring         morning        r_lighting            50
+ 2020             spring         afternoon      tl_distance           25
+	;
+
+
+param  ResourceBound  :=
+# time_optimize   # commodity_physical      # value
+ 2010              coal                      1000
+ 2015              coal                        50
+	;
+
+
+param  LifetimeTech  :=
+# tech_all        # vintage_all    # value (years)
+ imp_coal          1980             35
+ e_nuclear         2000             12
+	;
+
+
+param  CostFixed  :=
+# time_optimize   # tech_all     # vintage_all    # value
+ 2010              imp_coal       1980             10
+ 2015              e_coal         2010             10
+	;
+
+
+param  CostMarginal  :=
+# time_optimize   # tech_all         # vintage_all       # cost
+ 2010              imp_coal           2010                1
+ 2010              e_wind             2015                1
+	;
+
+param  Efficiency  :=
+# input carrier  # tech_all      # vintage_all  # output carrier   # eff. value
+ coal             imp_coal        1980           coal               1
+ coal             imp_coal        2015           coal               1
+ coal             e_coal          2000           electricity        1
+ coal             e_coal          2010           electricity        1
+ electricity      r_geoth         2010           r_heating          1
+ natgas           r_furnace       2010           r_heating          1
+	;
+
+param  ExistingCapacity  :=
+# tech_all      # vintage_exist    # value
+ imp_uranium     2000               50
+ e_nuclear       2000               50
+	;
+
