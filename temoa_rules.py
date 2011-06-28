@@ -480,6 +480,41 @@ def TechActivityByPeriodAndVintageConstraint_rule ( A_per, A_tech, A_vin, M ):
 	return expr
 
 
+def TechActivityByPeriodAndOutputConstraint_rule ( A_period, A_tech, A_output, M ):
+	l_sum = sum(
+	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, l_vin, A_output]
+
+	  for l_vin in ProcessVintages( A_period, A_tech )
+	  for l_inp in ProcessInputsByOutput( (A_period, A_tech, l_vin), A_output )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	if int is type( l_sum ):
+		return None
+
+	index = (A_period, A_tech, A_output)
+	expr = (M.V_ActivityByPeriodTechAndOutput[ index ] == l_sum)
+	return expr
+
+
+def TechActivityByPeriodVintageAndOutputConstraint_rule ( A_period, A_tech, A_vintage, A_output, M ):
+	l_sum = sum(
+	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_output]
+
+	  for l_inp in ProcessInputsByOutput( (A_period, A_tech, A_vintage), A_output )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	if int is type( l_sum ):
+		return None
+
+	index = (A_period, A_tech, A_vintage, A_output)
+	expr = (M.V_ActivityByPeriodTechVintageAndOutput[ index ] == l_sum)
+	return expr
+
+
 def CapacityAvailableByPeriodAndTechConstraint_rule ( A_per, A_tech, M ):
 	l_sum = sum(
 	  M.V_Capacity[A_tech, l_vin]
