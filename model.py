@@ -89,6 +89,9 @@ CapacityFactor(tech_all, vintage_all)
 	M.vintage_optimize = M.time_optimize # intentional copy, for unambiguous use
 	M.vintage_all     = M.time_all     # intentional copy, for unambiguous use
 
+	# always-empty Set; hack to perform inter-Set or inter-Param validation
+	M.validate_time    = Set( initialize=validate_time )
+
 	M.time_season     = Set()
 	M.time_of_day     = Set()
 
@@ -115,6 +118,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.PeriodRate   = Param( M.time_optimize, initialize=ParamPeriodRate_rule )
 
 	M.SegFrac = Param(M.time_season, M.time_of_day, default=0)
+	# always-empty Set; hack to perform inter-Set or inter-Param validation
+	M.validate_SegFrac = Set( initialize=validate_SegFrac )
 
 	M.CapacityToActivity = Param( M.tech_all,  default=1 )
 	M.CapacityFactor     = Param( M.tech_all,  M.vintage_all,  default=1 )
@@ -230,16 +235,6 @@ CapacityFactor(tech_all, vintage_all)
 	M.EnergyConsumptionByPeriodAndTechConstraint        = Constraint( M.time_optimize, M.tech_all, rule=EnergyConsumptionByPeriodAndTechConstraint_rule )
 	M.EnergyConsumptionByPeriodTechAndOutputConstraint  = Constraint( M.time_optimize, M.tech_all, M.commodity_all, rule=EnergyConsumptionByPeriodTechAndOutputConstraint_rule )
 	M.EnergyConsumptionByPeriodTechAndVintageConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, rule=EnergyConsumptionByPeriodTechAndVintageConstraint_rule )
-
-
-	# Finally, what follows is various methods to validate inputs.  These are
-	# here because we need to validate the entire Param or Set, not just
-	# individual elements within them.
-
-	# these are all empty Sets; hacks to perform validation
-
-	M.validate_time    = Set( initialize=validate_time )
-	M.validate_SegFrac = Set( initialize=validate_SegFrac )
 
 	return M
 
