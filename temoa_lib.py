@@ -109,7 +109,7 @@ def validate_time ( M ):
 		raise ValueError, msg % (exist, horizonl)
 	elif not ( horizonh < future ):
 		msg = "All items in time_future must be larger that in time_horizon.\n" \
-		      "time_horizon max:   %s\ntime_future min: %s"
+		      "time_horizon max:   %s\ntime_future min:    %s"
 		raise ValueError, msg % (horizonh, future)
 
 	return tuple()
