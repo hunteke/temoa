@@ -29,17 +29,23 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	Cons = soln.Constraint
 
 	var_keys = sorted(
-	  ii
+	  (ii.split('[')[0], ii)
+
 	  for ii in Vars
 	  if abs(Vars[ ii ].value) > 1e-15   # i.e. "if it's non-zero"
 	)
 
 	constraint_keys = sorted(
-	  ii
+	  (ii.split('[')[0][4:], ii)   # [4:] removes the c_[uel]_ part of name
+
 	  for ii in Cons
 	  if 'c_' == ii[:2]            # all Coopr constraint keys begin with c_
 	  if abs(Cons[ ii ].value) > 1e-15    # i.e. "if it's non-zero"
 	)
+
+	# remove the no-longer-necessary sorting key.
+	var_keys        = [ var for key, var in var_keys ]
+	constraint_keys = [ con for key, con in constraint_keys ]
 
 	def get_int_padding ( ObjSet ):
 		def wrapped ( key ):
@@ -54,9 +60,10 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 
 	run_output = StringIO()
 
-	msg = "Objective function value (%s): %s\n"
-	run_output.write( msg % (obj_name, obj_value) )
-	run_output.write( "Non-zero variable values for '%s'\n" % instance.name )
+	msg = 'Model name: %s\n'                                                   \
+	   'Objective function value (%s): %s\n'                                   \
+	   'Non-zero variable values:\n'
+	run_output.write( msg % (instance.name, obj_name, obj_value) )
 
 	if len( var_keys ) > 0:
 		# This padding code is what makes the display of the output values
@@ -75,12 +82,11 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 
 	if 0 == len( constraint_keys ):
 		# Since not all Coopr solvers give constraint results, must check
-		msg = '\nSelected Coopr solver plugin does not give constraint '        \
-		   'information.\n'
+		msg = '\nSelected Coopr solver plugin does not give constraint data.\n'
 		run_output.write( msg )
 	else:
-		msg = "\nBinding constraint values for '%s'\n"
-		run_output.write( msg % instance.name)
+		msg = '\nBinding constraint values:\n'
+		run_output.write( msg )
 
 		int_padding = max(map( get_int_padding(Cons), constraint_keys ))
 		dec_padding = max(map( get_dec_padding(Cons), constraint_keys ))
