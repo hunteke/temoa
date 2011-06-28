@@ -84,8 +84,8 @@ def ParamPeriodRate_rule ( period, M ):
 def ParamLifetimeFrac_rule ( A_period, A_tech, A_vintage, M ):
 	process = (A_tech, A_vintage)
 
-	l_future_years = sorted( year for year in M.time_horizon )
-	l_future_years.extend( sorted( year for year in M.time_future ) )
+	l_future_years = sorted( M.time_horizon )
+	l_future_years.extend( sorted( M.time_future ) )
 
 	# Because the optimization is run over time_optimize, which is missing the
 	# last period, this min is guaranteed to return a value (period)
