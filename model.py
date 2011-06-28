@@ -101,17 +101,12 @@ CapacityFactor(tech_all, vintage_all)
 	M.tech_baseload   = Set( within=M.tech_all )
 	M.tech_storage    = Set( within=M.tech_all )
 
+	M.commodity_demand    = Set()
 	M.commodity_emissions = Set()
 	M.commodity_physical  = Set()
-	M.commodity_demand    = Set()
 
-	# Pyomo currently has a rather large design flaw in it's implementation of
-	# set unions, where it is not possible to create a union of more than two
-	# sets in a single statement.  A bug report has been filed with the Coopr
-	# devs.
-	#   - 24 Feb 2011
-	M.tmp_set = M.commodity_physical | M.commodity_emissions
-	M.commodity_all = M.tmp_set | M.commodity_demand
+	M.commodity_carrier = M.commodity_physical | M.commodity_demand
+	M.commodity_all     = M.commodity_carrier | M.commodity_emissions
 
 	M.GlobalDiscountRate = Param( default=0 )
 	M.PeriodLength = Param( M.time_optimize, initialize=ParamPeriodLength_rule )
@@ -126,7 +121,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.ExistingCapacity = Param(M.tech_all, M.vintage_exist, default=0 )
 
-	M.Efficiency    = Param( M.commodity_all,  M.tech_all,  M.vintage_all,  M.commodity_all,  default=0 )
+	M.Efficiency    = Param( M.commodity_carrier,  M.tech_all,  M.vintage_all,  M.commodity_carrier,  default=0 )
 	M.Demand        = Param( M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand,  default=0 )
 	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical,  default=0 )
 
@@ -150,8 +145,8 @@ CapacityFactor(tech_all, vintage_all)
 
 	# Variables
 	#   Base decision variables
-	M.V_FlowIn  = Var(M.time_optimize, M.time_season, M.time_of_day, M.commodity_all, M.tech_all, M.vintage_all, M.commodity_all, domain=NonNegativeReals)
-	M.V_FlowOut = Var(M.time_optimize, M.time_season, M.time_of_day, M.commodity_all, M.tech_all, M.vintage_all, M.commodity_all, domain=NonNegativeReals)
+	M.V_FlowIn  = Var(M.time_optimize, M.time_season, M.time_of_day, M.commodity_carrier, M.tech_all, M.vintage_all, M.commodity_carrier, domain=NonNegativeReals)
+	M.V_FlowOut = Var(M.time_optimize, M.time_season, M.time_of_day, M.commodity_carrier, M.tech_all, M.vintage_all, M.commodity_carrier, domain=NonNegativeReals)
 
 	#   Derived decision variables
 	M.V_Activity = Var(M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, domain=NonNegativeReals)
@@ -174,13 +169,13 @@ CapacityFactor(tech_all, vintage_all)
 	#      very useful.)
 	M.DemandConstraint             = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_demand,      rule=DemandConstraint_rule )
 	M.DemandCapacityConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_demand,      rule=DemandCapacityConstraint_rule )
-	M.ProcessBalanceConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_all, M.tech_all, M.vintage_all, M.commodity_all, rule=ProcessBalanceConstraint_rule )
+	M.ProcessBalanceConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier, rule=ProcessBalanceConstraint_rule )
 	M.CommodityBalanceConstraint   = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_physical,    rule=CommodityBalanceConstraint_rule )
 	M.ResourceExtractionConstraint = Constraint( M.time_optimize, M.commodity_physical,    rule=ResourceExtractionConstraint_rule )
 
 	M.BaseloadDiurnalConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_baseload, M.vintage_all, rule=BaseloadDiurnalConstraint_rule )
 	M.StorageConstraint = Constraint( M.time_optimize, M.time_season, M.commodity_all, M.tech_storage, M.vintage_all, M.commodity_all, rule=StorageConstraint_rule )
-	M.CapacityFractionalLifetimeConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_all, rule=CapacityFractionalLifetimeConstraint_rule )
+	M.CapacityFractionalLifetimeConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=CapacityFractionalLifetimeConstraint_rule )
 
 	M.MaxCarrierOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.commodity_physical, rule=MaxCarrierOutputConstraint_rule )
 	#   Constraints not yet updated
@@ -194,8 +189,8 @@ CapacityFactor(tech_all, vintage_all)
 	# fairly inefficient, and each Variable represents a fair chunk of memory,
 	# among other resources.  Luckily, all told, these are cheap, compared
 	# to the computational cost of the other constraints.
-	M.V_ActivityByPeriodAndTech        = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
-	M.V_ActivityByPeriodTechAndVintage = Var( M.time_optimize, M.tech_all, M.vintage_all, domain=NonNegativeReals )
+	M.V_ActivityByPeriodAndTech              = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
+	M.V_ActivityByPeriodTechAndVintage       = Var( M.time_optimize, M.tech_all, M.vintage_all, domain=NonNegativeReals )
 
 	M.V_CapacityAvailableByPeriodAndTech = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
 

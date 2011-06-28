@@ -95,8 +95,8 @@ def ParamLifetimeFrac_rule ( A_period, A_tech, A_vintage, M ):
 	if A_period < l_eol_year and l_eol_year < l_next_period:
 		# Since we're still in the parameter initilization phase (we ARE param
 		# initialization!), we can't use the Process* functions.
-		for l_inp in M.commodity_all:
-			for l_out in M.commodity_all:
+		for l_inp in M.commodity_physical:
+			for l_out in M.commodity_carrier:
 				if M.Efficiency[l_inp, A_tech, A_vintage, l_out] > 0:
 					# if an efficiency exists, that's it, we're done.  Calculate
 					# the fraction and return it to Pyomo

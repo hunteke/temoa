@@ -177,7 +177,7 @@ def InitProcessParams ( M ):
 					SE.write( msg % (l_process, l_lifetime, l_first_period) )
 
 			for l_inp in M.commodity_physical:
-				for l_out in M.commodity_all:
+				for l_out in M.commodity_carrier:
 
 					eindex = (l_inp, l_tech, l_vintage, l_out)
 					if M.Efficiency[ eindex ] > 0:
