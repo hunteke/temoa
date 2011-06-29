@@ -293,7 +293,7 @@ def CapacityFractionalLifetimeConstraint_rule ( M, A_period, A_tech, A_vintage, 
 	)
 
 	if int is type( l_output ):
-		# This should happen, but if, for some reason, there is no possibility
+		# This shouldn't happen, but if, for some reason, there is no possibility
 		# of flow out for the tech in this period, then don't create a constraint
 		return Constraint.Skip
 
