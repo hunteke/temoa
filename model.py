@@ -198,6 +198,9 @@ CapacityFactor(tech_all, vintage_all)
 	M.V_ActivityByPeriodTechAndOutput        = Var( M.time_optimize, M.tech_all, M.commodity_carrier, domain=NonNegativeReals )
 	M.V_ActivityByPeriodTechVintageAndOutput = Var( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, domain=NonNegativeReals )
 
+	M.V_ActivityByPeriodInputAndTech        = Var( M.time_optimize, M.commodity_physical, M.tech_all, domain=NonNegativeReals )
+	M.V_ActivityByPeriodInputTechAndVintage = Var( M.time_optimize, M.commodity_physical, M.tech_all, M.vintage_all, domain=NonNegativeReals )
+
 	M.V_CapacityAvailableByPeriodAndTech = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
 
 	M.V_InvestmentByTech           = Var( M.tech_all, domain=NonNegativeReals )
@@ -221,6 +224,9 @@ CapacityFactor(tech_all, vintage_all)
 	M.TechActivityByPeriodAndVintageConstraint       = Constraint( M.time_optimize, M.tech_all, M.vintage_all,                      rule=TechActivityByPeriodAndVintageConstraint_rule )
 	M.TechActivityByPeriodAndOutputConstraint        = Constraint( M.time_optimize, M.tech_all, M.commodity_carrier,                rule=TechActivityByPeriodAndOutputConstraint_rule )
 	M.TechActivityByPeriodVintageAndOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=TechActivityByPeriodVintageAndOutputConstraint_rule )
+
+	M.ActivityByPeriodInputAndTechConstraint        = Constraint( M.time_optimize, M.commodity_physical, M.tech_all,                rule=ActivityByPeriodInputAndTechConstraint_rule )
+	M.ActivityByPeriodInputTechAndVintageConstraint = Constraint( M.time_optimize, M.commodity_physical, M.tech_all, M.vintage_all, rule=ActivityByPeriodInputTechAndVintageConstraint_rule )
 
 	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.time_optimize, M.tech_all, rule=CapacityAvailableByPeriodAndTechConstraint_rule )
 
