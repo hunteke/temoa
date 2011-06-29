@@ -223,16 +223,18 @@ def InitializeProcessParameters ( M ):
 	return set()
 
 
-def ProcessOutputs ( *index ):
+def ProcessOutputs ( A_period, A_tech, A_vintage ):
 	"""\
 index = (period, tech, vintage)
 	"""
+	index = (A_period, A_tech, A_vintage)
 	if index in g_processOutputs:
 		return g_processOutputs[ index ]
 	return set()
 
 
-def ProcessInputs ( *index ):
+def ProcessInputs ( A_period, A_tech, A_vintage ):
+	index = (A_period, A_tech, A_vintage)
 	if index in g_processInputs:
 		return g_processInputs[ index ]
 	return set()

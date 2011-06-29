@@ -216,12 +216,12 @@ V_Activity[p,s,d,t,v] = sum((inp,out), V_FlowOut[p,s,d,inp,t,v,out])
 
 	# The following two lines prevent creating obviously invalid or unnecessary constraints
 	# ex: a coal power plant does not consume wind and produce light.
-	if not ProcessOutputs( *pindex ):
+	if not ProcessOutputs( A_period, A_tech, A_vintage ):
 		return Constraint.Skip
 
 	l_activity = 0
-	for l_inp in ProcessInputs( *pindex ):
-		for l_out in ProcessOutputs( *pindex ):
+	for l_inp in ProcessInputs( A_period, A_tech, A_vintage ):
+		for l_out in ProcessOutputs( A_period, A_tech, A_vintage ):
 			l_activity += M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, A_tech, A_vintage, l_out]
 
 	expr = ( M.V_Activity[ aindex ] == l_activity )
@@ -238,7 +238,7 @@ V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 	pindex = (A_period, A_tech, A_vintage)   # "process" index
 
 	# No sense in creating a guaranteed unused constraint
-	if not ProcessOutputs( *pindex ):
+	if not ProcessOutputs( A_period, A_tech, A_vintage ):
 		return Constraint.Skip
 
 	l_vintage_activity = (
