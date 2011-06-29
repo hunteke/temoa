@@ -180,7 +180,7 @@ def MaxCarrierOutputConstraint_rule ( A_period, A_tech, A_output, M ):
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	  for l_vin in M.vintage_all
-	  for l_inp in ProcessInputsByOutput( (A_period, A_tech, l_vin), A_output )
+	  for l_inp in ProcessInputsByOutput( A_period, A_tech, l_vin, A_output )
 	)
 	expr = (l_flowout <= M.MaxCarrierOutput[ index ])
 	return expr
@@ -216,12 +216,12 @@ V_Activity[p,s,d,t,v] = sum((inp,out), V_FlowOut[p,s,d,inp,t,v,out])
 
 	# The following two lines prevent creating obviously invalid or unnecessary constraints
 	# ex: a coal power plant does not consume wind and produce light.
-	if not ProcessOutputs( *pindex ):
+	if not ProcessOutputs( A_period, A_tech, A_vintage ):
 		return None
 
 	l_activity = 0
-	for l_inp in ProcessInputs( *pindex ):
-		for l_out in ProcessOutputs( *pindex ):
+	for l_inp in ProcessInputs( A_period, A_tech, A_vintage ):
+		for l_out in ProcessOutputs( A_period, A_tech, A_vintage ):
 			l_activity += M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, A_tech, A_vintage, l_out]
 
 	expr = ( M.V_Activity[ aindex ] == l_activity )
@@ -238,7 +238,7 @@ V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 	pindex = (A_period, A_tech, A_vintage)   # "process" index
 
 	# No sense in creating a guaranteed unused constraint
-	if not ProcessOutputs( *pindex ):
+	if not ProcessOutputs( A_period, A_tech, A_vintage ):
 		return None
 
 	l_vintage_activity = (
@@ -302,12 +302,12 @@ sum((inp,tech,vintage),V_FlowOut[period,season,time_of_day,*,*,*,carrier]) >= su
 
 	for l_tech in M.tech_all:
 		for l_vintage in M.vintage_all:
-			for l_inp in ProcessInputsByOutput( (A_period, l_tech, l_vintage), A_carrier ):
+			for l_inp in ProcessInputsByOutput( A_period, l_tech, l_vintage, A_carrier ):
 				l_vflow_out += M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, l_tech, l_vintage, A_carrier]
 
 	for l_tech in M.tech_production:
 		for l_vintage in M.vintage_all:
-			for l_out in ProcessOutputsByInput( (A_period, l_tech, l_vintage), A_carrier ):
+			for l_out in ProcessOutputsByInput( A_period, l_tech, l_vintage, A_carrier ):
 				l_vflow_in += M.V_FlowIn[A_period, A_season, A_time_of_day, A_carrier, l_tech, l_vintage, l_out]
 
 	if type(l_vflow_out) == type(l_vflow_in):
@@ -357,7 +357,7 @@ def CapacityFractionalLifetimeConstraint_rule ( A_period, A_tech, A_vintage, A_c
 		# create a constraint.
 		return None
 
-	if not ProcessInputsByOutput( index, A_com ):
+	if not ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com ):
 		# if this process would not meet the output anyway, don't bother.
 		return None
 
@@ -374,7 +374,7 @@ def CapacityFractionalLifetimeConstraint_rule ( A_period, A_tech, A_vintage, A_c
 		  M.V_FlowIn[A_period, l_season, l_tod, A_com, l_tech, l_vin, l_out]
 
 		  for l_tech, l_vin in ProcessesByPeriodAndInput( A_period, A_com, M )
-		  for l_out in ProcessOutputsByInput( (A_period, l_tech, l_vin), A_com )
+		  for l_out in ProcessOutputsByInput( A_period, l_tech, l_vin, A_com )
 		  for l_season in M.time_season
 		  for l_tod in M.time_of_day
 		)
@@ -386,7 +386,7 @@ def CapacityFractionalLifetimeConstraint_rule ( A_period, A_tech, A_vintage, A_c
 	l_dying_capacity_output = sum(
 	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_com]
 
-	  for l_inp in ProcessInputsByOutput( index, A_com )
+	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -427,7 +427,7 @@ sum((inp,tech,vintage),V_FlowOut[p,s,d,*,*,*,commodity]) >= Demand[p,s,d,commodi
 	l_supply = 0
 	for l_tech in M.tech_all:
 		for l_vintage in M.vintage_all:
-			for l_input in ProcessInputsByOutput( (A_period, l_tech, l_vintage), A_comm ):
+			for l_input in ProcessInputsByOutput( A_period, l_tech, l_vintage, A_comm ):
 				l_supply += M.V_FlowOut[A_period, A_season, A_time_of_day, l_input, l_tech, l_vintage, A_comm]
 
 	DemandConstraintErrorCheck (
@@ -482,7 +482,7 @@ def ActivityByPeriodTechAndOutputConstraint_rule ( A_period, A_tech, A_output, M
 	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, l_vin, A_output]
 
 	  for l_vin in ProcessVintages( A_period, A_tech )
-	  for l_inp in ProcessInputsByOutput( (A_period, A_tech, l_vin), A_output )
+	  for l_inp in ProcessInputsByOutput( A_period, A_tech, l_vin, A_output )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -499,7 +499,7 @@ def ActivityByPeriodTechVintageAndOutputConstraint_rule ( A_period, A_tech, A_vi
 	l_sum = sum(
 	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_output]
 
-	  for l_inp in ProcessInputsByOutput( (A_period, A_tech, A_vintage), A_output )
+	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_output )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -517,7 +517,7 @@ def ActivityByPeriodInputAndTechConstraint_rule ( A_period, A_input, A_tech, M )
 	  M.V_FlowIn[A_period, l_season, l_tod, A_input, A_tech, l_vin, l_out]
 
 	  for l_vin in ProcessVintages( A_period, A_tech )
-	  for l_out in ProcessOutputsByInput( (A_period, A_tech, l_vin), A_input )
+	  for l_out in ProcessOutputsByInput( A_period, A_tech, l_vin, A_input )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -534,7 +534,7 @@ def ActivityByPeriodInputTechAndVintageConstraint_rule ( A_period, A_input, A_te
 	l_sum = sum(
 	  M.V_FlowIn[A_period, l_season, l_tod, A_input, A_tech, A_vintage, l_out]
 
-	  for l_out in ProcessOutputsByInput( (A_period, A_tech, A_vintage), A_input )
+	  for l_out in ProcessOutputsByInput( A_period, A_tech, A_vintage, A_input )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -696,7 +696,7 @@ def EnergyConsumptionByTechConstraint_rule ( A_tech, M ):
 	  for l_per in M.time_optimize
 	  for l_inp in M.commodity_physical
 	  for l_vin in M.vintage_all
-	  for l_out in ProcessOutputsByInput( (l_per, A_tech, l_vin), l_inp )
+	  for l_out in ProcessOutputsByInput( l_per, A_tech, l_vin, l_inp )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -711,7 +711,7 @@ def EnergyConsumptionByTechAndOutputConstraint_rule ( A_tech, A_out, M ):
 
 	  for l_per in M.time_optimize
 	  for l_vin in M.vintage_all
-	  for l_inp in ProcessInputsByOutput( (l_per, A_tech, l_vin), A_out )
+	  for l_inp in ProcessInputsByOutput( l_per, A_tech, l_vin, A_out )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -725,7 +725,7 @@ def EnergyConsumptionByPeriodAndTechConstraint_rule ( A_period, A_tech, M ):
 
 	  for l_inp in M.commodity_physical
 	  for l_vin in M.vintage_all
-	  for l_out in ProcessOutputsByInput( (A_period, A_tech, l_vin), l_inp )
+	  for l_out in ProcessOutputsByInput( A_period, A_tech, l_vin, l_inp )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -739,7 +739,7 @@ def EnergyConsumptionByPeriodTechAndOutputConstraint_rule ( A_period, A_tech, A_
 	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, A_tech, l_vin, A_out]
 
 	  for l_vin in M.vintage_all
-	  for l_inp in ProcessInputsByOutput( (A_period, A_tech, l_vin), A_out )
+	  for l_inp in ProcessInputsByOutput( A_period, A_tech, l_vin, A_out )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -754,7 +754,7 @@ def EnergyConsumptionByPeriodTechAndVintageConstraint_rule ( A_period, A_tech, A
 	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, l_out]
 
 	  for l_inp in M.commodity_physical
-	  for l_out in ProcessOutputsByInput( (A_period, A_tech, A_vintage), l_inp )
+	  for l_out in ProcessOutputsByInput( A_period, A_tech, A_vintage, l_inp )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
