@@ -251,11 +251,12 @@ produce a given output carrier (A_output).
 	return set()
 
 
-def ProcessOutputsByInput ( index, A_input ):
+def ProcessOutputsByInput ( A_period, A_tech, A_vintage, A_input ):
 	"""\
 Return the set of output energy carriers used by a technology (A_tech) to
 produce a given input carrier (A_output).
 """
+	index = (A_period, A_tech, A_vintage)
 	if index in g_processInputs:
 		if A_input in g_processInputs[ index ]:
 			return g_processOutputs[ index ]
