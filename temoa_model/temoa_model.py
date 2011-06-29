@@ -139,6 +139,10 @@ CapacityFactor(tech_all, vintage_all)
 	M.CostInvest    = Param( M.tech_all, M.vintage_optimize, default=0 )
 	M.LoanAnnualize = Param( M.tech_all, M.vintage_optimize, rule=ParamLoanAnnualize_rule )
 
+	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier, default=0 )
+	# always-empty Set; hack to perform inter-Set or inter-Param validation
+	M.validate_TechOutputSplit = Set( initialize=validate_TechOutputSplit )
+
 
 	M.MaxCarrierOutput = Param( M.time_optimize, M.tech_all, M.commodity_physical, default=0 )
 
@@ -185,6 +189,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.BaseloadDiurnalConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_baseload, M.vintage_all, rule=BaseloadDiurnalConstraint_rule )
 
 	M.StorageConstraint = Constraint( M.time_optimize, M.time_season, M.commodity_all, M.tech_storage, M.vintage_all, M.commodity_all, rule=StorageConstraint_rule )
+
+	M.TechOutputSplitConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier, rule=TechOutputSplitConstraint_rule )
 
 	M.CapacityLifetimeConstraint           = Constraint( M.time_optimize, M.commodity_carrier, rule=CapacityLifetimeConstraint_rule )
 	M.CapacityFractionalLifetimeConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=CapacityFractionalLifetimeConstraint_rule )
