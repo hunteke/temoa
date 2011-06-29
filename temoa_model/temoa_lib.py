@@ -211,9 +211,11 @@ def InitializeProcessParameters ( M ):
 
 							pindex = (l_period, l_tech, l_vintage)
 							if pindex not in g_processInputs:
-								g_processVintages[l_period, l_tech] = set()
 								g_processInputs[  pindex ] = set()
 								g_processOutputs[ pindex ] = set()
+							if (l_period, l_tech) not in g_processVintages:
+								g_processVintages[l_period, l_tech] = set()
+
 							g_processVintages[l_period, l_tech].add( l_vintage )
 							g_processInputs[ pindex ].add( l_inp )
 							g_processOutputs[pindex ].add( l_out )
