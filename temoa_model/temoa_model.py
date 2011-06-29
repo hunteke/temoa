@@ -156,6 +156,11 @@ CapacityFactor(tech_all, vintage_all)
 	M.V_Activity = Var(M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, domain=NonNegativeReals)
 	M.V_Capacity = Var(M.tech_all, M.vintage_all, domain=NonNegativeReals)
 
+	# always empty set; Like the validation hacks above, we Temoa uses a couple
+	# of global variables to precalculate some oft-used results in constraint
+	# generation.  This is therefore intentially placed after all Set and Param
+	# definitions and initializations, but before the Objective and Constraints.
+	M.IntializeProcessParameters = Set( rule=InitializeProcessParameters )
 
 	# Objective
 	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
