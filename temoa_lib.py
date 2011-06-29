@@ -133,6 +133,38 @@ def validate_SegFrac ( M ):
 	return tuple()
 
 
+def validate_TechOutputSplit ( M ):
+	msg = 'A set of output fractional values specified in TechOutputSplit for '\
+	   'do not sum to 1.  Each item in specified in TechOutputSplit represents'\
+	   ' a fraction of the input carrier converted to the output carrier, so ' \
+	   'they must total to 1.  Current values:\n   %s\n\tsum = %s'
+
+	for l_inp in M.commodity_physical:
+		for l_tech in M.tech_all:
+			l_total = sum(
+			  value(M.TechOutputSplit[l_inp, l_tech, l_out])
+			  for l_out in M.commodity_carrier
+			)
+
+			# small enough; likely a rounding error
+			if abs(l_total) < 1e-15: continue
+
+			if abs(l_total -1) > 1e-10:
+				items = '\n   '.join(
+				  "%s: %s" % (
+				    str((l_inp, l_tech, l_out)),
+				    value(M.TechOutputSplit[l_inp, l_tech, l_out])
+				  )
+
+				  for l_out in M.commodity_carrier
+				  if value(M.TechOutputSplit[l_inp, l_tech, l_out]) > 0
+				)
+
+				raise ValueError, msg % (items, l_total)
+
+	return set()
+
+
 def init_set_time_optimize ( M ):
 	items = list( M.time_horizon )
 	items.extend( list( M.time_future ) )

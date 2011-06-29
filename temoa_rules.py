@@ -204,6 +204,35 @@ def StorageConstraint_rule ( A_period, A_season, A_inp, A_tech, A_vintage, A_out
 	return expr
 
 
+def TechOutputSplitConstraint_rule ( A_period, A_season, A_time_of_day, A_input, A_tech, A_vintage, A_output, M ):
+	l_split = value(M.TechOutputSplit[A_input, A_tech, A_output])
+	if not l_split:
+		return None
+
+	l_outputs = sorted(
+	  l_out
+
+	  for l_out in M.commodity_carrier
+	  if value(M.TechOutputSplit[A_input, A_tech, l_out])
+	)
+
+	l_index = l_outputs.index( A_output )
+	if 0 == l_index:
+		return None
+
+	l_prev = l_outputs[ l_index -1 ]
+	l_prev_split = value(M.TechOutputSplit[A_input, A_tech, l_prev])
+
+	expr = (
+	    M.V_FlowOut[A_period, A_season, A_time_of_day, A_input, A_tech, A_vintage, A_output]
+	  * l_split
+	  ==
+	    M.V_FlowOut[A_period, A_season, A_time_of_day, A_input, A_tech, A_vintage, l_prev]
+	  * l_prev_split
+	)
+	return expr
+
+
 def ActivityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vintage, M ):
 	"""\
 As V_Activity is a derived variable, the constraint sets V_Activity to the sum over input and output energy carriers of a process.
