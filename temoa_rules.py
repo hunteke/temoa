@@ -9,11 +9,6 @@ Objective function.
 
 This function is currently a simple summation of all items in V_FlowOut multiplied by CommunityProductionCost.  For the time being (i.e. during development), this is intended to make development and debugging simpler.
 	"""
-
-	# There appears to be no other way to hook into Pyomo's model creation than
-	# by "hijacking", for a time, it's first call to one of our functions.
-	InitProcessParams( M )
-
 	l_cost = 0
 
 	for l_per in M.time_optimize:
