@@ -266,7 +266,7 @@ produce a given input carrier (A_output).
 	return set()
 
 
-def ProcessesByPeriodAndInput ( A_period, A_inp, M ):
+def ProcessesByPeriodAndInput ( M, A_period, A_inp ):
 	"""\
 This function relies on the Model (argument M).  I'd like to update at some point to not rely on th emodel
 """
@@ -280,7 +280,7 @@ This function relies on the Model (argument M).  I'd like to update at some poin
 	return processes
 
 
-def ProcessesByPeriodAndOutput ( A_period, A_out, M ):
+def ProcessesByPeriodAndOutput ( M, A_period, A_out ):
 	"""\
 This function relies on the Model (argument M).  I'd like to update at some point to not rely on th emodel
 """

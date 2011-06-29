@@ -373,7 +373,7 @@ def CapacityFractionalLifetimeConstraint_rule ( M, A_period, A_tech, A_vintage, 
 		l_period_demand = sum(
 		  M.V_FlowIn[A_period, l_season, l_tod, A_com, l_tech, l_vin, l_out]
 
-		  for l_tech, l_vin in ProcessesByPeriodAndInput( A_period, A_com, M )
+		  for l_tech, l_vin in ProcessesByPeriodAndInput( M, A_period, A_com )
 		  for l_out in ProcessOutputsByInput( A_period, l_tech, l_vin, A_com )
 		  for l_season in M.time_season
 		  for l_tod in M.time_of_day
@@ -402,7 +402,7 @@ def DemandCapacityConstraint_rule ( M, A_period, A_season, A_time_of_day, A_comm
 	l_capacity = sum(
 	  M.V_Capacity[l_tech, l_vin]
 
-	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_comm, M )
+	  for l_tech, l_vin in ProcessesByPeriodAndOutput( M, A_period, A_comm )
 	)
 
 	dindex = (A_period, A_season, A_time_of_day, A_comm)
