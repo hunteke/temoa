@@ -228,6 +228,79 @@ V_Activity[p,s,d,t,v] = sum((inp,out), V_FlowOut[p,s,d,inp,t,v,out])
 	return expr
 
 
+def CapacityLifetimeConstraint_rule ( A_period, A_com, M ):
+	if not ProcessesByPeriodAndOutput( M, A_period, A_com ):
+		# if nothing uses this commodity, don't bother creating a constraint
+		return None
+
+	if A_com in M.commodity_demand:
+		l_period_demand = sum(
+		  value(M.Demand[A_period, l_season, l_tod, A_com])
+
+		  for l_season in M.time_season
+		  for l_tod in M.time_of_day
+		  if value(M.Demand[A_period, l_season, l_tod, A_com])
+		)
+	elif A_com in M.commodity_physical:
+		l_period_demand = sum(
+		  M.V_FlowIn[A_period, l_season, l_tod, A_com, l_tech, l_vin, l_out]
+
+		  for l_tech, l_vin in ProcessesByPeriodAndInput( M, A_period, A_com )
+		  for l_out in ProcessOutputsByInput( A_period, l_tech, l_vin, A_com )
+		  for l_season in M.time_season
+		  for l_tod in M.time_of_day
+		)
+
+	if int is type( l_period_demand ) and l_period_demand == 0:
+		# if there is no demand, then no need to create a constraint
+		return Constraint.Skip
+
+	l_non_dying_ability = sum(
+	    M.V_Capacity[l_tech, l_vin]
+	  * value(M.CapacityFactor[l_tech, l_vin])
+	  * value(M.CapacityToActivity[l_tech])
+	  * value(M.PeriodLength[ A_period ])
+
+	  for l_tech, l_vin in ProcessesByPeriodAndOutput( M, A_period, A_com )
+	  if not value(M.LifetimeFrac[A_period, l_tech, l_vin])
+	)
+
+	expr = (l_non_dying_ability >= l_period_demand)
+	return expr
+
+
+def CapacityFractionalLifetimeConstraint_rule ( A_period, A_tech, A_vintage, A_com, M ):
+	index = (A_tech, A_vintage)
+	if not M.LifetimeFrac[A_period, A_tech, A_vintage]:
+		# if this vintage of tech does not die in this period, no need to create
+		# a constraint for it's max output in this period.
+		return None
+
+	l_max_output = (
+	    M.V_Capacity[ index ]
+	  * value(M.CapacityFactor[ index ])
+	  * value(M.CapacityToActivity[A_tech])
+	  * value(M.LifetimeFrac[A_period, A_tech, A_vintage])
+	  * value(M.PeriodLength[ A_period ])
+	)
+
+	l_output = sum(
+	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_com]
+
+	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	if int is type( l_output ):
+		# This shouldn't happen, but if, for some reason, there is no possibility
+		# of flow out for the tech in this period, then don't create a constraint
+		return None
+
+	expr = (l_output <= l_max_output)
+	return expr
+
+
 def CapacityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vintage, M ):
 	"""\
 V_Capacity is a derived variable; this constraint sets V_Capacity to at least be able to handle the activity in any optimization time slice.  In effect, this sets V_Capacity[p,t,v] to the max of the activity for similar indices: max(Activity[p,*,*t,v])
@@ -345,53 +418,6 @@ V_FlowOut[p,s,d,t,v,o] <= V_FlowIn[p,s,d,t,v,o] * Efficiency[i,t,v,o]
 	  * M.Efficiency[A_inp, A_tech, A_vintage, A_out]
 	)
 
-	return expr
-
-
-def CapacityFractionalLifetimeConstraint_rule ( A_period, A_tech, A_vintage, A_com, M ):
-	index = (A_period, A_tech, A_vintage)
-	l_fraction = value(M.LifetimeFrac[ index ])
-
-	if not l_fraction:
-		# If there is no fractional life in this period, there's no need to
-		# create a constraint.
-		return None
-
-	if not ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com ):
-		# if this process would not meet the output anyway, don't bother.
-		return None
-
-	if A_com in M.commodity_demand:
-		l_period_demand = sum(
-		  value(M.Demand[A_period, l_season, l_tod, A_com])
-
-		  for l_season in M.time_season
-		  for l_tod in M.time_of_day
-		  if value(M.Demand[A_period, l_season, l_tod, A_com])
-		)
-	elif A_com in M.commodity_physical:
-		l_period_demand = sum(
-		  M.V_FlowIn[A_period, l_season, l_tod, A_com, l_tech, l_vin, l_out]
-
-		  for l_tech, l_vin in ProcessesByPeriodAndInput( A_period, A_com, M )
-		  for l_out in ProcessOutputsByInput( A_period, l_tech, l_vin, A_com )
-		  for l_season in M.time_season
-		  for l_tod in M.time_of_day
-		)
-	else:
-		# Since this constraint is defined over M.commodity_all, it makes no
-		# sense to create a constraint based on commodity_emissions.
-		return None
-
-	l_dying_capacity_output = sum(
-	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_com]
-
-	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
-	)
-
-	expr = (l_dying_capacity_output <= l_fraction * l_period_demand)
 	return expr
 
 
