@@ -262,7 +262,7 @@ def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
 	  * value(M.PeriodLength[ A_period ])
 
 	  for l_tech, l_vin in ProcessesByPeriodAndOutput( M, A_period, A_com )
-	  if not M.LifetimeFrac[A_period, l_tech, l_vin]
+	  if not value(M.LifetimeFrac[A_period, l_tech, l_vin])
 	)
 
 	expr = (l_non_dying_ability >= l_period_demand)
