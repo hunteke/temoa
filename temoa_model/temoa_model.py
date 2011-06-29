@@ -183,7 +183,10 @@ CapacityFactor(tech_all, vintage_all)
 	M.ResourceExtractionConstraint = Constraint( M.time_optimize, M.commodity_physical,    rule=ResourceExtractionConstraint_rule )
 
 	M.BaseloadDiurnalConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_baseload, M.vintage_all, rule=BaseloadDiurnalConstraint_rule )
+
 	M.StorageConstraint = Constraint( M.time_optimize, M.time_season, M.commodity_all, M.tech_storage, M.vintage_all, M.commodity_all, rule=StorageConstraint_rule )
+
+	M.CapacityLifetimeConstraint           = Constraint( M.time_optimize, M.commodity_carrier, rule=CapacityLifetimeConstraint_rule )
 	M.CapacityFractionalLifetimeConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=CapacityFractionalLifetimeConstraint_rule )
 
 	M.MaxCarrierOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.commodity_physical, rule=MaxCarrierOutputConstraint_rule )
