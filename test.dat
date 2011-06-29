@@ -5,7 +5,7 @@ set  time_exist   :=  1980  2000 ;
 set  time_horizon :=  2010  2015 ;
 set  time_future  :=  2020  2030 ;
 
-set  time_season  :=  winter  summer  inter ;
+set  time_season  :=  summer ;
 set  time_of_day  :=  day  night ;
 
 set  tech_resource  :=
@@ -50,12 +50,8 @@ set  commodity_demand  :=
 
 
 param  SegFrac  :=
- winter  day    0.2
- winter  night  0.01
- summer  day    1
- summer  night  0.2
- inter   day    0.1
- inter   night  0.1
+ summer  day    0.5
+ summer  night  0.5
 	;
 
 
@@ -73,18 +69,6 @@ param  EmissionLimit  :=
 param  Demand  :=
  2010  summer  day    transport_distance   50
  2010  summer  night  transport_distance   25
-# 2010  winter  day    resheating            2
-# 2010  summer  day    reslighting           0
-	;
-
-param  CommodityProductionCost  :=
- 2010 t_elccar          2010      1
- 2010 t_elcboiler       2010      1
- 2010 t_coal            2010      1
- 2010 t_hyrdo           2010      0
- 2010 t_pumped_storage  2010       .5
- #2015 t_coal           2010      1
- #2015 t_elccar         2010      1
 	;
 
 
@@ -130,19 +114,14 @@ param  CostMarginal  :=
 
 param  Efficiency  :=
 # input carrier  # tech            # vintage  # output carrier     # eff. value
- coal             imp_coal          1980       coal                   1
- coal             imp_coal          2015       coal                   1
+ coal             imp_coal          2010       coal                   1
  coal             t_coal            2000       electricity            1
  coal             t_coal            2010       electricity            1
- electricity      t_elcboiler       2010       resheating             1
- electricity      t_lighting        2010       reslighting            1
  electricity      t_elccar          2010       transport_distance     1
- electricity      t_pumped_storage  2010       water                  2
- water            t_hydro           2010       electricity            2
 	;
 
-#param  ExistingCapacity  :=
+param  ExistingCapacity  :=
 # tech        # vintage       # capacity amount
-# t_coal        2000            30
-#	;
+ t_coal        2000            30
+	;
 
