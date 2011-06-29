@@ -151,7 +151,7 @@ Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 		# When index is 0, it means that we've reached the beginning of the array
 		# For the algorithm, this is a terminating condition: do not create
 		# an effectively useless constraint
-		return None
+		return Constraint.Skip
 
 	# for the rest of the time_of_days, set them equal to the one before.  i.e.
 	# create a set of constraints that look something like:
@@ -169,7 +169,7 @@ Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 
 
 def EmissionsConstraint_rule ( M, A_period, A_emission ):
-	pass
+	return Constraint.Skip
 
 
 def MaxCarrierOutputConstraint_rule ( M, A_period, A_tech, A_output ):
@@ -177,7 +177,7 @@ def MaxCarrierOutputConstraint_rule ( M, A_period, A_tech, A_output ):
 	if M.MaxCarrierOutput[ index ] == 0:
 		# if user specified 0, or did not specify a value, then there is no
 		# constraint.  (The default value for this parameter is 0.)
-		return None
+		return Constraint.Skip
 
 	l_flowout = sum(
 	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, l_vin, A_output]
@@ -196,7 +196,7 @@ def StorageConstraint_rule ( M, A_period, A_season, A_inp, A_tech, A_vintage, A_
 	Constraint rule documentation goes here ...
 """
 	if not isValidProcess( A_period, A_inp, A_tech, A_vintage, A_out ):
-		return None
+		return Constraint.Skip
 
 	l_sum_in_out = sum(
 	    M.V_FlowOut[A_period, A_season, l_tod, A_inp, A_tech, A_vintage, A_out]
@@ -222,7 +222,7 @@ V_Activity[p,s,d,t,v] = sum((inp,out), V_FlowOut[p,s,d,inp,t,v,out])
 	# The following two lines prevent creating obviously invalid or unnecessary constraints
 	# ex: a coal power plant does not consume wind and produce light.
 	if not ProcessOutputs( *pindex ):
-		return None
+		return Constraint.Skip
 
 	l_activity = 0
 	for l_inp in ProcessInputs( *pindex ):
@@ -244,7 +244,7 @@ V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 
 	# No sense in creating a guaranteed unused constraint
 	if not ProcessOutputs( *pindex ):
-		return None
+		return Constraint.Skip
 
 	l_vintage_activity = (
 	  M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
@@ -319,7 +319,7 @@ sum((inp,tech,vintage),V_FlowOut[period,season,time_of_day,*,*,*,carrier]) >= su
 		if int is type(l_vflow_out):
 			# Tell Pyomo not to create this constraint; it's useless because both
 			# of the flows are 0.  i.e. carrier not needed and nothing makes it.
-			return None
+			return Constraint.Skip
 
 	CommodityBalanceConstraintErrorCheck(
 	  l_vflow_out, l_vflow_in, A_carrier, A_season, A_time_of_day, A_period
@@ -339,7 +339,7 @@ V_FlowOut[p,s,d,t,v,o] <= V_FlowIn[p,s,d,t,v,o] * Efficiency[i,t,v,o]
 	index = (A_period, A_inp, A_tech, A_vintage, A_out)
 	if not isValidProcess( *index ):
 		# No sense in creating a guaranteed unused constraint
-		return None
+		return Constraint.Skip
 
 	aindex = (A_period, A_season, A_time_of_day, A_inp, A_tech, A_vintage, A_out)
 
@@ -360,11 +360,11 @@ def CapacityFractionalLifetimeConstraint_rule ( M, A_period, A_tech, A_vintage, 
 	if not l_fraction:
 		# If there is no fractional life in this period, there's no need to
 		# create a constraint.
-		return None
+		return Constraint.Skip
 
 	if not ProcessInputsByOutput( index, A_com ):
 		# if this process would not meet the output anyway, don't bother.
-		return None
+		return Constraint.Skip
 
 	if A_com in M.commodity_demand:
 		l_period_demand = sum(
@@ -386,7 +386,7 @@ def CapacityFractionalLifetimeConstraint_rule ( M, A_period, A_tech, A_vintage, 
 	else:
 		# Since this constraint is defined over M.commodity_all, it makes no
 		# sense to create a constraint based on commodity_emissions.
-		return None
+		return Constraint.Skip
 
 	l_dying_capacity_output = sum(
 	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_com]
@@ -427,7 +427,7 @@ sum((inp,tech,vintage),V_FlowOut[p,s,d,*,*,*,commodity]) >= Demand[p,s,d,commodi
 	index = (A_period, A_season, A_time_of_day, A_comm)
 	if not (M.Demand[ index ] > 0):
 		# nothing to be met: don't create a useless constraint like X >= 0
-		return None
+		return Constraint.Skip
 
 	l_supply = 0
 	for l_tech in M.tech_all:
@@ -458,7 +458,7 @@ def ActivityByPeriodTechConstraint_rule ( M, A_per, A_tech ):
 	)
 
 	if int is type( l_sum ):
-		return None
+		return Constraint.Skip
 
 	expr = (M.V_ActivityByPeriodAndTech[A_per, A_tech] == l_sum)
 	return expr
@@ -466,7 +466,7 @@ def ActivityByPeriodTechConstraint_rule ( M, A_per, A_tech ):
 
 def ActivityByPeriodTechAndVintageConstraint_rule ( M, A_per, A_tech, A_vin ):
 	if A_per < A_vin or A_vin not in ProcessVintages( A_per, A_tech ):
-		return None
+		return Constraint.Skip
 
 	l_sum = sum(
 	  M.V_Activity[A_per, l_season, l_tod, A_tech, A_vin]
@@ -476,7 +476,7 @@ def ActivityByPeriodTechAndVintageConstraint_rule ( M, A_per, A_tech, A_vin ):
 	)
 
 	if int is type( l_sum ):
-		return None
+		return Constraint.Skip
 
 	expr = (M.V_ActivityByPeriodTechAndVintage[A_per, A_tech, A_vin] == l_sum)
 	return expr
@@ -493,7 +493,7 @@ def ActivityByPeriodTechAndOutputConstraint_rule ( M, A_period, A_tech, A_output
 	)
 
 	if int is type( l_sum ):
-		return None
+		return Constraint.Skip
 
 	index = (A_period, A_tech, A_output)
 	expr = (M.V_ActivityByPeriodTechAndOutput[ index ] == l_sum)
@@ -510,7 +510,7 @@ def ActivityByPeriodTechVintageAndOutputConstraint_rule ( M, A_period, A_tech, A
 	)
 
 	if int is type( l_sum ):
-		return None
+		return Constraint.Skip
 
 	index = (A_period, A_tech, A_vintage, A_output)
 	expr = (M.V_ActivityByPeriodTechVintageAndOutput[ index ] == l_sum)
@@ -528,7 +528,7 @@ def ActivityByPeriodInputAndTechConstraint_rule ( M, A_period, A_input, A_tech )
 	)
 
 	if int is type( l_sum ):
-		return None
+		return Constraint.Skip
 
 	index = (A_period, A_input, A_tech)
 	expr = (M.V_ActivityByPeriodInputAndTech[ index ] == l_sum)
@@ -545,7 +545,7 @@ def ActivityByPeriodInputTechAndVintageConstraint_rule ( M, A_period, A_input, A
 	)
 
 	if int is type( l_sum ):
-		return None
+		return Constraint.Skip
 
 	index = (A_period, A_input, A_tech, A_vintage)
 	expr = (M.V_ActivityByPeriodInputTechAndVintage[ index ] == l_sum)
@@ -561,7 +561,7 @@ def CapacityAvailableByPeriodAndTechConstraint_rule ( M, A_per, A_tech ):
 	)
 
 	if type( l_sum ) is int:
-		return None
+		return Constraint.Skip
 
 	expr = (M.V_CapacityAvailableByPeriodAndTech[A_per, A_tech] == l_sum)
 	return expr
@@ -577,7 +577,7 @@ def InvestmentByTechConstraint_rule ( M, A_tech ):
 	)
 
 	if int is type( l_sum ):
-		return None
+		return Constraint.Skip
 
 	expr = ( M.V_InvestmentByTech[ A_tech ] == l_sum)
 	return expr
@@ -592,7 +592,7 @@ def InvestmentByTechAndVintageConstraint_rule ( M, A_tech, A_vin ):
 		l_cost = M.V_Capacity[ index ] * value(M.CostInvest[ index ])
 
 	if int is type( l_cost ):
-		return None
+		return Constraint.Skip
 
 	expr = ( M.V_InvestmentByTechAndVintage[ index ] == l_cost)
 	return expr
@@ -612,7 +612,7 @@ def EmissionActivityTotalConstraint_rule ( M, A_emission ):
 	)
 
 	if type( l_sum ) is int:
-		return None
+		return Constraint.Skip
 
 	expr = (M.V_EmissionActivityTotal[ A_emission ] == l_sum)
 	return expr
@@ -631,7 +631,7 @@ def EmissionActivityByPeriodConstraint_rule ( M, A_emission, A_period ):
 	)
 
 	if type( l_sum ) is int:
-		return None
+		return Constraint.Skip
 
 	expr = (M.V_EmissionActivityByPeriod[A_emission, A_period] == l_sum)
 	return expr
@@ -650,7 +650,7 @@ def EmissionActivityByTechConstraint_rule ( M, A_emission, A_tech ):
 	)
 
 	if type( l_sum ) is int:
-		return None
+		return Constraint.Skip
 
 	expr = (M.V_EmissionActivityByTech[A_emission, A_tech] == l_sum)
 	return expr
@@ -668,7 +668,7 @@ def EmissionActivityByPeriodAndTechConstraint_rule ( M, A_emission, A_period, A_
 	)
 
 	if type( l_sum ) is int:
-		return None
+		return Constraint.Skip
 
 	index = (A_emission, A_period, A_tech)
 	expr = (M.V_EmissionActivityByPeriodAndTech[ index ] == l_sum)
@@ -687,7 +687,7 @@ def EmissionActivityByTechAndVintageConstraint_rule ( M, A_emission, A_tech, A_v
 	)
 
 	if type( l_sum ) is int:
-		return None
+		return Constraint.Skip
 
 	index = (A_emission, A_tech, A_vintage)
 	expr = (M.V_EmissionActivityByTechAndVintage[ index ] == l_sum)
