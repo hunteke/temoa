@@ -488,7 +488,15 @@ def parse_args ( ):
 # Direct invocation methods (when modeler runs via "python model.py ..."
 
 def temoa_solve ( model ):
-	from sys import argv
+	from sys import argv, version_info
+
+	if version_info < (2, 7):
+		msg = "Temoa requires Python v2.7 or greater to run.\n\nIf you've "     \
+		   "installed Coopr with Python 2.6 or less, you'll need to reinstall " \
+		   "Coopr, taking care to install with a Python 2.7 (or greater) "      \
+		   "executable."
+		raise SystemExit, msg
+
 	from time import clock
 
 	from coopr.opt import SolverFactory
@@ -501,7 +509,7 @@ def temoa_solve ( model ):
 
 	opt = SolverFactory('glpk_experimental')
 	opt.keepFiles = False
-	# opt.options.wlp = "temoa_model.lp"  # output GLPK LP understanding of model
+	opt.options.wlp = "temoa_model.lp"  # output GLPK LP understanding of model
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
