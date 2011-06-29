@@ -218,6 +218,7 @@ def InitializeProcessParameters ( M ):
 
 							g_processVintages[l_period, l_tech].add( l_vintage )
 							g_processInputs[ pindex ].add( l_inp )
+							g_processOutputs[pindex ].add( l_out )
 
 	return set()
 
