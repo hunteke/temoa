@@ -238,11 +238,12 @@ def ProcessInputs ( *index ):
 	return set()
 
 
-def ProcessInputsByOutput ( index, A_output ):
+def ProcessInputsByOutput ( A_period, A_tech, A_vintage, A_output ):
 	"""\
 Return the set of input energy carriers used by a technology (A_tech) to
 produce a given output carrier (A_output).
 """
+	index = (A_period, A_tech, A_vintage)
 	if index in g_processOutputs:
 		if A_output in g_processOutputs[ index ]:
 			return g_processInputs[ index ]
