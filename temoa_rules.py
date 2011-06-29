@@ -448,7 +448,7 @@ sum((inp,tech,vintage),V_FlowOut[p,s,d,*,*,*,commodity]) >= Demand[p,s,d,commodi
 ##############################################################################
 # Additional and derived (informational) variable constraints
 
-def TechActivityByPeriodConstraint_rule ( A_per, A_tech, M ):
+def ActivityByPeriodTechConstraint_rule ( A_per, A_tech, M ):
 	l_sum = sum(
 	  M.V_Activity[A_per, l_season, l_tod, A_tech, l_vin]
 
@@ -464,7 +464,7 @@ def TechActivityByPeriodConstraint_rule ( A_per, A_tech, M ):
 	return expr
 
 
-def TechActivityByPeriodAndVintageConstraint_rule ( A_per, A_tech, A_vin, M ):
+def ActivityByPeriodTechAndVintageConstraint_rule ( A_per, A_tech, A_vin, M ):
 	if A_per < A_vin or A_vin not in ProcessVintages( A_per, A_tech ):
 		return None
 
@@ -482,7 +482,7 @@ def TechActivityByPeriodAndVintageConstraint_rule ( A_per, A_tech, A_vin, M ):
 	return expr
 
 
-def TechActivityByPeriodAndOutputConstraint_rule ( A_period, A_tech, A_output, M ):
+def ActivityByPeriodTechAndOutputConstraint_rule ( A_period, A_tech, A_output, M ):
 	l_sum = sum(
 	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, l_vin, A_output]
 
@@ -500,7 +500,7 @@ def TechActivityByPeriodAndOutputConstraint_rule ( A_period, A_tech, A_output, M
 	return expr
 
 
-def TechActivityByPeriodVintageAndOutputConstraint_rule ( A_period, A_tech, A_vintage, A_output, M ):
+def ActivityByPeriodTechVintageAndOutputConstraint_rule ( A_period, A_tech, A_vintage, A_output, M ):
 	l_sum = sum(
 	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_output]
 

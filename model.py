@@ -220,10 +220,10 @@ CapacityFactor(tech_all, vintage_all)
 
 	#   The requisite constraints to set the derived variables above.
 
-	M.TechActivityByPeriodConstraint                 = Constraint( M.time_optimize, M.tech_all,                                     rule=TechActivityByPeriodConstraint_rule )
-	M.TechActivityByPeriodAndVintageConstraint       = Constraint( M.time_optimize, M.tech_all, M.vintage_all,                      rule=TechActivityByPeriodAndVintageConstraint_rule )
-	M.TechActivityByPeriodAndOutputConstraint        = Constraint( M.time_optimize, M.tech_all, M.commodity_carrier,                rule=TechActivityByPeriodAndOutputConstraint_rule )
-	M.TechActivityByPeriodVintageAndOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=TechActivityByPeriodVintageAndOutputConstraint_rule )
+	M.ActivityByPeriodTechConstraint                 = Constraint( M.time_optimize, M.tech_all,                                     rule=ActivityByPeriodTechConstraint_rule )
+	M.ActivityByPeriodTechAndVintageConstraint       = Constraint( M.time_optimize, M.tech_all, M.vintage_all,                      rule=ActivityByPeriodTechAndVintageConstraint_rule )
+	M.ActivityByPeriodTechAndOutputConstraint        = Constraint( M.time_optimize, M.tech_all, M.commodity_carrier,                rule=ActivityByPeriodTechAndOutputConstraint_rule )
+	M.ActivityByPeriodTechVintageAndOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=ActivityByPeriodTechVintageAndOutputConstraint_rule )
 
 	M.ActivityByPeriodInputAndTechConstraint        = Constraint( M.time_optimize, M.commodity_physical, M.tech_all,                rule=ActivityByPeriodInputAndTechConstraint_rule )
 	M.ActivityByPeriodInputTechAndVintageConstraint = Constraint( M.time_optimize, M.commodity_physical, M.tech_all, M.vintage_all, rule=ActivityByPeriodInputTechAndVintageConstraint_rule )
