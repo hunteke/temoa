@@ -40,11 +40,11 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 
 			for l_vin in M.vintage_all:
 				l_ucost = 0
-				if M.CostMarginal[l_per, l_tech, l_vin].value > 0:
+				if value( M.CostMarginal[l_per, l_tech, l_vin] ) > 0:
 					# The if keeps the objective function cleaner in LP output
 					l_ucost = sum(
 					    M.V_Activity[l_per, l_season, l_time_of_day, l_tech, l_vin]
-					  * M.CostMarginal[l_per, l_tech, l_vin].value
+					  * value( M.CostMarginal[l_per, l_tech, l_vin] )
 
 					  for l_season in M.time_season
 					  for l_time_of_day in M.time_of_day
@@ -73,7 +73,7 @@ def ParamPeriodLength_rule ( period, M ):
 
 def ParamPeriodRate_rule ( period, M ):
 	l_rate_multiplier = sum( [
-	  (1 + M.GlobalDiscountRate.value)**(M.time_optimize.first() - y - period)
+	  (1 + value(M.GlobalDiscountRate)) ** (M.time_optimize.first() - y - period)
 
 	  for y in range(0, M.PeriodLength[ period ])
 	])
@@ -110,10 +110,12 @@ def ParamLifetimeFrac_rule ( A_period, A_tech, A_vintage, M ):
 
 
 def ParamLoanAnnualize_rule ( A_tech, A_vintage, M ):
-	l_annualized_rate = ( M.DiscountRate[ A_tech, A_vintage ].value /
-	    (1 - (1 + M.DiscountRate[A_tech, A_vintage].value)
-	         **(-M.LifetimeLoan[A_tech, A_vintage].value )
-	))
+	l_annualized_rate = (
+	    value( M.DiscountRate[ A_tech, A_vintage ] )
+	  / (1 - (1 + value(M.DiscountRate[A_tech, A_vintage]))
+	         **(-value(M.LifetimeLoan[A_tech, A_vintage]))
+	    )
+	)
 
 	return l_annualized_rate
 
@@ -532,10 +534,10 @@ def CapacityAvailableByPeriodAndTechConstraint_rule ( A_per, A_tech, M ):
 def InvestmentByTechConstraint_rule ( A_tech, M ):
 	l_sum = sum(
 	    M.V_Capacity[A_tech, l_vin]
-	  * M.CostInvest[A_tech, l_vin].value
+	  * value( M.CostInvest[A_tech, l_vin] )
 
 	  for l_vin in M.vintage_optimize
-	  if M.CostInvest[A_tech, l_vin].value > 0
+	  if value( M.CostInvest[A_tech, l_vin] ) > 0
 	)
 
 	if int is type( l_sum ):
