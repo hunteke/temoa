@@ -269,9 +269,9 @@ def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
 	return expr
 
 
-def CapacityFractionalLifetimeConstraint_rule ( A_period, A_tech, A_vintage, A_com ):
+def CapacityFractionalLifetimeConstraint_rule ( M, A_period, A_tech, A_vintage, A_com ):
 	index = (A_tech, A_vintage)
-	if not M.LifetimeFrac[ index ]:
+	if not M.LifetimeFrac[A_period, A_tech, A_vintage]:
 		# if this vintage of tech does not die in this period, no need to create
 		# a constraint for it's max output in this period.
 		return Constraint.Skip
@@ -418,53 +418,6 @@ V_FlowOut[p,s,d,t,v,o] <= V_FlowIn[p,s,d,t,v,o] * Efficiency[i,t,v,o]
 	  * M.Efficiency[A_inp, A_tech, A_vintage, A_out]
 	)
 
-	return expr
-
-
-def CapacityFractionalLifetimeConstraint_rule ( M, A_period, A_tech, A_vintage, A_com ):
-	index = (A_period, A_tech, A_vintage)
-	l_fraction = value(M.LifetimeFrac[ index ])
-
-	if not l_fraction:
-		# If there is no fractional life in this period, there's no need to
-		# create a constraint.
-		return Constraint.Skip
-
-	if not ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com ):
-		# if this process would not meet the output anyway, don't bother.
-		return Constraint.Skip
-
-	if A_com in M.commodity_demand:
-		l_period_demand = sum(
-		  value(M.Demand[A_period, l_season, l_tod, A_com])
-
-		  for l_season in M.time_season
-		  for l_tod in M.time_of_day
-		  if value(M.Demand[A_period, l_season, l_tod, A_com])
-		)
-	elif A_com in M.commodity_physical:
-		l_period_demand = sum(
-		  M.V_FlowIn[A_period, l_season, l_tod, A_com, l_tech, l_vin, l_out]
-
-		  for l_tech, l_vin in ProcessesByPeriodAndInput( M, A_period, A_com )
-		  for l_out in ProcessOutputsByInput( A_period, l_tech, l_vin, A_com )
-		  for l_season in M.time_season
-		  for l_tod in M.time_of_day
-		)
-	else:
-		# Since this constraint is defined over M.commodity_all, it makes no
-		# sense to create a constraint based on commodity_emissions.
-		return Constraint.Skip
-
-	l_dying_capacity_output = sum(
-	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_com]
-
-	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
-	)
-
-	expr = (l_dying_capacity_output <= l_fraction * l_period_demand)
 	return expr
 
 
