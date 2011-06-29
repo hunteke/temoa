@@ -84,10 +84,14 @@ CapacityFactor(tech_all, vintage_all)
 	M.time_optimize   = Set( ordered=True, initialize=init_set_time_optimize )
 	M.time_report     = M.time_exist | M.time_horizon
 	M.time_all        = M.time_exist | M.time_optimize
-	M.vintage_exist   = M.time_exist   # intentional copy, for unambiguous use
-	M.vintage_future  = M.time_future  # intentional copy, for unambiguous use
-	M.vintage_optimize = M.time_optimize # intentional copy, for unambiguous use
-	M.vintage_all     = M.time_all     # intentional copy, for unambiguous use
+
+	# These next sets are just various copies of the time_ sets, but
+	# unfortunately must be manually copied because of a few outstanding bugs
+	# within Pyomo (Jul 2011)
+	M.vintage_exist    = Set( ordered=True, initialize=init_set_vintage_exist)
+	M.vintage_future   = Set( ordered=True, initialize=init_set_vintage_future)
+	M.vintage_optimize = Set( ordered=True, initialize=init_set_vintage_optimize)
+	M.vintage_all      = Set( ordered=True, initialize=init_set_vintage_all)
 
 	# always-empty Set; hack to perform inter-Set or inter-Param validation
 	M.validate_time    = Set( initialize=validate_time )

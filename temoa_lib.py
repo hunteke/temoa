@@ -139,6 +139,22 @@ def init_set_time_optimize ( M ):
 
 	return items[:-1]
 
+
+def init_set_vintage_exist ( M ):
+	return list( M.time_exist )
+
+
+def init_set_vintage_future ( M ):
+	return list( M.time_future )
+
+
+def init_set_vintage_optimize ( M ):
+	return list( M.time_optimize )
+
+
+def init_set_vintage_all ( M ):
+	return list( M.time_all )
+
 # end validation and initialization routines
 ##############################################################################
 
