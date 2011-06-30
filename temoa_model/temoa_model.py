@@ -4,7 +4,7 @@ __all__ = [ 'temoa_create_model', ]
 
 from temoa_rules import *
 
-def temoa_create_model ( ):
+def temoa_create_model ( name='TEMOA Entire Energy System Economic Optimization Model' ):
 	"""\
 Returns an abstract instance of the TEMOA model.  (Abstract because it will yet
 need to be populated with "dot dat" file data.)
@@ -76,7 +76,7 @@ CapacityFactor(tech_all, vintage_all)
    [default: 0] CapacityFactor enables the modeler to set the capacity factor
    for any vintage of technology.
 	"""
-	M = AbstractModel('TEMOA Entire Energy System Economic Optimization Model')
+	M = AbstractModel( name )
 
 	M.time_exist      = Set( ordered=True, within=Integers )
 	M.time_horizon    = Set( ordered=True, within=Integers )
@@ -143,8 +143,7 @@ CapacityFactor(tech_all, vintage_all)
 	# always-empty Set; hack to perform inter-Set or inter-Param validation
 	M.validate_TechOutputSplit = Set( initialize=validate_TechOutputSplit )
 
-
-	M.MaxCarrierOutput = Param( M.time_optimize, M.tech_all, M.commodity_physical, default=0 )
+	M.MaxCapacity = Param( M.time_optimize, M.tech_all, default=-1 )
 
 	# Not yet indexed by period or incorporated into the constraints
 	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions, default=0 )
@@ -165,6 +164,8 @@ CapacityFactor(tech_all, vintage_all)
 	# generation.  This is therefore intentially placed after all Set and Param
 	# definitions and initializations, but before the Objective and Constraints.
 	M.IntializeProcessParameters = Set( rule=InitializeProcessParameters )
+
+	AddReportingVariables( M )
 
 	# Objective
 	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
@@ -195,69 +196,10 @@ CapacityFactor(tech_all, vintage_all)
 	M.CapacityLifetimeConstraint           = Constraint( M.time_optimize, M.commodity_carrier, rule=CapacityLifetimeConstraint_rule )
 	M.CapacityFractionalLifetimeConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=CapacityFractionalLifetimeConstraint_rule )
 
-	M.MaxCarrierOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.commodity_physical, rule=MaxCarrierOutputConstraint_rule )
+	M.MaxCapacityConstraint = Constraint( M.time_optimize, M.tech_all, rule=MaxCapacityConstraint_rule )
 	#   Constraints not yet updated
 	M.EmissionConstraint           = Constraint( M.time_optimize, M.commodity_emissions, rule=EmissionsConstraint_rule)
 
-
-	# Additional and derived variables, mainly for reporting purposes.  As
-	# these are basically used to export information for modeler consumption,
-	# these could be taken out of here and put in a post-processing step.  This
-	# is in fact what we'll likely want to do as we grow because Coopr remains
-	# fairly inefficient, and each Variable represents a fair chunk of memory,
-	# among other resources.  Luckily, all told, these are cheap, compared
-	# to the computational cost of the other constraints.
-	M.V_ActivityByPeriodAndTech              = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
-	M.V_ActivityByPeriodTechAndVintage       = Var( M.time_optimize, M.tech_all, M.vintage_all, domain=NonNegativeReals )
-	M.V_ActivityByPeriodTechAndOutput        = Var( M.time_optimize, M.tech_all, M.commodity_carrier, domain=NonNegativeReals )
-	M.V_ActivityByPeriodTechVintageAndOutput = Var( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, domain=NonNegativeReals )
-
-	M.V_ActivityByPeriodInputAndTech        = Var( M.time_optimize, M.commodity_physical, M.tech_all, domain=NonNegativeReals )
-	M.V_ActivityByPeriodInputTechAndVintage = Var( M.time_optimize, M.commodity_physical, M.tech_all, M.vintage_all, domain=NonNegativeReals )
-
-	M.V_CapacityAvailableByPeriodAndTech = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
-
-	M.V_InvestmentByTech           = Var( M.tech_all, domain=NonNegativeReals )
-	M.V_InvestmentByTechAndVintage = Var( M.tech_all, M.vintage_optimize, domain=NonNegativeReals )
-
-	M.V_EmissionActivityTotal            = Var( M.commodity_emissions, domain=Reals )
-	M.V_EmissionActivityByPeriod         = Var( M.commodity_emissions, M.time_optimize, domain=Reals )
-	M.V_EmissionActivityByTech           = Var( M.commodity_emissions, M.tech_all, domain=Reals )
-	M.V_EmissionActivityByPeriodAndTech  = Var( M.commodity_emissions, M.time_optimize, M.tech_all, domain=Reals )
-	M.V_EmissionActivityByTechAndVintage = Var( M.commodity_emissions, M.tech_all, M.vintage_all, domain=Reals )
-
-	M.V_EnergyConsumptionByTech                 = Var( M.tech_all, domain=NonNegativeReals )
-	M.V_EnergyConsumptionByTechAndOutput        = Var( M.tech_all, M.commodity_all, domain=NonNegativeReals )
-	M.V_EnergyConsumptionByPeriodAndTech        = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
-	M.V_EnergyConsumptionByPeriodTechAndOutput  = Var( M.time_optimize, M.tech_all, M.commodity_all, domain=NonNegativeReals )
-	M.V_EnergyConsumptionByPeriodTechAndVintage = Var( M.time_optimize, M.tech_all, M.vintage_all, domain=NonNegativeReals )
-
-	#   The requisite constraints to set the derived variables above.
-
-	M.ActivityByPeriodTechConstraint                 = Constraint( M.time_optimize, M.tech_all,                                     rule=ActivityByPeriodTechConstraint_rule )
-	M.ActivityByPeriodTechAndVintageConstraint       = Constraint( M.time_optimize, M.tech_all, M.vintage_all,                      rule=ActivityByPeriodTechAndVintageConstraint_rule )
-	M.ActivityByPeriodTechAndOutputConstraint        = Constraint( M.time_optimize, M.tech_all, M.commodity_carrier,                rule=ActivityByPeriodTechAndOutputConstraint_rule )
-	M.ActivityByPeriodTechVintageAndOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=ActivityByPeriodTechVintageAndOutputConstraint_rule )
-
-	M.ActivityByPeriodInputAndTechConstraint        = Constraint( M.time_optimize, M.commodity_physical, M.tech_all,                rule=ActivityByPeriodInputAndTechConstraint_rule )
-	M.ActivityByPeriodInputTechAndVintageConstraint = Constraint( M.time_optimize, M.commodity_physical, M.tech_all, M.vintage_all, rule=ActivityByPeriodInputTechAndVintageConstraint_rule )
-
-	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.time_optimize, M.tech_all, rule=CapacityAvailableByPeriodAndTechConstraint_rule )
-
-	M.InvestmentByTechConstraint           = Constraint( M.tech_all, rule=InvestmentByTechConstraint_rule )
-	M.InvestmentByTechAndVintageConstraint = Constraint( M.tech_all, M.vintage_optimize, rule=InvestmentByTechAndVintageConstraint_rule )
-
-	M.EmissionActivityTotalConstraint            = Constraint( M.commodity_emissions, rule=EmissionActivityTotalConstraint_rule )
-	M.EmissionActivityByPeriodConstraint         = Constraint( M.commodity_emissions, M.time_optimize, rule=EmissionActivityByPeriodConstraint_rule )
-	M.EmissionActivityByTechConstraint           = Constraint( M.commodity_emissions, M.tech_all, rule=EmissionActivityByTechConstraint_rule )
-	M.EmissionActivityByPeriodAndTechConstraint  = Constraint( M.commodity_emissions, M.time_optimize, M.tech_all, rule=EmissionActivityByPeriodAndTechConstraint_rule )
-	M.EmissionActivityByTechAndVintageConstraint = Constraint( M.commodity_emissions, M.tech_all, M.vintage_all, rule=EmissionActivityByTechAndVintageConstraint_rule )
-
-	M.EnergyConsumptionByTechConstraint                 = Constraint( M.tech_all, rule=EnergyConsumptionByTechConstraint_rule )
-	M.EnergyConsumptionByTechAndOutputConstraint        = Constraint( M.tech_all, M.commodity_all, rule=EnergyConsumptionByTechAndOutputConstraint_rule )
-	M.EnergyConsumptionByPeriodAndTechConstraint        = Constraint( M.time_optimize, M.tech_all, rule=EnergyConsumptionByPeriodAndTechConstraint_rule )
-	M.EnergyConsumptionByPeriodTechAndOutputConstraint  = Constraint( M.time_optimize, M.tech_all, M.commodity_all, rule=EnergyConsumptionByPeriodTechAndOutputConstraint_rule )
-	M.EnergyConsumptionByPeriodTechAndVintageConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, rule=EnergyConsumptionByPeriodTechAndVintageConstraint_rule )
 
 	return M
 
