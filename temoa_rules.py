@@ -165,6 +165,18 @@ def EmissionsConstraint_rule ( A_period, A_emission, M ):
 	pass
 
 
+def MinCapacityConstraint_rule ( A_period, A_tech, M ):
+	index = (A_period, A_tech)
+	l_min = value(M.MinCapacity[ index ])
+	if -1 == l_min:
+		# if user specified -1 (did not specify a value), then there is no
+		# constraint.  (The default value for this parameter is -1.)
+		return None
+
+	expr = (M.V_CapacityAvailableByPeriodAndTech[A_period, A_tech] >= l_min)
+	return expr
+
+
 def MaxCapacityConstraint_rule ( A_period, A_tech, M ):
 	index = (A_period, A_tech)
 	l_max = value(M.MaxCapacity[ index ])

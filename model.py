@@ -143,6 +143,7 @@ CapacityFactor(tech_all, vintage_all)
 	# always-empty Set; hack to perform inter-Set or inter-Param validation
 	M.validate_TechOutputSplit = Set( initialize=validate_TechOutputSplit )
 
+	M.MinCapacity = Param( M.time_optimize, M.tech_all, default=-1 )
 	M.MaxCapacity = Param( M.time_optimize, M.tech_all, default=-1 )
 
 	# Not yet indexed by period or incorporated into the constraints
@@ -196,6 +197,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.CapacityLifetimeConstraint           = Constraint( M.time_optimize, M.commodity_carrier, rule=CapacityLifetimeConstraint_rule )
 	M.CapacityFractionalLifetimeConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=CapacityFractionalLifetimeConstraint_rule )
 
+	M.MinCapacityConstraint = Constraint( M.time_optimize, M.tech_all, rule=MinCapacityConstraint_rule )
 	M.MaxCapacityConstraint = Constraint( M.time_optimize, M.tech_all, rule=MaxCapacityConstraint_rule )
 	#   Constraints not yet updated
 	M.EmissionConstraint           = Constraint( M.time_optimize, M.commodity_emissions, rule=EmissionsConstraint_rule)
