@@ -2,7 +2,7 @@
 
 CLEANUP=true
 
-PKG_NAME=temoa
+PKG_NAME=temoa.py
 PKG_PATH=./temoa_model
 
 if [[ "$1" = "--save" ]]; then
