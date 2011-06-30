@@ -233,11 +233,25 @@ param  ResourceBound  :=
 	;
 
 
-param  MaxCarrierOutput  :=   # roughly NRAT_RTY2
-# period     # tech          # carrier       # value
- 1990         t_dsl_plant     electricity     80   # E70
- 2000         t_dsl_plant     electricity     80   # E70
- 2010         t_dsl_plant     electricity     80   # E70
+param  MinCapacity  :=   # roughly NRAT_RTY2
+# period     # tech               # value
+ 1990         t_hydro_electric     0.13   # E31
+ 2000         t_hydro_electric     0.13   # E31
+ 2010         t_hydro_electric     0.13   # E31
+	;
+
+param  MaxCapacity  :=   # roughly NRAT_RTY2
+# period     # tech               # value
+ 1990         t_hydro_electric     0.13   # E31
+ 2000         t_hydro_electric     0.17   # E31
+ 2010         t_hydro_electric     0.21   # E31
+	;
+
+
+param  TechOutputSplit  :=    # roughly TABLE PRC_OUT
+# input carrier   # tech            # output carrier    # fractional value
+ crude_oil         t_oil_refinery    diesel              0.7
+ crude_oil         t_oil_refinery    gasoline            0.3
 	;
 
 
@@ -372,12 +386,12 @@ param  Efficiency  :=        # PARAMETER CON_INP2, DMD_EFF
  electricity        t_std_incandescent_lighting  2000       res_lighting         1     # direct translation from DMD_EFF
  electricity        t_std_incandescent_lighting  2010       res_lighting         1     # direct translation from DMD_EFF
 
- crude_oil          t_oil_refinery               1990       diesel               .7     # direct translation from PRC_INP2, PRC_OUT
- crude_oil          t_oil_refinery               2000       diesel               .7     # direct translation from PRC_INP2, PRC_OUT
- crude_oil          t_oil_refinery               2010       diesel               .7     # direct translation from PRC_INP2, PRC_OUT
- crude_oil          t_oil_refinery               1990       gasoline             .3     # direct translation from PRC_INP2, PRC_OUT
- crude_oil          t_oil_refinery               2000       gasoline             .3     # direct translation from PRC_INP2, PRC_OUT
- crude_oil          t_oil_refinery               2010       gasoline             .3     # direct translation from PRC_INP2, PRC_OUT
+ crude_oil          t_oil_refinery               1990       diesel               1     # direct translation from PRC_INP2, PRC_OUT
+ crude_oil          t_oil_refinery               2000       diesel               1     # direct translation from PRC_INP2, PRC_OUT
+ crude_oil          t_oil_refinery               2010       diesel               1     # direct translation from PRC_INP2, PRC_OUT
+ crude_oil          t_oil_refinery               1990       gasoline             1     # direct translation from PRC_INP2, PRC_OUT
+ crude_oil          t_oil_refinery               2000       gasoline             1     # direct translation from PRC_INP2, PRC_OUT
+ crude_oil          t_oil_refinery               2010       gasoline             1     # direct translation from PRC_INP2, PRC_OUT
 
  diesel             t_dsl_car                    1990       auto_transportation  0.231 # direct translation from DMD_EFF
  diesel             t_dsl_car                    2000       auto_transportation  0.231 # direct translation from DMD_EFF
