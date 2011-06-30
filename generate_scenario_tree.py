@@ -444,15 +444,15 @@ def parse_options ( ):
 	from os import path
 
 	parser = OptionParser()
-	parser.usage = '%prog \\\n'                                                \
-	   '\t--dirname=<run_name> \\\n'                                           \
-	   '\t--model=<../path/to/model/file> \\\n'                                \
-	   '\t--dotdat=<../path/to/dot/dat/file> \\\n'                         \
-	   '\t--stochasticset=<model_stochastic_set> \\\n'                         \
-	   '\t--params=<parameters_to_vary> \\\n'                                  \
-	   '\t--stage-types=<stage_types> \\\n'                                    \
-	   '\t--stage-rates=<stage_varying_rates> \\\n'                            \
-	   '\t[options]'
+	parser.usage = ('%prog \\\n'
+	   '\t--dirname=<run_name> \\\n'
+	   '\t--model=<../path/to/model/file> \\\n'
+	   '\t--dotdat=<../path/to/dot/dat/file> \\\n'
+	   '\t--stochasticset=<model_stochastic_set> \\\n'
+	   '\t--params=<parameters_to_vary> \\\n'
+	   '\t--stage-types=<stage_types> \\\n'
+	   '\t--stage-rates=<stage_varying_rates> \\\n'
+	   '\t[options]')
 
 	mopts = OptionGroup( parser, 'Model Arguments')
 	opts  = OptionGroup( parser, 'Stochastic Arguments')
@@ -479,12 +479,12 @@ def parse_options ( ):
 	  type='string')
 
 	opts.add_option('-f','--force',
-	  help='If a subdirectory conflicts with --name, then this option directs '\
+	  help='If a subdirectory conflicts with --name, then this option directs '
 	     'the script to remove all files in it and use it anyway.',
 	  action='store_true',
 	  dest='force',)
 	opts.add_option('-n','--dirname',
-	  help='Name of a working directory for the output files.  This script '   \
+	  help='Name of a working directory for the output files.  This script '
 	     'will create (or use, if empty) a subdirectory by this name.',
 	  action='store',
 	  dest='dirname',
@@ -566,11 +566,11 @@ def parse_options ( ):
 				rates[ key ] = [ float(i) for i in vals.split(',') ]
 			popts.rates = rates
 		except ValueError, e:
-			msg = 'stage-rates must be a list of numbers.  Did you use a colon\n'\
-			      'to specify the model parameter (i.e. param:n1,n2,...)?\n'     \
-			      '  Offending item: %s\n  Specified list: %s'
-			msg %= ( i, r )
-			raise ValueError, msg
+			msg = ('stage-rates must be a parameter followed by a list of '
+			   'numbers.  Did you use a colon to specify the model parameter '
+			   '(i.e. param:n1,n2,...)?\n'
+			   '  Specified list: %s')
+			raise ValueError, msg % r
 
 	if popts.types:
 		types = dict()
@@ -581,20 +581,33 @@ def parse_options ( ):
 				types[ key ] = [ str(i) for i in vals.split(',') ]
 			popts.types = types
 		except ValueError, e:
-			msg = 'stage-types must be a list of names.  Did you use a colon\n'  \
-			      'to specify the model parameter (i.e. param:n1,n2,...)?\n'     \
-			      '  Offending item: %s\n  Specified list: %s'
-			msg %= ( i, t )
-			raise ValueError, msg
+			msg = ('stage-types must be a list of names.  Did you use a colon '
+			   'to specify the model parameter (i.e. param:n1,n2,...)?\n'
+			   '  Specified list: %s')
+			raise ValueError, msg % t
 
+	print popts.types, popts.rates
 	if len(popts.types) != len(popts.rates):
-			msg = 'The stage-rates and stage-types options need the same number' \
-			      ' of items\n' \
-			      '  stage-rates: (count: %d) %s\n  stage-types: (count: %d) %s'
-			data = [ len(popts.rates), stringify( popts.rates ) ]
-			data.extend( [len(popts.types), stringify( popts.types )] )
+			msg = ('The stage-rates and stage-types options need the same number '
+			   'of items.\n'
+			   '  stage-rates params: (count: %d) %s\n'
+			   '  stage-types params: (count: %d) %s')
+			data = [ len(popts.rates), stringify( sorted( popts.rates )) ]
+			data.extend( [len(popts.types), stringify( sorted( popts.types ))] )
 			msg %= tuple(data)
 			raise ValueError, msg
+
+	for key in popts.params:
+		if len(popts.types[ key ]) != len(popts.rates[ key ]):
+			msg = ('Extra or missing values from stage rates and types argument.\n'
+				'  type %(name)s: %(t)s\n'
+			   '  rate %(name)s: %(r)s')
+			data = dict(
+			  name=key,
+			  t=stringify(popts.types[ key ]),
+			  r=stringify(popts.rates[ key ])
+			)
+			raise ValueError, msg % data
 
 	global verbose
 	verbose = popts.verbose
