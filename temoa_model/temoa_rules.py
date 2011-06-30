@@ -13,9 +13,7 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 
 	for l_per in M.time_optimize:
 		for l_tech in M.tech_all:
-			for l_vin in M.vintage_optimize:
-				if l_vin > l_per: continue
-
+			for l_vin in ProcessVintages( l_per, l_tech ):
 				if loanIsActive(l_per, l_tech, l_vin):
 					l_icost = (
 					    M.V_Capacity[l_tech, l_vin]
@@ -33,13 +31,13 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 						  * M.CostFixed[l_per, l_tech, l_vin]
 						)
 
-			for l_vin in M.vintage_all:
 				l_ucost = 0
-				if value( M.CostMarginal[l_per, l_tech, l_vin] ) > 0:
+				l_marg_cost = value(M.CostMarginal[l_per, l_tech, l_vin])
+				if l_marg_cost > 0:
 					# The if keeps the objective function cleaner in LP output
 					l_ucost = sum(
 					    M.V_Activity[l_per, l_season, l_time_of_day, l_tech, l_vin]
-					  * value( M.CostMarginal[l_per, l_tech, l_vin] )
+					  * l_marg_cost
 
 					  for l_season in M.time_season
 					  for l_time_of_day in M.time_of_day
