@@ -418,6 +418,27 @@ def inform ( x ):
 		SE.flush()
 
 
+def test_model_parameters ( M, opts ):
+	try:
+		getattr(M, opts.stochasticset)
+	except:
+		msg = 'Whoops!  The stochastic set is not available from the model.  '  \
+		   'Did you perhaps typo the name?\n'                                   \
+		   '  Model name: %s\n'                                                 \
+		   '  Stochastic name: %s'
+		raise ValueError, msg % (M.name, opts.stochasticset)
+
+	try:
+		for pname in opts.params:
+			param = getattr(M, pname)
+	except:
+		msg = 'Whoops!  Parameter not available from the model.  Have you '     \
+		   'perhaps typoed the name?\n'                                         \
+		   '  Model name: %s\n'                                                 \
+		   '  Parameter name: %s'
+		raise ValueError, msg %(M.name, pname)
+
+
 def parse_options ( ):
 	from optparse import OptionParser, OptionGroup
 	from os import path
@@ -623,6 +644,8 @@ def main ( ):
 	M = _temp.model
 	del _temp
 	sys.path.pop(0)
+
+	test_model_parameters( M, opts )
 
 	inform( '\r[%6.2f\n' % duration() )
 
