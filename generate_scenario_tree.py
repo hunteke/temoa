@@ -1,16 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env coopr_python
 
-#sys.argv = sys.argv[:1]
-#import IPython; IPython.Shell.IPShellEmbed()()
+import os
+import sys
 
 from itertools import product
-from optparse import OptionParser, OptionGroup
-import os
 from pprint import pformat
-import random
-from shutil import copy as copyfile
-import sys
+from shutil import copy as copyfile, rmtree
 from textwrap import TextWrapper
+
 
 wrapper = TextWrapper(
   width             = 80,
@@ -30,13 +27,18 @@ class Storage ( ):
 	__repr__ = __str__
 
 class Param ( object ):
+	# will be common to all Parameters, so no sense in storing it N times
+	stochasticset = None
 
 	def __init__ ( self, **kwargs ):
 		from coopr.pyomo.base import _ProductSet, _SetContainer
 
-		name   = kwargs.pop('param')
-		period = kwargs.pop('period')
-		rate   = kwargs.pop('rate')
+		# At the point someone is using this class, they probably know what
+		# they're doing, so intentionally die at this point if any of these
+		# items are not passed.  They're all mandatory.
+		name   = kwargs.pop('param')   # parameter in question to modify
+		spoint = kwargs.pop('spoint')  # stochastic point at which to do it
+		rate   = kwargs.pop('rate')    # how much to vary the parameter
 
 		param = getattr( instance, name ) # intentionally die if not found.
 
@@ -50,30 +52,30 @@ class Param ( object ):
 			skeys = lambda: (' '.join(str(i) for i in k) for k in self.model_keys)
 
 			keys = param.keys()
-			f = lambda: lambda x: x[pidx] == period
+			f = lambda: lambda x: x[pidx] == spoint
 			r = lambda: lambda x: tuple(x[0:pidx] + x[pidx+1:])
-			    # reduce keys to remove period
+			    # reduce keys to remove stochastic parameter
 
 		elif isinstance( pindex, _SetContainer):
 			indices = (param._index.name,)
 			skeys = lambda: (' '.join(str(i) for i in self.model_keys) )
 
 			keys = param.keys()
-			f = lambda: lambda x: x == period
+			f = lambda: lambda x: x == spoint
 			r = lambda: lambda x: ()
 
-		#if isinstance(param.index(), dict)
+		if Param.stochasticset not in indices:
+			msg = 'Model parameter not indexed by stochastic set and therefore ' \
+			      'is not a stochastic parameter as currently defined for this ' \
+			      'model.'
+			msg = wrapper.fill( msg )
+			msg += '\n\tstochastic set: %s\n\tparameter:      %s'
+			raise ValueError, msg % (Param.stochasticset, name)
 
-		if 'operating_period' not in indices:
-			msg = "Model parameter '%s' does not have a period index.  It is"    \
-			      ' therefore not a stochastic parameter as currently defined'   \
-			      ' for this model.'
-			raise KeyError, msg % name
+		# take only the keys about which we care; i.e. /this/ spoint
+		pidx = indices.index( Param.stochasticset )
 
-		# take only the keys about which we care; i.e. /this/ period
-		pidx = indices.index('operating_period')
-
-		# we filter out the period because it's inherently known by TreeNode,
+		# we filter out the spoint because it's inherently known by TreeNode,
 		# which "owns" /this/ Param
 		model_keys = filter( f(), keys )
 		my_keys    = map( r(), model_keys )
@@ -86,10 +88,10 @@ class Param ( object ):
 
 		self.items      = items
 		self.name       = name
-		self.period     = period
+		self.spoint     = spoint
 		self.param      = param
-		self.my_keys    = my_keys      # these keys are linked, in the same
-		self.model_keys = model_keys   #   order, so can use zip()
+		self.my_keys    = my_keys      # these keys are linked -- in the same
+		self.model_keys = model_keys   #   order -- for zip()-ability
 		self.skeys      = skeys        # for later, string keys
 
 
@@ -127,26 +129,29 @@ class Param ( object ):
 
 class TreeNode ( object ):
 	def __init__ ( self, *args, **kwargs ):
-		self.name   = kwargs.pop('name')     # intentionally die if not passed
-		self.period = kwargs.pop('period')   # intentionally die if not passed
-		self.prob   = kwargs.pop('prob')     # intentionally die if not passed
-		bname       = kwargs.pop('filebase') # intentionally die if not passed
-		params      = kwargs.pop('params')   # intentionally die if not passed
-		types       = kwargs.pop('types')    # intentionally die if not passed
-		rates       = kwargs.pop('rates')    # intentionally die if not passed
+		# At the point someone is using this class, they probably know what
+		# they're doing, so intentionally die at this point if any of these
+		# items are not passed.  They're all mandatory.
+		self.name   = kwargs.pop('name')      # name of /this/ node
+		self.spoint = kwargs.pop('spoint')    # stochastic point of node
+		self.prob   = kwargs.pop('prob')      # conditional probability of node
+		bname       = kwargs.pop('filebase')  # file name minus extension
+		params      = kwargs.pop('params')    # parameters to vary
+		types       = kwargs.pop('types')     # names of decisions
+		rates       = kwargs.pop('rates')     # rates at which to vary
 
 		myparams = dict()
-		for p, n in zip(params, self.name):
+		for pp, nn in zip(params, self.name):
 			paramkwargs = {
-			  'param'  : p,
-			  'period' : self.period,
+			  'param'  : pp,
+			  'spoint' : self.spoint,
 			  'rate'   : 1 # for "Root", default to 1 (do nothing multiplier)
 			}
 			if isinstance(self.name, tuple):
 				# if not head node, then set rate as specified
-				paramkwargs.update( rate=rates[p][types[p].index(n)] )
+				paramkwargs.update( rate=rates[pp][types[pp].index(nn)] )
 
-			myparams[p] = Param( **paramkwargs )
+			myparams[pp] = Param( **paramkwargs )
 
 		self.params = myparams
 		self.bname = bname
@@ -160,7 +165,7 @@ class TreeNode ( object ):
 	def __repr__ ( self ):
 		x = self.name
 		if isinstance(self.name, tuple): x = ', '.join(x)
-		return '%s(%s)' % ( self.period, x ) + ': ' + ', '.join(str(i) for i in self.params.values())
+		return '%s(%s): ' % ( self.spoint, x ) + ', '.join(str(i) for i in self.params.values())
 
 	def __str__ ( self, indent='  ', space='' ):
 		x = ''.join( i.__str__(indent, space + indent) for i in self.children )
@@ -192,7 +197,7 @@ class TreeNode ( object ):
 
 	def get_scenario_data ( self ):
 		nodes     = [ self.bname ]
-		nodestage = [( self.bname, 'p' + str(self.period) )]
+		nodestage = [( self.bname, 'p' + str(self.spoint) )]
 		probability = [( self.bname, self.prob )]
 		scenarios = []
 		children  = []
@@ -212,7 +217,7 @@ class TreeNode ( object ):
 
 		return scenarios, nodes, nodestage, children, probability
 
-def write_scenario_file ( periods, tree ):
+def write_scenario_file ( stochasticset, tree ):
 	( scenarios,
 	  nodes,
 	  nodestage,
@@ -220,47 +225,93 @@ def write_scenario_file ( periods, tree ):
 	  probability,
 	) = tree.get_scenario_data()
 
-	x = 'set  Stages  :=  p%s ;\n' % ' p'.join( str(i) for i in periods )
-	print x
+	child_fmt     = 'set  Children[%s]  :=\n  %s\n\t;\n'
+	scenario_fmt  = 'Scenario%(i)s  Rs%(i)s'
+	stages_fmt    = 'set  StageVariables[s%s]  :=\n  %s\n\t;'
+	stagecost_fmt = 's%s StageCost[%s]'
 
-	x = '\n  Scenario'.join( scenarios )
-	x = 'set  Scenarios  :=\n  Scenario%s\n\t;\n' % x
-	print x
+	leaves      = '\n  '.join( scenario_fmt % {'i' : i} for i in scenarios )
+	nodes       = '\n  '.join( nodes )
+	nodestage   = '\n  '.join( ('   '.join(ns) for ns in nodestage) )
+	scenarios   = 'Scenario%s' % '\n  Scenario'.join( scenarios )
+	stagecost   = '\n  '.join( stagecost_fmt % (s, s) for s in stochasticset )
+	stages      = '\n  s'.join( str(se) for se in stochasticset )
 
-	x = '\n  '.join( nodes )
-	x = 'set  Nodes  :=\n  %s\n\t;\n' % x
-	print x
+	probability = '\n  '.join(
+	  ('  '.join(str(i) for i in p) for p in probability)
+	)
+	children    = '\n'.join(
+	  child_fmt % (c[0], '\n  '.join(c[1]) )
+	  for c in children
+	)
 
-	x = '\n  '.join( ('   '.join(ns) for ns in nodestage) )
-	x = 'param  NodeStage  :=\n  %s\n\t;\n' % x
-	print x
+	stage_var_sets = (
+	  stages_fmt % (
+	    se,
+	    '\n  '.join(
+	      sorted( 'V_FlowOut[%s,*,*,*,*,%s,*]' %
+	         (se, v)
+	         for v in stochasticset[:stochasticset.index( se ) +1]
+	      ))
+	  )
 
-	x = '\n  '.join( ('  '.join(str(i) for i in p) for p in probability) )
-	x = 'param  ConditionalProbability  :=\n  %s\n\t;\n' % x
-	print x
+	  for se in stochasticset   # "stochastic element" = se
+	)
+	stage_var_sets = '\n\n'.join( stage_var_sets )
 
-	for c in children:
-		x = '\n  '.join( c[1] )
-		x = 'set  Children[%s]  :=\n  %s\n\t;\n' % (c[0], x )
-		print x
+	structure = '''\
+set  Stages  :=
+  s%(stages)s
+	;
 
-	x = '\n  '.join( 'Scenario%(i)s  Rs%(i)s' % {'i':i} for i in scenarios )
-	x = 'param  ScenarioLeafNode  :=\n  %s\n\t;\n' % x
-	print x
+set  Scenarios  :=
+  %(scenarios)s
+	;
 
-	x = '\n  '.join( 'p%s PeriodCost[%s]' % (p, p) for p in periods )
-	x = 'param  StageCostVariable  :=\n  %s\n\t;\n' % x
-	print x
+set  Nodes  :=
+  %(nodes)s
+	;
 
-	for p in periods:
-		x = ' '.join('xu[*,%s,%s]' %(v, p) for v in periods[:periods.index(p)+1])
-		x = 'xc[*,%s] %s' % (p, x)
-		x = 'set  StageVariables[p%s]  :=  %s ;' % (p, x)
-		print wrapper.fill(x)
+%(children_sets)s
 
-	print '\nparam ScenarioBasedData := False ;'
+%(stage_var_sets)s
 
-def _create_tree ( periods, **kwargs ):
+param  NodeStage  :=
+  %(nodestage)s
+	;
+
+param  ConditionalProbability  :=
+  %(cond_prob)s
+	;
+
+param  ScenarioLeafNode  :=
+  %(leaves)s
+	;
+
+param  StageCostVariable  :=
+  %(stagecost)s
+	;
+
+param  ScenarioBasedData  :=  False ;
+'''
+
+	structure %= dict(
+	  stages        = stages,
+	  scenarios     = scenarios,
+	  nodes         = nodes,
+	  children_sets = children,
+	  stage_var_sets = stage_var_sets,
+	  nodestage     = nodestage,
+	  cond_prob     = probability,
+	  leaves        = leaves,
+	  stagecost     = stagecost
+	)
+
+	with open( 'ScenarioStructure.dat', 'w' ) as f:
+		f.write( structure )
+
+
+def _create_tree ( stochasticset, **kwargs ):
 	name   = kwargs.get('name')
 	types  = kwargs.get('types')
 	rates  = kwargs.get('rates')
@@ -269,22 +320,22 @@ def _create_tree ( periods, **kwargs ):
 	prob   = kwargs.get('prob')
 	decision_list = kwargs.get('decisions')
 
-	p = periods.pop()
-	treekwargs = {
-	  'period'   : p,
-	  'name'     : name,
-	  'types'    : types,
-	  'rates'    : rates,
-	  'filebase' : bname,
-	  'params'   : params,
-	  'prob'     : prob,
-	}
+	spoint = stochasticset.pop() # stochastic point, use of pop implies ordering
+	treekwargs = dict(
+	  spoint   = spoint,
+	  name     = name,
+	  types    = types,
+	  rates    = rates,
+	  filebase = bname,
+	  params   = params,
+	  prob     = prob,
+	)
 	node = TreeNode( **treekwargs )
 	global node_count
 	node_count += 1
 	inform( '\b' * (len(str(node_count -1))+1) + str(node_count) + ' ' )
 
-	if periods:
+	if stochasticset:
 		decisions = enumerate( decision_list )
 		prob = 1.0 / len(decision_list)
 		bname = '%ss%%d' % bname  # the format for the basename of the file
@@ -294,17 +345,15 @@ def _create_tree ( periods, **kwargs ):
 			  bname = bname % enum,
 			  prob  = prob,
 			)
-			node.addChild( _create_tree(periods[:], **kwargs) )
+			node.addChild( _create_tree(stochasticset[:], **kwargs) )
 
 	return node
 
 
-def create_tree ( periods, **kwargs ):
-	name   = kwargs.pop('name', 'Root')
-	bname  = kwargs.pop('bname', 'R')
-	types  = kwargs.pop('types', None )
-	rates  = kwargs.pop('rates', None )
-	params = kwargs.pop('params', None)
+def create_tree ( stochasticset, opts ):
+	types  = opts.types
+	rates  = opts.rates
+	params = opts.params
 	prob   = 1
 
 	if params is None:
@@ -313,14 +362,14 @@ def create_tree ( periods, **kwargs ):
 
 	if None in (types, rates):
 		msg = 'Must specify both the stochastic decision names (types=) and '   \
-		      'rates (rates=)'
+		   'rates (rates=)'
 		raise ValueError, msg
 
 	tkeys = sorted( types.keys() )
 	rkeys = sorted( rates.keys() )
 	if len(tkeys) != len(rkeys):
-		msg = 'types and rates keys iterable lengths do not match.\n'           \
-		      '  types: %s\n  rates: %s'
+		msg = 'types and rates keys lengths do not match.  Are you missing a '  \
+		   'a type or rate?\n\ttypes: %s\n\trates: %s'
 		types = stringify( types )
 		rates = stringify( rates )
 		raise ValueError, msg % ( types, rates )
@@ -346,100 +395,105 @@ def create_tree ( periods, **kwargs ):
 				rates = stringify( rates[r] )
 				raise ValueError, msg % ( i, type(i), rates[r] )
 
-	periods.reverse()
+	stochasticset.reverse()
 
 	decisions = [ types[i] for i in sorted(types.keys()) ]
 	params.sort()
-	kwargs.update(
-	  name      = name,
-	  bname     = bname,
+	kwargs = dict(
+	  name      = 'Root',
+	  bname     = 'R',
 	  types     = types,
 	  rates     = rates,
 	  params    = params,
 	  decisions = [ i for i in product( *decisions ) ],
 	  prob      = 1,  # conditional probability, but root guaranteed to occur
 	)
-	return _create_tree( periods, **kwargs )
+	return _create_tree( stochasticset, **kwargs )
 
 
-def inform ( x='done.\n' ):
+def inform ( x ):
 	global verbose
 	if verbose:
 		SE.write( x )
 		SE.flush()
 
 
-def main ( ):
-	options, args = parse_options()
-
-	inform('Import model definition from ReferenceModel: ')
-	sys.path.insert(0, '../models')
-	from ReferenceModel import model as M
-	sys.path.remove('../models')
-	inform()
-
-	inform('Create concrete instance from ReferenceModel.dat: ')
-	ins = M.create('ReferenceModel.dat')
-	inform()
-
-	global instance
-	instance = ins
-
-	inform('Collecting stochastic points (periods) from the model: ')
-	periods = sorted( ins.operating_period.value )
-	inform()
-
-	inform('Building tree:   ')
-	tree = create_tree( periods[:], **options )
-	inform()
-	global node_count
-	node_count = 0
-
-	inform('Writing scenario "dot dat" files:   ')
-	tree.write_dat_files()
-	write_scenario_file( periods, tree )
-	inform()
-
-	inform('Copying ReferenceModel.dat to R.dat (the scenario tree root): ')
-	copyfile('ReferenceModel.dat', 'R.dat')
-	inform()
-
-
 def parse_options ( ):
-	parser = OptionParser()
-	parser.usage = '%prog --params=<stochastic_parameters> [options]'
+	from optparse import OptionParser, OptionGroup
+	from os import path
 
-	opts = OptionGroup( parser, 'Stochastic Options')
-	dbg  = OptionGroup( parser, 'Debugging Options')
+	parser = OptionParser()
+	parser.usage = '%prog \\\n'                                                \
+	   '\t--dirname=<run_name> \\\n'                                           \
+	   '\t--model=<../path/to/model/file> \\\n'                                \
+	   '\t--dotdat=<../path/to/dot/dat/file> \\\n'                         \
+	   '\t--stochasticset=<model_stochastic_set> \\\n'                         \
+	   '\t--params=<parameters_to_vary> \\\n'                                  \
+	   '\t--stage-types=<stage_types> \\\n'                                    \
+	   '\t--stage-rates=<stage_varying_rates> \\\n'                            \
+	   '\t[options]'
+
+	mopts = OptionGroup( parser, 'Model Arguments')
+	opts  = OptionGroup( parser, 'Stochastic Arguments')
+	dbg   = OptionGroup( parser, 'Debugging Arguments')
+	parser.add_option_group( mopts )
 	parser.add_option_group( opts )
 	parser.add_option_group( dbg )
 
-	opts.add_option('--params',
-	  help='Comma separated list of model parameters to vary at each '         \
+	mopts.add_option('-d','--dotdat',
+	  help='Path to the AMPL data file to use as a basis for stochastics',
+	  action='store',
+	  dest='dotdatpath',
+	  type='string')
+	mopts.add_option('-m','--model',
+	  help='Path to the Pyomo model file to use as a basis for stochastics',
+	  action='store',
+	  dest='modelpath',
+	  type='string')
+	mopts.add_option('-s','--stochasticset',
+	  help='The model stochastic (decision) points set.  In many models, this '
+	     'is a set of time periods.',
+	  action='store',
+	  dest='stochasticset',
+	  type='string')
+
+	opts.add_option('-f','--force',
+	  help='If a subdirectory conflicts with --name, then this option directs '\
+	     'the script to remove all files in it and use it anyway.',
+	  action='store_true',
+	  dest='force',)
+	opts.add_option('-n','--dirname',
+	  help='Name of a working directory for the output files.  This script '   \
+	     'will create (or use, if empty) a subdirectory by this name.',
+	  action='store',
+	  dest='dirname',
+	  type='string')
+	opts.add_option('-p','--params',
+	  help='Comma separated list of model parameters to vary at each '
 	       'stochastic stage (period).  Example: power_dmd,co2_tot',
 	  action='store',
 	  dest='params',
 	  type='string')
-	opts.add_option('--stage-rates',
-	  help='Comma separated list of rate values for each stochastic variable ' \
-	       'at each stages (specified with the --stage-types).  A stage rate ' \
-	       'must be specified for each item in --params.  Example: '           \
+	opts.add_option('-r','--stage-rates',
+	  help='Comma separated list of rate values for each stochastic variable '
+	       'at each stages (specified with the --stage-types).  A stage rate '
+	       'must be specified for each item in --params.  Example: '
 	       'power_dmd:0.85,1.00,1.15',
 	  action='append',
 	  dest='rates',
 	  type='string')
-	opts.add_option('--stage-types',
-	  help='Comma separated list of stochastic stage types (names) for each '  \
-	       'stochastic variable.  These are the "decision" possibilities of '  \
-	       'the scenario tree.  Stage_types need to be specified for each '    \
+	opts.add_option('-t','--stage-types',
+	  help='Comma separated list of stochastic stage types (names) for each '
+	       'stochastic variable.  These are the "decision" possibilities of '
+	       'the scenario tree.  Stage_types need to be specified for each '
 	       'item in --params.  Example: power_dmd:Low,Med,High',
 	  action='append',
 	  dest='types',
 	  type='string')
 
 	dbg.add_option('--debug',
-	help='Help with debugging of this script.  Generally only the script '     \
-	     'developrs will use this option.',
+	help='Help with debugging of this script.  Generally only the script '
+	     'developers will use this option.',
 	  action='store_false'
 	)
 	dbg.add_option('-q','--quiet',
@@ -452,14 +506,33 @@ def parse_options ( ):
 	popts, args = parser.parse_args( sys.argv[1:] )
 	o = {}
 
-	if popts.params:
-		o.update( params=[str(i) for i in popts.params.split(',')] )
-	else:
+	if not popts.modelpath:
 		parser.print_usage()
-		raise ValueError, 'params is a required parameter'
+		raise ValueError, 'Required: -m or --model is a required argument'
+	elif not os.path.exists( popts.modelpath ):
+		raise ValueError, "Error: model not found: %s" % popts.modelpath
+
+	if not popts.dotdatpath:
+		parser.print_usage()
+		raise ValueError, 'Required: -d or --dotdatpath is a required argument'
+	elif not os.path.exists( popts.dotdatpath ):
+		raise ValueError, "Error: data file not found: %s" % popts.dotdatpath
+
+	if not popts.stochasticset:
+		parser.print_usage()
+		raise ValueError, 'Required: -s or --stochasticset is a required argument'
+
+	if not popts.dirname:
+		parser.print_usage()
+		raise ValueError, 'Required: -n or --dirname is a required argument'
+
+	if not popts.params:
+		parser.print_usage()
+		raise ValueError, 'Required: -p or --params is a required argument'
+	popts.params = [str(i) for i in popts.params.split(',')]
 
 	if None in ( popts.rates, popts.types ) and popts.rates != popts.types:
-		msg = 'stage-rates and stage-types are required parameters'
+		msg = 'Required: stage-rates and stage-types are required arguments'
 		raise ValueError, msg
 
 	rates = types = ''
@@ -470,7 +543,7 @@ def parse_options ( ):
 				i = 'Model Param(%s)' % r # clear i in case the colon split fails
 				key, vals = r.split(':')
 				rates[ key ] = [ float(i) for i in vals.split(',') ]
-			o.update( rates=rates )
+			popts.rates = rates
 		except ValueError, e:
 			msg = 'stage-rates must be a list of numbers.  Did you use a colon\n'\
 			      'to specify the model parameter (i.e. param:n1,n2,...)?\n'     \
@@ -485,7 +558,7 @@ def parse_options ( ):
 				i = 'Model Param(%s)' % t  # clear i in case the colon split fails
 				key, vals = t.split(':')
 				types[ key ] = [ str(i) for i in vals.split(',') ]
-			o.update( types=types )
+			popts.types = types
 		except ValueError, e:
 			msg = 'stage-types must be a list of names.  Did you use a colon\n'  \
 			      'to specify the model parameter (i.e. param:n1,n2,...)?\n'     \
@@ -493,54 +566,100 @@ def parse_options ( ):
 			msg %= ( i, t )
 			raise ValueError, msg
 
-	if len(types) != len(rates):
+	if len(popts.types) != len(popts.rates):
 			msg = 'The stage-rates and stage-types options need the same number' \
 			      ' of items\n' \
 			      '  stage-rates: (count: %d) %s\n  stage-types: (count: %d) %s'
-			data = [ len(rates), stringify( rates ) ]
-			data.extend( [len(types), stringify( types )] )
+			data = [ len(popts.rates), stringify( popts.rates ) ]
+			data.extend( [len(popts.types), stringify( popts.types )] )
 			msg %= tuple(data)
 			raise ValueError, msg
 
 	global verbose
 	verbose = popts.verbose
 
-	return o, args
+	return popts, args
+
+
+def main ( ):
+	from os import getcwd
+	from time import clock
+
+	opts, args = parse_options()
+
+	cwd = getcwd()
+
+	begin = clock()
+	duration = lambda: clock() - begin
+
+	inform( '[      ] Setting up working directory (%s)' % opts.dirname )
+	if os.path.exists( opts.dirname ):
+		if os.path.isdir( opts.dirname ):
+			files = os.listdir( opts.dirname )
+			if files and not opts.force:
+				msg = 'Not empty: %s\n\nIf you want to use this directory anyway,'\
+				   ' use the --force flag.'
+				raise Warning, msg % opts.dirname
+
+			# would be potentially useful to put this into a thread to speed up
+			# the process.  like 'mv somedir to_del; rm -rf to_del &'
+			rmtree( opts.dirname )
+			os.mkdir( opts.dirname )
+		else:
+			msg = 'Error - already exists: %s'
+			raise NameError, msg % opts.dirname
+	else:
+		os.mkdir( opts.dirname )
+
+	inform( '\r[%6.2f\n' % duration() )
+
+	inform( '[      ] Import model definition (%s)' % opts.modelpath )
+	mp = opts.modelpath
+	modelbase = os.path.basename(mp)[:-3]
+	modeldir  = os.path.abspath( os.path.dirname( mp ))
+
+	sys.path.insert(0, modeldir)
+	_temp = __import__(modelbase, globals(), locals(), ('model',))
+	M = _temp.model
+	del _temp
+	sys.path.pop(0)
+
+	inform( '\r[%6.2f\n' % duration() )
+
+	inform( '[      ] Create concrete instance (%s)' % opts.dotdatpath )
+	ins = M.create( opts.dotdatpath )
+	inform( '\r[%6.2f\n' % duration() )
+
+	global instance
+	instance = ins
+
+	inform( '[      ] Collecting stochastic points from model (%s)' % M.name )
+	spoints = sorted( getattr(ins, opts.stochasticset).value )
+	inform( '\r[%6.2f\n' % duration() )
+
+	  # used for friendlier error checking
+	Param.stochasticset = opts.stochasticset
+
+	os.chdir( opts.dirname )
+	inform( '[      ] Building tree:                          ')
+	tree = create_tree( spoints[:], opts )  # give an intentional copy
+	inform( '\r[%6.2f\n' % duration() )
+
+	global node_count
+	node_count = 0
+
+	inform( '[      ] Writing scenario "dot dat" files:       ')
+	tree.write_dat_files()
+	write_scenario_file( spoints, tree )
+	inform( '\r[%6.2f] Writing scenario "dot dat" files\n' % duration() )
+
+	os.chdir( cwd )
+	inform( '[      ] Copying ReferenceModel.dat as scenario tree root' )
+	copyfile( opts.dotdatpath, '%s/R.dat' % opts.dirname)
+	inform( '\r[%6.2f\n' % duration() )
 
 
 if '__main__' == __name__:
-	try:
-		# Needed to make the #! line (first line) portable.
-
-		# test if coopr is on path (or otherwise importable) by importing a
-		# small item from a known location.  Probably not the best, but I don't
-		# know of a better way to test.
-		from coopr.pyomo.io.cpxlp import convert_name
-	except:
-		msg = """\
-Unable to find coopr.pyomo on the Python system path.  Are you running Coopr's
-version of Python?  Here are two ways to check:
-
-  # should return the python binary located inside the Coopr directory
-$ which python
-
-  # look for items that have to do with the Coopr project
-$ python -c "import sys; from pprint import pprint as P; P(sys.path)"
-
-If you aren't running with Coopr's environment for Python, you'll need to either
-update your PATH environment variable use Coopr's Python setup, or always
-explicitly use the path:
-
-Option 1:
-$ PATH=/path/to/coopr/bin:$PATH
-$ which python
-
-Option 2:
-$ /path/to/coopr/bin/python  %s  ...
-""" % os.path.basename( sys.argv[0] )
-
-		raise SystemExit, msg
-
 	try:
 		if 1 == len(sys.argv):
 			sys.argv.append( '--help' )
