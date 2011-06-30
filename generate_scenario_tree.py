@@ -418,14 +418,36 @@ def inform ( x ):
 		SE.flush()
 
 
+def setup_directory ( dname, force ):
+	if os.path.exists( dname ):
+		if os.path.isdir( dname ):
+			files = os.listdir( dname )
+			if files and not force:
+				msg = 'Not empty: %s\n\nIf you want to use this directory anyway,'\
+				   ' use the --force flag.'
+				raise Warning, msg % dname
+
+			# would be potentially useful to put this into a thread to speed up
+			# the process.  like 'mv somedir to_del; rm -rf to_del &'
+			rmtree( dname )
+			os.mkdir( dname )
+		else:
+			msg = 'Error - already exists: %s'
+			raise NameError, msg % dname
+	else:
+		os.mkdir( dname )
+
+
+
+
 def test_model_parameters ( M, opts ):
 	try:
 		getattr(M, opts.stochasticset)
 	except:
-		msg = 'Whoops!  The stochastic set is not available from the model.  '  \
-		   'Did you perhaps typo the name?\n'                                   \
-		   '  Model name: %s\n'                                                 \
-		   '  Stochastic name: %s'
+		msg = ('Whoops!  The stochastic set is not available from the model.  '
+		   'Did you perhaps typo the name?\n'
+		   '  Model name: %s\n'
+		   '  Stochastic name: %s')
 		raise ValueError, msg % (M.name, opts.stochasticset)
 
 	try:
@@ -586,7 +608,6 @@ def parse_options ( ):
 			   '  Specified list: %s')
 			raise ValueError, msg % t
 
-	print popts.types, popts.rates
 	if len(popts.types) != len(popts.rates):
 			msg = ('The stage-rates and stage-types options need the same number '
 			   'of items.\n'
@@ -627,24 +648,7 @@ def main ( ):
 	duration = lambda: clock() - begin
 
 	inform( '[      ] Setting up working directory (%s)' % opts.dirname )
-	if os.path.exists( opts.dirname ):
-		if os.path.isdir( opts.dirname ):
-			files = os.listdir( opts.dirname )
-			if files and not opts.force:
-				msg = 'Not empty: %s\n\nIf you want to use this directory anyway,'\
-				   ' use the --force flag.'
-				raise Warning, msg % opts.dirname
-
-			# would be potentially useful to put this into a thread to speed up
-			# the process.  like 'mv somedir to_del; rm -rf to_del &'
-			rmtree( opts.dirname )
-			os.mkdir( opts.dirname )
-		else:
-			msg = 'Error - already exists: %s'
-			raise NameError, msg % opts.dirname
-	else:
-		os.mkdir( opts.dirname )
-
+	setup_directory( opts.dirname, opts.force )
 	inform( '\r[%6.2f\n' % duration() )
 
 	inform( '[      ] Import model definition (%s)' % opts.modelpath )
