@@ -235,7 +235,7 @@ def InitializeProcessParameters ( M ):
 
 							if l_vintage in M.time_optimize:
 								l_loan_life = value(M.LifetimeLoan[ l_process ])
-								if l_vintage + l_loan_life > l_period:
+								if l_vintage + l_loan_life >= l_period:
 									g_processLoans[l_period, l_tech, l_vintage] = True
 
 							# if tech is no longer "alive", don't include it
