@@ -745,6 +745,7 @@ def EmissionActivityByTechAndVintageConstraint_rule ( M, A_emission, A_tech, A_v
 	  if M.EmissionActivity[A_emission, A_tech, A_vintage] > 0
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
+	  if ValidActivity(l_per, l_season, l_tod, A_tech, A_vintage)
 	)
 
 	if type( l_sum ) is int:
