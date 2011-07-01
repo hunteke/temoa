@@ -235,7 +235,7 @@ def InitializeProcessParameters ( M ):
 
 							if l_vintage in M.time_optimize:
 								l_loan_life = value(M.LifetimeLoan[ l_process ])
-								if l_vintage + l_loan_life > l_period:
+								if l_vintage + l_loan_life >= l_period:
 									g_processLoans[l_period, l_tech, l_vintage] = True
 
 							# if tech is no longer "alive", don't include it
@@ -252,6 +252,7 @@ def InitializeProcessParameters ( M ):
 							g_processInputs[ pindex ].add( l_inp )
 							g_processOutputs[pindex ].add( l_out )
 
+	deactivateUnusedVariables( M )
 	return set()
 
 
@@ -355,6 +356,37 @@ Return a boolean (True or False) whether a loan is still active in a period.
 This is the implementation of imat in the rest of the documentation.
 """
 	return (A_period, A_tech, A_vintage) in g_processLoans
+
+
+def deactivateUnusedVariables ( M ):
+	# The variables identified here as inactive, could just as well be removed
+	# entirely from the model.  Unfortunately, I don't know how to do that.  Nor
+	# do I know how to selectively create the variables we need.
+	var_keys = M.active_components(Var)
+	flow_keys = set( var_keys['V_FlowIn'].keys() )
+
+	active_keys = set(
+	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	inactive_keys = flow_keys - active_keys
+
+	for key in inactive_keys:
+		M.V_FlowIn[  key ].deactivate()
+		M.V_FlowIn[  key ].fixed = True
+		M.V_FlowIn[  key ].set_value( 0 )
+		M.V_FlowOut[ key ].deactivate()
+		M.V_FlowOut[ key ].fixed = True
+		M.V_FlowOut[ key ].set_value( 0 )
+
 
 # End helper functions
 ##############################################################################
