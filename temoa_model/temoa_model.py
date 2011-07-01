@@ -160,7 +160,20 @@ CapacityFactor(tech_all, vintage_all)
 	M.FlowVarSet = Set( initialize=
 	    M.time_optimize * M.time_season * M.time_of_day * M.commodity_carrier
 	  * M.tech_all      * M.vintage_all * M.commodity_carrier,
-	  filter = FlowVariableFilter
+	  filter = FlowVariableIndexFilter
+	)
+	M.ActivityVarSet = Set( initialize=
+	    M.time_optimize * M.time_season * M.time_of_day
+	  * M.tech_all      * M.vintage_all,
+	  filter = ActivityVariableIndexFilter
+	)
+	M.CapacityVarSet = Set( initialize=
+	  M.tech_all * M.vintage_all,
+	  filter = CapacityVariableIndexFilter
+	)
+	M.CapacityAvailableVarSet = Set( initialize=
+	  M.time_optimize * M.tech_all,
+	  filter = CapacityAvailableVariableIndexFilter
 	)
 
 	# Variables
@@ -169,8 +182,10 @@ CapacityFactor(tech_all, vintage_all)
 	M.V_FlowOut = Var( M.FlowVarSet, domain=NonNegativeReals )
 
 	#   Derived decision variables
-	M.V_Activity = Var(M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, domain=NonNegativeReals)
-	M.V_Capacity = Var(M.tech_all, M.vintage_all, domain=NonNegativeReals)
+	M.V_Activity = Var( M.ActivityVarSet, domain=NonNegativeReals)
+	M.V_Capacity = Var( M.CapacityVarSet, domain=NonNegativeReals)
+
+	M.V_CapacityAvailableByPeriodAndTech = Var( M.CapacityAvailableVarSet, domain=NonNegativeReals )
 
 	AddReportingVariables( M )
 

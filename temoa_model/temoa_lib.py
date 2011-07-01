@@ -199,6 +199,9 @@ g_processOutputs = dict()
 g_processVintages = dict()
 g_processLoans = dict()
 g_activeFlowIndices = set()
+g_activeActivityIndices = set()
+g_activeCapacityIndices = set()
+g_activeCapacityAvailableIndices = set()
 
 def InitializeProcessParameters ( M ):
 	global g_processInputs
@@ -206,6 +209,9 @@ def InitializeProcessParameters ( M ):
 	global g_processVintages
 	global g_processLoans
 	global g_activeFlowIndices
+	global g_activeActivityIndices
+	global g_activeCapacityIndices
+	global g_activeCapacityAvailableIndices
 
 	l_first_period = min( M.time_horizon )
 
@@ -264,6 +270,29 @@ def InitializeProcessParameters ( M ):
 	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
+	)
+	g_activeActivityIndices = set(
+	  (l_per, l_season, l_tod, l_tech, l_vin)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+	g_activeCapacityIndices = set(
+	  (l_tech, l_vin)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	)
+	g_activeCapacityAvailableIndices = set(
+	  (l_per, l_tech)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  if ProcessVintages( l_per, l_tech )
 	)
 
 	return set()
@@ -348,6 +377,14 @@ def ProcessVintages ( A_per, A_tech ):
 	return set()
 
 
+def ValidActivity ( A_period, A_season, A_time_of_day, A_tech, A_vintage ):
+	return (A_period, A_season, A_time_of_day, A_tech, A_vintage) in g_activeActivityIndices
+
+
+def ValidCapacity ( A_tech, A_vintage ):
+	return (A_tech, A_vintage) in g_activeCapacityIndices
+
+
 def isValidProcess ( A_period, A_inp, A_tech, A_vintage, A_out ):
 	"""\
 Returns a boolean (True or False) indicating whether, in any given period, a
@@ -371,13 +408,17 @@ This is the implementation of imat in the rest of the documentation.
 	return (A_period, A_tech, A_vintage) in g_processLoans
 
 
-def FlowVariableFilter ( M, *index ):
-	# The variables identified here as inactive, could just as well be removed
-	# entirely from the model.  Unfortunately, I don't know how to do that.  Nor
-	# do I know how to selectively create the variables we need.
-
+def FlowVariableIndexFilter ( M, *index ):
 	return index in g_activeFlowIndices
 
+def ActivityVariableIndexFilter ( M, *index ):
+	return index in g_activeActivityIndices
+
+def CapacityVariableIndexFilter ( M, *index ):
+	return index in g_activeCapacityIndices
+
+def CapacityAvailableVariableIndexFilter ( M, *index ):
+	return index in g_activeCapacityAvailableIndices
 
 # End helper functions
 ##############################################################################
