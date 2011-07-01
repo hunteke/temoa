@@ -127,7 +127,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.Efficiency    = Param( M.commodity_carrier,  M.tech_all,  M.vintage_all,  M.commodity_carrier,  default=0 )
 	M.Demand        = Param( M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand,  default=0 )
-	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical,  default=0 )
+	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical,  default=float('+inf') )
 
 	M.LifetimeTech = Param( M.tech_all,  M.vintage_all,  default=30 )  # in years
 	M.LifetimeLoan = Param( M.tech_all,  M.vintage_optimize,  default=10 )  # in years
@@ -147,24 +147,30 @@ CapacityFactor(tech_all, vintage_all)
 	M.MaxCapacity = Param( M.time_optimize, M.tech_all, default=-1 )
 
 	# Not yet indexed by period or incorporated into the constraints
-	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions, default=0 )
+	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions, default=float('+inf') )
 	M.EmissionActivity = Param( M.commodity_emissions, M.tech_all, M.vintage_all, default=0 )
 
+	# always empty set, like the validation hacks above.  Temoa uses a couple
+	# of global variables to precalculate some oft-used results in constraint
+	# generation.  This is therefore intentially placed after all Set and Param
+	# definitions and initializations, but before the Var, Objectives, and
+	# Constraints.
+	M.IntializeProcessParameters = Set( rule=InitializeProcessParameters )
+
+	M.FlowVarSet = Set( initialize=
+	    M.time_optimize * M.time_season * M.time_of_day * M.commodity_carrier
+	  * M.tech_all      * M.vintage_all * M.commodity_carrier,
+	  filter = FlowVariableFilter
+	)
 
 	# Variables
 	#   Base decision variables
-	M.V_FlowIn  = Var(M.time_optimize, M.time_season, M.time_of_day, M.commodity_carrier, M.tech_all, M.vintage_all, M.commodity_carrier, domain=NonNegativeReals)
-	M.V_FlowOut = Var(M.time_optimize, M.time_season, M.time_of_day, M.commodity_carrier, M.tech_all, M.vintage_all, M.commodity_carrier, domain=NonNegativeReals)
+	M.V_FlowIn  = Var( M.FlowVarSet, domain=NonNegativeReals )
+	M.V_FlowOut = Var( M.FlowVarSet, domain=NonNegativeReals )
 
 	#   Derived decision variables
 	M.V_Activity = Var(M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, domain=NonNegativeReals)
 	M.V_Capacity = Var(M.tech_all, M.vintage_all, domain=NonNegativeReals)
-
-	# always empty set; Like the validation hacks above, we Temoa uses a couple
-	# of global variables to precalculate some oft-used results in constraint
-	# generation.  This is therefore intentially placed after all Set and Param
-	# definitions and initializations, but before the Objective and Constraints.
-	M.IntializeProcessParameters = Set( rule=InitializeProcessParameters )
 
 	AddReportingVariables( M )
 
