@@ -215,6 +215,8 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.TechOutputSplitConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier, rule=TechOutputSplitConstraint_rule )
 
+	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.time_optimize, M.tech_all, rule=CapacityAvailableByPeriodAndTechConstraint_rule )
+
 	M.CapacityLifetimeConstraint           = Constraint( M.time_optimize, M.commodity_carrier, rule=CapacityLifetimeConstraint_rule )
 	M.CapacityFractionalLifetimeConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=CapacityFractionalLifetimeConstraint_rule )
 
