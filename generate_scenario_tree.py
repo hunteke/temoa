@@ -246,6 +246,14 @@ def write_scenario_file ( stochasticset, tree ):
 	  for c in children
 	)
 
+	# XXX: Temporary and absolute hack, for IEW conference: This script was
+	# written prior to Temoa's implementation with sparse sets, so now we have
+	# to ensure that only the sparse sets are used:
+	svars = tuple(
+	  (ii[0], ii[5])
+	  for ii in instance.V_FlowOut.keys()
+	)
+
 	stage_var_sets = (
 	  stages_fmt % (
 	    se,
@@ -253,6 +261,7 @@ def write_scenario_file ( stochasticset, tree ):
 	      sorted( 'V_FlowOut[%s,*,*,*,*,%s,*]' %
 	         (se, v)
 	         for v in stochasticset[:stochasticset.index( se ) +1]
+	         if (se, v) in svars
 	      ))
 	  )
 
