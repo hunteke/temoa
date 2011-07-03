@@ -272,13 +272,11 @@ def InitializeProcessParameters ( M ):
 	  for l_tod in M.time_of_day
 	)
 	g_activeActivityIndices = set(
-	  (l_per, l_season, l_tod, l_tech, l_vin)
+	  (l_per, l_tech, l_vin)
 
 	  for l_per in M.time_optimize
 	  for l_tech in M.tech_all
 	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
 	)
 	g_activeCapacityIndices = set(
 	  (l_tech, l_vin)
@@ -377,8 +375,8 @@ def ProcessVintages ( A_per, A_tech ):
 	return set()
 
 
-def ValidActivity ( A_period, A_season, A_time_of_day, A_tech, A_vintage ):
-	return (A_period, A_season, A_time_of_day, A_tech, A_vintage) in g_activeActivityIndices
+def ValidActivity ( A_period, A_tech, A_vintage ):
+	return (A_period, A_tech, A_vintage) in g_activeActivityIndices
 
 
 def ValidCapacity ( A_tech, A_vintage ):
@@ -411,8 +409,8 @@ This is the implementation of imat in the rest of the documentation.
 def FlowVariableIndexFilter ( M, *index ):
 	return index in g_activeFlowIndices
 
-def ActivityVariableIndexFilter ( M, *index ):
-	return index in g_activeActivityIndices
+def ActivityVariableIndexFilter ( M, A_period, A_season, A_time_of_day, A_tech, A_vintage ):
+	return (A_period, A_tech, A_vintage) in g_activeActivityIndices
 
 def CapacityVariableIndexFilter ( M, *index ):
 	return index in g_activeCapacityIndices

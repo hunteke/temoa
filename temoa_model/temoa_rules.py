@@ -129,7 +129,7 @@ time_of_day set, and uses that order such that
 (for each d element of time_of_day)
 Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 """
-	if not ValidActivity(A_period, A_season, A_time_of_day, A_tech, A_vintage):
+	if not ValidActivity(A_period, A_tech, A_vintage):
 		return Constraint.Skip
 
 	# Question: How do I set the different times of day equal to each other?
@@ -210,6 +210,9 @@ def StorageConstraint_rule ( M, A_period, A_season, A_inp, A_tech, A_vintage, A_
 
 
 def TechOutputSplitConstraint_rule ( M, A_period, A_season, A_time_of_day, A_input, A_tech, A_vintage, A_output ):
+	if not ValidActivity(A_period, A_tech, A_vintage):
+		return Constraint.Skip
+
 	l_split = value(M.TechOutputSplit[A_input, A_tech, A_output])
 	if not l_split:
 		return Constraint.Skip
@@ -734,18 +737,15 @@ def EmissionActivityByPeriodAndTechConstraint_rule ( M, A_emission, A_period, A_
 
 
 def EmissionActivityByTechAndVintageConstraint_rule ( M, A_emission, A_tech, A_vintage ):
-	if not ValidCapacity( A_tech, A_vintage ):
-		return Constraint.Skip
-
 	l_sum = sum(
 	    M.V_Activity[l_per, l_season, l_tod, A_tech, A_vintage]
 	  * M.EmissionActivity[A_emission, A_tech, A_vintage]
 
 	  for l_per in M.time_optimize
+	  if ValidActivity(l_per, A_tech, A_vintage)
 	  if M.EmissionActivity[A_emission, A_tech, A_vintage] > 0
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
-	  if ValidActivity(l_per, l_season, l_tod, A_tech, A_vintage)
 	)
 
 	if type( l_sum ) is int:
