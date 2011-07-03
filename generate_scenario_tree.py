@@ -3,6 +3,7 @@
 import os
 import sys
 
+from cStringIO import StringIO
 from itertools import product
 from pprint import pformat
 from shutil import copy as copyfile, rmtree
@@ -41,10 +42,10 @@ class Param ( object ):
 		rate   = kwargs.pop('rate')    # how much to vary the parameter
 
 		param = getattr( instance, name ) # intentionally die if not found.
+#		print param, kwargs
 
-		indices = ()
+		indices = tuple()
 		pindex = param.index()
-
 
 		if isinstance( pindex, _ProductSet ):
 			getname = lambda x: x.name
@@ -197,7 +198,7 @@ class TreeNode ( object ):
 
 	def get_scenario_data ( self ):
 		nodes     = [ self.bname ]
-		nodestage = [( self.bname, 'p' + str(self.spoint) )]
+		nodestage = [( self.bname, 's' + str(self.spoint) )]
 		probability = [( self.bname, self.prob )]
 		scenarios = []
 		children  = []
@@ -228,7 +229,7 @@ def write_scenario_file ( stochasticset, tree ):
 	child_fmt     = 'set  Children[%s]  :=\n  %s\n\t;\n'
 	scenario_fmt  = 'Scenario%(i)s  Rs%(i)s'
 	stages_fmt    = 'set  StageVariables[s%s]  :=\n  %s\n\t;'
-	stagecost_fmt = 's%s StageCost[%s]'
+	stagecost_fmt = 's%s StochasticPointCost[%s]'
 
 	leaves      = '\n  '.join( scenario_fmt % {'i' : i} for i in scenarios )
 	nodes       = '\n  '.join( nodes )
