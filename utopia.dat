@@ -9,63 +9,63 @@ set  time_season  :=  inter  summer  winter ;
 set  time_of_day  :=  day  night ;
 
 set  tech_resource  :=    # SET SRCENCP
-# Temoa                 # Utopia
- imp_dsl                  # IMPDSL1
- imp_gsl                  # IMPGSL1
- imp_hard_coal            # IMPHCO1
- imp_crude_oil            # IMPOIL1, OIL
- imp_uranium              # IMPURN1
+# Temoa            
+ IMPDSL1           
+ IMPGSL1           
+ IMPHCO1           
+ IMPOIL1           
+ IMPURN1           
 
- imp_fossil_equiv         # doesn't exist
- imp_water                # doesn't exist
+ IMPFEQ         # doesn't exist
+ IMPHYD                # doesn't exist
 	;
 
 
 set  tech_production  :=       # SET TCH (partial)
-# Temoa                      # Utopia
- t_coal_steam                  # E01
- t_light_water_nuclear         # E21
- t_hydro_electric              # E31
- t_pumped_storage              # E51
- t_dsl_plant                   # E70
- t_elc_boiler                  # RHE
- t_dsl_boiler                  # RHO
- t_std_incandescent_lighting   # RL1
- t_oil_refinery                # SRE
- t_dsl_car                     # TXD
- t_elc_car                     # TXE
- t_gas_car                     # TXG
+# Temoa                     
+ E01  
+ E21  
+ E31  
+ E51  
+ E70  
+ RHE  
+ RHO  
+ RL1  
+ SRE  
+ TXD  
+ TXE  
+ TXG  
 	;
 
 
 set  tech_baseload  :=
-# Temoa                   # Utopia
- t_coal_steam               # E01
- t_light_water_nuclear      # E21
- t_hydro_electric           # E31
-	;
+# Temoa                   
+ E01       
+ E21       
+ E31       
+	;       
 
 
 set  tech_storage  :=        # SET STG
-# Temoa               # Utopia
- t_pumped_storage       # E51
+# Temoa               
+ E51       
 	;
 
 
 set  commodity_physical  :=        # SET ENT
-# Temoa              # Utopia
- conservation          # CSV
- diesel                # DSL
- electricity           # ELC
- fossil_equiv          # FEQ
- gasoline              # GSL
- hard_coal             # HCO
- water                 # HYD
- low_temp_heat         # LTH
- crude_oil             # OIL
- uranium               # URN
+# Temoa     
+ CSV        
+ DSL        
+ ELC        
+ FEQ        
+ GSL        
+ HCO        
+ HYD        
+ LTH        
+ OIL        
+ URN        
 	;
-
+	
 
 set  commodity_emissions  :=        # SET ENV
 # Temoa        # Utopia
@@ -75,10 +75,10 @@ set  commodity_emissions  :=        # SET ENV
 
 
 set  commodity_demand  :=        # SET DM
-# Temoa                    # Utopia
- res_space_heating           # RH
- res_lighting                # RL
- auto_transportation         # TX
+# Temoa    
+ RH        
+ RL        
+ TX        
 	;
 
 
@@ -95,18 +95,11 @@ param  SegFrac  :=        # PARAMETER NQHR
 
 param  CapacityToActivity  :=         # PARAMETER TCH_CAPU
 # Temoa                               # Utopia
- t_coal_steam                   31.54   # E01
- t_light_water_nuclear          31.54   # E21
- t_hydro_electric               31.54   # E31
- t_pumped_storage               31.54   # E51
- t_dsl_plant                    31.54   # E70
- t_elc_boiler                   1       # RHE
- t_dsl_boiler                   1       # RHO
- t_std_incandescent_lighting    1       # RL1
- t_oil_refinery                 1       # SRE
- t_dsl_car                      1       # TXD
- t_elc_car                      1       # TXE
- t_gas_car                      1       # TXG
+ E01          31.54
+ E21          31.54
+ E31          31.54
+ E51          31.54
+ E70          31.54
 	;
 
 
@@ -124,525 +117,623 @@ param  EmissionLimit  :=        # TABLE EM_BOUND
 
 param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
 # Emission    # process      # vintage      # amount released per unit activity
- co2          imp_dsl          1990          0.075
- co2          imp_dsl          2000          0.075
- co2          imp_dsl          2010          0.075
- co2          imp_gas          1990          0.075
- co2          imp_gas          2000          0.075
- co2          imp_gas          2010          0.075
- co2          imp_hard_coal    1990          0.089
- co2          imp_hard_coal    2000          0.089
- co2          imp_hard_coal    2010          0.089
- co2          imp_crude_oil    1990          0.075
- co2          imp_crude_oil    2000          0.075
- co2          imp_crude_oil    2010          0.075
- nox          t_dsl_car        1990          1
- nox          t_dsl_car        2000          1
- nox          t_dsl_car        2010          1
- nox          t_gas_car        1990          1
- nox          t_gas_car        2000          1
- nox          t_gas_car        2010          1
+ co2          IMPDSL1          1990          0.075
+ co2          IMPDSL1          2000          0.075
+ co2          IMPDSL1          2010          0.075
+ co2          IMPGSL1          1990          0.075
+ co2          IMPGSL1          2000          0.075
+ co2          IMPGSL1          2010          0.075
+ co2          IMPHCO1          1990          0.089
+ co2          IMPHCO1          2000          0.089
+ co2          IMPHCO1          2010          0.089
+ co2          IMPOIL1          1990          0.075
+ co2          IMPOIL1          2000          0.075
+ co2          IMPOIL1          2010          0.075
+ nox          TXD              1990          1
+ nox          TXD              2000          1
+ nox          TXD              2010          1
+ nox          TXG              1990          1
+ nox          TXG              2000          1
+ nox          TXG              2010          1
 	;
 
 
 param  Demand  :=        # TABLE DM_DEM
 # Temoa                                                     # Utopia percentages
- 1990   inter   day     res_space_heating       3.024     # RH, 12%
- 1990   inter   night   res_space_heating       1.512     # RH,  6%
- 1990   winter  day     res_space_heating      13.77684   # RH, 54.67%
- 1990   winter  night   res_space_heating       6.88716   # RH, 27.33%
+ 1990   inter   day     RH       3.024     # RH, 12%
+ 1990   inter   night   RH       1.512     # RH,  6%
+ 1990   winter  day     RH      13.77684   # RH, 54.67%
+ 1990   winter  night   RH       6.88716   # RH, 27.33%
 
- 2000   inter   day     res_space_heating       4.536     # RH, 12%
- 2000   inter   night   res_space_heating       2.268     # RH,  6%
- 2000   winter  day     res_space_heating      20.66526   # RH, 54.67%
- 2000   winter  night   res_space_heating      10.33074   # RH, 27.33%
+ 2000   inter   day     RH       4.536     # RH, 12%
+ 2000   inter   night   RH       2.268     # RH,  6%
+ 2000   winter  day     RH      20.66526   # RH, 54.67%
+ 2000   winter  night   RH      10.33074   # RH, 27.33%
 
- 2010   inter   day     res_space_heating       6.804     # RH, 12%
- 2010   inter   night   res_space_heating       3.402     # RH,  6%
- 2010   winter  day     res_space_heating      30.99789   # RH, 54.67%
- 2010   winter  night   res_space_heating      15.49611   # RH, 27.33%
+ 2010   inter   day     RH       6.804     # RH, 12%
+ 2010   inter   night   RH       3.402     # RH,  6%
+ 2010   winter  day     RH      30.99789   # RH, 54.67%
+ 2010   winter  night   RH      15.49611   # RH, 27.33%
 
- 1990   inter   day     res_lighting            0.84      # RL, 15%
- 1990   inter   night   res_lighting            0.28      # RL,  5%
- 1990   summer  day     res_lighting            0.84      # RL, 15%
- 1990   summer  night   res_lighting            0.28      # RL,  5%
- 1990   winter  day     res_lighting            2.8       # RL, 50%
- 1990   winter  night   res_lighting            0.56      # RL, 10%
+ 1990   inter   day     RL       0.84      # RL, 15%
+ 1990   inter   night   RL       0.28      # RL,  5%
+ 1990   summer  day     RL       0.84      # RL, 15%
+ 1990   summer  night   RL       0.28      # RL,  5%
+ 1990   winter  day     RL       2.8       # RL, 50%
+ 1990   winter  night   RL       0.56      # RL, 10%
 
- 2000   inter   day     res_lighting            1.26      # RL, 15%
- 2000   inter   night   res_lighting            0.42      # RL,  5%
- 2000   summer  day     res_lighting            1.26      # RL, 15%
- 2000   summer  night   res_lighting            0.42      # RL,  5%
- 2000   winter  day     res_lighting            4.2       # RL, 50%
- 2000   winter  night   res_lighting            0.84      # RL, 10%
+ 2000   inter   day     RL       1.26      # RL, 15%
+ 2000   inter   night   RL       0.42      # RL,  5%
+ 2000   summer  day     RL       1.26      # RL, 15%
+ 2000   summer  night   RL       0.42      # RL,  5%
+ 2000   winter  day     RL       4.2       # RL, 50%
+ 2000   winter  night   RL       0.84      # RL, 10%
 
- 2010   inter   day     res_lighting            1.89      # RL, 15%
- 2010   inter   night   res_lighting            0.63      # RL,  5%
- 2010   summer  day     res_lighting            1.89      # RL, 15%
- 2010   summer  night   res_lighting            0.63      # RL,  5%
- 2010   winter  day     res_lighting            6.3       # RL, 50%
- 2010   winter  night   res_lighting            1.26      # RL, 10%
+ 2010   inter   day     RL       1.89      # RL, 15%
+ 2010   inter   night   RL       0.63      # RL,  5%
+ 2010   summer  day     RL       1.89      # RL, 15%
+ 2010   summer  night   RL       0.63      # RL,  5%
+ 2010   winter  day     RL       6.3       # RL, 50%
+ 2010   winter  night   RL       1.26      # RL, 10%
 
- 1990   inter   day     auto_transportation     0.86684   # TX, 16.67%
- 1990   inter   night   auto_transportation     0.43316   # TX,  8.33%
- 1990   summer  day     auto_transportation     0.86684   # TX, 16.67%
- 1990   summer  night   auto_transportation     0.43316   # TX,  8.33%
- 1990   winter  day     auto_transportation     1.73316   # TX, 33.33%
- 1990   winter  night   auto_transportation     0.86684   # TX, 16.67%
-
- 2000   inter   day     auto_transportation     1.30026   # TX, 16.67%
- 2000   inter   night   auto_transportation     0.64974   # TX,  8.33%
- 2000   summer  day     auto_transportation     1.30026   # TX, 16.67%
- 2000   summer  night   auto_transportation     0.64974   # TX,  8.33%
- 2000   winter  day     auto_transportation     2.59974   # TX, 33.33%
- 2000   winter  night   auto_transportation     1.30026   # TX, 16.67%
-
- 2010   inter   day     auto_transportation     1.948723  # TX, 16.67%
- 2010   inter   night   auto_transportation     0.973777  # TX,  8.33%
- 2010   summer  day     auto_transportation     1.948723  # TX, 16.67%
- 2010   summer  night   auto_transportation     0.973777  # TX,  8.33%
- 2010   winter  day     auto_transportation     3.896277  # TX, 33.33%
- 2010   winter  night   auto_transportation     1.948723  # TX, 16.67%
-	;
-
-
-param  ResourceBound  :=
-# period   # tech          # value
- 1990        diesel          1e50  # for now, infinity (no limit)
- 2000        diesel          1e50  # for now, infinity (no limit)
- 2010        diesel          1e50  # for now, infinity (no limit)
- 1990        gasoline        1e50  # for now, infinity (no limit)
- 2000        gasoline        1e50  # for now, infinity (no limit)
- 2010        gasoline        1e50  # for now, infinity (no limit)
- 1990        hard_coal       1e50  # for now, infinity (no limit)
- 2000        hard_coal       1e50  # for now, infinity (no limit)
- 2010        hard_coal       1e50  # for now, infinity (no limit)
- 1990        crude_oil       1e50  # for now, infinity (no limit)
- 2000        crude_oil       1e50  # for now, infinity (no limit)
- 2010        crude_oil       1e50  # for now, infinity (no limit)
- 1990        uranium         1e50  # for now, infinity (no limit)
- 2000        uranium         1e50  # for now, infinity (no limit)
- 2010        uranium         1e50  # for now, infinity (no limit)
-
- 1990        water           1e50  # for now, infinity (no limit)
- 2000        water           1e50  # for now, infinity (no limit)
- 2010        water           1e50  # for now, infinity (no limit)
- 1990        fossil_equiv    1e50  # for now, infinity (no limit)
- 2000        fossil_equiv    1e50  # for now, infinity (no limit)
- 2010        fossil_equiv    1e50  # for now, infinity (no limit)
+ 1990   inter   day     TX       0.86684   # TX, 16.67%
+ 1990   inter   night   TX       0.43316   # TX,  8.33%
+ 1990   summer  day     TX       0.86684   # TX, 16.67%
+ 1990   summer  night   TX       0.43316   # TX,  8.33%
+ 1990   winter  day     TX       1.73316   # TX, 33.33%
+ 1990   winter  night   TX       0.86684   # TX, 16.67%
+                                 
+ 2000   inter   day     TX       1.30026   # TX, 16.67%
+ 2000   inter   night   TX       0.64974   # TX,  8.33%
+ 2000   summer  day     TX       1.30026   # TX, 16.67%
+ 2000   summer  night   TX       0.64974   # TX,  8.33%
+ 2000   winter  day     TX       2.59974   # TX, 33.33%
+ 2000   winter  night   TX       1.30026   # TX, 16.67%
+                                 
+ 2010   inter   day     TX       1.948723  # TX, 16.67%
+ 2010   inter   night   TX       0.973777  # TX,  8.33%
+ 2010   summer  day     TX       1.948723  # TX, 16.67%
+ 2010   summer  night   TX       0.973777  # TX,  8.33%
+ 2010   winter  day     TX       3.896277  # TX, 33.33%
+ 2010   winter  night   TX       1.948723  # TX, 16.67%
 	;
 
 
 param  MinCapacity  :=   # roughly NRAT_RTY2
 # period     # tech               # value
- 1990         t_hydro_electric     0.13   # E31
- 2000         t_hydro_electric     0.13   # E31
- 2010         t_hydro_electric     0.13   # E31
+ 1990         E31     0.13   # E31
+ 2000         E31     0.13   # E31
+ 2010         E31     0.13   # E31
+ 1990         SRE     0.1   # SRE
 	;
 
 param  MaxCapacity  :=   # roughly NRAT_RTY2
 # period     # tech               # value
- 1990         t_hydro_electric     0.13   # E31
- 2000         t_hydro_electric     0.17   # E31
- 2010         t_hydro_electric     0.21   # E31
+ 1990         E31     0.13   # E31
+ 2000         E31     0.17   # E31
+ 2010         E31     0.21   # E31
+ 1990         TXD     0.6   # E31
+ 2000         TXD     1.76   # E31
+ 2010         TXD     4.76   # E31
+
+ ;
+	
+	
+param  ResourceBound  :=
+# period   # tech          # value
+ 1990        DSL       1e50  # for now, infinity (no limit)
+ 2000        DSL       1e50  # for now, infinity (no limit)
+ 2010        DSL       1e50  # for now, infinity (no limit)
+ 1990        GSL       1e50  # for now, infinity (no limit)
+ 2000        GSL       1e50  # for now, infinity (no limit)
+ 2010        GSL       1e50  # for now, infinity (no limit)
+ 1990        HCO       1e50  # for now, infinity (no limit)
+ 2000        HCO       1e50  # for now, infinity (no limit)
+ 2010        HCO       1e50  # for now, infinity (no limit)
+ 1990        OIL       1e50  # for now, infinity (no limit)
+ 2000        OIL       1e50  # for now, infinity (no limit)
+ 2010        OIL       1e50  # for now, infinity (no limit)
+ 1990        URN       1e50  # for now, infinity (no limit)
+ 2000        URN       1e50  # for now, infinity (no limit)
+ 2010        URN       1e50  # for now, infinity (no limit)
+
+ 1990        HYD       1e50  # for now, infinity (no limit)
+ 2000        HYD       1e50  # for now, infinity (no limit)
+ 2010        HYD       1e50  # for now, infinity (no limit)
+ 1990        FEQ       1e50  # for now, infinity (no limit)
+ 2000        FEQ       1e50  # for now, infinity (no limit)
+ 2010        FEQ       1e50  # for now, infinity (no limit)
 	;
 
 
-param  TechOutputSplit  :=    # roughly TABLE PRC_OUT
-# input carrier   # tech            # output carrier    # fractional value
- crude_oil         t_oil_refinery    diesel              0.7
- crude_oil         t_oil_refinery    gasoline            0.3
-	;
+#param  MaxCarrierOutput  :=   # roughly NRAT_RTY2
+# period     # tech          # carrier       # value
+# 1990         E70     ELC     80   # E70
+# 2000         E70     ELC     80   # E70
+# 2010         E70     ELC     80   # E70
+#	;
 
 
 param  LifetimeTech  :=        # PARAMETER TCH_LIFE
 # Temoa tech name             # vintage    # value   # Utopia tech name
- t_coal_steam                   1960         40        # E01, for existing cap.
- t_coal_steam                   1970         40        # E01, for existing cap.
- t_coal_steam                   1980         40        # E01, for existing cap.
- t_coal_steam                   1990         40        # E01
- t_coal_steam                   2000         40        # E01
- t_coal_steam                   2010         40        # E01
- t_light_water_nuclear          1990         40        # E21
- t_light_water_nuclear          2000         40        # E21
- t_light_water_nuclear          2010         40        # E21
- t_hydro_electric               1980        100        # E31, for existing cap.
- t_hydro_electric               1990        100        # E31
- t_hydro_electric               2000        100        # E31
- t_hydro_electric               2010        100        # E31
- t_pumped_storage               1990        100        # E51
- t_pumped_storage               2000        100        # E51
- t_pumped_storage               2010        100        # E51
- t_dsl_plant                    1960         40        # E70, for existing cap.
- t_dsl_plant                    1970         40        # E70, for existing cap.
- t_dsl_plant                    1980         40        # E70, for existing cap.
- t_dsl_plant                    1990         40        # E70
- t_dsl_plant                    2000         40        # E70
- t_dsl_plant                    2010         40        # E70
- t_elc_boiler                   1990         30        # RHE
- t_elc_boiler                   2000         30        # RHE
- t_elc_boiler                   2010         30        # RHE
- t_dsl_boiler                   1970         30        # RHO, for existing cap.
- t_dsl_boiler                   1980         30        # RHO, for existing cap.
- t_dsl_boiler                   1990         30        # RHO
- t_dsl_boiler                   2000         30        # RHO
- t_dsl_boiler                   2010         30        # RHO
- t_std_incandescent_lighting    1980         20        # RL1, for existing cap.
- t_std_incandescent_lighting    1990         10        # RL1
- t_std_incandescent_lighting    2000         10        # RL1
- t_std_incandescent_lighting    2010         10        # RL1
- t_oil_refinery                 1990         50        # SRE
- t_oil_refinery                 2000         50        # SRE
- t_oil_refinery                 2010         50        # SRE
- t_dsl_car                      1970         30        # TXD, for existing cap.
- t_dsl_car                      1980         30        # TXD, for existing cap.
- t_dsl_car                      1990         15        # TXD
- t_dsl_car                      2000         15        # TXD
- t_dsl_car                      2010         15        # TXD
- t_elc_car                      1990         15        # TXE
- t_elc_car                      2000         15        # TXE
- t_elc_car                      2010         15        # TXE
- t_gas_car                      1970         30        # TXG, for existing cap.
- t_gas_car                      1980         30        # TXG, for existing cap.
- t_gas_car                      1990         15        # TXG
- t_gas_car                      2000         15        # TXG
- t_gas_car                      2010         15        # TXG
+ E01          1960         40        # E01, for existing cap.
+ E01          1970         40        # E01, for existing cap.
+ E01          1980         40        # E01, for existing cap.
+ E01          1990         40        # E01
+ E01          2000         40        # E01
+ E01          2010         40        # E01
+ E21          1990         40        # E21
+ E21          2000         40        # E21
+ E21          2010         40        # E21
+ E31          1980        100        # E31, for existing cap.
+ E31          1990        100        # E31
+ E31          2000        100        # E31
+ E31          2010        100        # E31
+ E51          1980         40        # E51, for existing cap
+ E51          1990        100        # E51
+ E51          2000        100        # E51
+ E51          2010        100        # E51
+ E70          1960         40        # E70, for existing cap.
+ E70          1970         40        # E70, for existing cap.
+ E70          1980         40        # E70, for existing cap.
+ E70          1990         40        # E70
+ E70          2000         40        # E70
+ E70          2010         40        # E70
+ RHE          1990         30        # RHE
+ RHE          2000         30        # RHE
+ RHE          2010         30        # RHE
+ RHO          1970         30        # RHO, for existing cap.
+ RHO          1980         30        # RHO, for existing cap.
+ RHO          1990         30        # RHO
+ RHO          2000         30        # RHO
+ RHO          2010         30        # RHO
+ RL1          1980         20        # RL1, for existing cap.
+ RL1          1990         10        # RL1
+ RL1          2000         10        # RL1
+ RL1          2010         10        # RL1
+ SRE          1990         50        # SRE
+ SRE          2000         50        # SRE
+ SRE          2010         50        # SRE
+ TXD          1970         30        # TXD, for existing cap.
+ TXD          1980         30        # TXD, for existing cap.
+ TXD          1990         15        # TXD
+ TXD          2000         15        # TXD
+ TXD          2010         15        # TXD
+ TXE          1990         15        # TXE
+ TXE          2000         15        # TXE
+ TXE          2010         15        # TXE
+ TXG          1970         30        # TXG, for existing cap.
+ TXG          1980         30        # TXG, for existing cap.
+ TXG          1990         15        # TXG
+ TXG          2000         15        # TXG
+ TXG          2010         15        # TXG
 
  # added because /every/ process in TEMOA is a technology
- imp_dsl         1990     1000
- imp_dsl         2000     1000
- imp_dsl         2010     1000
- imp_gsl         1990     1000
- imp_gsl         2000     1000
- imp_gsl         2010     1000
- imp_hard_coal   1990     1000
- imp_hard_coal   2000     1000
- imp_hard_coal   2010     1000
- imp_crude_oil   1990     1000
- imp_crude_oil   2000     1000
- imp_crude_oil   2010     1000
- imp_uranium     1990     1000
- imp_uranium     2000     1000
- imp_uranium     2010     1000
+ IMPDSL1      1990     1000
+ IMPDSL1      2000     1000
+ IMPDSL1      2010     1000
+ IMPGSL1      1990     1000
+ IMPGSL1      2000     1000
+ IMPGSL1      2010     1000
+ IMPHCO1      1990     1000
+ IMPHCO1      2000     1000
+ IMPHCO1      2010     1000
+ IMPOIL1      1990     1000
+ IMPOIL1      2000     1000
+ IMPOIL1      2010     1000
+ IMPURN1      1990     1000
+ IMPURN1      2000     1000
+ IMPURN1      2010     1000
 
- imp_water         1990     1000
- imp_water         2000     1000
- imp_water         2010     1000
- imp_fossil_equiv  1990     1000
- imp_fossil_equiv  2000     1000
- imp_fossil_equiv  2010     1000
+ IMPHYD       1990     1000
+ IMPHYD       2000     1000
+ IMPHYD       2010     1000
+ IMPFEQ       1990     1000
+ IMPFEQ       2000     1000
+ IMPFEQ       2010     1000
 	;
 
+param  LifetimeLoan  :=        # This is a copy of LifeTime Tech for Loan Amortization
+# Temoa tech name             # vintage    # value   # Utopia tech name
+ E01          1990         40        # E01
+ E01          2000         40        # E01
+ E01          2010         40        # E01
+ E21          1990         40        # E21
+ E21          2000         40        # E21
+ E21          2010         40        # E21
+ E31          1990        100        # E31
+ E31          2000        100        # E31
+ E31          2010        100        # E31
+ E51          1990        100        # E51
+ E51          2000        100        # E51
+ E51          2010        100        # E51
+ E70          1990         40        # E70
+ E70          2000         40        # E70
+ E70          2010         40        # E70
+ RHE          1990         30        # RHE
+ RHE          2000         30        # RHE
+ RHE          2010         30        # RHE
+ RHO          1990         30        # RHO
+ RHO          2000         30        # RHO
+ RHO          2010         30        # RHO
+ RL1          1990         10        # RL1
+ RL1          2000         10        # RL1
+ RL1          2010         10        # RL1
+ SRE          1990         50        # SRE
+ SRE          2000         50        # SRE
+ SRE          2010         50        # SRE
+ TXD          1990         15        # TXD
+ TXD          2000         15        # TXD
+ TXD          2010         15        # TXD
+ TXE          1990         15        # TXE
+ TXE          2000         15        # TXE
+ TXE          2010         15        # TXE
+ TXG          1990         15        # TXG
+ TXG          2000         15        # TXG
+ TXG          2010         15        # TXG	
+	;
+	
+param CapacityFactor :=
+# tech  		# vintage     # value
+ E01          1960	      0.8
+ E01          1970	      0.8
+ E01          1980	      0.8
+ E01          1990	      0.8
+ E01          2000	      0.8
+ E01          2010	      0.8
+ E21          1990         0.8
+ E21          2000         0.8
+ E21          2010         0.8
+ E31          1980         0.275
+ E31          1990         0.275
+ E31          2000         0.2753
+ E31          2010         0.2756
+ E51          1980         0.17
+ E51          1990         0.17
+ E51          2000         0.17
+ E51          2010         0.17
+ E70          1960         0.8 
+ E70          1970         0.8
+ E70          1980         0.8
+ E70          1990         0.8
+ E70          2000         0.8
+ E70          2010         0.8
+
+ ;
+
+	
 param  Efficiency  :=        # PARAMETER CON_INP2, DMD_EFF
 # input carrier    # tech                       # vintage  # output carrier     # eff. value
- diesel             imp_dsl                      1990       diesel               1
- gasoline           imp_gsl                      1990       gasoline             1
- hard_coal          imp_hard_coal                1990       hard_coal            1
- crude_oil          imp_crude_oil                1990       crude_oil            1
- uranium            imp_uranium                  1990       uranium              1
+ DSL          IMPDSL1       1990       DSL          1
+ DSL          IMPDSL1       2000       DSL          1
+ DSL          IMPDSL1       2010       DSL          1
 
- fossil_equiv       imp_fossil_equiv             1990       fossil_equiv         1
- water              imp_water                    1990       water                1
+ GSL          IMPGSL1       1990       GSL          1
+ GSL          IMPGSL1       2000       GSL          1
+ GSL          IMPGSL1       2010       GSL          1
 
- hard_coal          t_coal_steam                 1960       electricity          0.32  # 1/3.125
- hard_coal          t_coal_steam                 1970       electricity          0.32  # 1/3.125
- hard_coal          t_coal_steam                 1980       electricity          0.32  # 1/3.125
- hard_coal          t_coal_steam                 1990       electricity          0.32  # 1/3.125
- hard_coal          t_coal_steam                 2000       electricity          0.32  # 1/3.125
- hard_coal          t_coal_steam                 2010       electricity          0.32  # 1/3.125
+ HCO          IMPHCO1       1990       HCO          1
+ HCO          IMPHCO1       2000       HCO          1
+ HCO          IMPHCO1       2010       HCO          1
 
- fossil_equiv       t_light_water_nuclear        1990       electricity          0.32  # 1/3.125
- fossil_equiv       t_light_water_nuclear        2000       electricity          0.32  # 1/3.125
- fossil_equiv       t_light_water_nuclear        2010       electricity          0.32  # 1/3.125
+ OIL          IMPOIL1       1990       OIL          1
+ OIL          IMPOIL1       2000       OIL          1
+ OIL          IMPOIL1       2010       OIL          1
 
- uranium            t_light_water_nuclear        1990       electricity          0.4   # 1/2.5
- uranium            t_light_water_nuclear        2000       electricity          0.4   # 1/2.5
- uranium            t_light_water_nuclear        2010       electricity          0.4   # 1/2.5
+ URN          IMPURN1       1990       URN          1
+ URN          IMPURN1       2000       URN          1
+ URN          IMPURN1       2010       URN          1
 
- water              t_hydro_electric             1990       electricity          0.32  # 1/3.125
- water              t_hydro_electric             2000       electricity          0.32  # 1/3.125
- water              t_hydro_electric             2010       electricity          0.32  # 1/3.125
+ FEQ          IMPFEQ        1990       FEQ          1
+ FEQ          IMPFEQ        2000       FEQ          1
+ FEQ          IMPFEQ        2010       FEQ          1
 
- diesel             t_dsl_plant                  1960       electricity          0.294 # 1/3.4
- diesel             t_dsl_plant                  1970       electricity          0.294 # 1/3.4
- diesel             t_dsl_plant                  1980       electricity          0.294 # 1/3.4
- diesel             t_dsl_plant                  1990       electricity          0.294 # 1/3.4
- diesel             t_dsl_plant                  2000       electricity          0.294 # 1/3.4
- diesel             t_dsl_plant                  2010       electricity          0.294 # 1/3.4
+ HYD          IMPHYD        1990       HYD          1
+ HYD          IMPHYD        2000       HYD          1
+ HYD          IMPHYD        2010       HYD          1 
 
- electricity        t_pumped_storage             1990       water                1
- electricity        t_pumped_storage             2000       water                1
- electricity        t_pumped_storage             2010       water                1
+ HCO          E01           1960       ELC          0.32  # 1/3.125
+ HCO          E01           1970       ELC          0.32  # 1/3.125
+ HCO          E01           1980       ELC          0.32  # 1/3.125
+ HCO          E01           1990       ELC          0.32  # 1/3.125
+ HCO          E01           2000       ELC          0.32  # 1/3.125
+ HCO          E01           2010       ELC          0.32  # 1/3.125
 
- electricity        t_elc_boiler                 1990       res_space_heating    1     # direct translation from DMD_EFF
- electricity        t_elc_boiler                 2000       res_space_heating    1     # direct translation from DMD_EFF
- electricity        t_elc_boiler                 2010       res_space_heating    1     # direct translation from DMD_EFF
+ FEQ          E21           1990       ELC          0.32  # 1/3.125
+ FEQ          E21           2000       ELC          0.32  # 1/3.125
+ FEQ          E21           2010       ELC          0.32  # 1/3.125
 
- diesel             t_dsl_boiler                 1990       res_space_heating    0.7   # direct translation from DMD_EFF
- diesel             t_dsl_boiler                 2000       res_space_heating    0.7   # direct translation from DMD_EFF
- diesel             t_dsl_boiler                 2010       res_space_heating    0.7   # direct translation from DMD_EFF
+ URN          E21           1990       ELC          0.4   # 1/2.5
+ URN          E21           2000       ELC          0.4   # 1/2.5
+ URN          E21           2010       ELC          0.4   # 1/2.5
 
- electricity        t_std_incandescent_lighting  1990       res_lighting         1     # direct translation from DMD_EFF
- electricity        t_std_incandescent_lighting  2000       res_lighting         1     # direct translation from DMD_EFF
- electricity        t_std_incandescent_lighting  2010       res_lighting         1     # direct translation from DMD_EFF
+ HYD          E31           1990       ELC          0.32  # 1/3.125
+ HYD          E31           2000       ELC          0.32  # 1/3.125
+ HYD          E31           2010       ELC          0.32  # 1/3.125
 
- crude_oil          t_oil_refinery               1990       diesel               1     # direct translation from PRC_INP2, PRC_OUT
- crude_oil          t_oil_refinery               2000       diesel               1     # direct translation from PRC_INP2, PRC_OUT
- crude_oil          t_oil_refinery               2010       diesel               1     # direct translation from PRC_INP2, PRC_OUT
- crude_oil          t_oil_refinery               1990       gasoline             1     # direct translation from PRC_INP2, PRC_OUT
- crude_oil          t_oil_refinery               2000       gasoline             1     # direct translation from PRC_INP2, PRC_OUT
- crude_oil          t_oil_refinery               2010       gasoline             1     # direct translation from PRC_INP2, PRC_OUT
+ DSL          E70           1960       ELC          0.294 # 1/3.4
+ DSL          E70           1970       ELC          0.294 # 1/3.4
+ DSL          E70           1980       ELC          0.294 # 1/3.4
+ DSL          E70           1990       ELC          0.294 # 1/3.4
+ DSL          E70           2000       ELC          0.294 # 1/3.4
+ DSL          E70           2010       ELC          0.294 # 1/3.4
 
- diesel             t_dsl_car                    1990       auto_transportation  0.231 # direct translation from DMD_EFF
- diesel             t_dsl_car                    2000       auto_transportation  0.231 # direct translation from DMD_EFF
- diesel             t_dsl_car                    2010       auto_transportation  0.231 # direct translation from DMD_EFF
+ ELC          E51           1980       HYD          0.720 # 1/1.3889
+ ELC          E51           1990       HYD          0.720 # 1/1.3889
+ ELC          E51           2000       HYD          0.720 # 1/1.3889
+ ELC          E51           2010       HYD          0.720 # 1/1.3889
 
- electricity        t_elc_car                    1990       auto_transportation  0.827 # direct translation from DMD_EFF
- electricity        t_elc_car                    2000       auto_transportation  0.827 # direct translation from DMD_EFF
- electricity        t_elc_car                    2010       auto_transportation  0.827 # direct translation from DMD_EFF
+ ELC          RHE           1990       RH           1     # direct translation from DMD_EFF
+ ELC          RHE           2000       RH           1     # direct translation from DMD_EFF
+ ELC          RHE           2010       RH           1     # direct translation from DMD_EFF
 
- gasoline           t_gas_car                    1990       auto_transportation  0.231 # direct translation from DMD_EFF
- gasoline           t_gas_car                    2000       auto_transportation  0.231 # direct translation from DMD_EFF
- gasoline           t_gas_car                    2010       auto_transportation  0.231 # direct translation from DMD_EFF
+ DSL          RHO           1990       RH          0.7   # direct translation from DMD_EFF
+ DSL          RHO           2000       RH          0.7   # direct translation from DMD_EFF
+ DSL          RHO           2010       RH          0.7   # direct translation from DMD_EFF
+
+ ELC          RL1           1990       RL          1     # direct translation from DMD_EFF
+ ELC          RL1           2000       RL          1     # direct translation from DMD_EFF
+ ELC          RL1           2010       RL          1     # direct translation from DMD_EFF
+
+ OIL          SRE           1990       DSL         1     # direct translation from PRC_INP2, PRC_OUT
+ OIL          SRE           2000       DSL         1     # direct translation from PRC_INP2, PRC_OUT
+ OIL          SRE           2010       DSL         1     # direct translation from PRC_INP2, PRC_OUT
+ OIL          SRE           1990       GSL         1     # direct translation from PRC_INP2, PRC_OUT
+ OIL          SRE           2000       GSL         1     # direct translation from PRC_INP2, PRC_OUT
+ OIL          SRE           2010       GSL         1     # direct translation from PRC_INP2, PRC_OUT
+
+ DSL          TXD           1990       TX          0.231 # direct translation from DMD_EFF
+ DSL          TXD           2000       TX          0.231 # direct translation from DMD_EFF
+ DSL          TXD           2010       TX          0.231 # direct translation from DMD_EFF
+
+ ELC          TXE           1990       TX          0.827 # direct translation from DMD_EFF
+ ELC          TXE           2000       TX          0.827 # direct translation from DMD_EFF
+ ELC          TXE           2010       TX          0.827 # direct translation from DMD_EFF
+
+ GSL          TXG           1990       TX          0.231 # direct translation from DMD_EFF
+ GSL          TXG           2000       TX          0.231 # direct translation from DMD_EFF
+ GSL          TXG           2010       TX          0.231 # direct translation from DMD_EFF
 	;
 
 
 param  ExistingCapacity  :=        # TABLE TCH_RES
 # tech                        # vintage       # capacity amount
- t_coal_steam                  1960            0.175   # E01
- t_coal_steam                  1970            0.175   # E01
- t_coal_steam                  1980            0.15    # E01
- t_hydro_electric              1980            0.1     # E31
- t_dsl_plant                   1960            0.05    # E70
- t_dsl_plant                   1970            0.05    # E70
- t_dsl_plant                   1980            0.2     # E70
- t_dsl_boiler                  1970           12.5     # RHO
- t_dsl_boiler                  1980           12.5     # RHO
- t_std_incandescent_lighting   1980            5.6     # RL1
- t_dsl_car                     1970            0.4     # TXD
- t_dsl_car                     1980            0.2     # TXD
- t_gas_car                     1970            3.1     # TXG
- t_gas_car                     1980            1.5     # TXG
+ E01              1960            0.175   # E01
+ E01              1970            0.175   # E01
+ E01              1980            0.15    # E01
+ E31              1980            0.1     # E31
+ E51              1980            0.5     # E51
+ E70              1960            0.05    # E70
+ E70              1970            0.05    # E70
+ E70              1980            0.2     # E70
+ RHO              1970           12.5     # RHO
+ RHO              1980           12.5     # RHO
+ RL1              1980            5.6     # RL1
+ TXD              1970            0.4     # TXD
+ TXD              1980            0.2     # TXD
+ TXG              1970            3.1     # TXG
+ TXG              1980            1.5     # TXG
 	;
 
 
 param  CostInvest  :=  # TABLE TCH_INVCOS
 # tech                       # vintage      # value
- t_coal_steam                 1990           1400
- t_coal_steam                 2000           1300
- t_coal_steam                 2010           1200
- t_light_water_nuclear        1990           5000
- t_light_water_nuclear        2000           5000
- t_light_water_nuclear        2010           5000
- t_hydro_electric             1990           3000
- t_hydro_electric             2000           3000
- t_hydro_electric             2010           3000
- t_pumped_storage             1990            900
- t_pumped_storage             2000            900
- t_pumped_storage             2010            900
- t_dsl_plant                  1990           1000
- t_dsl_plant                  2000           1000
- t_dsl_plant                  2010           1000
- t_elc_boiler                 1990             90
- t_elc_boiler                 2000             90
- t_elc_boiler                 2010             90
- t_dsl_boiler                 1990            100
- t_dsl_boiler                 2000            100
- t_dsl_boiler                 2010            100
- t_oil_refinery               1990            100
- t_oil_refinery               2000            100
- t_oil_refinery               2010            100
- t_dsl_car                    1990            1044
- t_dsl_car                    2000            1044
- t_dsl_car                    2010            1044
- t_elc_car                    1990            2000
- t_elc_car                    2000            1750
- t_elc_car                    2010            1500
- t_gas_car                    1990            1044
- t_gas_car                    2000            1044
- t_gas_car                    2010            1044
+ E01        1990           1400
+ E01        2000           1300
+ E01        2010           1200
+ E21        1990           5000
+ E21        2000           5000
+ E21        2010           5000
+ E31        1990           3000
+ E31        2000           3000
+ E31        2010           3000
+ E51        1990            900
+ E51        2000            900
+ E51        2010            900
+ E70        1990           1000
+ E70        2000           1000
+ E70        2010           1000
+ RHE        1990             90
+ RHE        2000             90
+ RHE        2010             90
+ RHO        1990              0
+ RHO        2000              0
+ RHO        2010              0
+ SRE        1990            100
+ SRE        2000            100
+ SRE        2010            100
+ TXD        1990            1044
+ TXD        2000            1044
+ TXD        2010            1044
+ TXE        1990            2000
+ TXE        2000            1750
+ TXE        2010            1500
+ TXG        1990            1044
+ TXG        2000            1044
+ TXG        2010            1044
 ;
 
 
 param  CostFixed  :=        # TABLE TCH_FIXOM
-# period         # tech                          # vintage       # value
- 1990             t_coal_steam                    1960              40
- 1990             t_coal_steam                    1970              40
- 1990             t_coal_steam                    1980              40
- 1990             t_coal_steam                    1990              40
- 2000             t_coal_steam                    1970              40
- 2000             t_coal_steam                    1980              40
- 2000             t_coal_steam                    1990              40
- 2000             t_coal_steam                    2000              70
- 2010             t_coal_steam                    1980              40
- 2010             t_coal_steam                    1990              40
- 2010             t_coal_steam                    2000              70
- 2010             t_coal_steam                    2010             100
+# period         # tech        # vintage       # value
+ 1990             E01           1960              40
+ 1990             E01           1970              40
+ 1990             E01           1980              40
+ 1990             E01           1990              40
+ 2000             E01           1970              70
+ 2000             E01           1980              70
+ 2000             E01           1990              70
+ 2000             E01           2000              70
+ 2010             E01           1980             100
+ 2010             E01           1990             100
+ 2010             E01           2000             100
+ 2010             E01           2010             100
 
- 1990             t_light_water_nuclear           1990             500
- 2000             t_light_water_nuclear           1990             500
- 2010             t_light_water_nuclear           1990             500
- 2000             t_light_water_nuclear           2000             500
- 2010             t_light_water_nuclear           2000             500
- 2010             t_light_water_nuclear           2010             500
+ 1990             E21           1990             500
+ 2000             E21           1990             500
+ 2010             E21           1990             500
+ 2000             E21           2000             500
+ 2010             E21           2000             500
+ 2010             E21           2010             500
 
- 1990             t_hydro_electric                1980              75
- 1990             t_hydro_electric                1990              75
- 2000             t_hydro_electric                1980              75
- 2000             t_hydro_electric                1990              75
- 2000             t_hydro_electric                2000              75
- 2010             t_hydro_electric                1980              75
- 2010             t_hydro_electric                1990              75
- 2010             t_hydro_electric                2000              75
- 2010             t_hydro_electric                2010              75
+ 1990             E31           1980              75
+ 1990             E31           1990              75
+ 2000             E31           1980              75
+ 2000             E31           1990              75
+ 2000             E31           2000              75
+ 2010             E31           1980              75
+ 2010             E31           1990              75
+ 2010             E31           2000              75
+ 2010             E31           2010              75
 
- 1990             t_pumped_storage                1990              30
- 2000             t_pumped_storage                1990              30
- 2000             t_pumped_storage                2000              30
- 2010             t_pumped_storage                1990              30
- 2010             t_pumped_storage                2000              30
- 2010             t_pumped_storage                2010              30
+ 1990             E51           1980              30
+ 1990             E51           1990              30
+ 2000             E51           1990              30
+ 2000             E51           2000              30
+ 2010             E51           1990              30
+ 2010             E51           2000              30
+ 2010             E51           2010              30
 
- 1990             t_dsl_plant                     1960              30
- 1990             t_dsl_plant                     1970              30
- 1990             t_dsl_plant                     1980              30
- 1990             t_dsl_plant                     1990              30
- 2000             t_dsl_plant                     1970              30
- 2000             t_dsl_plant                     1980              30
- 2000             t_dsl_plant                     1990              30
- 2000             t_dsl_plant                     2000              30
- 2010             t_dsl_plant                     1980              30
- 2010             t_dsl_plant                     1990              30
- 2010             t_dsl_plant                     2000              30
- 2010             t_dsl_plant                     2010              30
+ 1990             E70           1960              30
+ 1990             E70           1970              30
+ 1990             E70           1980              30
+ 1990             E70           1990              30
+ 2000             E70           1970              30
+ 2000             E70           1980              30
+ 2000             E70           1990              30
+ 2000             E70           2000              30
+ 2010             E70           1980              30
+ 2010             E70           1990              30
+ 2010             E70           2000              30
+ 2010             E70           2010              30
 
- 1990             t_dsl_boiler                    1970               1
- 1990             t_dsl_boiler                    1980               1
- 1990             t_dsl_boiler                    1990               1
- 2000             t_dsl_boiler                    1980               1
- 2000             t_dsl_boiler                    1990               1
- 2000             t_dsl_boiler                    2000               1
- 2010             t_dsl_boiler                    1990               1
- 2010             t_dsl_boiler                    2000               1
- 2010             t_dsl_boiler                    2010               1
+ 1990             RHO           1970               1
+ 1990             RHO           1980               1
+ 1990             RHO           1990               1
+ 2000             RHO           1980               1
+ 2000             RHO           1990               1
+ 2000             RHO           2000               1
+ 2010             RHO           1990               1
+ 2010             RHO           2000               1
+ 2010             RHO           2010               1
 
- 1990             t_std_incandescent_lighting     1980               9.46
- 1990             t_std_incandescent_lighting     1990               9.46
- 2000             t_std_incandescent_lighting     1990               9.46
- 2000             t_std_incandescent_lighting     2000               9.46
- 2010             t_std_incandescent_lighting     2000               9.46
- 2010             t_std_incandescent_lighting     2010               9.46
+ 1990             RL1           1980               9.46
+ 1990             RL1           1990               9.46
+ 2000             RL1           1990               9.46
+ 2000             RL1           2000               9.46
+ 2010             RL1           2000               9.46
+ 2010             RL1           2010               9.46
 
- 1990             t_dsl_car                       1990              52
- 2000             t_dsl_car                       1990              52
- 2010             t_dsl_car                       1990              52
- 2000             t_dsl_car                       2000              52
- 2010             t_dsl_car                       2000              52
- 2010             t_dsl_car                       2010              52
+ 1990             TXD           1990              52
+ 2000             TXD           1990              52
+ 2010             TXD           1990              52
+ 2000             TXD           2000              52
+ 2010             TXD           2000              52
+ 2010             TXD           2010              52
 
- 1990             t_elc_car                       1990             100
- 2000             t_elc_car                       1990             100
- 2010             t_elc_car                       1990             100
- 2000             t_elc_car                       2000              90
- 2010             t_elc_car                       2000              90
- 2010             t_elc_car                       2010              80
+ 1990             TXE           1990             100
+ 2000             TXE           1990              90
+ 2000             TXE           2000              90
+ 2010             TXE           1990              80
+ 2010             TXE           2000              80
+ 2010             TXE           2010              80
 
- 1990             t_gas_car                       1970              48
- 1990             t_gas_car                       1980              48
- 1990             t_gas_car                       1990              48
- 2000             t_gas_car                       1980              48
- 2000             t_gas_car                       1990              48
- 2000             t_gas_car                       2000              48
- 2010             t_gas_car                       1990              48
- 2010             t_gas_car                       2000              48
- 2010             t_gas_car                       2010              48
+ 1990             TXG           1970              48
+ 1990             TXG           1980              48
+ 1990             TXG           1990              48
+ 2000             TXG           1980              48
+ 2000             TXG           1990              48
+ 2000             TXG           2000              48
+ 2010             TXG           1990              48
+ 2010             TXG           2000              48
+ 2010             TXG           2010              48
 	;
 
 
 param  CostMarginal  :=        # TABLE NSEP_COST1, TCH_VAROM
 # period   # technology             # vintage   # value
- 1990       imp_dsl                 1990         10
- 2000       imp_dsl                 1990         10
- 2010       imp_dsl                 1990         10
- 2000       imp_dsl                 2000         10
- 2010       imp_dsl                 2000         10
- 2010       imp_dsl                 2010         10
- 1990       imp_gsl                 1990         15
- 2000       imp_gsl                 1990         15
- 2010       imp_gsl                 1990         15
- 2000       imp_gsl                 2000         15
- 2010       imp_gsl                 2000         15
- 2010       imp_gsl                 2010         15
- 1990       imp_hard_coal           1990          2
- 2000       imp_hard_coal           1990          2
- 2010       imp_hard_coal           1990          2
- 2000       imp_hard_coal           2000          2
- 2010       imp_hard_coal           2000          2
- 2010       imp_hard_coal           2010          2
- 1990       imp_crude_oil           1990          8
- 2000       imp_crude_oil           1990          8
- 2010       imp_crude_oil           1990          8
- 2000       imp_crude_oil           2000          8
- 2010       imp_crude_oil           2000          8
- 2010       imp_crude_oil           2010          8
- 1990       imp_uranium             1990          2
- 2000       imp_uranium             1990          2
- 2010       imp_uranium             1990          2
- 2000       imp_uranium             2000          2
- 2010       imp_uranium             2000          2
- 2010       imp_uranium             2010          2
+ 1990       IMPDSL1                 1990         10
+ 2000       IMPDSL1                 1990         10
+ 2010       IMPDSL1                 1990         10
+ 2000       IMPDSL1                 2000         10
+ 2010       IMPDSL1                 2000         10
+ 2010       IMPDSL1                 2010         10
+ 1990       IMPGSL1                 1990         15
+ 2000       IMPGSL1                 1990         15
+ 2010       IMPGSL1                 1990         15
+ 2000       IMPGSL1                 2000         15
+ 2010       IMPGSL1                 2000         15
+ 2010       IMPGSL1                 2010         15
+ 1990       IMPHCO1                 1990          2
+ 2000       IMPHCO1                 1990          2
+ 2010       IMPHCO1                 1990          2
+ 2000       IMPHCO1                 2000          2
+ 2010       IMPHCO1                 2000          2
+ 2010       IMPHCO1                 2010          2
+ 1990       IMPOIL1                 1990          8
+ 2000       IMPOIL1                 1990          8
+ 2010       IMPOIL1                 1990          8
+ 2000       IMPOIL1                 2000          8
+ 2010       IMPOIL1                 2000          8
+ 2010       IMPOIL1                 2010          8
+ 1990       IMPURN1                 1990          2
+ 2000       IMPURN1                 1990          2
+ 2010       IMPURN1                 1990          2
+ 2000       IMPURN1                 2000          2
+ 2010       IMPURN1                 2000          2
+ 2010       IMPURN1                 2010          2
 
- 1990       imp_fossil_equiv        1990          0
- 2000       imp_fossil_equiv        1990          0
- 2010       imp_fossil_equiv        1990          0
- 2000       imp_fossil_equiv        2000          0
- 2010       imp_fossil_equiv        2000          0
- 2010       imp_fossil_equiv        2010          0
- 1990       imp_fossil_equiv        1990          0
- 2000       imp_water               1990          0
- 2010       imp_water               1990          0
- 2000       imp_water               2000          0
- 2010       imp_water               2000          0
- 2010       imp_water               2010          0
+ 1990       IMPFEQ                  1990          0
+ 2000       IMPFEQ                  1990          0
+ 2010       IMPFEQ                  1990          0
+ 2000       IMPFEQ                  2000          0
+ 2010       IMPFEQ                  2000          0
+ 2010       IMPFEQ                  2010          0
+ 1990       IMPFEQ                  1990          0
+ 2000       IMPHYD                  1990          0
+ 2010       IMPHYD                  1990          0
+ 2000       IMPHYD                  2000          0
+ 2010       IMPHYD                  2000          0
+ 2010       IMPHYD                  2010          0
 
- 1990       t_coal_steam            1960          0.3
- 1990       t_coal_steam            1970          0.3
- 1990       t_coal_steam            1980          0.3
- 1990       t_coal_steam            1990          0.3
- 2000       t_coal_steam            1970          0.3
- 2000       t_coal_steam            1980          0.3
- 2000       t_coal_steam            1990          0.3
- 2000       t_coal_steam            2000          0.3
- 2010       t_coal_steam            1980          0.3
- 2010       t_coal_steam            1990          0.3
- 2010       t_coal_steam            2000          0.3
- 2010       t_coal_steam            2010          0.3
+ 1990       E01                     1960          0.3
+ 1990       E01                     1970          0.3
+ 1990       E01                     1980          0.3
+ 1990       E01                     1990          0.3
+ 2000       E01                     1970          0.3
+ 2000       E01                     1980          0.3
+ 2000       E01                     1990          0.3
+ 2000       E01                     2000          0.3
+ 2010       E01                     1980          0.3
+ 2010       E01                     1990          0.3
+ 2010       E01                     2000          0.3
+ 2010       E01                     2010          0.3
 
- 1990       t_light_water_nuclear   1990          1.5
- 2000       t_light_water_nuclear   1990          1.5
- 2010       t_light_water_nuclear   1990          1.5
- 2000       t_light_water_nuclear   2000          1.5
- 2010       t_light_water_nuclear   2000          1.5
- 2010       t_light_water_nuclear   2010          1.5
+ 1990       E21                     1990          1.5
+ 2000       E21                     1990          1.5
+ 2010       E21                     1990          1.5
+ 2000       E21                     2000          1.5
+ 2010       E21                     2000          1.5
+ 2010       E21                     2010          1.5
 
- 1990       t_dsl_plant             1960          0.4
- 1990       t_dsl_plant             1970          0.4
- 1990       t_dsl_plant             1980          0.4
- 1990       t_dsl_plant             1990          0.4
- 2000       t_dsl_plant             1970          0.4
- 2000       t_dsl_plant             1980          0.4
- 2000       t_dsl_plant             1990          0.4
- 2000       t_dsl_plant             2000          0.4
- 2010       t_dsl_plant             1980          0.4
- 2010       t_dsl_plant             1990          0.4
- 2010       t_dsl_plant             2000          0.4
- 2010       t_dsl_plant             2010          0.4
+ 1990       E70                     1960          0.4
+ 1990       E70                     1970          0.4
+ 1990       E70                     1980          0.4
+ 1990       E70                     1990          0.4
+ 2000       E70                     1970          0.4
+ 2000       E70                     1980          0.4
+ 2000       E70                     1990          0.4
+ 2000       E70                     2000          0.4
+ 2010       E70                     1980          0.4
+ 2010       E70                     1990          0.4
+ 2010       E70                     2000          0.4
+ 2010       E70                     2010          0.4
 
- 1990       t_oil_refinery          1990         10
- 2000       t_oil_refinery          1990         10
- 2000       t_oil_refinery          2000         10
- 2010       t_oil_refinery          1990         10
- 2010       t_oil_refinery          2000         10
- 2010       t_oil_refinery          2010         10
+ 1990       SRE                     1990         10
+ 2000       SRE                     1990         10
+ 2000       SRE                     2000         10
+ 2010       SRE                     1990         10
+ 2010       SRE                     2000         10
+ 2010       SRE                     2010         10
 	;
 
