@@ -11,6 +11,9 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 	"""
 	l_cost = 0
 
+	# import IPython
+	# IPython.Shell.IPShellEmbed()()
+
 	for l_per in M.time_optimize:
 		for l_tech in M.tech_all:
 			for l_vin in ProcessVintages( l_per, l_tech ):
@@ -369,7 +372,7 @@ V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 
 def ExistingCapacityConstraint_rule ( M, A_tech, A_vintage ):
 	"""\
-For vintage periods that the model is not to optimize, explicitly set the capacity values based on dat file input.
+For vintage periods (that the model is not to optimize), explicitly set the capacity values.
 
 (for each tech, vintage_exist)
 V_Capacity[t,v] = Param(Existingcapacity[t,v])
@@ -389,17 +392,23 @@ def ResourceExtractionConstraint_rule ( M, A_period, A_resource ):
 Prevent TEMOA from extracting an endless supply of energy from "the ether".
 
 (for each period, resource)
-sum((season,time_of_day,tech,vintage),V_FlowIn[p,*,*,r,*,*r]) <= Param(ResourceBound[p,r])
+sum((season,time_of_day,tech,vintage),V_FlowIn[p,*,*,e,*,*,r]) <= Param(ResourceBound[p,r])
 	"""
-	l_extract = 0
-	for l_tech in M.tech_resource:
-		for l_vintage in M.vintage_all:
-			if isValidProcess( A_period, A_resource, l_tech, l_vintage, A_resource ):
-				for l_season in M.time_season:
-					for l_time_of_day in M.time_of_day:
-						l_extract += M.V_FlowIn[A_period, l_season, l_time_of_day, A_resource, l_tech, l_vintage, A_resource]
+	max_resource = value(M.ResourceBound[A_period, A_resource])
+	if float('inf') == max_resource:
+		# if there is no limit, no point in writing a constraint.
+		return Constraint.Skip
 
-	expression = (l_extract <= M.ResourceBound[A_period, A_resource])
+	l_extract = sum(
+	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, l_tech, l_vin, A_resource]
+
+	  for l_tech, l_vin in ProcessesByPeriodAndOutput( M, A_period, A_resource )
+	  for l_inp in ProcessInputsByOutput( A_period, l_tech, l_vin, A_resource )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	expression = (l_extract <= max_resource)
 	return expression
 
 
