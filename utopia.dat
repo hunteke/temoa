@@ -9,12 +9,12 @@ set  time_season  :=  inter  summer  winter ;
 set  time_of_day  :=  day  night ;
 
 set  tech_resource  :=    # SET SRCENCP
-# Temoa            
- IMPDSL1           
- IMPGSL1           
- IMPHCO1           
- IMPOIL1           
- IMPURN1           
+# Temoa
+ IMPDSL1
+ IMPGSL1
+ IMPHCO1
+ IMPOIL1
+ IMPURN1
 
  IMPFEQ         # doesn't exist
  IMPHYD                # doesn't exist
@@ -22,50 +22,50 @@ set  tech_resource  :=    # SET SRCENCP
 
 
 set  tech_production  :=       # SET TCH (partial)
-# Temoa                     
- E01  
- E21  
- E31  
- E51  
- E70  
- RHE  
- RHO  
- RL1  
- SRE  
- TXD  
- TXE  
- TXG  
+# Temoa
+ E01
+ E21
+ E31
+ E51
+ E70
+ RHE
+ RHO
+ RL1
+ SRE
+ TXD
+ TXE
+ TXG
 	;
 
 
 set  tech_baseload  :=
-# Temoa                   
- E01       
- E21       
- E31       
-	;       
+# Temoa
+ E01
+ E21
+ E31
+	;
 
 
 set  tech_storage  :=        # SET STG
-# Temoa               
- E51       
+# Temoa
+ E51
 	;
 
 
 set  commodity_physical  :=        # SET ENT
-# Temoa     
- CSV        
- DSL        
- ELC        
- FEQ        
- GSL        
- HCO        
- HYD        
- LTH        
- OIL        
- URN        
+# Temoa
+ CSV
+ DSL
+ ELC
+ FEQ
+ GSL
+ HCO
+ HYD
+ LTH
+ OIL
+ URN
 	;
-	
+
 
 set  commodity_emissions  :=        # SET ENV
 # Temoa        # Utopia
@@ -75,10 +75,10 @@ set  commodity_emissions  :=        # SET ENV
 
 
 set  commodity_demand  :=        # SET DM
-# Temoa    
- RH        
- RL        
- TX        
+# Temoa
+ RH
+ RL
+ TX
 	;
 
 
@@ -100,20 +100,18 @@ param  CapacityToActivity  :=         # PARAMETER TCH_CAPU
  E31          31.54
  E51          31.54
  E70          31.54
+ RHE           1
+ RHO           1
+ RL1           1
+ SRE           1
+ TXD           1
+ TXE           1
+ TXG           1
 	;
 
 
 param  GlobalDiscountRate  :=  0.05 ;  # SCALAR DISCOUNT
 
-
-param  EmissionLimit  :=        # TABLE EM_BOUND
- 1990  co2   1e50    # approximation of infinity, or no limit
- 1990  nox   1e50    # approximation of infinity, or no limit
- 2000  c02   1e50    # approximation of infinity, or no limit
- 2000  nox   1e50    # approximation of infinity, or no limit
- 2010  co2   1e50    # approximation of infinity, or no limit
- 2010  nox   1e50    # approximation of infinity, or no limit
-	;
 
 param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
 # Emission    # process      # vintage      # amount released per unit activity
@@ -139,7 +137,7 @@ param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
 
 
 param  Demand  :=        # TABLE DM_DEM
-# Temoa                                                     # Utopia percentages
+# Temoa                                   # Utopia percentages
  1990   inter   day     RH       3.024     # RH, 12%
  1990   inter   night   RH       1.512     # RH,  6%
  1990   winter  day     RH      13.77684   # RH, 54.67%
@@ -182,14 +180,14 @@ param  Demand  :=        # TABLE DM_DEM
  1990   summer  night   TX       0.43316   # TX,  8.33%
  1990   winter  day     TX       1.73316   # TX, 33.33%
  1990   winter  night   TX       0.86684   # TX, 16.67%
-                                 
+
  2000   inter   day     TX       1.30026   # TX, 16.67%
  2000   inter   night   TX       0.64974   # TX,  8.33%
  2000   summer  day     TX       1.30026   # TX, 16.67%
  2000   summer  night   TX       0.64974   # TX,  8.33%
  2000   winter  day     TX       2.59974   # TX, 33.33%
  2000   winter  night   TX       1.30026   # TX, 16.67%
-                                 
+
  2010   inter   day     TX       1.948723  # TX, 16.67%
  2010   inter   night   TX       0.973777  # TX,  8.33%
  2010   summer  day     TX       1.948723  # TX, 16.67%
@@ -200,113 +198,77 @@ param  Demand  :=        # TABLE DM_DEM
 
 
 param  MinCapacity  :=   # roughly NRAT_RTY2
-# period     # tech               # value
+# period     # tech  # value
  1990         E31     0.13   # E31
  2000         E31     0.13   # E31
  2010         E31     0.13   # E31
- 1990         SRE     0.1   # SRE
+ 1990         SRE     0.1    # SRE
 	;
 
 param  MaxCapacity  :=   # roughly NRAT_RTY2
-# period     # tech               # value
+# period     # tech  # value
  1990         E31     0.13   # E31
  2000         E31     0.17   # E31
  2010         E31     0.21   # E31
- 1990         TXD     0.6   # E31
+ 1990         TXD     0.6    # E31
  2000         TXD     1.76   # E31
  2010         TXD     4.76   # E31
 
  ;
-	
-	
-param  ResourceBound  :=
-# period   # tech          # value
- 1990        DSL       1e50  # for now, infinity (no limit)
- 2000        DSL       1e50  # for now, infinity (no limit)
- 2010        DSL       1e50  # for now, infinity (no limit)
- 1990        GSL       1e50  # for now, infinity (no limit)
- 2000        GSL       1e50  # for now, infinity (no limit)
- 2010        GSL       1e50  # for now, infinity (no limit)
- 1990        HCO       1e50  # for now, infinity (no limit)
- 2000        HCO       1e50  # for now, infinity (no limit)
- 2010        HCO       1e50  # for now, infinity (no limit)
- 1990        OIL       1e50  # for now, infinity (no limit)
- 2000        OIL       1e50  # for now, infinity (no limit)
- 2010        OIL       1e50  # for now, infinity (no limit)
- 1990        URN       1e50  # for now, infinity (no limit)
- 2000        URN       1e50  # for now, infinity (no limit)
- 2010        URN       1e50  # for now, infinity (no limit)
-
- 1990        HYD       1e50  # for now, infinity (no limit)
- 2000        HYD       1e50  # for now, infinity (no limit)
- 2010        HYD       1e50  # for now, infinity (no limit)
- 1990        FEQ       1e50  # for now, infinity (no limit)
- 2000        FEQ       1e50  # for now, infinity (no limit)
- 2010        FEQ       1e50  # for now, infinity (no limit)
-	;
-
-
-#param  MaxCarrierOutput  :=   # roughly NRAT_RTY2
-# period     # tech          # carrier       # value
-# 1990         E70     ELC     80   # E70
-# 2000         E70     ELC     80   # E70
-# 2010         E70     ELC     80   # E70
-#	;
 
 
 param  LifetimeTech  :=        # PARAMETER TCH_LIFE
-# Temoa tech name             # vintage    # value   # Utopia tech name
- E01          1960         40        # E01, for existing cap.
- E01          1970         40        # E01, for existing cap.
- E01          1980         40        # E01, for existing cap.
- E01          1990         40        # E01
- E01          2000         40        # E01
- E01          2010         40        # E01
- E21          1990         40        # E21
- E21          2000         40        # E21
- E21          2010         40        # E21
- E31          1980        100        # E31, for existing cap.
- E31          1990        100        # E31
- E31          2000        100        # E31
- E31          2010        100        # E31
- E51          1980         40        # E51, for existing cap
- E51          1990        100        # E51
- E51          2000        100        # E51
- E51          2010        100        # E51
- E70          1960         40        # E70, for existing cap.
- E70          1970         40        # E70, for existing cap.
- E70          1980         40        # E70, for existing cap.
- E70          1990         40        # E70
- E70          2000         40        # E70
- E70          2010         40        # E70
- RHE          1990         30        # RHE
- RHE          2000         30        # RHE
- RHE          2010         30        # RHE
- RHO          1970         30        # RHO, for existing cap.
- RHO          1980         30        # RHO, for existing cap.
- RHO          1990         30        # RHO
- RHO          2000         30        # RHO
- RHO          2010         30        # RHO
- RL1          1980         20        # RL1, for existing cap.
- RL1          1990         10        # RL1
- RL1          2000         10        # RL1
- RL1          2010         10        # RL1
- SRE          1990         50        # SRE
- SRE          2000         50        # SRE
- SRE          2010         50        # SRE
- TXD          1970         30        # TXD, for existing cap.
- TXD          1980         30        # TXD, for existing cap.
- TXD          1990         15        # TXD
- TXD          2000         15        # TXD
- TXD          2010         15        # TXD
- TXE          1990         15        # TXE
- TXE          2000         15        # TXE
- TXE          2010         15        # TXE
- TXG          1970         30        # TXG, for existing cap.
- TXG          1980         30        # TXG, for existing cap.
- TXG          1990         15        # TXG
- TXG          2000         15        # TXG
- TXG          2010         15        # TXG
+# Temoa tech name   # vintage    # value   # Utopia tech name
+ E01                 1960         40        # E01, for existing cap.
+ E01                 1970         40        # E01, for existing cap.
+ E01                 1980         40        # E01, for existing cap.
+ E01                 1990         40        # E01
+ E01                 2000         40        # E01
+ E01                 2010         40        # E01
+ E21                 1990         40        # E21
+ E21                 2000         40        # E21
+ E21                 2010         40        # E21
+ E31                 1980        100        # E31, for existing cap.
+ E31                 1990        100        # E31
+ E31                 2000        100        # E31
+ E31                 2010        100        # E31
+ E51                 1990        100        # E51
+ E51                 2000        100        # E51
+ E51                 2010        100        # E51
+ E70                 1960         40        # E70, for existing cap.
+ E70                 1970         40        # E70, for existing cap.
+ E70                 1980         40        # E70, for existing cap.
+ E70                 1990         40        # E70
+ E70                 2000         40        # E70
+ E70                 2010         40        # E70
+ RHE                 1990         30        # RHE
+ RHE                 2000         30        # RHE
+ RHE                 2010         30        # RHE
+ RHO                 1970         30        # RHO, for existing cap.
+ RHO                 1980         30        # RHO, for existing cap.
+ RHO                 1990         30        # RHO
+ RHO                 2000         30        # RHO
+ RHO                 2010         30        # RHO
+ RL1                 1980         20        # RL1, for existing cap.
+ RL1                 1990         10        # RL1
+ RL1                 2000         10        # RL1
+ RL1                 2010         10        # RL1
+ SRE                 1990         50        # SRE
+ SRE                 2000         50        # SRE
+ SRE                 2010         50        # SRE
+ TXD                 1970         30        # TXD, for existing cap.
+ TXD                 1980         30        # TXD, for existing cap.
+ TXD                 1990         15        # TXD
+ TXD                 2000         15        # TXD
+ TXD                 2010         15        # TXD
+ TXE                 1990         15        # TXE
+ TXE                 2000         15        # TXE
+ TXE                 2010         15        # TXE
+ TXG                 1970         30        # TXG, for existing cap.
+ TXG                 1980         30        # TXG, for existing cap.
+ TXG                 1990         15        # TXG
+ TXG                 2000         15        # TXG
+ TXG                 2010         15        # TXG
 
  # added because /every/ process in TEMOA is a technology
  IMPDSL1      1990     1000
@@ -334,53 +296,67 @@ param  LifetimeTech  :=        # PARAMETER TCH_LIFE
 	;
 
 param  LifetimeLoan  :=        # This is a copy of LifeTime Tech for Loan Amortization
-# Temoa tech name             # vintage    # value   # Utopia tech name
- E01          1990         40        # E01
- E01          2000         40        # E01
- E01          2010         40        # E01
- E21          1990         40        # E21
- E21          2000         40        # E21
- E21          2010         40        # E21
- E31          1990        100        # E31
- E31          2000        100        # E31
- E31          2010        100        # E31
- E51          1990        100        # E51
- E51          2000        100        # E51
- E51          2010        100        # E51
- E70          1990         40        # E70
- E70          2000         40        # E70
- E70          2010         40        # E70
- RHE          1990         30        # RHE
- RHE          2000         30        # RHE
- RHE          2010         30        # RHE
- RHO          1990         30        # RHO
- RHO          2000         30        # RHO
- RHO          2010         30        # RHO
- RL1          1990         10        # RL1
- RL1          2000         10        # RL1
- RL1          2010         10        # RL1
- SRE          1990         50        # SRE
- SRE          2000         50        # SRE
- SRE          2010         50        # SRE
- TXD          1990         15        # TXD
- TXD          2000         15        # TXD
- TXD          2010         15        # TXD
- TXE          1990         15        # TXE
- TXE          2000         15        # TXE
- TXE          2010         15        # TXE
- TXG          1990         15        # TXG
- TXG          2000         15        # TXG
- TXG          2010         15        # TXG	
+# Temoa tech name     # vintage    # value   # Utopia tech name
+ E01                   1960         40        # E01, for existing cap.
+ E01                   1970         40        # E01, for existing cap.
+ E01                   1980         40        # E01, for existing cap.
+ E01                   1990         40        # E01
+ E01                   2000         40        # E01
+ E01                   2010         40        # E01
+ E21                   1990         40        # E21
+ E21                   2000         40        # E21
+ E21                   2010         40        # E21
+ E31                   1980        100        # E31, for existing cap.
+ E31                   1990        100        # E31
+ E31                   2000        100        # E31
+ E31                   2010        100        # E31
+ E51                   1990        100        # E51
+ E51                   2000        100        # E51
+ E51                   2010        100        # E51
+ E70                   1960         40        # E70, for existing cap.
+ E70                   1970         40        # E70, for existing cap.
+ E70                   1980         40        # E70, for existing cap.
+ E70                   1990         40        # E70
+ E70                   2000         40        # E70
+ E70                   2010         40        # E70
+ RHE                   1990         30        # RHE
+ RHE                   2000         30        # RHE
+ RHE                   2010         30        # RHE
+ RHO                   1970         30        # RHO, for existing cap.
+ RHO                   1980         30        # RHO, for existing cap.
+ RHO                   1990         30        # RHO
+ RHO                   2000         30        # RHO
+ RHO                   2010         30        # RHO
+ RL1                   1980         20        # RL1, for existing cap.
+ RL1                   1990         10        # RL1
+ RL1                   2000         10        # RL1
+ RL1                   2010         10        # RL1
+ SRE                   1990         50        # SRE
+ SRE                   2000         50        # SRE
+ SRE                   2010         50        # SRE
+ TXD                   1970         30        # TXD, for existing cap.
+ TXD                   1980         30        # TXD, for existing cap.
+ TXD                   1990         15        # TXD
+ TXD                   2000         15        # TXD
+ TXD                   2010         15        # TXD
+ TXE                   1990         15        # TXE
+ TXE                   2000         15        # TXE
+ TXE                   2010         15        # TXE
+ TXG                   1970         30        # TXG, for existing cap.
+ TXG                   1980         30        # TXG, for existing cap.
+ TXG                   1990         15        # TXG
+ TXG                   2000         15        # TXG
+ TXG                   2010         15        # TXG
 	;
-	
+
 param CapacityFactor :=
-# tech  		# vintage     # value
- E01          1960	      0.8
- E01          1970	      0.8
- E01          1980	      0.8
- E01          1990	      0.8
- E01          2000	      0.8
- E01          2010	      0.8
+# tech       # vintage    # value
+ E01          1960         0.8
+ E01          1970         0.8
+ E01          1980         0.8
+ E01          1990         0.8
+ E01          2000         0.8
+ E01          2010         0.8
  E21          1990         0.8
  E21          2000         0.8
  E21          2010         0.8
@@ -388,11 +364,10 @@ param CapacityFactor :=
  E31          1990         0.275
  E31          2000         0.2753
  E31          2010         0.2756
- E51          1980         0.17
  E51          1990         0.17
  E51          2000         0.17
  E51          2010         0.17
- E70          1960         0.8 
+ E70          1960         0.8
  E70          1970         0.8
  E70          1980         0.8
  E70          1990         0.8
@@ -401,103 +376,83 @@ param CapacityFactor :=
 
  ;
 
-	
+
 param  Efficiency  :=        # PARAMETER CON_INP2, DMD_EFF
-# input carrier    # tech                       # vintage  # output carrier     # eff. value
- DSL          IMPDSL1       1990       DSL          1
- DSL          IMPDSL1       2000       DSL          1
- DSL          IMPDSL1       2010       DSL          1
+# input carrier   # tech        # vintage  # output carrier   # eff. value
+ DSL               IMPDSL1       1990       DSL                1
+ GSL               IMPGSL1       1990       GSL                1
+ HCO               IMPHCO1       1990       HCO                1
+ OIL               IMPOIL1       1990       OIL                1
+ URN               IMPURN1       1990       URN                1
 
- GSL          IMPGSL1       1990       GSL          1
- GSL          IMPGSL1       2000       GSL          1
- GSL          IMPGSL1       2010       GSL          1
+ FEQ               IMPFEQ        1990       FEQ                1
+ HYD               IMPHYD        1990       HYD                1
 
- HCO          IMPHCO1       1990       HCO          1
- HCO          IMPHCO1       2000       HCO          1
- HCO          IMPHCO1       2010       HCO          1
+ HCO               E01           1960       ELC                0.32  # 1/3.125
+ HCO               E01           1970       ELC                0.32  # 1/3.125
+ HCO               E01           1980       ELC                0.32  # 1/3.125
+ HCO               E01           1990       ELC                0.32  # 1/3.125
+ HCO               E01           2000       ELC                0.32  # 1/3.125
+ HCO               E01           2010       ELC                0.32  # 1/3.125
 
- OIL          IMPOIL1       1990       OIL          1
- OIL          IMPOIL1       2000       OIL          1
- OIL          IMPOIL1       2010       OIL          1
+ FEQ               E21           1990       ELC                0.32  # 1/3.125
+ FEQ               E21           2000       ELC                0.32  # 1/3.125
+ FEQ               E21           2010       ELC                0.32  # 1/3.125
 
- URN          IMPURN1       1990       URN          1
- URN          IMPURN1       2000       URN          1
- URN          IMPURN1       2010       URN          1
+ URN               E21           1990       ELC                0.4   # 1/2.5
+ URN               E21           2000       ELC                0.4   # 1/2.5
+ URN               E21           2010       ELC                0.4   # 1/2.5
 
- FEQ          IMPFEQ        1990       FEQ          1
- FEQ          IMPFEQ        2000       FEQ          1
- FEQ          IMPFEQ        2010       FEQ          1
+ HYD               E31           1990       ELC                0.32  # 1/3.125
+ HYD               E31           2000       ELC                0.32  # 1/3.125
+ HYD               E31           2010       ELC                0.32  # 1/3.125
 
- HYD          IMPHYD        1990       HYD          1
- HYD          IMPHYD        2000       HYD          1
- HYD          IMPHYD        2010       HYD          1 
+ DSL               E70           1960       ELC                0.294 # 1/3.4
+ DSL               E70           1970       ELC                0.294 # 1/3.4
+ DSL               E70           1980       ELC                0.294 # 1/3.4
+ DSL               E70           1990       ELC                0.294 # 1/3.4
+ DSL               E70           2000       ELC                0.294 # 1/3.4
+ DSL               E70           2010       ELC                0.294 # 1/3.4
 
- HCO          E01           1960       ELC          0.32  # 1/3.125
- HCO          E01           1970       ELC          0.32  # 1/3.125
- HCO          E01           1980       ELC          0.32  # 1/3.125
- HCO          E01           1990       ELC          0.32  # 1/3.125
- HCO          E01           2000       ELC          0.32  # 1/3.125
- HCO          E01           2010       ELC          0.32  # 1/3.125
+ ELC               E51           1990       HYD                0.720 # 1/1.3889
+ ELC               E51           2000       HYD                0.720 # 1/1.3889
+ ELC               E51           2010       HYD                0.720 # 1/1.3889
 
- FEQ          E21           1990       ELC          0.32  # 1/3.125
- FEQ          E21           2000       ELC          0.32  # 1/3.125
- FEQ          E21           2010       ELC          0.32  # 1/3.125
+ ELC               RHE           1990       RH                 1     # direct translation from DMD_EFF
+ ELC               RHE           2000       RH                 1     # direct translation from DMD_EFF
+ ELC               RHE           2010       RH                 1     # direct translation from DMD_EFF
 
- URN          E21           1990       ELC          0.4   # 1/2.5
- URN          E21           2000       ELC          0.4   # 1/2.5
- URN          E21           2010       ELC          0.4   # 1/2.5
+ DSL               RHO           1990       RH                 0.7   # direct translation from DMD_EFF
+ DSL               RHO           2000       RH                 0.7   # direct translation from DMD_EFF
+ DSL               RHO           2010       RH                 0.7   # direct translation from DMD_EFF
 
- HYD          E31           1990       ELC          0.32  # 1/3.125
- HYD          E31           2000       ELC          0.32  # 1/3.125
- HYD          E31           2010       ELC          0.32  # 1/3.125
+ ELC               RL1           1990       RL                 1     # direct translation from DMD_EFF
+ ELC               RL1           2000       RL                 1     # direct translation from DMD_EFF
+ ELC               RL1           2010       RL                 1     # direct translation from DMD_EFF
 
- DSL          E70           1960       ELC          0.294 # 1/3.4
- DSL          E70           1970       ELC          0.294 # 1/3.4
- DSL          E70           1980       ELC          0.294 # 1/3.4
- DSL          E70           1990       ELC          0.294 # 1/3.4
- DSL          E70           2000       ELC          0.294 # 1/3.4
- DSL          E70           2010       ELC          0.294 # 1/3.4
+ OIL               SRE           1990       DSL                1     # direct translation from PRC_INP2, PRC_OUT
+ OIL               SRE           2000       DSL                1     # direct translation from PRC_INP2, PRC_OUT
+ OIL               SRE           2010       DSL                1     # direct translation from PRC_INP2, PRC_OUT
+ OIL               SRE           1990       GSL                1     # direct translation from PRC_INP2, PRC_OUT
+ OIL               SRE           2000       GSL                1     # direct translation from PRC_INP2, PRC_OUT
+ OIL               SRE           2010       GSL                1     # direct translation from PRC_INP2, PRC_OUT
 
- ELC          E51           1980       HYD          0.720 # 1/1.3889
- ELC          E51           1990       HYD          0.720 # 1/1.3889
- ELC          E51           2000       HYD          0.720 # 1/1.3889
- ELC          E51           2010       HYD          0.720 # 1/1.3889
+ DSL               TXD           1990       TX                 0.231 # direct translation from DMD_EFF
+ DSL               TXD           2000       TX                 0.231 # direct translation from DMD_EFF
+ DSL               TXD           2010       TX                 0.231 # direct translation from DMD_EFF
 
- ELC          RHE           1990       RH           1     # direct translation from DMD_EFF
- ELC          RHE           2000       RH           1     # direct translation from DMD_EFF
- ELC          RHE           2010       RH           1     # direct translation from DMD_EFF
+ ELC               TXE           1990       TX                 0.827 # direct translation from DMD_EFF
+ ELC               TXE           2000       TX                 0.827 # direct translation from DMD_EFF
+ ELC               TXE           2010       TX                 0.827 # direct translation from DMD_EFF
 
- DSL          RHO           1990       RH          0.7   # direct translation from DMD_EFF
- DSL          RHO           2000       RH          0.7   # direct translation from DMD_EFF
- DSL          RHO           2010       RH          0.7   # direct translation from DMD_EFF
-
- ELC          RL1           1990       RL          1     # direct translation from DMD_EFF
- ELC          RL1           2000       RL          1     # direct translation from DMD_EFF
- ELC          RL1           2010       RL          1     # direct translation from DMD_EFF
-
- OIL          SRE           1990       DSL         1     # direct translation from PRC_INP2, PRC_OUT
- OIL          SRE           2000       DSL         1     # direct translation from PRC_INP2, PRC_OUT
- OIL          SRE           2010       DSL         1     # direct translation from PRC_INP2, PRC_OUT
- OIL          SRE           1990       GSL         1     # direct translation from PRC_INP2, PRC_OUT
- OIL          SRE           2000       GSL         1     # direct translation from PRC_INP2, PRC_OUT
- OIL          SRE           2010       GSL         1     # direct translation from PRC_INP2, PRC_OUT
-
- DSL          TXD           1990       TX          0.231 # direct translation from DMD_EFF
- DSL          TXD           2000       TX          0.231 # direct translation from DMD_EFF
- DSL          TXD           2010       TX          0.231 # direct translation from DMD_EFF
-
- ELC          TXE           1990       TX          0.827 # direct translation from DMD_EFF
- ELC          TXE           2000       TX          0.827 # direct translation from DMD_EFF
- ELC          TXE           2010       TX          0.827 # direct translation from DMD_EFF
-
- GSL          TXG           1990       TX          0.231 # direct translation from DMD_EFF
- GSL          TXG           2000       TX          0.231 # direct translation from DMD_EFF
- GSL          TXG           2010       TX          0.231 # direct translation from DMD_EFF
+ GSL               TXG           1990       TX                 0.231 # direct translation from DMD_EFF
+ GSL               TXG           2000       TX                 0.231 # direct translation from DMD_EFF
+ GSL               TXG           2010       TX                 0.231 # direct translation from DMD_EFF
 	;
 
 
 param  ExistingCapacity  :=        # TABLE TCH_RES
-# tech                        # vintage       # capacity amount
+# tech           # vintage       # capacity amount
  E01              1960            0.175   # E01
  E01              1970            0.175   # E01
  E01              1980            0.15    # E01
@@ -517,7 +472,7 @@ param  ExistingCapacity  :=        # TABLE TCH_RES
 
 
 param  CostInvest  :=  # TABLE TCH_INVCOS
-# tech                       # vintage      # value
+# tech     # vintage      # value
  E01        1990           1400
  E01        2000           1300
  E01        2010           1200
@@ -536,9 +491,9 @@ param  CostInvest  :=  # TABLE TCH_INVCOS
  RHE        1990             90
  RHE        2000             90
  RHE        2010             90
- RHO        1990              0
- RHO        2000              0
- RHO        2010              0
+ RHO        1990            100
+ RHO        2000            100
+ RHO        2010            100
  SRE        1990            100
  SRE        2000            100
  SRE        2010            100
@@ -560,13 +515,13 @@ param  CostFixed  :=        # TABLE TCH_FIXOM
  1990             E01           1970              40
  1990             E01           1980              40
  1990             E01           1990              40
- 2000             E01           1970              70
- 2000             E01           1980              70
- 2000             E01           1990              70
+ 2000             E01           1970              40
+ 2000             E01           1980              40
+ 2000             E01           1990              40
  2000             E01           2000              70
- 2010             E01           1980             100
- 2010             E01           1990             100
- 2010             E01           2000             100
+ 2010             E01           1980              40
+ 2010             E01           1990              40
+ 2010             E01           2000              70
  2010             E01           2010             100
 
  1990             E21           1990             500
@@ -586,7 +541,6 @@ param  CostFixed  :=        # TABLE TCH_FIXOM
  2010             E31           2000              75
  2010             E31           2010              75
 
- 1990             E51           1980              30
  1990             E51           1990              30
  2000             E51           1990              30
  2000             E51           2000              30
@@ -632,10 +586,10 @@ param  CostFixed  :=        # TABLE TCH_FIXOM
  2010             TXD           2010              52
 
  1990             TXE           1990             100
- 2000             TXE           1990              90
+ 2000             TXE           1990             100
+ 2010             TXE           1990             100
  2000             TXE           2000              90
- 2010             TXE           1990              80
- 2010             TXE           2000              80
+ 2010             TXE           2000              90
  2010             TXE           2010              80
 
  1990             TXG           1970              48
@@ -651,7 +605,7 @@ param  CostFixed  :=        # TABLE TCH_FIXOM
 
 
 param  CostMarginal  :=        # TABLE NSEP_COST1, TCH_VAROM
-# period   # technology             # vintage   # value
+# period   # technology            # vintage   # value
  1990       IMPDSL1                 1990         10
  2000       IMPDSL1                 1990         10
  2010       IMPDSL1                 1990         10
@@ -736,4 +690,3 @@ param  CostMarginal  :=        # TABLE NSEP_COST1, TCH_VAROM
  2010       SRE                     2000         10
  2010       SRE                     2010         10
 	;
-
