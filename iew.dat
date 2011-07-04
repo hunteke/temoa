@@ -2,8 +2,8 @@ data;
 
 
 set  time_exist   :=  2000 ;
-set  time_horizon :=  2010  2015  2020  2025  2030  2035  2040 ;
-set  time_future  :=  2045 ;
+set  time_horizon :=  2010  2015  2020  2025  2030  2035 ;
+set  time_future  :=  2040 ;
 
 set  time_season  :=  winter summer intermediate;
 set  time_of_day  :=  day night;
