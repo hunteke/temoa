@@ -2,7 +2,7 @@ data;
 
 
 set  time_exist   :=  2000 ; 		       # feel free to mess
-set  time_horizon :=  2010  2015  2020  2025  2030  2035  2040 ; # with any of these,
+set  time_horizon :=  2010  2015  2020  2025  2030  2035  2040; # with any of these,
 set  time_future  :=  2045 ;                   # clearly
 
 set  time_season  :=  winter summer intermediate;
@@ -54,13 +54,13 @@ set  commodity_physical  :=
 	;
 
 set  commodity_emissions  :=
-	;
+ co2	
+  ;
 
 set  commodity_demand  :=
  r_cooling		#PJ/yr
  r_heating		#PJ/yr
  r_lighting  	#billion lumens/yr
-
  tl_distance   #billion vehicle miles traveled (bvmt) / yr
 	;
 
@@ -87,209 +87,259 @@ param  CapacityToActivity  :=
 	;
 
 
+param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
+# Emission    # process      # vintage      # amount released per unit activity
+ co2     diesel       imp_dsl      2005     diesel       69.4  #Emissions units: kilotonnes/PJ
+ co2     diesel       imp_dsl      2010     diesel       69.4
+ co2     diesel       imp_dsl      2015     diesel       69.4
+ co2     diesel       imp_dsl      2020     diesel       69.4
+ co2     diesel       imp_dsl      2025     diesel       69.4
+ co2     diesel       imp_dsl      2030     diesel       69.4
+ co2     diesel       imp_dsl      2035     diesel       69.4
+ co2     diesel       imp_dsl      2040     diesel       69.4
+
+ co2     gasoline     imp_gsl      2005     gasoline     67.2
+ co2     gasoline     imp_gsl      2010     gasoline     67.2
+ co2     gasoline     imp_gsl      2015     gasoline     67.2
+ co2     gasoline     imp_gsl      2020     gasoline     67.2
+ co2     gasoline     imp_gsl      2025     gasoline     67.2
+ co2     gasoline     imp_gsl      2030     gasoline     67.2
+ co2     gasoline     imp_gsl      2035     gasoline     67.2
+ co2     gasoline     imp_gsl      2040     gasoline     67.2
+ 
+ co2     natgas       imp_natgas   2005     natgas       50.3
+ co2     natgas       imp_natgas   2010     natgas       50.3
+ co2     natgas       imp_natgas   2015     natgas       50.3
+ co2     natgas       imp_natgas   2020     natgas       50.3
+ co2     natgas       imp_natgas   2025     natgas       50.3
+ co2     natgas       imp_natgas   2030     natgas       50.3
+ co2     natgas       imp_natgas   2035     natgas       50.3
+ co2     natgas       imp_natgas   2040     natgas       50.3
+ 
+ co2     oil          p_refinery   2005     diesel       69.4
+ co2     oil          p_refinery   2010     diesel       69.4
+ co2     oil          p_refinery   2015     diesel       69.4
+ co2     oil          p_refinery   2020     diesel       69.4
+ co2     oil          p_refinery   2025     diesel       69.4
+ co2     oil          p_refinery   2030     diesel       69.4
+ co2     oil          p_refinery   2035     diesel       69.4
+ co2     oil          p_refinery   2040     diesel       69.4
+ 
+ co2      oil         p_refinery   2005     gasoline     67.2
+ co2     oil          p_refinery   2010     gasoline     67.2
+ co2     oil          p_refinery   2015     gasoline     67.2
+ co2     oil          p_refinery   2020     gasoline     67.2
+ co2     oil          p_refinery   2025     gasoline     67.2
+ co2     oil          p_refinery   2030     gasoline     67.2
+ co2     oil          p_refinery   2035     gasoline     67.2
+ co2     oil          p_refinery   2040     gasoline     67.2 
+ 
+ 
+ ;
+ 
+ 
 param  EmissionLimit  :=
 # time_optimize   # commodity_emission     # value
- 2010              co2                      100000
- 2010              nox                      100000
+ 2010              co2                      1e10
 	;
 
 param  Demand  :=
 # time_optimize  # time_season  # time_of_day  # commodity_demand    # value
- 2010             winter         day            r_lighting            30
- 2010             winter         night          r_lighting            30
- 2010             summer         day            r_lighting            30
- 2010             summer         night          r_lighting            30
- 2010             intermediate   day            r_lighting            30
- 2010             intermediate   night          r_lighting            30
+ 2010             winter         day            r_lighting            25
+ 2010             winter         night          r_lighting            25
+ 2010             summer         day            r_lighting            12.5
+ 2010             summer         night          r_lighting            12.5
+ 2010             intermediate   day            r_lighting            12.5
+ 2010             intermediate   night          r_lighting            12.5
  
- 2010             winter         day            r_heating             50
- 2010             winter         night          r_heating             50
- 2010             summer         day            r_heating             0
- 2010             summer         night          r_heating             0
- 2010             intermediate   day            r_heating             20
- 2010             intermediate   night          r_heating             20
+ 2010             winter         day            r_heating             25
+ 2010             winter         night          r_heating             25
+ 2010             summer         day            r_heating              0
+ 2010             summer         night          r_heating              0
+ 2010             intermediate   day            r_heating            100
+ 2010             intermediate   night          r_heating             50
 
- 2010             winter         day            r_cooling             0
- 2010             winter         night          r_cooling             0
- 2010             summer         day            r_cooling             50
- 2010             summer         night          r_cooling             50
- 2010             intermediate   day            r_cooling             20
- 2010             intermediate   night          r_cooling             20
+ 2010             winter         day            r_cooling             24
+ 2010             winter         night          r_cooling             24
+ 2010             summer         day            r_cooling            144
+ 2010             summer         night          r_cooling             48
+ 2010             intermediate   day            r_cooling              0
+ 2010             intermediate   night          r_cooling              0
 
- 2010             winter         day            tl_distance           0
- 2010             winter         night          tl_distance           0
- 2010             summer         day            tl_distance           50
- 2010             summer         night          tl_distance           50
- 2010             intermediate   day            tl_distance           20
- 2010             intermediate   night          tl_distance           20
+ 2010             winter         day            tl_distance            2.5
+ 2010             winter         night          tl_distance            2.5
+ 2010             summer         day            tl_distance            1.25
+ 2010             summer         night          tl_distance            1.25
+ 2010             intermediate   day            tl_distance            1.25
+ 2010             intermediate   night          tl_distance            1.25
 
- 2015             winter         day            r_lighting            33
- 2015             winter         night          r_lighting            33
- 2015             summer         day            r_lighting            33
- 2015             summer         night          r_lighting            33
- 2015             intermediate   day            r_lighting            33
- 2015             intermediate   night          r_lighting            33
+ 2015             winter         day            r_lighting            26.25
+ 2015             winter         night          r_lighting            26.25
+ 2015             summer         day            r_lighting            13.125
+ 2015             summer         night          r_lighting            13.125
+ 2015             intermediate   day            r_lighting            13.125
+ 2015             intermediate   night          r_lighting            13.125
    
- 2015             winter         day            r_heating             55
- 2015             winter         night          r_heating             55
- 2015             summer         day            r_heating             0
- 2015             summer         night          r_heating             0
- 2015             intermediate   day            r_heating             22
- 2015             intermediate   night          r_heating             22
+ 2015             winter         day            r_heating             26.25
+ 2015             winter         night          r_heating             26.25
+ 2015             summer         day            r_heating              0
+ 2015             summer         night          r_heating              0
+ 2015             intermediate   day            r_heating             105
+ 2015             intermediate   night          r_heating             52.5
    
- 2015             winter         day            r_cooling             0
- 2015             winter         night          r_cooling             0
- 2015             summer         day            r_cooling             55
- 2015             summer         night          r_cooling             55
- 2015             intermediate   day            r_cooling             22
- 2015             intermediate   night          r_cooling             22
+ 2015             winter         day            r_cooling             25.4
+ 2015             winter         night          r_cooling             25.4
+ 2015             summer         day            r_cooling            152.4
+ 2015             summer         night          r_cooling             50.8
+ 2015             intermediate   day            r_cooling              0
+ 2015             intermediate   night          r_cooling              0
    
- 2015             winter         day            tl_distance           0
- 2015             winter         night          tl_distance           0
- 2015             summer         day            tl_distance           55
- 2015             summer         night          tl_distance           55
- 2015             intermediate   day            tl_distance           22
- 2015             intermediate   night          tl_distance           22
+ 2015             winter         day            tl_distance            2.55
+ 2015             winter         night          tl_distance            2.55
+ 2015             summer         day            tl_distance            1.275
+ 2015             summer         night          tl_distance            1.275
+ 2015             intermediate   day            tl_distance            1.275
+ 2015             intermediate   night          tl_distance            1.275
 
- 2020             winter         day            r_lighting            36
- 2020             winter         night          r_lighting            36
- 2020             summer         day            r_lighting            36
- 2020             summer         night          r_lighting            36
- 2020             intermediate   day            r_lighting            36
- 2020             intermediate   night          r_lighting            36
+ 2020             winter         day            r_lighting            27.5
+ 2020             winter         night          r_lighting            27.5
+ 2020             summer         day            r_lighting            13.75
+ 2020             summer         night          r_lighting            13.75
+ 2020             intermediate   day            r_lighting            13.75
+ 2020             intermediate   night          r_lighting            13.75
    
- 2020             winter         day            r_heating             60
- 2020             winter         night          r_heating             60
- 2020             summer         day            r_heating             0
- 2020             summer         night          r_heating             0
- 2020             intermediate   day            r_heating             24
- 2020             intermediate   night          r_heating             24
+ 2020             winter         day            r_heating             27.5
+ 2020             winter         night          r_heating             27.5
+ 2020             summer         day            r_heating              0
+ 2020             summer         night          r_heating              0
+ 2020             intermediate   day            r_heating            110
+ 2020             intermediate   night          r_heating             55
    
- 2020             winter         day            r_cooling             0
- 2020             winter         night          r_cooling             0
- 2020             summer         day            r_cooling             60
- 2020             summer         night          r_cooling             60
- 2020             intermediate   day            r_cooling             24
- 2020             intermediate   night          r_cooling             24
+ 2020             winter         day            r_cooling             26.8
+ 2020             winter         night          r_cooling             26.8
+ 2020             summer         day            r_cooling            160.8
+ 2020             summer         night          r_cooling             53.6
+ 2020             intermediate   day            r_cooling              0
+ 2020             intermediate   night          r_cooling              0
    
- 2020             winter         day            tl_distance           0
- 2020             winter         night          tl_distance           0
- 2020             summer         day            tl_distance           60
- 2020             summer         night          tl_distance           60
- 2020             intermediate   day            tl_distance           24
- 2020             intermediate   night          tl_distance           24
+ 2020             winter         day            tl_distance            2.6
+ 2020             winter         night          tl_distance            2.6
+ 2020             summer         day            tl_distance            1.3
+ 2020             summer         night          tl_distance            1.3
+ 2020             intermediate   day            tl_distance            1.3
+ 2020             intermediate   night          tl_distance            1.3
 	
- 2025             winter         day            r_lighting            39
- 2025             winter         night          r_lighting            39
- 2025             summer         day            r_lighting            39
- 2025             summer         night          r_lighting            39
- 2025             intermediate   day            r_lighting            39
- 2025             intermediate   night          r_lighting            39
+ 2025             winter         day            r_lighting            28.75
+ 2025             winter         night          r_lighting            28.75
+ 2025             summer         day            r_lighting            14.375
+ 2025             summer         night          r_lighting            14.375
+ 2025             intermediate   day            r_lighting            14.375
+ 2025             intermediate   night          r_lighting            14.375
     
- 2025             winter         day            r_heating             65
- 2025             winter         night          r_heating             65
- 2025             summer         day            r_heating             0
- 2025             summer         night          r_heating             0
- 2025             intermediate   day            r_heating             26
- 2025             intermediate   night          r_heating             26
+ 2025             winter         day            r_heating             28.75
+ 2025             winter         night          r_heating             28.75
+ 2025             summer         day            r_heating              0
+ 2025             summer         night          r_heating              0
+ 2025             intermediate   day            r_heating            115
+ 2025             intermediate   night          r_heating             57.5
     
- 2025             winter         day            r_cooling             0
- 2025             winter         night          r_cooling             0
- 2025             summer         day            r_cooling             65
- 2025             summer         night          r_cooling             65
- 2025             intermediate   day            r_cooling             26
- 2025             intermediate   night          r_cooling             26
+ 2025             winter         day            r_cooling             28.2
+ 2025             winter         night          r_cooling             28.2
+ 2025             summer         day            r_cooling            169.2
+ 2025             summer         night          r_cooling             56.4
+ 2025             intermediate   day            r_cooling              0
+ 2025             intermediate   night          r_cooling              0
     
- 2025             winter         day            tl_distance           0
- 2025             winter         night          tl_distance           0
- 2025             summer         day            tl_distance           65
- 2025             summer         night          tl_distance           65
- 2025             intermediate   day            tl_distance           26
- 2025             intermediate   night          tl_distance           26
+ 2025             winter         day            tl_distance            2.65
+ 2025             winter         night          tl_distance            2.65
+ 2025             summer         day            tl_distance            1.325
+ 2025             summer         night          tl_distance            1.325
+ 2025             intermediate   day            tl_distance            1.325
+ 2025             intermediate   night          tl_distance            1.325
 	 
- 2030             winter         day            r_lighting            42
- 2030             winter         night          r_lighting            42
- 2030             summer         day            r_lighting            42
- 2030             summer         night          r_lighting            42
- 2030             intermediate   day            r_lighting            42
- 2030             intermediate   night          r_lighting            42
+ 2030             winter         day            r_lighting            30
+ 2030             winter         night          r_lighting            30
+ 2030             summer         day            r_lighting            15
+ 2030             summer         night          r_lighting            15
+ 2030             intermediate   day            r_lighting            15
+ 2030             intermediate   night          r_lighting            15
    
- 2030             winter         day            r_heating             70
- 2030             winter         night          r_heating             70
- 2030             summer         day            r_heating             0
- 2030             summer         night          r_heating             0
- 2030             intermediate   day            r_heating             28
- 2030             intermediate   night          r_heating             28
+ 2030             winter         day            r_heating             30
+ 2030             winter         night          r_heating             30
+ 2030             summer         day            r_heating              0
+ 2030             summer         night          r_heating              0
+ 2030             intermediate   day            r_heating            120
+ 2030             intermediate   night          r_heating             60
    
- 2030             winter         day            r_cooling             0
- 2030             winter         night          r_cooling             0
- 2030             summer         day            r_cooling             70
- 2030             summer         night          r_cooling             70
- 2030             intermediate   day            r_cooling             28
- 2030             intermediate   night          r_cooling             28
+ 2030             winter         day            r_cooling             29.6
+ 2030             winter         night          r_cooling             29.6
+ 2030             summer         day            r_cooling            177.6
+ 2030             summer         night          r_cooling             59.2
+ 2030             intermediate   day            r_cooling              0
+ 2030             intermediate   night          r_cooling              0
    
- 2030             winter         day            tl_distance           0
- 2030             winter         night          tl_distance           0
- 2030             summer         day            tl_distance           70
- 2030             summer         night          tl_distance           70
- 2030             intermediate   day            tl_distance           28
- 2030             intermediate   night          tl_distance           28
+ 2030             winter         day            tl_distance            2.7
+ 2030             winter         night          tl_distance            2.7
+ 2030             summer         day            tl_distance            1.35
+ 2030             summer         night          tl_distance            1.35
+ 2030             intermediate   day            tl_distance            1.35
+ 2030             intermediate   night          tl_distance            1.35
 
- 2035             winter         day            r_lighting            45
- 2035             winter         night          r_lighting            45
- 2035             summer         day            r_lighting            45
- 2035             summer         night          r_lighting            45
- 2035             intermediate   day            r_lighting            45
- 2035             intermediate   night          r_lighting            45
+ 2035             winter         day            r_lighting            31.25
+ 2035             winter         night          r_lighting            31.25
+ 2035             summer         day            r_lighting            15.625
+ 2035             summer         night          r_lighting            15.625
+ 2035             intermediate   day            r_lighting            15.625
+ 2035             intermediate   night          r_lighting            15.625
     
- 2035             winter         day            r_heating             75
- 2035             winter         night          r_heating             75
- 2035             summer         day            r_heating             0
- 2035             summer         night          r_heating             0
- 2035             intermediate   day            r_heating             30
- 2035             intermediate   night          r_heating             30
+ 2035             winter         day            r_heating             31.25
+ 2035             winter         night          r_heating             31.25
+ 2035             summer         day            r_heating              0
+ 2035             summer         night          r_heating              0
+ 2035             intermediate   day            r_heating            125
+ 2035             intermediate   night          r_heating             62.5
     
- 2035             winter         day            r_cooling             0
- 2035             winter         night          r_cooling             0
- 2035             summer         day            r_cooling             75
- 2035             summer         night          r_cooling             75
- 2035             intermediate   day            r_cooling             30
- 2035             intermediate   night          r_cooling             30
+ 2035             winter         day            r_cooling             31
+ 2035             winter         night          r_cooling             31
+ 2035             summer         day            r_cooling            186
+ 2035             summer         night          r_cooling             62
+ 2035             intermediate   day            r_cooling              0
+ 2035             intermediate   night          r_cooling              0
     
- 2035             winter         day            tl_distance           0
- 2035             winter         night          tl_distance           0
- 2035             summer         day            tl_distance           75
- 2035             summer         night          tl_distance           75
- 2035             intermediate   day            tl_distance           30
- 2035             intermediate   night          tl_distance           30
+ 2035             winter         day            tl_distance            2.75
+ 2035             winter         night          tl_distance            2.75
+ 2035             summer         day            tl_distance            1.375
+ 2035             summer         night          tl_distance            1.375
+ 2035             intermediate   day            tl_distance            1.375
+ 2035             intermediate   night          tl_distance            1.375
  
- 2040             winter         day            r_lighting            48
- 2040             winter         night          r_lighting            48
- 2040             summer         day            r_lighting            48
- 2040             summer         night          r_lighting            48
- 2040             intermediate   day            r_lighting            48
- 2040             intermediate   night          r_lighting            48
+ 2040             winter         day            r_lighting            32.5
+ 2040             winter         night          r_lighting            32.5
+ 2040             summer         day            r_lighting            16.25
+ 2040             summer         night          r_lighting            16.25
+ 2040             intermediate   day            r_lighting            16.25
+ 2040             intermediate   night          r_lighting            16.25
    
- 2040             winter         day            r_heating             80
- 2040             winter         night          r_heating             80
- 2040             summer         day            r_heating             0
- 2040             summer         night          r_heating             0
- 2040             intermediate   day            r_heating             32
- 2040             intermediate   night          r_heating             32
+ 2040             winter         day            r_heating             32.5
+ 2040             winter         night          r_heating             32.5
+ 2040             summer         day            r_heating              0
+ 2040             summer         night          r_heating              0
+ 2040             intermediate   day            r_heating            130
+ 2040             intermediate   night          r_heating             65
    
- 2040             winter         day            r_cooling             0
- 2040             winter         night          r_cooling             0
- 2040             summer         day            r_cooling             80
- 2040             summer         night          r_cooling             80
- 2040             intermediate   day            r_cooling             32
- 2040             intermediate   night          r_cooling             32
+ 2040             winter         day            r_cooling             32.4
+ 2040             winter         night          r_cooling             32.4
+ 2040             summer         day            r_cooling            194.4
+ 2040             summer         night          r_cooling             64.8
+ 2040             intermediate   day            r_cooling              0
+ 2040             intermediate   night          r_cooling              0
    
- 2040             winter         day            tl_distance           0
- 2040             winter         night          tl_distance           0
- 2040             summer         day            tl_distance           80
- 2040             summer         night          tl_distance           80
- 2040             intermediate   day            tl_distance           32
- 2040             intermediate   night          tl_distance           32
+ 2040             winter         day            tl_distance            2.8
+ 2040             winter         night          tl_distance            2.8
+ 2040             summer         day            tl_distance            1.4
+ 2040             summer         night          tl_distance            1.4
+ 2040             intermediate   day            tl_distance            1.4
+ 2040             intermediate   night          tl_distance            1.4
  
   ;
 
@@ -327,16 +377,305 @@ param  ResourceBound  :=
  2030              oil                        1e50
  2035              oil                        1e50
  2040              oil                        1e50
- ;
-
-
+  ;
+ 
 param  LifetimeTech  :=
+# tech_all        vintage_all    # value (years)
+ imp_coal         2005              100
+ imp_coal         2010              100
+ imp_coal         2015              100
+ imp_coal         2020              100
+ imp_coal         2025              100
+ imp_coal         2030              100
+ imp_coal         2035              100
+ imp_coal         2040              100
+                                    
+ imp_natgas       2005              100
+ imp_natgas       2010              100
+ imp_natgas       2015              100
+ imp_natgas       2020              100
+ imp_natgas       2025              100
+ imp_natgas       2030              100
+ imp_natgas       2035              100
+ imp_natgas       2040              100
+                                    
+ imp_oil          2005              100
+ imp_oil          2010              100
+ imp_oil          2015              100
+ imp_oil          2020              100
+ imp_oil          2025              100
+ imp_oil          2030              100
+ imp_oil          2035              100
+ imp_oil          2040              100 
+                                    
+ imp_uranium      2005              100
+ imp_uranium      2010              100
+ imp_uranium      2015              100
+ imp_uranium      2020              100
+ imp_uranium      2025              100
+ imp_uranium      2030              100
+ imp_uranium      2035              100
+ imp_uranium      2040              100 
+                                    
+ resource_wind    2005              100
+ resource_wind    2010              100
+ resource_wind    2015              100
+ resource_wind    2020              100
+ resource_wind    2025              100
+ resource_wind    2030              100
+ resource_wind    2035              100
+ resource_wind    2040              100 
+                                    
+ e_coal           2005               45
+ e_coal           2010               45
+ e_coal           2015               45
+ e_coal           2020               45
+ e_coal           2025               45
+ e_coal           2030               45
+ e_coal           2035               45
+ e_coal           2040               45
+                                    
+ e_nuclear        2005               45
+ e_nuclear        2010               45
+ e_nuclear        2015               45
+ e_nuclear        2020               45
+ e_nuclear        2025               45
+ e_nuclear        2030               45
+ e_nuclear        2035               45
+ e_nuclear        2040               45
+                                     
+ p_refinery       2005               40
+ p_refinery       2010               40
+ p_refinery       2015               40
+ p_refinery       2020               40
+ p_refinery       2025               40
+ p_refinery       2030               40
+ p_refinery       2035               40
+ p_refinery       2040               40
+                                     
+ r_furnace        2005               20
+ r_furnace        2010               20
+ r_furnace        2015               20
+ r_furnace        2020               20
+ r_furnace        2025               20
+ r_furnace        2030               20
+ r_furnace        2035               20
+ r_furnace        2040               20 
+                                     
+ r_geoth          2005               20
+ r_geoth          2010               20
+ r_geoth          2015               20
+ r_geoth          2020               20
+ r_geoth          2025               20
+ r_geoth          2030               20
+ r_geoth          2035               20
+ r_geoth          2040               20
+ 
+ r_ac             2005               15
+ r_ac             2010               15
+ r_ac             2015               15
+ r_ac             2020               15
+ r_ac             2025               15
+ r_ac             2030               15
+ r_ac             2035               15
+ r_ac             2040               15
+ 
+ r_cfl            2005               10
+ r_cfl            2010               10
+ r_cfl            2015               10
+ r_cfl            2020               10
+ r_cfl            2025               10
+ r_cfl            2030               10
+ r_cfl            2035               10
+ r_cfl            2040               10
+ 
+ r_incand         2005                1
+ r_incand         2010                1
+ r_incand         2015                1
+ r_incand         2020                1
+ r_incand         2025                1
+ r_incand         2030                1
+ r_incand         2035                1
+ r_incand         2040                1
+ 
+ tl_dslcar        2005               15
+ tl_dslcar        2010               15
+ tl_dslcar        2015               15
+ tl_dslcar        2020               15
+ tl_dslcar        2025               15
+ tl_dslcar        2030               15
+ tl_dslcar        2035               15
+ tl_dslcar        2040               15 
+
+ tl_elccar        2005               15
+ tl_elccar        2010               15
+ tl_elccar        2015               15
+ tl_elccar        2020               15
+ tl_elccar        2025               15
+ tl_elccar        2030               15
+ tl_elccar        2035               15
+ tl_elccar        2040               15 
+
+ tl_gascar        2005               15
+ tl_gascar        2010               15
+ tl_gascar        2015               15
+ tl_gascar        2020               15
+ tl_gascar        2025               15
+ tl_gascar        2030               15
+ tl_gascar        2035               15
+ tl_gascar        2040               15
+ 
+  ;
+
+param  LifetimeLoan  :=
 # tech_all        # vintage_all    # value (years)
- imp_coal          2000             35
- e_nuclear         2000             12
-	;
+ imp_coal         2005              100
+ imp_coal         2010              100
+ imp_coal         2015              100
+ imp_coal         2020              100
+ imp_coal         2025              100
+ imp_coal         2030              100
+ imp_coal         2035              100
+ imp_coal         2040              100
+                                    
+ imp_natgas       2005              100
+ imp_natgas       2010              100
+ imp_natgas       2015              100
+ imp_natgas       2020              100
+ imp_natgas       2025              100
+ imp_natgas       2030              100
+ imp_natgas       2035              100
+ imp_natgas       2040              100
+                                    
+ imp_oil          2005              100
+ imp_oil          2010              100
+ imp_oil          2015              100
+ imp_oil          2020              100
+ imp_oil          2025              100
+ imp_oil          2030              100
+ imp_oil          2035              100
+ imp_oil          2040              100 
+                                    
+ imp_uranium      2005              100
+ imp_uranium      2010              100
+ imp_uranium      2015              100
+ imp_uranium      2020              100
+ imp_uranium      2025              100
+ imp_uranium      2030              100
+ imp_uranium      2035              100
+ imp_uranium      2040              100 
+                                    
+ resource_wind    2005              100
+ resource_wind    2010              100
+ resource_wind    2015              100
+ resource_wind    2020              100
+ resource_wind    2025              100
+ resource_wind    2030              100
+ resource_wind    2035              100
+ resource_wind    2040              100 
+                                    
+ e_coal           2005               45
+ e_coal           2010               45
+ e_coal           2015               45
+ e_coal           2020               45
+ e_coal           2025               45
+ e_coal           2030               45
+ e_coal           2035               45
+ e_coal           2040               45
+                                    
+ e_nuclear        2005               45
+ e_nuclear        2010               45
+ e_nuclear        2015               45
+ e_nuclear        2020               45
+ e_nuclear        2025               45
+ e_nuclear        2030               45
+ e_nuclear        2035               45
+ e_nuclear        2040               45
+                                     
+ p_refinery       2005               40
+ p_refinery       2010               40
+ p_refinery       2015               40
+ p_refinery       2020               40
+ p_refinery       2025               40
+ p_refinery       2030               40
+ p_refinery       2035               40
+ p_refinery       2040               40
+                                     
+ r_furnace        2005               20
+ r_furnace        2010               20
+ r_furnace        2015               20
+ r_furnace        2020               20
+ r_furnace        2025               20
+ r_furnace        2030               20
+ r_furnace        2035               20
+ r_furnace        2040               20 
+                                     
+ r_geoth          2005               20
+ r_geoth          2010               20
+ r_geoth          2015               20
+ r_geoth          2020               20
+ r_geoth          2025               20
+ r_geoth          2030               20
+ r_geoth          2035               20
+ r_geoth          2040               20
+ 
+ r_ac             2005               15
+ r_ac             2010               15
+ r_ac             2015               15
+ r_ac             2020               15
+ r_ac             2025               15
+ r_ac             2030               15
+ r_ac             2035               15
+ r_ac             2040               15
+ 
+ r_cfl            2005               10
+ r_cfl            2010               10
+ r_cfl            2015               10
+ r_cfl            2020               10
+ r_cfl            2025               10
+ r_cfl            2030               10
+ r_cfl            2035               10
+ r_cfl            2040               10
+ 
+ r_incand         2005                1
+ r_incand         2010                1
+ r_incand         2015                1
+ r_incand         2020                1
+ r_incand         2025                1
+ r_incand         2030                1
+ r_incand         2035                1
+ r_incand         2040                1
+ 
+ tl_dslcar        2005               15
+ tl_dslcar        2010               15
+ tl_dslcar        2015               15
+ tl_dslcar        2020               15
+ tl_dslcar        2025               15
+ tl_dslcar        2030               15
+ tl_dslcar        2035               15
+ tl_dslcar        2040               15 
 
+ tl_elccar        2005               15
+ tl_elccar        2010               15
+ tl_elccar        2015               15
+ tl_elccar        2020               15
+ tl_elccar        2025               15
+ tl_elccar        2030               15
+ tl_elccar        2035               15
+ tl_elccar        2040               15 
 
+ tl_gascar        2005               15
+ tl_gascar        2010               15
+ tl_gascar        2015               15
+ tl_gascar        2020               15
+ tl_gascar        2025               15
+ tl_gascar        2030               15
+ tl_gascar        2035               15
+ tl_gascar        2040               15
+ 
+  ;
+  
+  
 param  CostInvest  :=
 # tech_all     # vintage_all    # value
  e_coal			  2010				1900
@@ -347,13 +686,13 @@ param  CostInvest  :=
  e_coal			  2035				1900
  e_coal			  2040				1900
 
- e_natgascc		  2010				830
- e_natgascc		  2015				830
- e_natgascc		  2020				830
- e_natgascc		  2025				830
- e_natgascc		  2030				830
- e_natgascc		  2035				830
- e_natgascc		  2040				830
+ e_natgascc		  2010				 830
+ e_natgascc		  2015				 830
+ e_natgascc		  2020				 830
+ e_natgascc		  2025				 830
+ e_natgascc		  2030				 830
+ e_natgascc		  2035				 830
+ e_natgascc		  2040				 830
  
  e_nuclear		  2010				3800
  e_nuclear		  2015				3800
@@ -371,53 +710,53 @@ param  CostInvest  :=
  e_wind			  2035				1500
  e_wind			  2040				1500
 
- p_refinery		  2010				7.85
- p_refinery		  2015				7.85
- p_refinery		  2020				7.85
- p_refinery		  2025				7.85
- p_refinery		  2030				7.85
- p_refinery		  2035				7.85
- p_refinery		  2040				7.85
+ p_refinery		  2010				   7.85
+ p_refinery		  2015				   7.85
+ p_refinery		  2020				   7.85
+ p_refinery		  2025				   7.85
+ p_refinery		  2030				   7.85
+ p_refinery		  2035				   7.85
+ p_refinery		  2040				   7.85
+                                    
+ r_furnace		  2010				   4.5
+ r_furnace		  2015				   4.5
+ r_furnace		  2020				   4.5
+ r_furnace		  2025				   4.5
+ r_furnace		  2030				   4.5
+ r_furnace		  2035				   4.5
+ r_furnace		  2040				   4.5
 
- r_furnace		  2010				4.5
- r_furnace		  2015				4.5
- r_furnace		  2020				4.5
- r_furnace		  2025				4.5
- r_furnace		  2030				4.5
- r_furnace		  2035				4.5
- r_furnace		  2040				4.5
-
- r_geot			  2010				25
- r_geot			  2015				25
- r_geot			  2020				25
- r_geot			  2025				25
- r_geot			  2030				25
- r_geot			  2035				25
- r_geot			  2040				25
+ r_geoth			  2010				  25
+ r_geoth			  2015				  25
+ r_geoth			  2020				  25
+ r_geoth			  2025				  25
+ r_geoth			  2030				  25
+ r_geoth			  2035				  25
+ r_geoth			  2040				  25
  
- r_ac				  2010				3.5
- r_ac				  2015				3.5
- r_ac				  2020				3.5
- r_ac				  2025				3.5
- r_ac				  2030				3.5
- r_ac				  2035				3.5
- r_ac				  2040				3.5
+ r_ac				  2010				   3.5
+ r_ac				  2015				   3.5
+ r_ac				  2020				   3.5
+ r_ac				  2025				   3.5
+ r_ac				  2030				   3.5
+ r_ac				  2035				   3.5
+ r_ac				  2040				   3.5
  
- r_cfl			  2010				13.8
- r_cfl			  2015				13.8
- r_cfl			  2020				13.8
- r_cfl			  2025				13.8
- r_cfl			  2030				13.8
- r_cfl			  2035				13.8
- r_cfl			  2040				13.8
+ r_cfl			  2010				  13.8
+ r_cfl			  2015				  13.8
+ r_cfl			  2020				  13.8
+ r_cfl			  2025				  13.8
+ r_cfl			  2030				  13.8
+ r_cfl			  2035				  13.8
+ r_cfl			  2040				  13.8
  
- r_incand		  2010				1.3
- r_incand		  2015				1.3
- r_incand		  2020				1.3
- r_incand		  2025				1.3
- r_incand		  2030				1.3
- r_incand		  2035				1.3
- r_incand		  2040				1.3
+ r_incand		  2010				   1.3
+ r_incand		  2015				   1.3
+ r_incand		  2020				   1.3
+ r_incand		  2025				   1.3
+ r_incand		  2030				   1.3
+ r_incand		  2035				   1.3
+ r_incand		  2040				   1.3
 
  tl_dslcar		  2010				2695
  tl_dslcar		  2015				2695
