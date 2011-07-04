@@ -780,7 +780,7 @@ def EmissionActivityByPeriodAndTechConstraint_rule ( M, A_emission, A_period, A_
 
 def EmissionActivityByTechAndVintageConstraint_rule ( M, A_emission, A_tech, A_vintage ):
 	l_sum = sum(
-	    M.V_FlowOut[l_pre, l_season, l_tod, l_inp, A_tech, A_vintage, l_out]
+	    M.V_FlowOut[l_per, l_season, l_tod, l_inp, A_tech, A_vintage, l_out]
 	  * value(M.EmissionActivity[A_emission, l_inp, A_tech, A_vintage, l_out])
 
 	  for l_per in M.time_optimize
