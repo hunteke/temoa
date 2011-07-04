@@ -223,7 +223,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.MinCapacityConstraint = Constraint( M.time_optimize, M.tech_all, rule=MinCapacityConstraint_rule )
 	M.MaxCapacityConstraint = Constraint( M.time_optimize, M.tech_all, rule=MaxCapacityConstraint_rule )
 	#   Constraints not yet updated
-	M.EmissionConstraint           = Constraint( M.time_optimize, M.commodity_emissions, rule=EmissionsConstraint_rule)
+	M.EmissionConstraint           = Constraint( M.time_optimize, M.commodity_emissions, rule=EmissionConstraint_rule)
 
 
 	return M

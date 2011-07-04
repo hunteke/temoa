@@ -166,7 +166,7 @@ Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 	return expr
 
 
-def EmissionsConstraint_rule ( M, A_period, A_emission ):
+def EmissionConstraint_rule ( M, A_period, A_emission ):
 	l_emissionlimit = value(M.EmissionLimit[A_period, A_emission])
 	if float('+inf') == l_emissionlimit:
 		# implies that modeler has set no limit
