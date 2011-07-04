@@ -195,8 +195,8 @@ CapacityFactor(tech_all, vintage_all)
 	# Constraints
 
 	#   "Bookkeeping" constraints
-	M.ActivityConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, rule=ActivityConstraint_rule )
-	M.CapacityConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, rule=CapacityConstraint_rule )
+	M.ActivityConstraint = Constraint( M.ActivityVarSet, rule=ActivityConstraint_rule )
+	M.CapacityConstraint = Constraint( M.ActivityVarSet, rule=CapacityConstraint_rule )
 
 	M.ExistingCapacityConstraint = Constraint( M.tech_all, M.vintage_exist, rule=ExistingCapacityConstraint_rule )
 
