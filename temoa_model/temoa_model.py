@@ -148,7 +148,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	# Not yet indexed by period or incorporated into the constraints
 	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions, default=float('+inf') )
-	M.EmissionActivity = Param( M.commodity_emissions, M.tech_all, M.vintage_all, default=0 )
+	M.EmissionActivity = Param( M.commodity_emissions, M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier, default=0 )
 
 	# always empty set, like the validation hacks above.  Temoa uses a couple
 	# of global variables to precalculate some oft-used results in constraint
