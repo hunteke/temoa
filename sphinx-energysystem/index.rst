@@ -23,6 +23,14 @@ Objective Formulation
 
 Key Model Constraints
 ============================================
+.. autofunction:: temoa_rules.ActivityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vintage, M )
+.. autofunction:: temoa_rules.CapacityConstraint_rule ( A_period, A_season, A_time_of_day, A_tech, A_vintage, M )
+.. autofunction:: temoa_rules.ExistingCapacityConstraint_rule ( A_tech, A_vintage, M ) 
+.. autofunction:: temoa_rules.ResourceExtractionConstraint_rule ( A_period, A_resource, M )
+
+.. autofunction:: temoa_rules.CommodityBalanceConstraint_rule ( A_period, A_season, A_time_of_day, A_carrier, M )
+.. autofunction:: temoa_rules.ProcessBalanceConstraint_rule ( A_period, A_season, A_time_of_day, A_inp, A_tech, A_vintage, A_out, M )
+.. autofunction:: temoa_rules.DemandConstraint_rule ( A_period, A_season, A_time_of_day, A_comm, M )
 
 Indices and tables
 ==================
