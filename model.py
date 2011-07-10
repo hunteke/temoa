@@ -126,8 +126,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.ExistingCapacity = Param(M.tech_all, M.vintage_exist, default=0 )
 
 	M.Efficiency    = Param( M.commodity_carrier,  M.tech_all,  M.vintage_all,  M.commodity_carrier,  default=0 )
-	M.Demand        = Param( M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand,  default=0 )
-	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical,  default=float('+inf') )
+	M.Demand        = Param( M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand )
+	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical )
 
 	M.LifetimeTech = Param( M.tech_all,  M.vintage_all,  default=30 )  # in years
 	M.LifetimeLoan = Param( M.tech_all,  M.vintage_optimize,  default=10 )  # in years
@@ -139,16 +139,15 @@ CapacityFactor(tech_all, vintage_all)
 	M.CostInvest    = Param( M.tech_all, M.vintage_optimize, default=0 )
 	M.LoanAnnualize = Param( M.tech_all, M.vintage_optimize, rule=ParamLoanAnnualize_rule )
 
-	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier, default=0 )
+	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
 	# always-empty Set; hack to perform inter-Set or inter-Param validation
 	M.validate_TechOutputSplit = Set( initialize=validate_TechOutputSplit )
 
-	M.MinCapacity = Param( M.time_optimize, M.tech_all, default=-1 )
-	M.MaxCapacity = Param( M.time_optimize, M.tech_all, default=-1 )
+	M.MinCapacity = Param( M.time_optimize, M.tech_all )
+	M.MaxCapacity = Param( M.time_optimize, M.tech_all )
 
-	# Not yet indexed by period or incorporated into the constraints
-	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions, default=float('+inf') )
-	M.EmissionActivity = Param( M.commodity_emissions, M.tech_all, M.vintage_all, default=0 )
+	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions )
+	M.EmissionActivity = Param( M.commodity_emissions, M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier )
 
 	# always empty set, like the validation hacks above.  Temoa uses a couple
 	# of global variables to precalculate some oft-used results in constraint
@@ -157,22 +156,51 @@ CapacityFactor(tech_all, vintage_all)
 	# Constraints.
 	M.IntializeProcessParameters = Set( rule=InitializeProcessParameters )
 
-	M.FlowVarSet = Set( initialize=
-	    M.time_optimize * M.time_season * M.time_of_day * M.commodity_carrier
-	  * M.tech_all      * M.vintage_all * M.commodity_carrier,
-	  filter = FlowVariableFilter
-	)
+	M.ActivityVarIndices = Set( dimen=5, rule=ActivityVariableIndices )
+	M.CapacityVarIndices = Set( dimen=2, rule=CapacityVariableIndices )
+	M.CapacityAvailableVarIndices = Set(
+	  dimen=2, rule=CapacityAvailableVariableIndices )
+	M.FlowVarIndices = Set( dimen=7, rule=FlowVariableIndices )
+
+	M.BaseloadDiurnalConstraintIndices = Set(
+	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
+	M.CapacityFractionalLifetimeConstraintIndices = Set(
+	  dimen=4, rule=CapacityFractionalLifetimeConstraintIndices )
+	M.CapacityLifetimeConstraintIndices = Set(
+	  dimen=2, rule=CapacityLifetimeConstraintIndices )
+	M.CommodityBalanceConstraintIndices = Set(
+	  dimen=4, rule=CommodityBalanceConstraintIndices )
+	M.DemandConstraintIndices = Set( dimen=4, rule=DemandConstraintIndices )
+	M.ExistingCapacityConstraintIndices = Set(
+	  dimen=2, rule=ExistingCapacityConstraintIndices )
+	M.MaxCapacityConstraintIndices = Set(
+	  dimen=2, rule=MaxCapacityConstraintIndices )
+	M.MinCapacityConstraintIndices = Set(
+	  dimen=2, rule=MinCapacityConstraintIndices )
+	M.ProcessBalanceConstraintIndices = Set(
+	  dimen=7, rule=ProcessBalanceConstraintIndices )
+	M.ResourceConstraintIndices = Set( dimen=2, rule=ResourceConstraintIndices )
+	M.StorageConstraintIndices = Set( dimen=6, rule=StorageConstraintIndices )
+	M.TechOutputSplitConstraintIndices = Set(
+	  dimen=7, rule=TechOutputSplitConstraintIndices )
+
+	M.EmissionConstraintIndices = Set( dimen=2, rule=EmissionConstraintIndices )
 
 	# Variables
 	#   Base decision variables
-	M.V_FlowIn  = Var( M.FlowVarSet, domain=NonNegativeReals )
-	M.V_FlowOut = Var( M.FlowVarSet, domain=NonNegativeReals )
+	M.V_FlowIn  = Var( M.FlowVarIndices, domain=NonNegativeReals )
+	M.V_FlowOut = Var( M.FlowVarIndices, domain=NonNegativeReals )
 
 	#   Derived decision variables
-	M.V_Activity = Var(M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, domain=NonNegativeReals)
-	M.V_Capacity = Var(M.tech_all, M.vintage_all, domain=NonNegativeReals)
+	M.V_Activity = Var( M.ActivityVarIndices, domain=NonNegativeReals )
+	M.V_Capacity = Var( M.CapacityVarIndices, domain=NonNegativeReals )
 
-	AddReportingVariables( M )
+	M.V_CapacityAvailableByPeriodAndTech = Var(
+	  M.CapacityAvailableVarIndices,
+	  domain=NonNegativeReals
+	)
+
+	#AddReportingVariables( M )
 
 	# Objective
 	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
@@ -180,33 +208,36 @@ CapacityFactor(tech_all, vintage_all)
 	# Constraints
 
 	#   "Bookkeeping" constraints
-	M.ActivityConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, rule=ActivityConstraint_rule )
-	M.CapacityConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_all, M.vintage_all, rule=CapacityConstraint_rule )
+	M.ActivityConstraint = Constraint( M.ActivityVarIndices, rule=ActivityConstraint_rule )
+	M.CapacityConstraint = Constraint( M.ActivityVarIndices, rule=CapacityConstraint_rule )
 
-	M.ExistingCapacityConstraint = Constraint( M.tech_all, M.vintage_exist, rule=ExistingCapacityConstraint_rule )
+	M.ExistingCapacityConstraint = Constraint( M.ExistingCapacityConstraintIndices, rule=ExistingCapacityConstraint_rule )
 
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
 	#      very useful.)
-	M.DemandConstraint             = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_demand,      rule=DemandConstraint_rule )
-	M.DemandCapacityConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_demand,      rule=DemandCapacityConstraint_rule )
-	M.ProcessBalanceConstraint     = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier, rule=ProcessBalanceConstraint_rule )
-	M.CommodityBalanceConstraint   = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_physical,    rule=CommodityBalanceConstraint_rule )
-	M.ResourceExtractionConstraint = Constraint( M.time_optimize, M.commodity_physical,    rule=ResourceExtractionConstraint_rule )
+	M.DemandConstraint           = Constraint( M.DemandConstraintIndices,  rule=DemandConstraint_rule )
+	M.DemandCapacityConstraint   = Constraint( M.DemandConstraintIndices,  rule=DemandCapacityConstraint_rule )
+	M.ProcessBalanceConstraint   = Constraint( M.ProcessBalanceConstraintIndices, rule=ProcessBalanceConstraint_rule )
+	M.CommodityBalanceConstraint = Constraint( M.CommodityBalanceConstraintIndices,  rule=CommodityBalanceConstraint_rule )
 
-	M.BaseloadDiurnalConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.tech_baseload, M.vintage_all, rule=BaseloadDiurnalConstraint_rule )
+	M.ResourceExtractionConstraint = Constraint( M.ResourceConstraintIndices,  rule=ResourceExtractionConstraint_rule )
 
-	M.StorageConstraint = Constraint( M.time_optimize, M.time_season, M.commodity_all, M.tech_storage, M.vintage_all, M.commodity_all, rule=StorageConstraint_rule )
+	M.BaseloadDiurnalConstraint = Constraint( M.BaseloadDiurnalConstraintIndices,  rule=BaseloadDiurnalConstraint_rule )
 
-	M.TechOutputSplitConstraint = Constraint( M.time_optimize, M.time_season, M.time_of_day, M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier, rule=TechOutputSplitConstraint_rule )
+	M.StorageConstraint = Constraint( M.StorageConstraintIndices, rule=StorageConstraint_rule )
 
-	M.CapacityLifetimeConstraint           = Constraint( M.time_optimize, M.commodity_carrier, rule=CapacityLifetimeConstraint_rule )
-	M.CapacityFractionalLifetimeConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=CapacityFractionalLifetimeConstraint_rule )
+	M.TechOutputSplitConstraint = Constraint( M.TechOutputSplitConstraintIndices, rule=TechOutputSplitConstraint_rule )
 
-	M.MinCapacityConstraint = Constraint( M.time_optimize, M.tech_all, rule=MinCapacityConstraint_rule )
-	M.MaxCapacityConstraint = Constraint( M.time_optimize, M.tech_all, rule=MaxCapacityConstraint_rule )
-	#   Constraints not yet updated
-	M.EmissionConstraint           = Constraint( M.time_optimize, M.commodity_emissions, rule=EmissionsConstraint_rule)
+	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVarIndices, rule=CapacityAvailableByPeriodAndTechConstraint_rule )
+
+	M.CapacityLifetimeConstraint           = Constraint( M.CapacityLifetimeConstraintIndices, rule=CapacityLifetimeConstraint_rule )
+	M.CapacityFractionalLifetimeConstraint = Constraint( M.CapacityFractionalLifetimeConstraintIndices, rule=CapacityFractionalLifetimeConstraint_rule )
+
+	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraintIndices, rule=MinCapacityConstraint_rule )
+	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraintIndices, rule=MaxCapacityConstraint_rule )
+
+	M.EmissionConstraint = Constraint( M.EmissionConstraintIndices, rule=EmissionConstraint_rule)
 
 
 	return M

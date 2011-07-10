@@ -139,11 +139,15 @@ def validate_TechOutputSplit ( M ):
 	   ' a fraction of the input carrier converted to the output carrier, so ' \
 	   'they must total to 1.  Current values:\n   %s\n\tsum = %s'
 
+	split_indices = M.TechOutputSplit.keys()
+
 	for l_inp in M.commodity_physical:
 		for l_tech in M.tech_all:
 			l_total = sum(
 			  value(M.TechOutputSplit[l_inp, l_tech, l_out])
+
 			  for l_out in M.commodity_carrier
+			  if (l_inp, l_tech, l_out) in split_indices
 			)
 
 			# small enough; likely a rounding error
@@ -157,7 +161,7 @@ def validate_TechOutputSplit ( M ):
 				  )
 
 				  for l_out in M.commodity_carrier
-				  if value(M.TechOutputSplit[l_inp, l_tech, l_out]) > 0
+				  if (l_inp, l_tech, l_out) in split_indices
 				)
 
 				raise ValueError, msg % (items, l_total)
@@ -198,7 +202,10 @@ g_processInputs  = dict()
 g_processOutputs = dict()
 g_processVintages = dict()
 g_processLoans = dict()
-g_activeFlowIndices = set()
+g_activeFlowIndices = None
+g_activeActivityIndices = None
+g_activeCapacityIndices = None
+g_activeCapacityAvailableIndices = None
 
 def InitializeProcessParameters ( M ):
 	global g_processInputs
@@ -206,6 +213,9 @@ def InitializeProcessParameters ( M ):
 	global g_processVintages
 	global g_processLoans
 	global g_activeFlowIndices
+	global g_activeActivityIndices
+	global g_activeCapacityIndices
+	global g_activeCapacityAvailableIndices
 
 	l_first_period = min( M.time_horizon )
 
@@ -265,7 +275,213 @@ def InitializeProcessParameters ( M ):
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
+	g_activeActivityIndices = set(
+	  (l_per, l_tech, l_vin)
 
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	)
+	g_activeCapacityIndices = set(
+	  (l_tech, l_vin)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	)
+	g_activeCapacityAvailableIndices = set(
+	  (l_per, l_tech)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  if ProcessVintages( l_per, l_tech )
+	)
+
+	return set()
+
+##############################################################################
+# Sparse index creation functions
+
+# These functions serve to create sparse index sets, so that Coopr need only
+# create the variable and constraint indices with which it will actually
+# operate.  This *tremendously* cuts down on memory usage, which decreases
+# time and increases the maximum specifiable problem size.
+
+##############################################################################
+# Variables
+
+def CapacityVariableIndices ( M ):
+	return g_activeCapacityIndices
+
+def CapacityAvailableVariableIndices ( M ):
+	return g_activeCapacityAvailableIndices
+
+def FlowVariableIndices ( M ):
+	return g_activeFlowIndices
+
+
+def ActivityVariableIndices ( M ):
+	activity_indices = set(
+	  (l_per, l_season, l_tod, l_tech, l_vin)
+
+	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+	return activity_indices
+
+# End variables
+##############################################################################
+
+##############################################################################
+# Constraints
+
+def DemandConstraintIndices ( M ):
+	return set( M.Demand.keys() )
+
+def EmissionConstraintIndices ( M ):
+	return set( M.EmissionLimit.keys() )
+
+def MaxCapacityConstraintIndices ( M ):
+	return set( M.MaxCapacity.keys() )
+
+def MinCapacityConstraintIndices ( M ):
+	return set( M.MinCapacity.keys() )
+
+def ResourceConstraintIndices ( M ):
+	return set( M.ResourceBound.keys() )
+
+
+def BaseloadDiurnalConstraintIndices ( M ):
+	indices = set(
+	  (l_per, l_season, l_tod, l_tech, l_vin)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_baseload
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	return indices
+
+
+def CapacityFractionalLifetimeConstraintIndices ( M ):
+	indices = set(
+	  (l_per, l_tech, l_vin, l_carrier)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  if value(M.LifetimeFrac[l_per, l_tech, l_vin])
+	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
+	)
+
+	return indices
+
+
+def CapacityLifetimeConstraintIndices ( M ):
+	indices = set(
+	  (l_per, l_carrier)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
+	  for l_inp in ProcessInputsByOutput( l_per, l_tech, l_vin, l_carrier )
+	)
+
+	return indices
+
+
+def CommodityBalanceConstraintIndices ( M ):
+	indices = set(
+	  (l_per, l_season, l_tod, l_carrier)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	  for l_carrier in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	return indices
+
+
+def ExistingCapacityConstraintIndices ( M ):
+	indices = set(
+	  (l_tech, l_vin)
+
+	  for l_tech in M.tech_all
+	  for l_vin in M.vintage_exist
+	  if (l_tech, l_vin) in g_activeCapacityIndices
+	)
+	return indices
+
+
+def ProcessBalanceConstraintIndices ( M ):
+	indices = set(
+	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	  for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	return indices
+
+
+def StorageConstraintIndices ( M ):
+	indices = set(
+	  (l_per, l_season, l_inp, l_tech, l_vin, l_out)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_storage
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	  for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp )
+	  for l_season in M.time_season
+	)
+
+	return indices
+
+
+def TechOutputSplitConstraintIndices ( M ):
+	indices = set(
+	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
+
+	  for l_inp, l_tech, l_out in M.TechOutputSplit.keys()
+	  for l_per in M.time_optimize
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	return indices
+
+# End constraints
+##############################################################################
+
+# End sparse index creation functions
+##############################################################################
+
+##############################################################################
+# Helper functions
+
+# These functions utilize global variables that are created in
+# InitializeProcessParameters, to aid in creation of sparse index sets, and
+# to increase readability of Coopr's often programmer-centric syntax.
+
+def ProcessInputs ( A_period, A_tech, A_vintage ):
+	index = (A_period, A_tech, A_vintage)
+	if index in g_processInputs:
+		return g_processInputs[ index ]
 	return set()
 
 
@@ -276,13 +492,6 @@ index = (period, tech, vintage)
 	index = (A_period, A_tech, A_vintage)
 	if index in g_processOutputs:
 		return g_processOutputs[ index ]
-	return set()
-
-
-def ProcessInputs ( A_period, A_tech, A_vintage ):
-	index = (A_period, A_tech, A_vintage)
-	if index in g_processInputs:
-		return g_processInputs[ index ]
 	return set()
 
 
@@ -318,7 +527,7 @@ This function relies on the Model (argument M).  I'd like to update at some poin
 """
 	processes = set()
 	for l_tech in M.tech_all:
-		for l_vin in M.vintage_all:
+		for l_vin in ProcessVintages( A_period, l_tech ):
 			index = (A_period, l_tech, l_vin)
 			if index in g_processInputs and A_inp in g_processInputs[ index ]:
 					processes.add( (l_tech, l_vin) )
@@ -332,7 +541,7 @@ This function relies on the Model (argument M).  I'd like to update at some poin
 """
 	processes = set()
 	for l_tech in M.tech_all:
-		for l_vin in M.vintage_all:
+		for l_vin in ProcessVintages( A_period, l_tech ):
 			index = (A_period, l_tech, l_vin)
 			if index in g_processOutputs and A_out in g_processOutputs[ index ]:
 					processes.add( (l_tech, l_vin) )
@@ -346,6 +555,14 @@ def ProcessVintages ( A_per, A_tech ):
 		return g_processVintages[ index ]
 
 	return set()
+
+
+def ValidActivity ( A_period, A_tech, A_vintage ):
+	return (A_period, A_tech, A_vintage) in g_activeActivityIndices
+
+
+def ValidCapacity ( A_tech, A_vintage ):
+	return (A_tech, A_vintage) in g_activeCapacityIndices
 
 
 def isValidProcess ( A_period, A_inp, A_tech, A_vintage, A_out ):
@@ -369,14 +586,6 @@ Return a boolean (True or False) whether a loan is still active in a period.
 This is the implementation of imat in the rest of the documentation.
 """
 	return (A_period, A_tech, A_vintage) in g_processLoans
-
-
-def FlowVariableFilter ( M, *index ):
-	# The variables identified here as inactive, could just as well be removed
-	# entirely from the model.  Unfortunately, I don't know how to do that.  Nor
-	# do I know how to selectively create the variables we need.
-
-	return index in g_activeFlowIndices
 
 
 # End helper functions
@@ -629,7 +838,6 @@ def temoa_solve ( model ):
 		#instance.load( result )
 		#CreateModelResultsDiagram( instance, options.graph_format )
 		#SE.write( '\r[%8.2f\n' % duration() )
-
 
 # End direct invocation methods
 ###############################################################################
