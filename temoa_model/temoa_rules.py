@@ -218,11 +218,13 @@ def StorageConstraint_rule ( M, A_period, A_season, A_inp, A_tech, A_vintage, A_
 
 
 def TechOutputSplitConstraint_rule ( M, A_period, A_season, A_time_of_day, A_input, A_tech, A_vintage, A_output ):
+	split_indices = M.TechOutputSplit.keys()
+
 	l_outputs = sorted(
 	  l_out
 
 	  for l_out in M.commodity_carrier
-	  if (A_input, A_tech, l_out) in tech_split_keys
+	  if (A_input, A_tech, l_out) in split_indices
 	)
 
 	l_index = l_outputs.index( A_output )
@@ -263,6 +265,7 @@ V_Activity[p,s,d,t,v] = sum((inp,out), V_FlowOut[p,s,d,inp,t,v,out])
 
 def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
 	demand_indices = M.Demand.keys()
+
 	if A_com in M.commodity_demand:
 		l_period_demand = sum(
 		  value(M.Demand[A_period, l_season, l_tod, A_com])
@@ -639,7 +642,7 @@ def EmissionActivityTotalConstraint_rule ( M, A_emission ):
 
 	l_sum = sum(
 	    M.V_FlowOut[l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out]
-	  * value(M.EmissionActivity[A_emission, l_inp, l_tech, l_vin, l_out])
+	  * M.EmissionActivity[A_emission, l_inp, l_tech, l_vin, l_out]
 
 	  for l_per in M.time_optimize
 	  for l_tech in M.tech_all
@@ -663,7 +666,7 @@ def EmissionActivityByPeriodConstraint_rule ( M, A_emission, A_period ):
 
 	l_sum = sum(
 	    M.V_FlowOut[A_period, l_season, l_tod, l_inp, l_tech, l_vin, l_out]
-	  * value(M.EmissionActivity[A_emission, l_inp, l_tech, l_vin, l_out])
+	  * M.EmissionActivity[A_emission, l_inp, l_tech, l_vin, l_out]
 
 	  for l_tech in M.tech_all
 	  for l_vin in ProcessVintages( A_period, l_tech )
@@ -682,11 +685,10 @@ def EmissionActivityByPeriodConstraint_rule ( M, A_emission, A_period ):
 
 
 def EmissionActivityByTechConstraint_rule ( M, A_emission, A_tech ):
-	l_eActivityIndices = M.EmissionActivity.keys()
 
 	l_sum = sum(
 	    M.V_FlowOut[l_per, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
-	  * value(M.EmissionActivity[A_emission, l_inp, A_tech, l_vin, l_out])
+	  * M.EmissionActivity[A_emission, l_inp, A_tech, l_vin, l_out]
 
 	  for l_per in M.time_optimize
 	  for l_vin in ProcessVintages( l_per, A_tech )
@@ -709,7 +711,7 @@ def EmissionActivityByPeriodAndTechConstraint_rule ( M, A_emission, A_period, A_
 
 	l_sum = sum(
 	    M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
-	  * value(M.EmissionActivity[A_emission, l_inp, A_tech, l_vin, l_out])
+	  * M.EmissionActivity[A_emission, l_inp, A_tech, l_vin, l_out]
 
 	  for l_vin in ProcessVintages( A_period, A_tech )
 	  for l_inp in ProcessInputs( A_period, A_tech, l_vin )
@@ -732,7 +734,7 @@ def EmissionActivityByTechAndVintageConstraint_rule ( M, A_emission, A_tech, A_v
 
 	l_sum = sum(
 	    M.V_FlowOut[l_per, l_season, l_tod, l_inp, A_tech, A_vintage, l_out]
-	  * value(M.EmissionActivity[A_emission, l_inp, A_tech, A_vintage, l_out])
+	  * M.EmissionActivity[A_emission, l_inp, A_tech, A_vintage, l_out]
 
 	  for l_per in M.time_optimize
 	  for l_inp in ProcessInputs( l_per, A_tech, A_vintage )
