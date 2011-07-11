@@ -30,8 +30,8 @@ set  tech_baseload  :=
  t_coal
 	;
 
-
 set  commodity_physical  :=
+ ethos
  coal
  natural_gas
  electricity
@@ -62,6 +62,60 @@ param  CapacityToActivity  :=
  t_coal   31.536    # PJ/yr -> GW
 	;
 
+
+param EmissionActivity  :=
+# Emission  # input      # tech         # vintage  # output     # amount released per unit activity
+ co2         ethos        imp_dsl        2000       diesel       69.4  # kilotonnes/PJ
+ co2         ethos        imp_dsl        2010       diesel       69.4  # kilotonnes/PJ
+ co2         ethos        imp_dsl        2015       diesel       69.4  # kilotonnes/PJ
+ co2         ethos        imp_dsl        2020       diesel       69.4  # kilotonnes/PJ
+ co2         ethos        imp_dsl        2025       diesel       69.4  # kilotonnes/PJ
+
+ co2         ethos        imp_gsl        2000       gasoline     67.2  # kilotonnes/PJ
+ co2         ethos        imp_gsl        2010       gasoline     67.2  # kilotonnes/PJ
+ co2         ethos        imp_gsl        2015       gasoline     67.2  # kilotonnes/PJ
+ co2         ethos        imp_gsl        2020       gasoline     67.2  # kilotonnes/PJ
+ co2         ethos        imp_gsl        2025       gasoline     67.2  # kilotonnes/PJ
+
+ co2         oil          p_refinery     2005       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2010       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2015       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2020       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2025       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2030       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2035       diesel       69.4  # kilotonnes/PJ
+
+ co2         oil          p_refinery     2005       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2010       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2015       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2020       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2025       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2030       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2035       gasoline     67.2  # kilotonnes/PJ
+
+ co2         ethos        imp_natgas     2000       natural_gas  50.3  # kilotonnes/PJ
+ co2         ethos        imp_natgas     2010       natural_gas  50.3  # kilotonnes/PJ
+ co2         ethos        imp_natgas     2015       natural_gas  50.3  # kilotonnes/PJ
+ co2         ethos        imp_natgas     2020       natural_gas  50.3  # kilotonnes/PJ
+ co2         ethos        imp_natgas     2025       natural_gas  50.3  # kilotonnes/PJ
+	;
+
+
+param  EmissionLimit  :=
+# period   # emission      # limit
+ 2010       co2             500
+ 2015       co2             450
+ 2020       co2             375
+ 2025       co2             275
+	;
+
+param  ResourceBound  :=
+# period      # resource   # bound
+ 2010          coal         2000000
+ 2015          coal         3000000
+ 2020          coal         2000000
+ 2025          coal         1000000
+	;
 
 param  Demand  :=
  2010  summer  day    transport_distance   40
@@ -131,6 +185,15 @@ param  LifetimeTech  :=
 	;
 
 
+param  CostInvest  :=
+# tech      # vintage       # cost
+ t_coal      2010            500
+ t_coal      2015            500
+ t_coal      2020            500
+ t_coal      2020            500
+	;
+
+
 param  CostFixed  :=
 # period     # tech            # vintage   # cost
  2010         imp_coal          2000        10
@@ -152,8 +215,8 @@ param  CostFixed  :=
  2020         imp_gas           2010        22
  2025         imp_gas           2010        22
 
- 2010         t_coal            1990        12
- 2015         t_coal            1990        12
+ 2010         t_coal            1990        7
+ 2015         t_coal            1990        7
 
  2010         t_coal            2000        7
  2015         t_coal            2000        7
@@ -237,11 +300,11 @@ param  CostFixed  :=
 
 param  Efficiency  :=
 # input carrier  # tech            # vintage  # output carrier     # eff. value
- coal             imp_coal          2000       coal                   1
- crude_oil        imp_oil           2000       crude_oil              1
- diesel           imp_dsl           2000       diesel                 1
- gasoline         imp_gas           2000       gasoline               1
- natural_gas      imp_natgas        2000       natural_gas            1
+ ethos            imp_coal          2000       coal                   1
+ ethos            imp_oil           2000       crude_oil              1
+ ethos            imp_dsl           2000       diesel                 1
+ ethos            imp_gas           2000       gasoline               1
+ ethos            imp_natgas        2000       natural_gas            1
 
  crude_oil        t_oil_refinery    2000       diesel                 1
  crude_oil        t_oil_refinery    2000       gasoline               1
