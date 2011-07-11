@@ -1,5 +1,12 @@
 data;
 
+# This dot dat file tests most Temoa functionality.  As of July 2011, Temoa
+# will solve this dot dat file on moderate hardware in < 5 seconds, consume
+# < 140 MiB of virtual memory, and < 60 MiB of physical RAM.
+
+# Note that this test.dat file is in no way, shape, or form representative of
+# a "real" or "typical" energy system, and is /solely/ meant to test basic
+# Temoa functionality.  All numbers in this file are suspect.
 
 set  time_exist   :=  1990  2000 ;
 set  time_horizon :=  2010  2015  2020  2025 ;
