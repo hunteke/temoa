@@ -721,7 +721,6 @@ def EmissionActivityByPeriodAndTechConstraint_rule ( A_emission, A_period, A_tec
 	  if (A_emission, l_inp, A_tech, l_vin, l_out) in l_eActivityIndices
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
-	  for l_vin in M.vintage_all
 	)
 
 	if type( l_sum ) is int:
