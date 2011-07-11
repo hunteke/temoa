@@ -233,6 +233,7 @@ def TechOutputSplitConstraint_rule ( A_period, A_season, A_time_of_day, A_input,
 
 	l_prev = l_outputs[ l_index -1 ]
 	l_prev_split = M.TechOutputSplit[A_input, A_tech, l_prev]
+	l_split = M.TechOutputSplit[A_input, A_tech, A_output]
 
 	expr = (
 	    M.V_FlowOut[A_period, A_season, A_time_of_day, A_input, A_tech, A_vintage, A_output]
