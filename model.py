@@ -200,7 +200,7 @@ CapacityFactor(tech_all, vintage_all)
 	  domain=NonNegativeReals
 	)
 
-	#AddReportingVariables( M )
+	AddReportingVariables( M )
 
 	# Objective
 	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
@@ -248,9 +248,9 @@ model = temoa_create_model()
 
 if '__main__' == __name__:
 	# This script was apparently invoked directly, rather than through Pyomo.
-	# $ ./model.py  test.dat           # called directly
-	# $ lpython  model.py  test.dat    # called directly
-	# $ pyomo    model.py  test.dat    # through Pyomo
+	# $ ./model.py  test.dat               # called directly
+	# $ coopr_python  model.py  test.dat   # called directly
+	# $ pyomo    model.py  test.dat        # not directly, through Pyomo
 
 	# Calling this script directly enables a cleaner formatting than Pyomo's
 	# default output, but (currently) forces the choice of solver to GLPK.
