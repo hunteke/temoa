@@ -95,10 +95,11 @@ def ParamLifetimeFrac_rule ( M, A_period, A_tech, A_vintage ):
 
 
 def ParamLoanAnnualize_rule ( M, A_tech, A_vintage ):
+	l_process = (A_tech, A_vintage)
 	l_annualized_rate = (
-	    M.DiscountRate[ A_tech, A_vintage ]
-	  / (1 - (1 + M.DiscountRate[A_tech, A_vintage])
-	         **(- M.LifetimeLoan[A_tech, A_vintage])
+	    M.DiscountRate[ l_process ]
+	  / (1 - (1 + M.DiscountRate[ l_process ])
+	         **(- M.LifetimeLoan[ l_process ])
 	    )
 	)
 
