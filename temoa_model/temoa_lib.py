@@ -224,7 +224,7 @@ def InitializeProcessParameters ( M ):
 			l_process = (l_tech, l_vintage)
 			l_lifetime = value( M.LifetimeTech[ l_process ] )
 
-			if l_vintage in M.time_exist:
+			if l_vintage in M.vintage_exist:
 				# if existing tech & capacity is 0, don't include it
 				if 0 == M.ExistingCapacity[ l_process ]: continue
 
