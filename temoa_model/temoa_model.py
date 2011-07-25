@@ -138,12 +138,13 @@ CapacityFactor(tech_all, vintage_all)
 	M.Demand        = Param( M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand )
 	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical )
 
+	M.CostFixed    = Param( M.time_optimize, M.tech_all, M.vintage_all )
+	M.CostMarginal = Param( M.time_optimize, M.tech_all, M.vintage_all )
+	M.CostInvest   = Param( M.tech_all, M.vintage_optimize )
+
 	M.LifetimeFrac = Param( M.time_optimize, M.tech_all,  M.vintage_all,  rule=ParamLifetimeFrac_rule )
 	M.DiscountRate = Param( M.tech_all,  M.vintage_optimize,  default=0.05 )
 
-	M.CostFixed     = Param( M.time_optimize, M.tech_all, M.vintage_all, default=0 )
-	M.CostMarginal  = Param( M.time_optimize, M.tech_all, M.vintage_all, default=0 )
-	M.CostInvest    = Param( M.tech_all, M.vintage_optimize, default=0 )
 	M.LoanAnnualize = Param( M.tech_all, M.vintage_optimize, rule=ParamLoanAnnualize_rule )
 
 	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )

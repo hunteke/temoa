@@ -9,6 +9,10 @@ Objective function.
 
 This function is currently a simple summation of all items in V_FlowOut multiplied by CommunityProductionCost.  For the time being (i.e. during development), this is intended to make development and debugging simpler.
 	"""
+	l_invest_indices = M.CostInvest.keys()
+	l_fixed_indices  = M.CostFixed.keys()
+	l_marg_indices   = M.CostMarginal.keys()
+
 	l_loan_costs = sum(
 	    M.V_Capacity[l_tech, l_vin] * M.PeriodRate[ l_per ]
 	  * M.CostInvest[l_tech, l_vin]
@@ -18,6 +22,8 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 	  for l_tech in M.tech_all
 	  for l_vin in ProcessVintages( l_per, l_tech )
 	  if loanIsActive( l_per, l_tech, l_vin )
+	  if (l_tech, l_vin) in l_invest_indices
+	  if value(M.CostInvest[l_tech, l_vin])
 	)
 
 	l_fixed_costs = sum(
@@ -28,6 +34,7 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 	  for l_per in M.time_optimize
 	  for l_tech in M.tech_all
 	  for l_vin in ProcessVintages( l_per, l_tech )
+	  if (l_per, l_tech, l_vin) in l_fixed_indices
 	  if value(M.CostFixed[l_per, l_tech, l_vin])
 	)
 
@@ -39,6 +46,7 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 	  for l_per in M.time_optimize
 	  for l_tech in M.tech_all
 	  for l_vin in ProcessVintages( l_per, l_tech )
+	  if (l_per, l_tech, l_vin) in l_marg_indices
 	  if value(M.CostMarginal[l_per, l_tech, l_vin])
 	  for l_season in M.time_season
 	  for l_time_of_day in M.time_of_day
@@ -611,12 +619,13 @@ def CapacityAvailableByPeriodAndTechConstraint_rule ( M, A_per, A_tech ):
 
 
 def InvestmentByTechConstraint_rule ( M, A_tech ):
+	l_cost_indices = M.CostInvest.keys()
 	l_sum = sum(
 	    M.V_Capacity[A_tech, l_vin]
 	  * value( M.CostInvest[A_tech, l_vin] )
 
 	  for l_vin in M.vintage_optimize
-	  if value( M.CostInvest[A_tech, l_vin] ) > 0
+	  if (A_tech, l_vin) in l_cost_indices
 	)
 
 	if int is type( l_sum ):
@@ -631,7 +640,7 @@ def InvestmentByTechAndVintageConstraint_rule ( M, A_tech, A_vin ):
 
 	l_cost = 0
 
-	if value(M.CostInvest[ index ]) > 0:
+	if index in M.CostInvest.keys():
 		l_cost = M.V_Capacity[ index ] * value(M.CostInvest[ index ])
 
 	if int is type( l_cost ):
