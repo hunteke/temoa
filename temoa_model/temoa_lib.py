@@ -329,6 +329,17 @@ def DiscountRateIndices ( M ):
 	return set( M.CostInvest.keys() )
 
 
+def EmissionActivityIndices ( M ):
+	indices = set(
+	  (l_emission, l_inp, l_tech, l_vin, l_out)
+
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_emission in M.commodity_emissions
+	)
+
+	return indices
+
+
 def LifetimeFracIndices ( M ):
 	l_periods = set( M.time_optimize )
 	l_max_year = max( M.time_future )

@@ -158,7 +158,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.MaxCapacity = Param( M.time_optimize, M.tech_all )
 
 	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions )
-	M.EmissionActivity = Param( M.commodity_emissions, M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier )
+	M.EmissionActivityIndices = Set( dimen=5, rule=EmissionActivityIndices )
+	M.EmissionActivity = Param( M.EmissionActivityIndices )
 
 	M.ActivityVarIndices = Set( dimen=5, rule=ActivityVariableIndices )
 	M.CapacityVarIndices = Set( dimen=2, rule=CapacityVariableIndices )
