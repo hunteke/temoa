@@ -112,7 +112,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.commodity_carrier = M.commodity_physical | M.commodity_demand
 	M.commodity_all     = M.commodity_carrier | M.commodity_emissions
 
-	M.GlobalDiscountRate = Param( default=0 )
+	M.GlobalDiscountRate = Param()
 	M.PeriodLength = Param( M.time_optimize, initialize=ParamPeriodLength_rule )
 	M.PeriodRate   = Param( M.time_optimize, initialize=ParamPeriodRate_rule )
 
