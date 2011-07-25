@@ -116,7 +116,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.PeriodLength = Param( M.time_optimize, initialize=ParamPeriodLength_rule )
 	M.PeriodRate   = Param( M.time_optimize, initialize=ParamPeriodRate_rule )
 
-	M.SegFrac = Param(M.time_season, M.time_of_day, default=0)
+	M.SegFrac = Param( M.time_season, M.time_of_day )
 	# always-empty Set; hack to perform inter-Set or inter-Param validation
 	M.validate_SegFrac = Set( initialize=validate_SegFrac )
 
