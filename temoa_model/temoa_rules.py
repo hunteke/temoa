@@ -686,6 +686,7 @@ def EmissionActivityByPeriodConstraint_rule ( M, A_emission, A_period ):
 
 
 def EmissionActivityByTechConstraint_rule ( M, A_emission, A_tech ):
+	l_eActivityIndices = M.EmissionActivity.keys()
 
 	l_sum = sum(
 	    M.V_FlowOut[l_per, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
