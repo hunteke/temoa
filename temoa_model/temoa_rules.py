@@ -83,34 +83,15 @@ def ParamPeriodRate_rule ( M, period ):
 
 
 def ParamLifetimeFrac_rule ( M, A_period, A_tech, A_vintage ):
-	process = (A_tech, A_vintage)
+	l_eol_year = A_vintage + value(M.LifetimeTech[A_tech, A_vintage])
 
-	l_future_years = sorted( M.time_horizon )
-	l_future_years.extend( sorted( M.time_future ) )
-
-	# Because the optimization is run over time_optimize, which is missing the
-	# last period, this min is guaranteed to return a value (period)
-	l_next_period = min( year for year in l_future_years if year > A_period )
-	l_eol_year = A_vintage + value(M.LifetimeTech[ process ])
-
-	if A_period < l_eol_year and l_eol_year < l_next_period:
-		l_eff_indices = M.Efficiency.keys()
-		# Since we're still in the parameter initilization phase (we ARE param
-		# initialization!), we can't use the Process* functions.
-		for l_inp in M.commodity_physical:
-			for l_out in M.commodity_carrier:
-				eindex = (l_inp, A_tech, A_vintage, l_out)
-				if eindex not in l_eff_indices: continue
-				if value(M.Efficiency[ eindex ]) > 0:
-					# if an efficiency exists, that's it, we're done.  Calculate
-					# the fraction and return it to Pyomo
-					l_frac  = l_eol_year - A_period
-					l_frac /= M.PeriodLength[ A_period ]
-					return value(l_frac)
-
-	# Either this is not an End of Life situtation, or this tech combo was not
-	# in the efficiency table.  Either/or: it's not an EOL concern.
-	return 0
+	for l_inp in ProcessInputs( A_period, A_tech, A_vintage ):
+		for l_out in ProcessOutputsByInput( A_period, A_tech, A_vintage, l_inp ):
+			# if an efficiency exists, that's it, we're done.  Calculate
+			# the fraction and return it to Pyomo
+			l_frac  = l_eol_year - A_period
+			l_frac /= M.PeriodLength[ A_period ]
+			return value(l_frac)
 
 
 def ParamLoanAnnualize_rule ( M, A_tech, A_vintage ):
@@ -300,6 +281,8 @@ def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
 		# if there is no demand, then no need to create a constraint
 		return Constraint.Skip
 
+	l_frac_indices = M.LifetimeFrac.keys()
+
 	l_non_dying_ability = sum(
 	    M.V_Capacity[l_tech, l_vin]
 	  * M.CapacityFactor[l_tech, l_vin]
@@ -307,7 +290,7 @@ def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
 	  * M.PeriodLength[ A_period ]
 
 	  for l_tech, l_vin in ProcessesByPeriodAndOutput( M, A_period, A_com )
-	  if not value(M.LifetimeFrac[A_period, l_tech, l_vin])
+	  if (A_period, l_tech, l_vin) not in l_frac_indices
 	)
 
 	expr = (l_non_dying_ability >= l_period_demand)

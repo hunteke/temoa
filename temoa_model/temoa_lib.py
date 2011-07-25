@@ -328,6 +328,21 @@ def InitializeProcessParameters ( M ):
 def DiscountRateIndices ( M ):
 	return set( M.CostInvest.keys() )
 
+
+def LifetimeFracIndices ( M ):
+	l_periods = set( M.time_optimize )
+	l_max_year = max( M.time_future )
+
+	indices = set()
+	for l_tech, l_vin in g_activeCapacityIndices:
+		l_death_year = l_vin + value(M.LifetimeTech[l_tech, l_vin])
+		if l_death_year < l_max_year and l_death_year not in l_periods:
+			l_per = max( yy for yy in M.time_optimize if yy < l_death_year )
+			indices.add( (l_per, l_tech, l_vin) )
+
+	return indices
+
+
 def LoanIndices ( M ):
 	return set( M.CostInvest.keys() )
 
@@ -394,13 +409,15 @@ def BaseloadDiurnalConstraintIndices ( M ):
 
 
 def CapacityFractionalLifetimeConstraintIndices ( M ):
+	l_frac_indices = M.LifetimeFrac.keys()
+
 	indices = set(
 	  (l_per, l_tech, l_vin, l_carrier)
 
 	  for l_per in M.time_optimize
 	  for l_tech in M.tech_all
 	  for l_vin in ProcessVintages( l_per, l_tech )
-	  if value(M.LifetimeFrac[l_per, l_tech, l_vin])
+	  if (l_per, l_tech, l_vin) in l_frac_indices
 	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
 	)
 
