@@ -237,7 +237,7 @@ def InitializeProcessParameters ( M ):
 					continue
 
 				if l_vintage + l_lifetime <= l_first_period:
-					msg = '\nNotice: %s specified as ExistingCapacity, but its '   \
+					msg = '\nWarning: %s specified as ExistingCapacity, but its '   \
 					   'LifetimeTech parameter does not extend past the beginning '\
 					   'of time_horizon.  (i.e. useless parameter)'                \
 					   '\n\tLifetime:     %s'                                      \
