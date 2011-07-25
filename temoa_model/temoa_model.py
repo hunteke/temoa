@@ -142,10 +142,13 @@ CapacityFactor(tech_all, vintage_all)
 	M.CostMarginal = Param( M.time_optimize, M.tech_all, M.vintage_all )
 	M.CostInvest   = Param( M.tech_all, M.vintage_optimize )
 
-	M.LifetimeFrac = Param( M.time_optimize, M.tech_all,  M.vintage_all,  rule=ParamLifetimeFrac_rule )
-	M.DiscountRate = Param( M.tech_all,  M.vintage_optimize,  default=0.05 )
+	M.DiscountRateIndices = Set( dimen=2, rule=DiscountRateIndices )
+	M.LoanIndices         = Set( dimen=2, rule=LoanIndices )
 
-	M.LoanAnnualize = Param( M.tech_all, M.vintage_optimize, rule=ParamLoanAnnualize_rule )
+	M.DiscountRate  = Param( M.DiscountRateIndices, default=0.05 )
+	M.LoanAnnualize = Param( M.LoanIndices, rule=ParamLoanAnnualize_rule )
+
+	M.LifetimeFrac = Param( M.time_optimize, M.tech_all,  M.vintage_all,  rule=ParamLifetimeFrac_rule )
 
 	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
 	# always-empty Set; hack to perform inter-Set or inter-Param validation

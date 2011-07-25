@@ -318,9 +318,21 @@ def InitializeProcessParameters ( M ):
 # Sparse index creation functions
 
 # These functions serve to create sparse index sets, so that Coopr need only
-# create the variable and constraint indices with which it will actually
-# operate.  This *tremendously* cuts down on memory usage, which decreases
-# time and increases the maximum specifiable problem size.
+# create the parameter, variable, and constraint indices with which it will
+# actually operate.  This *tremendously* cuts down on memory usage, which
+# decreases time and increases the maximum specifiable problem size.
+
+##############################################################################
+# Parameters
+
+def DiscountRateIndices ( M ):
+	return set( M.CostInvest.keys() )
+
+def LoanIndices ( M ):
+	return set( M.CostInvest.keys() )
+
+# End parameters
+##############################################################################
 
 ##############################################################################
 # Variables
