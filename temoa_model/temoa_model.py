@@ -123,14 +123,21 @@ CapacityFactor(tech_all, vintage_all)
 	M.CapacityToActivity = Param( M.tech_all,  default=1 )
 	M.CapacityFactor     = Param( M.tech_all,  M.vintage_all,  default=1 )
 
-	M.ExistingCapacity = Param(M.tech_all, M.vintage_exist, default=0 )
+	M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
+	M.Efficiency   = Param( M.commodity_carrier, M.tech_all, M.vintage_all, M.commodity_carrier )
+	M.LifetimeTech = Param( M.tech_all,  M.vintage_all,  default=30 )  # in years
+	M.LifetimeLoan = Param( M.tech_all,  M.vintage_optimize,  default=10 )  # in years
 
-	M.Efficiency    = Param( M.commodity_carrier,  M.tech_all,  M.vintage_all,  M.commodity_carrier,  default=0 )
+	# always empty set, like the validation hacks above.  Temoa uses a couple
+	# of global variables to precalculate some oft-used results in constraint
+	# generation.  This is therefore intentially placed after all Set and Param
+	# definitions and initializations, but before the Var, Objectives, and
+	# Constraints.
+	M.IntializeProcessParameters = Set( rule=InitializeProcessParameters )
+
 	M.Demand        = Param( M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand )
 	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical )
 
-	M.LifetimeTech = Param( M.tech_all,  M.vintage_all,  default=30 )  # in years
-	M.LifetimeLoan = Param( M.tech_all,  M.vintage_optimize,  default=10 )  # in years
 	M.LifetimeFrac = Param( M.time_optimize, M.tech_all,  M.vintage_all,  rule=ParamLifetimeFrac_rule )
 	M.DiscountRate = Param( M.tech_all,  M.vintage_optimize,  default=0.05 )
 
@@ -148,13 +155,6 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions )
 	M.EmissionActivity = Param( M.commodity_emissions, M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier )
-
-	# always empty set, like the validation hacks above.  Temoa uses a couple
-	# of global variables to precalculate some oft-used results in constraint
-	# generation.  This is therefore intentially placed after all Set and Param
-	# definitions and initializations, but before the Var, Objectives, and
-	# Constraints.
-	M.IntializeProcessParameters = Set( rule=InitializeProcessParameters )
 
 	M.ActivityVarIndices = Set( dimen=5, rule=ActivityVariableIndices )
 	M.CapacityVarIndices = Set( dimen=2, rule=CapacityVariableIndices )

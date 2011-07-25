@@ -218,6 +218,8 @@ def InitializeProcessParameters ( M ):
 	global g_activeCapacityAvailableIndices
 
 	l_first_period = min( M.time_horizon )
+	l_exist_indices = M.ExistingCapacity.keys()
+	l_eff_indices = M.Efficiency.keys()
 
 	for l_vintage in M.vintage_all:
 		for l_tech in M.tech_all:
@@ -226,7 +228,13 @@ def InitializeProcessParameters ( M ):
 
 			if l_vintage in M.vintage_exist:
 				# if existing tech & capacity is 0, don't include it
-				if 0 == M.ExistingCapacity[ l_process ]: continue
+				if l_process not in l_exist_indices: continue
+				if 0 == M.ExistingCapacity[ l_process ]:
+					msg = ('Notice: Unnecessary specification of ExistingCapacity '
+					   '%s.  If specifying a capacity of zero, you may simply '
+					   'omit the declaration.\n')
+					SE.write( msg % str(l_process) )
+					continue
 
 				if l_vintage + l_lifetime <= l_first_period:
 					msg = '\nNotice: %s specified as ExistingCapacity, but its '   \
@@ -240,29 +248,36 @@ def InitializeProcessParameters ( M ):
 				for l_out in M.commodity_carrier:
 
 					eindex = (l_inp, l_tech, l_vintage, l_out)
-					if M.Efficiency[ eindex ] > 0:
-						for l_period in M.time_optimize:
-							# can't build a vintage before it's been invented
-							if l_period < l_vintage: continue
+					if eindex not in l_eff_indices: continue
+					if 0 == M.Efficiency[ eindex ]:
+						msg = ('\nNotice: Unnecessary specification of Efficiency %s'
+						   '.  If specifying an efficiency of zero, you may simply '
+						   'omit the declaration.\n')
+						SE.write( msg % str(eindex) )
+						continue
 
-							if l_vintage in M.time_optimize:
-								l_loan_life = value(M.LifetimeLoan[ l_process ])
-								if l_vintage + l_loan_life >= l_period:
-									g_processLoans[l_period, l_tech, l_vintage] = True
+					for l_period in M.time_optimize:
+						# can't build a vintage before it's been invented
+						if l_period < l_vintage: continue
 
-							# if tech is no longer "alive", don't include it
-							if l_vintage + l_lifetime <= l_period: continue
+						if l_vintage in M.time_optimize:
+							l_loan_life = value(M.LifetimeLoan[ l_process ])
+							if l_vintage + l_loan_life >= l_period:
+								g_processLoans[l_period, l_tech, l_vintage] = True
 
-							pindex = (l_period, l_tech, l_vintage)
-							if pindex not in g_processInputs:
-								g_processInputs[  pindex ] = set()
-								g_processOutputs[ pindex ] = set()
-							if (l_period, l_tech) not in g_processVintages:
-								g_processVintages[l_period, l_tech] = set()
+						# if tech is no longer "alive", don't include it
+						if l_vintage + l_lifetime <= l_period: continue
 
-							g_processVintages[l_period, l_tech].add( l_vintage )
-							g_processInputs[ pindex ].add( l_inp )
-							g_processOutputs[pindex ].add( l_out )
+						pindex = (l_period, l_tech, l_vintage)
+						if pindex not in g_processInputs:
+							g_processInputs[  pindex ] = set()
+							g_processOutputs[ pindex ] = set()
+						if (l_period, l_tech) not in g_processVintages:
+							g_processVintages[l_period, l_tech] = set()
+
+						g_processVintages[l_period, l_tech].add( l_vintage )
+						g_processInputs[ pindex ].add( l_inp )
+						g_processOutputs[pindex ].add( l_out )
 
 	g_activeFlowIndices = set(
 	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)

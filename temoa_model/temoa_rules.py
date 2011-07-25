@@ -86,11 +86,14 @@ def ParamLifetimeFrac_rule ( M, A_period, A_tech, A_vintage ):
 	l_eol_year = A_vintage + value(M.LifetimeTech[ process ])
 
 	if A_period < l_eol_year and l_eol_year < l_next_period:
+		l_eff_indices = M.Efficiency.keys()
 		# Since we're still in the parameter initilization phase (we ARE param
 		# initialization!), we can't use the Process* functions.
 		for l_inp in M.commodity_physical:
 			for l_out in M.commodity_carrier:
-				if value(M.Efficiency[l_inp, A_tech, A_vintage, l_out]) > 0:
+				eindex = (l_inp, A_tech, A_vintage, l_out)
+				if eindex not in l_eff_indices: continue
+				if value(M.Efficiency[ eindex ]) > 0:
 					# if an efficiency exists, that's it, we're done.  Calculate
 					# the fraction and return it to Pyomo
 					l_frac  = l_eol_year - A_period
