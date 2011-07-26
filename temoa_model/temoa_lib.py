@@ -325,6 +325,24 @@ def InitializeProcessParameters ( M ):
 ##############################################################################
 # Parameters
 
+def CostFixedIndices ( M ):
+	return g_activeActivityIndices
+
+
+def CostMarginalIndices ( M ):
+	return g_activeActivityIndices
+
+
+def CostInvestIndices ( M ):
+	indices = set(
+	  (l_tech, l_vin)
+
+	  for l_per, l_tech, l_vin in g_processLoans
+	)
+
+	return indices
+
+
 def DiscountRateIndices ( M ):
 	return set( M.CostInvest.keys() )
 
