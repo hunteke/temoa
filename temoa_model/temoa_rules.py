@@ -262,7 +262,7 @@ def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
 
 	if A_com in M.commodity_demand:
 		l_period_demand = sum(
-		  value(M.Demand[A_period, l_season, l_tod, A_com])
+		  M.Demand[A_period, l_season, l_tod, A_com]
 
 		  for l_season in M.time_season
 		  for l_tod in M.time_of_day
