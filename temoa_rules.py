@@ -560,6 +560,44 @@ def ActivityByPeriodTechVintageAndOutputConstraint_rule ( A_period, A_tech, A_vi
 	return expr
 
 
+def ActivityByTechAndOutputConstraint_rule ( A_tech, A_output, M ):
+	l_sum = sum(
+	  M.V_FlowOut[l_per, l_season, l_tod, l_inp, A_tech, l_vin, A_output]
+
+	  for l_per in M.time_optimize
+	  for l_vin in ProcessVintages( l_per, A_tech )
+	  for l_inp in ProcessInputsByOutput( l_per, A_tech, l_vin, A_output )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	if int is type( l_sum ):
+		return None
+
+	index = (A_tech, A_output)
+	expr = (M.V_ActivityByTechAndOutput[ index ] == l_sum)
+	return expr
+
+
+def ActivityByInputAndTechConstraint_rule ( A_input, A_tech, M ):
+	l_sum = sum(
+	  M.V_FlowOut[l_per, l_season, l_tod, A_input, A_tech, l_vin, l_out]
+
+	  for l_per in M.time_optimize
+	  for l_vin in ProcessVintages( l_per, A_tech )
+	  for l_out in ProcessOutputsByInput( l_per, A_tech, l_vin, A_input )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	if int is type( l_sum ):
+		return None
+
+	index = (A_input, A_tech)
+	expr = (M.V_ActivityByInputAndTech[ index ] == l_sum)
+	return expr
+
+
 def ActivityByPeriodInputAndTechConstraint_rule ( A_period, A_input, A_tech, M ):
 	l_sum = sum(
 	  M.V_FlowIn[A_period, l_season, l_tod, A_input, A_tech, l_vin, l_out]
@@ -850,6 +888,9 @@ def AddReportingVariables ( M ):
 	M.V_ActivityByPeriodTechAndOutput        = Var( M.time_optimize, M.tech_all, M.commodity_carrier, domain=NonNegativeReals )
 	M.V_ActivityByPeriodTechVintageAndOutput = Var( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, domain=NonNegativeReals )
 
+	M.V_ActivityByTechAndOutput = Var( M.tech_all, M.commodity_carrier, domain=NonNegativeReals )
+	M.V_ActivityByInputAndTech  = Var( M.commodity_physical, M.tech_all, domain=NonNegativeReals )
+
 	M.V_ActivityByPeriodInputAndTech        = Var( M.time_optimize, M.commodity_physical, M.tech_all, domain=NonNegativeReals )
 	M.V_ActivityByPeriodInputTechAndVintage = Var( M.time_optimize, M.commodity_physical, M.tech_all, M.vintage_all, domain=NonNegativeReals )
 
@@ -874,6 +915,9 @@ def AddReportingVariables ( M ):
 	M.ActivityByPeriodTechAndVintageConstraint       = Constraint( M.time_optimize, M.tech_all, M.vintage_all,                      rule=ActivityByPeriodTechAndVintageConstraint_rule )
 	M.ActivityByPeriodTechAndOutputConstraint        = Constraint( M.time_optimize, M.tech_all, M.commodity_carrier,                rule=ActivityByPeriodTechAndOutputConstraint_rule )
 	M.ActivityByPeriodTechVintageAndOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=ActivityByPeriodTechVintageAndOutputConstraint_rule )
+
+	M.ActivityByTechAndOutputConstraint = Constraint( M.tech_all, M.commodity_carrier, rule=ActivityByTechAndOutputConstraint_rule )
+	M.ActivityByInputAndTechConstraint  = Constraint( M.commodity_physical, M.tech_all, rule=ActivityByInputAndTechConstraint_rule )
 
 	M.ActivityByPeriodInputAndTechConstraint        = Constraint( M.time_optimize, M.commodity_physical, M.tech_all,                rule=ActivityByPeriodInputAndTechConstraint_rule )
 	M.ActivityByPeriodInputTechAndVintageConstraint = Constraint( M.time_optimize, M.commodity_physical, M.tech_all, M.vintage_all, rule=ActivityByPeriodInputTechAndVintageConstraint_rule )
