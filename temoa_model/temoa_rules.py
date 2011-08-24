@@ -719,8 +719,6 @@ def EmissionActivityByPeriodConstraint_rule ( M, A_emission, A_period ):
 
 
 def EmissionActivityByTechConstraint_rule ( M, A_emission, A_tech ):
-	l_eActivityIndices = M.EmissionActivity.keys()
-
 	l_sum = sum(
 	    M.V_FlowOut[l_per, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
 	  * M.EmissionActivity[A_emission, l_inp, A_tech, l_vin, l_out]
@@ -729,7 +727,6 @@ def EmissionActivityByTechConstraint_rule ( M, A_emission, A_tech ):
 	  for l_vin in ProcessVintages( l_per, A_tech )
 	  for l_inp in ProcessInputs( l_per, A_tech, l_vin )
 	  for l_out in ProcessOutputsByInput( l_per, A_tech, l_vin, l_inp )
-	  if (A_emission, l_inp, A_tech, l_vin, l_out) in l_eActivityIndices
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -742,8 +739,6 @@ def EmissionActivityByTechConstraint_rule ( M, A_emission, A_tech ):
 
 
 def EmissionActivityByPeriodAndTechConstraint_rule ( M, A_emission, A_period, A_tech ):
-	l_eActivityIndices = M.EmissionActivity.keys()
-
 	l_sum = sum(
 	    M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
 	  * M.EmissionActivity[A_emission, l_inp, A_tech, l_vin, l_out]
@@ -751,7 +746,6 @@ def EmissionActivityByPeriodAndTechConstraint_rule ( M, A_emission, A_period, A_
 	  for l_vin in ProcessVintages( A_period, A_tech )
 	  for l_inp in ProcessInputs( A_period, A_tech, l_vin )
 	  for l_out in ProcessOutputsByInput( A_period, A_tech, l_vin, l_inp )
-	  if (A_emission, l_inp, A_tech, l_vin, l_out) in l_eActivityIndices
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -765,8 +759,6 @@ def EmissionActivityByPeriodAndTechConstraint_rule ( M, A_emission, A_period, A_
 
 
 def EmissionActivityByTechAndVintageConstraint_rule ( M, A_emission, A_tech, A_vintage ):
-	l_eActivityIndices = M.EmissionActivity.keys()
-
 	l_sum = sum(
 	    M.V_FlowOut[l_per, l_season, l_tod, l_inp, A_tech, A_vintage, l_out]
 	  * M.EmissionActivity[A_emission, l_inp, A_tech, A_vintage, l_out]
@@ -774,7 +766,6 @@ def EmissionActivityByTechAndVintageConstraint_rule ( M, A_emission, A_tech, A_v
 	  for l_per in M.time_optimize
 	  for l_inp in ProcessInputs( l_per, A_tech, A_vintage )
 	  for l_out in ProcessOutputsByInput( l_per, A_tech, A_vintage, l_inp )
-	  if (A_emission, l_inp, A_tech, A_vintage, l_out) in l_eActivityIndices
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -878,59 +869,92 @@ def AddReportingVariables ( M ):
 	# fairly inefficient, and each Variable represents a fair chunk of memory,
 	# among other resources.  Luckily, all told, these are cheap, compared
 	# to the computational cost of the other constraints.
-	M.V_ActivityByPeriodAndTech              = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
-	M.V_ActivityByPeriodTechAndVintage       = Var( M.time_optimize, M.tech_all, M.vintage_all, domain=NonNegativeReals )
-	M.V_ActivityByPeriodTechAndOutput        = Var( M.time_optimize, M.tech_all, M.commodity_carrier, domain=NonNegativeReals )
-	M.V_ActivityByPeriodTechVintageAndOutput = Var( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, domain=NonNegativeReals )
+	M.ActivityByPeriodTechAndVintageVarIndices = Set(
+	  dimen=3, rule=ActivityByPeriodTechAndVintageVarIndices )
+	M.ActivityByPeriodTechAndOutputVarIndices = Set(
+	  dimen=3, rule=ActivityByPeriodTechAndOutputVariableIndices )
+	M.ActivityByPeriodTechVintageAndOutputVarIndices = Set(
+	  dimen=4, rule=ActivityByPeriodTechVintageAndOutputVariableIndices )
 
-	M.V_ActivityByTechAndOutput = Var( M.tech_all, M.commodity_carrier, domain=NonNegativeReals )
-	M.V_ActivityByInputAndTech  = Var( M.commodity_physical, M.tech_all, domain=NonNegativeReals )
+	M.ActivityByTechAndOutputVarIndices = Set(
+	  dimen=2, rule=ActivityByTechAndOutputVariableIndices )
+	M.ActivityByInputAndTechVarIndices = Set(
+	  dimen=2, rule=ActivityByInputAndTechVariableIndices )
 
-	M.V_ActivityByPeriodInputAndTech        = Var( M.time_optimize, M.commodity_physical, M.tech_all, domain=NonNegativeReals )
-	M.V_ActivityByPeriodInputTechAndVintage = Var( M.time_optimize, M.commodity_physical, M.tech_all, M.vintage_all, domain=NonNegativeReals )
+	M.ActivityByPeriodInputAndTechVarIndices = Set(
+	  dimen=3, rule=ActivityByPeriodInputAndTechVariableIndices )
+	M.ActivityByPeriodInputTechAndVintageVarIndices = Set(
+	  dimen=4, rule=ActivityByPeriodInputTechAndVintageVariableIndices )
 
-	M.V_InvestmentByTech           = Var( M.tech_all, domain=NonNegativeReals )
+	M.EmissionActivityByTechVarIndices = Set(
+	  dimen=2, rule=EmissionActivityByTechVariableIndices )
+	M.EmissionActivityByPeriodAndTechVarIndices = Set(
+	  dimen=3, rule=EmissionActivityByPeriodAndTechVariableIndices )
+	M.EmissionActivityByTechAndVintageVarIndices = Set(
+	  dimen=3, rule=EmissionActivityByTechAndVintageVariableIndices )
+
+	M.EnergyConsumptionByTechAndOutputVarIndices = Set(
+	  dimen=2, rule=EnergyConsumptionByTechAndOutputVariableIndices )
+	M.EnergyConsumptionByPeriodAndTechVarIndices = Set(
+	  dimen=2, rule=EnergyConsumptionByPeriodAndTechVariableIndices )
+	M.EnergyConsmptionByPeriodTechAndOutputVarIndices = Set(
+	  dimen=3, rule=EnergyConsumptionByPeriodTechAndOutputVariableIndices )
+	M.EnergyConsumptionByPeriodTechAndVintageVarIndices = Set(
+	  dimen=3, rule=EnergyConsumptionByPeriodTechAndVintageVariableIndices )
+
+	M.V_ActivityByPeriodAndTech              = Var( M.time_optimize, M.tech_all,                      domain=NonNegativeReals )
+	M.V_ActivityByPeriodTechAndVintage       = Var( M.ActivityByPeriodTechAndVintageVarIndices,       domain=NonNegativeReals )
+	M.V_ActivityByPeriodTechAndOutput        = Var( M.ActivityByPeriodTechAndOutputVarIndices,        domain=NonNegativeReals )
+	M.V_ActivityByPeriodTechVintageAndOutput = Var( M.ActivityByPeriodTechVintageAndOutputVarIndices, domain=NonNegativeReals )
+
+	M.V_ActivityByTechAndOutput = Var( M.ActivityByTechAndOutputVarIndices, domain=NonNegativeReals )
+	M.V_ActivityByInputAndTech  = Var( M.ActivityByInputAndTechVarIndices,  domain=NonNegativeReals )
+
+	M.V_ActivityByPeriodInputAndTech        = Var( M.ActivityByPeriodInputAndTechVarIndices,        domain=NonNegativeReals )
+	M.V_ActivityByPeriodInputTechAndVintage = Var( M.ActivityByPeriodInputTechAndVintageVarIndices, domain=NonNegativeReals )
+
+	M.V_InvestmentByTech           = Var( M.tech_all,                     domain=NonNegativeReals )
 	M.V_InvestmentByTechAndVintage = Var( M.tech_all, M.vintage_optimize, domain=NonNegativeReals )
 
-	M.V_EmissionActivityTotal            = Var( M.commodity_emissions, domain=Reals )
-	M.V_EmissionActivityByPeriod         = Var( M.commodity_emissions, M.time_optimize, domain=Reals )
-	M.V_EmissionActivityByTech           = Var( M.commodity_emissions, M.tech_all, domain=Reals )
-	M.V_EmissionActivityByPeriodAndTech  = Var( M.commodity_emissions, M.time_optimize, M.tech_all, domain=Reals )
-	M.V_EmissionActivityByTechAndVintage = Var( M.commodity_emissions, M.tech_all, M.vintage_all, domain=Reals )
+	M.V_EmissionActivityTotal            = Var( M.commodity_emissions,                        domain=Reals )
+	M.V_EmissionActivityByPeriod         = Var( M.commodity_emissions, M.time_optimize,       domain=Reals )
+	M.V_EmissionActivityByTech           = Var( M.EmissionActivityByTechVarIndices,           domain=Reals )
+	M.V_EmissionActivityByPeriodAndTech  = Var( M.EmissionActivityByPeriodAndTechVarIndices,  domain=Reals )
+	M.V_EmissionActivityByTechAndVintage = Var( M.EmissionActivityByTechAndVintageVarIndices, domain=Reals )
 
 	M.V_EnergyConsumptionByTech                 = Var( M.tech_all, domain=NonNegativeReals )
-	M.V_EnergyConsumptionByTechAndOutput        = Var( M.tech_all, M.commodity_all, domain=NonNegativeReals )
-	M.V_EnergyConsumptionByPeriodAndTech        = Var( M.time_optimize, M.tech_all, domain=NonNegativeReals )
-	M.V_EnergyConsumptionByPeriodTechAndOutput  = Var( M.time_optimize, M.tech_all, M.commodity_all, domain=NonNegativeReals )
-	M.V_EnergyConsumptionByPeriodTechAndVintage = Var( M.time_optimize, M.tech_all, M.vintage_all, domain=NonNegativeReals )
+	M.V_EnergyConsumptionByTechAndOutput        = Var( M.EnergyConsumptionByTechAndOutputVarIndices, domain=NonNegativeReals )
+	M.V_EnergyConsumptionByPeriodAndTech        = Var( M.EnergyConsumptionByPeriodAndTechVarIndices, domain=NonNegativeReals )
+	M.V_EnergyConsumptionByPeriodTechAndOutput  = Var( M.EnergyConsmptionByPeriodTechAndOutputVarIndices, domain=NonNegativeReals )
+	M.V_EnergyConsumptionByPeriodTechAndVintage = Var( M.EnergyConsumptionByPeriodTechAndVintageVarIndices, domain=NonNegativeReals )
 
 	#   The requisite constraints to set the derived variables above.
 
-	M.ActivityByPeriodTechConstraint                 = Constraint( M.time_optimize, M.tech_all,                                     rule=ActivityByPeriodTechConstraint_rule )
-	M.ActivityByPeriodTechAndVintageConstraint       = Constraint( M.time_optimize, M.tech_all, M.vintage_all,                      rule=ActivityByPeriodTechAndVintageConstraint_rule )
-	M.ActivityByPeriodTechAndOutputConstraint        = Constraint( M.time_optimize, M.tech_all, M.commodity_carrier,                rule=ActivityByPeriodTechAndOutputConstraint_rule )
-	M.ActivityByPeriodTechVintageAndOutputConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, M.commodity_carrier, rule=ActivityByPeriodTechVintageAndOutputConstraint_rule )
+	M.ActivityByPeriodTechConstraint                 = Constraint( M.time_optimize, M.tech_all,                      rule=ActivityByPeriodTechConstraint_rule )
+	M.ActivityByPeriodTechAndVintageConstraint       = Constraint( M.ActivityByPeriodTechAndVintageVarIndices,       rule=ActivityByPeriodTechAndVintageConstraint_rule )
+	M.ActivityByPeriodTechAndOutputConstraint        = Constraint( M.ActivityByPeriodTechAndOutputVarIndices,        rule=ActivityByPeriodTechAndOutputConstraint_rule )
+	M.ActivityByPeriodTechVintageAndOutputConstraint = Constraint( M.ActivityByPeriodTechVintageAndOutputVarIndices, rule=ActivityByPeriodTechVintageAndOutputConstraint_rule )
 
-	M.ActivityByTechAndOutputConstraint = Constraint( M.tech_all, M.commodity_carrier, rule=ActivityByTechAndOutputConstraint_rule )
-	M.ActivityByInputAndTechConstraint  = Constraint( M.commodity_physical, M.tech_all, rule=ActivityByInputAndTechConstraint_rule )
+	M.ActivityByTechAndOutputConstraint = Constraint( M.ActivityByTechAndOutputVarIndices, rule=ActivityByTechAndOutputConstraint_rule )
+	M.ActivityByInputAndTechConstraint  = Constraint( M.ActivityByInputAndTechVarIndices,  rule=ActivityByInputAndTechConstraint_rule )
 
-	M.ActivityByPeriodInputAndTechConstraint        = Constraint( M.time_optimize, M.commodity_physical, M.tech_all,                rule=ActivityByPeriodInputAndTechConstraint_rule )
-	M.ActivityByPeriodInputTechAndVintageConstraint = Constraint( M.time_optimize, M.commodity_physical, M.tech_all, M.vintage_all, rule=ActivityByPeriodInputTechAndVintageConstraint_rule )
+	M.ActivityByPeriodInputAndTechConstraint        = Constraint( M.ActivityByPeriodInputAndTechVarIndices,        rule=ActivityByPeriodInputAndTechConstraint_rule )
+	M.ActivityByPeriodInputTechAndVintageConstraint = Constraint( M.ActivityByPeriodInputTechAndVintageVarIndices, rule=ActivityByPeriodInputTechAndVintageConstraint_rule )
 
 	M.InvestmentByTechConstraint           = Constraint( M.tech_all, rule=InvestmentByTechConstraint_rule )
 	M.InvestmentByTechAndVintageConstraint = Constraint( M.tech_all, M.vintage_optimize, rule=InvestmentByTechAndVintageConstraint_rule )
 
 	M.EmissionActivityTotalConstraint            = Constraint( M.commodity_emissions, rule=EmissionActivityTotalConstraint_rule )
 	M.EmissionActivityByPeriodConstraint         = Constraint( M.commodity_emissions, M.time_optimize, rule=EmissionActivityByPeriodConstraint_rule )
-	M.EmissionActivityByTechConstraint           = Constraint( M.commodity_emissions, M.tech_all, rule=EmissionActivityByTechConstraint_rule )
-	M.EmissionActivityByPeriodAndTechConstraint  = Constraint( M.commodity_emissions, M.time_optimize, M.tech_all, rule=EmissionActivityByPeriodAndTechConstraint_rule )
-	M.EmissionActivityByTechAndVintageConstraint = Constraint( M.commodity_emissions, M.tech_all, M.vintage_all, rule=EmissionActivityByTechAndVintageConstraint_rule )
+	M.EmissionActivityByTechConstraint           = Constraint( M.EmissionActivityByTechVarIndices, rule=EmissionActivityByTechConstraint_rule )
+	M.EmissionActivityByPeriodAndTechConstraint  = Constraint( M.EmissionActivityByPeriodAndTechVarIndices, rule=EmissionActivityByPeriodAndTechConstraint_rule )
+	M.EmissionActivityByTechAndVintageConstraint = Constraint( M.EmissionActivityByTechAndVintageVarIndices, rule=EmissionActivityByTechAndVintageConstraint_rule )
 
 	M.EnergyConsumptionByTechConstraint                 = Constraint( M.tech_all, rule=EnergyConsumptionByTechConstraint_rule )
-	M.EnergyConsumptionByTechAndOutputConstraint        = Constraint( M.tech_all, M.commodity_all, rule=EnergyConsumptionByTechAndOutputConstraint_rule )
-	M.EnergyConsumptionByPeriodAndTechConstraint        = Constraint( M.time_optimize, M.tech_all, rule=EnergyConsumptionByPeriodAndTechConstraint_rule )
-	M.EnergyConsumptionByPeriodTechAndOutputConstraint  = Constraint( M.time_optimize, M.tech_all, M.commodity_all, rule=EnergyConsumptionByPeriodTechAndOutputConstraint_rule )
-	M.EnergyConsumptionByPeriodTechAndVintageConstraint = Constraint( M.time_optimize, M.tech_all, M.vintage_all, rule=EnergyConsumptionByPeriodTechAndVintageConstraint_rule )
+	M.EnergyConsumptionByTechAndOutputConstraint        = Constraint( M.EnergyConsumptionByTechAndOutputVarIndices, rule=EnergyConsumptionByTechAndOutputConstraint_rule )
+	M.EnergyConsumptionByPeriodAndTechConstraint        = Constraint( M.EnergyConsumptionByPeriodAndTechVarIndices, rule=EnergyConsumptionByPeriodAndTechConstraint_rule )
+	M.EnergyConsumptionByPeriodTechAndOutputConstraint  = Constraint( M.EnergyConsmptionByPeriodTechAndOutputVarIndices, rule=EnergyConsumptionByPeriodTechAndOutputConstraint_rule )
+	M.EnergyConsumptionByPeriodTechAndVintageConstraint = Constraint( M.EnergyConsumptionByPeriodTechAndVintageVarIndices, rule=EnergyConsumptionByPeriodTechAndVintageConstraint_rule )
 
 # End miscellaneous related functions
 ##############################################################################

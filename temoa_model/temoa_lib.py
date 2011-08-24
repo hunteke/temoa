@@ -399,7 +399,165 @@ def ActivityVariableIndices ( M ):
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
+
 	return activity_indices
+
+### Reporting variables
+
+def ActivityByPeriodTechAndVintageVarIndices ( M ):
+	return g_activeActivityIndices
+
+
+def ActivityByPeriodTechAndOutputVariableIndices ( M ):
+	indices = set(
+	  (l_per, l_tech, l_out)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
+	 )
+
+	return indices
+
+
+def ActivityByPeriodTechVintageAndOutputVariableIndices ( M ):
+	indices = set(
+	  (l_per, l_tech, l_vin, l_out)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
+	)
+
+	return indices
+
+
+def ActivityByTechAndOutputVariableIndices ( M ):
+	indices = set(
+	  (l_tech, l_out)
+
+	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
+	)
+
+	return indices
+
+
+def ActivityByInputAndTechVariableIndices ( M ):
+	indices = set(
+	  (l_inp, l_tech)
+
+	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	)
+
+	return indices
+
+
+def ActivityByPeriodInputAndTechVariableIndices ( M ):
+	indices = set(
+	  (l_per, l_inp, l_tech)
+
+	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	)
+
+	return indices
+
+
+def ActivityByPeriodInputTechAndVintageVariableIndices ( M ):
+	indices = set(
+	  (l_per, l_inp, l_tech, l_vin)
+
+	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	)
+
+	return indices
+
+
+def EmissionActivityByTechVariableIndices ( M ):
+	indices = set(
+	  (l_emission, l_tech)
+
+	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
+	)
+
+	return indices
+
+def EmissionActivityByPeriodAndTechVariableIndices ( M ):
+	l_eActivityIndices = M.EmissionActivity.keys()
+	indices = set(
+	  (l_emission, l_per, l_tech)
+
+	  for l_per in M.time_optimize
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	  for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp )
+	  for l_emission in M.commodity_emissions
+	  if (l_emission, l_inp, l_tech, l_vin, l_out) in l_eActivityIndices
+	)
+
+	return indices
+
+
+def EmissionActivityByTechAndVintageVariableIndices ( M ):
+	indices = set(
+	  (l_emission, l_tech, l_vin)
+
+	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
+	)
+
+	return indices
+
+
+def EnergyConsumptionByTechAndOutputVariableIndices ( M ):
+	indices = set(
+	  (l_tech, l_out)
+
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	)
+
+	return indices
+
+
+def EnergyConsumptionByPeriodAndTechVariableIndices ( M ):
+	indices = set(
+	  (l_per, l_tech)
+
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_per in M.time_optimize
+	  if ValidActivity( l_per, l_tech, l_vin )
+	)
+
+	return indices
+
+
+def EnergyConsumptionByPeriodTechAndOutputVariableIndices ( M ):
+	indices = set(
+	  (l_per, l_tech, l_out)
+
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_per in M.time_optimize
+	  if ValidActivity( l_per, l_tech, l_vin )
+	)
+
+	return indices
+
+
+def EnergyConsumptionByPeriodTechAndVintageVariableIndices ( M ):
+	indices = set(
+	  (l_per, l_tech, l_vin)
+
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_per in M.time_optimize
+	  if ValidActivity( l_per, l_tech, l_vin )
+	)
+
+	return indices
 
 # End variables
 ##############################################################################
