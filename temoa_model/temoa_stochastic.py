@@ -5,38 +5,50 @@ from temoa_model import *
 
 def StochasticPointObjective_rule ( M, A_period ):
 	l_cost = 0
+	"""\
+Objective function.
 
-	for l_tech in M.tech_all:
-		for l_vin in ProcessVintages( A_period, l_tech ):
-			if loanIsActive(A_period, l_tech, l_vin):
-				l_icost = (
-				    M.V_Capacity[l_tech, l_vin]
-				  * ( M.CostInvest[l_tech, l_vin]
-				    * M.LoanAnnualize[l_tech, l_vin]
-				    + M.CostFixed[A_period, l_tech, l_vin]
-				    )
-				)
-			else:
-				l_icost = 0
-				if M.CostFixed[A_period, l_tech, l_vin] > 0:
-					# The if keeps the objective function cleaner in LP output
-					l_icost = (
-					    M.V_Capacity[l_tech, l_vin]
-					  * M.CostFixed[A_period, l_tech, l_vin]
-					)
+This function is currently a simple summation of all items in V_FlowOut multiplied by CommunityProductionCost.  For the time being (i.e. during development), this is intended to make development and debugging simpler.
+	"""
+	l_invest_indices = M.CostInvest.keys()
+	l_fixed_indices  = M.CostFixed.keys()
+	l_marg_indices   = M.CostMarginal.keys()
 
-			l_ucost = 0
-			l_marg_cost = value(M.CostMarginal[A_period, l_tech, l_vin])
-			if l_marg_cost > 0:
-				# The if keeps the objective function cleaner in LP output
-				l_ucost = sum(
-				    M.V_Activity[A_period, l_season, l_time_of_day, l_tech, l_vin]
-				  * l_marg_cost
+	l_loan_costs = sum(
+	    M.V_Capacity[l_tech, l_vin] * M.PeriodRate[ A_period ]
+	  * M.CostInvest[l_tech, l_vin]
+	  * M.LoanAnnualize[l_tech, l_vin]
 
-				  for l_season in M.time_season
-				  for l_time_of_day in M.time_of_day
-				)
-			l_cost += (l_icost + l_ucost) * M.PeriodRate[ A_period ]
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( A_period, l_tech )
+	  if loanIsActive( A_period, l_tech, l_vin )
+	  if (l_tech, l_vin) in l_invest_indices
+	  if value(M.CostInvest[l_tech, l_vin])
+	)
+
+	l_fixed_costs = sum(
+	    M.V_Capacity[l_tech, l_vin]
+	  * M.CostFixed[A_period, l_tech, l_vin]
+	  * M.PeriodRate[ A_period ]
+
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( A_period, l_tech )
+	  if (A_period, l_tech, l_vin) in l_fixed_indices
+	  if value(M.CostFixed[A_period, l_tech, l_vin])
+	)
+
+	l_marg_costs = sum(
+	    M.V_Activity[A_period, l_season, l_time_of_day, l_tech, l_vin]
+	  * M.PeriodRate[ A_period ]
+	  * M.CostMarginal[A_period, l_tech, l_vin]
+
+	  for l_tech in M.tech_all
+	  for l_vin in ProcessVintages( A_period, l_tech )
+	  if (A_period, l_tech, l_vin) in l_marg_indices
+	  if value(M.CostMarginal[A_period, l_tech, l_vin])
+	  for l_season in M.time_season
+	  for l_time_of_day in M.time_of_day
+	)
 
 	expr = (M.StochasticPointCost[ A_period ] == l_cost)
 	return expr
