@@ -272,7 +272,7 @@ def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
 		l_period_demand = sum(
 		  M.V_FlowIn[A_period, l_season, l_tod, A_com, l_tech, l_vin, l_out]
 
-		  for l_tech, l_vin in ProcessesByPeriodAndInput( M, A_period, A_com )
+		  for l_tech, l_vin in ProcessesByPeriodAndInput( A_period, A_com )
 		  for l_out in ProcessOutputsByInput( A_period, l_tech, l_vin, A_com )
 		  for l_season in M.time_season
 		  for l_tod in M.time_of_day
@@ -290,7 +290,7 @@ def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
 	  * M.CapacityToActivity[l_tech]
 	  * M.PeriodLength[ A_period ]
 
-	  for l_tech, l_vin in ProcessesByPeriodAndOutput( M, A_period, A_com )
+	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_com )
 	  if (A_period, l_tech, l_vin) not in l_frac_indices
 	)
 
@@ -371,7 +371,7 @@ sum((season,time_of_day,tech,vintage),V_FlowIn[p,*,*,e,*,*,r]) <= Param(Resource
 	l_extract = sum(
 	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, l_tech, l_vin, A_resource]
 
-	  for l_tech, l_vin in ProcessesByPeriodAndOutput( M, A_period, A_resource )
+	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_resource )
 	  for l_inp in ProcessInputsByOutput( A_period, l_tech, l_vin, A_resource )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
@@ -442,7 +442,7 @@ def DemandCapacityConstraint_rule ( M, A_period, A_season, A_time_of_day, A_comm
 	l_capacity = sum(
 	  M.V_Capacity[l_tech, l_vin]
 
-	  for l_tech, l_vin in ProcessesByPeriodAndOutput( M, A_period, A_comm )
+	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_comm )
 	)
 
 	dindex = (A_period, A_season, A_time_of_day, A_comm)

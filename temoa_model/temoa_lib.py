@@ -752,30 +752,35 @@ produce a given input carrier (A_output).
 	return set()
 
 
-def ProcessesByPeriodAndInput ( M, A_period, A_inp ):
+
+def ProcessesByPeriodAndInput ( A_period, A_inp ):
 	"""\
-This function relies on the Model (argument M).  I'd like to update at some point to not rely on th emodel
+Returns the set of processes that operate in 'period' and take 'input'.  Note
+that a process is conceptually a vintage of a technology.
 """
-	processes = set()
-	for l_tech in M.tech_all:
-		for l_vin in ProcessVintages( A_period, l_tech ):
-			index = (A_period, l_tech, l_vin)
-			if index in g_processInputs and A_inp in g_processInputs[ index ]:
-					processes.add( (l_tech, l_vin) )
+	processes = set(
+	  (l_tech, l_vin)
+
+	  for l_per, l_tech, l_vin in g_processInputs
+	  if l_per == A_period
+	  if A_inp in g_processInputs[l_per, l_tech, l_vin]
+	)
 
 	return processes
 
 
-def ProcessesByPeriodAndOutput ( M, A_period, A_out ):
+def ProcessesByPeriodAndOutput ( A_period, A_out ):
 	"""\
-This function relies on the Model (argument M).  I'd like to update at some point to not rely on th emodel
+Returns the set of processes that operate in 'period' and take 'output'.  Note
+that a process is a conceptually a vintage of a technology.
 """
-	processes = set()
-	for l_tech in M.tech_all:
-		for l_vin in ProcessVintages( A_period, l_tech ):
-			index = (A_period, l_tech, l_vin)
-			if index in g_processOutputs and A_out in g_processOutputs[ index ]:
-					processes.add( (l_tech, l_vin) )
+	processes = set(
+	  (l_tech, l_vin)
+
+	  for l_per, l_tech, l_vin in g_processOutputs
+	  if l_per == A_period
+	  if A_out in g_processOutputs[l_per, l_tech, l_vin]
+	)
 
 	return processes
 
