@@ -1,5 +1,6 @@
 __all__ = ('CreateModelDiagrams',)
 
+import multiprocessing as MP
 import os
 
 from subprocess import call
@@ -354,13 +355,12 @@ strict digraph Temoa_energy_carrier {
 		l_carriers.update( l_carrier for l_carrier in g_processInputs[ index ] )
 		l_carriers.update( l_carrier for l_carrier in g_processOutputs[index ] )
 
-	# this step is not necessary, but if there is some error, lets the user
-	# know on exactly which carrier it failed in terms of what has (not) been
-	# written to disk.
-	l_carriers = sorted( l_carriers )
+	# sorting is not strictly necessary, but if there is some error, it lets
+	# the user know on exactly which carrier it failed in terms of what has
+	# (not) been written to disk.
 
 	# Step 3: actually do the work
-	createImages( l_carriers )
+	createImages( sorted(l_carriers) )
 
 	os.chdir('..')
 
@@ -660,6 +660,8 @@ strict digraph model {
 """
 
 	# Now actually do the work
+	#  Sorting is not necessary, but gives a clue to user about where to look
+	#  if some sort of processing error occurs.
 	for t in sorted( M.tech_all ):
 		create_dot_file( t )
 		cmd = (
@@ -856,51 +858,51 @@ strict digraph model {
 	enode_attr_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
 	v_fmt = '%s\\nCap: %.2f'
 
-	for l_per, l_tech in g_activeCapacityAvailableIndices:
-		total_cap = M.V_CapacityAvailableByPeriodAndTech[l_per, l_tech].value
+	for per, tech in g_activeCapacityAvailableIndices:
+		total_cap = M.V_CapacityAvailableByPeriodAndTech[per, tech].value
 
 		# energy/vintage nodes, in/out edges
 		enodes, vnodes, iedges, oedges = set(), set(), set(), set()
 
-		for l_vin in ProcessVintages( l_per, l_tech ):
-			if not M.V_ActivityByPeriodTechAndVintage[l_per, l_tech, l_vin]:
+		for l_vin in ProcessVintages( per, tech ):
+			if not M.V_ActivityByPeriodTechAndVintage[per, tech, l_vin]:
 				continue
 
-			cap = M.V_Capacity[l_tech, l_vin]
+			cap = M.V_Capacity[tech, l_vin]
 			vnode = v_fmt % (l_vin, cap)
-			for l_inp in ProcessInputs( l_per, l_tech, l_vin ):
-				for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp ):
+			for l_inp in ProcessInputs( per, tech, l_vin ):
+				for l_out in ProcessOutputsByInput( per, tech, l_vin, l_inp ):
 					flowin = sum(
-					  M.V_FlowIn[l_per, ssn, tod, l_inp, l_tech, l_vin, l_out].value
+					  M.V_FlowIn[per, ssn, tod, l_inp, tech, l_vin, l_out].value
 					  for ssn in M.time_season
 					  for tod in M.time_of_day
 					)
 					flowout = sum(
-					  M.V_FlowOut[l_per, ssn, tod, l_inp, l_tech, l_vin, l_out].value
+					  M.V_FlowOut[per, ssn, tod, l_inp, tech, l_vin, l_out].value
 					  for ssn in M.time_season
 					  for tod in M.time_of_day
 					)
-					index = (l_per, l_inp, l_tech, l_vin)
+					index = (per, l_inp, tech, l_vin)
 
 					vnodes.add( (vnode, None) )
-					enodes.add( (l_inp, enode_attr_fmt % (l_inp, l_per)) )
-					enodes.add( (l_out, enode_attr_fmt % (l_out, l_per)) )
+					enodes.add( (l_inp, enode_attr_fmt % (l_inp, per)) )
+					enodes.add( (l_out, enode_attr_fmt % (l_out, per)) )
 					iedges.add( (l_inp, vnode, 'label="%.2f"' % flowin) )
 					oedges.add( (vnode, l_out, 'label="%.2f"' % flowout) )
 
-		if not vnodes: continue
+		if not vnodes: return
 
 		enodes = create_text_nodes( enodes, indent=2 )
 		vnodes = create_text_nodes( vnodes, indent=2 )
 		iedges = create_text_edges( iedges, indent=2 )
 		oedges = create_text_edges( oedges, indent=2 )
 
-		fname = 'results_%s_%s.' % (l_tech, l_per)
+		fname = 'results_%s_%s.' % (tech, per)
 		with open( fname + 'dot', 'w' ) as f:
 			f.write( model_dot_fmt % dict(
 			  images_dir      = images_dir,
-			  tech            = l_tech,
-			  period          = l_per,
+			  tech            = tech,
+			  period          = per,
 			  ffmt            = ffmt,
 			  commodity_color = commodity_color,
 			  usedfont_color  = usedfont_color,
@@ -1365,13 +1367,34 @@ def CreateModelDiagrams ( M, options ):
 	)
 	####################################
 
-	CreateCompleteEnergySystemDiagram( **kwargs )
-	CreateCommodityPartialGraphs( **kwargs )
-	CreateProcessPartialGraphs( **kwargs )
-	CreateMainModelDiagram( **kwargs )
-	CreateDetailedModelDiagram( **kwargs )
-	CreateTechResultsDiagrams( **kwargs )
-	CreateCommodityPartialResults( **kwargs )
-	CreateMainResultsDiagram( **kwargs )
+	# Do all necessary work in parallel, taking advantage of whatever cores
+	# are available to the computer on which this code is run.  To add a
+	# function to the pool, ensure that the function is in the 'gvizFunctions'
+	# tuple below, and that the function has all it needs to work passed in
+	# via the 'kwargs' dict above.
+
+	gvizFunctions = (
+	  CreateCompleteEnergySystemDiagram,
+	  CreateCommodityPartialGraphs,
+	  CreateProcessPartialGraphs,
+	  CreateMainModelDiagram,
+	  CreateDetailedModelDiagram,
+	  CreateTechResultsDiagrams,
+	  CreateCommodityPartialResults,
+	  CreateMainResultsDiagram,
+	)
+
+	sem = MP.Semaphore( MP.cpu_count() )
+	def do_work ( func ):
+		sem.acquire()
+		func( **kwargs )
+		sem.release()
+
+	processes = [
+	  MP.Process( target=do_work, args=(func,) )
+	  for func in gvizFunctions
+	]
+	for p in processes: p.start()
+	for p in processes: p.join()
 
 	os.chdir( '..' )
