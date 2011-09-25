@@ -898,6 +898,29 @@ def parse_args ( ):
 	  action='store',
 	  dest='graph_format',
 	  default=None)
+
+	parser.add_argument('--show_capacity',
+	  help='Choose whether or not the capacity shows up in the subgraphs.  '   \
+	       '[Default: not shown]',
+	  action='store_true',
+	  dest='show_capacity',
+	  default=False)
+
+	parser.add_argument( '--graph_type',
+	  help='Choose the type of subgraph depiction desired. The available '     \
+	       'options are "explicit_vintages" and "separate_vintages".  '        \
+	       '[Default: separate_vintages]',
+	  action='store',
+	  dest='graph_type',
+	  default='separate_vintages')
+
+	parser.add_argument('--use_splines',
+	  help='Choose whether the subgraph edges needs to be straight or curved.' \
+	       '  [Default: use straight lines, not splines]',
+	  action='store_true',
+	  dest='splinevar',
+	  default=False)
+
 	options = parser.parse_args()
 	return options
 

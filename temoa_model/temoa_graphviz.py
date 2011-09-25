@@ -1,4 +1,4 @@
-__all__ = ('CreateModelDiagram', 'CreateModelResultsDiagrams')
+__all__ = ('CreateModelDiagrams',)
 
 import os
 
@@ -365,6 +365,314 @@ strict digraph Temoa_energy_carrier {
 	os.chdir('..')
 
 
+def CreateProcessPartialGraphs ( **kwargs ):
+	"""\
+A new subgraph is created for every technology in the tech_all set.  Subgraphs
+are named model_<tech>.<format>
+"""
+	from temoa_lib import g_processInputs, ProcessInputs, ProcessOutputsByInput
+
+	M                  = kwargs.get( 'model' )
+	ffmt               = kwargs.get( 'image_format' )
+	arrowheadin_color  = kwargs.get( 'arrowheadin_color' )
+	arrowheadout_color = kwargs.get( 'arrowheadout_color' )
+	commodity_color    = kwargs.get( 'commodity_color' )
+	sb_vp_color        = kwargs.get( 'sb_vp_color' )
+	sb_vpbackg_color   = kwargs.get( 'sb_vpbackg_color' )
+	color_list         = kwargs.get( 'color_list' )
+	sb_incom_color     = kwargs.get( 'sb_incom_color' )
+	sb_outcom_color    = kwargs.get( 'sb_outcom_color' )
+	images_dir         = kwargs.get( 'images_dir' )
+	usedfont_color     = kwargs.get( 'usedfont_color' )
+	home_color         = kwargs.get( 'home_color' )
+	tech_color         = kwargs.get( 'tech_color' )
+	options            = kwargs.get( 'options' )
+
+	os.chdir( 'processes' )
+
+	show_capacity = options.show_capacity
+	splinevar     = options.splinevar
+
+	VintageCap = M.V_Capacity
+	PeriodCap  = M.V_CapacityAvailableByPeriodAndTech
+
+	url_fmt  = '../commodities/commodity_%%s.%s' % ffmt
+	dummystr = '   '
+	fname = 'process_%s.%s'
+
+	def _create_separate ( l_tech ):
+		# begin/end/period/vintage nodes
+		bnodes, enodes, pnodes, vnodes = set(), set(), set(), set()
+		eedges, vedges = set(), set()
+
+		periods  = set()  # used to obtain the first vintage/period, so that
+		vintages = set()  #   all connections can point to a common point
+		for l_per, tmp, l_vin in g_processInputs:
+			if tmp != l_tech: continue
+			periods.add(l_per)
+			vintages.add(l_vin)
+		mid_period  = sorted(periods)[ len(periods)  //2 ] # // is 'floordiv'
+		mid_vintage = sorted(vintages)[len(vintages) //2 ]
+		del periods, vintages
+
+		p_fmt = 'p_%s'
+		v_fmt = 'v_%s'
+		niattr = 'color="%s", href="%s"' % (sb_incom_color, url_fmt)  # inp node
+		noattr = 'color="%s", href="%s"' % (sb_outcom_color, url_fmt) # out node
+		eattr = 'color="%s"'    # edge attribute
+		pattr = None            # period node attribute
+		vattr = None            # vintage node attribute
+		  # "cluster-in attribute", "cluster-out attribute"
+		ciattr = 'color="%s", lhead="cluster_vintage"' % arrowheadin_color
+		coattr = 'color="%s", ltail="cluster_period"'  % arrowheadout_color
+
+		if show_capacity:
+			pattr_fmt = 'label="p%s\\nTotal Capacity: %.2f"'
+			vattr_fmt = 'label="v%s\\nCapacity: %.2f"'
+
+		j = 0
+		for l_per, tmp, l_vin in g_processInputs:
+			if tmp != l_tech: continue
+
+			if show_capacity:
+				pattr = pattr_fmt % (l_per, PeriodCap[l_per, l_tech].value)
+				vattr = vattr_fmt % (l_vin, VintageCap[l_tech, l_vin].value)
+			pnodes.add( (p_fmt % l_per, pattr) )
+			vnodes.add( (v_fmt % l_vin, vattr) )
+
+			for l_inp in ProcessInputs( l_per, l_tech, l_vin ):
+				for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp ):
+					# use color_list for the option 1 subgraph arrows 1, so as to
+					# more easily delineate the connections in the graph.
+					rainbow = color_list[j]
+					j = (j +1) % len(color_list)
+
+					enodes.add( (l_inp, niattr % l_inp) )
+					bnodes.add( (l_out, noattr % l_out) )
+					eedges.add( (l_inp, v_fmt % mid_vintage, ciattr) )
+					vedges.add( (v_fmt % l_vin, p_fmt % l_per, eattr % rainbow) )
+					eedges.add( (p_fmt % mid_period, '%s' % l_out, coattr) )
+
+		bnodes = create_text_nodes( bnodes, indent=2 ) # beginning nodes
+		enodes = create_text_nodes( enodes, indent=2 ) # ending nodes
+		pnodes = create_text_nodes( pnodes, indent=2 ) # period nodes
+		vnodes = create_text_nodes( vnodes, indent=2 ) # vintage nodes
+		eedges = create_text_edges( eedges, indent=2 ) # external edges
+		vedges = create_text_edges( vedges, indent=2 ) # vintage edges
+
+		with open( fname % (l_tech, 'dot'), 'w' ) as f:
+			f.write( model_dot_fmt % dict(
+			  cluster_url = '../simple_model.%s' % ffmt,
+			  graph_label = l_tech,
+			  dummy       = dummystr,
+			  images_dir  = images_dir,
+			  splinevar   = splinevar,
+			  clusternode_color = sb_vp_color,
+			  period_color      = sb_vpbackg_color,
+			  vintage_color     = sb_vpbackg_color,
+			  usedfont_color    = usedfont_color,
+			  home_color        = home_color,
+			  bnodes = bnodes,
+			  enodes = enodes,
+			  pnodes = pnodes,
+			  vnodes = vnodes,
+			  eedges = eedges,
+			  vedges = vedges,
+			))
+		del bnodes, enodes, pnodes, vnodes, eedges, vedges
+
+
+	def _create_explicit ( l_tech ):
+		v_fmt = 'p%s_v%s'
+
+		nattr = 'color="%s", href="%s"' % (commodity_color, url_fmt)
+		vattr = 'color="%s", href="model.%s"' % (tech_color, ffmt)
+		etattr = 'color="%s", sametail="%%s"' % arrowheadin_color
+		efattr = 'color="%s", samehead="%%s"' % arrowheadout_color
+
+		if show_capacity:
+			vattr = 'color="%s", label="p%%(p)s_v%%(v)s\\n' \
+		           'Capacity = %%(val).2f", href="model.%s"' % (tech_color, ffmt)
+
+		# begin/end/vintage nodes
+		bnodes, enodes, vnodes, edges = set(), set(), set(), set()
+
+		for l_per, tmp, l_vin in g_processInputs:
+			if tmp != l_tech: continue
+
+			for l_inp in ProcessInputs( l_per, l_tech, l_vin ):
+				for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp ):
+					bnodes.add( (l_inp, nattr % l_inp) )
+					enodes.add( (l_out, nattr % l_out) )
+
+					attr_args = dict()
+					if show_capacity:
+						val = VintageCap[l_tech, l_vin].value
+						attr_args.update(p=l_per, v=l_vin, val=val)
+					vnodes.add( (v_fmt % (l_per, l_vin),
+					  vattr % attr_args ) )
+
+					edges.add( (l_inp, v_fmt % (l_per, l_vin),
+					  etattr % l_inp) )
+					edges.add( (v_fmt % (l_per, l_vin), l_out, efattr % l_out) )
+
+		bnodes = create_text_nodes( bnodes, indent=2 )
+		enodes = create_text_nodes( enodes, indent=2 )
+		vnodes = create_text_nodes( vnodes )
+		edges  = create_text_edges( edges )
+
+		with open( fname % (l_tech, 'dot'), 'w' ) as f:
+			f.write( model_dot_fmt % dict(
+			  tech           = l_tech,
+			  images_dir     = images_dir,
+			  home_color     = home_color,
+			  usedfont_color = usedfont_color,
+			  dummy          = dummystr,
+			  bnodes         = bnodes,
+			  enodes         = enodes,
+			  vnodes         = vnodes,
+			  edges          = edges,
+			))
+		del bnodes, enodes, vnodes, edges
+
+
+	if options.graph_type == 'separate_vintages':
+		create_dot_file = _create_separate
+		model_dot_fmt = """\
+strict digraph model {
+	label = "%(graph_label)s" ;
+
+	bgcolor     = "transparent" ;
+	color       = "black" ;
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "%(splinevar)s" ;
+
+	node [ shape="box", style="filled" ];
+
+	edge [
+	  arrowhead  = "vee",
+	  decorate   = "True",
+	  dir        = "both",
+	  fontsize   = "8",
+	  label      = "%(dummy)s",
+	  labelfloat = "false",
+	  labelfontcolor = "lightgreen",
+	  len        = "2",
+	  weight     = "0.5"
+	];
+
+	subgraph cluster_vintage {
+		label = "Vintages" ;
+
+		color = "%(vintage_color)s" ;
+		style = "filled";
+		href  = "%(cluster_url)s" ;
+
+		node [ color="%(clusternode_color)s" ]
+
+		%(vnodes)s
+	}
+
+	subgraph cluster_period {
+		label = "Period" ;
+		color = "%(period_color)s" ;
+		style = "filled" ;
+		href  = "%(cluster_url)s" ;
+
+		node [ color="%(clusternode_color)s" ]
+
+		%(pnodes)s
+	}
+
+	subgraph energy_carriers {
+		node [ shape="circle" ] ;
+
+	  // Beginning nodes
+		%(bnodes)s
+
+	  // Ending nodes
+		%(enodes)s
+	}
+
+	subgraph external_edges {
+		edge [ arrowhead="normal", dir="forward" ] ;
+
+		%(eedges)s
+	}
+
+	subgraph internal_edges {
+		// edges between vintages and periods
+		%(vedges)s
+	}
+
+	"%(images_dir)s" [
+	  color     = "%(home_color)s",
+	  fontcolor = "%(usedfont_color)s",
+	  href      = "..",
+	  shape     = "house"
+	] ;
+}
+"""
+	elif options.graph_type == 'explicit_vintages':
+		create_dot_file = _create_explicit
+		model_dot_fmt = """\
+strict digraph model {
+	label = "%(tech)s" ;
+
+	color       = "black" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+
+	node [ shape="box", style="filled" ];
+
+	edge [
+	  arrowhead = "vee",
+	  decorate  = "True",
+	  label     = "%(dummy)s",
+	  labelfontcolor = "lightgreen"
+	];
+
+	subgraph energy_carriers {
+		node [ shape="circle" ] ;
+
+	  // Input nodes
+		%(bnodes)s
+
+	  // Output nodes
+		%(enodes)s
+	}
+
+		// Vintage nodes
+	%(vnodes)s
+
+	// Define edges and any specific edge attributes
+	%(edges)s
+
+	"%(images_dir)s" [
+	  color     = "%(home_color)s",
+	  fontcolor = "%(usedfont_color)s",
+	  href      = "..",
+	  shape     = "house"
+	];
+}
+"""
+
+	# Now actually do the work
+	for t in sorted( M.tech_all ):
+		create_dot_file( t )
+		cmd = (
+		  'dot',
+		  '-T' + ffmt,
+		  '-o' + fname % (t, ffmt),
+		  fname % (t, 'dot')
+		)
+		call( cmd )
+
+	os.chdir('..')
+
+
 def CreateModelDiagrams ( M, options ):
 	# This function is a "master", calling many other functions based on command
 	# line input.  Other than code cleanliness, there is no reason that the
@@ -423,5 +731,6 @@ def CreateModelDiagrams ( M, options ):
 
 	CreateCompleteEnergySystemDiagram( **kwargs )
 	CreateCommodityPartialGraphs( **kwargs )
+	CreateProcessPartialGraphs( **kwargs )
 
 	os.chdir( '..' )
