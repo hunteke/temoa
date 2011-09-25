@@ -53,15 +53,15 @@ def CommodityBalanceConstraintErrorCheck (
 	if int is type(l_vflow_out):
 		flow_in_expr = StringIO()
 		l_vflow_in.pprint( ostream=flow_in_expr )
-		msg = "Unable to meet an interprocess '%s' transfer in (%s, %s, %s).\n" \
-		  "No flow out.  Constraint flow in:\n   %s\n"                          \
-		  "Possible reasons:\n"                                                 \
-		  " - Is there a missing period in set 'time_horizon'?\n"               \
-		  " - Is there a missing tech in set 'tech_resource'?\n"                \
-		  " - Is there a missing tech in set 'tech_production'?\n"              \
-		  " - Is there a missing commodity in set 'commodity_physical'?\n"      \
-		  " - Are there missing entries in the Efficiency parameter?\n"         \
-		  " - Does a tech need a longer LifetimeTech parameter setting?"
+		msg = ("Unable to meet an interprocess '%s' transfer in (%s, %s, %s).\n"
+		  'No flow out.  Constraint flow in:\n   %s\n'
+		  'Possible reasons:\n'
+		  " - Is there a missing period in set 'time_horizon'?\n"
+		  " - Is there a missing tech in set 'tech_resource'?\n"
+		  " - Is there a missing tech in set 'tech_production'?\n"
+		  " - Is there a missing commodity in set 'commodity_physical'?\n"
+		  ' - Are there missing entries in the Efficiency parameter?\n'
+		  ' - Does a tech need a longer LifetimeTech parameter setting?')
 		raise ValueError, msg % (A_carrier, A_season, A_time_of_day, A_period,
 		                         flow_in_expr.getvalue() )
 
@@ -70,11 +70,11 @@ def DemandConstraintErrorCheck (
   l_supply, A_comm, A_period, A_season, A_time_of_day
 ):
 	if int is type( l_supply ):
-		msg = "Error: Demand '%s' for (%s, %s, %s) unable to be met by any "    \
-		  "technology.\n\tPossible reasons:\n"                                  \
-		  " - Is the Efficiency parameter missing an entry for this demand?\n"  \
-		  " - Does a tech that satisfies this demand need a longer LifetimeTech?"\
-		  "\n"
+		msg = ("Error: Demand '%s' for (%s, %s, %s) unable to be met by any "
+		  'technology.\n\tPossible reasons:\n'
+		  ' - Is the Efficiency parameter missing an entry for this demand?\n'
+		  ' - Does a tech that satisfies this demand need a longer LifetimeTech?'
+		  '\n')
 		raise ValueError, msg % (A_comm, A_period, A_season, A_time_of_day)
 
 # End Temoa rule "partials"
@@ -87,14 +87,14 @@ def validate_time ( M ):
 	from sys import maxint
 
 	if not len( M.time_horizon ):
-		msg = 'Set "time_horizon" is empty!  Please specify at least one '      \
-		      'period in set time_horizon.'
+		msg = ('Set "time_horizon" is empty!  Please specify at least one '
+		  'period in set time_horizon.')
 		raise ValueError, msg
 
 	if not len( M.time_future ):
-		msg = 'Set "time_future" is empty!  Please specify at least one year ' \
-		      'in set time_future, so that the model may ascertain a final '   \
-		      'period length for optimization and economic accounting.'
+		msg = ('Set "time_future" is empty!  Please specify at least one year '
+		  'in set time_future, so that the model may ascertain a final period '
+		  'period length for optimization and economic accounting.')
 		raise ValueError, msg
 
 	""" Ensure that the time_exist < time_horizon < time_future """
@@ -104,12 +104,12 @@ def validate_time ( M ):
 	future   = min( M.time_future )
 
 	if not ( exist < horizonl ):
-		msg = "All items in time_horizon must be larger that in time_exist.\n"  \
-		      "time_exist max:   %s\ntime_horizon min: %s"
+		msg = ('All items in time_horizon must be larger than in time_exist.\n'
+		  'time_exist max:   %s\ntime_horizon min: %s')
 		raise ValueError, msg % (exist, horizonl)
 	elif not ( horizonh < future ):
-		msg = "All items in time_future must be larger that in time_horizon.\n" \
-		      "time_horizon max:   %s\ntime_future min:    %s"
+		msg = ('All items in time_future must be larger that in time_horizon.\n'
+		  'time_horizon max:   %s\ntime_future min:    %s')
 		raise ValueError, msg % (horizonh, future)
 
 	return tuple()
@@ -125,19 +125,19 @@ def validate_SegFrac ( M ):
 		# compare against an epsilon value of "close enough".
 		items = '\n   '.join( "%s: %s" % ii for ii in M.SegFrac.data().items() )
 
-		msg = 'The values of the SegFrac parameter do not sum to 1.  Each item '\
-		   'in SegFrac represents a fraction of a year, so they must total to ' \
-		   '1.  Current values:\n   %s\n\tsum = %s'
+		msg = ('The values of the SegFrac parameter do not sum to 1.  Each item '
+		  'in SegFrac represents a fraction of a year, so they must total to '
+		  '1.  Current values:\n   %s\n\tsum = %s')
 		raise ValueError, msg % (items, total)
 
 	return tuple()
 
 
 def validate_TechOutputSplit ( M ):
-	msg = 'A set of output fractional values specified in TechOutputSplit for '\
-	   'do not sum to 1.  Each item in specified in TechOutputSplit represents'\
-	   ' a fraction of the input carrier converted to the output carrier, so ' \
-	   'they must total to 1.  Current values:\n   %s\n\tsum = %s'
+	msg = ('A set of output fractional values specified in TechOutputSplit do '
+	  'not sum to 1.  Each item specified in TechOutputSplit represents a '
+	  'fraction of the input carrier converted to the output carrier, so '
+	  'they must total to 1.  Current values:\n   %s\n\tsum = %s')
 
 	split_indices = M.TechOutputSplit.keys()
 
@@ -237,11 +237,11 @@ def InitializeProcessParameters ( M ):
 					continue
 
 				if l_vintage + l_lifetime <= l_first_period:
-					msg = '\nWarning: %s specified as ExistingCapacity, but its '   \
-					   'LifetimeTech parameter does not extend past the beginning '\
-					   'of time_horizon.  (i.e. useless parameter)'                \
-					   '\n\tLifetime:     %s'                                      \
-					   '\n\tFirst period: %s\n'
+					msg = ('\nWarning: %s specified as ExistingCapacity, but its '
+					  'LifetimeTech parameter does not extend past the beginning '
+					  'of time_horizon.  (i.e. useless parameter)'
+					  '\n\tLifetime:     %s'
+					  '\n\tFirst period: %s\n')
 					SE.write( msg % (l_process, l_lifetime, l_first_period) )
 
 			for l_inp in M.commodity_physical:
@@ -251,8 +251,8 @@ def InitializeProcessParameters ( M ):
 					if eindex not in l_eff_indices: continue
 					if 0 == M.Efficiency[ eindex ]:
 						msg = ('\nNotice: Unnecessary specification of Efficiency %s'
-						   '.  If specifying an efficiency of zero, you may simply '
-						   'omit the declaration.\n')
+						  '.  If specifying an efficiency of zero, you may simply '
+						  'omit the declaration.\n')
 						SE.write( msg % str(eindex) )
 						continue
 
@@ -1015,10 +1015,10 @@ def temoa_solve ( model ):
 	from sys import argv, version_info
 
 	if version_info < (2, 7):
-		msg = "Temoa requires Python v2.7 or greater to run.\n\nIf you've "     \
-		   "installed Coopr with Python 2.6 or less, you'll need to reinstall " \
-		   "Coopr, taking care to install with a Python 2.7 (or greater) "      \
-		   "executable."
+		msg = ("Temoa requires Python v2.7 or greater to run.\n\nIf you've "
+		  "installed Coopr with Python 2.6 or less, you'll need to reinstall "
+		  'Coopr, taking care to install with a Python 2.7 (or greater) '
+		  'executable.')
 		raise SystemExit, msg
 
 	from time import clock

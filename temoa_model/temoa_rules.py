@@ -175,7 +175,7 @@ def EmissionConstraint_rule ( M, A_period, A_emission ):
 
 	if int is type( l_sum ):
 		msg = ("Warning: No technology produces emission '%s', though limit was "
-		   "specified as %s.\n")
+		  'specified as %s.\n')
 		SE.write( msg % (A_emission, l_emissionlimit) )
 		return Constraint.Skip
 
