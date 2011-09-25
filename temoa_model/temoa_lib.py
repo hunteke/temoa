@@ -219,65 +219,63 @@ def InitializeProcessParameters ( M ):
 
 	l_first_period = min( M.time_horizon )
 	l_exist_indices = M.ExistingCapacity.keys()
-	l_eff_indices = M.Efficiency.keys()
 
-	for l_vintage in M.vintage_all:
-		for l_tech in M.tech_all:
-			l_process = (l_tech, l_vintage)
-			l_lifetime = value( M.LifetimeTech[ l_process ] )
+	for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys():
+		l_process = (l_tech, l_vin)
+		l_lifetime = value(M.LifetimeTech[ l_process ])
 
-			if l_vintage in M.vintage_exist:
-				# if existing tech & capacity is 0, don't include it
-				if l_process not in l_exist_indices: continue
-				if 0 == M.ExistingCapacity[ l_process ]:
-					msg = ('Notice: Unnecessary specification of ExistingCapacity '
-					   '%s.  If specifying a capacity of zero, you may simply '
-					   'omit the declaration.\n')
-					SE.write( msg % str(l_process) )
-					continue
+		if l_vin in M.vintage_exist:
+			if l_process not in l_exist_indices:
+				msg = ('Warning: %s has a specified Efficiency, but does not '
+				  'have any existing install base (ExistingCapacity)\n.')
+				SE.write( msg % str(l_process) )
+				continue
+			if 0 == M.ExistingCapacity[ l_process ]:
+				msg = ('Notice: Unnecessary specification of ExistingCapacity '
+				  '%s.  If specifying a capacity of zero, you may simply '
+				  'omit the declaration.\n')
+				SE.write( msg % str(l_process) )
+				continue
+			if l_vin + l_lifetime <= l_first_period:
+				msg = ('\nWarning: %s specified as ExistingCapacity, but its '
+				  'LifetimeTech parameter does not extend past the beginning of '
+				  'time_horizon.  (i.e. useless parameter)'
+				  '\n\tLifetime:     %s'
+				  '\n\tFirst period: %s\n')
+				SE.write( msg % (l_process, l_lifetime, l_first_period) )
+				continue
 
-				if l_vintage + l_lifetime <= l_first_period:
-					msg = ('\nWarning: %s specified as ExistingCapacity, but its '
-					  'LifetimeTech parameter does not extend past the beginning '
-					  'of time_horizon.  (i.e. useless parameter)'
-					  '\n\tLifetime:     %s'
-					  '\n\tFirst period: %s\n')
-					SE.write( msg % (l_process, l_lifetime, l_first_period) )
+		eindex = (l_inp, l_tech, l_vin, l_out)
+		if 0 == M.Efficiency[ eindex ]:
+			msg = ('\nNotice: Unnecessary specification of Efficiency %s.  If '
+			  'specifying an efficiency of zero, you may simply omit the '
+			  'declaration.\n')
+			SE.write( msg % str(eindex) )
+			continue
 
-			for l_inp in M.commodity_physical:
-				for l_out in M.commodity_carrier:
+		for l_per in M.time_optimize:
+			# can't build a vintage before it's been invented
+			if l_per < l_vin: continue
 
-					eindex = (l_inp, l_tech, l_vintage, l_out)
-					if eindex not in l_eff_indices: continue
-					if 0 == M.Efficiency[ eindex ]:
-						msg = ('\nNotice: Unnecessary specification of Efficiency %s'
-						  '.  If specifying an efficiency of zero, you may simply '
-						  'omit the declaration.\n')
-						SE.write( msg % str(eindex) )
-						continue
+			pindex = (l_per, l_tech, l_vin)
 
-					for l_period in M.time_optimize:
-						# can't build a vintage before it's been invented
-						if l_period < l_vintage: continue
+			if l_vin in M.time_optimize:
+				l_loan_life = value(M.LifetimeLoan[ l_process ])
+				if l_vin + l_loan_life >= l_per:
+					g_processLoans[ pindex ] = True
 
-						if l_vintage in M.time_optimize:
-							l_loan_life = value(M.LifetimeLoan[ l_process ])
-							if l_vintage + l_loan_life >= l_period:
-								g_processLoans[l_period, l_tech, l_vintage] = True
+			# if tech is no longer "alive", don't include it
+			if l_vin + l_lifetime <= l_per: continue
 
-						# if tech is no longer "alive", don't include it
-						if l_vintage + l_lifetime <= l_period: continue
+			if pindex not in g_processInputs:
+				g_processInputs[  pindex ] = set()
+				g_processOutputs[ pindex ] = set()
+			if (l_per, l_tech) not in g_processVintages:
+				g_processVintages[l_per, l_tech] = set()
 
-						pindex = (l_period, l_tech, l_vintage)
-						if pindex not in g_processInputs:
-							g_processInputs[  pindex ] = set()
-							g_processOutputs[ pindex ] = set()
-						if (l_period, l_tech) not in g_processVintages:
-							g_processVintages[l_period, l_tech] = set()
-
-						g_processVintages[l_period, l_tech].add( l_vintage )
-						g_processInputs[ pindex ].add( l_inp )
-						g_processOutputs[pindex ].add( l_out )
+			g_processVintages[l_per, l_tech].add( l_vin )
+			g_processInputs[ pindex ].add( l_inp )
+			g_processOutputs[pindex ].add( l_out )
 
 	g_activeFlowIndices = set(
 	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
