@@ -125,8 +125,11 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
 	M.Efficiency   = Param( M.commodity_carrier, M.tech_all, M.vintage_all, M.commodity_carrier )
-	M.LifetimeTech = Param( M.tech_all,  M.vintage_all,  default=30 )  # in years
-	M.LifetimeLoan = Param( M.tech_all,  M.vintage_optimize,  default=10 )  # in years
+
+	M.LifetimeTechIndices = Set( dimen=2, rule=LifetimeTechIndices )
+	M.LifetimeLoanIndices = Set( dimen=2, rule=LifetimeLoanIndices )
+	M.LifetimeTech = Param( M.LifetimeTechIndices,  default=30 )  # in years
+	M.LifetimeLoan = Param( M.LifetimeLoanIndices,  default=10 )  # in years
 
 	# always empty set, like the validation hacks above.  Temoa uses a couple
 	# of global variables to precalculate some oft-used results in constraint

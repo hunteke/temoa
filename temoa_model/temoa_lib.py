@@ -370,6 +370,29 @@ def LifetimeFracIndices ( M ):
 	return indices
 
 
+def LifetimeTechIndices ( M ):
+	indices = set(
+	  (l_tech, l_vin)
+
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	)
+
+	return indices
+
+
+def LifetimeLoanIndices ( M ):
+	min_period = min( M.vintage_optimize )
+
+	indices = set(
+	  (l_tech, l_vin)
+
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  if l_vin >= min_period
+	)
+
+	return indices
+
+
 def LoanIndices ( M ):
 	return set( M.CostInvest.keys() )
 
