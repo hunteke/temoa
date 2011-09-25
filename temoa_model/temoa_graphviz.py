@@ -673,6 +673,106 @@ strict digraph model {
 	os.chdir('..')
 
 
+def CreateMainModelDiagram ( **kwargs ):
+	from temoa_lib import g_processInputs, ProcessInputs, ProcessOutputsByInput
+
+	M                  = kwargs.get( 'model' )
+	ffmt               = kwargs.get( 'image_format' )
+	images_dir         = kwargs.get( 'images_dir' )
+	arrowheadin_color  = kwargs.get( 'arrowheadin_color' )
+	arrowheadout_color = kwargs.get( 'arrowheadout_color' )
+	commodity_color    = kwargs.get( 'commodity_color' )
+	home_color         = kwargs.get( 'home_color' )
+	tech_color         = kwargs.get( 'tech_color' )
+	usedfont_color     = kwargs.get( 'usedfont_color' )
+
+	fname = 'simple_model.'
+
+	model_dot_fmt = """\
+strict digraph model {
+	label = "Model Diagram"
+
+	rankdir = "LR" ;
+
+	// Default node and edge attributes
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee", labelfontcolor="lightgreen" ] ;
+
+	// Define individual nodes
+	subgraph techs {
+		node [ color="%(tech_color)s", shape="box" ] ;
+
+		%(tnodes)s
+	}
+
+	subgraph energy_carriers {
+		node [ color="%(commodity_color)s", shape="circle" ] ;
+
+		%(enodes)s
+	}
+
+	// Define edges and any specific edge attributes
+	subgraph inputs {
+		edge [ color="%(arrowheadin_color)s" ] ;
+
+		%(iedges)s
+	}
+
+	subgraph outputs {
+		edge [ color="%(arrowheadout_color)s" ] ;
+
+		%(oedges)s
+	}
+
+	"%(images_dir)s" [
+	  color     = "%(home_color)s",
+	  fontcolor = "%(usedfont_color)s",
+	  href      = "..",
+	  shape     = "house"
+	];
+}
+"""
+
+	tech_attr_fmt    = 'href="processes/process_%%s.%s"' % ffmt
+	carrier_attr_fmt = 'href="commodities/commodity_%%s.%s"' % ffmt
+
+	# edge/tech nodes, in/out edges
+	enodes, tnodes, iedges, oedges = set(), set(), set(), set()
+
+	for l_per, l_tech, l_vin in g_processInputs:
+		tnodes.add( (l_tech, tech_attr_fmt % l_tech) )
+		for l_inp in ProcessInputs( l_per, l_tech, l_vin ):
+			enodes.add( (l_inp, carrier_attr_fmt % l_inp) )
+			for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp ):
+				enodes.add( (l_out, carrier_attr_fmt % l_out) )
+				iedges.add( (l_inp, l_tech, None) )
+				oedges.add( (l_tech, l_out, None) )
+
+	enodes = create_text_nodes( enodes, indent=2 )
+	tnodes = create_text_nodes( tnodes, indent=2 )
+	iedges = create_text_edges( iedges, indent=2 )
+	oedges = create_text_edges( oedges, indent=2 )
+
+	with open( fname + 'dot', 'w' ) as f:
+		f.write( model_dot_fmt % dict(
+		  images_dir         = images_dir,
+		  arrowheadin_color  = arrowheadin_color,
+		  arrowheadout_color = arrowheadout_color,
+		  commodity_color    = commodity_color,
+		  home_color         = home_color,
+		  tech_color         = tech_color,
+		  usedfont_color     = usedfont_color,
+		  enodes             = enodes,
+		  tnodes             = tnodes,
+		  iedges             = iedges,
+		  oedges             = oedges,
+		))
+	del enodes, tnodes, iedges, oedges
+
+	cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
+	call( cmd )
+
+
 def CreateModelDiagrams ( M, options ):
 	# This function is a "master", calling many other functions based on command
 	# line input.  Other than code cleanliness, there is no reason that the
@@ -732,5 +832,6 @@ def CreateModelDiagrams ( M, options ):
 	CreateCompleteEnergySystemDiagram( **kwargs )
 	CreateCommodityPartialGraphs( **kwargs )
 	CreateProcessPartialGraphs( **kwargs )
+	CreateMainModelDiagram( **kwargs )
 
 	os.chdir( '..' )
