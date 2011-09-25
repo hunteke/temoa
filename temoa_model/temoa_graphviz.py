@@ -773,6 +773,11 @@ strict digraph model {
 	call( cmd )
 
 
+def CreateDetailedModelDiagram ( **kwargs ):
+	SE.write( "CreateDetailedModelDiagram - not yet implemented\n" )
+	# Need to spec out what it details a bit more.
+
+
 def CreateModelDiagrams ( M, options ):
 	# This function is a "master", calling many other functions based on command
 	# line input.  Other than code cleanliness, there is no reason that the
@@ -833,5 +838,6 @@ def CreateModelDiagrams ( M, options ):
 	CreateCommodityPartialGraphs( **kwargs )
 	CreateProcessPartialGraphs( **kwargs )
 	CreateMainModelDiagram( **kwargs )
+	CreateDetailedModelDiagram( **kwargs )
 
 	os.chdir( '..' )
