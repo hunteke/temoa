@@ -1,7 +1,7 @@
 from cStringIO import StringIO
 from sys import argv, stderr as SE, stdout as SO
 
-from temoa_graphviz import CreateModelDiagram
+from temoa_graphviz import CreateModelDiagrams
 
 try:
 	from coopr.pyomo import *
@@ -771,6 +771,35 @@ produce a given input carrier (A_output).
 	return set()
 
 
+def ProcessesByInput ( A_inp ):
+	"""\
+Returns the set of processes that take 'input'.  Note that a process is
+conceptually a vintage of a technology.
+"""
+	processes = set(
+	  (l_tech, l_vin)
+
+	  for l_per, l_tech, l_vin in g_processInputs
+	  if A_inp in g_processInputs[l_per, l_tech, l_vin]
+	)
+
+	return processes
+
+
+def ProcessesByOutput ( A_out ):
+	"""\
+Returns the set of processes that take 'output'.  Note that a process is
+conceptually a vintage of a technology.
+"""
+	processes = set(
+	  (l_tech, l_vin)
+
+	  for l_per, l_tech, l_vin in g_processOutputs
+	  if A_out in g_processOutputs[l_per, l_tech, l_vin]
+	)
+
+	return processes
+
 
 def ProcessesByPeriodAndInput ( A_period, A_inp ):
 	"""\
@@ -933,14 +962,10 @@ def temoa_solve ( model ):
 	SO.write( formatted_results )
 
 	if options.graph_format:
-		SE.write( '[        ] Creating Temoa model diagram.' ); SE.flush()
-		CreateModelDiagram( instance, options.graph_format )
+		SE.write( '[        ] Creating Temoa model diagrams.' ); SE.flush()
+		instance.load( result )
+		CreateModelDiagrams( instance, options )
 		SE.write( '\r[%8.2f\n' % duration() )
-
-		#SE.write( '[        ] Creating Temoa model results diagram ... '); SE.flush()
-		#instance.load( result )
-		#CreateModelResultsDiagram( instance, options.graph_format )
-		#SE.write( '\r[%8.2f\n' % duration() )
 
 # End direct invocation methods
 ###############################################################################
