@@ -680,12 +680,9 @@ def InvestmentByTechConstraint_rule ( M, A_tech ):
 def InvestmentByTechAndVintageConstraint_rule ( M, A_tech, A_vin ):
 	index = (A_tech, A_vin)
 
-	l_cost = 0
-
 	if index in M.CostInvest.keys():
 		l_cost = M.V_Capacity[ index ] * value(M.CostInvest[ index ])
-
-	if int is type( l_cost ):
+	else:
 		return Constraint.Skip
 
 	expr = ( M.V_InvestmentByTechAndVintage[ index ] == l_cost)
