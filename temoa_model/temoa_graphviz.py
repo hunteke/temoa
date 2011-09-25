@@ -778,6 +778,302 @@ def CreateDetailedModelDiagram ( **kwargs ):
 	# Need to spec out what it details a bit more.
 
 
+def CreateTechResultsDiagrams ( **kwargs ):
+	from temoa_lib import g_activeCapacityAvailableIndices, g_processInputs,   \
+	  ProcessVintages, ProcessInputs, ProcessOutputsByInput
+
+	M                  = kwargs.get( 'model' )
+	ffmt               = kwargs.get( 'image_format' )
+	images_dir         = kwargs.get( 'images_dir' )
+	arrowheadin_color  = kwargs.get( 'arrowheadin_color' )
+	arrowheadout_color = kwargs.get( 'arrowheadout_color' )
+	sb_vpbackg_color   = kwargs.get( 'sb_vpbackg_color' )
+	sb_vp_color        = kwargs.get( 'sb_vp_color' )
+	commodity_color    = kwargs.get( 'commodity_color' )
+	home_color         = kwargs.get( 'home_color' )
+	tech_color         = kwargs.get( 'tech_color' )
+	usedfont_color     = kwargs.get( 'usedfont_color' )
+	options            = kwargs.get( 'options' )
+
+	splinevar = options.splinevar
+
+	os.chdir( 'results' )
+
+	model_dot_fmt = """\
+strict digraph model {
+	label = "Results for %(tech)s in %(period)s" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "%(splinevar)s" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\\nCapacity: %(total_cap).2f" ;
+
+		style = "filled"
+		color = "%(vintage_cluster_color)s"
+
+		node [ color="%(vintage_color)s", shape="box" ] ;
+
+		%(vnodes)s
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "%(commodity_color)s",
+		  fontcolor = "%(usedfont_color)s",
+		  shape     = "circle"
+		] ;
+
+		%(enodes)s
+	}
+
+	subgraph inputs {
+		edge [ color="%(input_color)s" ] ;
+
+		%(iedges)s
+	}
+
+	subgraph outputs {
+		edge [ color="%(output_color)s" ] ;
+
+		%(oedges)s
+	}
+
+	"%(images_dir)s" [
+	  color     = "%(home_color)s",
+	  fontcolor = "%(usedfont_color)s",
+	  href      = "..",
+	  shape     = "house"
+	];
+}
+"""
+	enode_attr_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
+	v_fmt = '%s\\nCap: %.2f'
+
+	for l_per, l_tech in g_activeCapacityAvailableIndices:
+		total_cap = M.V_CapacityAvailableByPeriodAndTech[l_per, l_tech].value
+
+		# energy/vintage nodes, in/out edges
+		enodes, vnodes, iedges, oedges = set(), set(), set(), set()
+
+		for l_vin in ProcessVintages( l_per, l_tech ):
+			if not M.V_ActivityByPeriodTechAndVintage[l_per, l_tech, l_vin]:
+				continue
+
+			cap = M.V_Capacity[l_tech, l_vin]
+			vnode = v_fmt % (l_vin, cap)
+			for l_inp in ProcessInputs( l_per, l_tech, l_vin ):
+				for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp ):
+					flowin = sum(
+					  M.V_FlowIn[l_per, ssn, tod, l_inp, l_tech, l_vin, l_out].value
+					  for ssn in M.time_season
+					  for tod in M.time_of_day
+					)
+					flowout = sum(
+					  M.V_FlowOut[l_per, ssn, tod, l_inp, l_tech, l_vin, l_out].value
+					  for ssn in M.time_season
+					  for tod in M.time_of_day
+					)
+					index = (l_per, l_inp, l_tech, l_vin)
+
+					vnodes.add( (vnode, None) )
+					enodes.add( (l_inp, enode_attr_fmt % (l_inp, l_per)) )
+					enodes.add( (l_out, enode_attr_fmt % (l_out, l_per)) )
+					iedges.add( (l_inp, vnode, 'label="%.2f"' % flowin) )
+					oedges.add( (vnode, l_out, 'label="%.2f"' % flowout) )
+
+		if not vnodes: continue
+
+		enodes = create_text_nodes( enodes, indent=2 )
+		vnodes = create_text_nodes( vnodes, indent=2 )
+		iedges = create_text_edges( iedges, indent=2 )
+		oedges = create_text_edges( oedges, indent=2 )
+
+		fname = 'results_%s_%s.' % (l_tech, l_per)
+		with open( fname + 'dot', 'w' ) as f:
+			f.write( model_dot_fmt % dict(
+			  images_dir      = images_dir,
+			  tech            = l_tech,
+			  period          = l_per,
+			  ffmt            = ffmt,
+			  commodity_color = commodity_color,
+			  usedfont_color  = usedfont_color,
+			  home_color      = home_color,
+			  input_color     = arrowheadin_color,
+			  output_color    = arrowheadout_color,
+			  vintage_cluster_color = sb_vpbackg_color,
+			  vintage_color   = sb_vp_color,
+			  splinevar       = splinevar,
+			  total_cap       = total_cap,
+			  vnodes          = vnodes,
+			  enodes          = enodes,
+			  iedges          = iedges,
+			  oedges          = oedges,
+			))
+		cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
+		call( cmd )
+
+	os.chdir( '..' )
+
+
+def CreateCommodityPartialResults ( **kwargs ):
+	from temoa_lib import g_processInputs, g_processOutputs, \
+	  ProcessInputs, ProcessOutputsByInput, ProcessesByInput, ProcessesByOutput
+
+	M               = kwargs.get( 'model' )
+	ffmt            = kwargs.get( 'image_format' )
+	images_dir      = kwargs.get( 'images_dir' )
+	sb_arrow_color  = kwargs.get( 'sb_arrow_color' )
+	commodity_color = kwargs.get( 'commodity_color' )
+	home_color      = kwargs.get( 'home_color' )
+	tech_color      = kwargs.get( 'tech_color' )
+	usedfont_color  = kwargs.get( 'usedfont_color' )
+	unused_color    = kwargs.get( 'unused_color' )
+	options         = kwargs.get( 'options' )
+
+	splinevar = options.splinevar
+
+	os.chdir( 'commodities' )
+
+	commodity_dot_fmt = """\
+strict digraph result_commodity_%(commodity)s {
+	label       = "%(commodity)s - %(period)s" ;
+
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "True" ;
+
+	node [ shape="box", style="filled" ] ;
+	edge [
+	  arrowhead  = "vee",
+	  fontsize   = "8",
+	  label      = "   ",
+	  labelfloat = "False",
+	  labelfontcolor = "lightgreen"
+	  len        = "2",
+	  weight     = "0.5",
+	] ;
+
+	%(resource_node)s
+
+	subgraph used_techs {
+		node [ color="%(tech_color)s" ] ;
+
+		%(used_nodes)s
+	}
+
+	subgraph used_techs {
+		node [ color="%(unused_color)s" ] ;
+
+		%(unused_nodes)s
+	}
+
+	subgraph in_use_flows {
+		edge [ color="%(sb_arrow_color)s" ] ;
+
+		%(used_edges)s
+	}
+
+	subgraph unused_flows {
+		edge [ color="%(unused_color)s" ] ;
+
+		%(unused_edges)s
+	}
+
+	"%(images_dir)s" [
+	  color     = "%(home_color)s",
+	  fontcolor = "%(usedfont_color)s",
+	  href      = "..",
+	  shape     = "house"
+	];
+}
+"""
+
+	FI = M.V_FlowIn
+	FO = M.V_FlowOut
+	used_carriers, used_techs = set(), set()
+
+	for p, t, v in g_processInputs:
+		for i in ProcessInputs( p, t, v ):
+			for o in ProcessOutputsByInput( p, t, v, i ):
+				flowin = sum(
+				  FI[p, s, d, i, t, v, o].value
+				  for s in M.time_season
+				  for d in M.time_of_day
+				)
+				if flowin:
+					flowout = sum(
+					  FO[p, s, d, i, t, v, o].value
+					  for s in M.time_season
+					  for d in M.time_of_day
+					)
+					used_carriers.update( g_processInputs[p, t, v] )
+					used_carriers.update( g_processOutputs[p, t, v] )
+					used_techs.add( t )
+
+	period_results_url_fmt = '../results/results%%s.%s' % ffmt
+	node_attr_fmt = 'href="../results/results_%%s_%%s.%s"' % ffmt
+	rc_node_fmt = 'color="%s", shape="circle"'
+
+	for l_per in M.time_horizon:
+		url = period_results_url_fmt % l_per
+		for l_carrier in used_carriers:
+			# enabled/disabled nodes/edges
+			enodes, dnodes, eedges, dedges = set(), set(), set(), set()
+
+			rcnode = ((l_carrier, rc_node_fmt % commodity_color),)
+
+			for l_tech, l_vin in ProcessesByInput( l_carrier ):
+				if l_tech in used_techs:
+					enodes.add( (l_tech, node_attr_fmt % (l_tech, l_per)) )
+					eedges.add( (l_carrier, l_tech, None) )
+				else:
+					dnodes.add( (l_tech, None) )
+					dedges.add( (l_carrier, l_tech, None) )
+			for l_tech, l_vin in ProcessesByOutput( l_carrier ):
+				if l_tech in used_techs:
+					enodes.add( (l_tech, node_attr_fmt % (l_tech, l_per)) )
+					eedges.add( (l_tech, l_carrier, None) )
+				else:
+					dnodes.add( (l_tech, None) )
+					dedges.add( (l_tech, l_carrier, None) )
+
+			rcnode = create_text_nodes( rcnode )
+			enodes = create_text_nodes( enodes, indent=2 )
+			dnodes = create_text_nodes( dnodes, indent=2 )
+			eedges = create_text_edges( eedges, indent=2 )
+			dedges = create_text_edges( dedges, indent=2 )
+
+			fname = 'rc_%s_%s.' % (l_carrier, l_per)
+			with open( fname + 'dot' ,'w') as f:
+				f.write( commodity_dot_fmt % dict(
+				  images_dir     = images_dir,
+				  home_color     = home_color,
+				  usedfont_color = usedfont_color,
+				  sb_arrow_color = sb_arrow_color,
+				  tech_color     = tech_color,
+				  commodity      = l_carrier,
+				  period         = l_per,
+				  unused_color   = unused_color,
+				  resource_node  = rcnode,
+				  used_nodes     = enodes,
+				  unused_nodes   = dnodes,
+				  used_edges     = eedges,
+				  unused_edges   = dedges,
+				))
+
+			cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
+			call( cmd )
+
+	os.chdir( '..' )
+
+
 def CreateModelDiagrams ( M, options ):
 	# This function is a "master", calling many other functions based on command
 	# line input.  Other than code cleanliness, there is no reason that the
@@ -797,6 +1093,7 @@ def CreateModelDiagrams ( M, options ):
 
 	os.makedirs( 'commodities' )
 	os.makedirs( 'processes' )
+	os.makedirs( 'results' )
 
 	##############################################
 	#MAIN MODEL AND RESULTS AND EVERYTHING ELSE
@@ -839,5 +1136,7 @@ def CreateModelDiagrams ( M, options ):
 	CreateProcessPartialGraphs( **kwargs )
 	CreateMainModelDiagram( **kwargs )
 	CreateDetailedModelDiagram( **kwargs )
+	CreateTechResultsDiagrams( **kwargs )
+	CreateCommodityPartialResults( **kwargs )
 
 	os.chdir( '..' )
