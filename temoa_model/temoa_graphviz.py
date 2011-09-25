@@ -814,6 +814,7 @@ strict digraph model {
 	subgraph cluster_vintages {
 		label = "Vintages\\nCapacity: %(total_cap).2f" ;
 
+		href  = "results%(period)s.%(ffmt)s" ;
 		style = "filled"
 		color = "%(vintage_cluster_color)s"
 
@@ -1019,7 +1020,7 @@ strict digraph result_commodity_%(commodity)s {
 
 	period_results_url_fmt = '../results/results%%s.%s' % ffmt
 	node_attr_fmt = 'href="../results/results_%%s_%%s.%s"' % ffmt
-	rc_node_fmt = 'color="%s", shape="circle"'
+	rc_node_fmt = 'color="%s", href="%s", shape="circle"'
 
 	for l_per in M.time_horizon:
 		url = period_results_url_fmt % l_per
@@ -1027,7 +1028,7 @@ strict digraph result_commodity_%(commodity)s {
 			# enabled/disabled nodes/edges
 			enodes, dnodes, eedges, dedges = set(), set(), set(), set()
 
-			rcnode = ((l_carrier, rc_node_fmt % commodity_color),)
+			rcnode = ((l_carrier, rc_node_fmt % (commodity_color, url)),)
 
 			for l_tech, l_vin in ProcessesByInput( l_carrier ):
 				if l_tech in used_techs:
@@ -1070,6 +1071,239 @@ strict digraph result_commodity_%(commodity)s {
 
 			cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
 			call( cmd )
+
+	os.chdir( '..' )
+
+
+def CreateMainResultsDiagram ( **kwargs ):
+	from temoa_lib import ProcessVintages, ProcessInputs,  ProcessOutputs,     \
+	  ValidActivity
+
+	M                  = kwargs.get( 'model' )
+	images_dir         = kwargs.get( 'images_dir' )
+	ffmt               = kwargs.get( 'image_format' )
+	options            = kwargs.get( 'options' )
+	arrowheadin_color  = kwargs.get( 'arrowheadin_color' )
+	arrowheadout_color = kwargs.get( 'arrowheadout_color' )
+	commodity_color    = kwargs.get( 'commodity_color' )
+	tech_color         = kwargs.get( 'tech_color' )
+	unused_color       = kwargs.get( 'unused_color' )
+	unusedfont_color   = kwargs.get( 'unusedfont_color' )
+	usedfont_color     = kwargs.get( 'usedfont_color' )
+
+	splinevar = options.splinevar
+
+	os.chdir( 'results' )
+
+	results_dot_fmt = """\
+strict digraph model {
+	label = "Results for %(period)s"
+
+	layers = "nosoln:soln" ;
+	rankdir = "LR" ;
+	smoothtype = "power_dist" ;
+	splines = "%(splinevar)s" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph unused_techs {
+		node [
+		  color     = "%(unused_color)s",
+		  fontcolor = "%(unusedfont_color)s",
+		  layer     = "nosoln",
+		  shape     = "box"
+		] ;
+
+		%(dtechs)s
+	}
+
+	subgraph unused_energy_carriers {
+		node [
+		  color     = "%(unused_color)s",
+		  fontcolor = "%(unusedfont_color)s",
+		  layer     = "nosoln",
+		  shape     = "circle"
+		] ;
+
+		%(dcarriers)s
+	}
+
+	subgraph unused_emissions {
+		node [
+		  color     = "%(unused_color)s",
+		  fontcolor = "%(unusedfont_color)s",
+		  layer     = "nosoln",
+		  shape     = "circle"
+		]
+
+		%(demissions)s
+	}
+
+	subgraph in_use_techs {
+		node [
+		  color     = "%(tech_color)s",
+		  fontcolor = "%(usedfont_color)s",
+		  layer     = "soln",
+		  shape     = "box"
+		] ;
+
+		%(etechs)s
+	}
+
+	subgraph in_use_energy_carriers {
+		node [
+		  color     = "%(commodity_color)s",
+		  fontcolor = "%(usedfont_color)s",
+		  layer     = "soln",
+		  shape     = "circle"
+		] ;
+
+		%(ecarriers)s
+	}
+
+	subgraph in_use_emissions {
+		node [
+		  color     = "%(commodity_color)s",
+		  fontcolor = "%(usedfont_color)s",
+		  layer     = "soln",
+		  shape     = "circle"
+		] ;
+
+		%(eemissions)s
+	}
+
+	subgraph unused_flows {
+		edge [ color="%(unused_color)s" ]
+
+		%(dflows)s
+	}
+
+	subgraph in_use_flows {
+		edge [ layer="soln" ] ;
+
+		subgraph inputs {
+			edge [ color="%(arrowheadin_color)s" ] ;
+
+			%(eflowsi)s
+		}
+
+		subgraph outputs {
+			edge [ color="%(arrowheadout_color)s" ] ;
+
+			%(eflowso)s
+		}
+	}
+}
+"""
+
+	tech_attr_fmt = 'label="%%s\\nCapacity: %%.2f", href="results_%%s_%%s.%s"'
+	tech_attr_fmt %= ffmt
+	commodity_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
+	flow_fmt = 'label="%.2f"'
+
+	V_Cap = M.V_CapacityAvailableByPeriodAndTech
+	FI = M.V_FlowIn
+	FO = M.V_FlowOut
+	EI = M.V_EnergyConsumptionByPeriodInputAndTech    # Energy In
+	EO = M.V_ActivityByPeriodTechAndOutput            # Energy Out
+	EmiO = M.V_EmissionActivityByPeriodAndTech
+
+	epsilon = 0.005  # we only care about last two decimals
+	  # but perhaps this should be configurable?  Not until we can do this
+	  # both after the fact (i.e. not synchronous with a solve), and via a
+	  # configuration file.
+
+	for pp in M.time_optimize:
+		# enabled/disabled   techs/carriers/emissions/flows   in/out
+		etechs, dtechs, ecarriers = set(), set(), set()
+		eemissions = set()
+		eflowsi, eflowso, dflows = set(), set(), set()   # edges
+		usedc, usede = set(), set()    # used carriers, used emissions
+
+		for tt in M.tech_all:
+			cap = V_Cap[pp, tt]
+			if cap:
+				etechs.add( (tt, tech_attr_fmt % (tt, cap, tt, pp)) )
+			else:
+				dtechs.add( (tt, None) )
+
+			for vv in ProcessVintages( pp, tt ):
+				for ii in ProcessInputs( pp, tt, vv ):
+					inp = EI[pp, ii, tt].value
+					if inp >= epsilon:
+						eflowsi.add( (ii, tt, flow_fmt % inp) )
+						ecarriers.add( (ii, commodity_fmt % (ii, pp)) )
+						usedc.add( ii )
+					else:
+						dflows.add( (ii, tt, None) )
+				for oo in ProcessOutputs( pp, tt, vv ):
+					out = EO[pp, tt, oo].value
+					if out >= epsilon:
+						eflowso.add( (tt, oo, flow_fmt % out) )
+						ecarriers.add( (oo, commodity_fmt % (oo, pp)) )
+						usedc.add( oo )
+					else:
+						dflows.add( (tt, oo, None) )
+
+		for ee, ii, tt, vv, oo in M.EmissionActivity.keys():
+			if ValidActivity( pp, tt, vv ):
+				amt = EmiO[ee, pp, tt].value
+				if amt < epsilon: continue
+
+				eflowso.add( (tt, ee, flow_fmt % amt) )
+				eemissions.add( (ee, None) )
+				usede.add( ee )
+
+		dcarriers = set( (cc, None)
+		  for cc in M.commodity_carrier if cc not in usedc )
+		demissions = set( (ee, None)
+		  for ee in M.commodity_emissions if ee not in usede )
+
+		dtechs     = create_text_nodes( dtechs,     indent=2 )
+		etechs     = create_text_nodes( etechs,     indent=2 )
+		dcarriers  = create_text_nodes( dcarriers,  indent=2 )
+		ecarriers  = create_text_nodes( ecarriers,  indent=2 )
+		demissions = create_text_nodes( demissions, indent=2 )
+		eemissions = create_text_nodes( eemissions, indent=2 )
+		dflows     = create_text_edges( dflows,     indent=2 )
+		eflowsi    = create_text_edges( eflowsi,    indent=3 )
+		eflowso    = create_text_edges( eflowso,    indent=3 )
+
+		# link to periods: Do we want to include this in the SVG, or just let the
+		# modeler use the standard browser buttons?  I think the latter.
+		# for randstr in l_perset:
+			# url = 'results%s.%s' % (randstr, ffmt)
+			# l_file.write (str(randstr) + '[URL="' + url + '",fontcolor=' + usedfont_color + ', rank="min", style=filled, shape=box, color=' + menu_color + '];\n')
+		# l_file.write( images + '[URL="..",shape=house, style=filled, fontcolor=' + usedfont_color + ', color=' + home_color + '];\n')
+		# l_file.write ("}\n");
+		# l_file.close()
+
+		fname = 'results%s.' % pp
+		with open( fname + 'dot', 'w' ) as f:
+			f.write( results_dot_fmt % dict(
+			  period             = pp,
+			  splinevar          = splinevar,
+			  arrowheadin_color  = arrowheadin_color,
+			  arrowheadout_color = arrowheadout_color,
+			  commodity_color    = commodity_color,
+			  tech_color         = tech_color,
+			  unused_color       = unused_color,
+			  unusedfont_color   = unusedfont_color,
+			  usedfont_color     = usedfont_color,
+			  dtechs     = dtechs,
+			  etechs     = etechs,
+			  dcarriers  = dcarriers,
+			  ecarriers  = ecarriers,
+			  demissions = demissions,
+			  eemissions = eemissions,
+			  dflows     = dflows,
+			  eflowsi    = eflowsi,
+			  eflowso    = eflowso,
+			))
+
+		cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
+		call( cmd )
 
 	os.chdir( '..' )
 
@@ -1138,5 +1372,6 @@ def CreateModelDiagrams ( M, options ):
 	CreateDetailedModelDiagram( **kwargs )
 	CreateTechResultsDiagrams( **kwargs )
 	CreateCommodityPartialResults( **kwargs )
+	CreateMainResultsDiagram( **kwargs )
 
 	os.chdir( '..' )

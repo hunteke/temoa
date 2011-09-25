@@ -554,6 +554,18 @@ def EnergyConsumptionByPeriodAndTechVariableIndices ( M ):
 	return indices
 
 
+def EnergyConsumptionByPeriodInputAndTechVariableIndices ( M ):
+	indices = set(
+	  (l_per, l_inp, l_tech)
+
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_per in M.time_optimize
+	  if ValidActivity( l_per, l_tech, l_vin )
+	)
+
+	return indices
+
+
 def EnergyConsumptionByPeriodTechAndOutputVariableIndices ( M ):
 	indices = set(
 	  (l_per, l_tech, l_out)

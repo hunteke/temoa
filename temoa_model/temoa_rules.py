@@ -841,6 +841,23 @@ def EnergyConsumptionByPeriodAndTechConstraint_rule ( M, A_period, A_tech ):
 	return expr
 
 
+def EnergyConsumptionByPeriodInputAndTechConstraint_rule (
+  M, A_period, A_inp, A_tech
+):
+	l_sum = sum(
+	  M.V_FlowIn[A_period, l_season, l_tod, A_inp, A_tech, l_vin, l_out]
+
+	  for l_vin in ProcessVintages( A_period, A_tech )
+	  for l_out in ProcessOutputsByInput( A_period, A_tech, l_vin, A_inp )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	index = (A_period, A_inp, A_tech)
+	expr = (M.V_EnergyConsumptionByPeriodInputAndTech[ index ] == l_sum)
+	return expr
+
+
 def EnergyConsumptionByPeriodTechAndOutputConstraint_rule (
   M, A_period, A_tech, A_out
 ):
@@ -919,7 +936,9 @@ def AddReportingVariables ( M ):
 	  dimen=2, rule=EnergyConsumptionByTechAndOutputVariableIndices )
 	M.EnergyConsumptionByPeriodAndTechVarIndices = Set(
 	  dimen=2, rule=EnergyConsumptionByPeriodAndTechVariableIndices )
-	M.EnergyConsmptionByPeriodTechAndOutputVarIndices = Set(
+	M.EnergyConsumptionByPeriodInputAndTechVarIndices = Set(
+	  dimen=3, rule=EnergyConsumptionByPeriodInputAndTechVariableIndices )
+	M.EnergyConsumptionByPeriodTechAndOutputVarIndices = Set(
 	  dimen=3, rule=EnergyConsumptionByPeriodTechAndOutputVariableIndices )
 	M.EnergyConsumptionByPeriodTechAndVintageVarIndices = Set(
 	  dimen=3, rule=EnergyConsumptionByPeriodTechAndVintageVariableIndices )
@@ -947,7 +966,8 @@ def AddReportingVariables ( M ):
 	M.V_EnergyConsumptionByTech                 = Var( M.tech_all, domain=NonNegativeReals )
 	M.V_EnergyConsumptionByTechAndOutput        = Var( M.EnergyConsumptionByTechAndOutputVarIndices, domain=NonNegativeReals )
 	M.V_EnergyConsumptionByPeriodAndTech        = Var( M.EnergyConsumptionByPeriodAndTechVarIndices, domain=NonNegativeReals )
-	M.V_EnergyConsumptionByPeriodTechAndOutput  = Var( M.EnergyConsmptionByPeriodTechAndOutputVarIndices, domain=NonNegativeReals )
+	M.V_EnergyConsumptionByPeriodInputAndTech   = Var( M.EnergyConsumptionByPeriodInputAndTechVarIndices, domain=NonNegativeReals )
+	M.V_EnergyConsumptionByPeriodTechAndOutput  = Var( M.EnergyConsumptionByPeriodTechAndOutputVarIndices, domain=NonNegativeReals )
 	M.V_EnergyConsumptionByPeriodTechAndVintage = Var( M.EnergyConsumptionByPeriodTechAndVintageVarIndices, domain=NonNegativeReals )
 
 	#   The requisite constraints to set the derived variables above.
@@ -975,7 +995,8 @@ def AddReportingVariables ( M ):
 	M.EnergyConsumptionByTechConstraint                 = Constraint( M.tech_all, rule=EnergyConsumptionByTechConstraint_rule )
 	M.EnergyConsumptionByTechAndOutputConstraint        = Constraint( M.EnergyConsumptionByTechAndOutputVarIndices, rule=EnergyConsumptionByTechAndOutputConstraint_rule )
 	M.EnergyConsumptionByPeriodAndTechConstraint        = Constraint( M.EnergyConsumptionByPeriodAndTechVarIndices, rule=EnergyConsumptionByPeriodAndTechConstraint_rule )
-	M.EnergyConsumptionByPeriodTechAndOutputConstraint  = Constraint( M.EnergyConsmptionByPeriodTechAndOutputVarIndices, rule=EnergyConsumptionByPeriodTechAndOutputConstraint_rule )
+	M.EnergyConsumptionByPeriodInputAndTechConstraint   = Constraint( M.EnergyConsumptionByPeriodInputAndTechVarIndices, rule=EnergyConsumptionByPeriodInputAndTechConstraint_rule )
+	M.EnergyConsumptionByPeriodTechAndOutputConstraint  = Constraint( M.EnergyConsumptionByPeriodTechAndOutputVarIndices, rule=EnergyConsumptionByPeriodTechAndOutputConstraint_rule )
 	M.EnergyConsumptionByPeriodTechAndVintageConstraint = Constraint( M.EnergyConsumptionByPeriodTechAndVintageVarIndices, rule=EnergyConsumptionByPeriodTechAndVintageConstraint_rule )
 
 # End miscellaneous related functions
