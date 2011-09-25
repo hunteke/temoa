@@ -674,6 +674,7 @@ def ProcessBalanceConstraintIndices ( M ):
 
 	  for l_per in M.time_optimize
 	  for l_tech in M.tech_all
+	  if l_tech not in M.tech_storage
 	  for l_vin in ProcessVintages( l_per, l_tech )
 	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
 	  for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp )

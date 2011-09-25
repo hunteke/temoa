@@ -204,6 +204,7 @@ def StorageConstraint_rule (
 	l_sum_in_out = sum(
 	    M.V_FlowOut[A_period, A_season, l_tod, A_inp, A_tech, A_vintage, A_out]
 	  - M.V_FlowIn[A_period, A_season, l_tod, A_inp, A_tech, A_vintage, A_out]
+	  * M.Efficiency[A_inp, A_tech, A_vintage, A_out]
 
 	  for l_tod in M.time_of_day
 	)
