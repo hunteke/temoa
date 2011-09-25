@@ -486,17 +486,12 @@ def EmissionActivityByTechVariableIndices ( M ):
 	return indices
 
 def EmissionActivityByPeriodAndTechVariableIndices ( M ):
-	l_eActivityIndices = M.EmissionActivity.keys()
 	indices = set(
 	  (l_emission, l_per, l_tech)
 
+	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
 	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
-	  for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp )
-	  for l_emission in M.commodity_emissions
-	  if (l_emission, l_inp, l_tech, l_vin, l_out) in l_eActivityIndices
+	  if ValidActivity( l_per, l_tech, l_vin )
 	)
 
 	return indices
