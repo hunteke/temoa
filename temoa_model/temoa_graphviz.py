@@ -890,7 +890,7 @@ strict digraph model {
 					iedges.add( (l_inp, vnode, 'label="%.2f"' % flowin) )
 					oedges.add( (vnode, l_out, 'label="%.2f"' % flowout) )
 
-		if not vnodes: return
+		if not vnodes: continue
 
 		enodes = create_text_nodes( enodes, indent=2 )
 		vnodes = create_text_nodes( vnodes, indent=2 )
