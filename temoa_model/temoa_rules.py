@@ -140,18 +140,27 @@ Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 		# an effectively useless constraint
 		return Constraint.Skip
 
-	# for the rest of the time_of_days, set them equal to the one before.  i.e.
+	# for the rest of the time_of_days, set them equal to the first.  i.e.
 	# create a set of constraints that look something like:
 	# tod[ 2 ] == tod[ 1 ]
-	# tod[ 3 ] == tod[ 2 ]
-	# tod[ 4 ] == tod[ 3 ]
+	# tod[ 3 ] == tod[ 1 ]
+	# tod[ 4 ] == tod[ 1 ]
 	# and so on ...
-	l_prev_time_of_day = l_times[ index -1 ]
+	l_first = l_times[ 0 ]
 
-	aindex_1 = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
-	aindex_2 = (A_period, A_season, l_prev_time_of_day, A_tech, A_vintage)
-
-	expr = (M.V_Activity[ aindex_1 ] == M.V_Activity[ aindex_2 ])
+	# Finally, the actual expression: for baseload, must compute the /average/
+	# activity over the segment.  By definition, average is
+	#     (segment activity) / (segment length)
+	# So:   (ActA / SegA) == (ActB / SegB)
+	#   computationally, however, multiplication is cheaper than division, so:
+	#       (ActA * SegB) == (ActB * SegA)
+	expr = (
+	    M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
+	  * M.SegFrac[A_season, l_first]
+	  ==
+	    M.V_Activity[A_period, A_season, l_first, A_tech, A_vintage]
+	  * M.SegFrac[A_season, A_time_of_day]
+	)
 	return expr
 
 
