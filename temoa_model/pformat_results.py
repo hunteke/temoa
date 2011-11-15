@@ -2,6 +2,8 @@ from sys import stderr as SE
 from cStringIO import StringIO
 
 def pformat_results ( pyomo_instance, pyomo_result ):
+	from coopr.pyomo import Objective
+
 	instance = pyomo_instance
 	result = pyomo_result
 
@@ -15,7 +17,7 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	if str(soln.Status) not in optimal_solutions:
 		return "No solution found."
 
-	objs = instance.objectives()
+	objs = instance.active_components( Objective )
 	if len( objs ) > 1:
 		msg = '\nWarning: More than one objective.  Using first objective.\n'
 		SE.write( msg )
@@ -28,38 +30,28 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	Vars = soln.Variable
 	Cons = soln.Constraint
 
-	try:
-		# This /should/ work with Coopr v3.0
+	var_info = sorted(
+	  (ii.split('(')[0],
+	   ii.replace('_,', ',')
+	     .replace(',_', ',')
+	     .replace('(_', '(')
+	     .replace('_)', ')'),
+	   Vars[ ii ]['Value']
+	  )
 
-		# Sanitize name mapping so we have a consistent interface later
-		tmpv, tmpc = instance._label_var_map, instance._label_constraint_map
-		var_map = dict({ key : tmpv[ key ].name for key in tmpv })
-		con_map = dict({ key : tmpc[ key ].name for key in tmpc })
+	  for ii in Vars
+	  if abs(Vars[ ii ]['Value']) > 1e-15
+	)
 
-		var_keys = sorted(
-		  (ii.split('(')[0], ii, Vars[ ii ]['Value'])
-
-		  for ii in Vars
-		  if abs(Vars[ ii ]['Value']) > 1e-15   # i.e. "if it's non-zero"
-		)
-
-	except AttributeError:
-		# We are using Coopr prior v3.0
-
-		# Sanitize name mapping so we have a consistent interface later
-		var_map = dict({ key : key for key in instance.variables().keys() })
-		con_map = dict({ key : key for key in instance.constraints().keys() })
-
-		var_keys = sorted(
-		  (ii.split('[')[0], ii, Vars[ ii ]['Value'])
-
-		  for ii in Vars
-		  if abs(Vars[ ii ]['Value']) > 1e-15   # i.e. "if it's non-zero"
-		)
-
-	con_keys = sorted(
-	  (ii.split('[')[0][4:], ii[4:-1], Cons[ ii ]['Value'])
-	    # [4:-1] removes the c_[uel]_ part of name
+	con_info = sorted(
+	  (ii.split('[')[0][4:],
+	   ii[4:-1]     # [4:-1] removes the c_[uel]_ part of name
+	     .replace('_,', ',')
+	     .replace(',_', ',')
+	     .replace('(_', '(')
+	     .replace('_)', ')'),
+	   Cons[ ii ]['Value']
+	  )
 
 	  for ii in Cons
 	  if 'c_' == ii[:2]            # all Coopr constraint keys begin with c_
@@ -67,8 +59,8 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	)
 
 	# remove the no-longer-necessary sorting key.
-	var_info = [ (var_map[ var ], val) for key, var, val in var_keys ]
-	con_info = [ (con_map[ con ], val) for key, con, val in con_keys ]
+	con_info = [ (con, val) for sortkey, con, val in con_info ]
+	var_info = [ (var, val) for sortkey, var, val in var_info ]
 
 	def get_int_padding ( obj ):
 		val = obj[ 1 ]         # obj is 2-tuple, defined within var_info
@@ -79,12 +71,13 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 
 	run_output = StringIO()
 
-	msg = 'Model name: %s\n'                                                   \
-	   'Objective function value (%s): %s\n'                                   \
+	msg = ( 'Model name: %s\n'
+	   'Objective function value (%s): %s\n'
 	   'Non-zero variable values:\n'
+	)
 	run_output.write( msg % (instance.name, obj_name, obj_value) )
 
-	if len( var_keys ) > 0:
+	if len( var_info ) > 0:
 		# This padding code is what makes the display of the output values
 		# line up on the decimal point.
 		int_padding = max(map( get_int_padding, var_info ))
@@ -97,6 +90,9 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 			dec_part = str(abs(val) - int_part)[1:]  # remove (negative and) 0
 			if val < 0: int_part = "-%d" % int_part
 			run_output.write( format % (int_part, dec_part, key) )
+
+	else:
+		run_output.write( '\nAll variables have a zero (0) value.\n' )
 
 	if 0 == len( con_info ):
 		# Since not all Coopr solvers give constraint results, must check
@@ -117,7 +113,4 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 			if val < 0: int_part = "-%d" % int_part
 			run_output.write( format % (int_part, dec_part, key) )
 
-	data = run_output.getvalue()
-
-	  # remove the new 3.0 format's superfluous apostrophes
-	return data.replace("'",'')
+	return run_output.getvalue()
