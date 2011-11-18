@@ -200,7 +200,7 @@ def MinCapacityConstraint_rule ( M, A_period, A_tech ):
 def MaxCapacityConstraint_rule ( M, A_period, A_tech ):
 	index = (A_period, A_tech)
 	l_max = M.MaxCapacity[ index ]
-	expr = (M.V_CapacityAvailableByPeriodAndTech[ index ] < l_max)
+	expr = (M.V_CapacityAvailableByPeriodAndTech[ index ] <= l_max)
 	return expr
 
 
