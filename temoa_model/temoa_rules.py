@@ -256,11 +256,10 @@ def ActivityConstraint_rule (
   M, A_period, A_season, A_time_of_day, A_tech, A_vintage
 ):
 	"""\
-As V_Activity is a derived variable, the constraint sets V_Activity to the sum over input and output energy carriers of a process.
-
-(for each period, season, time_of_day, tech, vintage)
-V_Activity[p,s,d,t,v] = sum((inp,out), V_FlowOut[p,s,d,inp,t,v,out])
-	"""
+This constraint defines the convenience variable V_Activity as the sum of all
+outputs of a process.  If there is more than one output, there is currently no
+attempt to convert to a common unit of measurement.
+"""
 	pindex = (A_period, A_tech, A_vintage)
 	aindex = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
 
