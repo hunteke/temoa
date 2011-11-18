@@ -1,4 +1,5 @@
 from cStringIO import StringIO
+from os import path
 from sys import argv, stderr as SE, stdout as SO
 
 from temoa_graphviz import CreateModelDiagrams
@@ -7,27 +8,30 @@ try:
 	from coopr.pyomo import *
 except:
 
-	import os, sys
-	ppath = '/path/to/coopr/bin'
-	path = """Option 1:
-$ PATH=%(ppath)s:$PATH
-$ which python
+	import sys
+	cpath = path.join('path', 'to', 'coopr', 'executable', 'coopr_python')
+	if 'win' not in sys.platform:
+		msg = """\
+Option 1:
+$ PATH=%(cpath)s:$PATH
+$ coopr_python %(base)s  [options]  data.dat
 
 Option 2:
-$ %(ppath)s/python  %(base)s  ...
+$ %(cpath)s  %(base)s  [options]  data.dat
 """
-	if 'win' in sys.platform:
-		ppath = 'C:\\path\\to\\coopr\\bin'
-		path = """Option 1:
-C:\\> set PATH=%(ppath)s:%%PATH%%
-C:\\> python  %(base)s  ...
+
+	else:
+		msg = """\
+Option 1:
+C:\\> set PATH=%(cpath)s:%%PATH%%
+C:\\> coopr_python  %(base)s  [options]  data.dat
 
 Option 2:
-C:\\> %(ppath)s\\python  %(base)s  ...
+C:\\> %(cpath)s  %(base)s  [options]  data.dat
 """
 
-	base = os.path.basename( sys.argv[0] )
-	path %= { 'ppath' : ppath, 'base' : base }
+	base = path.basename( sys.argv[0] )
+	msg %= { 'cpath' : cpath, 'base' : base }
 	msg = """\
 Unable to find coopr.pyomo on the Python system path.  Are you running Coopr's
 version of Python?  Here is one way to check:
@@ -40,9 +44,9 @@ update your PATH environment variable to use Coopr's Python setup, or always
 explicitly use the Coopr path:
 
 %s
-"""
+""" % msg
 
-	raise ImportError, msg % path
+	raise ImportError, msg
 
 
 ###############################################################################
@@ -974,7 +978,9 @@ def temoa_solve ( model ):
 
 	opt = SolverFactory('glpk_experimental')
 	opt.keepFiles = False
-	# opt.options.wlp = "temoa_model.lp"  # output GLPK LP understanding of model
+	   # output GLPK LP understanding of model
+	   #   Potentially want to incorporate this as an actual command line arg.
+	# opt.options.wlp = basename( options.dot_dat[0] )[:-4] + '.lp'
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
