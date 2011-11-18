@@ -125,11 +125,21 @@ def validate_SegFrac ( M ):
 		# We can't explicitly test for "!= 1.0" because of incremental roundoff
 		# errors inherent in float manipulations and representations, so instead
 		# compare against an epsilon value of "close enough".
-		items = '\n   '.join( "%s: %s" % ii for ii in M.SegFrac.data().items() )
+
+		def get_str_padding ( obj ):
+			return len(str( obj ))
+		key_padding = max(map( get_str_padding, M.SegFrac.data().keys() ))
+
+		format = "%%-%ds = %%s" % key_padding
+			# Works out to something like "%-25s = %s"
+
+		items = sorted( M.SegFrac.data().items() )
+		items = '\n   '.join( format % (str(k), v) for k, v in items )
 
 		msg = ('The values of the SegFrac parameter do not sum to 1.  Each item '
 		  'in SegFrac represents a fraction of a year, so they must total to '
 		  '1.  Current values:\n   %s\n\tsum = %s')
+
 		raise ValueError, msg % (items, total)
 
 	return tuple()
