@@ -373,6 +373,11 @@ def EmissionActivityIndices ( M ):
 
 
 def LifetimeFracIndices ( M ):
+	"""\
+Returns the set of (period, tech, vintage) tuples of processes that die between
+period boundaries.  The tuple indicates the last period in which a process is
+active.
+"""
 	l_periods = set( M.time_optimize )
 	l_max_year = max( M.time_future )
 
@@ -387,6 +392,10 @@ def LifetimeFracIndices ( M ):
 
 
 def LifetimeTechIndices ( M ):
+	"""\
+Based on the Efficiency parameter's indices, this function returns the set of
+process indices that may be specified in the LifetimeTech parameter.
+"""
 	indices = set(
 	  (l_tech, l_vin)
 
@@ -397,6 +406,11 @@ def LifetimeTechIndices ( M ):
 
 
 def LifetimeLoanIndices ( M ):
+	"""\
+Based on the Efficiency parameter's indices and time_horizon parameter, this
+function returns the set of process indices that may be specified in the
+CostInvest parameter.
+"""
 	min_period = min( M.vintage_optimize )
 
 	indices = set(
@@ -410,6 +424,12 @@ def LifetimeLoanIndices ( M ):
 
 
 def LoanIndices ( M ):
+	"""\
+Returns the set of possible process (tech, vintage) investments the optimizer
+may make.
+
+This function is deprecated and may soon be removed from the API.
+"""
 	return set( M.CostInvest.keys() )
 
 # End parameters
