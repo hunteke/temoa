@@ -976,7 +976,7 @@ def temoa_solve ( model ):
 	options = parse_args()
 	dot_dats = options.dot_dat
 
-	opt = SolverFactory('glpk_experimental')
+	opt = SolverFactory('glpk')
 	opt.keepFiles = False
 	   # output GLPK LP understanding of model
 	   #   Potentially want to incorporate this as an actual command line arg.
