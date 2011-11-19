@@ -1018,5 +1018,15 @@ def temoa_solve ( model ):
 		CreateModelDiagrams( instance, options )
 		SE.write( '\r[%8.2f\n' % duration() )
 
+	if not ( SO.isatty() and SE.isatty() ):
+		SO.write( "\n\nNotice: You are not receiving 'standard error' messages."
+		  "  Temoa uses the 'standard error' file to send meta information "
+		  "on the progress of the solve.  If you aren't intentionally "
+		  "ignoring standard error messages, you may correct the issue by "
+		  "updating coopr/src/coopr.misc/coopr/misc/scripts.py as per this "
+		  "coopr changeset: "
+		  "https://software.sandia.gov/trac/coopr/changeset/5363\n")
+
+
 # End direct invocation methods
 ###############################################################################
