@@ -856,7 +856,8 @@ strict digraph model {
 }
 """
 	enode_attr_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
-	v_fmt = '%s\\nCap: %.2f'
+	vnode_attr_fmt = 'href="results_%%s_p%%sv%%s_segments.%s", ' % ffmt
+	vnode_attr_fmt += 'label="%s\\nCap: %.2f"'
 
 	for per, tech in g_activeCapacityAvailableIndices:
 		total_cap = M.V_CapacityAvailableByPeriodAndTech[per, tech].value
@@ -869,7 +870,7 @@ strict digraph model {
 				continue
 
 			cap = M.V_Capacity[tech, l_vin]
-			vnode = v_fmt % (l_vin, cap)
+			vnode = str(l_vin)
 			for l_inp in ProcessInputs( per, tech, l_vin ):
 				for l_out in ProcessOutputsByInput( per, tech, l_vin, l_inp ):
 					flowin = sum(
@@ -884,7 +885,8 @@ strict digraph model {
 					)
 					index = (per, l_inp, tech, l_vin)
 
-					vnodes.add( (vnode, None) )
+					vnodes.add( (vnode, vnode_attr_fmt %
+					  (tech, per, l_vin, l_vin, cap)) )
 					enodes.add( (l_inp, enode_attr_fmt % (l_inp, per)) )
 					enodes.add( (l_out, enode_attr_fmt % (l_out, per)) )
 					iedges.add( (l_inp, vnode, 'label="%.2f"' % flowin) )
@@ -920,6 +922,134 @@ strict digraph model {
 			))
 		cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
 		call( cmd )
+
+	os.chdir( '..' )
+
+
+def CreatePartialSegmentsDiagram ( **kwargs ):
+	from temoa_lib import g_activeCapacityAvailableIndices, g_processInputs,   \
+	  ProcessVintages, ProcessInputs, ProcessOutputsByInput
+
+	M                  = kwargs.get( 'model' )
+	ffmt               = kwargs.get( 'image_format' )
+	arrowheadin_color  = kwargs.get( 'arrowheadin_color' )
+	arrowheadout_color = kwargs.get( 'arrowheadout_color' )
+	sb_vpbackg_color   = kwargs.get( 'sb_vpbackg_color' )
+	sb_vp_color        = kwargs.get( 'sb_vp_color' )
+	commodity_color    = kwargs.get( 'commodity_color' )
+	home_color         = kwargs.get( 'home_color' )
+	tech_color         = kwargs.get( 'tech_color' )
+	usedfont_color     = kwargs.get( 'usedfont_color' )
+	options            = kwargs.get( 'options' )
+
+	splinevar = options.splinevar
+
+	os.chdir( 'results' )
+
+	slice_dot_fmt = """\
+strict digraph model {
+	label = "Activity split of process %(tech)s, %(vintage)s in year %(period)s" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "%(splinevar)s" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_slices {
+		label = "%(vintage)s Capacity: %(total_cap).2f" ;
+
+		color = "%(vintage_cluster_color)s" ;
+		rank  = "same" ;
+		style = "filled" ;
+
+		node [ color="%(vintage_color)s", shape="box" ] ;
+
+		%(snodes)s
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "%(commodity_color)s",
+		  fontcolor = "%(usedfont_color)s",
+		  shape     = "circle"
+		] ;
+
+		%(enodes)s
+	}
+
+	subgraph inputs {
+		edge [ color="%(input_color)s" ] ;
+
+		%(iedges)s
+	}
+
+	subgraph outputs {
+		edge [ color="%(output_color)s" ] ;
+
+		%(oedges)s
+	}
+}
+"""
+	enode_attr_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
+
+	for p, t in g_activeCapacityAvailableIndices:
+		total_cap = M.V_CapacityAvailableByPeriodAndTech[p, t].value
+
+		for v in ProcessVintages( p, t ):
+			if not M.V_ActivityByPeriodTechAndVintage[p, t, v]:
+				continue
+
+			cap = M.V_Capacity[t, v]
+			vnode = str( v )
+			for i in ProcessInputs( p, t, v ):
+				for o in ProcessOutputsByInput( p, t, v, i ):
+					# energy/vintage nodes, in/out edges
+					snodes, enodes, iedges, oedges = set(), set(), set(), set()
+					for s in M.time_season:
+						for d in M.time_of_day:
+							flowin = M.V_FlowIn[p, s, d, i, t, v, o].value
+							if not flowin: continue
+							flowout = M.V_FlowOut[p, s, d, i, t, v, o].value
+							snode = "%s, %s" % (s, d)
+							snodes.add( (snode, None) )
+							enodes.add( (i, enode_attr_fmt % (i, p)) )
+							enodes.add( (o, enode_attr_fmt % (o, p)) )
+							iedges.add( (i, snode, 'label="%.2f"' % flowin) )
+							oedges.add( (snode, o, 'label="%.2f"' % flowout) )
+
+					if not snodes: continue
+
+					snodes = create_text_nodes( snodes, indent=2 )
+					enodes = create_text_nodes( enodes, indent=2 )
+					iedges = create_text_edges( iedges, indent=2 )
+					oedges = create_text_edges( oedges, indent=2 )
+
+					fname = 'results_%s_p%sv%s_segments.' % (t, p, v)
+					with open( fname + 'dot', 'w' ) as f:
+						f.write( slice_dot_fmt % dict(
+						  period          = p,
+						  tech            = t,
+						  vintage         = v,
+						  ffmt            = ffmt,
+						  commodity_color = commodity_color,
+						  usedfont_color  = usedfont_color,
+						  home_color      = home_color,
+						  input_color     = arrowheadin_color,
+						  output_color    = arrowheadout_color,
+						  vintage_cluster_color = sb_vpbackg_color,
+						  vintage_color   = sb_vp_color,
+						  splinevar       = splinevar,
+						  total_cap       = total_cap,
+						  snodes          = snodes,
+						  enodes          = enodes,
+						  iedges          = iedges,
+						  oedges          = oedges,
+						))
+					cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
+					call( cmd )
 
 	os.chdir( '..' )
 
@@ -1016,6 +1146,7 @@ strict digraph result_commodity_%(commodity)s {
 					  for s in M.time_season
 					  for d in M.time_of_day
 					)
+					print p, t, v, i, o, flowin, flowout
 					used_carriers.update( g_processInputs[p, t, v] )
 					used_carriers.update( g_processOutputs[p, t, v] )
 					used_techs.add( t )
@@ -1382,6 +1513,7 @@ def CreateModelDiagrams ( M, options ):
 	  CreateTechResultsDiagrams,
 	  CreateCommodityPartialResults,
 	  CreateMainResultsDiagram,
+	  CreatePartialSegmentsDiagram,
 	)
 
 	sem = MP.Semaphore( MP.cpu_count() )
