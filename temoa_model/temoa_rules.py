@@ -340,13 +340,14 @@ def CapacityConstraint_rule (
   M, A_period, A_season, A_time_of_day, A_tech, A_vintage
 ):
 	"""\
-V_Capacity is a derived variable; this constraint sets V_Capacity to at least be able to handle the activity in any optimization time slice.  In effect, this sets V_Capacity[p,t,v] to the max of the activity for similar indices: max(Activity[p,*,*t,v])
+V_Capacity is a derived variable; this constraint sets V_Capacity to at least
+be able to handle the activity in any optimization time slice.  In effect, this
+sets V_Capacity[p,t,v] to the max of the activity for similar indices:
+max(Activity[p,*,*t,v])
 
 (for each period, season, time_of_day, tech, vintage)
 V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 	"""
-	pindex = (A_period, A_tech, A_vintage)   # "process" index
-
 	l_vintage_activity = (
 	  M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
 	)
@@ -457,23 +458,29 @@ V_FlowOut[p,s,d,t,v,o] <= V_FlowIn[p,s,d,t,v,o] * Efficiency[i,t,v,o]
 	return expr
 
 
-def DemandCapacityConstraint_rule (
-  M, A_period, A_season, A_time_of_day, A_comm
+def DemandActivityConstraint_rule (
+  M, A_period, A_season, A_time_of_day, A_tech, A_vintage, A_demand,
+  first_season, first_time_of_day, first_demand,
 ):
 	"""\
+For end-use demands, it is unreasonable to let the optimizer only allow use in a
+single time slice.  For instance, if household A buys a natural gas furnace
+while household B buys an electric furnace, then both units should be used
+through the year.  Without this constraint, the model might choose to only use
+the electric during the day, and the natural gas during the night.
+
+Mathematically, this constraint ensures that the ratio of the Activity to demand
+is constant for all time slices.  The multiplication trick here is analogous to
+what is performed in the Baseload constraint.
 """
-
-	l_capacity = sum(
-	  M.V_Capacity[l_tech, l_vin]
-
-	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_comm )
+	expr = (
+	    M.V_Activity[A_period, first_season, first_time_of_day, A_tech, A_vintage]
+	  * A_demand
+	  ==
+	    M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
+	  * first_demand
 	)
-
-	dindex = (A_period, A_season, A_time_of_day, A_comm)
-	sindex = (A_season, A_time_of_day)
-
-	expression = (l_capacity * M.SegFrac[ sindex ] >= M.Demand[ dindex ])
-	return expression
+	return expr
 
 
 def DemandConstraint_rule ( M, A_period, A_season, A_time_of_day, A_comm ):

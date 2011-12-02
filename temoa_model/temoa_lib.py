@@ -632,6 +632,32 @@ def EnergyConsumptionByPeriodTechAndVintageVariableIndices ( M ):
 def DemandConstraintIndices ( M ):
 	return set( M.Demand.keys() )
 
+def DemandActivityConstraintIndices ( M ):
+	indices = set()
+
+	Act = dict()
+	for period, season, day, demand in M.Demand.keys():
+		key = (period, demand)
+		if key not in Act:
+			Act[ key ] = set()
+		dval = value(M.Demand[period, season, day, demand])
+		Act[ key ].add( (season, day, dval) )
+
+	for period, demand in Act:
+		demands = sorted( Act[period, demand] )
+		if not len( demands ) > 1: continue
+		first = demands[0]
+		tmp = set(
+		  (period, s, d, t, v, dval, first[0], first[1], first[2])
+
+		  for t, v in ProcessesByPeriodAndOutput( period, demand )
+		  for s, d, dval in demands[1:]
+		)
+		indices.update( tmp )
+
+	return set( indices )
+
+
 def EmissionConstraintIndices ( M ):
 	return set( M.EmissionLimit.keys() )
 
@@ -1000,7 +1026,7 @@ def temoa_solve ( model ):
 	opt.keepFiles = False
 	   # output GLPK LP understanding of model
 	   #   Potentially want to incorporate this as an actual command line arg.
-	# opt.options.wlp = basename( options.dot_dat[0] )[:-4] + '.lp'
+	# opt.options.wlp = path.basename( options.dot_dat[0] )[:-4] + '.lp'
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
