@@ -9,47 +9,74 @@ Objective function.
 
 This function is currently a simple summation of all items in V_FlowOut multiplied by CommunityProductionCost.  For the time being (i.e. during development), this is intended to make development and debugging simpler.
 	"""
-	l_invest_indices = M.CostInvest.keys()
-	l_fixed_indices  = M.CostFixed.keys()
-	l_marg_indices   = M.CostMarginal.keys()
+	l_loan_period_fraction_indices = M.LoanLifeFrac.keys()
+	l_tech_period_fraction_indices = M.TechLifeFrac.keys()
 
 	l_loan_costs = sum(
-	    M.V_Capacity[l_tech, l_vin] * M.PeriodRate[ l_per ]
-	  * M.CostInvest[l_tech, l_vin]
-	  * M.LoanAnnualize[l_tech, l_vin]
+	    M.V_CapacityInvest[l_tech, l_vin]
+	  * value(
+	      M.PeriodRate[ l_per ].value
+	    * M.CostInvest[l_tech, l_vin].value
+	    * M.LoanAnnualize[l_tech, l_vin].value
+	  )
 
+	  for l_tech, l_vin in M.CostInvest.keys()
 	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
+	  if (l_per, l_tech, l_vin) not in l_loan_period_fraction_indices
 	  if loanIsActive( l_per, l_tech, l_vin )
-	  if (l_tech, l_vin) in l_invest_indices
-	  if value(M.CostInvest[l_tech, l_vin])
+	) + sum(
+	    M.V_CapacityInvest[l_tech, l_vin]
+	  * M.CostInvest[l_tech, l_vin].value
+	  * M.LoanAnnualize[l_tech, l_vin].value
+	  * sum(
+	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
+	      for y in range( 0, M.PeriodLength[ l_per ] * M.LoanLifeFrac[l_per, l_tech, l_vin])
+	    )
+
+	  for l_per, l_tech, l_vin in l_loan_period_fraction_indices
 	)
 
 	l_fixed_costs = sum(
-	    M.V_Capacity[l_tech, l_vin]
-	  * M.CostFixed[l_per, l_tech, l_vin]
-	  * M.PeriodRate[ l_per ]
+	    M.V_CapacityFixed[l_tech, l_vin]
+	  * value(
+	      M.CostFixed[l_per, l_tech, l_vin].value
+	    * M.PeriodRate[ l_per ].value
+	  )
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  if (l_per, l_tech, l_vin) in l_fixed_indices
-	  if value(M.CostFixed[l_per, l_tech, l_vin])
-	)
+	  for l_per, l_tech, l_vin in M.CostFixed.keys()
+	  if (l_per, l_tech, l_vin) not in l_tech_period_fraction_indices
+	) + sum(
+	    M.V_CapacityInvest[l_tech, l_vin]
+	  * M.CostInvest[l_tech, l_vin].value
+	  * M.LoanAnnualize[l_tech, l_vin].value
+	  * sum(
+	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
+	      for y in range( 0, M.PeriodLength[ l_per ] * M.TechLifeFrac[l_per, l_tech, l_vin])
+	    )
+
+	  for l_per, l_tech, l_vin in l_tech_period_fraction_indices
+	  if (l_per, l_tech, l_vin) in M.CostFixed.keys()
+	  )
 
 	l_marg_costs = sum(
-	    M.V_Activity[l_per, l_season, l_time_of_day, l_tech, l_vin]
-	  * M.PeriodRate[ l_per ]
-	  * M.CostMarginal[l_per, l_tech, l_vin]
+	    M.V_ActivityByPeriodTechAndVintage[l_per, l_tech, l_vin]
+	  * value(
+	      M.CostMarginal[l_per, l_tech, l_vin].value
+	    * M.PeriodRate[ l_per ].value
+	  )
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  if (l_per, l_tech, l_vin) in l_marg_indices
-	  if value(M.CostMarginal[l_per, l_tech, l_vin])
-	  for l_season in M.time_season
-	  for l_time_of_day in M.time_of_day
+	  for l_per, l_tech, l_vin in M.CostMarginal.keys()
+	  if (l_per, l_tech, l_vin) not in l_tech_period_fraction_indices
+	) + sum(
+	    M.V_ActivityByPeriodTechAndVintage[l_per, l_tech, l_vin]
+	  * value( M.CostMarginal[l_per, l_tech, l_vin].value )
+	  * sum(
+	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
+	      for y in range( 0, M.PeriodLength[ l_per ] * M.TechLifeFrac[l_per, l_tech, l_vin])
+	    )
+
+	  for l_per, l_tech, l_vin in l_tech_period_fraction_indices
+	  if (l_per, l_tech, l_vin) in M.CostMarginal.keys()
 	)
 
 	return (l_loan_costs + l_fixed_costs + l_marg_costs)
@@ -59,6 +86,8 @@ Objective_rule = TotalCost_rule
 #   Initializaton rules
 
 def ParamPeriodLength_rule ( M, period ):
+	# This specifically does not use time_optimize because this function is
+	# called /over/ time_optimize.
 	periods = sorted( M.time_horizon )
 	periods.extend( sorted(M.time_future) )
 
@@ -73,8 +102,15 @@ def ParamPeriodLength_rule ( M, period ):
 
 
 def ParamPeriodRate_rule ( M, period ):
+	"""\
+The "Period Rate" is a multiplier against the costs incurred within a period to
+bring the time-value back to the base year.  The parameter PeriodRate is not
+directly specified by the modeler, but is a convenience calculation based on the
+GlobalDiscountRate and the length of each period.  One may refer to this
+(pseudo) parameter via M.PeriodRate[ a_period ]
+"""
 	l_rate_multiplier = sum(
-	  (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - y - period)
+	  (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - period - y)
 
 	  for y in range(0, M.PeriodLength[ period ])
 	)
@@ -82,16 +118,39 @@ def ParamPeriodRate_rule ( M, period ):
 	return value(l_rate_multiplier)
 
 
-def ParamLifetimeFrac_rule ( M, A_period, A_tech, A_vintage ):
+def ParamLoanLifeFraction_rule ( M, A_period, A_tech, A_vintage ):
+	"""\
+For any technology investment loan that will end between periods (as opposed to
+on a period boundary), calculate the fraction of the final period that loan
+payments must still be made.
+
+This function relies on being called only with ('period', 'tech', 'vintage')
+combinations of processes that will end in 'period'.
+"""
+	l_eol_year = A_vintage + value(M.LifetimeLoan[A_tech, A_vintage])
+
+	  # number of years into final period loan is complete
+	l_frac = l_eol_year - A_period
+
+	l_frac /= M.PeriodLength[ A_period ]
+	return value( l_frac )
+
+
+def ParamTechLifeFraction_rule ( M, A_period, A_tech, A_vintage ):
+	"""\
+For any technology that will cease operation (rust out, be decommissioned, etc.)
+between periods (as opposed to on a period boundary), calculate the fraction of
+the final period that the technology is still able to create useful output.
+
+This function must be called only with ('period', 'tech', 'vintage')
+combinations of processes that will end in 'period'.
+"""
 	l_eol_year = A_vintage + value(M.LifetimeTech[A_tech, A_vintage])
 
-	for l_inp in ProcessInputs( A_period, A_tech, A_vintage ):
-		for l_out in ProcessOutputsByInput( A_period, A_tech, A_vintage, l_inp ):
-			# if an efficiency exists, that's it, we're done.  Calculate
-			# the fraction and return it to Pyomo
-			l_frac  = l_eol_year - A_period
-			l_frac /= M.PeriodLength[ A_period ]
-			return value(l_frac)
+	  # number of years into final period loan is complete
+	l_frac  = l_eol_year - A_period
+	l_frac /= M.PeriodLength[ A_period ]
+	return value(l_frac)
 
 
 def ParamLoanAnnualize_rule ( M, A_tech, A_vintage ):
@@ -103,7 +162,7 @@ def ParamLoanAnnualize_rule ( M, A_tech, A_vintage ):
 	    )
 	)
 
-	return l_annualized_rate
+	return value(l_annualized_rate)
 
 # End initialization rules
 ##############################################################################
@@ -115,7 +174,8 @@ def BaseloadDiurnalConstraint_rule (
   M, A_period, A_season, A_time_of_day, A_tech, A_vintage
 ):
 	"""\
-Ensure that certain (electric baseload) technologies maintain equivalent output at all times during a day.
+Ensure that certain (electric baseload) technologies maintain equivalent output
+at all times during a day.
 
 The math behind this is more computer programmatic in fashion, than
 mathematical.  It involves a minor algorithm that creates an ordering of the
@@ -124,14 +184,11 @@ time_of_day set, and uses that order such that
 (for each d element of time_of_day)
 Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 """
-	# Question: How do I set the different times of day equal to each other?
-	# This approach is the more programmatic one, but is there a simpler
-	# mathematical approach?
+	# Question: How to set the different times of day equal to each other?
 
-	l_times = list( M.time_of_day )  # convert to Python list.  (Already
-	  # appropriately sorted by the 'order=True' on the Set definition.)  This
-	  # this is the commonality between invocations of this method, and how
-	  # to find where in the "pecking order" A_time_of_day falls.
+	# Step 1: Acquire a "canonical" representation of the times of day
+	l_times = list( M.time_of_day )  # i.e. a Python list.
+	  # This is the commonality between invocations of this method.
 
 	index = l_times.index( A_time_of_day )
 	if 0 == index:
@@ -140,15 +197,15 @@ Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 		# an effectively useless constraint
 		return Constraint.Skip
 
-	# for the rest of the time_of_days, set them equal to the first.  i.e.
-	# create a set of constraints that look something like:
+	# Step 2: Set the rest of the times of day equal in output to the first.
+	# i.e. create a set of constraints that look something like:
 	# tod[ 2 ] == tod[ 1 ]
 	# tod[ 3 ] == tod[ 1 ]
 	# tod[ 4 ] == tod[ 1 ]
 	# and so on ...
 	l_first = l_times[ 0 ]
 
-	# Finally, the actual expression: for baseload, must compute the /average/
+	# Step 3: the actual expression.  For baseload, must compute the /average/
 	# activity over the segment.  By definition, average is
 	#     (segment activity) / (segment length)
 	# So:   (ActA / SegA) == (ActB / SegB)
@@ -208,7 +265,9 @@ def StorageConstraint_rule (
   M, A_period, A_season, A_inp, A_tech, A_vintage, A_out
 ):
 	"""\
-	Constraint rule documentation goes here ...
+The idea behind the Temoa storage implementation is that, on average, the amount
+of energy into a storage unit (less an efficiency) is the same as the energy
+coming out of it.  The "on average" is taken to be over the course of a season.
 """
 	l_sum_in_out = sum(
 	    M.V_FlowOut[A_period, A_season, l_tod, A_inp, A_tech, A_vintage, A_out]
@@ -258,7 +317,8 @@ def ActivityConstraint_rule (
 	"""\
 This constraint defines the convenience variable V_Activity as the sum of all
 outputs of a process.  If there is more than one output, there is currently no
-attempt to convert to a common unit of measurement.
+attempt to convert to a common unit of measurement.  (Unfortunately, this tedium
+is currently left as an implicit accounting exercise for the modeler.)
 """
 	pindex = (A_period, A_tech, A_vintage)
 	aindex = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
@@ -297,7 +357,7 @@ def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
 		# if there is no demand, then no need to create a constraint
 		return Constraint.Skip
 
-	l_frac_indices = M.LifetimeFrac.keys()
+	l_frac_indices = M.TechLifeFrac.keys()
 
 	l_non_dying_ability = sum(
 	    M.V_Capacity[l_tech, l_vin]
@@ -320,7 +380,7 @@ def CapacityFractionalLifetimeConstraint_rule (
 	    M.V_Capacity[A_tech, A_vintage]
 	  * M.CapacityFactor[A_tech, A_vintage]
 	  * M.CapacityToActivity[A_tech]
-	  * M.LifetimeFrac[A_period, A_tech, A_vintage]
+	  * M.TechLifeFrac[A_period, A_tech, A_vintage]
 	  * M.PeriodLength[ A_period ]
 	)
 
@@ -364,6 +424,14 @@ V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 	return expr
 
 
+def CapacityInvestConstraint_rule ( M, t, v ):
+	return  M.V_Capacity[t, v] == M.V_CapacityInvest[t, v]
+
+
+def CapacityFixedConstraint_rule ( M, t, v ):
+	return  M.V_Capacity[t, v] == M.V_CapacityFixed[t, v]
+
+
 def ExistingCapacityConstraint_rule ( M, A_tech, A_vintage ):
 	"""\
 For vintage periods (that the model is not to optimize), explicitly set the capacity values.
@@ -372,9 +440,8 @@ For vintage periods (that the model is not to optimize), explicitly set the capa
 V_Capacity[t,v] = Param(Existingcapacity[t,v])
 	"""
 	index = (A_tech, A_vintage)
-	ecapacity = M.ExistingCapacity[ index ]
 
-	expr = ( M.V_Capacity[ index ] == ecapacity )
+	expr = ( M.V_Capacity[ index ] == M.ExistingCapacity[ index ] )
 	return expr
 
 
@@ -920,8 +987,6 @@ def AddReportingVariables ( M ):
 	# fairly inefficient, and each Variable represents a fair chunk of memory,
 	# among other resources.  Luckily, all told, these are cheap, compared
 	# to the computational cost of the other constraints.
-	M.ActivityByPeriodTechAndVintageVarIndices = Set(
-	  dimen=3, rule=ActivityByPeriodTechAndVintageVarIndices )
 	M.ActivityByPeriodTechAndOutputVarIndices = Set(
 	  dimen=3, rule=ActivityByPeriodTechAndOutputVariableIndices )
 	M.ActivityByPeriodTechVintageAndOutputVarIndices = Set(
@@ -956,7 +1021,6 @@ def AddReportingVariables ( M ):
 	  dimen=3, rule=EnergyConsumptionByPeriodTechAndVintageVariableIndices )
 
 	M.V_ActivityByPeriodAndTech              = Var( M.time_optimize, M.tech_all,                      domain=NonNegativeReals )
-	M.V_ActivityByPeriodTechAndVintage       = Var( M.ActivityByPeriodTechAndVintageVarIndices,       domain=NonNegativeReals )
 	M.V_ActivityByPeriodTechAndOutput        = Var( M.ActivityByPeriodTechAndOutputVarIndices,        domain=NonNegativeReals )
 	M.V_ActivityByPeriodTechVintageAndOutput = Var( M.ActivityByPeriodTechVintageAndOutputVarIndices, domain=NonNegativeReals )
 
@@ -985,7 +1049,6 @@ def AddReportingVariables ( M ):
 	#   The requisite constraints to set the derived variables above.
 
 	M.ActivityByPeriodTechConstraint                 = Constraint( M.time_optimize, M.tech_all,                      rule=ActivityByPeriodTechConstraint_rule )
-	M.ActivityByPeriodTechAndVintageConstraint       = Constraint( M.ActivityByPeriodTechAndVintageVarIndices,       rule=ActivityByPeriodTechAndVintageConstraint_rule )
 	M.ActivityByPeriodTechAndOutputConstraint        = Constraint( M.ActivityByPeriodTechAndOutputVarIndices,        rule=ActivityByPeriodTechAndOutputConstraint_rule )
 	M.ActivityByPeriodTechVintageAndOutputConstraint = Constraint( M.ActivityByPeriodTechVintageAndOutputVarIndices, rule=ActivityByPeriodTechVintageAndOutputConstraint_rule )
 

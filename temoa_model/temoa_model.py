@@ -149,11 +149,13 @@ CapacityFactor(tech_all, vintage_all)
 	M.CostInvest   = Param( M.CostInvestIndices )
 
 	M.DiscountRateIndices = Set( dimen=2, rule=DiscountRateIndices )
-	M.LifetimeFracIndices = Set( dimen=3, rule=LifetimeFracIndices )
+	M.LoanLifeFracIndices = Set( dimen=3, rule=LoanLifeFracIndices )
+	M.TechLifeFracIndices = Set( dimen=3, rule=TechLifeFracIndices )
 	M.LoanIndices         = Set( dimen=2, rule=LoanIndices )
 
 	M.DiscountRate  = Param( M.DiscountRateIndices, default=0.05 )
-	M.LifetimeFrac  = Param( M.LifetimeFracIndices, rule=ParamLifetimeFrac_rule )
+	M.LoanLifeFrac  = Param( M.LoanLifeFracIndices, rule=ParamLoanLifeFraction_rule )
+	M.TechLifeFrac  = Param( M.TechLifeFracIndices, rule=ParamTechLifeFraction_rule )
 	M.LoanAnnualize = Param( M.LoanIndices, rule=ParamLoanAnnualize_rule )
 
 	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
@@ -168,9 +170,13 @@ CapacityFactor(tech_all, vintage_all)
 	M.EmissionActivity = Param( M.EmissionActivityIndices )
 
 	M.ActivityVarIndices = Set( dimen=5, rule=ActivityVariableIndices )
+	M.ActivityByPeriodTechAndVintageVarIndices = Set(
+	  dimen=3, rule=ActivityByPeriodTechAndVintageVarIndices )
+
 	M.CapacityVarIndices = Set( dimen=2, rule=CapacityVariableIndices )
 	M.CapacityAvailableVarIndices = Set(
 	  dimen=2, rule=CapacityAvailableVariableIndices )
+
 	M.FlowVarIndices = Set( dimen=7, rule=FlowVariableIndices )
 
 	M.BaseloadDiurnalConstraintIndices = Set(
@@ -207,10 +213,18 @@ CapacityFactor(tech_all, vintage_all)
 	M.V_Activity = Var( M.ActivityVarIndices, domain=NonNegativeReals )
 	M.V_Capacity = Var( M.CapacityVarIndices, domain=NonNegativeReals )
 
+	M.V_ActivityByPeriodTechAndVintage = Var(
+	  M.ActivityByPeriodTechAndVintageVarIndices,
+	  domain=NonNegativeReals
+	)
+
 	M.V_CapacityAvailableByPeriodAndTech = Var(
 	  M.CapacityAvailableVarIndices,
 	  domain=NonNegativeReals
 	)
+
+	M.V_CapacityInvest = Var( M.CapacityVarIndices, domain=NonNegativeReals )
+	M.V_CapacityFixed  = Var( M.CapacityVarIndices, domain=NonNegativeReals )
 
 	AddReportingVariables( M )
 
@@ -221,9 +235,14 @@ CapacityFactor(tech_all, vintage_all)
 
 	#   "Bookkeeping" constraints
 	M.ActivityConstraint = Constraint( M.ActivityVarIndices, rule=ActivityConstraint_rule )
+	M.ActivityByPeriodTechAndVintageConstraint = Constraint( M.ActivityByPeriodTechAndVintageVarIndices, rule=ActivityByPeriodTechAndVintageConstraint_rule )
+
 	M.CapacityConstraint = Constraint( M.ActivityVarIndices, rule=CapacityConstraint_rule )
 
 	M.ExistingCapacityConstraint = Constraint( M.ExistingCapacityConstraintIndices, rule=ExistingCapacityConstraint_rule )
+
+	M.CapacityInvestConstraint = Constraint( M.CapacityVarIndices, rule=CapacityInvestConstraint_rule )
+	M.CapacityFixedConstraint  = Constraint( M.CapacityVarIndices, rule=CapacityFixedConstraint_rule )
 
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
