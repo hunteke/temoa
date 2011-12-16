@@ -59,8 +59,8 @@ Objective_rule = TotalCost_rule
 #   Initializaton rules
 
 def ParamPeriodLength_rule ( M, period ):
-	periods = list( M.time_horizon )
-	periods.extend( list(M.time_future) )
+	periods = sorted( M.time_horizon )
+	periods.extend( sorted(M.time_future) )
 
 	i = periods.index( period )
 
