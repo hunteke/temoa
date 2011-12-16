@@ -117,14 +117,17 @@ CapacityFactor(tech_all, vintage_all)
 	M.PeriodRate   = Param( M.time_optimize, initialize=ParamPeriodRate_rule )
 
 	M.SegFrac = Param( M.time_season, M.time_of_day )
+
 	# always-empty Set; hack to perform inter-Set or inter-Param validation
 	M.validate_SegFrac = Set( initialize=validate_SegFrac )
 
 	M.CapacityToActivity = Param( M.tech_all,  default=1 )
-	M.CapacityFactor     = Param( M.tech_all,  M.vintage_all,  default=1 )
 
 	M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
 	M.Efficiency   = Param( M.commodity_carrier, M.tech_all, M.vintage_all, M.commodity_carrier )
+
+	M.CapacityFactorIndices = Set( dimen=2, rule=CapacityFactorIndices )
+	M.CapacityFactor     = Param( M.CapacityFactorIndices, default=1 )
 
 	M.LifetimeTechIndices = Set( dimen=2, rule=LifetimeTechIndices )
 	M.LifetimeLoanIndices = Set( dimen=2, rule=LifetimeLoanIndices )

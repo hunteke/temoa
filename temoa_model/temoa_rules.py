@@ -136,7 +136,6 @@ combinations of processes that will end in 'period'.
 	return value( l_frac )
 
 
-
 def ParamTechLifeFraction_rule ( M, A_period, A_tech, A_vintage ):
 	"""\
 For any technology that will cease operation (rust out, be decommissioned, etc.)
