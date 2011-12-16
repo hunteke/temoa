@@ -704,6 +704,34 @@ def BaseloadDiurnalConstraintIndices ( M ):
 	return indices
 
 
+### Additions to match MARKAL
+
+def MARKAL_SegFrac_Electric_Indices ( M ):
+	indices = set(
+	  (l_per, l_season, l_tod, l_tech, l_vin)
+
+	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  if l_tech in M.tech_electric    # This is major difference from Temoa
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	return indices
+
+
+def MARKAL_No_SegFrac_Indices ( M ):
+	indices = set(
+	  (l_per, l_tech, l_vin)
+
+	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  if l_tech not in M.tech_electric  # This is major difference from Temoa
+	)
+
+	return indices
+
+
+### End additions to match MARKAL
+
 def CapacityFractionalLifetimeConstraintIndices ( M ):
 	indices = set(
 	  (l_per, l_tech, l_vin, l_carrier)

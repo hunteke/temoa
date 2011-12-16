@@ -1,0 +1,695 @@
+data ;
+
+
+set  time_exist    :=  1960  1970  1980 ;
+set  time_horizon  :=   2010 1990 2000   ;
+set  time_future   :=  2020 ;
+
+set  time_season  :=  inter  summer  winter ;
+set  time_of_day  :=  day  night ;
+
+set  tech_resource  :=    # SET SRCENCP
+ IMPDSL1        # "imported diesel"
+ IMPGSL1        # "imported gasoline"
+ IMPHCO1        # "imported coal"
+ IMPOIL1        # "imported crude oil"
+ IMPURN1        # "imported uranium"
+
+ IMPFEQ         # "imported ???", doesn't exist in Utopia
+ IMPHYD         # "imported water", doesn't exist in Utopia
+	;
+
+
+set  tech_production  :=       # SET TCH (partial)
+ E01            # coal power plant
+ E21            # nuclear power plant
+ E31            # hydro power
+ E51            # electric storage
+ E70            # diesel power plant
+ RHE            # electric residential heating
+ RHO            # diesel residential heating
+ RL1            # residential lighting
+ SRE            # crude oil processor
+ TXD            # diesel powered vehicles
+ TXE            # electric powered vehicles
+ TXG            # gasoline powered vehicles
+	;
+
+
+set  tech_electric  :=
+ E01
+ E21
+ E31
+ E51
+ E70
+	;
+
+
+set  tech_baseload  :=
+ E01
+ E21
+ E31
+	;
+
+
+set  tech_storage  :=        # SET STG
+ E51
+	;
+
+
+set  commodity_physical  :=        # SET ENT
+ ethos   # "dummy commodity" to supply inputs (makes graph easier to read)
+ CSV     # "conservation"
+ DSL     # diesel
+ ELC     # electricity
+ FEQ     #
+ GSL     # gasoline
+ HCO     # coal
+ HYD     # water
+ LTH     #
+ OIL     # crude oil
+ URN     # uranium
+	;
+
+
+set  commodity_emissions  :=        # SET ENV
+ co2
+ nox
+	;
+
+
+set  commodity_demand  :=        # SET DM
+ RH     # "residential heating"
+ RL     # "residential lighting"
+ TX     # "transportation"
+	;
+
+
+param  SegFrac  :=        # PARAMETER NQHR
+# Temoa                 # Utopia
+ inter  day     0.1667    # I-D
+ inter  night   0.0833    # I-N
+ summer day     0.1667    # S-D
+ summer night   0.0833    # S-N
+ winter day     0.3333    # W-D
+ winter night   0.1667    # W-N
+	;
+
+
+param  CapacityToActivity  :=         # PARAMETER TCH_CAPU
+# tech       # value
+ E01          31.54
+ E21          31.54
+ E31          31.54
+ E51          31.54
+ E70          31.54
+ RHE           1
+ RHO           1
+ RL1           1
+ SRE           1
+ TXD           1
+ TXE           1
+ TXG           1
+	;
+
+
+param  GlobalDiscountRate  :=  0.05 ;  # SCALAR DISCOUNT
+
+
+param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
+# Emission    # input   # process      # vintage     # output      # amount released per unit activity
+ co2           ethos     IMPDSL1        1990          DSL           0.075
+ co2           ethos     IMPGSL1        1990          GSL           0.075
+ co2           ethos     IMPHCO1        1990          HCO           0.089
+ co2           ethos     IMPOIL1        1990          OIL           0.075
+ nox           DSL       TXD            1970          TX            1
+ nox           DSL       TXD            1980          TX            1
+ nox           DSL       TXD            1990          TX            1
+ nox           DSL       TXD            2000          TX            1
+ nox           DSL       TXD            2010          TX            1
+ nox           GSL       TXG            1970          TX            1
+ nox           GSL       TXG            1980          TX            1
+ nox           GSL       TXG            1990          TX            1
+ nox           GSL       TXG            2000          TX            1
+ nox           GSL       TXG            2010          TX            1
+	;
+
+
+param  Demand  :=        # TABLE DM_DEM
+# year   # season   # time_of_day   # demand    # value    # Utopia percentages
+ 1990     inter      day             RH           3.024     # 12%
+ 1990     inter      night           RH           1.512     #  6%
+ 1990     winter     day             RH          13.77684   # 54.67%
+ 1990     winter     night           RH           6.88716   # 27.33%
+
+ 2000     inter      day             RH           4.536     # 12%
+ 2000     inter      night           RH           2.268     #  6%
+ 2000     winter     day             RH          20.66526   # 54.67%
+ 2000     winter     night           RH          10.33074   # 27.33%
+
+ 2010     inter      day             RH           6.804     # 12%
+ 2010     inter      night           RH           3.402     #  6%
+ 2010     winter     day             RH          30.99789   # 54.67%
+ 2010     winter     night           RH          15.49611   # 27.33%
+
+ 1990     inter      day             RL           0.84      # 15%
+ 1990     inter      night           RL           0.28      #  5%
+ 1990     summer     day             RL           0.84      # 15%
+ 1990     summer     night           RL           0.28      #  5%
+ 1990     winter     day             RL           2.8       # 50%
+ 1990     winter     night           RL           0.56      # 10%
+
+ 2000     inter      day             RL           1.26      # 15%
+ 2000     inter      night           RL           0.42      #  5%
+ 2000     summer     day             RL           1.26      # 15%
+ 2000     summer     night           RL           0.42      #  5%
+ 2000     winter     day             RL           4.2       # 50%
+ 2000     winter     night           RL           0.84      # 10%
+
+ 2010     inter      day             RL           1.89      # 15%
+ 2010     inter      night           RL           0.63      #  5%
+ 2010     summer     day             RL           1.89      # 15%
+ 2010     summer     night           RL           0.63      #  5%
+ 2010     winter     day             RL           6.3       # 50%
+ 2010     winter     night           RL           1.26      # 10%
+
+ 1990     inter      day             TX           0.86684   # 16.67%
+ 1990     inter      night           TX           0.43316   #  8.33%
+ 1990     summer     day             TX           0.86684   # 16.67%
+ 1990     summer     night           TX           0.43316   #  8.33%
+ 1990     winter     day             TX           1.73316   # 33.33%
+ 1990     winter     night           TX           0.86684   # 16.67%
+
+ 2000     inter      day             TX           1.30026   # 16.67%
+ 2000     inter      night           TX           0.64974   #  8.33%
+ 2000     summer     day             TX           1.30026   # 16.67%
+ 2000     summer     night           TX           0.64974   #  8.33%
+ 2000     winter     day             TX           2.59974   # 33.33%
+ 2000     winter     night           TX           1.30026   # 16.67%
+
+ 2010     inter      day             TX           1.948723  # 16.67%
+ 2010     inter      night           TX           0.973777  #  8.33%
+ 2010     summer     day             TX           1.948723  # 16.67%
+ 2010     summer     night           TX           0.973777  #  8.33%
+ 2010     winter     day             TX           3.896277  # 33.33%
+ 2010     winter     night           TX           1.948723  # 16.67%
+	;
+
+
+param  MinCapacity  :=   # roughly NRAT_RTY2
+# period     # tech  # value
+ 1990         E31     0.13
+ 2000         E31     0.13
+ 2010         E31     0.13
+
+ 1990         SRE     0.1
+	;
+
+param  MaxCapacity  :=   # roughly NRAT_RTY2
+# period     # tech  # value
+ 1990         E31     0.13
+ 2000         E31     0.17
+ 2010         E31     0.21
+
+ 1990         RHE     0
+
+ 1990         TXD     0.6
+ 2000         TXD     1.76
+ 2010         TXD     4.76
+ ;
+
+
+param  LifetimeTech  :=        # PARAMETER TCH_LIFE
+# Temoa tech name   # vintage    # value
+ E01                 1960         40        # for existing cap.
+ E01                 1970         40        # for existing cap.
+ E01                 1980         40        # for existing cap.
+ E01                 1990         40
+ E01                 2000         40
+ E01                 2010         40
+
+ E21                 1990         40
+ E21                 2000         40
+ E21                 2010         40
+
+ E31                 1980        100        # for existing cap.
+ E31                 1990        100
+ E31                 2000        100
+ E31                 2010        100
+
+ E51                 1980        100
+ E51                 1990        100
+ E51                 2000        100
+ E51                 2010        100
+
+ E70                 1960         40        # for existing cap.
+ E70                 1970         40        # for existing cap.
+ E70                 1980         40        # for existing cap.
+ E70                 1990         40
+ E70                 2000         40
+ E70                 2010         40
+
+ RHE                 1990         30
+ RHE                 2000         30
+ RHE                 2010         30
+
+ RHO                 1970         30        # for existing cap.
+ RHO                 1980         30        # for existing cap.
+ RHO                 1990         30
+ RHO                 2000         30
+ RHO                 2010         30
+
+ RL1                 1980         20        # for existing cap.
+ RL1                 1990         10
+ RL1                 2000         10
+ RL1                 2010         10
+
+ SRE                 1990         50
+ SRE                 2000         50
+ SRE                 2010         50
+
+ TXD                 1970         30        # for existing cap.
+ TXD                 1980         30        # for existing cap.
+ TXD                 1990         15
+ TXD                 2000         15
+ TXD                 2010         15
+
+ TXE                 1990         15
+ TXE                 2000         15
+ TXE                 2010         15
+
+ TXG                 1970         30        # for existing cap.
+ TXG                 1980         30        # for existing cap.
+ TXG                 1990         15
+ TXG                 2000         15
+ TXG                 2010         15
+
+ # added because /every/ process in TEMOA is a technology
+ IMPDSL1      1990     1000
+ IMPGSL1      1990     1000
+ IMPHCO1      1990     1000
+ IMPOIL1      1990     1000
+ IMPURN1      1990     1000
+
+ IMPHYD       1990     1000
+ IMPFEQ       1990     1000
+	;
+
+param  LifetimeLoan  :=
+   # This is a basically a copy of LifetimeTech, but for Loan Amortization.
+   # This is what allows the tech and loan life to be separate entities.
+# Temoa tech name     # vintage    # value   # Utopia tech name
+ E01                   1990         40
+ E01                   2000         40
+ E01                   2010         40
+
+ E21                   1990         40
+ E21                   2000         40
+ E21                   2010         40
+
+ E31                   1990        100
+ E31                   2000        100
+ E31                   2010        100
+
+ E51                   1990        100
+ E51                   2000        100
+ E51                   2010        100
+
+ E70                   1990         40
+ E70                   2000         40
+ E70                   2010         40
+
+ RHE                   1990         30
+ RHE                   2000         30
+ RHE                   2010         30
+
+ RHO                   1990         30
+ RHO                   2000         30
+ RHO                   2010         30
+
+ RL1                   1990         10
+ RL1                   2000         10
+ RL1                   2010         10
+
+ SRE                   1990         50
+ SRE                   2000         50
+ SRE                   2010         50
+
+ TXD                   1990         15
+ TXD                   2000         15
+ TXD                   2010         15
+
+ TXE                   1990         15
+ TXE                   2000         15
+ TXE                   2010         15
+
+ TXG                   1990         15
+ TXG                   2000         15
+ TXG                   2010         15
+	;
+
+param CapacityFactor :=
+# tech       # vintage    # value
+ E01          1960         0.8
+ E01          1970         0.8
+ E01          1980         0.8
+ E01          1990         0.8
+ E01          2000         0.8
+ E01          2010         0.8
+
+ E21          1990         0.8
+ E21          2000         0.8
+ E21          2010         0.8
+
+ E31          1980         0.275
+ E31          1990         0.275
+ E31          2000         0.2753
+ E31          2010         0.2756
+
+ E51          1980         0.17
+ E51          1990         0.17
+ E51          2000         0.17
+ E51          2010         0.17
+
+ E70          1960         0.8
+ E70          1970         0.8
+ E70          1980         0.8
+ E70          1990         0.8
+ E70          2000         0.8
+ E70          2010         0.8
+
+ ;
+
+
+param  Efficiency  :=        # PARAMETER CON_INP2, DMD_EFF
+# input carrier   # tech        # vintage  # output carrier   # eff. value
+ ethos             IMPDSL1       1990       DSL                1
+ ethos             IMPGSL1       1990       GSL                1
+ ethos             IMPHCO1       1990       HCO                1
+ ethos             IMPOIL1       1990       OIL                1
+ ethos             IMPURN1       1990       URN                1
+
+ ethos             IMPFEQ        1990       FEQ                1
+ ethos             IMPHYD        1990       HYD                1
+
+ HCO               E01           1960       ELC                0.32  # 1/3.125
+ HCO               E01           1970       ELC                0.32  # 1/3.125
+ HCO               E01           1980       ELC                0.32  # 1/3.125
+ HCO               E01           1990       ELC                0.32  # 1/3.125
+ HCO               E01           2000       ELC                0.32  # 1/3.125
+ HCO               E01           2010       ELC                0.32  # 1/3.125
+
+ FEQ               E21           1990       ELC                0.32  # 1/3.125
+ FEQ               E21           2000       ELC                0.32  # 1/3.125
+ FEQ               E21           2010       ELC                0.32  # 1/3.125
+
+ URN               E21           1990       ELC                0.4   # 1/2.5
+ URN               E21           2000       ELC                0.4   # 1/2.5
+ URN               E21           2010       ELC                0.4   # 1/2.5
+
+ HYD               E31           1980       ELC                0.32  # 1/3.125
+ HYD               E31           1990       ELC                0.32  # 1/3.125
+ HYD               E31           2000       ELC                0.32  # 1/3.125
+ HYD               E31           2010       ELC                0.32  # 1/3.125
+
+ DSL               E70           1960       ELC                0.294 # 1/3.4
+ DSL               E70           1970       ELC                0.294 # 1/3.4
+ DSL               E70           1980       ELC                0.294 # 1/3.4
+ DSL               E70           1990       ELC                0.294 # 1/3.4
+ DSL               E70           2000       ELC                0.294 # 1/3.4
+ DSL               E70           2010       ELC                0.294 # 1/3.4
+
+ ELC               E51           1980       ELC                0.720 # 1/1.3889
+ ELC               E51           1990       ELC                0.720 # 1/1.3889
+ ELC               E51           2000       ELC                0.720 # 1/1.3889
+ ELC               E51           2010       ELC                0.720 # 1/1.3889
+
+ ELC               RHE           1990       RH                 1     # direct translation from DMD_EFF
+ ELC               RHE           2000       RH                 1     # direct translation from DMD_EFF
+ ELC               RHE           2010       RH                 1     # direct translation from DMD_EFF
+
+ DSL               RHO           1970       RH                 0.7   # direct translation from DMD_EFF
+ DSL               RHO           1980       RH                 0.7   # direct translation from DMD_EFF
+ DSL               RHO           1990       RH                 0.7   # direct translation from DMD_EFF
+ DSL               RHO           2000       RH                 0.7   # direct translation from DMD_EFF
+ DSL               RHO           2010       RH                 0.7   # direct translation from DMD_EFF
+
+ ELC               RL1           1980       RL                 1     # direct translation from DMD_EFF
+ ELC               RL1           1990       RL                 1     # direct translation from DMD_EFF
+ ELC               RL1           2000       RL                 1     # direct translation from DMD_EFF
+ ELC               RL1           2010       RL                 1     # direct translation from DMD_EFF
+
+ OIL               SRE           1990       DSL                1     # direct translation from PRC_INP2, PRC_OUT
+ OIL               SRE           2000       DSL                1     # direct translation from PRC_INP2, PRC_OUT
+ OIL               SRE           2010       DSL                1     # direct translation from PRC_INP2, PRC_OUT
+ OIL               SRE           1990       GSL                1     # direct translation from PRC_INP2, PRC_OUT
+ OIL               SRE           2000       GSL                1     # direct translation from PRC_INP2, PRC_OUT
+ OIL               SRE           2010       GSL                1     # direct translation from PRC_INP2, PRC_OUT
+
+ DSL               TXD           1970       TX                 0.231 # direct translation from DMD_EFF
+ DSL               TXD           1980       TX                 0.231 # direct translation from DMD_EFF
+ DSL               TXD           1990       TX                 0.231 # direct translation from DMD_EFF
+ DSL               TXD           2000       TX                 0.231 # direct translation from DMD_EFF
+ DSL               TXD           2010       TX                 0.231 # direct translation from DMD_EFF
+
+ ELC               TXE           1990       TX                 0.827 # direct translation from DMD_EFF
+ ELC               TXE           2000       TX                 0.827 # direct translation from DMD_EFF
+ ELC               TXE           2010       TX                 0.827 # direct translation from DMD_EFF
+
+ GSL               TXG           1970       TX                 0.231 # direct translation from DMD_EFF
+ GSL               TXG           1980       TX                 0.231 # direct translation from DMD_EFF
+ GSL               TXG           1990       TX                 0.231 # direct translation from DMD_EFF
+ GSL               TXG           2000       TX                 0.231 # direct translation from DMD_EFF
+ GSL               TXG           2010       TX                 0.231 # direct translation from DMD_EFF
+	;
+
+
+param  ExistingCapacity  :=        # TABLE TCH_RES
+# tech           # vintage       # capacity amount
+ E01              1960            0.175
+ E01              1970            0.175
+ E01              1980            0.15
+
+ E31              1980            0.1
+
+ E51              1980            0.5
+
+ E70              1960            0.05
+ E70              1970            0.05
+ E70              1980            0.2
+
+ RHO              1970           12.5
+ RHO              1980           12.5
+
+ RL1              1980            5.6
+
+ TXD              1970            0.4
+ TXD              1980            0.2
+
+ TXG              1970            3.1
+ TXG              1980            1.5
+	;
+
+
+param  CostInvest  :=  # TABLE TCH_INVCOS
+# tech     # vintage      # value
+ E01        1990           1400
+ E01        2000           1300
+ E01        2010           1200
+
+ E21        1990           5000
+ E21        2000           5000
+ E21        2010           5000
+
+ E31        1990           3000
+ E31        2000           3000
+ E31        2010           3000
+
+ E51        1990            900
+ E51        2000            900
+ E51        2010            900
+
+ E70        1990           1000
+ E70        2000           1000
+ E70        2010           1000
+
+ RHE        1990             90
+ RHE        2000             90
+ RHE        2010             90
+
+ RHO        1990            100
+ RHO        2000            100
+ RHO        2010            100
+
+ SRE        1990            100
+ SRE        2000            100
+ SRE        2010            100
+
+ TXD        1990            1044
+ TXD        2000            1044
+ TXD        2010            1044
+
+ TXE        1990            2000
+ TXE        2000            1750
+ TXE        2010            1500
+
+ TXG        1990            1044
+ TXG        2000            1044
+ TXG        2010            1044
+;
+
+
+param  CostFixed  :=        # TABLE TCH_FIXOM
+# period         # tech        # vintage       # value
+ 1990             E01           1960              40
+ 1990             E01           1970              40
+ 1990             E01           1980              40
+ 1990             E01           1990              40
+ 2000             E01           1970              70
+ 2000             E01           1980              70
+ 2000             E01           1990              70
+ 2000             E01           2000              70
+ 2010             E01           1980             100
+ 2010             E01           1990             100
+ 2010             E01           2000             100
+ 2010             E01           2010             100
+
+ 1990             E21           1990             500
+ 2000             E21           1990             500
+ 2010             E21           1990             500
+ 2000             E21           2000             500
+ 2010             E21           2000             500
+ 2010             E21           2010             500
+
+ 1990             E31           1980              75
+ 1990             E31           1990              75
+ 2000             E31           1980              75
+ 2000             E31           1990              75
+ 2000             E31           2000              75
+ 2010             E31           1980              75
+ 2010             E31           1990              75
+ 2010             E31           2000              75
+ 2010             E31           2010              75
+
+ 1990             E51           1980              30
+ 1990             E51           1990              30
+ 2000             E51           1980              30
+ 2000             E51           1990              30
+ 2000             E51           2000              30
+ 2010             E51           1980              30
+ 2010             E51           1990              30
+ 2010             E51           2000              30
+ 2010             E51           2010              30
+
+ 1990             E70           1960              30
+ 1990             E70           1970              30
+ 1990             E70           1980              30
+ 1990             E70           1990              30
+ 2000             E70           1970              30
+ 2000             E70           1980              30
+ 2000             E70           1990              30
+ 2000             E70           2000              30
+ 2010             E70           1980              30
+ 2010             E70           1990              30
+ 2010             E70           2000              30
+ 2010             E70           2010              30
+
+ 1990             RHO           1970               1
+ 1990             RHO           1980               1
+ 1990             RHO           1990               1
+ 2000             RHO           1980               1
+ 2000             RHO           1990               1
+ 2000             RHO           2000               1
+ 2010             RHO           1990               1
+ 2010             RHO           2000               1
+ 2010             RHO           2010               1
+
+ 1990             RL1           1980               9.46
+ 1990             RL1           1990               9.46
+ 2000             RL1           2000               9.46
+ 2010             RL1           2010               9.46
+
+ 1990             TXD           1970              52
+ 1990             TXD           1980              52
+ 1990             TXD           1990              52
+ 2000             TXD           1980              52
+ 2000             TXD           1990              52
+ 2000             TXD           2000              52
+ 2010             TXD           2000              52
+ 2010             TXD           2010              52
+
+ 1990             TXE           1990             100
+ 2000             TXE           1990              90
+ 2000             TXE           2000              90
+ 2010             TXE           2000              80
+ 2010             TXE           2010              80
+
+ 1990             TXG           1970              48
+ 1990             TXG           1980              48
+ 1990             TXG           1990              48
+ 2000             TXG           1980              48
+ 2000             TXG           1990              48
+ 2000             TXG           2000              48
+ 2010             TXG           2000              48
+ 2010             TXG           2010              48
+	;
+
+
+param  CostMarginal  :=        # TABLE NSEP_COST1, TCH_VAROM
+# period   # technology            # vintage   # value
+ 1990       IMPDSL1                 1990         10
+ 2000       IMPDSL1                 1990         10
+ 2010       IMPDSL1                 1990         10
+ 1990       IMPGSL1                 1990         15
+ 2000       IMPGSL1                 1990         15
+ 2010       IMPGSL1                 1990         15
+ 1990       IMPHCO1                 1990          2
+ 2000       IMPHCO1                 1990          2
+ 2010       IMPHCO1                 1990          2
+ 1990       IMPOIL1                 1990          8
+ 2000       IMPOIL1                 1990          8
+ 2010       IMPOIL1                 1990          8
+ 1990       IMPURN1                 1990          2
+ 2000       IMPURN1                 1990          2
+ 2010       IMPURN1                 1990          2
+
+ 1990       E01                     1960          0.3
+ 1990       E01                     1970          0.3
+ 1990       E01                     1980          0.3
+ 1990       E01                     1990          0.3
+ 2000       E01                     1970          0.3
+ 2000       E01                     1980          0.3
+ 2000       E01                     1990          0.3
+ 2000       E01                     2000          0.3
+ 2010       E01                     1980          0.3
+ 2010       E01                     1990          0.3
+ 2010       E01                     2000          0.3
+ 2010       E01                     2010          0.3
+
+ 1990       E21                     1990          1.5
+ 2000       E21                     1990          1.5
+ 2010       E21                     1990          1.5
+ 2000       E21                     2000          1.5
+ 2010       E21                     2000          1.5
+ 2010       E21                     2010          1.5
+
+ 1990       E70                     1960          0.4
+ 1990       E70                     1970          0.4
+ 1990       E70                     1980          0.4
+ 1990       E70                     1990          0.4
+ 2000       E70                     1970          0.4
+ 2000       E70                     1980          0.4
+ 2000       E70                     1990          0.4
+ 2000       E70                     2000          0.4
+ 2010       E70                     1980          0.4
+ 2010       E70                     1990          0.4
+ 2010       E70                     2000          0.4
+ 2010       E70                     2010          0.4
+
+ 1990       SRE                     1990         10
+ 2000       SRE                     1990         10
+ 2000       SRE                     2000         10
+ 2010       SRE                     1990         10
+ 2010       SRE                     2000         10
+ 2010       SRE                     2010         10
+	;
