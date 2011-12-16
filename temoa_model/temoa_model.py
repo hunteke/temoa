@@ -182,6 +182,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.CommodityBalanceConstraintIndices = Set(
 	  dimen=4, rule=CommodityBalanceConstraintIndices )
 	M.DemandConstraintIndices = Set( dimen=4, rule=DemandConstraintIndices )
+	M.DemandActivityConstraintIndices = Set( dimen=9, rule=DemandActivityConstraintIndices )
 	M.ExistingCapacityConstraintIndices = Set(
 	  dimen=2, rule=ExistingCapacityConstraintIndices )
 	M.MaxCapacityConstraintIndices = Set(
@@ -228,7 +229,7 @@ CapacityFactor(tech_all, vintage_all)
 	#    - in driving order.  (e.g., without Demand, none of the others are
 	#      very useful.)
 	M.DemandConstraint           = Constraint( M.DemandConstraintIndices,  rule=DemandConstraint_rule )
-	M.DemandCapacityConstraint   = Constraint( M.DemandConstraintIndices,  rule=DemandCapacityConstraint_rule )
+	M.DemandActivityConstraint   = Constraint( M.DemandActivityConstraintIndices, rule=DemandActivityConstraint_rule )
 	M.ProcessBalanceConstraint   = Constraint( M.ProcessBalanceConstraintIndices, rule=ProcessBalanceConstraint_rule )
 	M.CommodityBalanceConstraint = Constraint( M.CommodityBalanceConstraintIndices,  rule=CommodityBalanceConstraint_rule )
 

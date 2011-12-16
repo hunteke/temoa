@@ -59,8 +59,8 @@ Objective_rule = TotalCost_rule
 #   Initializaton rules
 
 def ParamPeriodLength_rule ( M, period ):
-	periods = list( M.time_horizon )
-	periods.extend( list(M.time_future) )
+	periods = sorted( M.time_horizon )
+	periods.extend( sorted(M.time_future) )
 
 	i = periods.index( period )
 
@@ -140,18 +140,27 @@ Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
 		# an effectively useless constraint
 		return Constraint.Skip
 
-	# for the rest of the time_of_days, set them equal to the one before.  i.e.
+	# for the rest of the time_of_days, set them equal to the first.  i.e.
 	# create a set of constraints that look something like:
 	# tod[ 2 ] == tod[ 1 ]
-	# tod[ 3 ] == tod[ 2 ]
-	# tod[ 4 ] == tod[ 3 ]
+	# tod[ 3 ] == tod[ 1 ]
+	# tod[ 4 ] == tod[ 1 ]
 	# and so on ...
-	l_prev_time_of_day = l_times[ index -1 ]
+	l_first = l_times[ 0 ]
 
-	aindex_1 = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
-	aindex_2 = (A_period, A_season, l_prev_time_of_day, A_tech, A_vintage)
-
-	expr = (M.V_Activity[ aindex_1 ] == M.V_Activity[ aindex_2 ])
+	# Finally, the actual expression: for baseload, must compute the /average/
+	# activity over the segment.  By definition, average is
+	#     (segment activity) / (segment length)
+	# So:   (ActA / SegA) == (ActB / SegB)
+	#   computationally, however, multiplication is cheaper than division, so:
+	#       (ActA * SegB) == (ActB * SegA)
+	expr = (
+	    M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
+	  * M.SegFrac[A_season, l_first]
+	  ==
+	    M.V_Activity[A_period, A_season, l_first, A_tech, A_vintage]
+	  * M.SegFrac[A_season, A_time_of_day]
+	)
 	return expr
 
 
@@ -191,7 +200,7 @@ def MinCapacityConstraint_rule ( M, A_period, A_tech ):
 def MaxCapacityConstraint_rule ( M, A_period, A_tech ):
 	index = (A_period, A_tech)
 	l_max = M.MaxCapacity[ index ]
-	expr = (M.V_CapacityAvailableByPeriodAndTech[ index ] < l_max)
+	expr = (M.V_CapacityAvailableByPeriodAndTech[ index ] <= l_max)
 	return expr
 
 
@@ -247,11 +256,10 @@ def ActivityConstraint_rule (
   M, A_period, A_season, A_time_of_day, A_tech, A_vintage
 ):
 	"""\
-As V_Activity is a derived variable, the constraint sets V_Activity to the sum over input and output energy carriers of a process.
-
-(for each period, season, time_of_day, tech, vintage)
-V_Activity[p,s,d,t,v] = sum((inp,out), V_FlowOut[p,s,d,inp,t,v,out])
-	"""
+This constraint defines the convenience variable V_Activity as the sum of all
+outputs of a process.  If there is more than one output, there is currently no
+attempt to convert to a common unit of measurement.
+"""
 	pindex = (A_period, A_tech, A_vintage)
 	aindex = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
 
@@ -332,13 +340,14 @@ def CapacityConstraint_rule (
   M, A_period, A_season, A_time_of_day, A_tech, A_vintage
 ):
 	"""\
-V_Capacity is a derived variable; this constraint sets V_Capacity to at least be able to handle the activity in any optimization time slice.  In effect, this sets V_Capacity[p,t,v] to the max of the activity for similar indices: max(Activity[p,*,*t,v])
+V_Capacity is a derived variable; this constraint sets V_Capacity to at least
+be able to handle the activity in any optimization time slice.  In effect, this
+sets V_Capacity[p,t,v] to the max of the activity for similar indices:
+max(Activity[p,*,*t,v])
 
 (for each period, season, time_of_day, tech, vintage)
 V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 	"""
-	pindex = (A_period, A_tech, A_vintage)   # "process" index
-
 	l_vintage_activity = (
 	  M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
 	)
@@ -449,23 +458,29 @@ V_FlowOut[p,s,d,t,v,o] <= V_FlowIn[p,s,d,t,v,o] * Efficiency[i,t,v,o]
 	return expr
 
 
-def DemandCapacityConstraint_rule (
-  M, A_period, A_season, A_time_of_day, A_comm
+def DemandActivityConstraint_rule (
+  M, A_period, A_season, A_time_of_day, A_tech, A_vintage, A_demand,
+  first_season, first_time_of_day, first_demand,
 ):
 	"""\
+For end-use demands, it is unreasonable to let the optimizer only allow use in a
+single time slice.  For instance, if household A buys a natural gas furnace
+while household B buys an electric furnace, then both units should be used
+through the year.  Without this constraint, the model might choose to only use
+the electric during the day, and the natural gas during the night.
+
+Mathematically, this constraint ensures that the ratio of the Activity to demand
+is constant for all time slices.  The multiplication trick here is analogous to
+what is performed in the Baseload constraint.
 """
-
-	l_capacity = sum(
-	  M.V_Capacity[l_tech, l_vin]
-
-	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_comm )
+	expr = (
+	    M.V_Activity[A_period, first_season, first_time_of_day, A_tech, A_vintage]
+	  * A_demand
+	  ==
+	    M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
+	  * first_demand
 	)
-
-	dindex = (A_period, A_season, A_time_of_day, A_comm)
-	sindex = (A_season, A_time_of_day)
-
-	expression = (l_capacity * M.SegFrac[ sindex ] >= M.Demand[ dindex ])
-	return expression
+	return expr
 
 
 def DemandConstraint_rule ( M, A_period, A_season, A_time_of_day, A_comm ):

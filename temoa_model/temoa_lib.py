@@ -1,4 +1,5 @@
 from cStringIO import StringIO
+from os import path
 from sys import argv, stderr as SE, stdout as SO
 
 from temoa_graphviz import CreateModelDiagrams
@@ -7,27 +8,30 @@ try:
 	from coopr.pyomo import *
 except:
 
-	import os, sys
-	ppath = '/path/to/coopr/bin'
-	path = """Option 1:
-$ PATH=%(ppath)s:$PATH
-$ which python
+	import sys
+	cpath = path.join('path', 'to', 'coopr', 'executable', 'coopr_python')
+	if 'win' not in sys.platform:
+		msg = """\
+Option 1:
+$ PATH=%(cpath)s:$PATH
+$ coopr_python %(base)s  [options]  data.dat
 
 Option 2:
-$ %(ppath)s/python  %(base)s  ...
+$ %(cpath)s  %(base)s  [options]  data.dat
 """
-	if 'win' in sys.platform:
-		ppath = 'C:\\path\\to\\coopr\\bin'
-		path = """Option 1:
-C:\\> set PATH=%(ppath)s:%%PATH%%
-C:\\> python  %(base)s  ...
+
+	else:
+		msg = """\
+Option 1:
+C:\\> set PATH=%(cpath)s:%%PATH%%
+C:\\> coopr_python  %(base)s  [options]  data.dat
 
 Option 2:
-C:\\> %(ppath)s\\python  %(base)s  ...
+C:\\> %(cpath)s  %(base)s  [options]  data.dat
 """
 
-	base = os.path.basename( sys.argv[0] )
-	path %= { 'ppath' : ppath, 'base' : base }
+	base = path.basename( sys.argv[0] )
+	msg %= { 'cpath' : cpath, 'base' : base }
 	msg = """\
 Unable to find coopr.pyomo on the Python system path.  Are you running Coopr's
 version of Python?  Here is one way to check:
@@ -40,9 +44,9 @@ update your PATH environment variable to use Coopr's Python setup, or always
 explicitly use the Coopr path:
 
 %s
-"""
+""" % msg
 
-	raise ImportError, msg % path
+	raise ImportError, msg
 
 
 ###############################################################################
@@ -125,11 +129,21 @@ def validate_SegFrac ( M ):
 		# We can't explicitly test for "!= 1.0" because of incremental roundoff
 		# errors inherent in float manipulations and representations, so instead
 		# compare against an epsilon value of "close enough".
-		items = '\n   '.join( "%s: %s" % ii for ii in M.SegFrac.data().items() )
+
+		def get_str_padding ( obj ):
+			return len(str( obj ))
+		key_padding = max(map( get_str_padding, M.SegFrac.data().keys() ))
+
+		format = "%%-%ds = %%s" % key_padding
+			# Works out to something like "%-25s = %s"
+
+		items = sorted( M.SegFrac.data().items() )
+		items = '\n   '.join( format % (str(k), v) for k, v in items )
 
 		msg = ('The values of the SegFrac parameter do not sum to 1.  Each item '
 		  'in SegFrac represents a fraction of a year, so they must total to '
 		  '1.  Current values:\n   %s\n\tsum = %s')
+
 		raise ValueError, msg % (items, total)
 
 	return tuple()
@@ -172,26 +186,26 @@ def validate_TechOutputSplit ( M ):
 
 
 def init_set_time_optimize ( M ):
-	items = list( M.time_horizon )
-	items.extend( list( M.time_future ) )
+	items = sorted( M.time_horizon )
+	items.extend( sorted( M.time_future ) )
 
 	return items[:-1]
 
 
 def init_set_vintage_exist ( M ):
-	return list( M.time_exist )
+	return sorted( M.time_exist )
 
 
 def init_set_vintage_future ( M ):
-	return list( M.time_future )
+	return sorted( M.time_future )
 
 
 def init_set_vintage_optimize ( M ):
-	return list( M.time_optimize )
+	return sorted( M.time_optimize )
 
 
 def init_set_vintage_all ( M ):
-	return list( M.time_all )
+	return sorted( M.time_all )
 
 # end validation and initialization routines
 ##############################################################################
@@ -359,6 +373,11 @@ def EmissionActivityIndices ( M ):
 
 
 def LifetimeFracIndices ( M ):
+	"""\
+Returns the set of (period, tech, vintage) tuples of processes that die between
+period boundaries.  The tuple indicates the last period in which a process is
+active.
+"""
 	l_periods = set( M.time_optimize )
 	l_max_year = max( M.time_future )
 
@@ -373,6 +392,10 @@ def LifetimeFracIndices ( M ):
 
 
 def LifetimeTechIndices ( M ):
+	"""\
+Based on the Efficiency parameter's indices, this function returns the set of
+process indices that may be specified in the LifetimeTech parameter.
+"""
 	indices = set(
 	  (l_tech, l_vin)
 
@@ -383,6 +406,11 @@ def LifetimeTechIndices ( M ):
 
 
 def LifetimeLoanIndices ( M ):
+	"""\
+Based on the Efficiency parameter's indices and time_horizon parameter, this
+function returns the set of process indices that may be specified in the
+CostInvest parameter.
+"""
 	min_period = min( M.vintage_optimize )
 
 	indices = set(
@@ -396,6 +424,12 @@ def LifetimeLoanIndices ( M ):
 
 
 def LoanIndices ( M ):
+	"""\
+Returns the set of possible process (tech, vintage) investments the optimizer
+may make.
+
+This function is deprecated and may soon be removed from the API.
+"""
 	return set( M.CostInvest.keys() )
 
 # End parameters
@@ -597,6 +631,32 @@ def EnergyConsumptionByPeriodTechAndVintageVariableIndices ( M ):
 
 def DemandConstraintIndices ( M ):
 	return set( M.Demand.keys() )
+
+def DemandActivityConstraintIndices ( M ):
+	indices = set()
+
+	Act = dict()
+	for period, season, day, demand in M.Demand.keys():
+		key = (period, demand)
+		if key not in Act:
+			Act[ key ] = set()
+		dval = value(M.Demand[period, season, day, demand])
+		Act[ key ].add( (season, day, dval) )
+
+	for period, demand in Act:
+		demands = sorted( Act[period, demand] )
+		if not len( demands ) > 1: continue
+		first = demands[0]
+		tmp = set(
+		  (period, s, d, t, v, dval, first[0], first[1], first[2])
+
+		  for t, v in ProcessesByPeriodAndOutput( period, demand )
+		  for s, d, dval in demands[1:]
+		)
+		indices.update( tmp )
+
+	return set( indices )
+
 
 def EmissionConstraintIndices ( M ):
 	return set( M.EmissionLimit.keys() )
@@ -962,9 +1022,11 @@ def temoa_solve ( model ):
 	options = parse_args()
 	dot_dats = options.dot_dat
 
-	opt = SolverFactory('glpk_experimental')
+	opt = SolverFactory('glpk')
 	opt.keepFiles = False
-	# opt.options.wlp = "temoa_model.lp"  # output GLPK LP understanding of model
+	   # output GLPK LP understanding of model
+	   #   Potentially want to incorporate this as an actual command line arg.
+	# opt.options.wlp = path.basename( options.dot_dat[0] )[:-4] + '.lp'
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
@@ -1001,6 +1063,16 @@ def temoa_solve ( model ):
 		instance.load( result )
 		CreateModelDiagrams( instance, options )
 		SE.write( '\r[%8.2f\n' % duration() )
+
+	if not ( SO.isatty() and SE.isatty() ):
+		SO.write( "\n\nNotice: You are not receiving 'standard error' messages."
+		  "  Temoa uses the 'standard error' file to send meta information "
+		  "on the progress of the solve.  If you aren't intentionally "
+		  "ignoring standard error messages, you may correct the issue by "
+		  "updating coopr/src/coopr.misc/coopr/misc/scripts.py as per this "
+		  "coopr changeset: "
+		  "https://software.sandia.gov/trac/coopr/changeset/5363\n")
+
 
 # End direct invocation methods
 ###############################################################################
