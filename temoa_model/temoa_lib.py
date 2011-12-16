@@ -186,26 +186,26 @@ def validate_TechOutputSplit ( M ):
 
 
 def init_set_time_optimize ( M ):
-	items = list( M.time_horizon )
-	items.extend( list( M.time_future ) )
+	items = sorted( M.time_horizon )
+	items.extend( sorted( M.time_future ) )
 
 	return items[:-1]
 
 
 def init_set_vintage_exist ( M ):
-	return list( M.time_exist )
+	return sorted( M.time_exist )
 
 
 def init_set_vintage_future ( M ):
-	return list( M.time_future )
+	return sorted( M.time_future )
 
 
 def init_set_vintage_optimize ( M ):
-	return list( M.time_optimize )
+	return sorted( M.time_optimize )
 
 
 def init_set_vintage_all ( M ):
-	return list( M.time_all )
+	return sorted( M.time_all )
 
 # end validation and initialization routines
 ##############################################################################
