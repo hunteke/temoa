@@ -283,13 +283,6 @@ strict digraph Temoa_energy_carrier {
 
 		%(iedges)s
 	}
-
-	"%(images_dir)s" [
-	  color     = "%(home_color)s",
-	  fontcolor = "%(usedfont_color)s",
-	  href      = "..",
-	  shape     = "house"
-	] ;
 }
 """
 
@@ -606,13 +599,6 @@ strict digraph model {
 		// edges between vintages and periods
 		%(vedges)s
 	}
-
-	"%(images_dir)s" [
-	  color     = "%(home_color)s",
-	  fontcolor = "%(usedfont_color)s",
-	  href      = "..",
-	  shape     = "house"
-	] ;
 }
 """
 	elif options.graph_type == 'explicit_vintages':
@@ -649,13 +635,6 @@ strict digraph model {
 
 	// Define edges and any specific edge attributes
 	%(edges)s
-
-	"%(images_dir)s" [
-	  color     = "%(home_color)s",
-	  fontcolor = "%(usedfont_color)s",
-	  href      = "..",
-	  shape     = "house"
-	];
 }
 """
 
@@ -692,8 +671,6 @@ def CreateMainModelDiagram ( **kwargs ):
 
 	model_dot_fmt = """\
 strict digraph model {
-	label = "Model Diagram"
-
 	rankdir = "LR" ;
 
 	// Default node and edge attributes
@@ -725,13 +702,6 @@ strict digraph model {
 
 		%(oedges)s
 	}
-
-	"%(images_dir)s" [
-	  color     = "%(home_color)s",
-	  fontcolor = "%(usedfont_color)s",
-	  href      = "..",
-	  shape     = "house"
-	];
 }
 """
 
@@ -846,13 +816,6 @@ strict digraph model {
 
 		%(oedges)s
 	}
-
-	"%(images_dir)s" [
-	  color     = "%(home_color)s",
-	  fontcolor = "%(usedfont_color)s",
-	  href      = "..",
-	  shape     = "house"
-	];
 }
 """
 	enode_attr_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
@@ -1118,13 +1081,6 @@ strict digraph result_commodity_%(commodity)s {
 
 		%(unused_edges)s
 	}
-
-	"%(images_dir)s" [
-	  color     = "%(home_color)s",
-	  fontcolor = "%(usedfont_color)s",
-	  href      = "..",
-	  shape     = "house"
-	];
 }
 """
 
