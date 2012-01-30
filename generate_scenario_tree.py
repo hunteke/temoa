@@ -9,13 +9,9 @@ from pprint import pformat
 from shutil import copy as copyfile, rmtree
 from textwrap import TextWrapper
 
+from coopr.pyomo.base.sets import _SetProduct, _SetContainer
 
-wrapper = TextWrapper(
-  width             = 80,
-  subsequent_indent = '  ',
-  break_long_words  = False,
-  break_on_hyphens  = False,
-)
+
 SE = sys.stderr
 instance = None
 
@@ -23,6 +19,8 @@ node_count = 0
 stringify = lambda x: ', '.join(str(i) for i in x)
 
 class Storage ( ):
+	__slots__ = ('value', 'rate')  # this saves a noticeable amount of memory
+
 	def __str__ ( self ):
 		return pformat( self.__dict__, indent=2)
 	__repr__ = __str__
@@ -31,60 +29,67 @@ class Param ( object ):
 	# will be common to all Parameters, so no sense in storing it N times
 	stochasticset = None
 
+	  # this saves a noticeable amount of memory, and mild decrease in time
+	__slots__ = ('items', 'name', 'spoint', 'param', 'my_keys', 'model_keys',
+	             'skeys')
+
 	def __init__ ( self, **kwargs ):
-		from coopr.pyomo.base import _ProductSet, _SetContainer
 
 		# At the point someone is using this class, they probably know what
 		# they're doing, so intentionally die at this point if any of these
 		# items are not passed.  They're all mandatory.
 		name   = kwargs.pop('param')   # parameter in question to modify
 		spoint = kwargs.pop('spoint')  # stochastic point at which to do it
-		rate   = kwargs.pop('rate')    # how much to vary the parameter
+		rates  = kwargs.pop('rates')   # how much to vary the parameter
+		pidx   = int( kwargs.pop('stochastic_index') )
 
 		param = getattr( instance, name ) # intentionally die if not found.
-#		print param, kwargs
 
 		indices = tuple()
 		pindex = param.index()
 
-		if isinstance( pindex, _ProductSet ):
+		if isinstance( pindex, _SetProduct ):
 			getname = lambda x: x.name
 			indices = [ getname(i) for i in param._index_set ]
 			skeys = lambda: (' '.join(str(i) for i in k) for k in self.model_keys)
 
 			keys = param.keys()
-			f = lambda: lambda x: x[pidx] == spoint
-			r = lambda: lambda x: tuple(x[0:pidx] + x[pidx+1:])
+			f = lambda x: x[pidx] == spoint
+			r = lambda x: tuple(x[0:pidx] + x[pidx+1:])
 			    # reduce keys to remove stochastic parameter
 
 		elif isinstance( pindex, _SetContainer):
+			# this is under sparse keys
 			indices = (param._index.name,)
 			skeys = lambda: (' '.join(str(i) for i in self.model_keys) )
 
 			keys = param.keys()
-			f = lambda: lambda x: x == spoint
-			r = lambda: lambda x: ()
-
-		if Param.stochasticset not in indices:
-			msg = 'Model parameter not indexed by stochastic set and therefore ' \
-			      'is not a stochastic parameter as currently defined for this ' \
-			      'model.'
-			msg = wrapper.fill( msg )
-			msg += '\n\tstochastic set: %s\n\tparameter:      %s'
-			raise ValueError, msg % (Param.stochasticset, name)
-
-		# take only the keys about which we care; i.e. /this/ spoint
-		pidx = indices.index( Param.stochasticset )
+			f = lambda x: x[pidx] == spoint
+			r = lambda x: tuple(x[0:pidx] + x[pidx +1:])
 
 		# we filter out the spoint because it's inherently known by TreeNode,
 		# which "owns" /this/ Param
-		model_keys = filter( f(), keys )
-		my_keys    = map( r(), model_keys )
+		model_keys = filter( f, keys )
+		my_keys    = map( r, model_keys )
 
 		items = dict()
+
 		for actual, mine in zip(model_keys, my_keys):
+			rate = 1
+			for pattern, r in rates:
+				keys = pattern.split(',')
+				match = True
+				for p, t in zip(keys, mine):  # "pattern", "test"
+					if '*' == p: continue
+					if t != p:
+						match = False
+						break
+				if match:
+					rate = r
+					break
+
 			items[ mine ] = Storage()
-			items[ mine ].value = param[ actual ].value
+			items[ mine ].value = param[ actual ].value   # pulled from model
 			items[ mine ].rate  = rate
 
 		self.items      = items
@@ -101,7 +106,14 @@ class Param ( object ):
 
 
 	def __getitem__ ( self, i ):
-		return self.items[ i ]
+		try:
+			return self.items[ i ]
+		except:
+			# it's likely the element did not exist, which hopefully means 0?
+			class _tmp:
+				rate = 0
+				value = 0
+			return _tmp()
 
 
 	def __str__ ( self ):
@@ -120,15 +132,53 @@ class Param ( object ):
 		if isinstance( keys, str ):
 			keys = [ keys ]
 
-		vals = ( str(self[i].value) for i in self.my_keys )
-		data = '\n  '.join( (' '.join(i for i in v) for v in zip(keys, vals)) )
-		data = 'param  %s  :=\n  %s\n\t;\n' % (self.name, data)
+		# Together, these functions return the length of a printed version of
+		# a number, in characters.  They are used to make columns of data line up
+		# so one may have an easier time getting an overall sense of a data file.
+		def get_int_padding ( v ):
+			return len(str(int(v)))
+		def get_str_padding ( index ):
+			def anonymous_function ( obj ):
+				val = obj[ index ]
+				return len(str(val))
+			return anonymous_function
 
-		return comment + data
+		keys = tuple( tuple(i.split()) for i in keys )
+		vals = tuple( self[i].value for i in self.my_keys )
+		int_padding = max(map( get_int_padding, vals ))
+		str_padding = [
+		  max(map( get_str_padding(i), keys ))
+		  for i in range(len(keys[0]))
+		]
+		str_format = '  %-{}s' * len( self.model_keys[0] )
+		str_format = str_format.format(*str_padding)
+
+		format = '\n%%s   %%%ds%%s' % int_padding
+		# works out to something like '\n  %s   %8d%-6s'
+		#                                 index { val }
+
+		data = StringIO()
+		data.write( comment + 'param  %s  :=' % self.name )
+		for actual_key, this_key in sorted( zip( self.model_keys, self.my_keys )):
+			v = self[this_key].value
+			int_part = str(int(abs(v)))
+			if int_part != str(abs(v)):
+				dec_part = str(abs(v))[len(int_part):]
+			else:
+				dec_part = ''
+
+			if v < 0: int_part = '-%d' % int_part
+			index = str_format % tuple(actual_key)
+			data.write( format % (index, int_part, dec_part) )
+		data.write( '\n\t;\n' )
+
+		#return comment + data
+		return data.getvalue()
 
 
 
 class TreeNode ( object ):
+	__slots__ = ('name', 'spoint', 'prob', 'params', 'bname', 'children' )
 	def __init__ ( self, *args, **kwargs ):
 		# At the point someone is using this class, they probably know what
 		# they're doing, so intentionally die at this point if any of these
@@ -137,22 +187,23 @@ class TreeNode ( object ):
 		self.spoint = kwargs.pop('spoint')    # stochastic point of node
 		self.prob   = kwargs.pop('prob')      # conditional probability of node
 		bname       = kwargs.pop('filebase')  # file name minus extension
-		params      = kwargs.pop('params')    # parameters to vary
 		types       = kwargs.pop('types')     # names of decisions
 		rates       = kwargs.pop('rates')     # rates at which to vary
+		sindices    = kwargs.pop('stochastic_indices')
 
+		params = rates.keys()
 		myparams = dict()
-		for pp, nn in zip(params, self.name):
+		for key, decisions in rates.iteritems():
 			paramkwargs = {
-			  'param'  : pp,
+			  'param'  : key,
+			  'rates'  : (),
 			  'spoint' : self.spoint,
-			  'rate'   : 1 # for "Root", default to 1 (do nothing multiplier)
+			  'stochastic_index' : sindices[ key ],
 			}
-			if isinstance(self.name, tuple):
-				# if not head node, then set rate as specified
-				paramkwargs.update( rate=rates[pp][types[pp].index(nn)] )
+			if self.name != 'Root':
+				paramkwargs.update({'rates':decisions[ self.name ]})
 
-			myparams[pp] = Param( **paramkwargs )
+			myparams[ key ] = Param( **paramkwargs )
 
 		self.params = myparams
 		self.bname = bname
@@ -227,14 +278,14 @@ def write_scenario_file ( stochasticset, tree ):
 	) = tree.get_scenario_data()
 
 	child_fmt     = 'set  Children[%s]  :=\n  %s\n\t;\n'
-	scenario_fmt  = 'Scenario%(i)s  Rs%(i)s'
+	scenario_fmt  = 'S%(i)s  Rs%(i)s'
 	stages_fmt    = 'set  StageVariables[s%s]  :=\n  %s\n\t;'
 	stagecost_fmt = 's%s StochasticPointCost[%s]'
 
 	leaves      = '\n  '.join( scenario_fmt % {'i' : i} for i in scenarios )
 	nodes       = '\n  '.join( nodes )
 	nodestage   = '\n  '.join( ('   '.join(ns) for ns in nodestage) )
-	scenarios   = 'Scenario%s' % '\n  Scenario'.join( scenarios )
+	scenarios   = 'S%s' % '\n  S'.join( scenarios )
 	stagecost   = '\n  '.join( stagecost_fmt % (s, s) for s in stochasticset )
 	stages      = '\n  s'.join( str(se) for se in stochasticset )
 
@@ -246,9 +297,10 @@ def write_scenario_file ( stochasticset, tree ):
 	  for c in children
 	)
 
-	# XXX: Temporary and absolute hack, for IEW conference: This script was
-	# written prior to Temoa's implementation with sparse sets, so now we have
-	# to ensure that only the sparse sets are used:
+	# XXX: Temporary and absolute hack, that currently only works for Temoa
+	# models.  The short of it is that this script was # written prior to Temoa's
+	# implementation with sparse sets, so now we have # to ensure that only the
+	# sparse sets are used:
 	svars = tuple(
 	  (ii[0], ii[5])
 	  for ii in instance.V_FlowOut.keys()
@@ -258,13 +310,11 @@ def write_scenario_file ( stochasticset, tree ):
 	  stages_fmt % (
 	    se,
 	    '\n  '.join(
-	      sorted( 'V_FlowOut[%s,*,*,*,*,%s,*]' %
-	         (se, v)
-	         for v in stochasticset[:stochasticset.index( se ) +1]
-	         if (se, v) in svars
+	      sorted( 'V_FlowOut[%s,%s,%s,%s,%s,%s,%s]' % index
+	              for index in instance.V_FlowOut.keys()
+	              if index[0] == se
+	            )
 	      ))
-	  )
-
 	  for se in stochasticset   # "stochastic element" = se
 	)
 	stage_var_sets = '\n\n'.join( stage_var_sets )
@@ -323,23 +373,22 @@ param  ScenarioBasedData  :=  False ;
 
 def _create_tree ( stochasticset, **kwargs ):
 	name   = kwargs.get('name')
-	types  = kwargs.get('types')
-	rates  = kwargs.get('rates')
 	bname  = kwargs.get('bname')
-	params = kwargs.get('params')
 	prob   = kwargs.get('prob')
+	cprob  = kwargs.get('cprob')
 	decision_list = kwargs.get('decisions')
 
 	spoint = stochasticset.pop() # stochastic point, use of pop implies ordering
 	treekwargs = dict(
 	  spoint   = spoint,
 	  name     = name,
-	  types    = types,
-	  rates    = rates,
+	  types    = kwargs.get('types'),
+	  rates    = kwargs.get('rates'),
 	  filebase = bname,
-	  params   = params,
 	  prob     = prob,
+	  stochastic_indices = kwargs.get('stochastic_indices'),
 	)
+
 	node = TreeNode( **treekwargs )
 	global node_count
 	node_count += 1
@@ -347,13 +396,12 @@ def _create_tree ( stochasticset, **kwargs ):
 
 	if stochasticset:
 		decisions = enumerate( decision_list )
-		prob = 1.0 / len(decision_list)
 		bname = '%ss%%d' % bname  # the format for the basename of the file
 		for enum, d in decisions:
 			kwargs.update(
 			  name  = d,
 			  bname = bname % enum,
-			  prob  = prob,
+			  prob  = cprob[ d ],
 			)
 			node.addChild( _create_tree(stochasticset[:], **kwargs) )
 
@@ -361,61 +409,20 @@ def _create_tree ( stochasticset, **kwargs ):
 
 
 def create_tree ( stochasticset, opts ):
-	types  = opts.types
-	rates  = opts.rates
-	params = opts.params
-	prob   = 1
-
-	if params is None:
-		msg = 'Must specify at least one stochastic parameter to vary.'
-		raise ValueError, msg
-
-	if None in (types, rates):
-		msg = 'Must specify both the stochastic decision names (types=) and '   \
-		   'rates (rates=)'
-		raise ValueError, msg
-
-	tkeys = sorted( types.keys() )
-	rkeys = sorted( rates.keys() )
-	if len(tkeys) != len(rkeys):
-		msg = 'types and rates keys lengths do not match.  Are you missing a '  \
-		   'a type or rate?\n\ttypes: %s\n\trates: %s'
-		types = stringify( types )
-		rates = stringify( rates )
-		raise ValueError, msg % ( types, rates )
-
-
-	for key, rkey in zip( tkeys, rkeys ):
-		if key != rkey:
-			msg = 'Missing a parameter rate or type argument.\n'                 \
-			      '  type params: %s\n  rate params: %s'
-			raise ValueError, msg % ( stringify(tkeys), stringify(rkeys) )
-
-		if len( types[key] ) != len( rates[key] ):
-			msg = "Missing a type name or rate value for '%s'.\n"                \
-			      '  names: %s\n  rates: %s'
-			names  = stringify( types[key] )
-			values = stringify( rates[key] )
-			raise ValueError, msg % ( key, names, values )
-
-		for i in rates[key]:
-			if not isinstance(i, (int, long, float)):
-				msg = 'rates argument must be a list of rates (numbers)\n'        \
-				      "  Offending item: '%s' (is %s)\n  rates list: %s"
-				rates = stringify( rates[r] )
-				raise ValueError, msg % ( i, type(i), rates[r] )
+	types = opts.types
+	rates = opts.rates
+	cprob = opts.conditional_probability
 
 	stochasticset.reverse()
 
-	decisions = [ types[i] for i in sorted(types.keys()) ]
-	params.sort()
 	kwargs = dict(
 	  name      = 'Root',
 	  bname     = 'R',
 	  types     = types,
 	  rates     = rates,
-	  params    = params,
-	  decisions = [ i for i in product( *decisions ) ],
+	  cprob     = cprob,
+	  decisions = types,
+	  stochastic_indices = opts.stochastic_indices,
 	  prob      = 1,  # conditional probability, but root guaranteed to occur
 	)
 	return _create_tree( stochasticset, **kwargs )
@@ -433,17 +440,17 @@ def setup_directory ( dname, force ):
 		if os.path.isdir( dname ):
 			files = os.listdir( dname )
 			if files and not force:
-				msg = 'Not empty: %s\n\nIf you want to use this directory anyway,'\
-				   ' use the --force flag.'
-				raise Warning, msg % dname
+				msg = ('Not empty: {}\n\nIf you want to use this directory anyway, '
+				   "set 'force = True' in the options.py file.")
+				raise Warning( msg.format(dname) )
 
 			# would be potentially useful to put this into a thread to speed up
 			# the process.  like 'mv somedir to_del; rm -rf to_del &'
 			rmtree( dname )
 			os.mkdir( dname )
 		else:
-			msg = 'Error - already exists: %s'
-			raise NameError, msg % dname
+			msg = 'Error - already exists: {}'
+			raise NameError( msg.format(dname))
 	else:
 		os.mkdir( dname )
 
@@ -456,201 +463,110 @@ def test_model_parameters ( M, opts ):
 	except:
 		msg = ('Whoops!  The stochastic set is not available from the model.  '
 		   'Did you perhaps typo the name?\n'
-		   '  Model name: %s\n'
-		   '  Stochastic name: %s')
-		raise ValueError, msg % (M.name, opts.stochasticset)
+		   '  Model name: {}\n'
+		   '  Stochastic name: {}')
+		raise ValueError( msg.format(M.name, opts.stochasticset))
 
 	try:
-		for pname in opts.params:
+		for pname in opts.rates:
 			param = getattr(M, pname)
 	except:
-		msg = 'Whoops!  Parameter not available from the model.  Have you '     \
-		   'perhaps typoed the name?\n'                                         \
-		   '  Model name: %s\n'                                                 \
-		   '  Parameter name: %s'
-		raise ValueError, msg %(M.name, pname)
+		msg = ('Whoops!  Parameter not available from the model.  Have you '
+		   'perhaps typoed the name?\n'
+		   '  Model name: {}\n'
+		   '  Parameter name: {}')
+		raise ValueError( msg.format(M.name, pname) )
 
 
-def parse_options ( ):
-	from optparse import OptionParser, OptionGroup
-	from os import path
+def usage ( ):
+	SE.write("""
+synopsis: coopr_python  {0}  <options_to_import.py>
 
-	parser = OptionParser()
-	parser.usage = ('%prog \\\n'
-	   '\t--dirname=<run_name> \\\n'
-	   '\t--model=<../path/to/model/file> \\\n'
-	   '\t--dotdat=<../path/to/dot/dat/file> \\\n'
-	   '\t--stochasticset=<model_stochastic_set> \\\n'
-	   '\t--params=<parameters_to_vary> \\\n'
-	   '\t--stage-types=<stage_types> \\\n'
-	   '\t--stage-rates=<stage_varying_rates> \\\n'
-	   '\t[options]')
+Example: coopr_python  {0}  options/utopia_coal_vs_nuc.py
 
-	mopts = OptionGroup( parser, 'Model Arguments')
-	opts  = OptionGroup( parser, 'Stochastic Arguments')
-	dbg   = OptionGroup( parser, 'Debugging Arguments')
-	parser.add_option_group( mopts )
-	parser.add_option_group( opts )
-	parser.add_option_group( dbg )
+Generally, this script was developed to import the specified .py file in the
+options/ subdirectory.  However, as long as the specified path may be imported
+it does not matter where the options file is placed.  The script effectively
+does this:
 
-	mopts.add_option('-d','--dotdat',
-	  help='Path to the AMPL data file to use as a basis for stochastics',
-	  action='store',
-	  dest='dotdatpath',
-	  type='string')
-	mopts.add_option('-m','--model',
-	  help='Path to the Pyomo model file to use as a basis for stochastics',
-	  action='store',
-	  dest='modelpath',
-	  type='string')
-	mopts.add_option('-s','--stochasticset',
-	  help='The model stochastic (decision) points set.  In many models, this '
-	     'is a set of time periods.',
-	  action='store',
-	  dest='stochasticset',
-	  type='string')
+    options_path.replace('/', '.')
+    import options_path
 
-	opts.add_option('-f','--force',
-	  help='If a subdirectory conflicts with --name, then this option directs '
-	     'the script to remove all files in it and use it anyway.',
-	  action='store_true',
-	  dest='force',)
-	opts.add_option('-n','--dirname',
-	  help='Name of a working directory for the output files.  This script '
-	     'will create (or use, if empty) a subdirectory by this name.',
-	  action='store',
-	  dest='dirname',
-	  type='string')
-	opts.add_option('-p','--params',
-	  help='Comma separated list of model parameters to vary at each '
-	       'stochastic stage (period).  Example: power_dmd,co2_tot',
-	  action='store',
-	  dest='params',
-	  type='string')
-	opts.add_option('-r','--stage-rates',
-	  help='Comma separated list of rate values for each stochastic variable '
-	       'at each stages (specified with the --stage-types).  A stage rate '
-	       'must be specified for each item in --params.  Example: '
-	       'power_dmd:0.85,1.00,1.15',
-	  action='append',
-	  dest='rates',
-	  type='string')
-	opts.add_option('-t','--stage-types',
-	  help='Comma separated list of stochastic stage types (names) for each '
-	       'stochastic variable.  These are the "decision" possibilities of '
-	       'the scenario tree.  Stage_types need to be specified for each '
-	       'item in --params.  Example: power_dmd:Low,Med,High',
-	  action='append',
-	  dest='types',
-	  type='string')
+The options file should define these items:
 
-	dbg.add_option('--debug',
-	help='Help with debugging of this script.  Generally only the script '
-	     'developers will use this option.',
-	  action='store_false'
-	)
-	dbg.add_option('-q','--quiet',
-	  help='Turn off informational messages.',
-	  action='store_false',
-	  dest='verbose',
-	  default=True
+(str) dirname (optional)
+  This directory will be where all output files are placed.  If not specified,
+  the name of the options file will be used as the default.
+
+(bool) verbose
+  Should the script give information about it's progress?
+
+(bool) force
+  If the dirname already exists, remove it before proceeding?
+
+(path) modelpath
+  Relative or absolute path of where to find the model
+
+(path) dotdatpath
+  Relative or absolute path of where to find the base LP dat file.
+
+(str) stochasticset
+  Within the model, the name of the stochastic set that indexes the parameters
+  to be rate-modified.
+
+(tuple) stochastic_points
+  Within the model, specifically /which/ items in the stochastic set are the
+  stochastic ones?  For the parameters specified in types and rates, the ones
+  indexed by these points will be modified.
+
+(dict) stochastic_indices
+  For each parameter to modify, the numerical order of the stochastic parameter.
+  This is a 0-based, numerical specification.
+
+(tuple of strings) types
+  Each item in this tuple is the name of a decision branch from a node.  However
+  many items specified here, are the number of branches each node in the event
+  tree will have.
+
+(dict) conditional_probability
+  This dict specifies the conditional probability of each branch.
+
+(dict of dicts of tuples) rates
+  This is a two-level dict that specifies each parameter to modify, and for each
+  branch in types, what to multiply against each index.  Indices can be
+  explicitly spelled-out, or specified in a group via an asterisk.
+
+Please see the Temoa repository for examples of each parameter.
+""".format( sys.argv[0] )
 	)
 
-	popts, args = parser.parse_args( sys.argv[1:] )
-	o = {}
-
-	if not popts.modelpath:
-		parser.print_usage()
-		raise ValueError, 'Required: -m or --model is a required argument'
-	elif not os.path.exists( popts.modelpath ):
-		raise ValueError, "Error: model not found: %s" % popts.modelpath
-
-	if not popts.dotdatpath:
-		parser.print_usage()
-		raise ValueError, 'Required: -d or --dotdatpath is a required argument'
-	elif not os.path.exists( popts.dotdatpath ):
-		raise ValueError, "Error: data file not found: %s" % popts.dotdatpath
-
-	if not popts.stochasticset:
-		parser.print_usage()
-		raise ValueError, 'Required: -s or --stochasticset is a required argument'
-
-	if not popts.dirname:
-		parser.print_usage()
-		raise ValueError, 'Required: -n or --dirname is a required argument'
-
-	if not popts.params:
-		parser.print_usage()
-		raise ValueError, 'Required: -p or --params is a required argument'
-	popts.params = [str(i) for i in popts.params.split(',')]
-
-	if None in ( popts.rates, popts.types ) and popts.rates != popts.types:
-		msg = 'Required: stage-rates and stage-types are required arguments'
-		raise ValueError, msg
-
-	rates = types = ''
-	if popts.rates:
-		try:
-			rates = dict()
-			for r in popts.rates:
-				i = 'Model Param(%s)' % r # clear i in case the colon split fails
-				key, vals = r.split(':')
-				rates[ key ] = [ float(i) for i in vals.split(',') ]
-			popts.rates = rates
-		except ValueError, e:
-			msg = ('stage-rates must be a parameter followed by a list of '
-			   'numbers.  Did you use a colon to specify the model parameter '
-			   '(i.e. param:n1,n2,...)?\n'
-			   '  Specified list: %s')
-			raise ValueError, msg % r
-
-	if popts.types:
-		types = dict()
-		try:
-			for t in popts.types:
-				i = 'Model Param(%s)' % t  # clear i in case the colon split fails
-				key, vals = t.split(':')
-				types[ key ] = [ str(i) for i in vals.split(',') ]
-			popts.types = types
-		except ValueError, e:
-			msg = ('stage-types must be a list of names.  Did you use a colon '
-			   'to specify the model parameter (i.e. param:n1,n2,...)?\n'
-			   '  Specified list: %s')
-			raise ValueError, msg % t
-
-	if len(popts.types) != len(popts.rates):
-			msg = ('The stage-rates and stage-types options need the same number '
-			   'of items.\n'
-			   '  stage-rates params: (count: %d) %s\n'
-			   '  stage-types params: (count: %d) %s')
-			data = [ len(popts.rates), stringify( sorted( popts.rates )) ]
-			data.extend( [len(popts.types), stringify( sorted( popts.types ))] )
-			msg %= tuple(data)
-			raise ValueError, msg
-
-	for key in popts.params:
-		if len(popts.types[ key ]) != len(popts.rates[ key ]):
-			msg = ('Extra or missing values from stage rates and types argument.\n'
-				'  type %(name)s: %(t)s\n'
-			   '  rate %(name)s: %(r)s')
-			data = dict(
-			  name=key,
-			  t=stringify(popts.types[ key ]),
-			  r=stringify(popts.rates[ key ])
-			)
-			raise ValueError, msg % data
-
-	global verbose
-	verbose = popts.verbose
-
-	return popts, args
-
+	raise SystemExit
 
 def main ( ):
 	from os import getcwd
 	from time import clock
 
-	opts, args = parse_options()
+	if len(sys.argv) < 2:
+		usage()
+	module_name = sys.argv[1][:-3].replace('/', '.')  # remove the '.py'
+
+	try:
+		__import__(module_name)
+		opts = sys.modules[ module_name ]
+
+	except ImportError:
+		msg = ('Unable to import {}.\n\nRun this script with no arguments for '
+		       'more information.\n')
+		SE.write( msg.format( sys.argv[1] ) )
+		raise
+
+	try:
+		opts.dirname
+	except AttributeError:
+		opts.dirname = module_name.split('.')[-1]
+
+	global verbose
+	verbose = opts.verbose
 
 	cwd = getcwd()
 
@@ -684,7 +600,12 @@ def main ( ):
 	instance = ins
 
 	inform( '[      ] Collecting stochastic points from model (%s)' % M.name )
-	spoints = sorted( getattr(ins, opts.stochasticset).value )
+	try:
+		spoints = list(opts.stochastic_points)
+	except AttributeError:
+		spoints = sorted( getattr(ins, opts.stochasticset).value )
+
+#	print spoints
 	inform( '\r[%6.2f\n' % duration() )
 
 	  # used for friendlier error checking
@@ -705,21 +626,20 @@ def main ( ):
 
 	os.chdir( cwd )
 	inform( '[      ] Copying ReferenceModel.dat as scenario tree root' )
+	copyfile( opts.dotdatpath, '%s/ReferenceModel.dat' % opts.dirname)
 	copyfile( opts.dotdatpath, '%s/R.dat' % opts.dirname)
 	inform( '\r[%6.2f\n' % duration() )
 
 
 if '__main__' == __name__:
 	try:
-		if 1 == len(sys.argv):
-			sys.argv.append( '--help' )
 		main()
 	except Exception, e:
 		if '--debug' in sys.argv:
 			raise
 
-		msg = 'If you need more verbose (potentially helpful) information '   \
-		      'about this error, you can run this program again, and add the' \
-		      ' "--debug" command line flag.'
-		msg = '\n\n' + str(e) + '\n\n' + wrapper.fill(msg) + '\n'
+		msg = ('\n\nIf you need more verbose (potentially helpful) information '
+		      'about this error, you can run this program again, and add the'
+		      ' "--debug" command line flag.\n')
+		msg = '\n\n' + str(e) + msg
 		SE.write(msg)
