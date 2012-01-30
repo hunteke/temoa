@@ -1,5 +1,5 @@
 (Jan 2012) The entry point into Temoa stochastics is most easily done through
-the generate_scenario_tree.py script.  To use it, one needs 4 items in place:
+the generate_scenario_tree.py script.  To use it, one needs 3 items in place:
 
 * a stochastic version of the Temoa model.  This is generally the same as the
   LP version of the Temoa model, with two changes: the objective function, and
