@@ -298,8 +298,8 @@ def write_scenario_file ( stochasticset, tree ):
 	)
 
 	# XXX: Temporary and absolute hack, that currently only works for Temoa
-	# models.  The short of it is that this script was # written prior to Temoa's
-	# implementation with sparse sets, so now we have # to ensure that only the
+	# models.  The short of it is that this script was written prior to Temoa's
+	# implementation with sparse sets, so now we have to ensure that only the
 	# sparse sets are used:
 	svars = tuple(
 	  (ii[0], ii[5])
