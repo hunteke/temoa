@@ -1,4 +1,9 @@
-#!/bin/bash 
+#!/bin/bash
+
+# As of Jan 2012, the generate_scenario_tree.py script no includes the ability
+# to create scenarios only for specified stochastic points.  This supposedly
+# obsoletes the need for this script.  However, this vim script will remain in
+# misc_scripts for the time being, "just in case".
 
 # Usage: ./prune.sh filename
 # e.g. ./prune.sh ScenarioStructure.dat
@@ -38,9 +43,9 @@ do
 			let tmp="$i-1"
 			for k in `seq 1 $tmp `
 			do
-				echo -n "s${STAGE[$k]}"; 
+				echo -n "s${STAGE[$k]}";
 			done
-				
+
 			echo -n "s$j"
 			echo "/d"
 		fi
@@ -57,9 +62,9 @@ do
 			let tmp="$i-1"
 			for k in `seq 1 $tmp `
 			do
-				echo -n "${STAGE[$k]}s"; 
+				echo -n "${STAGE[$k]}s";
 			done
-				
+
 			echo -n "$j"
 			echo "/d"
 		fi
@@ -68,7 +73,7 @@ done
 
 
 
-# Remove lines that contain ';' only that are preceded by blank line 
+# Remove lines that contain ';' only that are preceded by blank line
 # These are leftovers from removing Children sets
 echo ':g/^\n\t;/norm 2dd'
 echo ':wq'
@@ -79,7 +84,7 @@ exec 1>&6 6>&-  # Restore stdout and close file descriptor #6.
 
 
 # Run vim using the generated script to get the desired pruned tree.
-vim -s ${TMP_VIM_SCRIPT} $1 
+vim -s ${TMP_VIM_SCRIPT} $1
 
 exec 6>&1           # Link file descriptor #6 with stdout.
 # Saves stdout.
@@ -97,9 +102,9 @@ do
 			let tmp="$i-1"
 			for k in `seq 1 $tmp `
 			do
-				echo -n "s${STAGE[$k]}"; 
+				echo -n "s${STAGE[$k]}";
 			done
-				
+
 			echo "s$j"
 		fi
 	done
@@ -109,8 +114,8 @@ done
 
 exec 1>&6 6>&-  # Restore stdout and close file descriptor #6.
 
-for i in `cat filedel-pattern.txt` 
-do 
-	 echo $i; 
-	 echo $i* | xargs rm ; 
+for i in `cat filedel-pattern.txt`
+do
+	 echo $i;
+	 echo $i* | xargs rm ;
 done
