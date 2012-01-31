@@ -200,7 +200,7 @@ class TreeNode ( object ):
 			  'spoint' : self.spoint,
 			  'stochastic_index' : sindices[ key ],
 			}
-			if self.name != 'Root':
+			if self.prob < 1:
 				paramkwargs.update({'rates':decisions[ self.name ]})
 
 			myparams[ key ] = Param( **paramkwargs )
@@ -227,14 +227,18 @@ class TreeNode ( object ):
 
 	def write_dat_files ( self ):
 		global node_count
-		# Step 1: Write my own file.
-		params = self.params.values()
-		data = params[0].as_ampl( self.name )
-		if len( params ) > 1:
-			data += '\n' + '\n'.join(p.as_ampl() for p in params[1:])
-		f = open( self.bname + '.dat', 'w' )
-		f.write( data )
-		f.close()
+
+		# Step 1: Write my own file, if necessary
+		if self.prob < 1:
+			params = self.params.values()
+			data = params[0].as_ampl( self.name )
+			if len( params ) > 1:
+				data += '\n' + '\n'.join(p.as_ampl() for p in params[1:])
+		else:
+			data = '# Decision: HedgingStrategy (no change from R.dat)'
+
+		with open( self.bname + '.dat', 'w' ) as f:
+			f.write( data )
 
 		node_count += 1
 		inform( '\b' * (len(str(node_count -1))+1) + str(node_count) + ' ' )
@@ -371,7 +375,7 @@ param  ScenarioBasedData  :=  False ;
 		f.write( structure )
 
 
-def _create_tree ( stochasticset, **kwargs ):
+def _create_tree ( stochasticset, spoints, **kwargs ):
 	name   = kwargs.get('name')
 	bname  = kwargs.get('bname')
 	prob   = kwargs.get('prob')
@@ -394,7 +398,14 @@ def _create_tree ( stochasticset, **kwargs ):
 	node_count += 1
 	inform( '\b' * (len(str(node_count -1))+1) + str(node_count) + ' ' )
 
-	if stochasticset:
+	if spoint not in spoints:
+		kwargs.update(
+		  name  = 'HedgingStrategy',
+		  bname = '%ss0' % bname,
+		  prob  = 1,
+		)
+		node.addChild( _create_tree(stochasticset[:], spoints, **kwargs) )
+	elif stochasticset:
 		decisions = enumerate( decision_list )
 		bname = '%ss%%d' % bname  # the format for the basename of the file
 		for enum, d in decisions:
@@ -403,17 +414,19 @@ def _create_tree ( stochasticset, **kwargs ):
 			  bname = bname % enum,
 			  prob  = cprob[ d ],
 			)
-			node.addChild( _create_tree(stochasticset[:], **kwargs) )
+			node.addChild( _create_tree(stochasticset[:], spoints, **kwargs) )
 
 	return node
 
 
-def create_tree ( stochasticset, opts ):
+def create_tree ( stochasticset, spoints, opts ):
 	types = opts.types
 	rates = opts.rates
 	cprob = opts.conditional_probability
 
 	stochasticset.reverse()
+	spoints.sort()
+	spoints.reverse()
 
 	kwargs = dict(
 	  name      = 'Root',
@@ -425,7 +438,7 @@ def create_tree ( stochasticset, opts ):
 	  stochastic_indices = opts.stochastic_indices,
 	  prob      = 1,  # conditional probability, but root guaranteed to occur
 	)
-	return _create_tree( stochasticset, **kwargs )
+	return _create_tree( stochasticset, spoints, **kwargs )
 
 
 def inform ( x ):
@@ -517,7 +530,9 @@ The options file should define these items:
 (tuple) stochastic_points
   Within the model, specifically /which/ items in the stochastic set are the
   stochastic ones?  For the parameters specified in types and rates, the ones
-  indexed by these points will be modified.
+  indexed by these points will be modified.  Note that for useful output, this
+  item, if specified, needs at least two stochastic points, and the first one
+  will have a conditional probability of 1.
 
 (dict) stochastic_indices
   For each parameter to modify, the numerical order of the stochastic parameter.
@@ -600,12 +615,12 @@ def main ( ):
 	instance = ins
 
 	inform( '[      ] Collecting stochastic points from model (%s)' % M.name )
+	all_spoints = sorted( getattr(ins, opts.stochasticset).value )
 	try:
 		spoints = list(opts.stochastic_points)
 	except AttributeError:
-		spoints = sorted( getattr(ins, opts.stochasticset).value )
+		spoints = all_spoints
 
-#	print spoints
 	inform( '\r[%6.2f\n' % duration() )
 
 	  # used for friendlier error checking
@@ -613,7 +628,7 @@ def main ( ):
 
 	os.chdir( opts.dirname )
 	inform( '[      ] Building tree:                          ')
-	tree = create_tree( spoints[:], opts )  # give an intentional copy
+	tree = create_tree( all_spoints[:], spoints[:], opts )  # give an intentional copy
 	inform( '\r[%6.2f\n' % duration() )
 
 	global node_count
@@ -621,7 +636,7 @@ def main ( ):
 
 	inform( '[      ] Writing scenario "dot dat" files:       ')
 	tree.write_dat_files()
-	write_scenario_file( spoints, tree )
+	write_scenario_file( all_spoints, tree )
 	inform( '\r[%6.2f] Writing scenario "dot dat" files\n' % duration() )
 
 	os.chdir( cwd )
