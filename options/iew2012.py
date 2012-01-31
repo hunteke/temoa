@@ -2,6 +2,7 @@
 verbose = True
 force = True
 
+dirname    = 'temoa_island'
 modelpath  = '../energysystem-process-Coopr3/temoa_model/temoa_model.py'
 dotdatpath = '../energysystem-datfiles/temoa_island.dat'
 stochasticset = 'time_optimize'
