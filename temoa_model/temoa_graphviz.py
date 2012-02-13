@@ -3,6 +3,7 @@ __all__ = ('CreateModelDiagrams',)
 import multiprocessing as MP
 import os
 
+from shutil import rmtree
 from subprocess import call
 from sys import stderr as SE
 
@@ -1102,7 +1103,6 @@ strict digraph result_commodity_%(commodity)s {
 					  for s in M.time_season
 					  for d in M.time_of_day
 					)
-					print p, t, v, i, o, flowin, flowout
 					used_carriers.update( g_processInputs[p, t, v] )
 					used_carriers.update( g_processOutputs[p, t, v] )
 					used_techs.add( t )
@@ -1407,9 +1407,8 @@ def CreateModelDiagrams ( M, options ):
 	datname = os.path.basename( options.dot_dat[0] )[:-4]
 	images_dir = "images_" + datname
 
-	if os.path.exists( '%s' % images_dir ):
-		cmd = ('rm', '-rf', images_dir)
-		call( cmd )
+	if os.path.exists( images_dir ):
+		rmtree( images_dir )
 
 	os.mkdir( images_dir )
 	os.chdir( images_dir )
