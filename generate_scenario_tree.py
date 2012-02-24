@@ -497,61 +497,8 @@ synopsis: coopr_python  {0}  <options_to_import.py>
 
 Example: coopr_python  {0}  options/utopia_coal_vs_nuc.py
 
-Generally, this script was developed to import the specified .py file in the
-options/ subdirectory.  However, as long as the specified path may be imported
-it does not matter where the options file is placed.  The script effectively
-does this:
-
-    options_path.replace('/', '.')
-    import options_path
-
-The options file should define these items:
-
-(str) dirname (optional)
-  This directory will be where all output files are placed.  If not specified,
-  the name of the options file will be used as the default.
-
-(bool) verbose
-  Should the script give information about it's progress?
-
-(bool) force
-  If the dirname already exists, remove it before proceeding?
-
-(path) modelpath
-  Relative or absolute path of where to find the model
-
-(path) dotdatpath
-  Relative or absolute path of where to find the base LP dat file.
-
-(str) stochasticset
-  Within the model, the name of the stochastic set that indexes the parameters
-  to be rate-modified.
-
-(tuple) stochastic_points
-  Within the model, specifically /which/ items in the stochastic set are the
-  stochastic ones?  For the parameters specified in types and rates, the ones
-  indexed by these points will be modified.  Note that for useful output, this
-  item, if specified, needs at least two stochastic points, and the first one
-  will have a conditional probability of 1.
-
-(dict) stochastic_indices
-  For each parameter to modify, the numerical order of the stochastic parameter.
-  This is a 0-based, numerical specification.
-
-(tuple of strings) types
-  Each item in this tuple is the name of a decision branch from a node.  However
-  many items specified here, are the number of branches each node in the event
-  tree will have.
-
-(dict) conditional_probability
-  This dict specifies the conditional probability of each branch.
-
-(dict of dicts of tuples) rates
-  This is a two-level dict that specifies each parameter to modify, and for each
-  branch in types, what to multiply against each index.  Indices can be
-  explicitly spelled-out, or specified in a group via an asterisk.
-
-Please see the Temoa repository for examples of each parameter.
+For information about the options_to_import.py file, please see
+options/README.txt
 """.format( sys.argv[0] )
 	)
 
