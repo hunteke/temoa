@@ -48,7 +48,7 @@ Elements an options.py Should Specify
   will have a conditional probability of 1.
 
 (dict) stochastic_indices
-  For each parameter to modify, the numerical order of the stochastic parameter.
+  For each parameter to modify, the numerical order of its stochastic index.
   This is a 0-based, numerical specification.
 
 (tuple of strings) types
