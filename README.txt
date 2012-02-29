@@ -25,6 +25,16 @@ $ coopr_python  temoa_model  --help
 
 Or for specific examples:
 
-$ coopr_python  temoa_model  --graph_format svg  path/to/dat/file
-$ coopr_python  temoa_model  --graph_format pdf  path/to/dat/file
+$ coopr_python  temoa_model  --graph_format svg  ../energysystem-datfiles/utopia.dat
+$ coopr_python  temoa_model  --graph_format pdf  ../energysystem-datfiles/utopia.dat
+
+And to place the gobs of solution information into a file:
+
+$ coopr_python  temoa_model  --graph_format svg  ../energysystem-datfiles/utopia.dat > temoa_utopia.sol
+
+
+If you are running Coopr from Windows, you may have more luck with a direct
+python command:
+
+\> python  temoa_model  --graph_format svg  ..\energysystem-datfiles\utopia.dat > temoa_utopia.sol
 
