@@ -1,7 +1,7 @@
 __all__ = ('CreateModelDiagrams',)
 
 import multiprocessing as MP
-import os
+import os, sys
 
 from shutil import rmtree
 from subprocess import call
@@ -1471,17 +1471,25 @@ def CreateModelDiagrams ( M, options ):
 	  CreatePartialSegmentsDiagram,
 	)
 
-	sem = MP.Semaphore( MP.cpu_count() )
-	def do_work ( func ):
-		sem.acquire()
-		func( **kwargs )
-		sem.release()
+	if 'win' in sys.platform:
+		msg = ('\n\nRunning in Windows ... Temoa is currently unable to use '
+		       'multiple process.  Generating graphs will take a bit longer.\n')
+		SE.write( msg )
+		for func in gvizFunctions:
+			func( **kwargs )
 
-	processes = [
-	  MP.Process( target=do_work, args=(func,) )
-	  for func in gvizFunctions
-	]
-	for p in processes: p.start()
-	for p in processes: p.join()
+	else:
+		sem = MP.Semaphore( MP.cpu_count() )
+		def do_work ( func ):
+			sem.acquire()
+			func( **kwargs )
+			sem.release()
+
+		processes = [
+		  MP.Process( target=do_work, args=(func,) )
+		  for func in gvizFunctions
+		]
+		for p in processes: p.start()
+		for p in processes: p.join()
 
 	os.chdir( '..' )
