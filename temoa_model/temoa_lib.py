@@ -235,6 +235,7 @@ def InitializeProcessParameters ( M ):
 
 	l_first_period = min( M.time_horizon )
 	l_exist_indices = M.ExistingCapacity.keys()
+	l_used_techs = set()
 
 	for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys():
 		l_process = (l_tech, l_vin)
@@ -269,6 +270,8 @@ def InitializeProcessParameters ( M ):
 			SE.write( msg % str(eindex) )
 			continue
 
+		l_used_techs.add( l_tech )
+
 		for l_per in M.time_optimize:
 			# can't build a vintage before it's been invented
 			if l_per < l_vin: continue
@@ -292,6 +295,12 @@ def InitializeProcessParameters ( M ):
 			g_processVintages[l_per, l_tech].add( l_vin )
 			g_processInputs[ pindex ].add( l_inp )
 			g_processOutputs[pindex ].add( l_out )
+	l_unused_techs = M.tech_all - l_used_techs
+	if l_unused_techs:
+		msg = ("Notice: '{}' specified as technology, but it is not utilized in "
+		       'the Efficiency parameter.\n')
+		for i in sorted( l_unused_techs ):
+			SE.write( msg.format( i ))
 
 	g_activeFlowIndices = set(
 	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
