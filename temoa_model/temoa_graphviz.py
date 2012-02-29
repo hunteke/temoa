@@ -405,6 +405,12 @@ are named model_<tech>.<format>
 			if tmp != l_tech: continue
 			periods.add(l_per)
 			vintages.add(l_vin)
+
+		if not (periods and vintages):
+			# apparently specified a technology in tech_resource, but never used
+			# it in efficiency.
+			return None
+
 		mid_period  = sorted(periods)[ len(periods)  //2 ] # // is 'floordiv'
 		mid_vintage = sorted(vintages)[len(vintages) //2 ]
 		del periods, vintages
@@ -454,7 +460,8 @@ are named model_<tech>.<format>
 		eedges = create_text_edges( eedges, indent=2 ) # external edges
 		vedges = create_text_edges( vedges, indent=2 ) # vintage edges
 
-		with open( fname % (l_tech, 'dot'), 'w' ) as f:
+		dot_fname = fname % (l_tech, 'dot')
+		with open( dot_fname, 'w' ) as f:
 			f.write( model_dot_fmt % dict(
 			  cluster_url = '../simple_model.%s' % ffmt,
 			  graph_label = l_tech,
@@ -473,7 +480,7 @@ are named model_<tech>.<format>
 			  eedges = eedges,
 			  vedges = vedges,
 			))
-		del bnodes, enodes, pnodes, vnodes, eedges, vedges
+		return dot_fname
 
 
 	def _create_explicit ( l_tech ):
@@ -510,12 +517,18 @@ are named model_<tech>.<format>
 					  etattr % l_inp) )
 					edges.add( (v_fmt % (l_per, l_vin), l_out, efattr % l_out) )
 
+		if not (bnodes and enodes and vnodes and edges):
+			# apparently specified a technology in tech_resource, but never used
+			# it in efficiency.
+			return None
+
 		bnodes = create_text_nodes( bnodes, indent=2 )
 		enodes = create_text_nodes( enodes, indent=2 )
 		vnodes = create_text_nodes( vnodes )
 		edges  = create_text_edges( edges )
 
-		with open( fname % (l_tech, 'dot'), 'w' ) as f:
+		dot_fname = fname % (l_tech, 'dot')
+		with open( fname, 'w' ) as f:
 			f.write( model_dot_fmt % dict(
 			  tech           = l_tech,
 			  images_dir     = images_dir,
@@ -527,7 +540,7 @@ are named model_<tech>.<format>
 			  vnodes         = vnodes,
 			  edges          = edges,
 			))
-		del bnodes, enodes, vnodes, edges
+		return dot_fname
 
 
 	if options.graph_type == 'separate_vintages':
@@ -642,15 +655,17 @@ strict digraph model {
 	# Now actually do the work
 	#  Sorting is not necessary, but gives a clue to user about where to look
 	#  if some sort of processing error occurs.
+
 	for t in sorted( M.tech_all ):
-		create_dot_file( t )
-		cmd = (
-		  'dot',
-		  '-T' + ffmt,
-		  '-o' + fname % (t, ffmt),
-		  fname % (t, 'dot')
-		)
-		call( cmd )
+		dot_fname = create_dot_file( t )
+		if dot_fname:
+			cmd = (
+			  'dot',
+			  '-T' + ffmt,
+			  '-o' + fname % (t, ffmt),
+			  fname % (t, 'dot')
+			)
+			call( cmd )
 
 	os.chdir('..')
 
@@ -1311,7 +1326,10 @@ strict digraph model {
 		usedc, usede = set(), set()    # used carriers, used emissions
 
 		for tt in M.tech_all:
+			if (pp, tt) not in V_Cap: continue
+
 			cap = V_Cap[pp, tt]
+
 			if cap:
 				etechs.add( (tt, tech_attr_fmt % (tt, cap, tt, pp)) )
 			else:
