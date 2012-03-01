@@ -1203,7 +1203,6 @@ def CreateMainResultsDiagram ( **kwargs ):
 strict digraph model {
 	label = "Results for %(period)s"
 
-	layers = "nosoln:soln" ;
 	rankdir = "LR" ;
 	smoothtype = "power_dist" ;
 	splines = "%(splinevar)s" ;
@@ -1215,7 +1214,6 @@ strict digraph model {
 		node [
 		  color     = "%(unused_color)s",
 		  fontcolor = "%(unusedfont_color)s",
-		  layer     = "nosoln",
 		  shape     = "box"
 		] ;
 
@@ -1226,7 +1224,6 @@ strict digraph model {
 		node [
 		  color     = "%(unused_color)s",
 		  fontcolor = "%(unusedfont_color)s",
-		  layer     = "nosoln",
 		  shape     = "circle"
 		] ;
 
@@ -1237,7 +1234,6 @@ strict digraph model {
 		node [
 		  color     = "%(unused_color)s",
 		  fontcolor = "%(unusedfont_color)s",
-		  layer     = "nosoln",
 		  shape     = "circle"
 		]
 
@@ -1248,7 +1244,6 @@ strict digraph model {
 		node [
 		  color     = "%(tech_color)s",
 		  fontcolor = "%(usedfont_color)s",
-		  layer     = "soln",
 		  shape     = "box"
 		] ;
 
@@ -1259,7 +1254,6 @@ strict digraph model {
 		node [
 		  color     = "%(commodity_color)s",
 		  fontcolor = "%(usedfont_color)s",
-		  layer     = "soln",
 		  shape     = "circle"
 		] ;
 
@@ -1270,7 +1264,6 @@ strict digraph model {
 		node [
 		  color     = "%(commodity_color)s",
 		  fontcolor = "%(usedfont_color)s",
-		  layer     = "soln",
 		  shape     = "circle"
 		] ;
 
@@ -1284,8 +1277,6 @@ strict digraph model {
 	}
 
 	subgraph in_use_flows {
-		edge [ layer="soln" ] ;
-
 		subgraph inputs {
 			edge [ color="%(arrowheadin_color)s" ] ;
 
