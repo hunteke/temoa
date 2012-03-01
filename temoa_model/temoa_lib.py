@@ -1039,7 +1039,7 @@ def temoa_solve ( model ):
 	from sys import argv, version_info
 
 	if version_info < (2, 7):
-		msg = ("Temoa requires Python v2.7 or greater to run.\n\nIf you've "
+		msg = ("Temoa requires Python v2.7 to run.\n\nIf you've "
 		  "installed Coopr with Python 2.6 or less, you'll need to reinstall "
 		  'Coopr, taking care to install with a Python 2.7 (or greater) '
 		  'executable.')
