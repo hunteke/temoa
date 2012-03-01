@@ -1465,9 +1465,9 @@ def CreateModelDiagrams ( M, options ):
 
 	  #SUBGRAPH 1 ARROW COLORS
 	    # feel free to add more colors here
-	  color_list = ['red', 'orange', 'gold', 'green', 'blue', 'purple',
-	                'hotpink', 'cyan' , 'burlywood' , 'coral' , 'lime' ,
-	                'black', 'brown'],
+	  color_list = ('red', 'orange', 'gold', 'green', 'blue', 'purple',
+	                'hotpink', 'cyan', 'burlywood', 'coral', 'limegreen',
+	                'black', 'brown'),
 	)
 	####################################
 
@@ -1491,7 +1491,8 @@ def CreateModelDiagrams ( M, options ):
 
 	if 'win' in sys.platform:
 		msg = ('\n\nRunning in Windows ... Temoa is currently unable to use '
-		       'multiple process.  Generating graphs will take a bit longer.\n')
+		       'multiple processes.  Generating graphs will take a bit longer.'
+		       '\n')
 		SE.write( msg )
 		for func in gvizFunctions:
 			func( **kwargs )
