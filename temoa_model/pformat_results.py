@@ -25,7 +25,19 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	# This awkward workaround so as to be generic.  Unfortunately, I don't
 	# know how else to automatically discover the objective name
 	obj_name = objs.keys()[0]
-	obj_value = getattr(soln.Objective, obj_name).Value
+	try:
+		obj_value = getattr(soln.Objective, obj_name).Value
+	except AttributeError, e:
+		try:
+			obj_value = soln.Objective['__default_objective__'].Value
+		except:
+			msg = ('Unknown error collecting objective function value.  A '
+			   'solution exists, but Temoa is currently unable to parse it.  '
+			   'If you are inclined, please send the dat file that creates the '
+			   'error to the Temoa developers.  Meanwhile, pyomo will still be '
+			   'able to extract the solution.\n')
+			SE.write( msg )
+			raise
 
 	Vars = soln.Variable
 	Cons = soln.Constraint
@@ -95,8 +107,7 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 		run_output.write( '\nAll variables have a zero (0) value.\n' )
 
 	if 0 == len( con_info ):
-		# Since not all Coopr solvers give constraint results, must check
-		msg = '\nSelected Coopr solver plugin does not give constraint data.\n'
+		msg = '\nThe Coopr solver plugin did not give constraint data.\n'
 		run_output.write( msg )
 	else:
 		msg = '\nBinding constraint values:\n'
