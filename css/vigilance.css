@@ -217,7 +217,7 @@ h1#title a:hover, div#title a:hover { color: #772124; text-decoration: none; }
 }
 /*Post Body
 ---------------------------------------*/
-.entry { font-size: 1.3em; }
+.entry { font-size: 1.3em; line-height: 2.5ex; }
 .entry p { margin-bottom: 10px; }
 .entry h2, .entry h3, .entry h4 {
 	font-size: 1.3em;
@@ -551,7 +551,8 @@ p.comments-rss a {
 ---------------------------------------*/
 p.note {
 	font-style: italic;
-	font-size: 1.3em;
+	font-size: 90%;
+	line-height: 2ex;
 }
 /*Pingbacks/Trackbacks
 ---------------------------------------*/
