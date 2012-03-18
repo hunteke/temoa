@@ -1,0 +1,47 @@
+strict digraph result_commodity_TX {
+	label       = "TX - 2010" ;
+
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "True" ;
+
+	node [ shape="box", style="filled" ] ;
+	edge [
+	  arrowhead  = "vee",
+	  fontsize   = "8",
+	  label      = "   ",
+	  labelfloat = "False",
+	  labelfontcolor = "lightgreen"
+	  len        = "2",
+	  weight     = "0.5",
+	] ;
+
+	"TX" [ color="lightsteelblue", href="../results/results2010.svg", shape="circle" ] ;
+
+	subgraph used_techs {
+		node [ color="darkseagreen" ] ;
+
+		"TXD" [ href="../results/results_TXD_2010.svg" ] ;
+		"TXG" [ href="../results/results_TXG_2010.svg" ] ;
+	}
+
+	subgraph used_techs {
+		node [ color="powderblue" ] ;
+
+		"TXE" ;
+	}
+
+	subgraph in_use_flows {
+		edge [ color="forestgreen" ] ;
+
+		"TXD" -> "TX" ;
+		"TXG" -> "TX" ;
+	}
+
+	subgraph unused_flows {
+		edge [ color="powderblue" ] ;
+
+		"TXE" -> "TX" ;
+	}
+}

@@ -1,0 +1,49 @@
+strict digraph model {
+	label = "Results for E21 in 2010" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\nCapacity: 0.00" ;
+
+		href  = "results2010.svg" ;
+		style = "filled"
+		color = "lightgrey"
+
+		node [ color="white", shape="box" ] ;
+
+		"2010" [ href="results_E21_p2010v2010_segments.svg", label="2010\nCap: 0.00" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"ELC" [ href="../commodities/rc_ELC_2010.svg" ] ;
+		"FEQ" [ href="../commodities/rc_FEQ_2010.svg" ] ;
+		"URN" [ href="../commodities/rc_URN_2010.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"FEQ" -> "2010" [ label="-0.00" ] ;
+		"URN" -> "2010" [ label="0.00" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"2010" -> "ELC" [ label="-0.00" ] ;
+		"2010" -> "ELC" [ label="0.00" ] ;
+	}
+}

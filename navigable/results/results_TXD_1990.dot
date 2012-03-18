@@ -1,0 +1,49 @@
+strict digraph model {
+	label = "Results for TXD in 1990" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\nCapacity: 0.60" ;
+
+		href  = "results1990.svg" ;
+		style = "filled"
+		color = "lightgrey"
+
+		node [ color="white", shape="box" ] ;
+
+		"1970" [ href="results_TXD_p1990v1970_segments.svg", label="1970\nCap: 0.40" ] ;
+		"1980" [ href="results_TXD_p1990v1980_segments.svg", label="1980\nCap: 0.20" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"DSL" [ href="../commodities/rc_DSL_1990.svg" ] ;
+		"TX"  [ href="../commodities/rc_TX_1990.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"DSL" -> "1970" [ label="1.73" ] ;
+		"DSL" -> "1980" [ label="0.87" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"1970" -> "TX" [ label="0.40" ] ;
+		"1980" -> "TX" [ label="0.20" ] ;
+	}
+}

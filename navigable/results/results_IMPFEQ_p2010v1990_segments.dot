@@ -1,0 +1,52 @@
+strict digraph model {
+	label = "Activity split of process IMPFEQ, 1990 in year 2010" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_slices {
+		label = "1990 Capacity: 0.00" ;
+
+		color = "lightgrey" ;
+		rank  = "same" ;
+		style = "filled" ;
+
+		node [ color="white", shape="box" ] ;
+
+		"summer, day" ;
+		"summer, night" ;
+		"winter, day" ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"FEQ"   [ href="../commodities/rc_FEQ_2010.svg" ] ;
+		"ethos" [ href="../commodities/rc_ethos_2010.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"ethos" -> "summer, day"   [ label="-0.00" ] ;
+		"ethos" -> "summer, night" [ label="-0.00" ] ;
+		"ethos" -> "winter, day"   [ label="-0.00" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"summer, day"   -> "FEQ" [ label="-0.00" ] ;
+		"summer, night" -> "FEQ" [ label="-0.00" ] ;
+		"winter, day"   -> "FEQ" [ label="-0.00" ] ;
+	}
+}

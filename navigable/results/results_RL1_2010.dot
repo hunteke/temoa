@@ -1,0 +1,46 @@
+strict digraph model {
+	label = "Results for RL1 in 2010" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\nCapacity: 18.90" ;
+
+		href  = "results2010.svg" ;
+		style = "filled"
+		color = "lightgrey"
+
+		node [ color="white", shape="box" ] ;
+
+		"2010" [ href="results_RL1_p2010v2010_segments.svg", label="2010\nCap: 18.90" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"ELC" [ href="../commodities/rc_ELC_2010.svg" ] ;
+		"RL"  [ href="../commodities/rc_RL_2010.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"ELC" -> "2010" [ label="12.60" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"2010" -> "RL" [ label="12.60" ] ;
+	}
+}

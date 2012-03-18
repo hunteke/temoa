@@ -1,0 +1,46 @@
+strict digraph model {
+	label = "Results for IMPGSL1 in 2000" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\nCapacity: 30.00" ;
+
+		href  = "results2000.svg" ;
+		style = "filled"
+		color = "lightgrey"
+
+		node [ color="white", shape="box" ] ;
+
+		"1990" [ href="results_IMPGSL1_p2000v1990_segments.svg", label="1990\nCap: 30.00" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"GSL"   [ href="../commodities/rc_GSL_2000.svg" ] ;
+		"ethos" [ href="../commodities/rc_ethos_2000.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"ethos" -> "1990" [ label="26.15" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"1990" -> "GSL" [ label="26.15" ] ;
+	}
+}

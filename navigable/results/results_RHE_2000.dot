@@ -1,0 +1,46 @@
+strict digraph model {
+	label = "Results for RHE in 2000" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\nCapacity: 33.17" ;
+
+		href  = "results2000.svg" ;
+		style = "filled"
+		color = "lightgrey"
+
+		node [ color="white", shape="box" ] ;
+
+		"2000" [ href="results_RHE_p2000v2000_segments.svg", label="2000\nCap: 33.17" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"ELC" [ href="../commodities/rc_ELC_2000.svg" ] ;
+		"RH"  [ href="../commodities/rc_RH_2000.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"ELC" -> "2000" [ label="20.22" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"2000" -> "RH" [ label="20.22" ] ;
+	}
+}

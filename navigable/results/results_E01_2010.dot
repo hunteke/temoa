@@ -1,0 +1,52 @@
+strict digraph model {
+	label = "Results for E01 in 2010" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\nCapacity: 1.91" ;
+
+		href  = "results2010.svg" ;
+		style = "filled"
+		color = "lightgrey"
+
+		node [ color="white", shape="box" ] ;
+
+		"1980" [ href="results_E01_p2010v1980_segments.svg", label="1980\nCap: 0.15" ] ;
+		"2000" [ href="results_E01_p2010v2000_segments.svg", label="2000\nCap: 1.36" ] ;
+		"2010" [ href="results_E01_p2010v2010_segments.svg", label="2010\nCap: 0.40" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"ELC" [ href="../commodities/rc_ELC_2010.svg" ] ;
+		"HCO" [ href="../commodities/rc_HCO_2010.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"HCO" -> "1980" [ label="8.87" ] ;
+		"HCO" -> "2000" [ label="68.77" ] ;
+		"HCO" -> "2010" [ label="23.54" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"1980" -> "ELC" [ label="2.84" ] ;
+		"2000" -> "ELC" [ label="22.01" ] ;
+		"2010" -> "ELC" [ label="7.53" ] ;
+	}
+}

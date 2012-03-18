@@ -1,0 +1,55 @@
+strict digraph model {
+	label = "Activity split of process RHO, 1990 in year 1990" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_slices {
+		label = "1990 Capacity: 41.33" ;
+
+		color = "lightgrey" ;
+		rank  = "same" ;
+		style = "filled" ;
+
+		node [ color="white", shape="box" ] ;
+
+		"inter, day" ;
+		"inter, night" ;
+		"winter, day" ;
+		"winter, night" ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"DSL" [ href="../commodities/rc_DSL_1990.svg" ] ;
+		"RH"  [ href="../commodities/rc_RH_1990.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"DSL" -> "inter, day"    [ label="1.71" ] ;
+		"DSL" -> "inter, night"  [ label="0.85" ] ;
+		"DSL" -> "winter, day"   [ label="7.78" ] ;
+		"DSL" -> "winter, night" [ label="3.89" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"inter, day"    -> "RH" [ label="1.20" ] ;
+		"inter, night"  -> "RH" [ label="0.60" ] ;
+		"winter, day"   -> "RH" [ label="5.44" ] ;
+		"winter, night" -> "RH" [ label="2.72" ] ;
+	}
+}

@@ -1,0 +1,61 @@
+strict digraph model {
+	label = "Activity split of process E31, 1990 in year 2000" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_slices {
+		label = "1990 Capacity: 0.13" ;
+
+		color = "lightgrey" ;
+		rank  = "same" ;
+		style = "filled" ;
+
+		node [ color="white", shape="box" ] ;
+
+		"inter, day" ;
+		"inter, night" ;
+		"summer, day" ;
+		"summer, night" ;
+		"winter, day" ;
+		"winter, night" ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"ELC" [ href="../commodities/rc_ELC_2000.svg" ] ;
+		"HYD" [ href="../commodities/rc_HYD_2000.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"HYD" -> "inter, day"    [ label="0.14" ] ;
+		"HYD" -> "inter, night"  [ label="0.07" ] ;
+		"HYD" -> "summer, day"   [ label="0.14" ] ;
+		"HYD" -> "summer, night" [ label="0.07" ] ;
+		"HYD" -> "winter, day"   [ label="0.27" ] ;
+		"HYD" -> "winter, night" [ label="0.14" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"inter, day"    -> "ELC" [ label="0.04" ] ;
+		"inter, night"  -> "ELC" [ label="0.02" ] ;
+		"summer, day"   -> "ELC" [ label="0.04" ] ;
+		"summer, night" -> "ELC" [ label="0.02" ] ;
+		"winter, day"   -> "ELC" [ label="0.09" ] ;
+		"winter, night" -> "ELC" [ label="0.04" ] ;
+	}
+}

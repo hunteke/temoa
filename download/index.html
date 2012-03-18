@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+	<title>Download | The TEMOA Project</title>
+
+	<link rel='canonical' href='http://www.temoaproject.org/download/' />
+
+<!--#include virtual="/includes/head.html" -->
+</head>
+<body>
+<div id='wrapper'>
+	<div id='header' class='clear'>
+<!--#include virtual="/includes/title.html" -->
+		<div id='nav'>
+			<ul>
+				<li><a href='/' title='Home'>Home</a></li>
+				<li><a href='/about/' title='About'>About</a></li>
+				<li><a href='/people/' title='People'>People</a></li>
+				<li><a href='/publications/' title='Publications'>Publications</a></li>
+				<li><a href='/contact/' title='Contact'>Contact</a></li>
+				<li class='current_page_item'>Download</li>
+			</ul>
+		</div><!--end nav-->
+	</div><!--end header-->
+
+	<div id='content' class='pad'>
+		<h1 class='pagetitle'>Download</h1>
+		<div class='entry page clear'>
+			<p>The abstract formulation of the TEMOA energy system model is written with <a href='https://software.sandia.gov/trac/coopr/wiki/Pyomo'>Pyomo</a>, which is in turn written in <a href='http://www.python.org/'>Python</a>.  Consequently, <strong>TEMOA will run on Linux, Mac, Windows, or any operating system that Pyomo supports.</strong></p>
+
+			<p>Currently, the installation of each software component must be done separately.  While we have tested the installation process on multiple machines, please let us know if you have any questions.  This page covers the following topics:</p>
+			<ul style='padding-left: 3em;'>
+				<li><a href='#software-components'>TEMOA Software Components</a></li>
+				<li><a href='#testing-installation'>Testing the Installation</a></li>
+				<li><a href='#code-checkout'>Development Version</a></li>
+			</ul>
+
+			<h2 id='software-components'>TEMOA Software Components</h2>
+			<p>To run TEMOA, you will need:</p>
+			<ul>
+				<li><strong><a title='The Python scripting language homepage' href='http://www.python.org/'>Python</a></strong> &ndash; a very robust open source scripting language that has become a staple of the scientific community.  At this time (Dec 2011), TEMOA requires Python v2.7.  You may (not) have success with an earlier version.  Unless you run Windows, it is likely already installed on your computer.</li>
+				<li><strong><a title='COmmon Optimization Python Repository' href='https://software.sandia.gov/trac/coopr/'>COOPR</a></strong> &ndash; TEMOA employs <span class='underline'>CO</span>mmon <span class='underline'>O</span>ptimization <span class='underline'>P</span>ython <span class='underline'>R</span>epository (Coopr), a set of open source optimization libraries developed by Sandia National Laboratory.  TEMOA makes use of two key components within Coopr: (1) <span class='underline'>P</span>ython <span class='underline'>O</span>ptimization <span class='underline'>M</span>odeling <span class='underline'>O</span>bjects (Pyomo), an application programming interface (API) that emulates an algebraic modeling language similar to GAMS or AMPL and (2) <span class='underline'>P</span>ython-based <span class='underline'>S</span>tochastic <span class='underline'>P</span>rogramming (PySP), which partially automates the process of stochastic problem formulation.  Coopr is open source, and can be freely downloaded from Sandia.</li>
+				<li><strong>Solver</strong> &ndash; Pyomo is a description language for optimization models, but must be linked to a search algorithm (i.e., solver) to find an optimal solution.  The TEMOA energy system is (currently) a linear formulation, and therefore requires a solver that works on linear programming problems.  If you are using a university machine, both <a href='http://www-01.ibm.com/software/integration/optimization/cplex-optimizer/'>CPLEX</a> and <a href='http://www.gurobi.com/'>Gurobi</a> can be used for free.  In addition, GLPK is freely available to all interested parties.  As <a title='Gnu Linear Programming Kit' href='http://www.gnu.org/software/glpk/'>GLPK</a> is free, it offers the lowest barrier to entry among the available solvers and consequently is what we explain how to install here.  However, be warned that it is a great deal less efficient (slower) than CPlex, Gurobi, and other commercial linear solvers.</li>
+				<li><strong>TEMOA model</strong> &ndash; we are in early development stages of the project, but we have a <a href='/download/temoa.py' title='TEMOA Energy System Model (Prototype)'>working prototype.</a>  Note that all of our code is registered under the GNU Public License, and is therefore publicly available to all interested parties.  (Interested developers: look to the section &ldquo;Development Version&rdquo; in this page for the repository checkout command and URL.)</li>
+			</ul>
+			<p>In general, once you&rsquo;ve downloaded and installed all of the above, working with the model is currently a command line venture.  The command to run it is <code>coopr_python temoa.py</code></p>
+
+			<h2 id='testing-installation'>Testing the Installation</h2>
+			<p>TEMOA has no files to install, just the <code>temoa.py</code> file, so once the above 3 prerequisite components are installed, you're done.  Testing your setup is as simple as running one of the  <a href='http://www.temoaproject.org/websvn/listing.php?repname=TEMOA+Projects&amp;path=/branches/energysystem-datfiles/#path_branches_energysystem-datfiles_' title='TEMOA supplied data files'>TEMOA example data sets</a>.  Open a new terminal, and navigate to where you placed <code>temoa.py</code>:</p>
+			<pre style='line-height: 2.3ex; font-size: 1.2em; font-weight: bold;'>$ <span style='color: #04f;'>cd temoa/</span>
+
+   # just see what options the TEMOA command line provides
+$ <span style='color: #04f;'>coopr_python  temoa_model  -h</span>
+usage:  [-h] [--graph_format GRAPH_FORMAT] [--show_capacity]
+        [--graph_type GRAPH_TYPE] [--use_splines]
+        dot_dat [dot_dat ...]
+temoa.py: error: too few arguments
+
+   # run TEMOA with the supplied Utopia data set and save results to a file:
+$ <span style='color: #04f;'>coopr_python  temoa_model  utopia.dat  &gt;  utopia.results</span>
+[    0.08] Reading data files.
+[    0.96] Creating TEMOA model instance.
+[    1.65] Solving.
+[    1.77] Formatting results.
+
+  # inspect the results:
+$ <span style='color: #04f;'>head  utopia.results</span>
+Model name: TEMOA Entire Energy System Economic Optimization Model
+Objective function value (TotalCost): 35657.0718528
+Non-zero variable values:
+     0.578040628071     V_Activity(1990,inter,day,E01,1960)
+     0.1445872          V_Activity(1990,inter,day,E31,1980)
+     0.04337616         V_Activity(1990,inter,day,E31,1990)
+     0.0739960119289    V_Activity(1990,inter,day,E51,1980)
+     4.752987012987     V_Activity(1990,inter,day,IMPDSL1,1990)
+     3.319567099567     V_Activity(1990,inter,day,IMPGSL1,1990)
+     1.806376962722     V_Activity(1990,inter,day,IMPHCO1,1990)
+</pre>
+
+			<h2 id='code-checkout'>Development Version</h2>
+			<p>While we make available snapshots of the TEMOA code base that we believe to be stable and correct, you are also welcome to check out the bleeding edge as we develop.  To do so, make sure that you have Subversion installed, and then check out our repository with a command like one of these:</p>
+			<pre style='line-height: 2.3ex; font-size: 1.2em; font-weight: bold;'>   # just what we've deemed stable
+$ <span style='color: #04f;'>svn  co  http://svn.temoaproject.org/temoa/trunk  temoa_trunk</span>
+
+   # parallel development branches that we may (not) merge into the mainline trunk.
+$ <span style='color: #04f;'>svn  co  http://svn.temoaproject.org/temoa/branches  temoa_branches</span>
+</pre>
+		</div><!--end entry-->
+	</div><!--end content-->
+
+	<div id='sidebar'>
+		<ul class='thin-sidebar spad'>
+<!--#include virtual='/includes/sidebar.html' -->
+			<li id='linkcat-4' class='widget widget_links'>
+				<h2 class='widgettitle'>Related Links</h2>
+				<ul class='xoxo blogroll'>
+					<li><a href='https://software.sandia.gov/trac/coopr/' title='Sandia&rsquo;s Official COOPR site'>COOPR</a></li>
+					<li><a href='http://groups.google.com/group/coopr-forum/about' title='COOPR Community User Forum'>COOPR Forum</a></li>
+					<li><a href='http://www.gnu.org/software/glpk/' title='GLPK Linear Solver'>GLPK</a></li>
+					<li><a href='https://software.sandia.gov/trac/coopr/wiki/Pyomo' title='Sandia&rsquo;s Pyomo Wiki'>Pyomo</a></li>
+					<li><a href='http://www.python.org/' title='Python Programming Language – Official Website'>Python</a></li>
+				</ul>
+			</li>
+		</ul>
+	</div><!--end sidebar-->
+
+<!--#include virtual="/includes/footer.html" -->
+</div><!--end wrapper-->
+</body></html>

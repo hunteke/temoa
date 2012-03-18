@@ -1,0 +1,58 @@
+strict digraph result_commodity_ELC {
+	label       = "ELC - 1990" ;
+
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "True" ;
+
+	node [ shape="box", style="filled" ] ;
+	edge [
+	  arrowhead  = "vee",
+	  fontsize   = "8",
+	  label      = "   ",
+	  labelfloat = "False",
+	  labelfontcolor = "lightgreen"
+	  len        = "2",
+	  weight     = "0.5",
+	] ;
+
+	"ELC" [ color="lightsteelblue", href="../results/results1990.svg", shape="circle" ] ;
+
+	subgraph used_techs {
+		node [ color="darkseagreen" ] ;
+
+		"E01" [ href="../results/results_E01_1990.svg" ] ;
+		"E21" [ href="../results/results_E21_1990.svg" ] ;
+		"E31" [ href="../results/results_E31_1990.svg" ] ;
+		"E51" [ href="../results/results_E51_1990.svg" ] ;
+		"RHE" [ href="../results/results_RHE_1990.svg" ] ;
+		"RL1" [ href="../results/results_RL1_1990.svg" ] ;
+	}
+
+	subgraph used_techs {
+		node [ color="powderblue" ] ;
+
+		"E70" ;
+		"TXE" ;
+	}
+
+	subgraph in_use_flows {
+		edge [ color="forestgreen" ] ;
+
+		"E01" -> "ELC" ;
+		"E21" -> "ELC" ;
+		"E31" -> "ELC" ;
+		"E51" -> "ELC" ;
+		"ELC" -> "E51" ;
+		"ELC" -> "RHE" ;
+		"ELC" -> "RL1" ;
+	}
+
+	subgraph unused_flows {
+		edge [ color="powderblue" ] ;
+
+		"E70" -> "ELC" ;
+		"ELC" -> "TXE" ;
+	}
+}

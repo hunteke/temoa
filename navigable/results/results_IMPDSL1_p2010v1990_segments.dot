@@ -1,0 +1,61 @@
+strict digraph model {
+	label = "Activity split of process IMPDSL1, 1990 in year 2010" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_slices {
+		label = "1990 Capacity: 106.09" ;
+
+		color = "lightgrey" ;
+		rank  = "same" ;
+		style = "filled" ;
+
+		node [ color="white", shape="box" ] ;
+
+		"inter, day" ;
+		"inter, night" ;
+		"summer, day" ;
+		"summer, night" ;
+		"winter, day" ;
+		"winter, night" ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"DSL"   [ href="../commodities/rc_DSL_2010.svg" ] ;
+		"ethos" [ href="../commodities/rc_ethos_2010.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"ethos" -> "inter, day"    [ label="9.69" ] ;
+		"ethos" -> "inter, night"  [ label="4.84" ] ;
+		"ethos" -> "summer, day"   [ label="3.44" ] ;
+		"ethos" -> "summer, night" [ label="1.72" ] ;
+		"ethos" -> "winter, day"   [ label="35.36" ] ;
+		"ethos" -> "winter, night" [ label="17.68" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"inter, day"    -> "DSL" [ label="9.69" ] ;
+		"inter, night"  -> "DSL" [ label="4.84" ] ;
+		"summer, day"   -> "DSL" [ label="3.44" ] ;
+		"summer, night" -> "DSL" [ label="1.72" ] ;
+		"winter, day"   -> "DSL" [ label="35.36" ] ;
+		"winter, night" -> "DSL" [ label="17.68" ] ;
+	}
+}

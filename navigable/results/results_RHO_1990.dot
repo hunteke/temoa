@@ -1,0 +1,52 @@
+strict digraph model {
+	label = "Results for RHO in 1990" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\nCapacity: 41.33" ;
+
+		href  = "results1990.svg" ;
+		style = "filled"
+		color = "lightgrey"
+
+		node [ color="white", shape="box" ] ;
+
+		"1970" [ href="results_RHO_p1990v1970_segments.svg", label="1970\nCap: 12.50" ] ;
+		"1980" [ href="results_RHO_p1990v1980_segments.svg", label="1980\nCap: 12.50" ] ;
+		"1990" [ href="results_RHO_p1990v1990_segments.svg", label="1990\nCap: 16.33" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"DSL" [ href="../commodities/rc_DSL_1990.svg" ] ;
+		"RH"  [ href="../commodities/rc_RH_1990.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"DSL" -> "1970" [ label="10.89" ] ;
+		"DSL" -> "1980" [ label="10.89" ] ;
+		"DSL" -> "1990" [ label="14.23" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"1970" -> "RH" [ label="7.62" ] ;
+		"1980" -> "RH" [ label="7.62" ] ;
+		"1990" -> "RH" [ label="9.96" ] ;
+	}
+}

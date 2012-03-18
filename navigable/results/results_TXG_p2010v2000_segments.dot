@@ -1,0 +1,61 @@
+strict digraph model {
+	label = "Activity split of process TXG, 2000 in year 2010" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_slices {
+		label = "2000 Capacity: 6.93" ;
+
+		color = "lightgrey" ;
+		rank  = "same" ;
+		style = "filled" ;
+
+		node [ color="white", shape="box" ] ;
+
+		"inter, day" ;
+		"inter, night" ;
+		"summer, day" ;
+		"summer, night" ;
+		"winter, day" ;
+		"winter, night" ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"GSL" [ href="../commodities/rc_GSL_2010.svg" ] ;
+		"TX"  [ href="../commodities/rc_TX_2010.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"GSL" -> "inter, day"    [ label="3.28" ] ;
+		"GSL" -> "inter, night"  [ label="1.64" ] ;
+		"GSL" -> "summer, day"   [ label="3.28" ] ;
+		"GSL" -> "summer, night" [ label="1.64" ] ;
+		"GSL" -> "winter, day"   [ label="6.55" ] ;
+		"GSL" -> "winter, night" [ label="3.28" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"inter, day"    -> "TX" [ label="0.76" ] ;
+		"inter, night"  -> "TX" [ label="0.38" ] ;
+		"summer, day"   -> "TX" [ label="0.76" ] ;
+		"summer, night" -> "TX" [ label="0.38" ] ;
+		"winter, day"   -> "TX" [ label="1.51" ] ;
+		"winter, night" -> "TX" [ label="0.76" ] ;
+	}
+}

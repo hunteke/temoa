@@ -1,0 +1,45 @@
+strict digraph result_commodity_URN {
+	label       = "URN - 1990" ;
+
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "True" ;
+
+	node [ shape="box", style="filled" ] ;
+	edge [
+	  arrowhead  = "vee",
+	  fontsize   = "8",
+	  label      = "   ",
+	  labelfloat = "False",
+	  labelfontcolor = "lightgreen"
+	  len        = "2",
+	  weight     = "0.5",
+	] ;
+
+	"URN" [ color="lightsteelblue", href="../results/results1990.svg", shape="circle" ] ;
+
+	subgraph used_techs {
+		node [ color="darkseagreen" ] ;
+
+		"E21" [ href="../results/results_E21_1990.svg" ] ;
+	}
+
+	subgraph used_techs {
+		node [ color="powderblue" ] ;
+
+		"IMPURN1" ;
+	}
+
+	subgraph in_use_flows {
+		edge [ color="forestgreen" ] ;
+
+		"URN" -> "E21" ;
+	}
+
+	subgraph unused_flows {
+		edge [ color="powderblue" ] ;
+
+		"IMPURN1" -> "URN" ;
+	}
+}

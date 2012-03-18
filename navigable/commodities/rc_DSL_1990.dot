@@ -1,0 +1,51 @@
+strict digraph result_commodity_DSL {
+	label       = "DSL - 1990" ;
+
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "True" ;
+
+	node [ shape="box", style="filled" ] ;
+	edge [
+	  arrowhead  = "vee",
+	  fontsize   = "8",
+	  label      = "   ",
+	  labelfloat = "False",
+	  labelfontcolor = "lightgreen"
+	  len        = "2",
+	  weight     = "0.5",
+	] ;
+
+	"DSL" [ color="lightsteelblue", href="../results/results1990.svg", shape="circle" ] ;
+
+	subgraph used_techs {
+		node [ color="darkseagreen" ] ;
+
+		"IMPDSL1" [ href="../results/results_IMPDSL1_1990.svg" ] ;
+		"RHO"     [ href="../results/results_RHO_1990.svg" ] ;
+		"TXD"     [ href="../results/results_TXD_1990.svg" ] ;
+	}
+
+	subgraph used_techs {
+		node [ color="powderblue" ] ;
+
+		"E70" ;
+		"SRE" ;
+	}
+
+	subgraph in_use_flows {
+		edge [ color="forestgreen" ] ;
+
+		"DSL"     -> "RHO" ;
+		"DSL"     -> "TXD" ;
+		"IMPDSL1" -> "DSL" ;
+	}
+
+	subgraph unused_flows {
+		edge [ color="powderblue" ] ;
+
+		"DSL" -> "E70" ;
+		"SRE" -> "DSL" ;
+	}
+}

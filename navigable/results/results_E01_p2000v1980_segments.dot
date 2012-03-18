@@ -1,0 +1,52 @@
+strict digraph model {
+	label = "Activity split of process E01, 1980 in year 2000" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_slices {
+		label = "1980 Capacity: 1.69" ;
+
+		color = "lightgrey" ;
+		rank  = "same" ;
+		style = "filled" ;
+
+		node [ color="white", shape="box" ] ;
+
+		"inter, night" ;
+		"winter, day" ;
+		"winter, night" ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"ELC" [ href="../commodities/rc_ELC_2000.svg" ] ;
+		"HCO" [ href="../commodities/rc_HCO_2000.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"HCO" -> "inter, night"  [ label="-0.00" ] ;
+		"HCO" -> "winter, day"   [ label="3.94" ] ;
+		"HCO" -> "winter, night" [ label="1.97" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"inter, night"  -> "ELC" [ label="-0.00" ] ;
+		"winter, day"   -> "ELC" [ label="1.26" ] ;
+		"winter, night" -> "ELC" [ label="0.63" ] ;
+	}
+}

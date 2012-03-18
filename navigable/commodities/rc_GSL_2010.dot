@@ -1,0 +1,47 @@
+strict digraph result_commodity_GSL {
+	label       = "GSL - 2010" ;
+
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "True" ;
+
+	node [ shape="box", style="filled" ] ;
+	edge [
+	  arrowhead  = "vee",
+	  fontsize   = "8",
+	  label      = "   ",
+	  labelfloat = "False",
+	  labelfontcolor = "lightgreen"
+	  len        = "2",
+	  weight     = "0.5",
+	] ;
+
+	"GSL" [ color="lightsteelblue", href="../results/results2010.svg", shape="circle" ] ;
+
+	subgraph used_techs {
+		node [ color="darkseagreen" ] ;
+
+		"IMPGSL1" [ href="../results/results_IMPGSL1_2010.svg" ] ;
+		"TXG"     [ href="../results/results_TXG_2010.svg" ] ;
+	}
+
+	subgraph used_techs {
+		node [ color="powderblue" ] ;
+
+		"SRE" ;
+	}
+
+	subgraph in_use_flows {
+		edge [ color="forestgreen" ] ;
+
+		"GSL"     -> "TXG" ;
+		"IMPGSL1" -> "GSL" ;
+	}
+
+	subgraph unused_flows {
+		edge [ color="powderblue" ] ;
+
+		"SRE" -> "GSL" ;
+	}
+}

@@ -1,0 +1,49 @@
+strict digraph model {
+	label = "Results for TXD in 2000" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\nCapacity: 1.76" ;
+
+		href  = "results2000.svg" ;
+		style = "filled"
+		color = "lightgrey"
+
+		node [ color="white", shape="box" ] ;
+
+		"1980" [ href="results_TXD_p2000v1980_segments.svg", label="1980\nCap: 0.20" ] ;
+		"2000" [ href="results_TXD_p2000v2000_segments.svg", label="2000\nCap: 1.56" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"DSL" [ href="../commodities/rc_DSL_2000.svg" ] ;
+		"TX"  [ href="../commodities/rc_TX_2000.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"DSL" -> "1980" [ label="0.87" ] ;
+		"DSL" -> "2000" [ label="6.75" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"1980" -> "TX" [ label="0.20" ] ;
+		"2000" -> "TX" [ label="1.56" ] ;
+	}
+}

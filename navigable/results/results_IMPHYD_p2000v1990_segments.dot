@@ -1,0 +1,61 @@
+strict digraph model {
+	label = "Activity split of process IMPHYD, 1990 in year 2000" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_slices {
+		label = "1990 Capacity: 3.52" ;
+
+		color = "lightgrey" ;
+		rank  = "same" ;
+		style = "filled" ;
+
+		node [ color="white", shape="box" ] ;
+
+		"inter, day" ;
+		"inter, night" ;
+		"summer, day" ;
+		"summer, night" ;
+		"winter, day" ;
+		"winter, night" ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"HYD"   [ href="../commodities/rc_HYD_2000.svg" ] ;
+		"ethos" [ href="../commodities/rc_ethos_2000.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"ethos" -> "inter, day"    [ label="0.59" ] ;
+		"ethos" -> "inter, night"  [ label="0.29" ] ;
+		"ethos" -> "summer, day"   [ label="0.59" ] ;
+		"ethos" -> "summer, night" [ label="0.29" ] ;
+		"ethos" -> "winter, day"   [ label="1.17" ] ;
+		"ethos" -> "winter, night" [ label="0.59" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"inter, day"    -> "HYD" [ label="0.59" ] ;
+		"inter, night"  -> "HYD" [ label="0.29" ] ;
+		"summer, day"   -> "HYD" [ label="0.59" ] ;
+		"summer, night" -> "HYD" [ label="0.29" ] ;
+		"winter, day"   -> "HYD" [ label="1.17" ] ;
+		"winter, night" -> "HYD" [ label="0.59" ] ;
+	}
+}

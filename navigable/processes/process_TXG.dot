@@ -1,0 +1,82 @@
+strict digraph model {
+	label = "TXG" ;
+
+	bgcolor     = "transparent" ;
+	color       = "black" ;
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ shape="box", style="filled" ];
+
+	edge [
+	  arrowhead  = "vee",
+	  decorate   = "True",
+	  dir        = "both",
+	  fontsize   = "8",
+	  label      = "   ",
+	  labelfloat = "false",
+	  labelfontcolor = "lightgreen",
+	  len        = "2",
+	  weight     = "0.5"
+	];
+
+	subgraph cluster_vintage {
+		label = "Vintages" ;
+
+		color = "lightgrey" ;
+		style = "filled";
+		href  = "../simple_model.svg" ;
+
+		node [ color="white" ]
+
+		"v_1970" ;
+		"v_1980" ;
+		"v_1990" ;
+		"v_2000" ;
+		"v_2010" ;
+	}
+
+	subgraph cluster_period {
+		label = "Period" ;
+		color = "lightgrey" ;
+		style = "filled" ;
+		href  = "../simple_model.svg" ;
+
+		node [ color="white" ]
+
+		"p_1990" ;
+		"p_2000" ;
+		"p_2010" ;
+	}
+
+	subgraph energy_carriers {
+		node [ shape="circle" ] ;
+
+	  // Beginning nodes
+		"TX" [ color="lawngreen", href="../commodities/commodity_TX.svg" ] ;
+
+	  // Ending nodes
+		"GSL" [ color="lightsteelblue", href="../commodities/commodity_GSL.svg" ] ;
+	}
+
+	subgraph external_edges {
+		edge [ arrowhead="normal", dir="forward" ] ;
+
+		"GSL"    -> "v_1990" [ color="firebrick", lhead="cluster_vintage" ] ;
+		"p_2000" -> "TX"     [ color="forestgreen", ltail="cluster_period" ] ;
+	}
+
+	subgraph internal_edges {
+		// edges between vintages and periods
+		"v_1970" -> "p_1990" [ color="blue" ] ;
+		"v_1980" -> "p_1990" [ color="cyan" ] ;
+		"v_1980" -> "p_2000" [ color="purple" ] ;
+		"v_1990" -> "p_1990" [ color="green" ] ;
+		"v_1990" -> "p_2000" [ color="orange" ] ;
+		"v_2000" -> "p_2000" [ color="gold" ] ;
+		"v_2000" -> "p_2010" [ color="red" ] ;
+		"v_2010" -> "p_2010" [ color="hotpink" ] ;
+	}
+}

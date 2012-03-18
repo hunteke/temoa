@@ -1,0 +1,73 @@
+strict digraph model {
+	label = "IMPHYD" ;
+
+	bgcolor     = "transparent" ;
+	color       = "black" ;
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ shape="box", style="filled" ];
+
+	edge [
+	  arrowhead  = "vee",
+	  decorate   = "True",
+	  dir        = "both",
+	  fontsize   = "8",
+	  label      = "   ",
+	  labelfloat = "false",
+	  labelfontcolor = "lightgreen",
+	  len        = "2",
+	  weight     = "0.5"
+	];
+
+	subgraph cluster_vintage {
+		label = "Vintages" ;
+
+		color = "lightgrey" ;
+		style = "filled";
+		href  = "../simple_model.svg" ;
+
+		node [ color="white" ]
+
+		"v_1990" ;
+	}
+
+	subgraph cluster_period {
+		label = "Period" ;
+		color = "lightgrey" ;
+		style = "filled" ;
+		href  = "../simple_model.svg" ;
+
+		node [ color="white" ]
+
+		"p_1990" ;
+		"p_2000" ;
+		"p_2010" ;
+	}
+
+	subgraph energy_carriers {
+		node [ shape="circle" ] ;
+
+	  // Beginning nodes
+		"HYD" [ color="lawngreen", href="../commodities/commodity_HYD.svg" ] ;
+
+	  // Ending nodes
+		"ethos" [ color="lightsteelblue", href="../commodities/commodity_ethos.svg" ] ;
+	}
+
+	subgraph external_edges {
+		edge [ arrowhead="normal", dir="forward" ] ;
+
+		"ethos"  -> "v_1990" [ color="firebrick", lhead="cluster_vintage" ] ;
+		"p_2000" -> "HYD"    [ color="forestgreen", ltail="cluster_period" ] ;
+	}
+
+	subgraph internal_edges {
+		// edges between vintages and periods
+		"v_1990" -> "p_1990" [ color="gold" ] ;
+		"v_1990" -> "p_2000" [ color="red" ] ;
+		"v_1990" -> "p_2010" [ color="orange" ] ;
+	}
+}

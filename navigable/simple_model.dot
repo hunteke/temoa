@@ -1,0 +1,100 @@
+strict digraph model {
+	rankdir = "LR" ;
+
+	// Default node and edge attributes
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee", labelfontcolor="lightgreen" ] ;
+
+	// Define individual nodes
+	subgraph techs {
+		node [ color="darkseagreen", shape="box" ] ;
+
+		"E01"     [ href="processes/process_E01.svg" ] ;
+		"E21"     [ href="processes/process_E21.svg" ] ;
+		"E31"     [ href="processes/process_E31.svg" ] ;
+		"E51"     [ href="processes/process_E51.svg" ] ;
+		"E70"     [ href="processes/process_E70.svg" ] ;
+		"IMPDSL1" [ href="processes/process_IMPDSL1.svg" ] ;
+		"IMPFEQ"  [ href="processes/process_IMPFEQ.svg" ] ;
+		"IMPGSL1" [ href="processes/process_IMPGSL1.svg" ] ;
+		"IMPHCO1" [ href="processes/process_IMPHCO1.svg" ] ;
+		"IMPHYD"  [ href="processes/process_IMPHYD.svg" ] ;
+		"IMPOIL1" [ href="processes/process_IMPOIL1.svg" ] ;
+		"IMPURN1" [ href="processes/process_IMPURN1.svg" ] ;
+		"RHE"     [ href="processes/process_RHE.svg" ] ;
+		"RHO"     [ href="processes/process_RHO.svg" ] ;
+		"RL1"     [ href="processes/process_RL1.svg" ] ;
+		"SRE"     [ href="processes/process_SRE.svg" ] ;
+		"TXD"     [ href="processes/process_TXD.svg" ] ;
+		"TXE"     [ href="processes/process_TXE.svg" ] ;
+		"TXG"     [ href="processes/process_TXG.svg" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [ color="lightsteelblue", shape="circle" ] ;
+
+		"DSL"   [ href="commodities/commodity_DSL.svg" ] ;
+		"ELC"   [ href="commodities/commodity_ELC.svg" ] ;
+		"FEQ"   [ href="commodities/commodity_FEQ.svg" ] ;
+		"GSL"   [ href="commodities/commodity_GSL.svg" ] ;
+		"HCO"   [ href="commodities/commodity_HCO.svg" ] ;
+		"HYD"   [ href="commodities/commodity_HYD.svg" ] ;
+		"OIL"   [ href="commodities/commodity_OIL.svg" ] ;
+		"RH"    [ href="commodities/commodity_RH.svg" ] ;
+		"RL"    [ href="commodities/commodity_RL.svg" ] ;
+		"TX"    [ href="commodities/commodity_TX.svg" ] ;
+		"URN"   [ href="commodities/commodity_URN.svg" ] ;
+		"ethos" [ href="commodities/commodity_ethos.svg" ] ;
+	}
+
+	// Define edges and any specific edge attributes
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"DSL"   -> "E70" ;
+		"DSL"   -> "RHO" ;
+		"DSL"   -> "TXD" ;
+		"ELC"   -> "E51" ;
+		"ELC"   -> "RHE" ;
+		"ELC"   -> "RL1" ;
+		"ELC"   -> "TXE" ;
+		"FEQ"   -> "E21" ;
+		"GSL"   -> "TXG" ;
+		"HCO"   -> "E01" ;
+		"HYD"   -> "E31" ;
+		"OIL"   -> "SRE" ;
+		"URN"   -> "E21" ;
+		"ethos" -> "IMPDSL1" ;
+		"ethos" -> "IMPFEQ" ;
+		"ethos" -> "IMPGSL1" ;
+		"ethos" -> "IMPHCO1" ;
+		"ethos" -> "IMPHYD" ;
+		"ethos" -> "IMPOIL1" ;
+		"ethos" -> "IMPURN1" ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"E01"     -> "ELC" ;
+		"E21"     -> "ELC" ;
+		"E31"     -> "ELC" ;
+		"E51"     -> "ELC" ;
+		"E70"     -> "ELC" ;
+		"IMPDSL1" -> "DSL" ;
+		"IMPFEQ"  -> "FEQ" ;
+		"IMPGSL1" -> "GSL" ;
+		"IMPHCO1" -> "HCO" ;
+		"IMPHYD"  -> "HYD" ;
+		"IMPOIL1" -> "OIL" ;
+		"IMPURN1" -> "URN" ;
+		"RHE"     -> "RH" ;
+		"RHO"     -> "RH" ;
+		"RL1"     -> "RL" ;
+		"SRE"     -> "DSL" ;
+		"SRE"     -> "GSL" ;
+		"TXD"     -> "TX" ;
+		"TXE"     -> "TX" ;
+		"TXG"     -> "TX" ;
+	}
+}

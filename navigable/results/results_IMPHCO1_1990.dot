@@ -1,0 +1,46 @@
+strict digraph model {
+	label = "Results for IMPHCO1 in 1990" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\nCapacity: 150.81" ;
+
+		href  = "results1990.svg" ;
+		style = "filled"
+		color = "lightgrey"
+
+		node [ color="white", shape="box" ] ;
+
+		"1990" [ href="results_IMPHCO1_p1990v1990_segments.svg", label="1990\nCap: 150.81" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"HCO"   [ href="../commodities/rc_HCO_1990.svg" ] ;
+		"ethos" [ href="../commodities/rc_ethos_1990.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"ethos" -> "1990" [ label="14.70" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"1990" -> "HCO" [ label="14.70" ] ;
+	}
+}

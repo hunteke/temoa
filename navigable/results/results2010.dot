@@ -1,0 +1,162 @@
+strict digraph model {
+	label = "Results for 2010"
+
+	rankdir = "LR" ;
+	smoothtype = "power_dist" ;
+	splines = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph unused_techs {
+		node [
+		  color     = "powderblue",
+		  fontcolor = "chocolate",
+		  shape     = "box"
+		] ;
+
+		"E21" ;
+		"IMPFEQ" ;
+		"IMPOIL1" ;
+		"IMPURN1" ;
+		"TXE" ;
+	}
+
+	subgraph unused_energy_carriers {
+		node [
+		  color     = "powderblue",
+		  fontcolor = "chocolate",
+		  shape     = "circle"
+		] ;
+
+		"CSV" ;
+		"FEQ" ;
+		"LTH" ;
+		"OIL" ;
+		"URN" ;
+	}
+
+	subgraph unused_emissions {
+		node [
+		  color     = "powderblue",
+		  fontcolor = "chocolate",
+		  shape     = "circle"
+		]
+
+		// no nodes in this section
+	}
+
+	subgraph in_use_techs {
+		node [
+		  color     = "darkseagreen",
+		  fontcolor = "black",
+		  shape     = "box"
+		] ;
+
+		"E01"     [ label="E01\nCapacity: 1.91", href="results_E01_2010.svg" ] ;
+		"E31"     [ label="E31\nCapacity: 0.13", href="results_E31_2010.svg" ] ;
+		"E51"     [ label="E51\nCapacity: 0.50", href="results_E51_2010.svg" ] ;
+		"E70"     [ label="E70\nCapacity: 0.20", href="results_E70_2010.svg" ] ;
+		"IMPDSL1" [ label="IMPDSL1\nCapacity: 106.09", href="results_IMPDSL1_2010.svg" ] ;
+		"IMPGSL1" [ label="IMPGSL1\nCapacity: 30.00", href="results_IMPGSL1_2010.svg" ] ;
+		"IMPHCO1" [ label="IMPHCO1\nCapacity: 150.81", href="results_IMPHCO1_2010.svg" ] ;
+		"IMPHYD"  [ label="IMPHYD\nCapacity: 3.52", href="results_IMPHYD_2010.svg" ] ;
+		"RHE"     [ label="RHE\nCapacity: 33.17", href="results_RHE_2010.svg" ] ;
+		"RHO"     [ label="RHO\nCapacity: 59.84", href="results_RHO_2010.svg" ] ;
+		"RL1"     [ label="RL1\nCapacity: 18.90", href="results_RL1_2010.svg" ] ;
+		"SRE"     [ label="SRE\nCapacity: 0.10", href="results_SRE_2010.svg" ] ;
+		"TXD"     [ label="TXD\nCapacity: 4.76", href="results_TXD_2010.svg" ] ;
+		"TXG"     [ label="TXG\nCapacity: 6.93", href="results_TXG_2010.svg" ] ;
+	}
+
+	subgraph in_use_energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"DSL"   [ href="../commodities/rc_DSL_2010.svg" ] ;
+		"ELC"   [ href="../commodities/rc_ELC_2010.svg" ] ;
+		"GSL"   [ href="../commodities/rc_GSL_2010.svg" ] ;
+		"HCO"   [ href="../commodities/rc_HCO_2010.svg" ] ;
+		"HYD"   [ href="../commodities/rc_HYD_2010.svg" ] ;
+		"RH"    [ href="../commodities/rc_RH_2010.svg" ] ;
+		"RL"    [ href="../commodities/rc_RL_2010.svg" ] ;
+		"TX"    [ href="../commodities/rc_TX_2010.svg" ] ;
+		"ethos" [ href="../commodities/rc_ethos_2010.svg" ] ;
+	}
+
+	subgraph in_use_emissions {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"co2" ;
+		"nox" ;
+	}
+
+	subgraph unused_flows {
+		edge [ color="powderblue" ]
+
+		"DSL"     -> "E70" ;
+		"E21"     -> "ELC" ;
+		"E70"     -> "ELC" ;
+		"ELC"     -> "TXE" ;
+		"FEQ"     -> "E21" ;
+		"IMPFEQ"  -> "FEQ" ;
+		"IMPOIL1" -> "OIL" ;
+		"IMPURN1" -> "URN" ;
+		"OIL"     -> "SRE" ;
+		"SRE"     -> "DSL" ;
+		"SRE"     -> "GSL" ;
+		"TXE"     -> "TX" ;
+		"URN"     -> "E21" ;
+		"ethos"   -> "IMPFEQ" ;
+		"ethos"   -> "IMPOIL1" ;
+		"ethos"   -> "IMPURN1" ;
+	}
+
+	subgraph in_use_flows {
+		subgraph inputs {
+			edge [ color="firebrick" ] ;
+
+			"DSL"   -> "RHO"     [ label="52.11" ] ;
+			"DSL"   -> "TXD"     [ label="20.61" ] ;
+			"ELC"   -> "E51"     [ label="1.70" ] ;
+			"ELC"   -> "RHE"     [ label="20.22" ] ;
+			"ELC"   -> "RL1"     [ label="12.60" ] ;
+			"GSL"   -> "TXG"     [ label="30.00" ] ;
+			"HCO"   -> "E01"     [ label="101.17" ] ;
+			"HYD"   -> "E31"     [ label="3.52" ] ;
+			"ethos" -> "IMPDSL1" [ label="72.72" ] ;
+			"ethos" -> "IMPGSL1" [ label="30.00" ] ;
+			"ethos" -> "IMPHCO1" [ label="101.17" ] ;
+			"ethos" -> "IMPHYD"  [ label="3.52" ] ;
+		}
+
+		subgraph outputs {
+			edge [ color="forestgreen" ] ;
+
+			"E01"     -> "ELC" [ label="32.38" ] ;
+			"E31"     -> "ELC" [ label="1.13" ] ;
+			"E51"     -> "ELC" [ label="1.23" ] ;
+			"IMPDSL1" -> "DSL" [ label="72.72" ] ;
+			"IMPDSL1" -> "co2" [ label="5.45" ] ;
+			"IMPGSL1" -> "GSL" [ label="30.00" ] ;
+			"IMPGSL1" -> "co2" [ label="2.25" ] ;
+			"IMPHCO1" -> "HCO" [ label="101.17" ] ;
+			"IMPHCO1" -> "co2" [ label="9.00" ] ;
+			"IMPHYD"  -> "HYD" [ label="3.52" ] ;
+			"RHE"     -> "RH"  [ label="20.22" ] ;
+			"RHO"     -> "RH"  [ label="36.48" ] ;
+			"RL1"     -> "RL"  [ label="12.60" ] ;
+			"TXD"     -> "TX"  [ label="4.76" ] ;
+			"TXD"     -> "nox" [ label="4.76" ] ;
+			"TXG"     -> "TX"  [ label="6.93" ] ;
+			"TXG"     -> "nox" [ label="6.93" ] ;
+		}
+	}
+}

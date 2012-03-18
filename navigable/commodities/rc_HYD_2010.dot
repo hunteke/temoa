@@ -1,0 +1,47 @@
+strict digraph result_commodity_HYD {
+	label       = "HYD - 2010" ;
+
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "True" ;
+
+	node [ shape="box", style="filled" ] ;
+	edge [
+	  arrowhead  = "vee",
+	  fontsize   = "8",
+	  label      = "   ",
+	  labelfloat = "False",
+	  labelfontcolor = "lightgreen"
+	  len        = "2",
+	  weight     = "0.5",
+	] ;
+
+	"HYD" [ color="lightsteelblue", href="../results/results2010.svg", shape="circle" ] ;
+
+	subgraph used_techs {
+		node [ color="darkseagreen" ] ;
+
+		"E31"    [ href="../results/results_E31_2010.svg" ] ;
+		"IMPHYD" [ href="../results/results_IMPHYD_2010.svg" ] ;
+	}
+
+	subgraph used_techs {
+		node [ color="powderblue" ] ;
+
+		// no nodes in this section
+	}
+
+	subgraph in_use_flows {
+		edge [ color="forestgreen" ] ;
+
+		"HYD"    -> "E31" ;
+		"IMPHYD" -> "HYD" ;
+	}
+
+	subgraph unused_flows {
+		edge [ color="powderblue" ] ;
+
+		// no edges in this section
+	}
+}

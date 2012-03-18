@@ -1,0 +1,47 @@
+strict digraph result_commodity_HCO {
+	label       = "HCO - 1990" ;
+
+	compound    = "True" ;
+	concentrate = "True" ;
+	rankdir     = "LR" ;
+	splines     = "True" ;
+
+	node [ shape="box", style="filled" ] ;
+	edge [
+	  arrowhead  = "vee",
+	  fontsize   = "8",
+	  label      = "   ",
+	  labelfloat = "False",
+	  labelfontcolor = "lightgreen"
+	  len        = "2",
+	  weight     = "0.5",
+	] ;
+
+	"HCO" [ color="lightsteelblue", href="../results/results1990.svg", shape="circle" ] ;
+
+	subgraph used_techs {
+		node [ color="darkseagreen" ] ;
+
+		"E01"     [ href="../results/results_E01_1990.svg" ] ;
+		"IMPHCO1" [ href="../results/results_IMPHCO1_1990.svg" ] ;
+	}
+
+	subgraph used_techs {
+		node [ color="powderblue" ] ;
+
+		// no nodes in this section
+	}
+
+	subgraph in_use_flows {
+		edge [ color="forestgreen" ] ;
+
+		"HCO"     -> "E01" ;
+		"IMPHCO1" -> "HCO" ;
+	}
+
+	subgraph unused_flows {
+		edge [ color="powderblue" ] ;
+
+		// no edges in this section
+	}
+}

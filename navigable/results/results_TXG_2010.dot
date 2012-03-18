@@ -1,0 +1,49 @@
+strict digraph model {
+	label = "Results for TXG in 2010" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_vintages {
+		label = "Vintages\nCapacity: 6.93" ;
+
+		href  = "results2010.svg" ;
+		style = "filled"
+		color = "lightgrey"
+
+		node [ color="white", shape="box" ] ;
+
+		"2000" [ href="results_TXG_p2010v2000_segments.svg", label="2000\nCap: 4.54" ] ;
+		"2010" [ href="results_TXG_p2010v2010_segments.svg", label="2010\nCap: 2.39" ] ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"GSL" [ href="../commodities/rc_GSL_2010.svg" ] ;
+		"TX"  [ href="../commodities/rc_TX_2010.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"GSL" -> "2000" [ label="19.65" ] ;
+		"GSL" -> "2010" [ label="10.35" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"2000" -> "TX" [ label="4.54" ] ;
+		"2010" -> "TX" [ label="2.39" ] ;
+	}
+}

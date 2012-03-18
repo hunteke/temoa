@@ -1,0 +1,61 @@
+strict digraph model {
+	label = "Activity split of process IMPHCO1, 1990 in year 1990" ;
+
+	compound    = "True" ;
+	concentrate = "True";
+	rankdir     = "LR" ;
+	splines     = "False" ;
+
+	node [ style="filled" ] ;
+	edge [ arrowhead="vee" ] ;
+
+	subgraph cluster_slices {
+		label = "1990 Capacity: 150.81" ;
+
+		color = "lightgrey" ;
+		rank  = "same" ;
+		style = "filled" ;
+
+		node [ color="white", shape="box" ] ;
+
+		"inter, day" ;
+		"inter, night" ;
+		"summer, day" ;
+		"summer, night" ;
+		"winter, day" ;
+		"winter, night" ;
+	}
+
+	subgraph energy_carriers {
+		node [
+		  color     = "lightsteelblue",
+		  fontcolor = "black",
+		  shape     = "circle"
+		] ;
+
+		"HCO"   [ href="../commodities/rc_HCO_1990.svg" ] ;
+		"ethos" [ href="../commodities/rc_ethos_1990.svg" ] ;
+	}
+
+	subgraph inputs {
+		edge [ color="firebrick" ] ;
+
+		"ethos" -> "inter, day"    [ label="1.81" ] ;
+		"ethos" -> "inter, night"  [ label="0.90" ] ;
+		"ethos" -> "summer, day"   [ label="1.81" ] ;
+		"ethos" -> "summer, night" [ label="0.90" ] ;
+		"ethos" -> "winter, day"   [ label="6.19" ] ;
+		"ethos" -> "winter, night" [ label="3.09" ] ;
+	}
+
+	subgraph outputs {
+		edge [ color="forestgreen" ] ;
+
+		"inter, day"    -> "HCO" [ label="1.81" ] ;
+		"inter, night"  -> "HCO" [ label="0.90" ] ;
+		"summer, day"   -> "HCO" [ label="1.81" ] ;
+		"summer, night" -> "HCO" [ label="0.90" ] ;
+		"winter, day"   -> "HCO" [ label="6.19" ] ;
+		"winter, night" -> "HCO" [ label="3.09" ] ;
+	}
+}
