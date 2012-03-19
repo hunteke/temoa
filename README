@@ -1,0 +1,5 @@
+This is an old, only partially useful branch of TEMOA.  Specifically, it was
+based on the assumption that the basic unit of measurement of the energysystem
+was the flow between two processes.  The major drawback to this is that it
+precludes the representation of more than one flow between two processes,
+which though most common, is not true of all real-world processes.
