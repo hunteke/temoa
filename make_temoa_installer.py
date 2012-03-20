@@ -180,10 +180,9 @@ The system path has additional elements:
 
 To propogate this change, please logoff and then back on.  (Alternatively, you
 may restart your computer as well.)
-
 '\''.format( elements='\\n '.join(el_to_add) )
 
-msg += 'Press enter to close this Window.'
+msg += '\\n\\nPress enter to close this Window.'
 raw_input( msg )
 '''.format(
   glpk_dll_type = glpk_dll_type,
