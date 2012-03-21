@@ -1,1 +1,7 @@
 XBitHack Full
+RemoveHandler py
+<FilesMatch "\.(?i:py)$">
+	ForceType text/x-python
+	Header set Content-Disposition attachment
+</FilesMatch>
+
