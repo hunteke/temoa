@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+	<title>Mac OS X Installation Instructions | The TEMOA Project</title>
+
+	<link rel='canonical' href='http://www.temoaproject.org/download/mac/' />
+
+<!--#include virtual="/includes/head.html" -->
+</head>
+<body>
+<div id='wrapper'>
+	<div id='header' class='clear'>
+<!--#include virtual="/includes/title.html" -->
+		<div id='nav'>
+			<ul>
+				<li><a href='/' title='Home'>Home</a></li>
+				<li><a href='/about/' title='About'>About</a></li>
+				<li><a href='/people/' title='People'>People</a></li>
+				<li><a href='/publications/' title='Publications'>Publications</a></li>
+				<li><a href='/contact/' title='Contact'>Contact</a></li>
+				<li class='current_page_item'><a href='/download/' title='Main Download Page'>Download</a></li>
+			</ul>
+		</div><!--end nav-->
+	</div><!--end header-->
+
+	<div id='content' class='pad'>
+		<h1 class='pagetitle'>Installing Temoa on Mac OS X</h1>
+		<div class='entry page clear'>
+			<p>The Mac OS X platform is currently not as well supported as we might like.  Specifically, we do not have a Mac computer with which to test.  There is also no precompiled baseline solver (e.g. GLPK) for easy installation.  Thus, we currently do not have an install script to automate the process.</p>
+			<p>There are a couple of options available to Mac OS X users wishing to model with Temoa:</p>
+			<ul style='padding-left: 1em;'>
+				<li>Install Linux inside of a <a href='https://www.virtualbox.org/' title='A way to run another operating system on top of your host Mac OS X.'>VirtualBox</a>.  Then, you can follow the Linux based instructions for installation.</li>
+				<li>Install Python and SetupTools independently, then use easy_install to install Coopr (<code>easy_install&nbsp;-U&nbsp;coopr</code>).  Finally, compile and install <a href='http://www.gnu.org/software/glpk/'>GLPK</a> (or your solver of choice).</li>
+			</ul>
+
+			<p>To test your efforts, you might try <a href='/download/#testing-installation'>running a simple model</a>.</p>
+		</div><!--end entry-->
+	</div><!--end content-->
+
+	<div id='sidebar'>
+		<ul class='thin-sidebar spad'>
+<!--#include virtual='/includes/sidebar.html' -->
+<!--#include virtual='/includes/download_related.html' -->
+		</ul>
+	</div><!--end sidebar-->
+
+<!--#include virtual="/includes/footer.html" -->
+</div><!--end wrapper-->
+</body></html>

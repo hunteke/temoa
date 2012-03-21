@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+	<title>Mac OS X Installation Instructions | The TEMOA Project</title>
+
+	<link rel='canonical' href='http://www.temoaproject.org/download/mac/' />
+
+<!--#include virtual="/includes/head.html" -->
+</head>
+<body>
+<div id='wrapper'>
+	<div id='header' class='clear'>
+<!--#include virtual="/includes/title.html" -->
+		<div id='nav'>
+			<ul>
+				<li><a href='/' title='Home'>Home</a></li>
+				<li><a href='/about/' title='About'>About</a></li>
+				<li><a href='/people/' title='People'>People</a></li>
+				<li><a href='/publications/' title='Publications'>Publications</a></li>
+				<li><a href='/contact/' title='Contact'>Contact</a></li>
+				<li class='current_page_item'><a href='/download/' title='Main Download Page'>Download</a></li>
+			</ul>
+		</div><!--end nav-->
+	</div><!--end header-->
+
+	<div id='content' class='pad'>
+		<h1 class='pagetitle'>Installing Temoa on Linux</h1>
+		<div class='entry page clear'>
+			<p>The number if Nix distributions is fairly large, so we present here only two distribution specific instructions.  The gist is:</p>
+			<ul style='padding-left: 2em;'>
+				<li>Ensure you are running Python v2.7 or at least have Python v2.7 on the path.</li>
+				<li>Ensure you have Python SetupTools installed.</li>
+				<li>Use SetupTools to install Coopr.</li>
+				<li>Install the GLPK solver.</li>
+				<li>Download and use the <a href='/download/temoa.py' title='The Temoa Energy-Economy Optimization model.'>Temoa EEO model</a>.</li>
+			</ul>
+			<h2>Instructions for Debian/Ubuntu</h2>
+			<ol>
+				<li>Open the your Ubuntu Software Center, and search for <code>Python2.7</code>.  Make sure it is installed.</li>
+				<li>Install the package <code>python-setuptools</code>.</li>
+				<li>Install the package <code>glpk</code>.</li>
+				<li>From a command line, execute <code>sudo easy_install-2.7 -U coopr</code>.</li>
+			</ol>
+			<p>Once the last completes, you may execute the <a href='/download/temoa.py' title='The Temoa Energy-Economy Optimization model.'>Temoa EEO model</a> as <a href='/download/#testing-installation'>exemplified</a> on the main download page.</p>
+			<h2>Instructions for Fedora</h2>
+			<p>Open a terminal, and type (or copy/paste) this series of commands:
+			<ol>
+				<li><code>sudo yum install python2.7 python-setuptools glpk</code></li>
+				<li><code>sudo easy_install-2.7 -U coopr</code></li>
+			</ol>
+			<p>Similar to the Debian-based instructions, assuming all goes well, you may test your setup with the <a href='/download/temoa.py' title='The Temoa Energy-Economy Optimization model.'>Temoa EEO model</a> as <a href='/download/#testing-installation'>indicated</a> on the main download page.</p>
+		</div><!--end entry-->
+	</div><!--end content-->
+
+	<div id='sidebar'>
+		<ul class='thin-sidebar spad'>
+<!--#include virtual='/includes/sidebar.html' -->
+<!--#include virtual='/includes/download_related.html' -->
+		</ul>
+	</div><!--end sidebar-->
+
+<!--#include virtual="/includes/footer.html" -->
+</div><!--end wrapper-->
+</body></html>
