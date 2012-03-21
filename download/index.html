@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xml:lang='en' xmlns='http://www.w3.org/1999/xhtml'>
 <head>
-	<title>Download | The TEMOA Project</title>
+	<title>Download | The Temoa Project</title>
 
 	<link rel='canonical' href='http://www.temoaproject.org/download/' />
 
@@ -26,7 +26,7 @@
 	<div id='content' class='pad'>
 		<h1 class='pagetitle'>Download</h1>
 		<div class='entry page clear'>
-			<p>The abstract formulation of the TEMOA energy system model is written with <a href='https://software.sandia.gov/trac/coopr/wiki/Pyomo'>Pyomo</a>, which is in turn written in <a href='http://www.python.org/'>Python</a>.  Consequently, <strong>TEMOA will run on Linux, Mac, Windows, or any operating system that Pyomo supports.</strong></p>
+			<p>The abstract formulation of the Temoa energy system model is written with <a href='https://software.sandia.gov/trac/coopr/wiki/Pyomo'>Pyomo</a>, which is in turn written in <a href='http://www.python.org/'>Python</a>.  Consequently, <strong>Temoa will run on Linux, Mac, Windows, or any operating system that Pyomo supports.</strong></p>
 
 			<p>If you already have Python, Coopr, and a solver, you can just download the <a href='/download/temoa.py' title='The Temoa Energy-Economy Optimization model.'>Temoa EEO model</a>.  If these are not already in place, then the installation is currently in two parts:</p>
 			<ol>
@@ -39,28 +39,29 @@
 
 			<p>The rest of this page covers the following topics:</p>
 			<ul style='padding-left: 3em;'>
-				<li><a href='#software-components'>TEMOA Software Components</a></li>
+				<li><a href='#software-components'>Temoa Software Components</a></li>
 				<li><a href='#testing-installation'>Testing the Installation</a></li>
 				<li><a href='#code-checkout'>Development Version</a></li>
 			</ul>
 
-			<h2 id='software-components'>TEMOA Software Components</h2>
-			<p>To run TEMOA, you will need:</p>
+			<h2 id='software-components'>Temoa Software Components</h2>
+			<p>To run Temoa, you will need:</p>
 			<ul>
-				<li><strong><a title='The Python scripting language homepage' href='http://www.python.org/'>Python</a></strong> &ndash; a very robust open source scripting language that has become a staple of the scientific community.  At this time (Dec 2011), TEMOA requires Python v2.7.  You may (not) have success with an earlier version.  Unless you run Windows, it is likely already installed on your computer.</li>
-				<li><strong><a title='COmmon Optimization Python Repository' href='https://software.sandia.gov/trac/coopr/'>COOPR</a></strong> &ndash; TEMOA employs <span class='underline'>CO</span>mmon <span class='underline'>O</span>ptimization <span class='underline'>P</span>ython <span class='underline'>R</span>epository (Coopr), a set of open source optimization libraries developed by Sandia National Laboratory.  TEMOA makes use of two key components within Coopr: (1) <span class='underline'>P</span>ython <span class='underline'>O</span>ptimization <span class='underline'>M</span>odeling <span class='underline'>O</span>bjects (Pyomo), an application programming interface (API) that emulates an algebraic modeling language similar to GAMS or AMPL and (2) <span class='underline'>P</span>ython-based <span class='underline'>S</span>tochastic <span class='underline'>P</span>rogramming (PySP), which partially automates the process of stochastic problem formulation.  Coopr is open source, and can be freely downloaded from Sandia.</li>
-				<li><strong>Solver</strong> &ndash; Pyomo is a description language for optimization models, but must be linked to a search algorithm (i.e., solver) to find an optimal solution.  The TEMOA energy system is (currently) a linear formulation, and therefore requires a solver that works on linear programming problems.  If you are using a university machine, both <a href='http://www-01.ibm.com/software/integration/optimization/cplex-optimizer/'>CPLEX</a> and <a href='http://www.gurobi.com/'>Gurobi</a> can be used for free.  In addition, GLPK is freely available to all interested parties.  As <a title='Gnu Linear Programming Kit' href='http://www.gnu.org/software/glpk/'>GLPK</a> is free, it offers the lowest barrier to entry among the available solvers and consequently is what we explain how to install here.  However, be warned that it is a great deal less efficient (slower) than CPlex, Gurobi, and other commercial linear solvers.</li>
-				<li><strong>TEMOA model</strong> &ndash; we are in early development stages of the project, but we have a <a href='/download/temoa.py' title='TEMOA Energy System Model (Prototype)'>working prototype.</a>  Note that all of our code is registered under the GNU Public License, and is therefore publicly available to all interested parties.  (Interested developers: look to the section &ldquo;Development Version&rdquo; in this page for the repository checkout command and URL.)</li>
+				<li><strong><a title='The Python scripting language homepage' href='http://www.python.org/'>Python</a></strong> &ndash; a very robust open source scripting language that has become a staple of the scientific community.  At this time (Dec 2011), Temoa requires Python v2.7.  You may (not) have success with an earlier version.  Unless you run Windows, it is likely already installed on your computer.</li>
+				<li><strong><a title='COmmon Optimization Python Repository' href='https://software.sandia.gov/trac/coopr/'>COOPR</a></strong> &ndash; Temoa employs <span class='underline'>CO</span>mmon <span class='underline'>O</span>ptimization <span class='underline'>P</span>ython <span class='underline'>R</span>epository (Coopr), a set of open source optimization libraries developed by Sandia National Laboratory.  Temoa makes use of two key components within Coopr: (1) <span class='underline'>P</span>ython <span class='underline'>O</span>ptimization <span class='underline'>M</span>odeling <span class='underline'>O</span>bjects (Pyomo), an application programming interface (API) that emulates an algebraic modeling language similar to GAMS or AMPL and (2) <span class='underline'>P</span>ython-based <span class='underline'>S</span>tochastic <span class='underline'>P</span>rogramming (PySP), which partially automates the process of stochastic problem formulation.  Coopr is open source, and can be freely downloaded from Sandia.</li>
+				<li><strong>Solver</strong> &ndash; Pyomo is a description language for optimization models, but must be linked to a search algorithm (i.e., solver) to find an optimal solution.  The Temoa energy system is (currently) a linear formulation, and therefore requires a solver that works on linear programming problems.  If you are using a university machine, both <a href='http://www-01.ibm.com/software/integration/optimization/cplex-optimizer/'>CPLEX</a> and <a href='http://www.gurobi.com/'>Gurobi</a> can be used for free.  In addition, GLPK is freely available to all interested parties.  As <a title='Gnu Linear Programming Kit' href='http://www.gnu.org/software/glpk/'>GLPK</a> is free, it offers the lowest barrier to entry among the available solvers and consequently is what we explain how to install here.  However, be warned that it is a great deal less efficient (slower) than CPlex, Gurobi, and other commercial linear solvers.</li>
+				<li><strong>Temoa model</strong> &ndash; we are in early development stages of the project, but we have a <a href='/download/temoa.py' title='Temoa Energy System Model (Prototype)'>working prototype.</a>  Note that all of our code is registered under the GNU Public License, and is therefore publicly available to all interested parties.  (Interested developers: look to the section &ldquo;Development Version&rdquo; in this page for the repository checkout command and URL.)</li>
 			</ul>
 			<p>In general, once you&rsquo;ve downloaded and installed all of the above, working with the model is currently a command line venture.  The command to run it is (Unix/Mac) <code>$ coopr_python temoa.py</code> or (Windows) <code>\> python temoa.py</code></p>
 
-			<p class='note'>Note that you do not need the install script to actually run TEMOA; it is just a convenience script to aid installing the below software.  <a href='/download/temoa.py'>The TEMOA model is a single file Python script</a>.</p>
+			<p class='note'>Note that you do not need the install script to actually run Temoa; it is just a convenience script to aid installing the below software.  <a href='/download/temoa.py'>The Temoa model is a single file Python script</a>.</p>
 
 			<h2 id='testing-installation'>Testing the Installation</h2>
-			<p>TEMOA has only a single file, <code>temoa.py</code>, so once the above 3 prerequisite components are installed, you're done.  Testing your setup is as simple as running one of the <a href='/download/example_data_sets.zip' title='TEMOA supplied data files'>TEMOA example data sets</a>.  Open a new terminal, and navigate to where you placed <code>temoa.py</code>:</p>
+			<p>Temoa has only a single file, <code>temoa.py</code>, so once the above 3 prerequisite components are installed, you're done.  Testing your setup is as simple as running one of the <a href='/download/example_data_sets.zip' title='Temoa supplied data files'>example data sets</a>.  Open a new terminal, and navigate to where you placed <code>temoa.py</code>:</p>
 			<pre style='line-height: 2.3ex; font-size: 1.2em; font-weight: bold;'>$ <span style='color: #04f;'>cd temoa/</span>
 
-   # just see what options the TEMOA command line provides
+   # just see what options the Temoa command line provides
+   # Windows users: &gt; <span style='color: #04f;'>python  temoa.py  -h</span>
 $ <span style='color: #04f;'>coopr_python  temoa.py  -h</span>
 usage: temoa.py [-h] [--graph_format GRAPH_FORMAT] [--show_capacity]
                 [--graph_type GRAPH_TYPE] [--use_splines]
@@ -87,16 +88,18 @@ optional arguments:
                         or curved. [Default: use straight lines, not splines]
 
 
-   # run TEMOA with the supplied Utopia data set and save results to a file:
+   # run Temoa with the supplied Utopia data set and save results to a file:
+   # Windows users: &gt; <span style='color: #04f;'>python  temoa.py  utopia.dat  &gt;  utopia.results</span>
 $ <span style='color: #04f;'>coopr_python  temoa.py  utopia.dat  &gt;  utopia.results</span>
 [    0.08] Reading data files.
-[    0.96] Creating TEMOA model instance.
+[    0.96] Creating Temoa model instance.
 [    1.65] Solving.
 [    1.77] Formatting results.
 
   # inspect the results:
+  # Windows users: &gt; <span style='color: #04f;'>notepad  utopia.results</span>
 $ <span style='color: #04f;'>head  utopia.results</span>
-Model name: TEMOA Entire Energy System Economic Optimization Model
+Model name: Temoa Entire Energy System Economic Optimization Model
 Objective function value (TotalCost): 35657.0718528
 Non-zero variable values:
      0.578040628071     V_Activity(1990,inter,day,E01,1960)
@@ -109,7 +112,7 @@ Non-zero variable values:
 </pre>
 
 			<h2 id='code-checkout'>Development Version</h2>
-			<p>While we make available snapshots of the TEMOA code base that we believe to be stable and correct, you are also welcome to check out the bleeding edge as we develop.  To do so, make sure that you have Subversion installed, and then check out our repository with a command like one of these:</p>
+			<p>While we make available snapshots of the Temoa code base that we believe to be stable and correct, you are also welcome to check out the bleeding edge as we develop.  To do so, make sure that you have Subversion installed, and then check out our repository with a command like one of these:</p>
 			<pre style='line-height: 2.3ex; font-size: 1.2em; font-weight: bold;'>   # just what we've deemed stable
 $ <span style='color: #04f;'>svn  co  http://svn.temoaproject.org/temoa/trunk  temoa_trunk</span>
 
