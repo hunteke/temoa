@@ -1,0 +1,6 @@
+User-Agent: *
+# This decision is open for debate, but basically, as of right now, the hits on
+# /websvn/ from crawlers dwarfs everything else.  The better solution would be
+# to figure out how to put these hits in another file, rather than to have
+# websvn not be indexed.
+Disallow: /websvn/
