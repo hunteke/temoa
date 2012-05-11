@@ -196,6 +196,13 @@ param  Demand  :=        # TABLE DM_DEM
 	;
 
 
+param TechOutputSplit :=
+# input carrier   # tech_all    # output carrier     # fractional output
+ OIL               SRE           DSL                  0.7
+ OIL               SRE           GSL                  0.3
+	;
+
+
 param  MinCapacity  :=   # roughly NRAT_RTY2
 # period     # tech  # value
  1990         E31     0.13
