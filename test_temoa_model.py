@@ -1,4 +1,4 @@
-#!/usr/bin/env lpython
+#!/usr/bin/env coopr_python
 
 import argparse
 from pformat_results import pformat_results
@@ -14,7 +14,7 @@ SE = stderr.write
 SO = stdout.write
 basename = argv[0]
 
-opt = SolverFactory('glpk_experimental')  # created once, for aggregation
+opt = SolverFactory('glpk')  # created once, for aggregation
 opt.keepFiles = False
 
 ###############################################################################
@@ -26,8 +26,8 @@ This script is a test suite for the TEMOA model implementation.  It looks like
 you're attempting to run this through Pyomo.  Please instead use Coopr's Python
 to invoke this script:
 
-$ lpython %(base)s
-$ lpython %(base)s  individual_test.dat
+$ coopr_python %(base)s
+$ coopr_python %(base)s  individual_test.dat
 """
 	SE( msg % { 'base' : basename, } )
 
