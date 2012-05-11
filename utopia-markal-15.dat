@@ -2,7 +2,7 @@ data ;
 
 
 set  time_exist    :=  1960  1970  1980 ;
-set  time_horizon  :=   2010 1990 2000   ;
+set  time_horizon  :=  2010  1990  2000 ;
 set  time_future   :=  2020 ;
 
 set  time_season  :=  inter  summer  winter ;
@@ -216,7 +216,7 @@ param  MaxCapacity  :=   # roughly NRAT_RTY2
  1990         TXD     0.6
  2000         TXD     1.76
  2010         TXD     4.76
- ;
+	;
 
 
 param  LifetimeTech  :=        # PARAMETER TCH_LIFE
@@ -377,8 +377,7 @@ param CapacityFactor :=
  E70          1990         0.8
  E70          2000         0.8
  E70          2010         0.8
-
- ;
+	;
 
 
 param  Efficiency  :=        # PARAMETER CON_INP2, DMD_EFF
