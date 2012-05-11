@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-from subprocess import call
-import sys, os
-from sys import stdin as SI, stderr as SE
-from cStringIO import StringIO
-from zlib import decompress
+import os, shutil, sys
+
 from base64 import decodestring
+from cStringIO import StringIO
+from subprocess import call
+from sys import stdin as SI, stderr as SE
+from tempfile import mkdtemp
 from zipfile import ZipFile
+from zlib import decompress
 
 if SI.isatty():
 	print """
@@ -336,26 +338,26 @@ content %= dict(
   newcap_2010TXG = results.get('V_Capacity(TXG,2010)', 0),
 )
 
-cmd = ('rm', '-rf', 'ttt')
-call( cmd )
-os.mkdir( 'ttt' )
-os.chdir( 'ttt' )
+cur_dir = os.getcwd()
+tmp_dir = mkdtemp( prefix='utopia-15.' )
+os.chdir( tmp_dir )
 
 ZipFile(ods_base).extractall()
-with open( 'content.xml', 'w' ) as f:
+with open( 'content.xml', 'wb' ) as f:
 	f.write( content )
-with open( 'styles.xml', 'w' ) as f:
+with open( 'styles.xml', 'wb' ) as f:
 	f.write( styles )
-with open( 'settings.xml', 'w' ) as f:
+with open( 'settings.xml', 'wb' ) as f:
 	f.write( settings )
 
-with ZipFile('../utopia.ods', 'w') as f:
+with ZipFile( os.path.join(cur_dir, 'utopia-15.ods'), 'w') as f:
 	for root, dirs, files in os.walk('.'):
 		for name in files:
 			f.write( os.path.join(root, name) )
 
-os.chdir( '..' )
-print "Successfully wrote 'utopia.ods'"
+os.chdir( cur_dir )
+shutil.rmtree( tmp_dir )
+print "Successfully wrote 'utopia-15.ods'"
 
 # import IPython
 # IPython.embed()
