@@ -492,7 +492,7 @@ param  ExistingCapacity  :=        # TABLE TCH_RES
 
 param  CostInvest  :=  # TABLE TCH_INVCOS
 # tech     # vintage      # value
- E01        1990           1400
+ E01        1990           2000
  E01        2000           1300
  E01        2010           1200
 
