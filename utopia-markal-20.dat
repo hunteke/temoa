@@ -2,7 +2,7 @@ data ;
 
 
 set  time_exist    :=  1960  1970  1980 ;
-set  time_horizon  :=   2010 1990 2000   ;
+set  time_horizon  :=  2010  1990  2000 ;
 set  time_future   :=  2020 ;
 
 set  time_season  :=  inter  summer  winter ;
@@ -196,6 +196,13 @@ param  Demand  :=        # TABLE DM_DEM
 	;
 
 
+param TechOutputSplit :=
+# input carrier   # tech_all    # output carrier     # fractional output
+ OIL               SRE           DSL                  0.7
+ OIL               SRE           GSL                  0.3
+	;
+
+
 param  MinCapacity  :=   # roughly NRAT_RTY2
 # period     # tech  # value
  1990         E31     0.13
@@ -213,10 +220,10 @@ param  MaxCapacity  :=   # roughly NRAT_RTY2
 
  1990         RHE     0
 
- 1990         TXD     0.6
- 2000         TXD     1.76
- 2010         TXD     4.76
- ;
+ 1990         TXD     1.18
+ 2000         TXD     3.26
+ 2010         TXD     8.65
+	;
 
 
 param  LifetimeTech  :=        # PARAMETER TCH_LIFE
@@ -270,19 +277,19 @@ param  LifetimeTech  :=        # PARAMETER TCH_LIFE
 
  TXD                 1970         30        # for existing cap.
  TXD                 1980         30        # for existing cap.
- TXD                 1990         15
- TXD                 2000         15
- TXD                 2010         15
+ TXD                 1990         20
+ TXD                 2000         20
+ TXD                 2010         20
 
- TXE                 1990         15
- TXE                 2000         15
- TXE                 2010         15
+ TXE                 1990         20
+ TXE                 2000         20
+ TXE                 2010         20
 
  TXG                 1970         30        # for existing cap.
  TXG                 1980         30        # for existing cap.
- TXG                 1990         15
- TXG                 2000         15
- TXG                 2010         15
+ TXG                 1990         20
+ TXG                 2000         20
+ TXG                 2010         20
 
  # added because /every/ process in TEMOA is a technology
  IMPDSL1      1990     1000
@@ -335,17 +342,17 @@ param  LifetimeLoan  :=
  SRE                   2000         50
  SRE                   2010         50
 
- TXD                   1990         15
- TXD                   2000         15
- TXD                   2010         15
+ TXD                   1990         20
+ TXD                   2000         20
+ TXD                   2010         20
 
- TXE                   1990         15
- TXE                   2000         15
- TXE                   2010         15
+ TXE                   1990         20
+ TXE                   2000         20
+ TXE                   2010         20
 
- TXG                   1990         15
- TXG                   2000         15
- TXG                   2010         15
+ TXG                   1990         20
+ TXG                   2000         20
+ TXG                   2010         20
 	;
 
 param CapacityFactor :=
@@ -377,8 +384,7 @@ param CapacityFactor :=
  E70          1990         0.8
  E70          2000         0.8
  E70          2010         0.8
-
- ;
+	;
 
 
 param  Efficiency  :=        # PARAMETER CON_INP2, DMD_EFF
@@ -493,7 +499,7 @@ param  ExistingCapacity  :=        # TABLE TCH_RES
 
 param  CostInvest  :=  # TABLE TCH_INVCOS
 # tech     # vintage      # value
- E01        1990           1400
+ E01        1990           2000
  E01        2000           1300
  E01        2010           1200
 
