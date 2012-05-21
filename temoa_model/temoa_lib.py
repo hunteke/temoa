@@ -478,7 +478,22 @@ def ActivityVariableIndices ( M ):
 
 	return activity_indices
 
+
+def CapacityByOutputVariableIndices ( M ):
+	indices = set(
+	  (t, v, o)
+
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  for v in ProcessVintages( p, t )
+	  for o in ProcessOutputs( p, t, v )
+	)
+
+	return indices
+
+
 ### Reporting variables
+
 
 def ActivityByPeriodTechAndVintageVarIndices ( M ):
 	return g_activeActivityIndices
@@ -648,8 +663,25 @@ def EnergyConsumptionByPeriodTechAndVintageVariableIndices ( M ):
 ##############################################################################
 # Constraints
 
+
+def CapacityByOutputConstraintIndices ( M ):
+	indices = set(
+	  (p, s, d, t, v, o)
+
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  for v in ProcessVintages( p, t )
+	  for o in ProcessOutputs( p, t, v )
+	  for s in M.time_season
+	  for d in M.time_of_day
+	)
+
+	return indices
+
+
 def DemandConstraintIndices ( M ):
 	return set( M.Demand.keys() )
+
 
 def DemandActivityConstraintIndices ( M ):
 	indices = set()
@@ -708,10 +740,11 @@ def BaseloadDiurnalConstraintIndices ( M ):
 
 def MARKAL_SegFrac_Electric_Indices ( M ):
 	indices = set(
-	  (l_per, l_season, l_tod, l_tech, l_vin)
+	  (l_per, l_season, l_tod, l_tech, l_vin, l_out)
 
 	  for l_per, l_tech, l_vin in g_activeActivityIndices
 	  if l_tech in M.tech_electric    # This is major difference from Temoa
+	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)

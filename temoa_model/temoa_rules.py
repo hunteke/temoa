@@ -396,33 +396,33 @@ def CapacityFractionalLifetimeConstraint_rule (
 	return expr
 
 
-def CapacityConstraint_rule (
-  M, A_period, A_season, A_time_of_day, A_tech, A_vintage
-):
-	"""\
-V_Capacity is a derived variable; this constraint sets V_Capacity to at least
-be able to handle the activity in any optimization time slice.  In effect, this
-sets V_Capacity[p,t,v] to the max of the activity for similar indices:
-max(Activity[p,*,*t,v])
-
-(for each period, season, time_of_day, tech, vintage)
-V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
-	"""
-	l_vintage_activity = (
-	  M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
+def CapacityByOutputConstraint_rule (
+  M, A_per, A_season, A_tod, A_tech, A_vintage, A_output ):
+	l_activity = sum(
+	  M.V_FlowOut[A_per, A_season, A_tod, l_inp, A_tech, A_vintage, A_output]
+	  for l_inp in ProcessInputs( A_per, A_tech, A_vintage )
 	)
 
-	cindex = (A_tech, A_vintage)   # "capacity" index
-	l_capacity = (
-	    M.V_Capacity[ cindex ]
-	  * M.CapacityFactor[ cindex ]
-	  * M.SegFrac[A_season, A_time_of_day]
+	l_min_cap = (
+	    M.V_CapacityByOutput[A_tech, A_vintage, A_output]
+	  * M.CapacityFactor[A_tech, A_vintage]
+	  * M.SegFrac[A_season, A_tod]
 	  * M.CapacityToActivity[ A_tech ]
 	)
 
-	expr = ( l_vintage_activity <= l_capacity )
+	expr = ( l_min_cap >= l_activity )
 	return expr
-MARKAL_SegFrac_Electric_CapacityConstraint_rule = CapacityConstraint_rule
+
+
+def CapacityConstraint_rule ( M, t, v ):
+	l_cap = sum(
+	  M.V_CapacityByOutput[t, v, o]
+
+	  for T, V, o in M.V_CapacityByOutput.keys()
+	  if T == t and V == v
+	)
+
+	return l_cap == M.V_Capacity[t, v]
 
 
 def MARKAL_No_SegFrac_CapacityConstraint_rule (
@@ -435,9 +435,6 @@ V_Capacity is a derived variable; this constraint sets V_Capacity to at least be
 V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 	"""
 	pindex = (A_period, A_tech, A_vintage)   # "process" index
-
-	if A_tech in ('E01', 'E21', 'E31', 'E51', 'E70'):
-		return Constraint.Skip
 
 	l_vintage_activity = sum(
 	  M.V_Activity[A_period, s, d, A_tech, A_vintage]

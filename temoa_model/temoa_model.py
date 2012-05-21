@@ -176,6 +176,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.ActivityByPeriodTechAndVintageVarIndices = Set(
 	  dimen=3, rule=ActivityByPeriodTechAndVintageVarIndices )
 
+	M.CapacityByOutputVarIndices = Set( dimen=3, rule=CapacityByOutputVariableIndices )
 	M.CapacityVarIndices = Set( dimen=2, rule=CapacityVariableIndices )
 	M.CapacityAvailableVarIndices = Set(
 	  dimen=2, rule=CapacityAvailableVariableIndices )
@@ -184,6 +185,8 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.BaseloadDiurnalConstraintIndices = Set(
 	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
+	M.CapacityByOutputConstraintIndices = Set(
+	  dimen=6, rule=CapacityByOutputConstraintIndices )
 	M.CapacityFractionalLifetimeConstraintIndices = Set(
 	  dimen=4, rule=CapacityFractionalLifetimeConstraintIndices )
 	M.CapacityLifetimeConstraintIndices = Set(
@@ -214,7 +217,9 @@ CapacityFactor(tech_all, vintage_all)
 
 	#   Derived decision variables
 	M.V_Activity = Var( M.ActivityVarIndices, domain=NonNegativeReals )
-	M.V_Capacity = Var( M.CapacityVarIndices, domain=NonNegativeReals )
+
+	M.V_CapacityByOutput = Var( M.CapacityByOutputVarIndices, domain=NonNegativeReals )
+	M.V_Capacity         = Var( M.CapacityVarIndices,         domain=NonNegativeReals )
 
 	M.V_ActivityByPeriodTechAndVintage = Var(
 	  M.ActivityByPeriodTechAndVintageVarIndices,
@@ -240,18 +245,22 @@ CapacityFactor(tech_all, vintage_all)
 	M.ActivityConstraint = Constraint( M.ActivityVarIndices, rule=ActivityConstraint_rule )
 	M.ActivityByPeriodTechAndVintageConstraint = Constraint( M.ActivityByPeriodTechAndVintageVarIndices, rule=ActivityByPeriodTechAndVintageConstraint_rule )
 
-	# What we name here "MARKAL_SegFrac_Electric ..." is the same as Temoa's
-	# Capacity constraint.  However, where Temoa's applies to all processes,
-	# MARKAL only applies it to the Electric sector.  Thus, for this calibration
-	# exercise, we have update the indices over which these MARKAL_ constraints
-	# are called.
-	M.MARKAL_SegFrac_Electric_indices = Set(
-	  dimen=5, rule=MARKAL_SegFrac_Electric_Indices )
-	M.MARKAL_SegFrac_Electric_CapacityConstraint = Constraint(
-	  M.MARKAL_SegFrac_Electric_indices, rule=CapacityConstraint_rule )
+	# M.CapacityByOutputConstraint = Constraint( M.CapacityByOutputConstraintIndices, rule=CapacityByOutputConstraint_rule )
+	M.CapacityConstraint = Constraint( M.CapacityVarIndices, rule=CapacityConstraint_rule )
 
-	M.MARKAL_No_SegFrac_Indices = Set(
-	  dimen=3, rule=MARKAL_No_SegFrac_Indices )
+	# What we name here "MARKAL_SegFrac_Electric ..." is the same as Temoa's
+	# CapacityByOutput constraint (evidenced by the rule=).  However, where
+	# Temoa's applies to all processes, MARKAL only applies it to the Electric
+	# sector.  Thus, for this calibration exercise, we have updated the indices
+	# over which these MARKAL_ constraints are called.  For specifics, check
+	# temoa_lib.py and search for MARKAL.
+
+	M.MARKAL_SegFrac_Electric_indices = Set(
+	  dimen=6, rule=MARKAL_SegFrac_Electric_Indices )
+	M.MARKAL_SegFrac_Electric_CapacityConstraint = Constraint(
+	  M.MARKAL_SegFrac_Electric_indices, rule=CapacityByOutputConstraint_rule )
+
+	M.MARKAL_No_SegFrac_Indices = Set( dimen=3, rule=MARKAL_No_SegFrac_Indices )
 	M.MARKAL_No_SegFrac_CapacityConstraint = Constraint(
 	  M.MARKAL_No_SegFrac_Indices,
 	  rule=MARKAL_No_SegFrac_CapacityConstraint_rule )
