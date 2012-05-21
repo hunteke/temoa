@@ -46,9 +46,8 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 	  for l_per, l_tech, l_vin in M.CostFixed.keys()
 	  if (l_per, l_tech, l_vin) not in l_tech_period_fraction_indices
 	) + sum(
-	    M.V_CapacityInvest[l_tech, l_vin]
-	  * M.CostInvest[l_tech, l_vin].value
-	  * M.LoanAnnualize[l_tech, l_vin].value
+	    M.V_CapacityFixed[l_tech, l_vin]
+	  * M.CostFixed[l_per, l_tech, l_vin].value
 	  * sum(
 	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
 	      for y in range( 0, M.PeriodLength[ l_per ] * M.TechLifeFrac[l_per, l_tech, l_vin])
@@ -56,7 +55,7 @@ This function is currently a simple summation of all items in V_FlowOut multipli
 
 	  for l_per, l_tech, l_vin in l_tech_period_fraction_indices
 	  if (l_per, l_tech, l_vin) in M.CostFixed.keys()
-	  )
+	)
 
 	l_marg_costs = sum(
 	    M.V_ActivityByPeriodTechAndVintage[l_per, l_tech, l_vin]
