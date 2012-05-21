@@ -235,6 +235,7 @@ def InitializeProcessParameters ( M ):
 
 	l_first_period = min( M.time_horizon )
 	l_exist_indices = M.ExistingCapacity.keys()
+	l_used_techs = set()
 
 	for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys():
 		l_process = (l_tech, l_vin)
@@ -269,6 +270,8 @@ def InitializeProcessParameters ( M ):
 			SE.write( msg % str(eindex) )
 			continue
 
+		l_used_techs.add( l_tech )
+
 		for l_per in M.time_optimize:
 			# can't build a vintage before it's been invented
 			if l_per < l_vin: continue
@@ -292,6 +295,12 @@ def InitializeProcessParameters ( M ):
 			g_processVintages[l_per, l_tech].add( l_vin )
 			g_processInputs[ pindex ].add( l_inp )
 			g_processOutputs[pindex ].add( l_out )
+	l_unused_techs = M.tech_all - l_used_techs
+	if l_unused_techs:
+		msg = ("Notice: '{}' specified as technology, but it is not utilized in "
+		       'the Efficiency parameter.\n')
+		for i in sorted( l_unused_techs ):
+			SE.write( msg.format( i ))
 
 	g_activeFlowIndices = set(
 	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
@@ -338,6 +347,16 @@ def InitializeProcessParameters ( M ):
 
 ##############################################################################
 # Parameters
+
+def CapacityFactorIndices ( M ):
+	indices = set(
+	  (l_tech, l_vin)
+
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	)
+
+	return indices
+
 
 def CostFixedIndices ( M ):
 	return g_activeActivityIndices
@@ -1033,7 +1052,7 @@ def parse_args ( ):
 	parser.add_argument('dot_dat',
 	  type=str,
 	  nargs='+',
-	  help='AMPL-format data file(s) with which to create a model instance. '  \
+	  help='AMPL-format data file(s) with which to create a model instance. '
 	       'e.g. "data.dat"'
 	)
 
@@ -1047,22 +1066,22 @@ def parse_args ( ):
 	  default=None)
 
 	parser.add_argument('--show_capacity',
-	  help='Choose whether or not the capacity shows up in the subgraphs.  '   \
+	  help='Choose whether or not the capacity shows up in the subgraphs.  '
 	       '[Default: not shown]',
 	  action='store_true',
 	  dest='show_capacity',
 	  default=False)
 
 	parser.add_argument( '--graph_type',
-	  help='Choose the type of subgraph depiction desired. The available '     \
-	       'options are "explicit_vintages" and "separate_vintages".  '        \
+	  help='Choose the type of subgraph depiction desired. The available '
+	       'options are "explicit_vintages" and "separate_vintages".  '
 	       '[Default: separate_vintages]',
 	  action='store',
 	  dest='graph_type',
 	  default='separate_vintages')
 
 	parser.add_argument('--use_splines',
-	  help='Choose whether the subgraph edges needs to be straight or curved.' \
+	  help='Choose whether the subgraph edges needs to be straight or curved.'
 	       '  [Default: use straight lines, not splines]',
 	  action='store_true',
 	  dest='splinevar',
@@ -1081,7 +1100,7 @@ def temoa_solve ( model ):
 	from sys import argv, version_info
 
 	if version_info < (2, 7):
-		msg = ("Temoa requires Python v2.7 or greater to run.\n\nIf you've "
+		msg = ("Temoa requires Python v2.7 to run.\n\nIf you've "
 		  "installed Coopr with Python 2.6 or less, you'll need to reinstall "
 		  'Coopr, taking care to install with a Python 2.7 (or greater) '
 		  'executable.')
@@ -1139,7 +1158,7 @@ def temoa_solve ( model ):
 		CreateModelDiagrams( instance, options )
 		SE.write( '\r[%8.2f\n' % duration() )
 
-	if not ( SO.isatty() and SE.isatty() ):
+	if not ( SO.isatty() or SE.isatty() ):
 		SO.write( "\n\nNotice: You are not receiving 'standard error' messages."
 		  "  Temoa uses the 'standard error' file to send meta information "
 		  "on the progress of the solve.  If you aren't intentionally "

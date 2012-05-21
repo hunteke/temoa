@@ -7,8 +7,14 @@ def TotalCost_rule ( M ):
 	"""\
 Objective function.
 
-This function is currently a simple summation of all items in V_FlowOut multiplied by CommunityProductionCost.  For the time being (i.e. during development), this is intended to make development and debugging simpler.
-	"""
+This implementation of the Temoa objective function sums up all the costs
+incurred in solving the system (supply energy to meet demands).
+
+Simplistically, it is C_tot = C_loans + C_fixed + C_marginal.
+
+Each part, in essence, is merely a summation of the costs incurred multiplied by
+the time-value of money to bring it back to year 0.
+"""
 	l_loan_period_fraction_indices = M.LoanLifeFrac.keys()
 	l_tech_period_fraction_indices = M.TechLifeFrac.keys()
 
@@ -322,10 +328,12 @@ is currently left as an implicit accounting exercise for the modeler.)
 	pindex = (A_period, A_tech, A_vintage)
 	aindex = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
 
-	l_activity = 0
-	for l_inp in ProcessInputs( A_period, A_tech, A_vintage ):
-		for l_out in ProcessOutputs( A_period, A_tech, A_vintage ):
-			l_activity += M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, A_tech, A_vintage, l_out]
+	l_activity = sum(
+	  M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, A_tech, A_vintage, l_out]
+
+	  for l_inp in ProcessInputs( A_period, A_tech, A_vintage )
+	  for l_out in ProcessOutputsByInput( A_period, A_tech, A_vintage, l_inp )
+	)
 
 	expr = ( M.V_Activity[ aindex ] == l_activity )
 	return expr
