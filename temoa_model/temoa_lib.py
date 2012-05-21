@@ -497,7 +497,22 @@ def ActivityVariableIndices ( M ):
 
 	return activity_indices
 
+
+def CapacityByOutputVariableIndices ( M ):
+	indices = set(
+	  (t, v, o)
+
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  for v in ProcessVintages( p, t )
+	  for o in ProcessOutputs( p, t, v )
+	)
+
+	return indices
+
+
 ### Reporting variables
+
 
 def ActivityByPeriodTechAndVintageVarIndices ( M ):
 	return g_activeActivityIndices
@@ -667,8 +682,25 @@ def EnergyConsumptionByPeriodTechAndVintageVariableIndices ( M ):
 ##############################################################################
 # Constraints
 
+
+def CapacityByOutputConstraintIndices ( M ):
+	indices = set(
+	  (p, s, d, t, v, o)
+
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  for v in ProcessVintages( p, t )
+	  for o in ProcessOutputs( p, t, v )
+	  for s in M.time_season
+	  for d in M.time_of_day
+	)
+
+	return indices
+
+
 def DemandConstraintIndices ( M ):
 	return set( M.Demand.keys() )
+
 
 def DemandActivityConstraintIndices ( M ):
 	indices = set()

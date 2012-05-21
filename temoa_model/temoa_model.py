@@ -176,6 +176,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.ActivityByPeriodTechAndVintageVarIndices = Set(
 	  dimen=3, rule=ActivityByPeriodTechAndVintageVarIndices )
 
+	M.CapacityByOutputVarIndices = Set( dimen=3, rule=CapacityByOutputVariableIndices )
 	M.CapacityVarIndices = Set( dimen=2, rule=CapacityVariableIndices )
 	M.CapacityAvailableVarIndices = Set(
 	  dimen=2, rule=CapacityAvailableVariableIndices )
@@ -184,6 +185,8 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.BaseloadDiurnalConstraintIndices = Set(
 	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
+	M.CapacityByOutputConstraintIndices = Set(
+	  dimen=6, rule=CapacityByOutputConstraintIndices )
 	M.CapacityFractionalLifetimeConstraintIndices = Set(
 	  dimen=4, rule=CapacityFractionalLifetimeConstraintIndices )
 	M.CapacityLifetimeConstraintIndices = Set(
@@ -214,7 +217,9 @@ CapacityFactor(tech_all, vintage_all)
 
 	#   Derived decision variables
 	M.V_Activity = Var( M.ActivityVarIndices, domain=NonNegativeReals )
-	M.V_Capacity = Var( M.CapacityVarIndices, domain=NonNegativeReals )
+
+	M.V_CapacityByOutput = Var( M.CapacityByOutputVarIndices, domain=NonNegativeReals )
+	M.V_Capacity         = Var( M.CapacityVarIndices,         domain=NonNegativeReals )
 
 	M.V_ActivityByPeriodTechAndVintage = Var(
 	  M.ActivityByPeriodTechAndVintageVarIndices,
@@ -240,7 +245,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.ActivityConstraint = Constraint( M.ActivityVarIndices, rule=ActivityConstraint_rule )
 	M.ActivityByPeriodTechAndVintageConstraint = Constraint( M.ActivityByPeriodTechAndVintageVarIndices, rule=ActivityByPeriodTechAndVintageConstraint_rule )
 
-	M.CapacityConstraint = Constraint( M.ActivityVarIndices, rule=CapacityConstraint_rule )
+	M.CapacityByOutputConstraint = Constraint( M.CapacityByOutputConstraintIndices, rule=CapacityByOutputConstraint_rule )
+	M.CapacityConstraint         = Constraint( M.CapacityVarIndices, rule=CapacityConstraint_rule )
 
 	M.ExistingCapacityConstraint = Constraint( M.ExistingCapacityConstraintIndices, rule=ExistingCapacityConstraint_rule )
 

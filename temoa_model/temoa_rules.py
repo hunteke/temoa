@@ -52,9 +52,8 @@ the time-value of money to bring it back to year 0.
 	  for l_per, l_tech, l_vin in M.CostFixed.keys()
 	  if (l_per, l_tech, l_vin) not in l_tech_period_fraction_indices
 	) + sum(
-	    M.V_CapacityInvest[l_tech, l_vin]
-	  * M.CostInvest[l_tech, l_vin].value
-	  * M.LoanAnnualize[l_tech, l_vin].value
+	    M.V_CapacityFixed[l_tech, l_vin]
+	  * M.CostFixed[l_per, l_tech, l_vin].value
 	  * sum(
 	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
 	      for y in range( 0, M.PeriodLength[ l_per ] * M.TechLifeFrac[l_per, l_tech, l_vin])
@@ -394,32 +393,33 @@ def CapacityFractionalLifetimeConstraint_rule (
 	return expr
 
 
-def CapacityConstraint_rule (
-  M, A_period, A_season, A_time_of_day, A_tech, A_vintage
-):
-	"""\
-V_Capacity is a derived variable; this constraint sets V_Capacity to at least
-be able to handle the activity in any optimization time slice.  In effect, this
-sets V_Capacity[p,t,v] to the max of the activity for similar indices:
-max(Activity[p,*,*t,v])
-
-(for each period, season, time_of_day, tech, vintage)
-V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
-	"""
-	l_vintage_activity = (
-	  M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
+def CapacityByOutputConstraint_rule (
+  M, A_per, A_season, A_tod, A_tech, A_vintage, A_output ):
+	l_activity = sum(
+	  M.V_FlowOut[A_per, A_season, A_tod, l_inp, A_tech, A_vintage, A_output]
+	  for l_inp in ProcessInputs( A_per, A_tech, A_vintage )
 	)
 
-	cindex = (A_tech, A_vintage)   # "capacity" index
-	l_capacity = (
-	    M.V_Capacity[ cindex ]
-	  * M.CapacityFactor[ cindex ]
-	  * M.SegFrac[A_season, A_time_of_day]
+	l_min_cap = (
+	    M.V_CapacityByOutput[A_tech, A_vintage, A_output]
+	  * M.CapacityFactor[A_tech, A_vintage]
+	  * M.SegFrac[A_season, A_tod]
 	  * M.CapacityToActivity[ A_tech ]
 	)
 
-	expr = ( l_vintage_activity <= l_capacity )
+	expr = ( l_min_cap >= l_activity )
 	return expr
+
+
+def CapacityConstraint_rule ( M, t, v ):
+	l_cap = sum(
+	  M.V_CapacityByOutput[t, v, o]
+
+	  for T, V, o in M.V_CapacityByOutput.keys()
+	  if T == t and V == v
+	)
+
+	return l_cap == M.V_Capacity[t, v]
 
 
 def CapacityInvestConstraint_rule ( M, t, v ):
