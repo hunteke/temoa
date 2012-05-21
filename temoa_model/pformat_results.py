@@ -1,3 +1,4 @@
+import re
 from sys import stderr as SE
 from cStringIO import StringIO
 
@@ -30,12 +31,13 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	Vars = soln.Variable
 	Cons = soln.Constraint
 
+	underscore = re.compile('_+')
+
 	var_info = sorted(
 	  (ii.split('(')[0],
-	   ii.replace('_,', ',')
-	     .replace(',_', ',')
-	     .replace('(_', '(')
-	     .replace('_)', ')'),
+	   ''.join((ii.split('(')[0], '(', underscore.sub(',', ii.split('(')[1] ) ))
+	     .replace('(,', '(')
+	     .replace(',)', ')'),
 	   Vars[ ii ]['Value']
 	  )
 
