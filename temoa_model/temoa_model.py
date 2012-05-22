@@ -191,9 +191,9 @@ CapacityFactor(tech_all, vintage_all)
 	M.CapacityByOutputConstraintIndices = Set(
 	  dimen=6, rule=CapacityByOutputConstraintIndices )
 	M.CapacityFractionalLifetimeConstraintIndices = Set(
-	  dimen=4, rule=CapacityFractionalLifetimeConstraintIndices )
-	M.CapacityLifetimeConstraintIndices = Set(
-	  dimen=2, rule=CapacityLifetimeConstraintIndices )
+	  dimen=6, rule=CapacityFractionalLifetimeConstraintIndices )
+#	M.CapacityLifetimeConstraintIndices = Set(
+#	  dimen=4, rule=CapacityLifetimeConstraintIndices )
 	M.CommodityBalanceConstraintIndices = Set(
 	  dimen=4, rule=CommodityBalanceConstraintIndices )
 	M.DemandConstraintIndices = Set( dimen=4, rule=DemandConstraintIndices )
@@ -258,14 +258,15 @@ CapacityFactor(tech_all, vintage_all)
 	# over which these MARKAL_ constraints are called.  For specifics, check
 	# temoa_lib.py and search for MARKAL.
 
-	M.MARKAL_SegFrac_Electric_indices = Set(
-	  dimen=6, rule=MARKAL_SegFrac_Electric_Indices )
+	M.MARKAL_SegFrac_CapacityByOutput_indices = Set(
+	  dimen=6, rule=MARKAL_SegFrac_CapacityByOutput_indices )
 	M.MARKAL_SegFrac_Electric_CapacityConstraint = Constraint(
-	  M.MARKAL_SegFrac_Electric_indices, rule=CapacityByOutputConstraint_rule )
+	  M.MARKAL_SegFrac_CapacityByOutput_indices, rule=CapacityByOutputConstraint_rule )
 
-	M.MARKAL_No_SegFrac_Indices = Set( dimen=3, rule=MARKAL_No_SegFrac_Indices )
+	M.MARKAL_No_SegFrac_CapacityByOutput_indices = Set(
+	  dimen=3, rule=MARKAL_No_SegFrac_CapacityByOutput_indices )
 	M.MARKAL_No_SegFrac_CapacityConstraint = Constraint(
-	  M.MARKAL_No_SegFrac_Indices,
+	  M.MARKAL_No_SegFrac_CapacityByOutput_indices,
 	  rule=MARKAL_No_SegFrac_CapacityConstraint_rule )
 
 	M.ExistingCapacityConstraint = Constraint( M.ExistingCapacityConstraintIndices, rule=ExistingCapacityConstraint_rule )
@@ -291,7 +292,14 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVarIndices, rule=CapacityAvailableByPeriodAndTechConstraint_rule )
 
-	M.CapacityLifetimeConstraint           = Constraint( M.CapacityLifetimeConstraintIndices, rule=CapacityLifetimeConstraint_rule )
+	M.MARKAL_SegFrac_CapacityLifetimeConstraint_indices = Set(
+	  dimen=4, rule=MARKAL_SegFrac_CapacityLifetimeConstraint_indices )
+	M.MARKAL_No_SegFrac_CapacityLifetimeConstraint_indices = Set(
+	  dimen=2, rule=MARKAL_No_SegFrac_CapacityLifetimeConstraint_indices )
+	M.MARKAL_SegFrac_CapacityLifetimeConstraint    = Constraint( M.MARKAL_SegFrac_CapacityLifetimeConstraint_indices,    rule=CapacityLifetimeConstraint_rule )
+	M.MARKAL_No_SegFrac_CapacityLifetimeConstraint = Constraint( M.MARKAL_No_SegFrac_CapacityLifetimeConstraint_indices, rule=MARKAL_No_SegFrac_CapacityLifetimeConstraint_rule )
+
+	#M.CapacityLifetimeConstraint           = Constraint( M.CapacityLifetimeConstraintIndices, rule=CapacityLifetimeConstraint_rule )
 	M.CapacityFractionalLifetimeConstraint = Constraint( M.CapacityFractionalLifetimeConstraintIndices, rule=CapacityFractionalLifetimeConstraint_rule )
 
 	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraintIndices, rule=MinCapacityConstraint_rule )

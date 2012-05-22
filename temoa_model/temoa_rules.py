@@ -339,28 +339,23 @@ is currently left as an implicit accounting exercise for the modeler.)
 	return expr
 
 
-def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
+def CapacityLifetimeConstraint_rule ( M, A_period, A_season, A_tod, A_com ):
 	demand_indices = M.Demand.keys()
 
 	if A_com in M.commodity_demand:
-		l_period_demand = sum(
-		  M.Demand[A_period, l_season, l_tod, A_com]
+		if (A_period, A_season, A_tod, A_com) not in demand_indices:
+			return Constraint.Skip
 
-		  for l_season in M.time_season
-		  for l_tod in M.time_of_day
-		  if (A_period, l_season, l_tod, A_com) in demand_indices
-		)
+		l_slice_demand = M.Demand[A_period, A_season, A_tod, A_com]
 	elif A_com in M.commodity_physical:
-		l_period_demand = sum(
-		  M.V_FlowIn[A_period, l_season, l_tod, A_com, l_tech, l_vin, l_out]
+		l_slice_demand = sum(
+		  M.V_FlowIn[A_period, A_season, A_tod, A_com, l_tech, l_vin, l_out]
 
 		  for l_tech, l_vin in ProcessesByPeriodAndInput( A_period, A_com )
 		  for l_out in ProcessOutputsByInput( A_period, l_tech, l_vin, A_com )
-		  for l_season in M.time_season
-		  for l_tod in M.time_of_day
 		)
 
-	if int is type( l_period_demand ) and l_period_demand == 0:
+	if int is type( l_slice_demand ) and l_slice_demand == 0:
 		# if there is no demand, then no need to create a constraint
 		return Constraint.Skip
 
@@ -370,33 +365,72 @@ def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
 	    M.V_Capacity[l_tech, l_vin]
 	  * M.CapacityFactor[l_tech, l_vin]
 	  * M.CapacityToActivity[l_tech]
-	  * M.PeriodLength[ A_period ]
+	  * M.SegFrac[A_season, A_tod]
 
 	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_com )
 	  if (A_period, l_tech, l_vin) not in l_frac_indices
 	)
 
-	expr = (l_non_dying_ability >= l_period_demand)
+	expr = (l_non_dying_ability >= l_slice_demand)
+	return expr
+
+
+def MARKAL_No_SegFrac_CapacityLifetimeConstraint_rule (
+  M, A_period, A_com
+):
+	demand_indices = M.Demand.keys()
+
+	if A_com in M.commodity_demand:
+		l_demand = sum(
+		  M.Demand[A_period, l_season, l_tod, A_com]
+
+		  for l_per, l_season, l_tod, l_com in M.Demand.keys()
+		  if l_per == A_period and l_com == A_com
+		)
+	elif A_com in M.commodity_physical:
+		l_demand = sum(
+		  M.V_FlowIn[A_period, l_season, l_tod, A_com, l_tech, l_vin, l_out]
+
+		  for l_tech, l_vin in ProcessesByPeriodAndInput( A_period, A_com )
+		  for l_out in ProcessOutputsByInput( A_period, l_tech, l_vin, A_com )
+		  for l_season in M.time_season
+		  for l_tod in M.time_of_day
+		)
+
+	if int is type( l_demand ) and l_demand == 0:
+		# if there is no demand, then no need to create a constraint
+		return Constraint.Skip
+
+	l_frac_indices = M.TechLifeFrac.keys()
+
+	l_non_dying_ability = sum(
+	    M.V_Capacity[l_tech, l_vin]
+	  * M.CapacityFactor[l_tech, l_vin]
+	  * M.CapacityToActivity[l_tech]
+
+	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_com )
+	  if (A_period, l_tech, l_vin) not in l_frac_indices
+	)
+
+	expr = (l_non_dying_ability >= l_demand)
 	return expr
 
 
 def CapacityFractionalLifetimeConstraint_rule (
-  M, A_period, A_tech, A_vintage, A_com
+  M, A_period, A_season, A_tod, A_tech, A_vintage, A_com
 ):
 	l_max_output = (
 	    M.V_Capacity[A_tech, A_vintage]
 	  * M.CapacityFactor[A_tech, A_vintage]
 	  * M.CapacityToActivity[A_tech]
 	  * M.TechLifeFrac[A_period, A_tech, A_vintage]
-	  * M.PeriodLength[ A_period ]
+	  * M.SegFrac[A_season, A_tod]
 	)
 
 	l_output = sum(
-	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_com]
+	  M.V_FlowOut[A_period, A_season, A_tod, l_inp, A_tech, A_vintage, A_com]
 
 	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
 	)
 
 	expr = (l_output <= l_max_output)
