@@ -170,6 +170,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.MinCapacity = Param( M.time_optimize, M.tech_all )
 	M.MaxCapacity = Param( M.time_optimize, M.tech_all )
+	M.MaxVintageCapacity = Param( M.tech_all, M.vintage_all )
 
 	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions )
 	M.EmissionActivityIndices = Set( dimen=5, rule=EmissionActivityIndices )
@@ -190,8 +191,8 @@ CapacityFactor(tech_all, vintage_all)
 	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
 	M.CapacityByOutputConstraintIndices = Set(
 	  dimen=6, rule=CapacityByOutputConstraintIndices )
-	M.CapacityFractionalLifetimeConstraintIndices = Set(
-	  dimen=6, rule=CapacityFractionalLifetimeConstraintIndices )
+#	M.CapacityFractionalLifetimeConstraintIndices = Set(
+#	  dimen=6, rule=CapacityFractionalLifetimeConstraintIndices )
 #	M.CapacityLifetimeConstraintIndices = Set(
 #	  dimen=4, rule=CapacityLifetimeConstraintIndices )
 	M.CommodityBalanceConstraintIndices = Set(
@@ -299,11 +300,23 @@ CapacityFactor(tech_all, vintage_all)
 	M.MARKAL_SegFrac_CapacityLifetimeConstraint    = Constraint( M.MARKAL_SegFrac_CapacityLifetimeConstraint_indices,    rule=CapacityLifetimeConstraint_rule )
 	M.MARKAL_No_SegFrac_CapacityLifetimeConstraint = Constraint( M.MARKAL_No_SegFrac_CapacityLifetimeConstraint_indices, rule=MARKAL_No_SegFrac_CapacityLifetimeConstraint_rule )
 
-	#M.CapacityLifetimeConstraint           = Constraint( M.CapacityLifetimeConstraintIndices, rule=CapacityLifetimeConstraint_rule )
-	M.CapacityFractionalLifetimeConstraint = Constraint( M.CapacityFractionalLifetimeConstraintIndices, rule=CapacityFractionalLifetimeConstraint_rule )
+	M.MARKAL_SegFrac_CapacityFractionalLifetimeConstraint_indices = Set(
+	  dimen=6,
+	  rule=MARKAL_SegFrac_CapacityFractionalLifetimeConstraint_indices )
+	M.MARKAL_No_SegFrac_CapacityFractionalLifetimeConstraint_indices = Set(
+	  dimen=4,
+	  rule=MARKAL_No_SegFrac_CapacityFractionalLifetimeConstraint_indices )
 
+	M.MARKAL_SegFrac_CapacityFractionalLifetimeConstraint    = Constraint( M.MARKAL_SegFrac_CapacityFractionalLifetimeConstraint_indices,    rule=CapacityFractionalLifetimeConstraint_rule )
+	M.MARKAL_No_SegFrac_CapacityFractionalLifetimeConstraint = Constraint( M.MARKAL_No_SegFrac_CapacityFractionalLifetimeConstraint_indices, rule=MARKAL_No_SegFrac_CapacityFractionalLifetimeConstraint_rule )
+
+	#M.CapacityLifetimeConstraint           = Constraint( M.CapacityLifetimeConstraintIndices, rule=CapacityLifetimeConstraint_rule )
+	#M.CapacityFractionalLifetimeConstraint = Constraint( M.CapacityFractionalLifetimeConstraintIndices, rule=CapacityFractionalLifetimeConstraint_rule )
+
+	M.MaxVintageCapacity_indices = Set( dimen=2, rule=lambda M: M.MaxVintageCapacity.keys() )
 	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraintIndices, rule=MinCapacityConstraint_rule )
 	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraintIndices, rule=MaxCapacityConstraint_rule )
+	M.MaxVintageCapacityConstraint = Constraint( M.MaxVintageCapacity_indices, rule=MaxVintageCapacityConstraint_rule )
 
 	M.EmissionConstraint = Constraint( M.EmissionConstraintIndices, rule=EmissionConstraint_rule)
 

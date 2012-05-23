@@ -222,9 +222,14 @@ param  MaxCapacity  :=   # roughly NRAT_RTY2
 
  1990         TXD     0.6
  2000         TXD     1.76
- 2010         TXD     4.76
+# 2010         TXD     4.76
 	;
 
+
+param  MaxVintageCapacity  :=
+# tech    # vintage   # value
+ TXD       2010        4.76
+	;
 
 param  LifetimeTech  :=        # PARAMETER TCH_LIFE
 # Temoa tech name   # vintage    # value

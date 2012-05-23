@@ -266,6 +266,13 @@ def MaxCapacityConstraint_rule ( M, A_period, A_tech ):
 	return expr
 
 
+def MaxVintageCapacityConstraint_rule ( M, A_tech, A_vin ):
+	index = (A_tech, A_vin)
+	l_max = M.MaxVintageCapacity[ index ]
+	expr = (M.V_Capacity[ index ] <= l_max)
+	return expr
+
+
 def StorageConstraint_rule (
   M, A_period, A_season, A_inp, A_tech, A_vintage, A_out
 ):
@@ -434,6 +441,28 @@ def CapacityFractionalLifetimeConstraint_rule (
 	)
 
 	expr = (l_output <= l_max_output)
+	return expr
+
+
+def MARKAL_No_SegFrac_CapacityFractionalLifetimeConstraint_rule (
+  M, A_period, A_tech, A_vintage, A_com
+):
+	l_max_output = (
+	    M.V_Capacity[A_tech, A_vintage]
+	  * M.CapacityFactor[A_tech, A_vintage]
+	  * M.CapacityToActivity[A_tech]
+	  * M.TechLifeFrac[A_period, A_tech, A_vintage]
+	)
+
+	l_output = sum(
+	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_com]
+
+	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
+	)
+
+	expr = (l_output <= l_max_output )
 	return expr
 
 

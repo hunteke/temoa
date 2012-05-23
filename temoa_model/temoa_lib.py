@@ -812,9 +812,7 @@ def MARKAL_No_SegFrac_CapacityLifetimeConstraint_indices ( M ):
 	return indices
 
 
-### End additions to match MARKAL
-
-def CapacityFractionalLifetimeConstraintIndices ( M ):
+def MARKAL_SegFrac_CapacityFractionalLifetimeConstraint_indices ( M ):
 	indices = set(
 	  (l_per, l_season, l_tod, l_tech, l_vin, l_carrier)
 
@@ -825,6 +823,19 @@ def CapacityFractionalLifetimeConstraintIndices ( M ):
 	)
 
 	return indices
+
+
+def MARKAL_No_SegFrac_CapacityFractionalLifetimeConstraint_indices ( M ):
+	indices = set(
+	  (l_per, l_tech, l_vin, l_carrier)
+
+	  for l_per, l_tech, l_vin in M.TechLifeFracIndices
+	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
+	)
+
+	return indices
+
+### End additions to match MARKAL
 
 
 def CommodityBalanceConstraintIndices ( M ):
@@ -1138,7 +1149,7 @@ def temoa_solve ( model ):
 	opt.keepFiles = False
 	   # output GLPK LP understanding of model
 	   #   Potentially want to incorporate this as an actual command line arg.
-	# opt.options.wlp = path.basename( options.dot_dat[0] )[:-4] + '.lp'
+	opt.options.wlp = path.basename( options.dot_dat[0] )[:-4] + '.lp'
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
