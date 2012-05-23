@@ -507,12 +507,15 @@ explicitly set technological capacity to user-specified values.
 
 
 def ResourceExtractionConstraint_rule ( M, A_period, A_resource ):
-	"""\
-Prevent TEMOA from extracting an endless supply of energy from "the ether".
+	r"""
+Prevent TEMOA from extracting an endless supply of energy from 'the ether'.
 
-(for each period, resource)
-sum((season,time_of_day,tech,vintage),V_FlowIn[p,*,*,e,*,*,r]) <= Param(ResourceBound[p,r])
-	"""
+.. math::
+   \sum_{ S,D,T,V | \atop \{p,s,d,e,t,v,c\} \in FI_{ind} }
+     FI_{p, s, d, e, t, v, c} \le RSC_{p, c}
+
+   \forall \{p, c\} \in RSC_{ind}, e = \text{'ether'}
+"""
 	index = (A_period, A_resource)
 	max_resource = M.ResourceBound[ index ]
 
