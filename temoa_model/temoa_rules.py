@@ -302,10 +302,19 @@ through a period.
 def StorageConstraint_rule (
   M, A_period, A_season, A_inp, A_tech, A_vintage, A_out
 ):
-	"""\
-The idea behind the Temoa storage implementation is that, on average, the amount
-of energy into a storage unit (less an efficiency) is the same as the energy
-coming out of it.  The "on average" is taken to be over the course of a season.
+	r"""\
+Over the length of a season, ensure that the amount of energy into a storage
+unit (less an efficiency) is the same as the energy coming out of it.
+
+.. math::
+   \sum_{D} \left (
+        \textbf{FO}_{p, s, d, i, t, v, o}
+      - EFF_{i, t, v, o}
+      \cdot \textbf{FI}_{p, s, d, i, t, v, o}
+   \right )
+   = 0
+
+   \forall \{p, s, i, t, v, o\} \in \overline{SC}_{ind}
 """
 	l_sum_in_out = sum(
 	    M.V_FlowOut[A_period, A_season, l_tod, A_inp, A_tech, A_vintage, A_out]
