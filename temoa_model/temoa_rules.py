@@ -260,6 +260,19 @@ Enforce user-specified limits of individual emissions, per period.
 
 
 def MinCapacityConstraint_rule ( M, A_period, A_tech ):
+	r"""
+Ensure a user-specified minimum amount of technology capacity is availabie at
+the beginning of a period.
+
+Note that this constraint is merely a summation of all available technology.
+Specifically, it does not handle the case where a technology dies halfway
+through a period.
+
+.. math::
+   \sum_{v \in \overline{PV}_{p, t}} \textbf{CAP}_{t, v} \ge MIN_{p, t}
+
+   \forall \{p, t\} \in MIN_{ind}
+"""
 	index = (A_period, A_tech)
 	l_min = M.MinCapacity[ index ]
 	expr = (M.V_CapacityAvailableByPeriodAndTech[ index ] >= l_min)
@@ -267,6 +280,19 @@ def MinCapacityConstraint_rule ( M, A_period, A_tech ):
 
 
 def MaxCapacityConstraint_rule ( M, A_period, A_tech ):
+	r"""
+Ensure a user-specified maximum amount of technology capacity at the beginning
+of a period.
+
+Note that this constraint is merely a summation of all available technology.
+Specifically, it does not handle the case where a technology dies halfway
+through a period.
+
+.. math::
+   \sum_{v \in \overline{PV}_{p, t}} \textbf{CAP}_{t, v} \le MAX_{p, t}
+
+   \forall \{p, t\} \in MAX_{ind}
+"""
 	index = (A_period, A_tech)
 	l_max = M.MaxCapacity[ index ]
 	expr = (M.V_CapacityAvailableByPeriodAndTech[ index ] <= l_max)
