@@ -533,13 +533,19 @@ Prevent TEMOA from extracting an endless supply of energy from 'the ether'.
 
 
 def CommodityBalanceConstraint_rule ( M, A_period, A_season, A_time_of_day, A_carrier ):
-	"""\
-Ensure that the FlowOut of a produced energy carrier at least meets the demand of the needed FlowIn of that energy carrier.  That is, this constraint maintains energy flows between processes.
+	r"""
+Ensure that the amount of energy produced at least meets the amount of needed
+input energy.  That is, this is the corollary to the ProcessBalance
+constraint, maintaining energy flows *between* processes.
 
-(for each period, season, time_of_day, energy_carrier)
-sum((inp,tech,vintage),V_FlowOut[p,s,t,*,*,*,c]) >= sum((tech,vintage,out),V_FlowIn[p,s,t,c,*,*,*])
-sum((inp,tech,vintage),V_FlowOut[period,season,time_of_day,*,*,*,carrier]) >= sum((tech,vintage,out),V_FlowIn[period,season,time_of_day,carrier,*,*,*])
-	"""
+.. math::
+   \sum_{I,T,V | \atop \{p,s,d,i,t,v,c\} \in FO_{ind}} FO_{p, s, d, i, t, v, c}
+   \ge
+   \sum_{T,V,O | \atop \{p,s,d,c,t,v,o\} \in FI_{ind}} FI_{p, s, d, c, t, v, o}
+
+   \\
+   \forall P, S, D, C \setminus C_d
+"""
 	if A_carrier in M.commodity_demand:
 		return Constraint.Skip
 
