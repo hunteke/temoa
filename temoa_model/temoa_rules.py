@@ -361,11 +361,19 @@ def TechOutputSplitConstraint_rule (
 def ActivityConstraint_rule (
   M, A_period, A_season, A_time_of_day, A_tech, A_vintage
 ):
-	"""\
-This constraint defines the convenience variable V_Activity as the sum of all
-outputs of a process.  If there is more than one output, there is currently no
-attempt to convert to a common unit of measurement.  (Unfortunately, this tedium
-is currently left as an implicit accounting exercise for the modeler.)
+	r"""
+Defines the convenience variable ACT as the sum of all outputs of a process.
+
+If there is more than one output, there is currently no attempt to convert to a
+common unit of measurement.  Unfortunately, this tedium is currently left as an
+accounting exercise for the modeler.
+
+.. math::
+   \textbf{ACT}_{p, s, d, t, v} =
+   \sum_{I, O | \{p,s,d,i,t,v,o\} \in FO_{ind}} \textbf{FO}_{p,s,d,i,t,v,o}
+
+   \\
+   \forall \{p, s, d, t, v\} \in ACT_{ind}
 """
 	pindex = (A_period, A_tech, A_vintage)
 	aindex = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
