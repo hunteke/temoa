@@ -491,12 +491,15 @@ def CapacityFixedConstraint_rule ( M, t, v ):
 
 
 def ExistingCapacityConstraint_rule ( M, A_tech, A_vintage ):
-	"""\
-For vintage periods (that the model is not to optimize), explicitly set the capacity values.
+	r"""
+For vintage periods (those in ``time_exist``, that the model does not optimize),
+explicitly set technological capacity to user-specified values.
 
-(for each tech, vintage_exist)
-V_Capacity[t,v] = Param(Existingcapacity[t,v])
-	"""
+.. math::
+   \textbf{CAP}_{t, v} = ECAP_{t, v}
+
+   \forall \{t, v\} \in ECAP_{ind}
+"""
 	index = (A_tech, A_vintage)
 
 	expr = ( M.V_Capacity[ index ] == M.ExistingCapacity[ index ] )
