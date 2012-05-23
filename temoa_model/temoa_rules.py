@@ -626,12 +626,20 @@ what is performed in the Baseload constraint.
 
 
 def DemandConstraint_rule ( M, A_period, A_season, A_time_of_day, A_comm ):
-	"""\
+	r"""\
 The driving constraint, this rule ensures that supply at least equals demand.
+The sum of all outputs from the FlowOut (``FO``) variable for a given commodity
+must meet or exceed that required by the exogenously specified demand (``DEM``)
+parameter.
 
-(for each period, season, time_of_day, commodity)
-sum((inp,tech,vintage),V_FlowOut[p,s,d,*,*,*,commodity]) >= Demand[p,s,d,commodity]
-	"""
+.. math::
+       \sum_{I,T,V|\{p, s, d, i, t, v, c\} \in FO_{ind}}
+   \ge
+       DEM_{p,s,d,c}
+
+   \\
+   \forall \{p, s, d, c\} \in DEM_{ind}
+"""
 	index = (A_period, A_season, A_time_of_day, A_comm)
 	if not (M.Demand[ index ] > 0):
 		# User must have supplied a 0 demand: no need to create a useless
