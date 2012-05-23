@@ -576,13 +576,18 @@ constraint, maintaining energy flows *between* processes.
 def ProcessBalanceConstraint_rule (
   M, A_period, A_season, A_time_of_day, A_inp, A_tech, A_vintage, A_out
 ):
-	"""\
-Analogous to CommodityBalance, this constraint ensures that the amount of
-energy leaving a process is not more than the amount entering it.
+	r"""
+Analogous to CommodityBalance, this constraint ensures that the amount of energy
+leaving a process is not more than the amount entering it.
 
-(for each period, season, time_of_day, inp_carrier, vintage, out_carrier)
-V_FlowOut[p,s,d,t,v,o] <= V_FlowIn[p,s,d,t,v,o] * Efficiency[i,t,v,o]
-	"""
+.. math::
+          FO_{p, s, d, i, t, v, o}
+   \le
+          EFF_{i, t, v, o}
+    \cdot FI_{p, s, d, i, t, v, o}
+
+   \forall \{p, s, d, i, t, v, o\} \in \textbf{FO}_{ind}
+"""
 	aindex = (A_period, A_season, A_time_of_day, A_inp, A_tech, A_vintage, A_out)
 
 	expr = (
