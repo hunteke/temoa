@@ -4,7 +4,7 @@ from temoa_lib import *
 # Begin *_rule definitions
 
 def TotalCost_rule ( M ):
-	"""\
+	r"""\
 Objective function.
 
 This implementation of the Temoa objective function sums up all the costs
@@ -168,21 +168,25 @@ def ParamLoanAnnualize_rule ( M, A_tech, A_vintage ):
 def BaseloadDiurnalConstraint_rule (
   M, A_period, A_season, A_time_of_day, A_tech, A_vintage
 ):
-	"""\
-Ensure that certain (electric baseload) technologies maintain equivalent output
-at all times during a day.
+	r"""
+Ensure that electric baseload technologies maintain a constant output at all
+times during a day.
 
-The math behind this is more computer programmatic in fashion, than
-mathematical.  It involves a minor algorithm that creates an ordering of the
-time_of_day set, and uses that order such that
+.. math::
+         SEG_{s, D_0}
+   \cdot \textbf{ACT}_{p, s, d, t, v}
+   =
+         SEG_{s, d}
+   \cdot \textbf{ACT}_{p, s, D_0, t, v}
 
-(for each d element of time_of_day)
-Activity[p,s,d,t,v] == Activity[p,s,d-1,t,v]
+   \\
+   \forall \{p, s, d, t, v\} \in ACT_{ind}, d \ne D_0
+
 """
 	# Question: How to set the different times of day equal to each other?
 
 	# Step 1: Acquire a "canonical" representation of the times of day
-	l_times = list( M.time_of_day )  # i.e. a Python list.
+	l_times = sorted( M.time_of_day )  # i.e. a sorted Python list.
 	  # This is the commonality between invocations of this method.
 
 	index = l_times.index( A_time_of_day )
