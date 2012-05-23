@@ -221,6 +221,19 @@ times during a day.
 
 
 def EmissionConstraint_rule ( M, A_period, A_emission ):
+	r"""
+Enforce user-specified limits of individual emissions, per period.
+
+.. math::
+   \sum_{I,T,V,O|{e,i,t,v,o} \in EAC_{ind}} \left (
+       EAC_{e, i, t, v, o} \cdot \textbf{FO}_{p, s, d, i, t, v, o}
+     \right )
+     \le
+     ELM_{p, e}
+
+   \\
+   \forall \{p, e\} \in ELM_{ind}
+	"""
 	index = (A_period, A_emission)
 	l_emissionlimit = M.EmissionLimit[ index ]
 
