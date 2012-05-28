@@ -71,17 +71,6 @@ the time-value of money to bring it back to year 0.
 	  )
 
 	  for l_per, l_tech, l_vin in M.CostMarginal.keys()
-	  if (l_per, l_tech, l_vin) not in l_tech_period_fraction_indices
-	) + sum(
-	    M.V_ActivityByPeriodTechAndVintage[l_per, l_tech, l_vin]
-	  * value( M.CostMarginal[l_per, l_tech, l_vin].value )
-	  * sum(
-	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
-	      for y in range( 0, M.PeriodLength[ l_per ] * M.TechLifeFrac[l_per, l_tech, l_vin])
-	    )
-
-	  for l_per, l_tech, l_vin in l_tech_period_fraction_indices
-	  if (l_per, l_tech, l_vin) in M.CostMarginal.keys()
 	)
 
 	return (l_loan_costs + l_fixed_costs + l_marg_costs)
