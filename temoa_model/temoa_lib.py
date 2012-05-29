@@ -53,12 +53,10 @@ explicitly use the Coopr path:
 # Temoa rule "partial" functions (excised from indidivual constraints for
 #   readability)
 
-def CommodityBalanceConstraintErrorCheck (
-  l_vflow_out, l_vflow_in, A_carrier, A_season, A_time_of_day, A_period
-):
-	if int is type(l_vflow_out):
+def CommodityBalanceConstraintErrorCheck ( p, s, d, c, out, inp ):
+	if int is type(out):
 		flow_in_expr = StringIO()
-		l_vflow_in.pprint( ostream=flow_in_expr )
+		inp.pprint( ostream=flow_in_expr )
 		msg = ("Unable to meet an interprocess '%s' transfer in (%s, %s, %s).\n"
 		  'No flow out.  Constraint flow in:\n   %s\n'
 		  'Possible reasons:\n'
@@ -68,20 +66,17 @@ def CommodityBalanceConstraintErrorCheck (
 		  " - Is there a missing commodity in set 'commodity_physical'?\n"
 		  ' - Are there missing entries in the Efficiency parameter?\n'
 		  ' - Does a tech need a longer LifetimeTech parameter setting?')
-		raise ValueError, msg % (A_carrier, A_season, A_time_of_day, A_period,
-		                         flow_in_expr.getvalue() )
+		raise ValueError, msg % (c, s, d, p, flow_in_expr.getvalue() )
 
 
-def DemandConstraintErrorCheck (
-  l_supply, A_comm, A_period, A_season, A_time_of_day
-):
-	if int is type( l_supply ):
+def DemandConstraintErrorCheck ( p, s, d, i, dem ):
+	if int is type( i ):
 		msg = ("Error: Demand '%s' for (%s, %s, %s) unable to be met by any "
 		  'technology.\n\tPossible reasons:\n'
 		  ' - Is the Efficiency parameter missing an entry for this demand?\n'
 		  ' - Does a tech that satisfies this demand need a longer LifetimeTech?'
 		  '\n')
-		raise ValueError, msg % (A_comm, A_period, A_season, A_time_of_day)
+		raise ValueError, msg % (dem, p, s, d)
 
 # End Temoa rule "partials"
 ###############################################################################
@@ -157,13 +152,13 @@ def validate_TechOutputSplit ( M ):
 
 	split_indices = M.TechOutputSplit.keys()
 
-	for l_inp in M.commodity_physical:
-		for l_tech in M.tech_all:
+	for i in M.commodity_physical:
+		for t in M.tech_all:
 			l_total = sum(
-			  value(M.TechOutputSplit[l_inp, l_tech, l_out])
+			  value(M.TechOutputSplit[i, t, o])
 
-			  for l_out in M.commodity_carrier
-			  if (l_inp, l_tech, l_out) in split_indices
+			  for o in M.commodity_carrier
+			  if (i, t, o) in split_indices
 			)
 
 			# small enough; likely a rounding error
@@ -172,12 +167,12 @@ def validate_TechOutputSplit ( M ):
 			if abs(l_total -1) > 1e-10:
 				items = '\n   '.join(
 				  "%s: %s" % (
-				    str((l_inp, l_tech, l_out)),
-				    value(M.TechOutputSplit[l_inp, l_tech, l_out])
+				    str((i, t, o)),
+				    value(M.TechOutputSplit[i, t, o])
 				  )
 
-				  for l_out in M.commodity_carrier
-				  if (l_inp, l_tech, l_out) in split_indices
+				  for o in M.commodity_carrier
+				  if (i, t, o) in split_indices
 				)
 
 				raise ValueError, msg % (items, l_total)
@@ -237,11 +232,11 @@ def InitializeProcessParameters ( M ):
 	l_exist_indices = M.ExistingCapacity.keys()
 	l_used_techs = set()
 
-	for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys():
-		l_process = (l_tech, l_vin)
+	for i, t, v, o in M.Efficiency.keys():
+		l_process = (t, v)
 		l_lifetime = value(M.LifetimeTech[ l_process ])
 
-		if l_vin in M.vintage_exist:
+		if v in M.vintage_exist:
 			if l_process not in l_exist_indices:
 				msg = ('Warning: %s has a specified Efficiency, but does not '
 				  'have any existing install base (ExistingCapacity)\n.')
@@ -253,7 +248,7 @@ def InitializeProcessParameters ( M ):
 				  'omit the declaration.\n')
 				SE.write( msg % str(l_process) )
 				continue
-			if l_vin + l_lifetime <= l_first_period:
+			if v + l_lifetime <= l_first_period:
 				msg = ('\nWarning: %s specified as ExistingCapacity, but its '
 				  'LifetimeTech parameter does not extend past the beginning of '
 				  'time_horizon.  (i.e. useless parameter)'
@@ -262,7 +257,7 @@ def InitializeProcessParameters ( M ):
 				SE.write( msg % (l_process, l_lifetime, l_first_period) )
 				continue
 
-		eindex = (l_inp, l_tech, l_vin, l_out)
+		eindex = (i, t, v, o)
 		if 0 == M.Efficiency[ eindex ]:
 			msg = ('\nNotice: Unnecessary specification of Efficiency %s.  If '
 			  'specifying an efficiency of zero, you may simply omit the '
@@ -270,31 +265,31 @@ def InitializeProcessParameters ( M ):
 			SE.write( msg % str(eindex) )
 			continue
 
-		l_used_techs.add( l_tech )
+		l_used_techs.add( t )
 
-		for l_per in M.time_optimize:
+		for p in M.time_optimize:
 			# can't build a vintage before it's been invented
-			if l_per < l_vin: continue
+			if p < v: continue
 
-			pindex = (l_per, l_tech, l_vin)
+			pindex = (p, t, v)
 
-			if l_vin in M.time_optimize:
+			if v in M.time_optimize:
 				l_loan_life = value(M.LifetimeLoan[ l_process ])
-				if l_vin + l_loan_life >= l_per:
+				if v + l_loan_life >= p:
 					g_processLoans[ pindex ] = True
 
 			# if tech is no longer "alive", don't include it
-			if l_vin + l_lifetime <= l_per: continue
+			if v + l_lifetime <= p: continue
 
 			if pindex not in g_processInputs:
 				g_processInputs[  pindex ] = set()
 				g_processOutputs[ pindex ] = set()
-			if (l_per, l_tech) not in g_processVintages:
-				g_processVintages[l_per, l_tech] = set()
+			if (p, t) not in g_processVintages:
+				g_processVintages[p, t] = set()
 
-			g_processVintages[l_per, l_tech].add( l_vin )
-			g_processInputs[ pindex ].add( l_inp )
-			g_processOutputs[pindex ].add( l_out )
+			g_processVintages[p, t].add( v )
+			g_processInputs[ pindex ].add( i )
+			g_processOutputs[pindex ].add( o )
 	l_unused_techs = M.tech_all - l_used_techs
 	if l_unused_techs:
 		msg = ("Notice: '{}' specified as technology, but it is not utilized in "
@@ -303,36 +298,36 @@ def InitializeProcessParameters ( M ):
 			SE.write( msg.format( i ))
 
 	g_activeFlowIndices = set(
-	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
+	  (p, s, d, i, t, v, o)
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
-	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  for v in ProcessVintages( p, t )
+	  for i in ProcessInputs( p, t, v )
+	  for o in ProcessOutputs( p, t, v )
+	  for s in M.time_season
+	  for d in M.time_of_day
 	)
 	g_activeActivityIndices = set(
-	  (l_per, l_tech, l_vin)
+	  (p, t, v)
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  for v in ProcessVintages( p, t )
 	)
 	g_activeCapacityIndices = set(
-	  (l_tech, l_vin)
+	  (t, v)
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  for v in ProcessVintages( p, t )
 	)
 	g_activeCapacityAvailableIndices = set(
-	  (l_per, l_tech)
+	  (p, t)
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  if ProcessVintages( l_per, l_tech )
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  if ProcessVintages( p, t )
 	)
 
 	return set()
@@ -350,9 +345,9 @@ def InitializeProcessParameters ( M ):
 
 def CapacityFactorIndices ( M ):
 	indices = set(
-	  (l_tech, l_vin)
+	  (t, v)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for i, t, v, o in M.Efficiency.keys()
 	)
 
 	return indices
@@ -368,9 +363,9 @@ def CostMarginalIndices ( M ):
 
 def CostInvestIndices ( M ):
 	indices = set(
-	  (l_tech, l_vin)
+	  (t, v)
 
-	  for l_per, l_tech, l_vin in g_processLoans
+	  for p, t, v in g_processLoans
 	)
 
 	return indices
@@ -382,10 +377,10 @@ def DiscountRateIndices ( M ):
 
 def EmissionActivityIndices ( M ):
 	indices = set(
-	  (l_emission, l_inp, l_tech, l_vin, l_out)
+	  (e, i, t, v, o)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
-	  for l_emission in M.commodity_emissions
+	  for i, t, v, o in M.Efficiency.keys()
+	  for e in M.commodity_emissions
 	)
 
 	return indices
@@ -397,15 +392,15 @@ Returns the set of (period, tech, vintage) tuples of process loans that die
 between period boundaries.  The tuple indicates the last period in which a
 process is active.
 """
-	l_periods = set( M.time_optimize )
-	l_max_year = max( M.time_future )
+	periods = set( M.time_optimize )
+	max_year = max( M.time_future )
 
 	indices = set()
-	for l_tech, l_vin in M.LifetimeLoanIndices:
-		l_death_year = l_vin + value(M.LifetimeLoan[l_tech, l_vin])
-		if l_death_year < l_max_year and l_death_year not in l_periods:
-			l_per = max( yy for yy in M.time_optimize if yy < l_death_year )
-			indices.add( (l_per, l_tech, l_vin) )
+	for t, v in M.LifetimeLoanIndices:
+		death_year = v + value(M.LifetimeLoan[t, v])
+		if death_year < max_year and death_year not in periods:
+			p = max( yy for yy in M.time_optimize if yy < death_year )
+			indices.add( (p, t, v) )
 
 	return indices
 
@@ -416,15 +411,15 @@ Returns the set of (period, tech, vintage) tuples of processes that die between
 period boundaries.  The tuple indicates the last period in which a process is
 active.
 """
-	l_periods = set( M.time_optimize )
-	l_max_year = max( M.time_future )
+	periods = set( M.time_optimize )
+	max_year = max( M.time_future )
 
 	indices = set()
-	for l_tech, l_vin in g_activeCapacityIndices:
-		l_death_year = l_vin + value(M.LifetimeTech[l_tech, l_vin])
-		if l_death_year < l_max_year and l_death_year not in l_periods:
-			l_per = max( yy for yy in M.time_optimize if yy < l_death_year )
-			indices.add( (l_per, l_tech, l_vin) )
+	for t, v in g_activeCapacityIndices:
+		death_year = v + value(M.LifetimeTech[t, v])
+		if death_year < max_year and death_year not in periods:
+			p = max( yy for yy in M.time_optimize if yy < death_year )
+			indices.add( (p, t, v) )
 
 	return indices
 
@@ -435,9 +430,9 @@ Based on the Efficiency parameter's indices, this function returns the set of
 process indices that may be specified in the LifetimeTech parameter.
 """
 	indices = set(
-	  (l_tech, l_vin)
+	  (t, v)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for i, t, v, o in M.Efficiency.keys()
 	)
 
 	return indices
@@ -452,10 +447,10 @@ CostInvest parameter.
 	min_period = min( M.vintage_optimize )
 
 	indices = set(
-	  (l_tech, l_vin)
+	  (t, v)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
-	  if l_vin >= min_period
+	  for i, t, v, o in M.Efficiency.keys()
+	  if v >= min_period
 	)
 
 	return indices
@@ -488,11 +483,11 @@ def FlowVariableIndices ( M ):
 
 def ActivityVariableIndices ( M ):
 	activity_indices = set(
-	  (l_per, l_season, l_tod, l_tech, l_vin)
+	  (p, s, d, t, v)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for p, t, v in g_activeActivityIndices
+	  for s in M.time_season
+	  for d in M.time_of_day
 	)
 
 	return activity_indices
@@ -520,12 +515,12 @@ def ActivityByPeriodTechAndVintageVarIndices ( M ):
 
 def ActivityByPeriodTechAndOutputVariableIndices ( M ):
 	indices = set(
-	  (l_per, l_tech, l_out)
+	  (p, t, o)
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  for v in ProcessVintages( p, t )
+	  for o in ProcessOutputs( p, t, v )
 	 )
 
 	return indices
@@ -533,12 +528,12 @@ def ActivityByPeriodTechAndOutputVariableIndices ( M ):
 
 def ActivityByPeriodTechVintageAndOutputVariableIndices ( M ):
 	indices = set(
-	  (l_per, l_tech, l_vin, l_out)
+	  (p, t, v, o)
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  for v in ProcessVintages( p, t )
+	  for o in ProcessOutputs( p, t, v )
 	)
 
 	return indices
@@ -546,10 +541,10 @@ def ActivityByPeriodTechVintageAndOutputVariableIndices ( M ):
 
 def ActivityByTechAndOutputVariableIndices ( M ):
 	indices = set(
-	  (l_tech, l_out)
+	  (t, o)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
-	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
+	  for p, t, v in g_activeActivityIndices
+	  for o in ProcessOutputs( p, t, v )
 	)
 
 	return indices
@@ -557,10 +552,10 @@ def ActivityByTechAndOutputVariableIndices ( M ):
 
 def ActivityByInputAndTechVariableIndices ( M ):
 	indices = set(
-	  (l_inp, l_tech)
+	  (i, t)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	  for p, t, v in g_activeActivityIndices
+	  for i in ProcessInputs( p, t, v )
 	)
 
 	return indices
@@ -568,10 +563,10 @@ def ActivityByInputAndTechVariableIndices ( M ):
 
 def ActivityByPeriodInputAndTechVariableIndices ( M ):
 	indices = set(
-	  (l_per, l_inp, l_tech)
+	  (p, i, t)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	  for p, t, v in g_activeActivityIndices
+	  for i in ProcessInputs( p, t, v )
 	)
 
 	return indices
@@ -579,10 +574,10 @@ def ActivityByPeriodInputAndTechVariableIndices ( M ):
 
 def ActivityByPeriodInputTechAndVintageVariableIndices ( M ):
 	indices = set(
-	  (l_per, l_inp, l_tech, l_vin)
+	  (p, i, t, v)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
+	  for p, t, v in g_activeActivityIndices
+	  for i in ProcessInputs( p, t, v )
 	)
 
 	return indices
@@ -590,20 +585,20 @@ def ActivityByPeriodInputTechAndVintageVariableIndices ( M ):
 
 def EmissionActivityByTechVariableIndices ( M ):
 	indices = set(
-	  (l_emission, l_tech)
+	  (e, t)
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
+	  for e, i, t, v, o in M.EmissionActivity.keys()
 	)
 
 	return indices
 
 def EmissionActivityByPeriodAndTechVariableIndices ( M ):
 	indices = set(
-	  (l_emission, l_per, l_tech)
+	  (e, p, t)
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
+	  for e, i, t, v, o in M.EmissionActivity.keys()
+	  for p in M.time_optimize
+	  if ValidActivity( p, t, v )
 	)
 
 	return indices
@@ -611,9 +606,9 @@ def EmissionActivityByPeriodAndTechVariableIndices ( M ):
 
 def EmissionActivityByTechAndVintageVariableIndices ( M ):
 	indices = set(
-	  (l_emission, l_tech, l_vin)
+	  (e, t, v)
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
+	  for e, i, t, v, o in M.EmissionActivity.keys()
 	)
 
 	return indices
@@ -621,9 +616,9 @@ def EmissionActivityByTechAndVintageVariableIndices ( M ):
 
 def EnergyConsumptionByTechAndOutputVariableIndices ( M ):
 	indices = set(
-	  (l_tech, l_out)
+	  (t, o)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for i, t, v, o in M.Efficiency.keys()
 	)
 
 	return indices
@@ -631,11 +626,11 @@ def EnergyConsumptionByTechAndOutputVariableIndices ( M ):
 
 def EnergyConsumptionByPeriodAndTechVariableIndices ( M ):
 	indices = set(
-	  (l_per, l_tech)
+	  (p, t)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
+	  for i, t, v, o in M.Efficiency.keys()
+	  for p in M.time_optimize
+	  if ValidActivity( p, t, v )
 	)
 
 	return indices
@@ -643,11 +638,11 @@ def EnergyConsumptionByPeriodAndTechVariableIndices ( M ):
 
 def EnergyConsumptionByPeriodInputAndTechVariableIndices ( M ):
 	indices = set(
-	  (l_per, l_inp, l_tech)
+	  (p, i, t)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
+	  for i, t, v, o in M.Efficiency.keys()
+	  for p in M.time_optimize
+	  if ValidActivity( p, t, v )
 	)
 
 	return indices
@@ -655,11 +650,11 @@ def EnergyConsumptionByPeriodInputAndTechVariableIndices ( M ):
 
 def EnergyConsumptionByPeriodTechAndOutputVariableIndices ( M ):
 	indices = set(
-	  (l_per, l_tech, l_out)
+	  (p, t, o)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
+	  for i, t, v, o in M.Efficiency.keys()
+	  for p in M.time_optimize
+	  if ValidActivity( p, t, v )
 	)
 
 	return indices
@@ -667,11 +662,11 @@ def EnergyConsumptionByPeriodTechAndOutputVariableIndices ( M ):
 
 def EnergyConsumptionByPeriodTechAndVintageVariableIndices ( M ):
 	indices = set(
-	  (l_per, l_tech, l_vin)
+	  (p, t, v)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
+	  for i, t, v, o in M.Efficiency.keys()
+	  for p in M.time_optimize
+	  if ValidActivity( p, t, v )
 	)
 
 	return indices
@@ -743,13 +738,13 @@ def ResourceConstraintIndices ( M ):
 
 def BaseloadDiurnalConstraintIndices ( M ):
 	indices = set(
-	  (l_per, l_season, l_tod, l_tech, l_vin)
+	  (p, s, d, t, v)
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_baseload
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for p in M.time_optimize
+	  for t in M.tech_baseload
+	  for v in ProcessVintages( p, t )
+	  for s in M.time_season
+	  for d in M.time_of_day
 	)
 
 	return indices
@@ -759,13 +754,13 @@ def BaseloadDiurnalConstraintIndices ( M ):
 
 def MARKAL_SegFrac_CapacityByOutput_indices ( M ):
 	indices = set(
-	  (l_per, l_season, l_tod, l_tech, l_vin, l_out)
+	  (p, s, d, t, v, o)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
-	  if l_tech in M.tech_electric    # This is major difference from Temoa
-	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for p, t, v in g_activeActivityIndices
+	  if t in M.tech_electric    # This is major difference from Temoa
+	  for o in ProcessOutputs( p, t, v )
+	  for s in M.time_season
+	  for d in M.time_of_day
 	)
 
 	return indices
@@ -773,10 +768,10 @@ def MARKAL_SegFrac_CapacityByOutput_indices ( M ):
 
 def MARKAL_No_SegFrac_CapacityByOutput_indices ( M ):
 	indices = set(
-	  (l_per, l_tech, l_vin)
+	  (p, t, v)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
-	  if l_tech not in M.tech_electric  # This is major difference from Temoa
+	  for p, t, v in g_activeActivityIndices
+	  if t not in M.tech_electric  # This is major difference from Temoa
 	)
 
 	return indices
@@ -829,15 +824,15 @@ def CapacityFractionalLifetimeConstraintIndices ( M ):
 
 def CommodityBalanceConstraintIndices ( M ):
 	indices = set(
-	  (l_per, l_season, l_tod, l_carrier)
+	  (p, s, d, o)
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
-	  for l_carrier in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  for v in ProcessVintages( p, t )
+	  for i in ProcessInputs( p, t, v )
+	  for o in ProcessOutputsByInput( p, t, v, i )
+	  for s in M.time_season
+	  for d in M.time_of_day
 	)
 
 	return indices
@@ -845,27 +840,27 @@ def CommodityBalanceConstraintIndices ( M ):
 
 def ExistingCapacityConstraintIndices ( M ):
 	indices = set(
-	  (l_tech, l_vin)
+	  (t, v)
 
-	  for l_tech in M.tech_all
-	  for l_vin in M.vintage_exist
-	  if (l_tech, l_vin) in g_activeCapacityIndices
+	  for t in M.tech_all
+	  for v in M.vintage_exist
+	  if (t, v) in g_activeCapacityIndices
 	)
 	return indices
 
 
 def ProcessBalanceConstraintIndices ( M ):
 	indices = set(
-	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
+	  (p, s, d, i, t, v, o)
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  if l_tech not in M.tech_storage
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
-	  for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for p in M.time_optimize
+	  for t in M.tech_all
+	  if t not in M.tech_storage
+	  for v in ProcessVintages( p, t )
+	  for i in ProcessInputs( p, t, v )
+	  for o in ProcessOutputsByInput( p, t, v, i )
+	  for s in M.time_season
+	  for d in M.time_of_day
 	)
 
 	return indices
@@ -873,14 +868,14 @@ def ProcessBalanceConstraintIndices ( M ):
 
 def StorageConstraintIndices ( M ):
 	indices = set(
-	  (l_per, l_season, l_inp, l_tech, l_vin, l_out)
+	  (p, s, i, t, v, o)
 
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_storage
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
-	  for l_out in ProcessOutputsByInput( l_per, l_tech, l_vin, l_inp )
-	  for l_season in M.time_season
+	  for p in M.time_optimize
+	  for t in M.tech_storage
+	  for v in ProcessVintages( p, t )
+	  for i in ProcessInputs( p, t, v )
+	  for o in ProcessOutputsByInput( p, t, v, i )
+	  for s in M.time_season
 	)
 
 	return indices
@@ -888,13 +883,13 @@ def StorageConstraintIndices ( M ):
 
 def TechOutputSplitConstraintIndices ( M ):
 	indices = set(
-	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
+	  (p, s, d, i, t, v, o)
 
-	  for l_inp, l_tech, l_out in M.TechOutputSplit.keys()
-	  for l_per in M.time_optimize
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for i, t, o in M.TechOutputSplit.keys()
+	  for p in M.time_optimize
+	  for v in ProcessVintages( p, t )
+	  for s in M.time_season
+	  for d in M.time_of_day
 	)
 
 	return indices
@@ -912,148 +907,148 @@ def TechOutputSplitConstraintIndices ( M ):
 # InitializeProcessParameters, to aid in creation of sparse index sets, and
 # to increase readability of Coopr's often programmer-centric syntax.
 
-def ProcessInputs ( A_period, A_tech, A_vintage ):
-	index = (A_period, A_tech, A_vintage)
+def ProcessInputs ( p, t, v ):
+	index = (p, t, v)
 	if index in g_processInputs:
 		return g_processInputs[ index ]
 	return set()
 
 
-def ProcessOutputs ( A_period, A_tech, A_vintage ):
+def ProcessOutputs ( p, t, v ):
 	"""\
 index = (period, tech, vintage)
 	"""
-	index = (A_period, A_tech, A_vintage)
+	index = (p, t, v)
 	if index in g_processOutputs:
 		return g_processOutputs[ index ]
 	return set()
 
 
-def ProcessInputsByOutput ( A_period, A_tech, A_vintage, A_output ):
+def ProcessInputsByOutput ( p, t, v, o ):
 	"""\
-Return the set of input energy carriers used by a technology (A_tech) to
-produce a given output carrier (A_output).
+Return the set of input energy carriers used by a technology (t) to
+produce a given output carrier (o).
 """
-	index = (A_period, A_tech, A_vintage)
+	index = (p, t, v)
 	if index in g_processOutputs:
-		if A_output in g_processOutputs[ index ]:
+		if o in g_processOutputs[ index ]:
 			return g_processInputs[ index ]
 
 	return set()
 
 
-def ProcessOutputsByInput ( A_period, A_tech, A_vintage, A_input ):
+def ProcessOutputsByInput ( p, t, v, i ):
 	"""\
-Return the set of output energy carriers used by a technology (A_tech) to
-produce a given input carrier (A_output).
+Return the set of output energy carriers used by a technology (t) to
+produce a given input carrier (o).
 """
-	index = (A_period, A_tech, A_vintage)
+	index = (p, t, v)
 	if index in g_processInputs:
-		if A_input in g_processInputs[ index ]:
+		if i in g_processInputs[ index ]:
 			return g_processOutputs[ index ]
 
 	return set()
 
 
-def ProcessesByInput ( A_inp ):
+def ProcessesByInput ( i ):
 	"""\
 Returns the set of processes that take 'input'.  Note that a process is
 conceptually a vintage of a technology.
 """
 	processes = set(
-	  (l_tech, l_vin)
+	  (t, v)
 
-	  for l_per, l_tech, l_vin in g_processInputs
-	  if A_inp in g_processInputs[l_per, l_tech, l_vin]
+	  for p, t, v in g_processInputs
+	  if i in g_processInputs[p, t, v]
 	)
 
 	return processes
 
 
-def ProcessesByOutput ( A_out ):
+def ProcessesByOutput ( o ):
 	"""\
 Returns the set of processes that take 'output'.  Note that a process is
 conceptually a vintage of a technology.
 """
 	processes = set(
-	  (l_tech, l_vin)
+	  (t, v)
 
-	  for l_per, l_tech, l_vin in g_processOutputs
-	  if A_out in g_processOutputs[l_per, l_tech, l_vin]
+	  for p, t, v in g_processOutputs
+	  if o in g_processOutputs[p, t, v]
 	)
 
 	return processes
 
 
-def ProcessesByPeriodAndInput ( A_period, A_inp ):
+def ProcessesByPeriodAndInput ( p, i ):
 	"""\
 Returns the set of processes that operate in 'period' and take 'input'.  Note
 that a process is conceptually a vintage of a technology.
 """
 	processes = set(
-	  (l_tech, l_vin)
+	  (t, v)
 
-	  for l_per, l_tech, l_vin in g_processInputs
-	  if l_per == A_period
-	  if A_inp in g_processInputs[l_per, l_tech, l_vin]
+	  for p, t, v in g_processInputs
+	  if p == p
+	  if i in g_processInputs[p, t, v]
 	)
 
 	return processes
 
 
-def ProcessesByPeriodAndOutput ( A_period, A_out ):
+def ProcessesByPeriodAndOutput ( p, o ):
 	"""\
 Returns the set of processes that operate in 'period' and take 'output'.  Note
 that a process is a conceptually a vintage of a technology.
 """
 	processes = set(
-	  (l_tech, l_vin)
+	  (t, v)
 
-	  for l_per, l_tech, l_vin in g_processOutputs
-	  if l_per == A_period
-	  if A_out in g_processOutputs[l_per, l_tech, l_vin]
+	  for p, t, v in g_processOutputs
+	  if p == p
+	  if o in g_processOutputs[p, t, v]
 	)
 
 	return processes
 
 
-def ProcessVintages ( A_per, A_tech ):
-	index = (A_per, A_tech)
+def ProcessVintages ( A_per, t ):
+	index = (A_per, t)
 	if index in g_processVintages:
 		return g_processVintages[ index ]
 
 	return set()
 
 
-def ValidActivity ( A_period, A_tech, A_vintage ):
-	return (A_period, A_tech, A_vintage) in g_activeActivityIndices
+def ValidActivity ( p, t, v ):
+	return (p, t, v) in g_activeActivityIndices
 
 
-def ValidCapacity ( A_tech, A_vintage ):
-	return (A_tech, A_vintage) in g_activeCapacityIndices
+def ValidCapacity ( t, v ):
+	return (t, v) in g_activeCapacityIndices
 
 
-def isValidProcess ( A_period, A_inp, A_tech, A_vintage, A_out ):
+def isValidProcess ( p, i, t, v, o ):
 	"""\
 Returns a boolean (True or False) indicating whether, in any given period, a
 technology can take a specified input carrier and convert it to and specified
 output carrier.
 """
-	index = (A_period, A_tech, A_vintage)
+	index = (p, t, v)
 	if index in g_processInputs and index in g_processOutputs:
-		if A_inp in g_processInputs[ index ]:
-			if A_out in g_processOutputs[ index ]:
+		if i in g_processInputs[ index ]:
+			if o in g_processOutputs[ index ]:
 				return True
 
 	return False
 
 
-def loanIsActive ( A_period, A_tech, A_vintage ):
+def loanIsActive ( p, t, v ):
 	"""\
 Return a boolean (True or False) whether a loan is still active in a period.
 This is the implementation of imat in the rest of the documentation.
 """
-	return (A_period, A_tech, A_vintage) in g_processLoans
+	return (p, t, v) in g_processLoans
 
 
 # End helper functions
