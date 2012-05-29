@@ -75,7 +75,8 @@ the time-value of money to bring it back to year 0.
 	  for l_per, l_tech, l_vin in M.CostMarginal.keys()
 	)
 
-	return (l_loan_costs + l_fixed_costs + l_marg_costs)
+	l_cost = (l_loan_costs + l_fixed_costs + l_marg_costs)
+	return l_cost
 Objective_rule = TotalCost_rule
 
 ##############################################################################
