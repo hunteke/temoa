@@ -1,3 +1,4 @@
+import re
 from sys import stderr as SE
 from cStringIO import StringIO
 
@@ -42,12 +43,13 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	Vars = soln.Variable
 	Cons = soln.Constraint
 
+	underscore = re.compile('_+')
+
 	var_info = sorted(
 	  (ii.split('(')[0],
-	   ii.replace('_,', ',')
-	     .replace(',_', ',')
-	     .replace('(_', '(')
-	     .replace('_)', ')'),
+	   ''.join((ii.split('(')[0], '(', underscore.sub(',', ii.split('(')[1] ) ))
+	     .replace('(,', '(')
+	     .replace(',)', ')'),
 	   Vars[ ii ]['Value']
 	  )
 
@@ -107,7 +109,8 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 		run_output.write( '\nAll variables have a zero (0) value.\n' )
 
 	if 0 == len( con_info ):
-		msg = '\nThe Coopr solver plugin did not give constraint data.\n'
+		# Since not all Coopr solvers give constraint results, must check
+		msg = '\nSelected Coopr solver plugin does not give constraint data.\n'
 		run_output.write( msg )
 	else:
 		msg = '\nBinding constraint values:\n'
