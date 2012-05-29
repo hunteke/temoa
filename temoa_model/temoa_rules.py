@@ -15,90 +15,91 @@ Simplistically, it is C_tot = C_loans + C_fixed + C_marginal.
 Each part, in essence, is merely a summation of the costs incurred multiplied by
 the time-value of money to bring it back to year 0.
 """
-	l_loan_period_fraction_indices = M.LoanLifeFrac.keys()
-	l_tech_period_fraction_indices = M.TechLifeFrac.keys()
+	partial_period_loan_indices = M.LoanLifeFrac.keys()
+	partial_period_tech_indices = M.TechLifeFrac.keys()
+	P_0 = M.time_optimize.first()
 
-	l_loan_costs = sum(
-	    M.V_CapacityInvest[l_tech, l_vin]
+	loan_costs = sum(
+	    M.V_CapacityInvest[S_t, S_v]
 	  * value(
-	      M.PeriodRate[ l_per ].value
-	    * M.CostInvest[l_tech, l_vin].value
-	    * M.LoanAnnualize[l_tech, l_vin].value
+	      M.PeriodRate[ S_p ].value
+	    * M.CostInvest[S_t, S_v].value
+	    * M.LoanAnnualize[S_t, S_v].value
 	  )
 
-	  for l_tech, l_vin in M.CostInvest.keys()
-	  for l_per in M.time_optimize
-	  if (l_per, l_tech, l_vin) not in l_loan_period_fraction_indices
-	  if loanIsActive( l_per, l_tech, l_vin )
+	  for S_t, S_v in M.CostInvest.keys()
+	  for S_p in M.time_optimize
+	  if (S_p, S_t, S_v) not in partial_period_loan_indices
+	  if loanIsActive( S_p, S_t, S_v )
 	) + sum(
-	    M.V_CapacityInvest[l_tech, l_vin]
+	    M.V_CapacityInvest[S_t, S_v]
 	  * value(
-	      M.CostInvest[l_tech, l_vin].value
-	    * M.LoanAnnualize[l_tech, l_vin].value
+	      M.CostInvest[S_t, S_v].value
+	    * M.LoanAnnualize[S_t, S_v].value
 	  )
 	  * sum(
-	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
-	      for y in range( 0, M.PeriodLength[ l_per ] * M.LoanLifeFrac[l_per, l_tech, l_vin])
+	      (1 + M.GlobalDiscountRate) ** (P_0 - S_p - y)
+	      for y in range( 0, M.PeriodLength[ S_p ] * M.LoanLifeFrac[S_p, S_t, S_v])
 	    )
 
-	  for l_per, l_tech, l_vin in l_loan_period_fraction_indices
+	  for S_p, S_t, S_v in partial_period_loan_indices
 	)
 
-	l_fixed_costs = sum(
-	    M.V_CapacityFixed[l_tech, l_vin]
+	fixed_costs = sum(
+	    M.V_CapacityFixed[S_t, S_v]
 	  * value(
-	      M.CostFixed[l_per, l_tech, l_vin].value
-	    * M.PeriodRate[ l_per ].value
+	      M.CostFixed[S_p, S_t, S_v].value
+	    * M.PeriodRate[ S_p ].value
 	  )
 
-	  for l_per, l_tech, l_vin in M.CostFixed.keys()
-	  if (l_per, l_tech, l_vin) not in l_tech_period_fraction_indices
+	  for S_p, S_t, S_v in M.CostFixed.keys()
+	  if (S_p, S_t, S_v) not in partial_period_tech_indices
 	) + sum(
-	    M.V_CapacityFixed[l_tech, l_vin]
-	  * M.CostFixed[l_per, l_tech, l_vin].value
+	    M.V_CapacityFixed[S_t, S_v]
+	  * M.CostFixed[S_p, S_t, S_v].value
 	  * sum(
-	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
-	      for y in range( 0, M.PeriodLength[ l_per ] * M.TechLifeFrac[l_per, l_tech, l_vin])
+	      (1 + M.GlobalDiscountRate) ** (P_0 - S_p - y)
+	      for y in range( 0, M.PeriodLength[ S_p ] * M.TechLifeFrac[S_p, S_t, S_v])
 	    )
 
-	  for l_per, l_tech, l_vin in l_tech_period_fraction_indices
-	  if (l_per, l_tech, l_vin) in M.CostFixed.keys()
+	  for S_p, S_t, S_v in partial_period_tech_indices
+	  if (S_p, S_t, S_v) in M.CostFixed.keys()
 	)
 
-	l_marg_costs = sum(
-	    M.V_ActivityByPeriodTechAndVintage[l_per, l_tech, l_vin]
+	marg_costs = sum(
+	    M.V_ActivityByPeriodTechAndVintage[S_p, S_t, S_v]
 	  * value(
-	      M.CostMarginal[l_per, l_tech, l_vin].value
-	    * M.PeriodRate[ l_per ].value
+	      M.CostMarginal[S_p, S_t, S_v].value
+	    * M.PeriodRate[ S_p ].value
 	  )
 
-	  for l_per, l_tech, l_vin in M.CostMarginal.keys()
+	  for S_p, S_t, S_v in M.CostMarginal.keys()
 	)
 
-	l_cost = (l_loan_costs + l_fixed_costs + l_marg_costs)
-	return l_cost
+	costs = (loan_costs + fixed_costs + marg_costs)
+	return costs
 Objective_rule = TotalCost_rule
 
 ##############################################################################
 #   Initializaton rules
 
-def ParamPeriodLength_rule ( M, period ):
+def ParamPeriodLength_rule ( M, p ):
 	# This specifically does not use time_optimize because this function is
 	# called /over/ time_optimize.
 	periods = sorted( M.time_horizon )
 	periods.extend( sorted(M.time_future) )
 
-	i = periods.index( period )
+	i = periods.index( p )
 
 	# The +1 won't fail, because this rule is called over time_optimize, which
 	# lacks the last period in time_future.  In fact, this is the whole point of
 	# having at least one period in time_future.
-	l_length = periods[i +1] - periods[ i ]
+	length = periods[i +1] - periods[ i ]
 
-	return l_length
+	return length
 
 
-def ParamPeriodRate_rule ( M, period ):
+def ParamPeriodRate_rule ( M, p ):
 	"""\
 The "Period Rate" is a multiplier against the costs incurred within a period to
 bring the time-value back to the base year.  The parameter PeriodRate is not
@@ -106,16 +107,16 @@ directly specified by the modeler, but is a convenience calculation based on the
 GlobalDiscountRate and the length of each period.  One may refer to this
 (pseudo) parameter via M.PeriodRate[ a_period ]
 """
-	l_rate_multiplier = sum(
-	  (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - period - y)
+	rate_multiplier = sum(
+	  (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - p - y)
 
-	  for y in range(0, M.PeriodLength[ period ])
+	  for y in range(0, M.PeriodLength[ p ])
 	)
 
-	return value(l_rate_multiplier)
+	return value(rate_multiplier)
 
 
-def ParamLoanLifeFraction_rule ( M, A_period, A_tech, A_vintage ):
+def ParamLoanLifeFraction_rule ( M, p, t, v ):
 	"""\
 For any technology investment loan that will end between periods (as opposed to
 on a period boundary), calculate the fraction of the final period that loan
@@ -124,16 +125,16 @@ payments must still be made.
 This function relies on being called only with ('period', 'tech', 'vintage')
 combinations of processes that will end in 'period'.
 """
-	l_eol_year = A_vintage + value(M.LifetimeLoan[A_tech, A_vintage])
+	eol_year = v + value(M.LifetimeLoan[t, v])
 
 	  # number of years into final period loan is complete
-	l_frac = l_eol_year - A_period
+	frac = eol_year - p
 
-	l_frac /= M.PeriodLength[ A_period ]
-	return value( l_frac )
+	frac /= M.PeriodLength[ p ]
+	return value( frac )
 
 
-def ParamTechLifeFraction_rule ( M, A_period, A_tech, A_vintage ):
+def ParamTechLifeFraction_rule ( M, p, t, v ):
 	"""\
 For any technology that will cease operation (rust out, be decommissioned, etc.)
 between periods (as opposed to on a period boundary), calculate the fraction of
@@ -142,24 +143,24 @@ the final period that the technology is still able to create useful output.
 This function must be called only with ('period', 'tech', 'vintage')
 combinations of processes that will end in 'period'.
 """
-	l_eol_year = A_vintage + value(M.LifetimeTech[A_tech, A_vintage])
+	eol_year = v + value(M.LifetimeTech[t, v])
 
 	  # number of years into final period loan is complete
-	l_frac  = l_eol_year - A_period
-	l_frac /= M.PeriodLength[ A_period ]
-	return value(l_frac)
+	frac  = eol_year - p
+	frac /= M.PeriodLength[ p ]
+	return value(frac)
 
 
-def ParamLoanAnnualize_rule ( M, A_tech, A_vintage ):
-	l_process = (A_tech, A_vintage)
-	l_annualized_rate = (
-	    M.DiscountRate[ l_process ]
-	  / (1 - (1 + M.DiscountRate[ l_process ])
-	         **(- M.LifetimeLoan[ l_process ])
+def ParamLoanAnnualize_rule ( M, t, v ):
+	process = (t, v)
+	annualized_rate = (
+	    M.DiscountRate[ process ]
+	  / (1 - (1 + M.DiscountRate[ process ])
+	         **(- M.LifetimeLoan[ process ])
 	    )
 	)
 
-	return value(l_annualized_rate)
+	return value(annualized_rate)
 
 # End initialization rules
 ##############################################################################
@@ -167,9 +168,7 @@ def ParamLoanAnnualize_rule ( M, A_tech, A_vintage ):
 ##############################################################################
 #   Constraint rules
 
-def BaseloadDiurnalConstraint_rule (
-  M, A_period, A_season, A_time_of_day, A_tech, A_vintage
-):
+def BaseloadDiurnalConstraint_rule ( M, p, s, d, t, v ):
 	r"""
 Ensure that electric baseload technologies maintain a constant output at all
 times during a day.
@@ -183,7 +182,6 @@ times during a day.
 
    \\
    \forall \{p, s, d, t, v\} \in ACT_{ind}, d \ne D_0
-
 """
 	# Question: How to set the different times of day equal to each other?
 
@@ -191,7 +189,7 @@ times during a day.
 	l_times = sorted( M.time_of_day )  # i.e. a sorted Python list.
 	  # This is the commonality between invocations of this method.
 
-	index = l_times.index( A_time_of_day )
+	index = l_times.index( d )
 	if 0 == index:
 		# When index is 0, it means that we've reached the beginning of the array
 		# For the algorithm, this is a terminating condition: do not create
@@ -204,7 +202,7 @@ times during a day.
 	# tod[ 3 ] == tod[ 1 ]
 	# tod[ 4 ] == tod[ 1 ]
 	# and so on ...
-	l_first = l_times[ 0 ]
+	d_0 = l_times[ 0 ]
 
 	# Step 3: the actual expression.  For baseload, must compute the /average/
 	# activity over the segment.  By definition, average is
@@ -213,16 +211,14 @@ times during a day.
 	#   computationally, however, multiplication is cheaper than division, so:
 	#       (ActA * SegB) == (ActB * SegA)
 	expr = (
-	    M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
-	  * M.SegFrac[A_season, l_first]
-	  ==
-	    M.V_Activity[A_period, A_season, l_first, A_tech, A_vintage]
-	  * M.SegFrac[A_season, A_time_of_day]
+	    M.V_Activity[p, s, d, t, v]   * M.SegFrac[s, d_0]
+	 ==
+	    M.V_Activity[p, s, d_0, t, v] * M.SegFrac[s, d]
 	)
 	return expr
 
 
-def EmissionConstraint_rule ( M, A_period, A_emission ):
+def EmissionConstraint_rule ( M, p, e ):
 	r"""
 Enforce user-specified limits of individual emissions, per period.
 
@@ -236,32 +232,30 @@ Enforce user-specified limits of individual emissions, per period.
    \\
    \forall \{p, e\} \in ELM_{ind}
 	"""
-	index = (A_period, A_emission)
-	l_emissionlimit = M.EmissionLimit[ index ]
+	emission_limit = M.EmissionLimit[p, e]
 
-	l_eActivityIndices = M.EmissionActivity.keys()
-	l_sum = sum(
-	    M.V_FlowOut[A_period, l_season, l_tod, l_inp, l_tech, l_vin, l_out]
-	  * M.EmissionActivity[A_emission, l_inp, l_tech, l_vin, l_out]
+	actual_emissions = sum(
+	    M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, S_o]
+	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o]
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
-	  if l_emission == A_emission
-	  if ValidActivity( A_period, l_tech, l_vin )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if T_e == e
+	  if ValidActivity( p, S_t, S_v )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if int is type( l_sum ):
+	if int is type( actual_emissions ):
 		msg = ("Warning: No technology produces emission '%s', though limit was "
 		  'specified as %s.\n')
-		SE.write( msg % (A_emission, l_emissionlimit) )
+		SE.write( msg % (e, emission_limit) )
 		return Constraint.Skip
 
-	expr = (l_sum <= l_emissionlimit)
+	expr = (actual_emissions <= emission_limit)
 	return expr
 
 
-def MinCapacityConstraint_rule ( M, A_period, A_tech ):
+def MinCapacityConstraint_rule ( M, p, t ):
 	r"""
 Ensure a user-specified minimum amount of technology capacity is availabie at
 the beginning of a period.
@@ -275,13 +269,12 @@ through a period.
 
    \forall \{p, t\} \in MIN_{ind}
 """
-	index = (A_period, A_tech)
-	l_min = M.MinCapacity[ index ]
-	expr = (M.V_CapacityAvailableByPeriodAndTech[ index ] >= l_min)
+	min_cap = M.MinCapacity[p, t]
+	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] >= min_cap)
 	return expr
 
 
-def MaxCapacityConstraint_rule ( M, A_period, A_tech ):
+def MaxCapacityConstraint_rule ( M, p, t ):
 	r"""
 Ensure a user-specified maximum amount of technology capacity at the beginning
 of a period.
@@ -295,15 +288,12 @@ through a period.
 
    \forall \{p, t\} \in MAX_{ind}
 """
-	index = (A_period, A_tech)
-	l_max = M.MaxCapacity[ index ]
-	expr = (M.V_CapacityAvailableByPeriodAndTech[ index ] <= l_max)
+	max_cap = M.MaxCapacity[p, t]
+	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] <= max_cap)
 	return expr
 
 
-def StorageConstraint_rule (
-  M, A_period, A_season, A_inp, A_tech, A_vintage, A_out
-):
+def StorageConstraint_rule ( M, p, s, i, t, v, o ):
 	r"""\
 Over the length of a season, ensure that the amount of energy into a storage
 unit (less an efficiency) is the same as the energy coming out of it.
@@ -318,51 +308,47 @@ unit (less an efficiency) is the same as the energy coming out of it.
 
    \forall \{p, s, i, t, v, o\} \in \overline{SC}_{ind}
 """
-	l_sum_in_out = sum(
-	    M.V_FlowOut[A_period, A_season, l_tod, A_inp, A_tech, A_vintage, A_out]
-	  - M.V_FlowIn[A_period, A_season, l_tod, A_inp, A_tech, A_vintage, A_out]
-	  * M.Efficiency[A_inp, A_tech, A_vintage, A_out]
+	total_out_in = sum(
+	    M.V_FlowOut[p, s, S_d, i, t, v, o]
+	  - M.Efficiency[i, t, v, o]
+	  * M.V_FlowIn[p, s, S_d, i, t, v, o]
 
-	  for l_tod in M.time_of_day
+	  for S_d in M.time_of_day
 	)
 
-	expr = ( l_sum_in_out == 0 )
+	expr = ( total_out_in == 0 )
 	return expr
 
 
-def TechOutputSplitConstraint_rule (
-  M, A_period, A_season, A_time_of_day, A_input, A_tech, A_vintage, A_output
-):
+def TechOutputSplitConstraint_rule ( M, p, s, d, i, t, v, o ):
 	split_indices = M.TechOutputSplit.keys()
 
-	l_outputs = sorted(
-	  l_out
+	outputs = sorted(
+	  output
 
-	  for l_out in M.commodity_carrier
-	  if (A_input, A_tech, l_out) in split_indices
+	  for output in M.commodity_carrier
+	  if (i, t, output) in split_indices
 	)
 
-	l_index = l_outputs.index( A_output )
-	if 0 == l_index:
+	index = outputs.index( o )
+	if 0 == index:
 		return Constraint.Skip
 
-	l_prev = l_outputs[ l_index -1 ]
-	l_prev_split = M.TechOutputSplit[A_input, A_tech, l_prev]
-	l_split = M.TechOutputSplit[A_input, A_tech, A_output]
+	prev = outputs[ index -1 ]
+	prev_split = M.TechOutputSplit[i, t, prev]
+	split = M.TechOutputSplit[i, t, o]
 
 	expr = (
-	    M.V_FlowOut[A_period, A_season, A_time_of_day, A_input, A_tech, A_vintage, A_output]
-	  * l_split
+	    M.V_FlowOut[p, s, d, i, t, v, o]
+	  * split
 	  ==
-	    M.V_FlowOut[A_period, A_season, A_time_of_day, A_input, A_tech, A_vintage, l_prev]
-	  * l_prev_split
+	    M.V_FlowOut[p, s, d, i, t, v, prev]
+	  * prev_split
 	)
 	return expr
 
 
-def ActivityConstraint_rule (
-  M, A_period, A_season, A_time_of_day, A_tech, A_vintage
-):
+def ActivityConstraint_rule ( M, p, s, d, t, v ):
 	r"""
 Defines the convenience variable ACT as the sum of all outputs of a process.
 
@@ -377,68 +363,63 @@ accounting exercise for the modeler.
    \\
    \forall \{p, s, d, t, v\} \in ACT_{ind}
 """
-	pindex = (A_period, A_tech, A_vintage)
-	aindex = (A_period, A_season, A_time_of_day, A_tech, A_vintage)
+	activity = sum(
+	  M.V_FlowOut[p, s, d, S_i, t, v, S_o]
 
-	l_activity = sum(
-	  M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, A_tech, A_vintage, l_out]
-
-	  for l_inp in ProcessInputs( A_period, A_tech, A_vintage )
-	  for l_out in ProcessOutputsByInput( A_period, A_tech, A_vintage, l_inp )
+	  for S_i in ProcessInputs( p, t, v )
+	  for S_o in ProcessOutputsByInput( p, t, v, S_i )
 	)
 
-	expr = ( M.V_Activity[ aindex ] == l_activity )
+	expr = ( M.V_Activity[p, s, d, t, v] == activity )
 	return expr
 
 
-def FractionalLifeActivityLimit_Constraint (
-  M, A_period, A_season, A_tod, A_tech, A_vintage, A_com
-):
-	l_max_output = (
-	    M.V_Capacity[A_tech, A_vintage]
-	  * M.CapacityFactor[A_tech, A_vintage]
-	  * M.CapacityToActivity[A_tech]
-	  * M.TechLifeFrac[A_period, A_tech, A_vintage]
-	  * M.SegFrac[A_season, A_tod]
+def FractionalLifeActivityLimit_Constraint ( M, p, s, d, t, v, o ):
+	max_output = (
+	    M.V_Capacity[t, v]
+	  * M.CapacityFactor[t, v]
+	  * M.CapacityToActivity[t]
+	  * M.TechLifeFrac[p, t, v]
+	  * M.SegFrac[s, d]
 	)
 
-	l_output = sum(
-	  M.V_FlowOut[A_period, A_season, A_tod, l_inp, A_tech, A_vintage, A_com]
+	S_o = sum(
+	  M.V_FlowOut[p, s, d, S_i, t, v, o]
 
-	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com )
+	  for S_i in ProcessInputsByOutput( p, t, v, o )
 	)
 
-	expr = (l_output <= l_max_output)
+	expr = (S_o <= max_output)
 	return expr
 
 
-def CapacityByOutputConstraint_rule (
-  M, A_per, A_season, A_tod, A_tech, A_vintage, A_output ):
-	l_activity = sum(
-	  M.V_FlowOut[A_per, A_season, A_tod, l_inp, A_tech, A_vintage, A_output]
-	  for l_inp in ProcessInputs( A_per, A_tech, A_vintage )
+def CapacityByOutputConstraint_rule ( M, p, s, d, t, v, o ):
+	actual_activity = sum(
+	  M.V_FlowOut[p, s, d, S_i, t, v, o]
+
+	  for S_i in ProcessInputs( p, t, v )
 	)
 
-	l_min_cap = (
-	    M.V_CapacityByOutput[A_tech, A_vintage, A_output]
-	  * M.CapacityFactor[A_tech, A_vintage]
-	  * M.SegFrac[A_season, A_tod]
-	  * M.CapacityToActivity[ A_tech ]
+	produceable = (
+	    M.V_CapacityByOutput[t, v, o]
+	  * M.CapacityFactor[t, v]
+	  * M.SegFrac[s, d]
+	  * M.CapacityToActivity[ t ]
 	)
 
-	expr = ( l_min_cap >= l_activity )
+	expr = ( produceable >= actual_activity )
 	return expr
 
 
 def CapacityConstraint_rule ( M, t, v ):
-	l_cap = sum(
+	cap = sum(
 	  M.V_CapacityByOutput[t, v, o]
 
-	  for T, V, o in M.V_CapacityByOutput.keys()
-	  if T == t and V == v
+	  for T_t, V, o in M.V_CapacityByOutput.keys()
+	  if T_t == t and V == v
 	)
 
-	return l_cap == M.V_Capacity[t, v]
+	return M.V_Capacity[t, v] == cap
 
 
 def CapacityInvestConstraint_rule ( M, t, v ):
@@ -449,7 +430,7 @@ def CapacityFixedConstraint_rule ( M, t, v ):
 	return  M.V_Capacity[t, v] == M.V_CapacityFixed[t, v]
 
 
-def ExistingCapacityConstraint_rule ( M, A_tech, A_vintage ):
+def ExistingCapacityConstraint_rule ( M, t, v ):
 	r"""
 For vintage periods (those in ``time_exist``, that the model does not optimize),
 explicitly set technological capacity to user-specified values.
@@ -459,13 +440,11 @@ explicitly set technological capacity to user-specified values.
 
    \forall \{t, v\} \in ECAP_{ind}
 """
-	index = (A_tech, A_vintage)
-
-	expr = ( M.V_Capacity[ index ] == M.ExistingCapacity[ index ] )
+	expr = ( M.V_Capacity[t, v] == M.ExistingCapacity[t, v] )
 	return expr
 
 
-def ResourceExtractionConstraint_rule ( M, A_period, A_resource ):
+def ResourceExtractionConstraint_rule ( M, p, r ):
 	r"""
 Prevent TEMOA from extracting an endless supply of energy from 'the ether'.
 
@@ -475,23 +454,20 @@ Prevent TEMOA from extracting an endless supply of energy from 'the ether'.
 
    \forall \{p, c\} \in RSC_{ind}, e = \text{'ether'}
 """
-	index = (A_period, A_resource)
-	max_resource = M.ResourceBound[ index ]
+	collected = sum(
+	  M.V_FlowIn[p, S_s, S_d, S_i, S_t, S_v, r]
 
-	l_extract = sum(
-	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, l_tech, l_vin, A_resource]
-
-	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_resource )
-	  for l_inp in ProcessInputsByOutput( A_period, l_tech, l_vin, A_resource )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_t, S_v in ProcessesByPeriodAndOutput( p, r )
+	  for S_i in ProcessInputsByOutput( p, S_t, S_v, r )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	expression = (l_extract <= max_resource)
-	return expression
+	expr = (collected <= M.ResourceBound[p, r])
+	return expr
 
 
-def CommodityBalanceConstraint_rule ( M, A_period, A_season, A_time_of_day, A_carrier ):
+def CommodityBalanceConstraint_rule ( M, p, s, d, c ):
 	r"""
 Ensure that the amount of energy produced at least meets the amount of needed
 input energy.  That is, this is the corollary to the ProcessBalance
@@ -505,36 +481,32 @@ constraint, maintaining energy flows *between* processes.
    \\
    \forall P, S, D, C \setminus C_d
 """
-	if A_carrier in M.commodity_demand:
+	if c in M.commodity_demand:
 		return Constraint.Skip
 
-	l_vflow_in = sum(
-	  M.V_FlowIn[A_period, A_season, A_time_of_day, A_carrier, l_tech, l_vin, l_out]
+	vflow_in = sum(
+	  M.V_FlowIn[p, s, d, c, S_t, S_v, S_o]
 
-	  for l_tech in M.tech_production
-	  for l_vin in M.vintage_all
-	  for l_out in ProcessOutputsByInput( A_period, l_tech, l_vin, A_carrier )
+	  for S_t in M.tech_production
+	  for S_v in M.vintage_all
+	  for S_o in ProcessOutputsByInput( p, S_t, S_v, c )
 	)
 
-	l_vflow_out = sum(
-	  M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, l_tech, l_vin, A_carrier]
+	vflow_out = sum(
+	  M.V_FlowOut[p, s, d, S_i, S_t, S_v, c]
 
-	  for l_tech in M.tech_all
-	  for l_vin in M.vintage_all
-	  for l_inp in ProcessInputsByOutput( A_period, l_tech, l_vin, A_carrier )
+	  for S_t in M.tech_all
+	  for S_v in M.vintage_all
+	  for S_i in ProcessInputsByOutput( p, S_t, S_v, c )
 	)
 
-	CommodityBalanceConstraintErrorCheck(
-	  l_vflow_out, l_vflow_in, A_carrier, A_season, A_time_of_day, A_period
-	)
+	CommodityBalanceConstraintErrorCheck( vflow_out, vflow_in, c, s, d, p )
 
-	expression = (l_vflow_out >= l_vflow_in)
-	return expression
+	expr = (vflow_out >= vflow_in)
+	return expr
 
 
-def ProcessBalanceConstraint_rule (
-  M, A_period, A_season, A_time_of_day, A_inp, A_tech, A_vintage, A_out
-):
+def ProcessBalanceConstraint_rule ( M, p, s, d, i, t, v, o ):
 	r"""
 Analogous to CommodityBalance, this constraint ensures that the amount of energy
 leaving a process is not more than the amount entering it.
@@ -547,22 +519,17 @@ leaving a process is not more than the amount entering it.
 
    \forall \{p, s, d, i, t, v, o\} \in \textbf{FO}_{ind}
 """
-	aindex = (A_period, A_season, A_time_of_day, A_inp, A_tech, A_vintage, A_out)
-
 	expr = (
-	    M.V_FlowOut[ aindex ]
+	    M.V_FlowOut[p, s, d, i, t, v, o]
 	      <=
-	    M.V_FlowIn[ aindex ]
-	  * M.Efficiency[A_inp, A_tech, A_vintage, A_out]
+	    M.V_FlowIn[p, s, d, i, t, v, o]
+	  * M.Efficiency[i, t, v, o]
 	)
 
 	return expr
 
 
-def DemandActivityConstraint_rule (
-  M, A_period, A_season, A_time_of_day, A_tech, A_vintage, A_demand,
-  first_season, first_time_of_day
-):
+def DemandActivityConstraint_rule ( M, p, s, d, t, v, dem, s_0, d_0 ):
 	"""\
 For end-use demands, it is unreasonable to let the optimizer only allow use in a
 single time slice.  For instance, if household A buys a natural gas furnace
@@ -576,25 +543,25 @@ what is performed in the Baseload constraint.
 """
 
 	act_a = sum(
-	  M.V_FlowOut[A_period, first_season, first_time_of_day, l_inp, A_tech, A_vintage, A_demand]
+	  M.V_FlowOut[p, s_0, d_0, S_i, t, v, dem]
 
-	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_demand )
+	  for S_i in ProcessInputsByOutput( p, t, v, dem )
 	)
 	act_b = sum(
-	  M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, A_tech, A_vintage, A_demand]
+	  M.V_FlowOut[p, s, d, S_i, t, v, dem]
 
-	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_demand )
+	  for S_i in ProcessInputsByOutput( p, t, v, dem )
 	)
 
 	expr = (
-	  act_a * M.Demand[A_period, A_season, A_time_of_day, A_demand].value
+	  act_a * M.Demand[p, s, d, dem].value
 	     ==
-	  act_b * M.Demand[A_period, first_season, first_time_of_day, A_demand].value
+	  act_b * M.Demand[p, s_0, d_0, dem].value
 	)
 	return expr
 
 
-def DemandConstraint_rule ( M, A_period, A_season, A_time_of_day, A_comm ):
+def DemandConstraint_rule ( M, p, s, d, dem ):
 	r"""\
 The driving constraint, this rule ensures that supply at least equals demand.
 The sum of all outputs from the FlowOut (``FO``) variable for a given commodity
@@ -609,26 +576,23 @@ parameter.
    \\
    \forall \{p, s, d, c\} \in DEM_{ind}
 """
-	index = (A_period, A_season, A_time_of_day, A_comm)
-	if not (M.Demand[ index ] > 0):
+	if not (M.Demand[p, s, d, dem] > 0):
 		# User must have supplied a 0 demand: no need to create a useless
 		# constraint like X >= 0
 		return Constraint.Skip
 
-	l_supply = sum(
-	  M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, l_tech, l_vin, A_comm]
+	supply = sum(
+	  M.V_FlowOut[p, s, d, S_i, S_t, S_v, dem]
 
-	  for l_tech in M.tech_all
-	  for l_vin in M.vintage_all
-	  for l_inp in ProcessInputsByOutput( A_period, l_tech, l_vin, A_comm )
+	  for S_t in M.tech_all
+	  for S_v in M.vintage_all
+	  for S_i in ProcessInputsByOutput( p, S_t, S_v, dem )
 	)
 
-	DemandConstraintErrorCheck (
-	  l_supply, A_comm, A_period, A_season, A_time_of_day
-	)
+	DemandConstraintErrorCheck ( supply, dem, p, s, d )
 
-	expression = (l_supply >= M.Demand[ index ])
-	return expression
+	expr = (supply >= M.Demand[p, s, d, dem])
+	return expr
 
 # End constraint rules
 ##############################################################################
@@ -636,155 +600,142 @@ parameter.
 ##############################################################################
 # Additional and derived (informational) variable constraints
 
-def ActivityByPeriodTechConstraint_rule ( M, A_per, A_tech ):
-	l_sum = sum(
-	  M.V_Activity[A_per, l_season, l_tod, A_tech, l_vin]
+def ActivityByPeriodTechConstraint_rule ( M, p, t ):
+	activity = sum(
+	  M.V_Activity[p, S_s, S_d, t, S_v]
 
-	  for l_vin in ProcessVintages( A_per, A_tech )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_v in ProcessVintages( p, t )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if int is type( l_sum ):
+	if int is type( activity ):
 		return Constraint.Skip
 
-	expr = (M.V_ActivityByPeriodAndTech[A_per, A_tech] == l_sum)
+	expr = (M.V_ActivityByPeriodAndTech[p, t] == activity)
 	return expr
 
 
-def ActivityByPeriodTechAndVintageConstraint_rule ( M, A_per, A_tech, A_vin ):
-	if A_per < A_vin or A_vin not in ProcessVintages( A_per, A_tech ):
+def ActivityByPeriodTechAndVintageConstraint_rule ( M, p, t, v ):
+	if p < v or v not in ProcessVintages( p, t ):
 		return Constraint.Skip
 
-	l_sum = sum(
-	  M.V_Activity[A_per, l_season, l_tod, A_tech, A_vin]
+	activity = sum(
+	  M.V_Activity[p, S_s, S_d, t, v]
 
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if int is type( l_sum ):
+	if int is type( activity ):
 		return Constraint.Skip
 
-	expr = (M.V_ActivityByPeriodTechAndVintage[A_per, A_tech, A_vin] == l_sum)
+	expr = (M.V_ActivityByPeriodTechAndVintage[p, t, v] == activity)
 	return expr
 
 
-def ActivityByPeriodTechAndOutputConstraint_rule ( M, A_period, A_tech, A_output ):
-	l_sum = sum(
-	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, l_vin, A_output]
+def ActivityByPeriodTechAndOutputConstraint_rule ( M, p, t, o ):
+	activity = sum(
+	  M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, o]
 
-	  for l_vin in ProcessVintages( A_period, A_tech )
-	  for l_inp in ProcessInputsByOutput( A_period, A_tech, l_vin, A_output )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_v in ProcessVintages( p, t )
+	  for S_i in ProcessInputsByOutput( p, t, S_v, o )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if int is type( l_sum ):
+	if int is type( activity ):
 		return Constraint.Skip
 
-	index = (A_period, A_tech, A_output)
-	expr = (M.V_ActivityByPeriodTechAndOutput[ index ] == l_sum)
+	expr = (M.V_ActivityByPeriodTechAndOutput[p, t, o] == activity)
 	return expr
 
 
-def ActivityByPeriodTechVintageAndOutputConstraint_rule (
-  M, A_period, A_tech, A_vintage, A_output
-):
-	l_sum = sum(
-	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_output]
+def ActivityByPeriodTechVintageAndOutputConstraint_rule ( M, p, t, v, o ):
+	activity = sum(
+	  M.V_FlowOut[p, S_s, S_d, S_i, t, v, o]
 
-	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_output )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_i in ProcessInputsByOutput( p, t, v, o )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if int is type( l_sum ):
+	if int is type( activity ):
 		return Constraint.Skip
 
-	index = (A_period, A_tech, A_vintage, A_output)
-	expr = (M.V_ActivityByPeriodTechVintageAndOutput[ index ] == l_sum)
+	expr = (M.V_ActivityByPeriodTechVintageAndOutput[p, t, v, o] == activity)
 	return expr
 
-def ActivityByTechAndOutputConstraint_rule ( M, A_tech, A_output ):
-	l_sum = sum(
-	  M.V_FlowOut[l_per, l_season, l_tod, l_inp, A_tech, l_vin, A_output]
+def ActivityByTechAndOutputConstraint_rule ( M, t, o ):
+	activity = sum(
+	  M.V_FlowOut[S_p, S_s, S_d, S_i, t, S_v, o]
 
-	  for l_per in M.time_optimize
-	  for l_vin in ProcessVintages( l_per, A_tech )
-	  for l_inp in ProcessInputsByOutput( l_per, A_tech, l_vin, A_output )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_p in M.time_optimize
+	  for S_v in ProcessVintages( S_p, t )
+	  for S_i in ProcessInputsByOutput( S_p, t, S_v, o )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if int is type( l_sum ):
+	if int is type( activity ):
 		return Constraint.Skip
 
-	index = (A_tech, A_output)
-	expr = (M.V_ActivityByTechAndOutput[ index ] == l_sum)
+	expr = (M.V_ActivityByTechAndOutput[t, o] == activity)
 	return expr
 
 
-def ActivityByInputAndTechConstraint_rule ( M, A_input, A_tech ):
-	l_sum = sum(
-	  M.V_FlowOut[l_per, l_season, l_tod, A_input, A_tech, l_vin, l_out]
+def ActivityByInputAndTechConstraint_rule ( M, i, t ):
+	activity = sum(
+	  M.V_FlowOut[S_p, S_s, S_d, i, t, S_v, S_o]
 
-	  for l_per in M.time_optimize
-	  for l_vin in ProcessVintages( l_per, A_tech )
-	  for l_out in ProcessOutputsByInput( l_per, A_tech, l_vin, A_input )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_p in M.time_optimize
+	  for S_v in ProcessVintages( S_p, t )
+	  for S_o in ProcessOutputsByInput( S_p, t, S_v, i )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if int is type( l_sum ):
+	if int is type( activity ):
 		return Constraint.Skip
 
-	index = (A_input, A_tech)
-	expr = (M.V_ActivityByInputAndTech[ index ] == l_sum)
+	expr = (M.V_ActivityByInputAndTech[i, t] == activity)
 	return expr
 
 
-def ActivityByPeriodInputAndTechConstraint_rule (
-  M, A_period, A_input, A_tech
-):
-	l_sum = sum(
-	  M.V_FlowIn[A_period, l_season, l_tod, A_input, A_tech, l_vin, l_out]
+def ActivityByPeriodInputAndTechConstraint_rule ( M, p, i, t ):
+	activity = sum(
+	  M.V_FlowIn[p, S_s, S_d, i, t, S_v, S_o]
 
-	  for l_vin in ProcessVintages( A_period, A_tech )
-	  for l_out in ProcessOutputsByInput( A_period, A_tech, l_vin, A_input )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_v in ProcessVintages( p, t )
+	  for S_o in ProcessOutputsByInput( p, t, S_v, i )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if int is type( l_sum ):
+	if int is type( activity ):
 		return Constraint.Skip
 
-	index = (A_period, A_input, A_tech)
-	expr = (M.V_ActivityByPeriodInputAndTech[ index ] == l_sum)
+	expr = (M.V_ActivityByPeriodInputAndTech[p, i, t] == activity)
 	return expr
 
 
-def ActivityByPeriodInputTechAndVintageConstraint_rule (
-  M, A_period, A_input, A_tech, A_vintage
-):
-	l_sum = sum(
-	  M.V_FlowIn[A_period, l_season, l_tod, A_input, A_tech, A_vintage, l_out]
+def ActivityByPeriodInputTechAndVintageConstraint_rule ( M, p, i, t, v ):
+	activity = sum(
+	  M.V_FlowIn[p, S_s, S_d, i, t, v, S_o]
 
-	  for l_out in ProcessOutputsByInput( A_period, A_tech, A_vintage, A_input )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_o in ProcessOutputsByInput( p, t, v, i )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if int is type( l_sum ):
+	if int is type( activity ):
 		return Constraint.Skip
 
-	index = (A_period, A_input, A_tech, A_vintage)
-	expr = (M.V_ActivityByPeriodInputTechAndVintage[ index ] == l_sum)
+	expr = (M.V_ActivityByPeriodInputTechAndVintage[p, i, t, v] == activity)
 	return expr
 
 
-
-def CapacityAvailableByPeriodAndTechConstraint_rule ( M, A_per, A_tech ):
+def CapacityAvailableByPeriodAndTechConstraint_rule ( M, p, t ):
 	"""
 This constraint sets V_CapacityAvailableByPeriodAndTech, a variable
 nominally for reporting, but also used in the Max and Min constraint
@@ -796,250 +747,232 @@ only as much percentage as its lifespan through the period.  For example, if a
 period is 8 years, and a process dies 3 years into the period, then only 3/8 of
 the installed capacity is available for use for the period.
 """
-	dying_vintages = set( l_vin
+	dying_vintages = set( S_v
 
-	  for l_per, l_tech, l_vin in M.TechLifeFrac.keys()
-	  if l_per == A_per and l_tech == A_tech
+	  for S_p, S_t, S_v in M.TechLifeFrac.keys()
+	  if S_p == p and S_t == t
 	)
-	non_dying = ProcessVintages( A_per, A_tech ) - dying_vintages
+	non_dying = ProcessVintages( p, t ) - dying_vintages
 
-	l_sum = sum( M.V_Capacity[A_tech, l_vin] for l_vin in non_dying )
-	l_sum += sum(
-	    M.V_Capacity[A_tech, l_vin]
-	  * M.TechLifeFrac[A_per, A_tech, l_vin].value
+	cap_avail = sum( M.V_Capacity[t, S_v] for S_v in non_dying )
+	cap_avail += sum(
+	    M.V_Capacity[t, S_v]
+	  * M.TechLifeFrac[p, t, S_v].value
 
-	  for l_vin in dying_vintages
+	  for S_v in dying_vintages
 	)
 
-	expr = (M.V_CapacityAvailableByPeriodAndTech[A_per, A_tech] == l_sum)
+	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] == cap_avail)
 	return expr
 
 
-def InvestmentByTechConstraint_rule ( M, A_tech ):
-	l_sum = sum(
-	    M.V_Capacity[A_tech, l_vin]
-	  * value( M.CostInvest[A_tech, l_vin] )
+def InvestmentByTechConstraint_rule ( M, t ):
+	investment = sum(
+	    M.V_Capacity[t, S_v]
+	  * value( M.CostInvest[t, S_v] )
 
-	  for l_tech, l_vin in M.CostInvest.keys()
-	  if l_tech == A_tech
+	  for S_t, S_v in M.CostInvest.keys()
+	  if S_t == t
 	)
 
-	if int is type( l_sum ):
+	if int is type( investment ):
 		return Constraint.Skip
 
-	expr = ( M.V_InvestmentByTech[ A_tech ] == l_sum)
+	expr = ( M.V_InvestmentByTech[ t ] == investment)
 	return expr
 
 
-def InvestmentByTechAndVintageConstraint_rule ( M, A_tech, A_vin ):
-	index = (A_tech, A_vin)
-
-	if index in M.CostInvest.keys():
-		l_cost = M.V_Capacity[ index ] * value(M.CostInvest[ index ])
-	else:
+def InvestmentByTechAndVintageConstraint_rule ( M, t, v ):
+	if (t, v) not in M.CostInvest.keys():
 		return Constraint.Skip
 
-	expr = ( M.V_InvestmentByTechAndVintage[ index ] == l_cost)
+	investment = M.V_Capacity[t, v] * value(M.CostInvest[t, v])
+	expr = ( M.V_InvestmentByTechAndVintage[t, v] == investment)
 	return expr
 
 
-def EmissionActivityTotalConstraint_rule ( M, A_emission ):
-	l_sum = sum(
-	    M.V_FlowOut[l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out]
-	  * M.EmissionActivity[A_emission, l_inp, l_tech, l_vin, l_out]
+def EmissionActivityTotalConstraint_rule ( M, e ):
+	emission_total = sum(
+	    M.V_FlowOut[S_p, S_s, S_d, S_i, S_t, S_v, S_o]
+	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o]
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
-	  if l_emission == A_emission
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if T_e == e
+	  for S_p in M.time_optimize
+	  if ValidActivity( S_p, S_t, S_v )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if type( l_sum ) is int:
+	if type( emission_total ) is int:
 		return Constraint.Skip
 
-	expr = (M.V_EmissionActivityTotal[ A_emission ] == l_sum)
+	expr = (M.V_EmissionActivityTotal[ e ] == emission_total)
 	return expr
 
 
-def EmissionActivityByPeriodConstraint_rule ( M, A_emission, A_period ):
-	l_sum = sum(
-	    M.V_FlowOut[A_period, l_season, l_tod, l_inp, l_tech, l_vin, l_out]
-	  * M.EmissionActivity[A_emission, l_inp, l_tech, l_vin, l_out]
+def EmissionActivityByPeriodConstraint_rule ( M, e, p ):
+	emission_total = sum(
+	    M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, S_o]
+	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o]
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
-	  if l_emission == A_emission
-	  if ValidActivity( A_period, l_tech, l_vin )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if T_e == e
+	  if ValidActivity( p, S_t, S_v )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if type( l_sum ) is int:
+	if type( emission_total ) is int:
 		return Constraint.Skip
 
-	expr = (M.V_EmissionActivityByPeriod[A_emission, A_period] == l_sum)
+	expr = (M.V_EmissionActivityByPeriod[e, p] == emission_total)
 	return expr
 
 
-def EmissionActivityByTechConstraint_rule ( M, A_emission, A_tech ):
-	l_sum = sum(
-	    M.V_FlowOut[l_per, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
-	  * M.EmissionActivity[A_emission, l_inp, A_tech, l_vin, l_out]
+def EmissionActivityByTechConstraint_rule ( M, e, t ):
+	emission_total = sum(
+	    M.V_FlowOut[S_p, S_s, S_d, S_i, t, S_v, S_o]
+	  * M.EmissionActivity[e, S_i, t, S_v, S_o]
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
-	  if l_emission == A_emission and l_tech == A_tech
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if T_e == e and S_t == t
+	  for S_p in M.time_optimize
+	  if ValidActivity( S_p, S_t, S_v )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if type( l_sum ) is int:
+	if type( emission_total ) is int:
 		return Constraint.Skip
 
-	expr = (M.V_EmissionActivityByTech[A_emission, A_tech] == l_sum)
+	expr = (M.V_EmissionActivityByTech[e, t] == emission_total)
 	return expr
 
 
-def EmissionActivityByPeriodAndTechConstraint_rule (
-  M, A_emission, A_period, A_tech
-):
-	l_sum = sum(
-	    M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
-	  * M.EmissionActivity[A_emission, l_inp, A_tech, l_vin, l_out]
+def EmissionActivityByPeriodAndTechConstraint_rule ( M, e, p, t ):
+	emission_total = sum(
+	    M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, S_o]
+	  * M.EmissionActivity[e, S_i, t, S_v, S_o]
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
-	  if l_emission == A_emission and l_tech == A_tech
-	  if ValidActivity( A_period, l_tech, l_vin )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if T_e == e and S_t == t
+	  if ValidActivity( p, S_t, S_v )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if type( l_sum ) is int:
+	if type( emission_total ) is int:
 		return Constraint.Skip
 
-	index = (A_emission, A_period, A_tech)
-	expr = (M.V_EmissionActivityByPeriodAndTech[ index ] == l_sum)
+	expr = (M.V_EmissionActivityByPeriodAndTech[e, p, t] == emission_total)
 	return expr
 
 
-def EmissionActivityByTechAndVintageConstraint_rule (
-  M, A_emission, A_tech, A_vintage
-):
-	l_sum = sum(
-	    M.V_FlowOut[l_per, l_season, l_tod, l_inp, A_tech, A_vintage, l_out]
-	  * M.EmissionActivity[A_emission, l_inp, A_tech, A_vintage, l_out]
+def EmissionActivityByTechAndVintageConstraint_rule ( M, e, t, v ):
+	emission_total = sum(
+	    M.V_FlowOut[S_p, S_s, S_d, S_i, t, v, S_o]
+	  * M.EmissionActivity[e, S_i, t, v, S_o]
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
-	  if l_emission == A_emission and l_tech == A_tech and l_vin == A_vintage
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if T_e == e and S_t == t and S_v == v
+	  for S_p in M.time_optimize
+	  if ValidActivity( S_p, S_t, S_v )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	if type( l_sum ) is int:
+	if type( emission_total ) is int:
 		return Constraint.Skip
 
-	index = (A_emission, A_tech, A_vintage)
-	expr = (M.V_EmissionActivityByTechAndVintage[ index ] == l_sum)
+	expr = (M.V_EmissionActivityByTechAndVintage[e, t, v] == emission_total)
 	return expr
 
 
-def EnergyConsumptionByTechConstraint_rule ( M, A_tech ):
-	l_sum = sum(
-	  M.V_FlowIn[l_per, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
+def EnergyConsumptionByTechConstraint_rule ( M, t ):
+	energy_used = sum(
+	  M.V_FlowIn[S_p, S_s, S_d, S_i, t, S_v, S_o]
 
-	  for l_per in M.time_optimize
-	  for l_vin in ProcessVintages( l_per, A_tech )
-	  for l_inp in ProcessInputs( l_per, A_tech, l_vin )
-	  for l_out in ProcessOutputsByInput( l_per, A_tech, l_vin, l_inp )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_p in M.time_optimize
+	  for S_v in ProcessVintages( S_p, t )
+	  for S_i in ProcessInputs( S_p, t, S_v )
+	  for S_o in ProcessOutputsByInput( S_p, t, S_v, S_i )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	expr = (M.V_EnergyConsumptionByTech[ A_tech ] == l_sum)
+	expr = (M.V_EnergyConsumptionByTech[ t ] == energy_used)
 	return expr
 
 
-def EnergyConsumptionByTechAndOutputConstraint_rule ( M, A_tech, A_out ):
-	l_sum = sum(
-	  M.V_FlowIn[l_per, l_season, l_tod, l_inp, A_tech, l_vin, A_out]
+def EnergyConsumptionByTechAndOutputConstraint_rule ( M, t, o ):
+	energy_used = sum(
+	  M.V_FlowIn[S_p, S_s, S_d, S_i, t, S_v, o]
 
-	  for l_per in M.time_optimize
-	  for l_vin in ProcessVintages( l_per, A_tech )
-	  for l_inp in ProcessInputsByOutput( l_per, A_tech, l_vin, A_out )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_p in M.time_optimize
+	  for S_v in ProcessVintages( S_p, t )
+	  for S_i in ProcessInputsByOutput( S_p, t, S_v, o )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	expr = (M.V_EnergyConsumptionByTechAndOutput[A_tech, A_out] == l_sum)
+	expr = (M.V_EnergyConsumptionByTechAndOutput[t, o] == energy_used)
 	return expr
 
-def EnergyConsumptionByPeriodAndTechConstraint_rule ( M, A_period, A_tech ):
-	l_sum = sum(
-	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, A_tech, l_vin, l_out]
+def EnergyConsumptionByPeriodAndTechConstraint_rule ( M, p, t ):
+	energy_used = sum(
+	  M.V_FlowIn[p, S_s, S_d, S_i, t, S_v, S_o]
 
-	  for l_vin in ProcessVintages( A_period, A_tech )
-	  for l_inp in ProcessInputs( A_period, A_tech, l_vin )
-	  for l_out in ProcessOutputsByInput( A_period, A_tech, l_vin, l_inp )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_v in ProcessVintages( p, t )
+	  for S_i in ProcessInputs( p, t, S_v )
+	  for S_o in ProcessOutputsByInput( p, t, S_v, S_i )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	expr = (M.V_EnergyConsumptionByPeriodAndTech[A_period, A_tech] == l_sum)
-	return expr
-
-
-def EnergyConsumptionByPeriodInputAndTechConstraint_rule (
-  M, A_period, A_inp, A_tech
-):
-	l_sum = sum(
-	  M.V_FlowIn[A_period, l_season, l_tod, A_inp, A_tech, l_vin, l_out]
-
-	  for l_vin in ProcessVintages( A_period, A_tech )
-	  for l_out in ProcessOutputsByInput( A_period, A_tech, l_vin, A_inp )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
-	)
-
-	index = (A_period, A_inp, A_tech)
-	expr = (M.V_EnergyConsumptionByPeriodInputAndTech[ index ] == l_sum)
+	expr = (M.V_EnergyConsumptionByPeriodAndTech[p, t] == energy_used)
 	return expr
 
 
-def EnergyConsumptionByPeriodTechAndOutputConstraint_rule (
-  M, A_period, A_tech, A_out
-):
-	l_sum = sum(
-	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, A_tech, l_vin, A_out]
+def EnergyConsumptionByPeriodInputAndTechConstraint_rule ( M, p, i, t ):
+	energy_used = sum(
+	  M.V_FlowIn[p, S_s, S_d, i, t, S_v, S_o]
 
-	  for l_vin in ProcessVintages( A_period, A_tech )
-	  for l_inp in ProcessInputsByOutput( A_period, A_tech, l_vin, A_out )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_v in ProcessVintages( p, t )
+	  for S_o in ProcessOutputsByInput( p, t, S_v, i )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	index = (A_period, A_tech, A_out)
-	expr = (M.V_EnergyConsumptionByPeriodTechAndOutput[ index ] == l_sum)
+	expr = (M.V_EnergyConsumptionByPeriodInputAndTech[p, i, t] == energy_used)
 	return expr
 
 
-def EnergyConsumptionByPeriodTechAndVintageConstraint_rule (
-  M, A_period, A_tech, A_vintage
-):
-	l_sum = sum(
-	  M.V_FlowIn[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, l_out]
+def EnergyConsumptionByPeriodTechAndOutputConstraint_rule ( M, p, t, o ):
+	energy_used = sum(
+	  M.V_FlowIn[p, S_s, S_d, S_i, t, S_v, o]
 
-	  for l_inp in ProcessInputs( A_period, A_tech, A_vintage )
-	  for l_out in ProcessOutputsByInput( A_period, A_tech, A_vintage, l_inp )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+	  for S_v in ProcessVintages( p, t )
+	  for S_i in ProcessInputsByOutput( p, t, S_v, o )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
 	)
 
-	index = (A_period, A_tech, A_vintage)
-	expr = (M.V_EnergyConsumptionByPeriodTechAndVintage[ index ] == l_sum)
+	expr = (M.V_EnergyConsumptionByPeriodTechAndOutput[p, t, o] == energy_used)
+	return expr
+
+
+def EnergyConsumptionByPeriodTechAndVintageConstraint_rule ( M, p, t, v ):
+	energy_used = sum(
+	  M.V_FlowIn[p, S_s, S_d, S_i, t, v, S_o]
+
+	  for S_i in ProcessInputs( p, t, v )
+	  for S_o in ProcessOutputsByInput( p, t, v, S_i )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
+	)
+
+	expr = (M.V_EnergyConsumptionByPeriodTechAndVintage[p, t, v] == energy_used)
 	return expr
 
 # End additional and derived (informational) variable constraints
