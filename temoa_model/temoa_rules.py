@@ -32,8 +32,10 @@ the time-value of money to bring it back to year 0.
 	  if loanIsActive( l_per, l_tech, l_vin )
 	) + sum(
 	    M.V_CapacityInvest[l_tech, l_vin]
-	  * M.CostInvest[l_tech, l_vin].value
-	  * M.LoanAnnualize[l_tech, l_vin].value
+	  * value(
+	      M.CostInvest[l_tech, l_vin].value
+	    * M.LoanAnnualize[l_tech, l_vin].value
+	  )
 	  * sum(
 	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
 	      for y in range( 0, M.PeriodLength[ l_per ] * M.LoanLifeFrac[l_per, l_tech, l_vin])
