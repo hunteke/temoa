@@ -190,8 +190,8 @@ CapacityFactor(tech_all, vintage_all)
 	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
 	M.CapacityByOutputConstraintIndices = Set(
 	  dimen=6, rule=CapacityByOutputConstraintIndices )
-	M.CapacityFractionalLifetimeConstraintIndices = Set(
-	  dimen=6, rule=CapacityFractionalLifetimeConstraintIndices )
+	M.FractionalLifeActivityLimitConstraintIndices = Set(
+	  dimen=6, rule=FractionalLifeActivityLimitConstraintIndices )
 #	M.CapacityLifetimeConstraintIndices = Set(
 #	  dimen=4, rule=CapacityLifetimeConstraintIndices )
 	M.CommodityBalanceConstraintIndices = Set(
@@ -292,7 +292,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVarIndices, rule=CapacityAvailableByPeriodAndTechConstraint_rule )
 
-	M.FractionalLifeActivityLimitConstraint = Constraint( M.CapacityFractionalLifetimeConstraintIndices, rule=FractionalLifeActivityLimit_Constraint )
+	M.FractionalLifeActivityLimitConstraint = Constraint( M.FractionalLifeActivityLimitConstraintIndices, rule=FractionalLifeActivityLimit_Constraint )
 
 	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraintIndices, rule=MinCapacityConstraint_rule )
 	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraintIndices, rule=MaxCapacityConstraint_rule )

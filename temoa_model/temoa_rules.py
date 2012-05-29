@@ -436,32 +436,27 @@ def CapacityConstraint_rule ( M, t, v ):
 	return M.V_Capacity[t, v] == capacity
 
 
-def MARKAL_No_SegFrac_CapacityConstraint_rule (
-  M, A_period, A_tech, A_vintage
-):
+def MARKAL_No_SegFrac_CapacityConstraint_rule ( M, p, t, v ):
 	"""\
 V_Capacity is a derived variable; this constraint sets V_Capacity to at least be able to handle the activity in any optimization time slice.  In effect, this sets V_Capacity[p,t,v] to the max of the activity for similar indices: max(Activity[p,*,*t,v])
 
 (for each period, season, time_of_day, tech, vintage)
 V_Capacity[t,v] * CapacityFactor[t,v] >= V_Activity[p,s,d,t,v]
 	"""
-	pindex = (A_period, A_tech, A_vintage)   # "process" index
-
-	l_vintage_activity = sum(
-	  M.V_Activity[A_period, s, d, A_tech, A_vintage]
+	vintage_activity = sum(
+	  M.V_Activity[p, s, d, t, v]
 
 	  for s in M.time_season
 	  for d in M.time_of_day
 	)
 
-	cindex = (A_tech, A_vintage)   # "capacity" index
-	l_capacity = (
-	    M.V_Capacity[ cindex ]
-	  * M.CapacityFactor[ cindex ]
-	  * M.CapacityToActivity[ A_tech ]
+	max_output = (
+	    M.V_Capacity[t, v]
+	  * M.CapacityFactor[t, v]
+	  * M.CapacityToActivity[ t ]
 	)
 
-	expr = ( l_vintage_activity <= l_capacity )
+	expr = ( vintage_activity <= max_output )
 	return expr
 
 

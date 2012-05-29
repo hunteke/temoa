@@ -809,14 +809,15 @@ def MARKAL_No_SegFrac_CapacityLifetimeConstraint_indices ( M ):
 
 ### End additions to match MARKAL
 
-def CapacityFractionalLifetimeConstraintIndices ( M ):
-	indices = set(
-	  (l_per, l_season, l_tod, l_tech, l_vin, l_carrier)
 
-	  for l_per, l_tech, l_vin in M.TechLifeFracIndices
-	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
+def FractionalLifeActivityLimitConstraintIndices ( M ):
+	indices = set(
+	  (p, s, d, t, v, o)
+
+	  for p, t, v in M.TechLifeFracIndices
+	  for o in ProcessOutputs( p, t, v )
+	  for s in M.time_season
+	  for d in M.time_of_day
 	)
 
 	return indices
