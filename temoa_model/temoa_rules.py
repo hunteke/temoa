@@ -389,64 +389,21 @@ accounting exercise for the modeler.
 	return expr
 
 
-def CapacityLifetimeConstraint_rule ( M, A_period, A_com ):
-	demand_indices = M.Demand.keys()
-
-	if A_com in M.commodity_demand:
-		l_period_demand = sum(
-		  M.Demand[A_period, l_season, l_tod, A_com]
-
-		  for l_season in M.time_season
-		  for l_tod in M.time_of_day
-		  if (A_period, l_season, l_tod, A_com) in demand_indices
-		)
-	elif A_com in M.commodity_physical:
-		l_period_demand = sum(
-		  M.V_FlowIn[A_period, l_season, l_tod, A_com, l_tech, l_vin, l_out]
-
-		  for l_tech, l_vin in ProcessesByPeriodAndInput( A_period, A_com )
-		  for l_out in ProcessOutputsByInput( A_period, l_tech, l_vin, A_com )
-		  for l_season in M.time_season
-		  for l_tod in M.time_of_day
-		)
-
-	if int is type( l_period_demand ) and l_period_demand == 0:
-		# if there is no demand, then no need to create a constraint
-		return Constraint.Skip
-
-	l_frac_indices = M.TechLifeFrac.keys()
-
-	l_non_dying_ability = sum(
-	    M.V_Capacity[l_tech, l_vin]
-	  * M.CapacityFactor[l_tech, l_vin]
-	  * M.CapacityToActivity[l_tech]
-	  * M.PeriodLength[ A_period ]
-
-	  for l_tech, l_vin in ProcessesByPeriodAndOutput( A_period, A_com )
-	  if (A_period, l_tech, l_vin) not in l_frac_indices
-	)
-
-	expr = (l_non_dying_ability >= l_period_demand)
-	return expr
-
-
-def CapacityFractionalLifetimeConstraint_rule (
-  M, A_period, A_tech, A_vintage, A_com
+def FractionalLifeActivityLimit_Constraint (
+  M, A_period, A_season, A_tod, A_tech, A_vintage, A_com
 ):
 	l_max_output = (
 	    M.V_Capacity[A_tech, A_vintage]
 	  * M.CapacityFactor[A_tech, A_vintage]
 	  * M.CapacityToActivity[A_tech]
 	  * M.TechLifeFrac[A_period, A_tech, A_vintage]
-	  * M.PeriodLength[ A_period ]
+	  * M.SegFrac[A_season, A_tod]
 	)
 
 	l_output = sum(
-	  M.V_FlowOut[A_period, l_season, l_tod, l_inp, A_tech, A_vintage, A_com]
+	  M.V_FlowOut[A_period, A_season, A_tod, l_inp, A_tech, A_vintage, A_com]
 
 	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_com )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
 	)
 
 	expr = (l_output <= l_max_output)
@@ -602,7 +559,7 @@ leaving a process is not more than the amount entering it.
 
 def DemandActivityConstraint_rule (
   M, A_period, A_season, A_time_of_day, A_tech, A_vintage, A_demand,
-  first_season, first_time_of_day, first_demand,
+  first_season, first_time_of_day
 ):
 	"""\
 For end-use demands, it is unreasonable to let the optimizer only allow use in a
@@ -615,12 +572,22 @@ Mathematically, this constraint ensures that the ratio of the Activity to demand
 is constant for all time slices.  The multiplication trick here is analogous to
 what is performed in the Baseload constraint.
 """
+
+	act_a = sum(
+	  M.V_FlowOut[A_period, first_season, first_time_of_day, l_inp, A_tech, A_vintage, A_demand]
+
+	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_demand )
+	)
+	act_b = sum(
+	  M.V_FlowOut[A_period, A_season, A_time_of_day, l_inp, A_tech, A_vintage, A_demand]
+
+	  for l_inp in ProcessInputsByOutput( A_period, A_tech, A_vintage, A_demand )
+	)
+
 	expr = (
-	    M.V_Activity[A_period, first_season, first_time_of_day, A_tech, A_vintage]
-	  * A_demand
-	  ==
-	    M.V_Activity[A_period, A_season, A_time_of_day, A_tech, A_vintage]
-	  * first_demand
+	  act_a * M.Demand[A_period, A_season, A_time_of_day, A_demand].value
+	     ==
+	  act_b * M.Demand[A_period, first_season, first_time_of_day, A_demand].value
 	)
 	return expr
 
@@ -816,10 +783,30 @@ def ActivityByPeriodInputTechAndVintageConstraint_rule (
 
 
 def CapacityAvailableByPeriodAndTechConstraint_rule ( M, A_per, A_tech ):
-	l_sum = sum(
-	  M.V_Capacity[A_tech, l_vin]
+	"""
+This constraint sets V_CapacityAvailableByPeriodAndTech, a variable
+nominally for reporting, but also used in the Max and Min constraint
+calculations.  For any process with an end-of-life on a period boundary, all of
+its capacity is available for use.  However, for any process with an EOL that
+falls between periods, Temoa makes the simplifying assumption that the available
+capacity from the dying technology is available through the *whole period*, but
+only as much percentage as its lifespan through the period.  For example, if a
+period is 8 years, and a process dies 3 years into the period, then only 3/8 of
+the installed capacity is available for use for the period.
+"""
+	dying_vintages = set( l_vin
 
-	  for l_vin in ProcessVintages( A_per, A_tech )
+	  for l_per, l_tech, l_vin in M.TechLifeFrac.keys()
+	  if l_per == A_per and l_tech == A_tech
+	)
+	non_dying = ProcessVintages( A_per, A_tech ) - dying_vintages
+
+	l_sum = sum( M.V_Capacity[A_tech, l_vin] for l_vin in non_dying )
+	l_sum += sum(
+	    M.V_Capacity[A_tech, l_vin]
+	  * M.TechLifeFrac[A_per, A_tech, l_vin].value
+
+	  for l_vin in dying_vintages
 	)
 
 	expr = (M.V_CapacityAvailableByPeriodAndTech[A_per, A_tech] == l_sum)

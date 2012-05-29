@@ -705,27 +705,27 @@ def DemandConstraintIndices ( M ):
 def DemandActivityConstraintIndices ( M ):
 	indices = set()
 
-	Act = dict()
-	for period, season, day, demand in M.Demand.keys():
-		key = (period, demand)
-		if key not in Act:
-			Act[ key ] = set()
-		dval = value(M.Demand[period, season, day, demand])
-		Act[ key ].add( (season, day, dval) )
+	dem_slices = dict()
+	for p, s, d, dem in M.Demand.keys():
+		if (p, dem) not in dem_slices:
+			dem_slices[p, dem] = set()
+		dem_slices[p, dem].add( (s, d) )
 
-	for period, demand in Act:
-		demands = sorted( Act[period, demand] )
-		if not len( demands ) > 1: continue
-		first = demands[0]
+	for (p, dem), slices in dem_slices.iteritems():
+		# No need for this constraint if demand is only in one slice.
+		if not len( slices ) > 1: continue
+		slices = sorted( slices )
+		first = slices[0]
 		tmp = set(
-		  (period, s, d, t, v, dval, first[0], first[1], first[2])
+		  (p, s, d, t, v, dem, first[0], first[1])
 
-		  for t, v in ProcessesByPeriodAndOutput( period, demand )
-		  for s, d, dval in demands[1:]
+		  for s, d in slices[1:]
+		  for Fp, Fs, Fd, i, t, v, Fo in M.FlowVarIndices
+		  if Fp == p and Fs == s and Fd == d and Fo == dem
 		)
 		indices.update( tmp )
 
-	return set( indices )
+	return indices
 
 
 def EmissionConstraintIndices ( M ):
@@ -757,24 +757,12 @@ def BaseloadDiurnalConstraintIndices ( M ):
 
 def CapacityFractionalLifetimeConstraintIndices ( M ):
 	indices = set(
-	  (l_per, l_tech, l_vin, l_carrier)
+	  (l_per, l_season, l_tod, l_tech, l_vin, l_carrier)
 
 	  for l_per, l_tech, l_vin in M.TechLifeFracIndices
 	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
-	)
-
-	return indices
-
-
-def CapacityLifetimeConstraintIndices ( M ):
-	indices = set(
-	  (l_per, l_carrier)
-
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
-	  for l_inp in ProcessInputsByOutput( l_per, l_tech, l_vin, l_carrier )
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
 	)
 
 	return indices
