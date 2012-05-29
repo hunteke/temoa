@@ -73,7 +73,6 @@ the time-value of money to bring it back to year 0.
 	  )
 
 	  for l_per, l_tech, l_vin in M.CostMarginal.keys()
-	  if (l_per, l_tech, l_vin) not in l_tech_period_fraction_indices
 	)
 
 	return (l_loan_costs + l_fixed_costs + l_marg_costs)
