@@ -39,19 +39,18 @@ TODO: update with LaTeX version of equation.
 	)
 
 	l_fixed_costs = sum(
-	    M.V_Capacity[l_tech, l_vin]
+	    M.V_CapacityFixed[l_tech, l_vin]
 	  * value(
-	      M.CostFixed[A_period, l_tech, l_vin].value
-	    * M.PeriodRate[ A_period ].value
+	      M.CostFixed[l_per, l_tech, l_vin].value
+	    * M.PeriodRate[ l_per ].value
 	  )
 
 	  for l_per, l_tech, l_vin in M.CostFixed.keys()
 	  if l_per == A_period
 	  if (l_per, l_tech, l_vin) not in l_tech_period_fraction_indices
 	) + sum(
-	    M.V_CapacityInvest[l_tech, l_vin]
-	  * M.CostInvest[l_tech, l_vin].value
-	  * M.LoanAnnualize[l_tech, l_vin].value
+	    M.V_CapacityFixed[l_tech, l_vin]
+	  * M.CostFixed[l_per, l_tech, l_vin].value
 	  * sum(
 	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
 	      for y in range( 0, M.PeriodLength[ l_per ] * M.TechLifeFrac[l_per, l_tech, l_vin])
@@ -63,15 +62,14 @@ TODO: update with LaTeX version of equation.
 	)
 
 	l_marg_costs = sum(
-	    M.V_Activity[A_period, l_season, l_time_of_day, l_tech, l_vin]
-	  * M.PeriodRate[ A_period ]
-	  * M.CostMarginal[A_period, l_tech, l_vin]
+	    M.V_ActivityByPeriodTechAndVintage[l_per, l_tech, l_vin]
+	  * value(
+	      M.CostMarginal[l_per, l_tech, l_vin].value
+	    * M.PeriodRate[ l_per ].value
+	  )
 
 	  for l_per, l_tech, l_vin in M.CostMarginal.keys()
 	  if l_per == A_period
-	  if (l_per, l_tech, l_vin) not in l_tech_period_fraction_indices
-	  for l_season in M.time_season
-	  for l_time_of_day in M.time_of_day
 	)
 
 	l_cost = (l_loan_costs + l_fixed_costs + l_marg_costs)
