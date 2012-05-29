@@ -202,7 +202,7 @@ PriOwutoed2SnkqfPr+vllMO6gLNW8B2teoCreyVcg9NVzua/h16+ycmmCwq
 
 
 data = SI.read().split('\n')
-#with open( 'test.sol', 'r') as f:
+#with open( 'utopia-15.results', 'rb') as f:
 #	data = f.read().split('\n')
 
 if data[0] == "No solution found.":
@@ -349,6 +349,13 @@ with open( 'styles.xml', 'wb' ) as f:
 	f.write( styles )
 with open( 'settings.xml', 'wb' ) as f:
 	f.write( settings )
+
+for dirname, subdirs, files in os.walk('.'):
+	for f in files:
+		os.utime(os.path.join(dirname, f), (1e9, 1e9))
+	for s in subdirs:
+		os.utime(os.path.join(dirname, s), (1e9, 1e9))
+os.utime('.', (1e9, 1e9) )
 
 with ZipFile( os.path.join(cur_dir, 'utopia-15.ods'), 'w') as f:
 	for root, dirs, files in os.walk('.'):
