@@ -192,8 +192,6 @@ CapacityFactor(tech_all, vintage_all)
 	  dimen=6, rule=CapacityByOutputConstraintIndices )
 	M.FractionalLifeActivityLimitConstraintIndices = Set(
 	  dimen=6, rule=FractionalLifeActivityLimitConstraintIndices )
-#	M.CapacityLifetimeConstraintIndices = Set(
-#	  dimen=4, rule=CapacityLifetimeConstraintIndices )
 	M.CommodityBalanceConstraintIndices = Set(
 	  dimen=4, rule=CommodityBalanceConstraintIndices )
 	M.DemandConstraintIndices = Set( dimen=4, rule=DemandConstraintIndices )

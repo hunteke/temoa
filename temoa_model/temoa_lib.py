@@ -776,37 +776,6 @@ def MARKAL_No_SegFrac_CapacityByOutput_indices ( M ):
 
 	return indices
 
-
-def MARKAL_SegFrac_CapacityLifetimeConstraint_indices ( M ):
-	indices = set(
-	  (l_per, l_season, l_tod, l_carrier)
-
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_electric
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
-	  for l_inp in ProcessInputsByOutput( l_per, l_tech, l_vin, l_carrier )
-	  for l_season in M.time_season
-	  for l_tod in M.time_of_day
-	)
-
-	return indices
-
-def MARKAL_No_SegFrac_CapacityLifetimeConstraint_indices ( M ):
-	indices = set(
-	  (l_per, l_carrier)
-
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  if l_tech not in M.tech_electric
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
-	  for l_inp in ProcessInputsByOutput( l_per, l_tech, l_vin, l_carrier )
-	)
-
-	return indices
-
-
 ### End additions to match MARKAL
 
 
