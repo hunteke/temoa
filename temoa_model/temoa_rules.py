@@ -455,7 +455,7 @@ Prevent TEMOA from extracting an endless supply of energy from 'the ether'.
    \forall \{p, c\} \in RSC_{ind}, e = \text{'ether'}
 """
 	collected = sum(
-	  M.V_FlowIn[p, S_s, S_d, S_i, S_t, S_v, r]
+	  M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, r]
 
 	  for S_t, S_v in ProcessesByPeriodAndOutput( p, r )
 	  for S_i in ProcessInputsByOutput( p, S_t, S_v, r )
