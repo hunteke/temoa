@@ -240,41 +240,41 @@ CapacityFactor(tech_all, vintage_all)
 	# Constraints
 
 	#   "Bookkeeping" constraints
-	M.ActivityConstraint = Constraint( M.ActivityVarIndices, rule=ActivityConstraint_rule )
-	M.ActivityByPeriodTechAndVintageConstraint = Constraint( M.ActivityByPeriodTechAndVintageVarIndices, rule=ActivityByPeriodTechAndVintageConstraint_rule )
+	M.ActivityConstraint = Constraint( M.ActivityVarIndices, rule=Activity_Constraint )
+	M.ActivityByPeriodTechAndVintageConstraint = Constraint( M.ActivityByPeriodTechAndVintageVarIndices, rule=ActivityByPeriodTechAndVintage_Constraint )
 
-	M.CapacityByOutputConstraint = Constraint( M.CapacityByOutputConstraintIndices, rule=CapacityByOutputConstraint_rule )
-	M.CapacityConstraint         = Constraint( M.CapacityVarIndices, rule=CapacityConstraint_rule )
+	M.CapacityByOutputConstraint = Constraint( M.CapacityByOutputConstraintIndices, rule=CapacityByOutput_Constraint )
+	M.CapacityConstraint         = Constraint( M.CapacityVarIndices, rule=Capacity_Constraint )
 
-	M.ExistingCapacityConstraint = Constraint( M.ExistingCapacityConstraintIndices, rule=ExistingCapacityConstraint_rule )
+	M.ExistingCapacityConstraint = Constraint( M.ExistingCapacityConstraintIndices, rule=ExistingCapacity_Constraint )
 
-	M.CapacityInvestConstraint = Constraint( M.CapacityVarIndices, rule=CapacityInvestConstraint_rule )
-	M.CapacityFixedConstraint  = Constraint( M.CapacityVarIndices, rule=CapacityFixedConstraint_rule )
+	M.CapacityInvestConstraint = Constraint( M.CapacityVarIndices, rule=CapacityInvest_Constraint )
+	M.CapacityFixedConstraint  = Constraint( M.CapacityVarIndices, rule=CapacityFixed_Constraint )
 
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
 	#      very useful.)
-	M.DemandConstraint           = Constraint( M.DemandConstraintIndices,  rule=DemandConstraint_rule )
-	M.DemandActivityConstraint   = Constraint( M.DemandActivityConstraintIndices, rule=DemandActivityConstraint_rule )
-	M.ProcessBalanceConstraint   = Constraint( M.ProcessBalanceConstraintIndices, rule=ProcessBalanceConstraint_rule )
-	M.CommodityBalanceConstraint = Constraint( M.CommodityBalanceConstraintIndices,  rule=CommodityBalanceConstraint_rule )
+	M.DemandConstraint           = Constraint( M.DemandConstraintIndices,  rule=Demand_Constraint )
+	M.DemandActivityConstraint   = Constraint( M.DemandActivityConstraintIndices, rule=DemandActivity_Constraint )
+	M.ProcessBalanceConstraint   = Constraint( M.ProcessBalanceConstraintIndices, rule=ProcessBalance_Constraint )
+	M.CommodityBalanceConstraint = Constraint( M.CommodityBalanceConstraintIndices,  rule=CommodityBalance_Constraint )
 
-	M.ResourceExtractionConstraint = Constraint( M.ResourceConstraintIndices,  rule=ResourceExtractionConstraint_rule )
+	M.ResourceExtractionConstraint = Constraint( M.ResourceConstraintIndices,  rule=ResourceExtraction_Constraint )
 
-	M.BaseloadDiurnalConstraint = Constraint( M.BaseloadDiurnalConstraintIndices,  rule=BaseloadDiurnalConstraint_rule )
+	M.BaseloadDiurnalConstraint = Constraint( M.BaseloadDiurnalConstraintIndices,  rule=BaseloadDiurnal_Constraint )
 
-	M.StorageConstraint = Constraint( M.StorageConstraintIndices, rule=StorageConstraint_rule )
+	M.StorageConstraint = Constraint( M.StorageConstraintIndices, rule=Storage_Constraint )
 
-	M.TechOutputSplitConstraint = Constraint( M.TechOutputSplitConstraintIndices, rule=TechOutputSplitConstraint_rule )
+	M.TechOutputSplitConstraint = Constraint( M.TechOutputSplitConstraintIndices, rule=TechOutputSplit_Constraint )
 
-	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVarIndices, rule=CapacityAvailableByPeriodAndTechConstraint_rule )
+	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVarIndices, rule=CapacityAvailableByPeriodAndTech_Constraint )
 
 	M.FractionalLifeActivityLimitConstraint = Constraint( M.CapacityFractionalLifetimeConstraintIndices, rule=FractionalLifeActivityLimit_Constraint )
 
-	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraintIndices, rule=MinCapacityConstraint_rule )
-	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraintIndices, rule=MaxCapacityConstraint_rule )
+	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraintIndices, rule=MinCapacity_Constraint )
+	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraintIndices, rule=MaxCapacity_Constraint )
 
-	M.EmissionConstraint = Constraint( M.EmissionConstraintIndices, rule=EmissionConstraint_rule)
+	M.EmissionConstraint = Constraint( M.EmissionConstraintIndices, rule=Emission_Constraint)
 
 
 	return M
