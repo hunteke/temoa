@@ -238,8 +238,8 @@ Enforce user-specified limits of individual emissions, per period.
 	    M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, S_o]
 	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o].value
 
-	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
-	  if T_e == e
+	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if tmp_e == e
 	  if ValidActivity( p, S_t, S_v )
 	  for S_s in M.time_season
 	  for S_d in M.time_of_day
@@ -419,8 +419,8 @@ def Capacity_Constraint ( M, t, v ):
 	cap = sum(
 	  M.V_CapacityByOutput[t, v, o]
 
-	  for T_t, V, o in M.V_CapacityByOutput.keys()
-	  if T_t == t and V == v
+	  for tmp_t, V, o in M.V_CapacityByOutput.keys()
+	  if tmp_t == t and V == v
 	)
 
 	return M.V_Capacity[t, v] == cap
@@ -800,8 +800,8 @@ def EmissionActivityTotal_Constraint ( M, e ):
 	    M.V_FlowOut[S_p, S_s, S_d, S_i, S_t, S_v, S_o]
 	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o].value
 
-	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
-	  if T_e == e
+	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if tmp_e == e
 	  for S_p in M.time_optimize
 	  if ValidActivity( S_p, S_t, S_v )
 	  for S_s in M.time_season
@@ -820,8 +820,8 @@ def EmissionActivityByPeriod_Constraint ( M, e, p ):
 	    M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, S_o]
 	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o]
 
-	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
-	  if T_e == e
+	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if tmp_e == e
 	  if ValidActivity( p, S_t, S_v )
 	  for S_s in M.time_season
 	  for S_d in M.time_of_day
@@ -839,8 +839,8 @@ def EmissionActivityByTech_Constraint ( M, e, t ):
 	    M.V_FlowOut[S_p, S_s, S_d, S_i, t, S_v, S_o]
 	  * M.EmissionActivity[e, S_i, t, S_v, S_o].value
 
-	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
-	  if T_e == e and S_t == t
+	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if tmp_e == e and S_t == t
 	  for S_p in M.time_optimize
 	  if ValidActivity( S_p, S_t, S_v )
 	  for S_s in M.time_season
@@ -859,8 +859,8 @@ def EmissionActivityByPeriodAndTech_Constraint ( M, e, p, t ):
 	    M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, S_o]
 	  * M.EmissionActivity[e, S_i, t, S_v, S_o].value
 
-	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
-	  if T_e == e and S_t == t
+	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if tmp_e == e and S_t == t
 	  if ValidActivity( p, S_t, S_v )
 	  for S_s in M.time_season
 	  for S_d in M.time_of_day
@@ -878,8 +878,8 @@ def EmissionActivityByTechAndVintage_Constraint ( M, e, t, v ):
 	    M.V_FlowOut[S_p, S_s, S_d, S_i, t, v, S_o]
 	  * M.EmissionActivity[e, S_i, t, v, S_o].value
 
-	  for T_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
-	  if T_e == e and S_t == t and S_v == v
+	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.keys()
+	  if tmp_e == e and S_t == t and S_v == v
 	  for S_p in M.time_optimize
 	  if ValidActivity( S_p, S_t, S_v )
 	  for S_s in M.time_season
