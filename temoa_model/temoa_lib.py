@@ -429,6 +429,15 @@ active.
 	return indices
 
 
+def TechPeriodLifeIndices ( M ):
+	"""
+Returns the set of (period, tech, vintage) tuples.  The tuple indicates the
+periods in which a process is active, distinct from TechLifeFracIndices that
+returns indices only for processes that EOL mid-period.
+"""
+	return g_activeActivityIndices
+
+
 def LifetimeTechIndices ( M ):
 	"""\
 Based on the Efficiency parameter's indices, this function returns the set of

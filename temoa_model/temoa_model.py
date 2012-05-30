@@ -151,6 +151,11 @@ CapacityFactor(tech_all, vintage_all)
 	M.CostMarginal = Param( M.CostMarginalIndices )
 	M.CostInvest   = Param( M.CostInvestIndices )
 
+	M.ModelLoanLifeIndices = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
+	M.TechPeriodLifeIndices = Set( dimen=3, rule=TechPeriodLifeIndices )
+	M.ModelLoanLife = Param( M.ModelLoanLifeIndices, rule=ParamModelLoanLife_rule )
+	M.TechPeriodLife = Param( M.TechPeriodLifeIndices, rule=ParamTechPeriodLife_rule )
+
 	M.DiscountRateIndices = Set( dimen=2, rule=DiscountRateIndices )
 	M.LoanLifeFracIndices = Set( dimen=3, rule=LoanLifeFracIndices )
 	M.TechLifeFracIndices = Set( dimen=3, rule=TechLifeFracIndices )

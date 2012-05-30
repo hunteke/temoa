@@ -17,53 +17,33 @@ the time-value of money to bring it back to year 0.
 """
 	partial_period_loan_indices = M.LoanLifeFrac.keys()
 	partial_period_tech_indices = M.TechLifeFrac.keys()
-	P_0 = M.time_optimize.first()
+	P_0 = min( M.time_optimize )
 
 	loan_costs = sum(
 	    M.V_CapacityInvest[S_t, S_v]
 	  * (
-	      M.PeriodRate[ S_p ].value
-	    * M.CostInvest[S_t, S_v].value
+	      M.CostInvest[S_t, S_v].value
 	    * M.LoanAnnualize[S_t, S_v].value
+	    * sum( (1 + M.GlobalDiscountRate.value) ** -y
+	        for y in range( S_v - P_0,
+	                        S_v - P_0 + M.ModelLoanLife[S_t, S_v].value )
+	      )
 	  )
 
 	  for S_t, S_v in M.CostInvest.keys()
-	  for S_p in M.time_optimize
-	  if (S_p, S_t, S_v) not in partial_period_loan_indices
-	  if loanIsActive( S_p, S_t, S_v )
-	) + sum(
-	    M.V_CapacityInvest[S_t, S_v]
-	  * (
-	      M.CostInvest[S_t, S_v].value
-	    * M.LoanAnnualize[S_t, S_v].value
-	  )
-	  * sum(
-	      (1 + M.GlobalDiscountRate) ** (P_0 - S_p - y)
-	      for y in range( 0, M.PeriodLength[ S_p ] * M.LoanLifeFrac[S_p, S_t, S_v])
-	    )
-
-	  for S_p, S_t, S_v in partial_period_loan_indices
 	)
 
 	fixed_costs = sum(
 	    M.V_CapacityFixed[S_t, S_v]
 	  * (
 	      M.CostFixed[S_p, S_t, S_v].value
-	    * M.PeriodRate[ S_p ].value
-	  )
-
-	  for S_p, S_t, S_v in M.CostFixed.keys()
-	  if (S_p, S_t, S_v) not in partial_period_tech_indices
-	) + sum(
-	    M.V_CapacityFixed[S_t, S_v]
-	  * M.CostFixed[S_p, S_t, S_v].value
-	  * sum(
-	      (1 + M.GlobalDiscountRate) ** (P_0 - S_p - y)
-	      for y in range( 0, M.PeriodLength[ S_p ] * M.TechLifeFrac[S_p, S_t, S_v])
+	    * sum( (1 + M.GlobalDiscountRate.value) ** -y
+	        for y in range( S_p - P_0,
+	                        S_p - P_0 + M.TechPeriodLife[S_p, S_t, S_v].value )
+	      )
 	    )
 
-	  for S_p, S_t, S_v in partial_period_tech_indices
-	  if (S_p, S_t, S_v) in M.CostFixed.keys()
+	  for S_p, S_t, S_v in M.CostFixed.keys()
 	)
 
 	marg_costs = sum(
@@ -82,6 +62,22 @@ Objective_rule = TotalCost_rule
 
 ##############################################################################
 #   Initializaton rules
+
+
+def ParamModelLoanLife_rule ( M, t, v ):
+	P_0 = min( M.time_optimize )
+	loan_length = M.LifetimeLoan[t, v].value
+	mll = min( loan_length, max(M.time_future) - v )
+
+	return mll
+
+
+def ParamTechPeriodLife_rule ( M, p, t, v ):
+	life_length = M.LifetimeTech[t, v].value
+	tpl = min( v + life_length - p, M.PeriodLength[ p ].value )
+
+	return tpl
+
 
 def ParamPeriodLength_rule ( M, p ):
 	# This specifically does not use time_optimize because this function is
