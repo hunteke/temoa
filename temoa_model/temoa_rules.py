@@ -413,10 +413,10 @@ def CapacityByOutput_Constraint ( M, p, s, d, t, v, o ):
 
 def Capacity_Constraint ( M, t, v ):
 	cap = sum(
-	  M.V_CapacityByOutput[t, v, o]
+	  M.V_CapacityByOutput[t, v, S_o]
 
-	  for tmp_t, V, o in M.V_CapacityByOutput.keys()
-	  if tmp_t == t and V == v
+	  for tmp_t, tmp_v, S_o in M.V_CapacityByOutput.keys()
+	  if tmp_t == t and tmp_v == v
 	)
 
 	return M.V_Capacity[t, v] == cap
