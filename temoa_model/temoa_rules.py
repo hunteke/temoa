@@ -4,16 +4,47 @@ from temoa_lib import *
 # Begin *_rule definitions
 
 def TotalCost_rule ( M ):
-	r"""\
-Objective function.
+	r"""
+The objective function makes use of the :math:`Activity` and :math:`Capacity`
+proxy variables to calculate the costs associated with supplying the system with
+energy.  This implementation sums up all the costs incurred in the optimal
+solution, and is simplistically :math:`C_{tot} = C_{loans} + C_{fixed} +
+C_{marginal}`.  Similarly, each sub-part is merely a summation of the costs
+incurred, multiplied by an annual discount factor to calculate the time-value in
+year :math:`P_0` dollars.
 
-This implementation of the Temoa objective function sums up all the costs
-incurred in solving the system (supply energy to meet demands).
+.. math::
+   C_{loans} & = \sum_{t, v \in \Theta_{IC}} \left (
+           \textbf{CAP}_{t, v}
+     \cdot IC_{t, v}
+     \cdot LA_{t, v}
+     \cdot {\sum_{y = v - P_0}^{v - P_0 + MLL_{t, v}}
+               \frac{1}{(1 + GDR)^y}}
+     \right )
 
-Simplistically, it is C_tot = C_loans + C_fixed + C_marginal.
+.. math::
+   C_{fixed} & = \sum_{p, t, v \in \Theta_{FC}} \left (
+           \textbf{CAP}_{t, v}
+     \cdot FC_{p, t, v}
+     \cdot {\sum_{y = v - P_0}^{v - P_0 + TPL_{t, v}}
+               \frac{1}{(1 + GDR)^y}}
+     \right )
 
-Each part, in essence, is merely a summation of the costs incurred multiplied by
-the time-value of money to bring it back to year 0.
+.. math::
+   C_{marginal} & = \sum_{p, t, v \in \Theta_{MC}} \left (
+           \textbf{ACT}_{t, v}
+     \cdot MC_{p, t, v}
+     \cdot R_p
+     \right )
+
+In the last sub-equation, :math:`R_p` is the equivalent operation to the inner
+summation of the other two sub-equations.  Due to the fact that Temoa optimizes
+only a single characteristic year within each period, the difference is that
+where the inner summations specifically account for the fixed and loan costs of
+partial-period processes, the activity is constant for all years within a
+period.  There is thus no need to calculate the time-value of money factor for
+each process, and instead, :math:`R_p` is calculated once for each period, as a
+pseudo-parameter.
 """
 	partial_period_loan_indices = M.LoanLifeFrac.keys()
 	partial_period_tech_indices = M.TechLifeFrac.keys()
@@ -166,10 +197,21 @@ def ParamLoanAnnualize_rule ( M, t, v ):
 
 def BaseloadDiurnal_Constraint ( M, p, s, d, t, v ):
 	r"""
-Ensure that electric baseload technologies maintain a constant output at all
-times during a day.
+There exists within the electric sector a class of technologies whose
+thermodynamic properties are impossible to change over a short period of time
+(e.g.  hourly or daily).  These include coal and nuclear power plants, which
+take weeks to bring to an operational state, and similarly require weeks to
+fully shut down.  Temoa models this behavior by forcing technologies in the
+:math:`tech\_baseload` set to maintain a constant output for all daily slices.
+Note that this allows the model to (not) use a baseload process in a season, and
+only applies over the :math:`time\_of\_day` set.
+
+In English, this constraint states that "the ratio of activity in all daily
+slices must be equivalent."
 
 .. math::
+   :label: BaseloadDaily
+
          SEG_{s, D_0}
    \cdot \textbf{ACT}_{p, s, d, t, v}
    =
@@ -177,7 +219,7 @@ times during a day.
    \cdot \textbf{ACT}_{p, s, D_0, t, v}
 
    \\
-   \forall \{p, s, d, t, v\} \in ACT_{ind}, d \ne D_0
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{baseload}}
 """
 	# Question: How to set the different times of day equal to each other?
 
@@ -214,11 +256,17 @@ times during a day.
 	return expr
 
 
-def Emission_Constraint ( M, p, e ):
+def EmissionLimit_Constraint ( M, p, e ):
 	r"""
-Enforce user-specified limits of individual emissions, per period.
+
+A modeler can track emissions through use of the :math:`commodity\_emissions`
+set and :math:`EAC` parameter.  The EAC parameter is analogous to the efficiency
+table, tying emissions to a unit of activity.  The EmissionLimit constraint
+allows the modeler to assign an upper bound per period to each emission.
 
 .. math::
+   :label: EmissionLimit
+
    \sum_{I,T,V,O|{e,i,t,v,o} \in EAC_{ind}} \left (
        EAC_{e, i, t, v, o} \cdot \textbf{FO}_{p, s, d, i, t, v, o}
      \right )
@@ -252,19 +300,8 @@ Enforce user-specified limits of individual emissions, per period.
 
 
 def MinCapacity_Constraint ( M, p, t ):
-	r"""
-Ensure a user-specified minimum amount of technology capacity is availabie at
-the beginning of a period.
+	r""" See MaxCapacity_Constraint """
 
-Note that this constraint is merely a summation of all available technology.
-Specifically, it does not handle the case where a technology dies halfway
-through a period.
-
-.. math::
-   \sum_{v \in \overline{PV}_{p, t}} \textbf{CAP}_{t, v} \ge MIN_{p, t}
-
-   \forall \{p, t\} \in MIN_{ind}
-"""
 	min_cap = M.MinCapacity[p, t].value
 	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] >= min_cap)
 	return expr
@@ -272,17 +309,24 @@ through a period.
 
 def MaxCapacity_Constraint ( M, p, t ):
 	r"""
-Ensure a user-specified maximum amount of technology capacity at the beginning
-of a period.
 
-Note that this constraint is merely a summation of all available technology.
-Specifically, it does not handle the case where a technology dies halfway
-through a period.
+The MinCapacity and MaxCapacity constraints set limits on the what the model is
+allowed to (not) have available of a certain technology.  Note that the indices
+for these constraints are period and tech_all, not tech and vintage.
 
 .. math::
-   \sum_{v \in \overline{PV}_{p, t}} \textbf{CAP}_{t, v} \le MAX_{p, t}
+   :label: MinCapacity
 
-   \forall \{p, t\} \in MAX_{ind}
+   \textbf{CAPAVL}_{p, t} \ge MIN_{p, t}
+
+   \forall \{p, t\} \in \Theta_{\text{MinCapacity parameter}}
+
+.. math::
+   :label: MaxCapacity
+
+   \textbf{CAPAVL}_{p, t} \le MAX_{p, t}
+
+   \forall \{p, t\} \in \Theta_{\text{MaxCapacity parameter}}
 """
 	max_cap = M.MaxCapacity[p, t].value
 	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] <= max_cap)
@@ -290,19 +334,27 @@ through a period.
 
 
 def Storage_Constraint ( M, p, s, i, t, v, o ):
-	r"""\
-Over the length of a season, ensure that the amount of energy into a storage
-unit (less an efficiency) is the same as the energy coming out of it.
+	r"""
+
+Temoa's algorithm for storage is to ensure that the amount of energy entering
+and leaving a storage technology is in equilbrium over the course of a day.
+
+This simplistic algorithm relies on the assumption that the total amount of
+storage related energy is miniscule in relation to the amount of energy required
+by the system over a season.  If it were not, the algorithm would have to
+account for end-of-season effects and have an understanding of the circular
+nature of seasons.  (Currently, each slice is completely independent of other
+slices.)
 
 .. math::
    \sum_{D} \left (
-        \textbf{FO}_{p, s, d, i, t, v, o}
-      - EFF_{i, t, v, o}
+            EFF_{i, t, v, o}
       \cdot \textbf{FI}_{p, s, d, i, t, v, o}
+      -     \textbf{FO}_{p, s, d, i, t, v, o}
    \right )
    = 0
 
-   \forall \{p, s, i, t, v, o\} \in \overline{SC}_{ind}
+   \forall \{p, s, i, t, v, o\} \in \Theta_{\text{storage}}
 """
 	total_out_in = sum(
 	    M.V_FlowOut[p, s, S_d, i, t, v, o]
@@ -317,6 +369,53 @@ unit (less an efficiency) is the same as the energy coming out of it.
 
 
 def TechOutputSplit_Constraint ( M, p, s, d, i, t, v, o ):
+	r"""
+
+Some processes take a single output and make multiple outputs.  A subset of
+these processes have a constant ratio of outputs relative to their input.  The
+most canonical example is that of an oil refinery.  Crude oil is composed of
+many different types of hydrocarbons, and the refinery process exploits the fact
+that they each have a different boiling point.  The amount of each type of
+product that a refinery produces is thus directly related to the makeup of the
+crude oil input.
+
+The TechOutputSplit constraint assumes that the input to any process of interest
+has a constant ratio output.  For example, a hypothetical (and highly
+simplified) refinery might have a crude oil input that only contains 4 parts
+diesel, 3 parts gasoline, and 2 parts kerosene.  The relative ratios to the
+output then are:
+
+.. math::
+
+   d = \tfrac{4}{9} \cdot \text{total output}, \qquad
+   g = \tfrac{3}{9} \cdot \text{total output}, \qquad
+   k = \tfrac{2}{9} \cdot \text{total output}
+
+Using the total output as the commonality, these can then be compared to each
+other:
+
+.. math::
+   \tfrac{d}{.\overline{4}} = \tfrac{g}{.\overline{3}} =
+   \tfrac{k}{.\overline{2}} = \text{total}
+
+Finally, in constraint form:
+
+.. math::
+   .\overline{3} d &= .\overline{4} g \\
+   .\overline{2} d &= .\overline{2} k
+
+Generalized, the constraint in set notation is:
+
+.. math::
+   :label: TechOutputSplit
+
+
+     SPL_{i, t, o} \cdot \textbf{FO}_{p, s, d, i, t, v, o_0}
+   =
+     SPL_{i, t, o_0} \cdot \textbf{FO}_{p, s, d, i, t ,v, o}
+
+   \forall \{p, s, d, i, t, v, o\} \in \Theta_{\text{split output}}
+"""
 	split_indices = M.TechOutputSplit.keys()
 
 	outputs = sorted(
@@ -346,18 +445,26 @@ def TechOutputSplit_Constraint ( M, p, s, d, i, t, v, o ):
 
 def Activity_Constraint ( M, p, s, d, t, v ):
 	r"""
-Defines the convenience variable ACT as the sum of all outputs of a process.
+The Activity constraint defines the Activity convenience variable.  The Activity
+variable is mainly used in the objective function to calculate the cost
+associated with use of a technology.  In English, this constraint states that
+"the activity of a process is the sum of its outputs."
 
-If there is more than one output, there is currently no attempt to convert to a
-common unit of measurement.  Unfortunately, this tedium is currently left as an
+There is one caveat to keep in mind in regards to the Activity variable: if
+there is more than one output, there is currently no attempt by Temoa to convert
+to a common unit of measurement.  For example, common measurements for heat
+include mass of steam at a given tempurature, or total BTUs, while electricity
+is generally measured in a variant of watt-hours.  Reconciling these units of
+measurement, as for example with a cogeneration plant, is currently left as an
 accounting exercise for the modeler.
 
 .. math::
-   \textbf{ACT}_{p, s, d, t, v} =
-   \sum_{I, O | \{p,s,d,i,t,v,o\} \in FO_{ind}} \textbf{FO}_{p,s,d,i,t,v,o}
+   :label: Activity
+
+   \textbf{ACT}_{p, s, d, t, v} = \sum_{I, O} \textbf{FO}_{p,s,d,i,t,v,o}
 
    \\
-   \forall \{p, s, d, t, v\} \in ACT_{ind}
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 """
 	activity = sum(
 	  M.V_FlowOut[p, s, d, S_i, t, v, S_o]
@@ -371,11 +478,48 @@ accounting exercise for the modeler.
 
 
 def FractionalLifeActivityLimit_Constraint ( M, p, s, d, t, v, o ):
+	r"""
+
+Temoa has no requirement that process lifetimes must fall on a period boundary.
+In context of Temoa's simplification that each period is :math:`n` copies of a
+single characteristic year, an open question is how best to deal with processes
+with an end-of-life (EOL) that occurs mid period.
+
+Rather than attempt to delineate each year within a period and force
+partial-period processes to operate strictly until the end of their life,
+Temoa's approach instead averages the amount of energy these processes can emit
+over the period.  For example, if a period is 8 years long, and a process' EOL
+is 3 years in, the FractionalLifetimeActivity constraint ensures that Temoa can
+only utilize :math:`\tfrac{3}{8}` of the process' installed capacity in that
+period.
+
+This constraint also highlights why Temoa needs to delineate installed capacity
+by output (as referenced in the CapacityByOutput constraint
+:eq:`CapacityByOutput`).  If the FractionalLifeActivityLimit did not also limit
+the individual outputs to the average, the optimizer could game the outputs by
+over-limiting one output one in favor of another.  For example, in context of an
+oil refinery, crude oil *cannot* be converted all to one type of fuel.
+
+.. math::
+   :label: FractionalLifeActivityLimit
+
+       \sum_{I} \textbf{FO}_{p, s, d, i, t, v, o}
+   \le
+       \left (
+               CF_{t, v}
+         \cdot C2A_{t}
+         \cdot TFL_{p, t, v}
+         \cdot SEG_{s, d}
+       \right )
+
+   \forall \{p, s, d, t, v, o\} \in \Theta_{\text{fractional life activity}}
+
+"""
 	max_output = (
 	    M.V_Capacity[t, v]
 	  * (
 	      M.CapacityFactor[t, v].value
-	    * M.CapacityToActivity[t].value
+	    * M.CapacityToActivity[ t ].value
 	    * M.TechLifeFrac[p, t, v].value
 	    * M.SegFrac[s, d].value
 	  )
@@ -392,6 +536,31 @@ def FractionalLifeActivityLimit_Constraint ( M, p, s, d, t, v, o ):
 
 
 def CapacityByOutput_Constraint ( M, p, s, d, t, v, o ):
+	r"""
+
+Temoa's definition of a process capacity is the total size of installation
+required to meet all of that process' demands.  There are a number of real-world
+processes which have multiple and independent energy outputs (the most prevalent
+example being an oil refinery which converts crude oil to multiple forms of
+petrol), so rather than a single Capacity calculation based on the
+process' total activity, Temoa delineates the amount of capacity needed by
+output.  The reason why is made clear in the FractionalLifeActivityLimit
+constraint :eq:`FractionalLifeActivityLimit`.
+
+.. math::
+   :label: CapacityByOutput
+
+       \left (
+               CF_{t, v}
+         \cdot C2A_{t}
+         \cdot SEG_{s, d}
+       \right )
+       \cdot \textbf{CAPO}_{t, v, o}
+   \ge
+   \sum_{I} \textbf{FO}_{p, s, d, i, t, v, o}
+
+   \forall \{p, s, d, t, v, o\} \in \Theta_{\text{capacity by output}}
+"""
 	actual_activity = sum(
 	  M.V_FlowOut[p, s, d, S_i, t, v, o]
 
@@ -412,6 +581,18 @@ def CapacityByOutput_Constraint ( M, p, s, d, t, v, o ):
 
 
 def Capacity_Constraint ( M, t, v ):
+	r"""
+Given that Temoa already calculates process capacity by output
+:eq:`CapacityByOutput`, the total capacity of a process is merely the summation
+of necessary output capacity.
+
+.. math::
+   :label: Capacity
+
+   \textbf{CAP}_{t, v} = \sum_{O} \textbf{CAPO}_{t, v, o}
+
+   \forall \{t, v\} \in \Theta_{\text{Capacity}}
+"""
 	cap = sum(
 	  M.V_CapacityByOutput[t, v, S_o]
 
@@ -432,13 +613,21 @@ def CapacityFixed_Constraint ( M, t, v ):
 
 def ExistingCapacity_Constraint ( M, t, v ):
 	r"""
-For vintage periods (those in ``time_exist``, that the model does not optimize),
-explicitly set technological capacity to user-specified values.
+
+Temoa treats residual capacity from before the model's optimization horizon as
+first class processes.  These require every consideration in the dat file as do
+new vintage technologies (e.g. entries in the efficiency table), except the
+CostInvest parameter.
+
+In English, this constraint "exogenously sets the capacity of processes for
+model periods prior to the optimization horizon to user-specified values."
 
 .. math::
+   :label: ExistingCapacity
+
    \textbf{CAP}_{t, v} = ECAP_{t, v}
 
-   \forall \{t, v\} \in ECAP_{ind}
+   \forall \{t, v\} \in \Theta_{\text{existing capacity parameter}}
 """
 	expr = ( M.V_Capacity[t, v] == M.ExistingCapacity[t, v] )
 	return expr
@@ -446,13 +635,17 @@ explicitly set technological capacity to user-specified values.
 
 def ResourceExtraction_Constraint ( M, p, r ):
 	r"""
-Prevent TEMOA from extracting an endless supply of energy from 'the ether'.
+
+The ResourceExtraction constraint allows a modeler to specify an annual limit on
+the amount of a particular resource Temoa may use in a period.
 
 .. math::
-   \sum_{ S,D,T,V | \atop \{p,s,d,e,t,v,c\} \in FI_{ind} }
-     FI_{p, s, d, e, t, v, c} \le RSC_{p, c}
+   :label: ResourceExtraction
 
-   \forall \{p, c\} \in RSC_{ind}, e = \text{'ether'}
+   \sum_{S, D, T, V} \textbf{FO}_{p, s, d, e, t, v, c} \le RSC_{p, c}
+
+   \forall \{p, c\} \in \Theta_{\text{resource bound parameter}},
+   e = \text{'ether'}
 """
 	collected = sum(
 	  M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, r]
@@ -469,17 +662,25 @@ Prevent TEMOA from extracting an endless supply of energy from 'the ether'.
 
 def CommodityBalance_Constraint ( M, p, s, d, c ):
 	r"""
-Ensure that the amount of energy produced at least meets the amount of needed
-input energy.  That is, this is the corollary to the ProcessBalance
-constraint, maintaining energy flows *between* processes.
+
+Where the Demand constraint :eq:`Demand` ensures that end-use demands are met,
+the CommodityBalance constraint ensures that the internal system demands are
+met.  That is, this is the constraint that ties the output of one process to the
+input of another.  At the same time, this constraint also conserves energy
+between process.  (But it does not account for transmission loss.) In this
+manner, it is a corollary to both the ProcessBalance :eq:`ProcessBalance` and
+Demand :eq:`Demand` constraints.
+
+In English, this constraint states that "for each commodity, the total amount
+of energy generated must at least meet the amount of needed input energy."
 
 .. math::
-   \sum_{I,T,V | \atop \{p,s,d,i,t,v,c\} \in FO_{ind}} FO_{p, s, d, i, t, v, c}
+   \sum_{I, T, V} FO_{p, s, d, i, t, v, c}
    \ge
-   \sum_{T,V,O | \atop \{p,s,d,c,t,v,o\} \in FI_{ind}} FI_{p, s, d, c, t, v, o}
+   \sum_{T, V, O} FI_{p, s, d, c, t, v, o}
 
    \\
-   \forall P, S, D, C \setminus C_d
+   \forall \{p, s, d, c\} \in \Theta_{\text{commodity balance}}
 """
 	if c in M.commodity_demand:
 		return Constraint.Skip
@@ -508,16 +709,26 @@ constraint, maintaining energy flows *between* processes.
 
 def ProcessBalance_Constraint ( M, p, s, d, i, t, v, o ):
 	r"""
-Analogous to CommodityBalance, this constraint ensures that the amount of energy
-leaving a process is not more than the amount entering it.
+The ProcessBalance constraint is the most fundamental constraint to the Temoa
+model.  It defines the basic relationship between the energy entering a process
+(:math:`\textbf{FI}`) and the energy leaving a processing (:math:`\textbf{FO}`).
+This constraint sets the FlowOut variable, upon which all other constraints
+rely.
+
+Conceptually, this constraint treats every process as a "black box", caring only
+about how efficient the process is.  In English, it states that "the
+amount of energy leaving a process cannot exceed the amount coming in."
 
 .. math::
-          FO_{p, s, d, i, t, v, o}
+   :label: ProcessBalance
+
+          \textbf{FO}_{p, s, d, i, t, v, o}
    \le
           EFF_{i, t, v, o}
-    \cdot FI_{p, s, d, i, t, v, o}
+    \cdot \textbf{FI}_{p, s, d, i, t, v, o}
 
-   \forall \{p, s, d, i, t, v, o\} \in \textbf{FO}_{ind}
+   \\
+   \forall \{p, s, d, i, t, v, o\} \in \Theta_{\text{valid process flows}}
 """
 	expr = (
 	    M.V_FlowOut[p, s, d, i, t, v, o]
@@ -530,16 +741,28 @@ leaving a process is not more than the amount entering it.
 
 
 def DemandActivity_Constraint ( M, p, s, d, t, v, dem, s_0, d_0 ):
-	"""\
+	r"""\
 For end-use demands, it is unreasonable to let the optimizer only allow use in a
 single time slice.  For instance, if household A buys a natural gas furnace
 while household B buys an electric furnace, then both units should be used
-through the year.  Without this constraint, the model might choose to only use
-the electric during the day, and the natural gas during the night.
+throughout the year.  Without this constraint, the model might choose to only
+use the electric during the day, and the natural gas during the night.
 
-Mathematically, this constraint ensures that the ratio of the Activity to demand
-is constant for all time slices.  The multiplication trick here is analogous to
-what is performed in the Baseload constraint.
+In English, this constraint states that "the ratio of a process activity to
+demand is constant for all time slices." Note that if a demand is not specified
+in a given time slice, or is zero, then this constraint will not be considered
+for that slice and demand.  This is transparently handled by the :math:`\Theta`
+superset.
+
+.. math::
+   :label: DemandActivity
+
+      DEM_{p, s, d, dem} \cdot \sum_{I} FO_{p, s_0, d_0, i, t, v, dem}
+   =
+      DEM_{p, s_0, d_0, dem} \cdot \sum_{I} FO_{p, s, d, i, t, v, dem}
+
+   \\
+   \forall \{p, s, d, t, v, dem, s_0, s_0\} \in \Theta_{\text{demand activity}}
 """
 
 	act_a = sum(
@@ -563,18 +786,29 @@ what is performed in the Baseload constraint.
 
 def Demand_Constraint ( M, p, s, d, dem ):
 	r"""\
-The driving constraint, this rule ensures that supply at least equals demand.
-The sum of all outputs from the FlowOut (``FO``) variable for a given commodity
-must meet or exceed that required by the exogenously specified demand (``DEM``)
-parameter.
+
+Where the ProcessBalance constraint :eq:`ProcessBalance` defines the fundamental
+relationship of Temoa, the Demand constraint drives the model.  This
+constraint ensures that supply at least meets the demand specified by the Demand
+parameter in all periods and slices.
+
+In English, this constraint says that "the sum of all the demand output
+commodity (:math:`dem`) generated by FO must meet demand in each time slice."
+
+Note that this constraint's validity relies on the fact that the
+:math:`commodity\_demand` set is distinct from both :math:`commodity\_emissions`
+and :math:`commodity\_physical`.  In other words, an end-use demand must be
+exactly and only that: an end-use demand.  If an output could satisfy both an
+end-use and internal system demand, then the output from FO would be double
+counted.
 
 .. math::
-       \sum_{I,T,V|\{p, s, d, i, t, v, c\} \in FO_{ind}}
-   \ge
-       DEM_{p,s,d,c}
+   :label: Demand
+
+   \sum_{I, T, V} FO_{p, s, d, i, t, v, dem} \ge DEM_{p, s, d, dem}
 
    \\
-   \forall \{p, s, d, c\} \in DEM_{ind}
+   \forall \{p, s, d, dem\} \in \Theta_{\text{demand parameter}}
 """
 	if not (M.Demand[p, s, d, dem] > 0):
 		# User must have supplied a 0 demand: no need to create a useless
