@@ -357,9 +357,9 @@ slices.)
    \forall \{p, s, i, t, v, o\} \in \Theta_{\text{storage}}
 """
 	total_out_in = sum(
-	    M.V_FlowOut[p, s, S_d, i, t, v, o]
-	  - M.Efficiency[i, t, v, o].value
+	    M.Efficiency[i, t, v, o].value
 	  * M.V_FlowIn[p, s, S_d, i, t, v, o]
+	  - M.V_FlowOut[p, s, S_d, i, t, v, o]
 
 	  for S_d in M.time_of_day
 	)
