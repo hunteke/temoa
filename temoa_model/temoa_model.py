@@ -279,7 +279,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraintIndices, rule=MinCapacity_Constraint )
 	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraintIndices, rule=MaxCapacity_Constraint )
 
-	M.EmissionConstraint = Constraint( M.EmissionConstraintIndices, rule=Emission_Constraint)
+	M.EmissionLimitConstraint = Constraint( M.EmissionConstraintIndices, rule=EmissionLimit_Constraint)
 
 
 	return M
