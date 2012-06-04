@@ -113,8 +113,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.commodity_all     = M.commodity_carrier | M.commodity_emissions
 
 	M.GlobalDiscountRate = Param()
-	M.PeriodLength = Param( M.time_optimize, initialize=ParamPeriodLength_rule )
-	M.PeriodRate   = Param( M.time_optimize, initialize=ParamPeriodRate_rule )
+	M.PeriodLength = Param( M.time_optimize, initialize=ParamPeriodLength )
+	M.PeriodRate   = Param( M.time_optimize, initialize=ParamPeriodRate )
 
 	M.SegFrac = Param( M.time_season, M.time_of_day )
 
@@ -126,13 +126,13 @@ CapacityFactor(tech_all, vintage_all)
 	M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
 	M.Efficiency   = Param( M.commodity_carrier, M.tech_all, M.vintage_all, M.commodity_carrier )
 
-	M.CapacityFactorIndices = Set( dimen=2, rule=CapacityFactorIndices )
-	M.CapacityFactor     = Param( M.CapacityFactorIndices, default=1 )
+	M.CapacityFactor_tv = Set( dimen=2, rule=CapacityFactorIndices )
+	M.CapacityFactor    = Param( M.CapacityFactor_tv, default=1 )
 
-	M.LifetimeTechIndices = Set( dimen=2, rule=LifetimeTechIndices )
-	M.LifetimeLoanIndices = Set( dimen=2, rule=LifetimeLoanIndices )
-	M.LifetimeTech = Param( M.LifetimeTechIndices,  default=30 )  # in years
-	M.LifetimeLoan = Param( M.LifetimeLoanIndices,  default=10 )  # in years
+	M.LifetimeTech_tv = Set( dimen=2, rule=LifetimeTechIndices )
+	M.LifetimeLoan_tv = Set( dimen=2, rule=LifetimeLoanIndices )
+	M.LifetimeTech = Param( M.LifetimeTech_tv,  default=30 )  # in years
+	M.LifetimeLoan = Param( M.LifetimeLoan_tv,  default=10 )  # in years
 
 	# always empty set, like the validation hacks above.  Temoa uses a couple
 	# of global variables to precalculate some oft-used results in constraint
@@ -144,27 +144,27 @@ CapacityFactor(tech_all, vintage_all)
 	M.Demand        = Param( M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand )
 	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical )
 
-	M.CostFixedIndices    = Set( dimen=3, rule=CostFixedIndices )
-	M.CostMarginalIndices = Set( dimen=3, rule=CostMarginalIndices )
-	M.CostInvestIndices   = Set( dimen=2, rule=CostInvestIndices )
-	M.CostFixed    = Param( M.CostFixedIndices )
-	M.CostMarginal = Param( M.CostMarginalIndices )
-	M.CostInvest   = Param( M.CostInvestIndices )
+	M.CostFixed_ptv    = Set( dimen=3, rule=CostFixedIndices )
+	M.CostMarginal_ptv = Set( dimen=3, rule=CostMarginalIndices )
+	M.CostInvest_tv    = Set( dimen=2, rule=CostInvestIndices )
+	M.CostFixed    = Param( M.CostFixed_ptv )
+	M.CostMarginal = Param( M.CostMarginal_ptv )
+	M.CostInvest   = Param( M.CostInvest_tv )
 
-	M.ModelLoanLifeIndices = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
-	M.ModelTechLifeIndices = Set( dimen=3, rule=ModelTechLifeIndices )
-	M.ModelLoanLife = Param( M.ModelLoanLifeIndices, rule=ParamModelLoanLife_rule )
-	M.ModelTechLife = Param( M.ModelTechLifeIndices, rule=ParamModelTechLife_rule )
+	M.Loan_tv         = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
+	M.ModelLoanLife_tv = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
+	M.ModelTechLife_tv = Set( dimen=3, rule=ModelTechLifeIndices )
+	M.ModelLoanLife = Param( M.ModelLoanLife_tv, rule=ParamModelLoanLife_rule )
+	M.ModelTechLife = Param( M.ModelTechLife_tv, rule=ParamModelTechLife_rule )
 
-	M.DiscountRateIndices = Set( dimen=2, rule=DiscountRateIndices )
-	M.LoanLifeFracIndices = Set( dimen=3, rule=LoanLifeFracIndices )
-	M.TechLifeFracIndices = Set( dimen=3, rule=TechLifeFracIndices )
-	M.LoanIndices         = Set( dimen=2, rule=LoanIndices )
+	M.DiscountRate_tv = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
+	M.LoanLifeFrac_ptv = Set( dimen=3, rule=LoanLifeFracIndices )
+	M.TechLifeFrac_ptv = Set( dimen=3, rule=TechLifeFracIndices )
 
-	M.DiscountRate  = Param( M.DiscountRateIndices, default=0.05 )
-	M.LoanLifeFrac  = Param( M.LoanLifeFracIndices, rule=ParamLoanLifeFraction_rule )
-	M.TechLifeFrac  = Param( M.TechLifeFracIndices, rule=ParamTechLifeFraction_rule )
-	M.LoanAnnualize = Param( M.LoanIndices, rule=ParamLoanAnnualize_rule )
+	M.DiscountRate  = Param( M.DiscountRate_tv, default=0.05 )
+	M.LoanLifeFrac  = Param( M.LoanLifeFrac_ptv, rule=ParamLoanLifeFraction_rule )
+	M.TechLifeFrac  = Param( M.TechLifeFrac_ptv, rule=ParamTechLifeFraction_rule )
+	M.LoanAnnualize = Param( M.Loan_tv, rule=ParamLoanAnnualize_rule )
 
 	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
 	# always-empty Set; hack to perform inter-Set or inter-Param validation
@@ -174,70 +174,72 @@ CapacityFactor(tech_all, vintage_all)
 	M.MaxCapacity = Param( M.time_optimize, M.tech_all )
 
 	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions )
-	M.EmissionActivityIndices = Set( dimen=5, rule=EmissionActivityIndices )
-	M.EmissionActivity = Param( M.EmissionActivityIndices )
+	M.EmissionActivity_eitvo = Set( dimen=5, rule=EmissionActivityIndices )
+	M.EmissionActivity = Param( M.EmissionActivity_eitvo )
 
-	M.ActivityVarIndices = Set( dimen=5, rule=ActivityVariableIndices )
-	M.ActivityByPeriodTechAndVintageVarIndices = Set(
+	M.ActivityVar_psdtv = Set( dimen=5, rule=ActivityVariableIndices )
+	M.ActivityByPeriodTechAndVintageVar_ptv = Set(
 	  dimen=3, rule=ActivityByPeriodTechAndVintageVarIndices )
 
-	M.CapacityByOutputVarIndices = Set( dimen=3, rule=CapacityByOutputVariableIndices )
-	M.CapacityVarIndices = Set( dimen=2, rule=CapacityVariableIndices )
-	M.CapacityAvailableVarIndices = Set(
+	M.CapacityByOutput_tvo = Set( dimen=3, rule=CapacityByOutputVariableIndices )
+	M.CapacityVar_tv = Set( dimen=2, rule=CapacityVariableIndices )
+	M.CapacityAvailableVar_pt = Set(
 	  dimen=2, rule=CapacityAvailableVariableIndices )
 
-	M.FlowVarIndices = Set( dimen=7, rule=FlowVariableIndices )
-
-	M.BaseloadDiurnalConstraintIndices = Set(
-	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
-	M.CapacityByOutputConstraintIndices = Set(
-	  dimen=6, rule=CapacityByOutputConstraintIndices )
-	M.CapacityFractionalLifetimeConstraintIndices = Set(
-	  dimen=6, rule=CapacityFractionalLifetimeConstraintIndices )
-	M.CommodityBalanceConstraintIndices = Set(
-	  dimen=4, rule=CommodityBalanceConstraintIndices )
-	M.DemandConstraintIndices = Set( dimen=4, rule=DemandConstraintIndices )
-	M.DemandActivityConstraintIndices = Set( dimen=8, rule=DemandActivityConstraintIndices )
-	M.ExistingCapacityConstraintIndices = Set(
-	  dimen=2, rule=ExistingCapacityConstraintIndices )
-	M.MaxCapacityConstraintIndices = Set(
-	  dimen=2, rule=MaxCapacityConstraintIndices )
-	M.MinCapacityConstraintIndices = Set(
-	  dimen=2, rule=MinCapacityConstraintIndices )
-	M.ProcessBalanceConstraintIndices = Set(
-	  dimen=7, rule=ProcessBalanceConstraintIndices )
-	M.ResourceConstraintIndices = Set( dimen=2, rule=ResourceConstraintIndices )
-	M.StorageConstraintIndices = Set( dimen=6, rule=StorageConstraintIndices )
-	M.TechOutputSplitConstraintIndices = Set(
-	  dimen=7, rule=TechOutputSplitConstraintIndices )
-
-	M.EmissionConstraintIndices = Set( dimen=2, rule=EmissionConstraintIndices )
+	M.FlowVar_psditvo = Set( dimen=7, rule=FlowVariableIndices )
 
 	# Variables
 	#   Base decision variables
-	M.V_FlowIn  = Var( M.FlowVarIndices, domain=NonNegativeReals )
-	M.V_FlowOut = Var( M.FlowVarIndices, domain=NonNegativeReals )
+	M.V_FlowIn  = Var( M.FlowVar_psditvo, domain=NonNegativeReals )
+	M.V_FlowOut = Var( M.FlowVar_psditvo, domain=NonNegativeReals )
 
 	#   Derived decision variables
-	M.V_Activity = Var( M.ActivityVarIndices, domain=NonNegativeReals )
+	M.V_Activity = Var( M.ActivityVar_psdtv, domain=NonNegativeReals )
 
-	M.V_CapacityByOutput = Var( M.CapacityByOutputVarIndices, domain=NonNegativeReals )
-	M.V_Capacity         = Var( M.CapacityVarIndices,         domain=NonNegativeReals )
+	M.V_CapacityByOutput = Var( M.CapacityByOutput_tvo, domain=NonNegativeReals )
+	M.V_Capacity         = Var( M.CapacityVar_tv,         domain=NonNegativeReals )
 
 	M.V_ActivityByPeriodTechAndVintage = Var(
-	  M.ActivityByPeriodTechAndVintageVarIndices,
+	  M.ActivityByPeriodTechAndVintageVar_ptv,
 	  domain=NonNegativeReals
 	)
 
 	M.V_CapacityAvailableByPeriodAndTech = Var(
-	  M.CapacityAvailableVarIndices,
+	  M.CapacityAvailableVar_pt,
 	  domain=NonNegativeReals
 	)
 
-	M.V_CapacityInvest = Var( M.CapacityVarIndices, domain=NonNegativeReals )
-	M.V_CapacityFixed  = Var( M.CapacityVarIndices, domain=NonNegativeReals )
+	M.V_CapacityInvest = Var( M.CapacityVar_tv, domain=NonNegativeReals )
+	M.V_CapacityFixed  = Var( M.CapacityVar_tv, domain=NonNegativeReals )
 
 	AddReportingVariables( M )
+
+	M.BaseloadDiurnalConstraint_psdtv = Set(
+	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
+	M.CapacityByOutputConstraint_psdtvo = Set(
+	  dimen=6, rule=CapacityByOutputConstraintIndices )
+	M.CapacityFractionalLifetimeConstraint_psdtvo = Set(
+	  dimen=6, rule=CapacityFractionalLifetimeConstraintIndices )
+	M.CommodityBalanceConstraint_psdc = Set(
+	  dimen=4, rule=CommodityBalanceConstraintIndices )
+	M.DemandConstraint_psdc = Set( dimen=4, rule=lambda M: M.Demand.keys() )
+	M.DemandActivityConstraint_psdtv_dem_s0d0 = Set( dimen=8, rule=DemandActivityConstraintIndices )
+	M.ExistingCapacityConstraint_tv = Set(
+	  dimen=2, rule=lambda M: M.ExistingCapacity.keys() )
+	M.MaxCapacityConstraint_pt = Set(
+	  dimen=2, rule=lambda M: M.MaxCapacity.keys() )
+	M.MinCapacityConstraint_pt = Set(
+	  dimen=2, rule=lambda M: M.MinCapacity.keys() )
+	M.MinCapacityConstraint_psditvo = Set(
+	  dimen=7, rule=ProcessBalanceConstraintIndices )
+	M.ResourceConstraint_pr = Set(
+	  dimen=2, rule=lambda M: M.ResourceBound.keys() )
+	M.StorageConstraint_psitvo = Set( dimen=6, rule=StorageConstraintIndices )
+	M.TechOutputSplitConstraint_psditvo = Set(
+	  dimen=7, rule=TechOutputSplitConstraintIndices )
+
+	M.EmissionLimitConstraint_pe = Set(
+	  dimen=2, rule=lambda M: M.EmissionLimit.keys() )
 
 	# Objective
 	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
@@ -245,41 +247,41 @@ CapacityFactor(tech_all, vintage_all)
 	# Constraints
 
 	#   "Bookkeeping" constraints
-	M.ActivityConstraint = Constraint( M.ActivityVarIndices, rule=Activity_Constraint )
-	M.ActivityByPeriodTechAndVintageConstraint = Constraint( M.ActivityByPeriodTechAndVintageVarIndices, rule=ActivityByPeriodTechAndVintage_Constraint )
+	M.ActivityConstraint = Constraint( M.ActivityVar_psdtv, rule=Activity_Constraint )
+	M.ActivityByPeriodTechAndVintageConstraint = Constraint( M.ActivityByPeriodTechAndVintageVar_ptv, rule=ActivityByPeriodTechAndVintage_Constraint )
 
-	M.CapacityByOutputConstraint = Constraint( M.CapacityByOutputConstraintIndices, rule=CapacityByOutput_Constraint )
-	M.CapacityConstraint         = Constraint( M.CapacityVarIndices, rule=Capacity_Constraint )
+	M.CapacityByOutputConstraint = Constraint( M.CapacityByOutputConstraint_psdtvo, rule=CapacityByOutput_Constraint )
+	M.CapacityConstraint         = Constraint( M.CapacityVar_tv, rule=Capacity_Constraint )
 
-	M.ExistingCapacityConstraint = Constraint( M.ExistingCapacityConstraintIndices, rule=ExistingCapacity_Constraint )
+	M.ExistingCapacityConstraint = Constraint( M.ExistingCapacityConstraint_tv, rule=ExistingCapacity_Constraint )
 
-	M.CapacityInvestConstraint = Constraint( M.CapacityVarIndices, rule=CapacityInvest_Constraint )
-	M.CapacityFixedConstraint  = Constraint( M.CapacityVarIndices, rule=CapacityFixed_Constraint )
+	M.CapacityInvestConstraint = Constraint( M.CapacityVar_tv, rule=CapacityInvest_Constraint )
+	M.CapacityFixedConstraint  = Constraint( M.CapacityVar_tv, rule=CapacityFixed_Constraint )
 
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
 	#      very useful.)
-	M.DemandConstraint           = Constraint( M.DemandConstraintIndices,  rule=Demand_Constraint )
-	M.DemandActivityConstraint   = Constraint( M.DemandActivityConstraintIndices, rule=DemandActivity_Constraint )
-	M.ProcessBalanceConstraint   = Constraint( M.ProcessBalanceConstraintIndices, rule=ProcessBalance_Constraint )
-	M.CommodityBalanceConstraint = Constraint( M.CommodityBalanceConstraintIndices,  rule=CommodityBalance_Constraint )
+	M.DemandConstraint           = Constraint( M.DemandConstraint_psdc,  rule=Demand_Constraint )
+	M.DemandActivityConstraint   = Constraint( M.DemandActivityConstraint_psdtv_dem_s0d0, rule=DemandActivity_Constraint )
+	M.ProcessBalanceConstraint   = Constraint( M.MinCapacityConstraint_psditvo, rule=ProcessBalance_Constraint )
+	M.CommodityBalanceConstraint = Constraint( M.CommodityBalanceConstraint_psdc,  rule=CommodityBalance_Constraint )
 
-	M.ResourceExtractionConstraint = Constraint( M.ResourceConstraintIndices,  rule=ResourceExtraction_Constraint )
+	M.ResourceExtractionConstraint = Constraint( M.ResourceConstraint_pr,  rule=ResourceExtraction_Constraint )
 
-	M.BaseloadDiurnalConstraint = Constraint( M.BaseloadDiurnalConstraintIndices,  rule=BaseloadDiurnal_Constraint )
+	M.BaseloadDiurnalConstraint = Constraint( M.BaseloadDiurnalConstraint_psdtv,  rule=BaseloadDiurnal_Constraint )
 
-	M.StorageConstraint = Constraint( M.StorageConstraintIndices, rule=Storage_Constraint )
+	M.StorageConstraint = Constraint( M.StorageConstraint_psitvo, rule=Storage_Constraint )
 
-	M.TechOutputSplitConstraint = Constraint( M.TechOutputSplitConstraintIndices, rule=TechOutputSplit_Constraint )
+	M.TechOutputSplitConstraint = Constraint( M.TechOutputSplitConstraint_psditvo, rule=TechOutputSplit_Constraint )
 
-	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVarIndices, rule=CapacityAvailableByPeriodAndTech_Constraint )
+	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVar_pt, rule=CapacityAvailableByPeriodAndTech_Constraint )
 
-	M.FractionalLifeActivityLimitConstraint = Constraint( M.CapacityFractionalLifetimeConstraintIndices, rule=FractionalLifeActivityLimit_Constraint )
+	M.FractionalLifeActivityLimitConstraint = Constraint( M.CapacityFractionalLifetimeConstraint_psdtvo, rule=FractionalLifeActivityLimit_Constraint )
 
-	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraintIndices, rule=MinCapacity_Constraint )
-	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraintIndices, rule=MaxCapacity_Constraint )
+	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraint_pt, rule=MinCapacity_Constraint )
+	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraint_pt, rule=MaxCapacity_Constraint )
 
-	M.EmissionLimitConstraint = Constraint( M.EmissionConstraintIndices, rule=EmissionLimit_Constraint)
+	M.EmissionLimitConstraint = Constraint( M.EmissionLimitConstraint_pe, rule=EmissionLimit_Constraint)
 
 
 	return M

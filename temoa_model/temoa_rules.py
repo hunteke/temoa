@@ -110,7 +110,7 @@ def ParamModelTechLife_rule ( M, p, t, v ):
 	return tpl
 
 
-def ParamPeriodLength_rule ( M, p ):
+def ParamPeriodLength ( M, p ):
 	# This specifically does not use time_optimize because this function is
 	# called /over/ time_optimize.
 	periods = sorted( M.time_horizon )
@@ -126,7 +126,7 @@ def ParamPeriodLength_rule ( M, p ):
 	return length
 
 
-def ParamPeriodRate_rule ( M, p ):
+def ParamPeriodRate ( M, p ):
 	"""\
 The "Period Rate" is a multiplier against the costs incurred within a period to
 bring the time-value back to the base year.  The parameter PeriodRate is not

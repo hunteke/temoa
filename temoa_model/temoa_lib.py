@@ -218,20 +218,20 @@ g_processInputs  = dict()
 g_processOutputs = dict()
 g_processVintages = dict()
 g_processLoans = dict()
-g_activeFlowIndices = None
-g_activeActivityIndices = None
-g_activeCapacityIndices = None
-g_activeCapacityAvailableIndices = None
+g_activeFlow_psditvo = None
+g_activeActivity_ptv = None
+g_activeCapacity_tv = None
+g_activeCapacityAvailable_pt = None
 
 def InitializeProcessParameters ( M ):
 	global g_processInputs
 	global g_processOutputs
 	global g_processVintages
 	global g_processLoans
-	global g_activeFlowIndices
-	global g_activeActivityIndices
-	global g_activeCapacityIndices
-	global g_activeCapacityAvailableIndices
+	global g_activeFlow_psditvo
+	global g_activeActivity_ptv
+	global g_activeCapacity_tv
+	global g_activeCapacityAvailable_pt
 
 	l_first_period = min( M.time_horizon )
 	l_exist_indices = M.ExistingCapacity.keys()
@@ -302,7 +302,7 @@ def InitializeProcessParameters ( M ):
 		for i in sorted( l_unused_techs ):
 			SE.write( msg.format( i ))
 
-	g_activeFlowIndices = set(
+	g_activeFlow_psditvo = set(
 	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
 
 	  for l_per in M.time_optimize
@@ -313,21 +313,21 @@ def InitializeProcessParameters ( M ):
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
-	g_activeActivityIndices = set(
+	g_activeActivity_ptv = set(
 	  (l_per, l_tech, l_vin)
 
 	  for l_per in M.time_optimize
 	  for l_tech in M.tech_all
 	  for l_vin in ProcessVintages( l_per, l_tech )
 	)
-	g_activeCapacityIndices = set(
+	g_activeCapacity_tv = set(
 	  (l_tech, l_vin)
 
 	  for l_per in M.time_optimize
 	  for l_tech in M.tech_all
 	  for l_vin in ProcessVintages( l_per, l_tech )
 	)
-	g_activeCapacityAvailableIndices = set(
+	g_activeCapacityAvailable_pt = set(
 	  (l_per, l_tech)
 
 	  for l_per in M.time_optimize
@@ -359,11 +359,11 @@ def CapacityFactorIndices ( M ):
 
 
 def CostFixedIndices ( M ):
-	return g_activeActivityIndices
+	return g_activeActivity_ptv
 
 
 def CostMarginalIndices ( M ):
-	return g_activeActivityIndices
+	return g_activeActivity_ptv
 
 
 def CostInvestIndices ( M ):
@@ -374,10 +374,6 @@ def CostInvestIndices ( M ):
 	)
 
 	return indices
-
-
-def DiscountRateIndices ( M ):
-	return set( M.CostInvest.keys() )
 
 
 def EmissionActivityIndices ( M ):
@@ -401,7 +397,7 @@ process is active.
 	l_max_year = max( M.time_future )
 
 	indices = set()
-	for l_tech, l_vin in M.LifetimeLoanIndices:
+	for l_tech, l_vin in M.LifetimeLoan.keys():
 		l_death_year = l_vin + value(M.LifetimeLoan[l_tech, l_vin])
 		if l_death_year < l_max_year and l_death_year not in l_periods:
 			l_per = max( yy for yy in M.time_optimize if yy < l_death_year )
@@ -420,7 +416,7 @@ active.
 	l_max_year = max( M.time_future )
 
 	indices = set()
-	for l_tech, l_vin in g_activeCapacityIndices:
+	for l_tech, l_vin in g_activeCapacity_tv:
 		l_death_year = l_vin + value(M.LifetimeTech[l_tech, l_vin])
 		if l_death_year < l_max_year and l_death_year not in l_periods:
 			l_per = max( yy for yy in M.time_optimize if yy < l_death_year )
@@ -435,7 +431,7 @@ Returns the set of (period, tech, vintage) tuples.  The tuple indicates the
 periods in which a process is active, distinct from TechLifeFracIndices that
 returns indices only for processes that EOL mid-period.
 """
-	return g_activeActivityIndices
+	return g_activeActivity_ptv
 
 
 def LifetimeTechIndices ( M ):
@@ -470,15 +466,6 @@ CostInvest parameter.
 	return indices
 
 
-def LoanIndices ( M ):
-	"""\
-Returns the set of possible process (tech, vintage) investments the optimizer
-may make.
-
-This function is deprecated and may soon be removed from the API.
-"""
-	return set( M.CostInvest.keys() )
-
 # End parameters
 ##############################################################################
 
@@ -486,20 +473,20 @@ This function is deprecated and may soon be removed from the API.
 # Variables
 
 def CapacityVariableIndices ( M ):
-	return g_activeCapacityIndices
+	return g_activeCapacity_tv
 
 def CapacityAvailableVariableIndices ( M ):
-	return g_activeCapacityAvailableIndices
+	return g_activeCapacityAvailable_pt
 
 def FlowVariableIndices ( M ):
-	return g_activeFlowIndices
+	return g_activeFlow_psditvo
 
 
 def ActivityVariableIndices ( M ):
 	activity_indices = set(
 	  (l_per, l_season, l_tod, l_tech, l_vin)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  for l_per, l_tech, l_vin in g_activeActivity_ptv
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -524,7 +511,7 @@ def CapacityByOutputVariableIndices ( M ):
 
 
 def ActivityByPeriodTechAndVintageVarIndices ( M ):
-	return g_activeActivityIndices
+	return g_activeActivity_ptv
 
 
 def ActivityByPeriodTechAndOutputVariableIndices ( M ):
@@ -557,7 +544,7 @@ def ActivityByTechAndOutputVariableIndices ( M ):
 	indices = set(
 	  (l_tech, l_out)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  for l_per, l_tech, l_vin in g_activeActivity_ptv
 	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
 	)
 
@@ -568,7 +555,7 @@ def ActivityByInputAndTechVariableIndices ( M ):
 	indices = set(
 	  (l_inp, l_tech)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  for l_per, l_tech, l_vin in g_activeActivity_ptv
 	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
 	)
 
@@ -579,7 +566,7 @@ def ActivityByPeriodInputAndTechVariableIndices ( M ):
 	indices = set(
 	  (l_per, l_inp, l_tech)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  for l_per, l_tech, l_vin in g_activeActivity_ptv
 	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
 	)
 
@@ -590,7 +577,7 @@ def ActivityByPeriodInputTechAndVintageVariableIndices ( M ):
 	indices = set(
 	  (l_per, l_inp, l_tech, l_vin)
 
-	  for l_per, l_tech, l_vin in g_activeActivityIndices
+	  for l_per, l_tech, l_vin in g_activeActivity_ptv
 	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
 	)
 
@@ -707,10 +694,6 @@ def CapacityByOutputConstraintIndices ( M ):
 	return indices
 
 
-def DemandConstraintIndices ( M ):
-	return set( M.Demand.keys() )
-
-
 def DemandActivityConstraintIndices ( M ):
 	indices = set()
 
@@ -728,26 +711,13 @@ def DemandActivityConstraintIndices ( M ):
 		tmp = set(
 		  (p, s, d, t, v, dem, first[0], first[1])
 
+		  for Fp, Fs, Fd, i, t, v, Fo in M.V_FlowOut.keys()
 		  for s, d in slices[1:]
-		  for Fp, Fs, Fd, i, t, v, Fo in M.FlowVarIndices
 		  if Fp == p and Fs == s and Fd == d and Fo == dem
 		)
 		indices.update( tmp )
 
 	return indices
-
-
-def EmissionConstraintIndices ( M ):
-	return set( M.EmissionLimit.keys() )
-
-def MaxCapacityConstraintIndices ( M ):
-	return set( M.MaxCapacity.keys() )
-
-def MinCapacityConstraintIndices ( M ):
-	return set( M.MinCapacity.keys() )
-
-def ResourceConstraintIndices ( M ):
-	return set( M.ResourceBound.keys() )
 
 
 def BaseloadDiurnalConstraintIndices ( M ):
@@ -768,7 +738,7 @@ def CapacityFractionalLifetimeConstraintIndices ( M ):
 	indices = set(
 	  (l_per, l_season, l_tod, l_tech, l_vin, l_carrier)
 
-	  for l_per, l_tech, l_vin in M.TechLifeFracIndices
+	  for l_per, l_tech, l_vin in M.TechLifeFrac.keys()
 	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
@@ -790,17 +760,6 @@ def CommodityBalanceConstraintIndices ( M ):
 	  for l_tod in M.time_of_day
 	)
 
-	return indices
-
-
-def ExistingCapacityConstraintIndices ( M ):
-	indices = set(
-	  (l_tech, l_vin)
-
-	  for l_tech in M.tech_all
-	  for l_vin in M.vintage_exist
-	  if (l_tech, l_vin) in g_activeCapacityIndices
-	)
 	return indices
 
 
@@ -976,11 +935,11 @@ def ProcessVintages ( A_per, A_tech ):
 
 
 def ValidActivity ( A_period, A_tech, A_vintage ):
-	return (A_period, A_tech, A_vintage) in g_activeActivityIndices
+	return (A_period, A_tech, A_vintage) in g_activeActivity_ptv
 
 
 def ValidCapacity ( A_tech, A_vintage ):
-	return (A_tech, A_vintage) in g_activeCapacityIndices
+	return (A_tech, A_vintage) in g_activeCapacity_tv
 
 
 def isValidProcess ( A_period, A_inp, A_tech, A_vintage, A_out ):
