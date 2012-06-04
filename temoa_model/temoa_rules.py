@@ -70,7 +70,7 @@ pseudo-parameter.
 	      M.CostFixed[S_p, S_t, S_v].value
 	    * sum( (1 + M.GlobalDiscountRate.value) ** -y
 	        for y in range( S_p - P_0,
-	                        S_p - P_0 + M.TechPeriodLife[S_p, S_t, S_v].value )
+	                        S_p - P_0 + M.ModelTechLife[S_p, S_t, S_v].value )
 	      )
 	    )
 
@@ -103,7 +103,7 @@ def ParamModelLoanLife_rule ( M, t, v ):
 	return mll
 
 
-def ParamTechPeriodLife_rule ( M, p, t, v ):
+def ParamModelTechLife_rule ( M, p, t, v ):
 	life_length = M.LifetimeTech[t, v].value
 	tpl = min( v + life_length - p, M.PeriodLength[ p ].value )
 

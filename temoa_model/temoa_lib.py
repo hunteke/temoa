@@ -429,7 +429,7 @@ active.
 	return indices
 
 
-def TechPeriodLifeIndices ( M ):
+def ModelTechLifeIndices ( M ):
 	"""
 Returns the set of (period, tech, vintage) tuples.  The tuple indicates the
 periods in which a process is active, distinct from TechLifeFracIndices that
