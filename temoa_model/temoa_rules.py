@@ -395,14 +395,14 @@ Using the total output as the commonality, these can then be compared to each
 other:
 
 .. math::
-   \tfrac{d}{.\overline{4}} = \tfrac{g}{.\overline{3}} =
-   \tfrac{k}{.\overline{2}} = \text{total}
+   \tfrac{9}{4} \cdot d = \tfrac{9}{3} \cdot g = \tfrac{9}{2} \cdot k
+   = \text{total}
 
 Finally, in constraint form:
 
 .. math::
-   .\overline{3} d &= .\overline{4} g \\
-   .\overline{2} d &= .\overline{2} k
+   \tfrac{9}{3} d &= \tfrac{9}{4} g \\
+   \tfrac{9}{2} d &= \tfrac{9}{4} k
 
 Generalized, the constraint in set notation is:
 
