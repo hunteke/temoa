@@ -518,7 +518,7 @@ oil refinery, crude oil *cannot* be converted all to one type of fuel.
 	max_output = (
 	    M.V_Capacity[t, v]
 	  * (
-	      M.CapacityFactor[t, v].value
+	      M.CapacityFactor[s, d, t, v].value
 	    * M.CapacityToActivity[ t ].value
 	    * M.TechLifeFrac[p, t, v].value
 	    * M.SegFrac[s, d].value
@@ -570,7 +570,7 @@ constraint :eq:`FractionalLifeActivityLimit`.
 	produceable = (
 	    M.V_CapacityByOutput[t, v, o]
 	  * (
-	      M.CapacityFactor[t, v].value
+	      M.CapacityFactor[s, d, t, v].value
 	    * M.SegFrac[s, d].value
 	    * M.CapacityToActivity[ t ].value
 	  )

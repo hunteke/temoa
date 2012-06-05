@@ -350,9 +350,11 @@ def InitializeProcessParameters ( M ):
 
 def CapacityFactorIndices ( M ):
 	indices = set(
-	  (l_tech, l_vin)
+	  (l_season, l_tod, l_tech, l_vin)
 
 	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_season in M.time_season
+	  for l_tod in M.time_of_day
 	)
 
 	return indices

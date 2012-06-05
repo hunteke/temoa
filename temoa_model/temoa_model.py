@@ -126,8 +126,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
 	M.Efficiency   = Param( M.commodity_carrier, M.tech_all, M.vintage_all, M.commodity_carrier )
 
-	M.CapacityFactor_tv = Set( dimen=2, rule=CapacityFactorIndices )
-	M.CapacityFactor    = Param( M.CapacityFactor_tv, default=1 )
+	M.CapacityFactor_sdtv = Set( dimen=4, rule=CapacityFactorIndices )
+	M.CapacityFactor      = Param( M.CapacityFactor_sdtv, default=1 )
 
 	M.LifetimeTech_tv = Set( dimen=2, rule=LifetimeTechIndices )
 	M.LifetimeLoan_tv = Set( dimen=2, rule=LifetimeLoanIndices )
