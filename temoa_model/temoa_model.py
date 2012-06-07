@@ -197,7 +197,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.V_Activity = Var( M.ActivityVar_psdtv, domain=NonNegativeReals )
 
 	M.V_CapacityByOutput = Var( M.CapacityByOutput_tvo, domain=NonNegativeReals )
-	M.V_Capacity         = Var( M.CapacityVar_tv,         domain=NonNegativeReals )
+	M.V_Capacity         = Var( M.CapacityVar_tv,       domain=NonNegativeReals )
 
 	M.V_ActivityByPeriodTechAndVintage = Var(
 	  M.ActivityByPeriodTechAndVintageVar_ptv,
@@ -222,24 +222,24 @@ CapacityFactor(tech_all, vintage_all)
 	  dimen=6, rule=CapacityFractionalLifetimeConstraintIndices )
 	M.CommodityBalanceConstraint_psdc = Set(
 	  dimen=4, rule=CommodityBalanceConstraintIndices )
-	M.DemandConstraint_psdc = Set( dimen=4, rule=lambda M: M.Demand.keys() )
+	M.DemandConstraint_psdc = Set( dimen=4, rule=lambda M: M.Demand.sparse_iterkeys() )
 	M.DemandActivityConstraint_psdtv_dem_s0d0 = Set( dimen=8, rule=DemandActivityConstraintIndices )
 	M.ExistingCapacityConstraint_tv = Set(
-	  dimen=2, rule=lambda M: M.ExistingCapacity.keys() )
+	  dimen=2, rule=lambda M: M.ExistingCapacity.sparse_iterkeys() )
 	M.MaxCapacityConstraint_pt = Set(
-	  dimen=2, rule=lambda M: M.MaxCapacity.keys() )
+	  dimen=2, rule=lambda M: M.MaxCapacity.sparse_iterkeys() )
 	M.MinCapacityConstraint_pt = Set(
-	  dimen=2, rule=lambda M: M.MinCapacity.keys() )
+	  dimen=2, rule=lambda M: M.MinCapacity.sparse_iterkeys() )
 	M.MinCapacityConstraint_psditvo = Set(
 	  dimen=7, rule=ProcessBalanceConstraintIndices )
 	M.ResourceConstraint_pr = Set(
-	  dimen=2, rule=lambda M: M.ResourceBound.keys() )
+	  dimen=2, rule=lambda M: M.ResourceBound.sparse_iterkeys() )
 	M.StorageConstraint_psitvo = Set( dimen=6, rule=StorageConstraintIndices )
 	M.TechOutputSplitConstraint_psditvo = Set(
 	  dimen=7, rule=TechOutputSplitConstraintIndices )
 
 	M.EmissionLimitConstraint_pe = Set(
-	  dimen=2, rule=lambda M: M.EmissionLimit.keys() )
+	  dimen=2, rule=lambda M: M.EmissionLimit.sparse_iterkeys() )
 
 	# Objective
 	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)

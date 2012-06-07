@@ -123,7 +123,7 @@ def validate_time ( M ):
 
 def validate_SegFrac ( M ):
 
-	total = sum( M.SegFrac.data().values() )
+	total = sum( i for i in M.SegFrac.itervalues() )
 
 	if abs(float(total) - 1.0) > 1e-15:
 		# We can't explicitly test for "!= 1.0" because of incremental roundoff
@@ -132,7 +132,7 @@ def validate_SegFrac ( M ):
 
 		def get_str_padding ( obj ):
 			return len(str( obj ))
-		key_padding = max(map( get_str_padding, M.SegFrac.data().keys() ))
+		key_padding = max(map( get_str_padding, M.SegFrac.sparse_iterkeys() ))
 
 		format = "%%-%ds = %%s" % key_padding
 			# Works out to something like "%-25s = %s"
@@ -155,7 +155,7 @@ def validate_TechOutputSplit ( M ):
 	  'fraction of the input carrier converted to the output carrier, so '
 	  'they must total to 1.  Current values:\n   %s\n\tsum = %s')
 
-	split_indices = M.TechOutputSplit.keys()
+	split_indices = M.TechOutputSplit.sparse_iterkeys()
 
 	for l_inp in M.commodity_physical:
 		for l_tech in M.tech_all:
@@ -234,10 +234,10 @@ def InitializeProcessParameters ( M ):
 	global g_activeCapacityAvailable_pt
 
 	l_first_period = min( M.time_horizon )
-	l_exist_indices = M.ExistingCapacity.keys()
+	l_exist_indices = M.ExistingCapacity.sparse_keys()
 	l_used_techs = set()
 
-	for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys():
+	for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys():
 		l_process = (l_tech, l_vin)
 		l_lifetime = value(M.LifetimeTech[ l_process ])
 
@@ -352,7 +352,7 @@ def CapacityFactorIndices ( M ):
 	indices = set(
 	  (l_season, l_tod, l_tech, l_vin)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
 	)
@@ -382,7 +382,7 @@ def EmissionActivityIndices ( M ):
 	indices = set(
 	  (l_emission, l_inp, l_tech, l_vin, l_out)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
 	  for l_emission in M.commodity_emissions
 	)
 
@@ -399,7 +399,7 @@ process is active.
 	l_max_year = max( M.time_future )
 
 	indices = set()
-	for l_tech, l_vin in M.LifetimeLoan.keys():
+	for l_tech, l_vin in M.LifetimeLoan.sparse_iterkeys():
 		l_death_year = l_vin + value(M.LifetimeLoan[l_tech, l_vin])
 		if l_death_year < l_max_year and l_death_year not in l_periods:
 			l_per = max( yy for yy in M.time_optimize if yy < l_death_year )
@@ -444,7 +444,7 @@ process indices that may be specified in the LifetimeTech parameter.
 	indices = set(
 	  (l_tech, l_vin)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
 	)
 
 	return indices
@@ -461,7 +461,7 @@ CostInvest parameter.
 	indices = set(
 	  (l_tech, l_vin)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
 	  if l_vin >= min_period
 	)
 
@@ -590,7 +590,7 @@ def EmissionActivityByTechVariableIndices ( M ):
 	indices = set(
 	  (l_emission, l_tech)
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
+	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.sparse_iterkeys()
 	)
 
 	return indices
@@ -599,7 +599,7 @@ def EmissionActivityByPeriodAndTechVariableIndices ( M ):
 	indices = set(
 	  (l_emission, l_per, l_tech)
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
+	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.sparse_iterkeys()
 	  for l_per in M.time_optimize
 	  if ValidActivity( l_per, l_tech, l_vin )
 	)
@@ -611,7 +611,7 @@ def EmissionActivityByTechAndVintageVariableIndices ( M ):
 	indices = set(
 	  (l_emission, l_tech, l_vin)
 
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.keys()
+	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.sparse_iterkeys()
 	)
 
 	return indices
@@ -621,7 +621,7 @@ def EnergyConsumptionByTechAndOutputVariableIndices ( M ):
 	indices = set(
 	  (l_tech, l_out)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
 	)
 
 	return indices
@@ -631,7 +631,7 @@ def EnergyConsumptionByPeriodAndTechVariableIndices ( M ):
 	indices = set(
 	  (l_per, l_tech)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
 	  for l_per in M.time_optimize
 	  if ValidActivity( l_per, l_tech, l_vin )
 	)
@@ -643,7 +643,7 @@ def EnergyConsumptionByPeriodInputAndTechVariableIndices ( M ):
 	indices = set(
 	  (l_per, l_inp, l_tech)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
 	  for l_per in M.time_optimize
 	  if ValidActivity( l_per, l_tech, l_vin )
 	)
@@ -655,7 +655,7 @@ def EnergyConsumptionByPeriodTechAndOutputVariableIndices ( M ):
 	indices = set(
 	  (l_per, l_tech, l_out)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
 	  for l_per in M.time_optimize
 	  if ValidActivity( l_per, l_tech, l_vin )
 	)
@@ -667,7 +667,7 @@ def EnergyConsumptionByPeriodTechAndVintageVariableIndices ( M ):
 	indices = set(
 	  (l_per, l_tech, l_vin)
 
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.keys()
+	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
 	  for l_per in M.time_optimize
 	  if ValidActivity( l_per, l_tech, l_vin )
 	)
@@ -700,7 +700,7 @@ def DemandActivityConstraintIndices ( M ):
 	indices = set()
 
 	dem_slices = dict()
-	for p, s, d, dem in M.Demand.keys():
+	for p, s, d, dem in M.Demand.sparse_iterkeys():
 		if (p, dem) not in dem_slices:
 			dem_slices[p, dem] = set()
 		dem_slices[p, dem].add( (s, d) )
@@ -713,7 +713,7 @@ def DemandActivityConstraintIndices ( M ):
 		tmp = set(
 		  (p, s, d, t, v, dem, first[0], first[1])
 
-		  for Fp, Fs, Fd, i, t, v, Fo in M.V_FlowOut.keys()
+		  for Fp, Fs, Fd, i, t, v, Fo in M.V_FlowOut.iterkeys()
 		  for s, d in slices[1:]
 		  if Fp == p and Fs == s and Fd == d and Fo == dem
 		)
@@ -740,7 +740,7 @@ def CapacityFractionalLifetimeConstraintIndices ( M ):
 	indices = set(
 	  (l_per, l_season, l_tod, l_tech, l_vin, l_carrier)
 
-	  for l_per, l_tech, l_vin in M.TechLifeFrac.keys()
+	  for l_per, l_tech, l_vin in M.TechLifeFrac.sparse_iterkeys()
 	  for l_carrier in ProcessOutputs( l_per, l_tech, l_vin )
 	  for l_season in M.time_season
 	  for l_tod in M.time_of_day
@@ -801,7 +801,7 @@ def TechOutputSplitConstraintIndices ( M ):
 	indices = set(
 	  (l_per, l_season, l_tod, l_inp, l_tech, l_vin, l_out)
 
-	  for l_inp, l_tech, l_out in M.TechOutputSplit.keys()
+	  for l_inp, l_tech, l_out in M.TechOutputSplit.sparse_iterkeys()
 	  for l_per in M.time_optimize
 	  for l_vin in ProcessVintages( l_per, l_tech )
 	  for l_season in M.time_season
