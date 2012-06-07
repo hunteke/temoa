@@ -155,32 +155,34 @@ def validate_TechOutputSplit ( M ):
 	  'fraction of the input carrier converted to the output carrier, so '
 	  'they must total to 1.  Current values:\n   %s\n\tsum = %s')
 
-	split_indices = M.TechOutputSplit.sparse_iterkeys()
+	split_indices = M.TechOutputSplit.sparse_keys()
 
-	for l_inp in M.commodity_physical:
-		for l_tech in M.tech_all:
-			l_total = sum(
-			  value(M.TechOutputSplit[l_inp, l_tech, l_out])
+	tmp = set((i, t) for i, t, o in split_indices)
+	left_side = dict({(i, t) : list() for i in tmp})
+	for i, t, o in split_indices:
+		left_side[i, t].append( o )
+
+	for i, t in left_side:
+		total = sum(
+		  M.TechOutputSplit[i, t, o].value
+		  for o in left_side[i, t]
+		)
+
+		# small enough; likely a rounding error
+		if abs(total) < 1e-15: continue
+
+		if abs(total -1) > 1e-10:
+			items = '\n   '.join(
+			  "%s: %s" % (
+			    str((i, t, o)),
+			    value(M.TechOutputSplit[l_inp, l_tech, l_out])
+			  )
 
 			  for l_out in M.commodity_carrier
 			  if (l_inp, l_tech, l_out) in split_indices
 			)
 
-			# small enough; likely a rounding error
-			if abs(l_total) < 1e-15: continue
-
-			if abs(l_total -1) > 1e-10:
-				items = '\n   '.join(
-				  "%s: %s" % (
-				    str((l_inp, l_tech, l_out)),
-				    value(M.TechOutputSplit[l_inp, l_tech, l_out])
-				  )
-
-				  for l_out in M.commodity_carrier
-				  if (l_inp, l_tech, l_out) in split_indices
-				)
-
-				raise ValueError, msg % (items, l_total)
+			raise ValueError, msg % (items, l_total)
 
 	return set()
 
