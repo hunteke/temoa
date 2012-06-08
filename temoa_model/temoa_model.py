@@ -150,7 +150,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.CostMarginal = Param( M.CostMarginal_ptv )
 	M.CostInvest   = Param( M.CostInvest_tv )
 
-	M.Loan_tv         = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
+	M.Loan_tv          = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
 	M.ModelLoanLife_tv = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
 	M.ModelTechLife_tv = Set( dimen=3, rule=ModelTechLifeIndices )
 	M.ModelLoanLife = Param( M.ModelLoanLife_tv, rule=ParamModelLoanLife_rule )
