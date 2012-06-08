@@ -158,7 +158,7 @@ def validate_TechOutputSplit ( M ):
 	split_indices = M.TechOutputSplit.sparse_keys()
 
 	tmp = set((i, t) for i, t, o in split_indices)
-	left_side = dict({(i, t) : list() for i in tmp})
+	left_side = dict({(i, t) : list() for i, t in tmp})
 	for i, t, o in split_indices:
 		left_side[i, t].append( o )
 
