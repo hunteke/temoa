@@ -229,7 +229,7 @@ CapacityFactor(tech_all, vintage_all)
 	  dimen=2, rule=lambda M: M.MaxCapacity.sparse_iterkeys() )
 	M.MinCapacityConstraint_pt = Set(
 	  dimen=2, rule=lambda M: M.MinCapacity.sparse_iterkeys() )
-	M.MinCapacityConstraint_psditvo = Set(
+	M.ProcessBalanceConstraint_psditvo = Set(
 	  dimen=7, rule=ProcessBalanceConstraintIndices )
 	M.ResourceConstraint_pr = Set(
 	  dimen=2, rule=lambda M: M.ResourceBound.sparse_iterkeys() )
@@ -262,7 +262,7 @@ CapacityFactor(tech_all, vintage_all)
 	#      very useful.)
 	M.DemandConstraint           = Constraint( M.DemandConstraint_psdc,  rule=Demand_Constraint )
 	M.DemandActivityConstraint   = Constraint( M.DemandActivityConstraint_psdtv_dem_s0d0, rule=DemandActivity_Constraint )
-	M.ProcessBalanceConstraint   = Constraint( M.MinCapacityConstraint_psditvo, rule=ProcessBalance_Constraint )
+	M.ProcessBalanceConstraint   = Constraint( M.ProcessBalanceConstraint_psditvo, rule=ProcessBalance_Constraint )
 	M.CommodityBalanceConstraint = Constraint( M.CommodityBalanceConstraint_psdc,  rule=CommodityBalance_Constraint )
 
 	M.ResourceExtractionConstraint = Constraint( M.ResourceConstraint_pr,  rule=ResourceExtraction_Constraint )
