@@ -82,7 +82,6 @@ CapacityFactor(tech_all, vintage_all)
 	M.time_horizon    = Set( ordered=True, within=Integers )
 	M.time_future     = Set( ordered=True, within=Integers )
 	M.time_optimize   = Set( ordered=True, initialize=init_set_time_optimize )
-	M.time_report     = M.time_exist | M.time_horizon
 	M.time_all        = M.time_exist | M.time_optimize
 
 	# These next sets are just various copies of the time_ sets, but
