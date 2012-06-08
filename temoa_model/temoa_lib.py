@@ -716,8 +716,9 @@ def DemandActivityConstraintIndices ( M ):
 		  (p, s, d, t, v, dem, first[0], first[1])
 
 		  for Fp, Fs, Fd, i, t, v, Fo in M.V_FlowOut.iterkeys()
+		  if Fp == p and Fo == dem
 		  for s, d in slices[1:]
-		  if Fp == p and Fs == s and Fd == d and Fo == dem
+		  if Fs == s and Fd == d
 		)
 		indices.update( tmp )
 
