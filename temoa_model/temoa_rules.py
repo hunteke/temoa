@@ -46,8 +46,6 @@ period.  There is thus no need to calculate the time-value of money factor for
 each process, and instead, :math:`R_p` is calculated once for each period, as a
 pseudo-parameter.
 """
-	partial_period_loan_indices = M.LoanLifeFrac.sparse_keys()
-	partial_period_tech_indices = M.TechLifeFrac.sparse_keys()
 	P_0 = min( M.time_optimize )
 
 	loan_costs = sum(
