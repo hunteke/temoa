@@ -48,11 +48,10 @@ class Param ( object ):
 		pindex = param.index()
 
 		if isinstance( pindex, _SetProduct ):
-			getname = lambda x: x.name
-			indices = [ getname(i) for i in param._index_set ]
+			indices = param.sparse_keys()
 			skeys = lambda: (' '.join(str(i) for i in k) for k in self.model_keys)
 
-			keys = param.keys()
+			keys = param.sparse_keys()
 			f = lambda x: x[pidx] == spoint
 			r = lambda x: tuple(x[0:pidx] + x[pidx+1:])
 			    # reduce keys to remove stochastic parameter
@@ -62,7 +61,7 @@ class Param ( object ):
 			indices = (param._index.name,)
 			skeys = lambda: (' '.join(str(i) for i in self.model_keys) )
 
-			keys = param.keys()
+			keys = param.sparse_keys()
 			f = lambda x: x[pidx] == spoint
 			r = lambda x: tuple(x[0:pidx] + x[pidx +1:])
 
