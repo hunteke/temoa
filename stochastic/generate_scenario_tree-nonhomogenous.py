@@ -11,11 +11,6 @@ from textwrap import TextWrapper
 
 from coopr.pyomo.base.sets import _SetProduct, _SetContainer
 
-
-from IPython.Shell import IPShellEmbed
-II = IPShellEmbed()
-
-
 SE = sys.stderr
 instance = None
 
