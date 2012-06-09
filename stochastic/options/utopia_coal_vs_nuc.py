@@ -18,15 +18,15 @@ types = (
 
 # for this toy problem, all branches are equally likely, so 1/9
 conditional_probability = dict(
-  CL_Low     = 0.1111111111111111111,
-  CA_Low     = 0.1111111111111111111,
-  CH_Low     = 0.1111111111111111111,
-  CL_Average = 0.1111111111111111111,
-  CA_Average = 0.1111111111111111111,
-  CH_Average = 0.1111111111111111111,
-  CL_High    = 0.1111111111111111111,
-  CA_High    = 0.1111111111111111111,
-  CH_High    = 0.1111111111111111111,
+  CL_Low     = 1./9,
+  CA_Low     = 1./9,
+  CH_Low     = 1./9,
+  CL_Average = 1./9,
+  CA_Average = 1./9,
+  CH_Average = 1./9,
+  CL_High    = 1./9,
+  CA_High    = 1./9,
+  CH_High    = 1./9,
 )
 rates = {
   'Demand' : dict(
