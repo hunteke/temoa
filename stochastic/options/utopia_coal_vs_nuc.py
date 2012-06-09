@@ -3,8 +3,8 @@ verbose = True
 force = True
 
 dirname    = 'utopia_demand'
-modelpath  = '../energysystem-process-Coopr3/temoa_model/temoa_model.py'
-dotdatpath = '../energysystem-datfiles/utopia.dat'
+modelpath  = '../temoa_model/temoa_model.py'
+dotdatpath = '../data_files/utopia.dat'
 stochasticset = 'time_optimize'
 stochastic_indices = {'Demand': 0, 'CostInvest': 1}
 

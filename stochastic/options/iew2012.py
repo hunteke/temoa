@@ -3,8 +3,8 @@ verbose = True
 force = True
 
 dirname    = 'temoa_island'
-modelpath  = '../energysystem-process-Coopr3/temoa_model/temoa_model.py'
-dotdatpath = '../energysystem-datfiles/temoa_island.dat'
+modelpath  = '../temoa_model/temoa_model.py'
+dotdatpath = '../data_files/temoa_island.dat'
 stochasticset = 'time_optimize'
 stochastic_points = (2020, 2025, 2030, 2035)
 stochastic_indices = {'Demand': 0, 'CostMarginal': 0}
