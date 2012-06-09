@@ -3,78 +3,57 @@
 from temoa_lib import *
 from temoa_model import *
 
-def StochasticPointObjective_rule ( M, A_period ):
+def StochasticPointObjective_rule ( M, p ):
 	"""\
 Stochastic objective function.
 
 TODO: update with LaTeX version of equation.
 	"""
-	l_loan_period_fraction_indices = M.LoanLifeFrac.keys()
-	l_tech_period_fraction_indices = M.TechLifeFrac.keys()
+	P_0 = min( M.time_optimize )
 
-	l_loan_costs = sum(
-	    M.V_CapacityInvest[l_tech, l_vin]
-	  * value(
-	      M.PeriodRate[ A_period ].value
-	    * M.CostInvest[l_tech, l_vin].value
-	    * M.LoanAnnualize[l_tech, l_vin].value
+	loan_costs = sum(
+	    M.V_CapacityInvest[S_t, S_v]
+	  * (
+	      M.CostInvest[S_t, S_v].value
+	    * M.LoanAnnualize[S_t, S_v].value
+	    * sum( (1 + M.GlobalDiscountRate.value) ** -y
+	        for y in range( S_v - P_0,
+	                        S_v - P_0 + M.ModelLoanLife[S_t, S_v].value )
+	      )
 	  )
 
-	  for l_tech, l_vin in M.CostInvest.keys()
-	  if (A_period, l_tech, l_vin) not in l_loan_period_fraction_indices
-	  if loanIsActive( A_period, l_tech, l_vin )
-	) + sum(
-	    M.V_CapacityInvest[l_tech, l_vin]
-	  * value(
-	      M.CostInvest[l_tech, l_vin].value
-	    * M.LoanAnnualize[l_tech, l_vin].value
-	  )
-	  * sum(
-	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
-	      for y in range( 0, M.PeriodLength[ l_per ] * M.LoanLifeFrac[l_per, l_tech, l_vin])
+	  for S_t, S_v in M.CostInvest.sparse_iterkeys()
+	  if S_v == p
+	)
+
+	fixed_costs = sum(
+	    M.V_CapacityFixed[S_t, S_v]
+	  * (
+	      M.CostFixed[p, S_t, S_v].value
+	    * sum( (1 + M.GlobalDiscountRate.value) ** -y
+	        for y in range( p - P_0,
+	                        p - P_0 + M.ModelTechLife[p, S_t, S_v].value )
+	      )
 	    )
 
-	  for l_per, l_tech, l_vin in l_loan_period_fraction_indices
-	  if l_per == A_period
+	  for S_p, S_t, S_v in M.CostFixed.sparse_iterkeys()
+	  if S_p == p
 	)
 
-	l_fixed_costs = sum(
-	    M.V_CapacityFixed[l_tech, l_vin]
-	  * value(
-	      M.CostFixed[l_per, l_tech, l_vin].value
-	    * M.PeriodRate[ l_per ].value
+	marg_costs = sum(
+	    M.V_ActivityByPeriodTechAndVintage[p, S_t, S_v]
+	  * (
+	      M.CostMarginal[p, S_t, S_v].value
+	    * M.PeriodRate[ p ].value
 	  )
 
-	  for l_per, l_tech, l_vin in M.CostFixed.keys()
-	  if l_per == A_period
-	  if (l_per, l_tech, l_vin) not in l_tech_period_fraction_indices
-	) + sum(
-	    M.V_CapacityFixed[l_tech, l_vin]
-	  * M.CostFixed[l_per, l_tech, l_vin].value
-	  * sum(
-	      (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - l_per - y)
-	      for y in range( 0, M.PeriodLength[ l_per ] * M.TechLifeFrac[l_per, l_tech, l_vin])
-	    )
-
-	  for l_per, l_tech, l_vin in l_tech_period_fraction_indices
-	  if l_per == A_period
-	  if (l_per, l_tech, l_vin) in M.CostFixed.keys()
+	  for S_p, S_t, S_v in M.CostMarginal.sparse_iterkeys()
+	  if S_p == p
 	)
 
-	l_marg_costs = sum(
-	    M.V_ActivityByPeriodTechAndVintage[l_per, l_tech, l_vin]
-	  * value(
-	      M.CostMarginal[l_per, l_tech, l_vin].value
-	    * M.PeriodRate[ l_per ].value
-	  )
+	sp_cost = (loan_costs + fixed_costs + marg_costs)
 
-	  for l_per, l_tech, l_vin in M.CostMarginal.keys()
-	  if l_per == A_period
-	)
-
-	l_cost = (l_loan_costs + l_fixed_costs + l_marg_costs)
-
-	expr = (M.StochasticPointCost[ A_period ] == l_cost)
+	expr = (M.StochasticPointCost[ p ] == sp_cost)
 	return expr
 
 def Objective_rule ( M ):
