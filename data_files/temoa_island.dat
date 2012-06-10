@@ -1,8 +1,8 @@
 data;
 
 
-set  time_horizon :=  2010  2015  2020  2025  2030  2035 ;
-set  time_future  :=  2040 ;
+set  time_horizon :=  2010  2015  2020  2025  2030  2035  2040  2045 ;
+set  time_future  :=  2050 ;
 
 set  time_season  :=  winter summer intermediate ;
 set  time_of_day  :=  day night ;
@@ -107,8 +107,8 @@ param  CapacityToActivity  :=
 
 param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
 # Emission  # input      # tech         # vintage  # output     # amount released per unit activity
- co2         resource        imp_natgas     2010       natgas       50.3  # kilotonnes/PJ
- co2         resource        imp_coal       2010       coal         88.3  # kilotonnes/PJ
+ co2         resource     imp_natgas     2010       natgas       50.3  # kilotonnes/PJ
+ co2         resource     imp_coal       2010       coal         88.3  # kilotonnes/PJ
 
  co2         oil          p_refinery     2010       diesel       69.4  # kilotonnes/PJ
  co2         oil          p_refinery     2015       diesel       69.4  # kilotonnes/PJ
@@ -116,6 +116,8 @@ param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
  co2         oil          p_refinery     2025       diesel       69.4  # kilotonnes/PJ
  co2         oil          p_refinery     2030       diesel       69.4  # kilotonnes/PJ
  co2         oil          p_refinery     2035       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2040       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2045       diesel       69.4  # kilotonnes/PJ
 
  co2         oil          p_refinery     2010       gasoline     67.2  # kilotonnes/PJ
  co2         oil          p_refinery     2015       gasoline     67.2  # kilotonnes/PJ
@@ -123,57 +125,99 @@ param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
  co2         oil          p_refinery     2025       gasoline     67.2  # kilotonnes/PJ
  co2         oil          p_refinery     2030       gasoline     67.2  # kilotonnes/PJ
  co2         oil          p_refinery     2035       gasoline     67.2  # kilotonnes/PJ
-	;
-
-
-param  EmissionLimit  :=
-# time_optimize   # commodity_emission     # value
- 2010              co2                      1e10
- 2015              co2                      1e10
- 2020              co2                      1e10
- 2025              co2                      1e10
- 2030              co2                      1e10
- 2035              co2                      1e10
-	;
-
-
-param  ResourceBound  :=
- 2010        coal         1e10
+ co2         oil          p_refinery     2040       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2045       gasoline     67.2  # kilotonnes/PJ
 	;
 
 
 param  Demand  :=
 # time_optimize  # time_season  # time_of_day  # commodity_demand    # value
- 2010             intermediate   day            r_lighting            25
- 2010             intermediate   night          r_lighting            25
- 2010             summer         day            r_lighting            12.5
- 2010             summer         night          r_lighting            12.5
- 2010             winter         day            r_lighting            12.5
- 2010             winter         night          r_lighting            12.5
+ 2010             intermediate   day            r_cooling             24
+ 2010             intermediate   night          r_cooling             24
+ 2010             summer         day            r_cooling            144
+ 2010             summer         night          r_cooling             48
+
+ 2015             intermediate   day            r_cooling             25
+ 2015             intermediate   night          r_cooling             25
+ 2015             summer         day            r_cooling            150.3
+ 2015             summer         night          r_cooling             50.1
+
+ 2020             intermediate   day            r_cooling             26.1
+ 2020             intermediate   night          r_cooling             26.1
+ 2020             summer         day            r_cooling            156.9
+ 2020             summer         night          r_cooling             52.3
+
+ 2025             intermediate   day            r_cooling             27.3
+ 2025             intermediate   night          r_cooling             27.3
+ 2025             summer         day            r_cooling            163.7
+ 2025             summer         night          r_cooling             54.6
+
+ 2030             intermediate   day            r_cooling             28.5
+ 2030             intermediate   night          r_cooling             28.5
+ 2030             summer         day            r_cooling            170.9
+ 2030             summer         night          r_cooling             57.0
+
+ 2035             intermediate   day            r_cooling             29.7
+ 2035             intermediate   night          r_cooling             29.7
+ 2035             summer         day            r_cooling            178.4
+ 2035             summer         night          r_cooling             59.5
+
+ 2040             intermediate   day            r_cooling             31
+ 2040             intermediate   night          r_cooling             31
+ 2040             summer         day            r_cooling            186.2
+ 2040             summer         night          r_cooling             62.1
+
+ 2045             intermediate   day            r_cooling             32.3
+ 2045             intermediate   night          r_cooling             32.3
+ 2045             summer         day            r_cooling            194
+ 2045             summer         night          r_cooling             64.7
 
  2010             intermediate   day            r_heating             25
  2010             intermediate   night          r_heating             25
  2010             winter         day            r_heating            100
  2010             winter         night          r_heating             50
 
- 2010             intermediate   day            r_cooling             24
- 2010             intermediate   night          r_cooling             24
- 2010             summer         day            r_cooling            144
- 2010             summer         night          r_cooling             48
+ 2015             intermediate   day            r_heating             26.1
+ 2015             intermediate   night          r_heating             26.1
+ 2015             winter         day            r_heating            104.4
+ 2015             winter         night          r_heating             52.2
 
- 2010             intermediate   day            tl_distance           50
- 2010             intermediate   night          tl_distance           50
- 2010             summer         day            tl_distance           25
- 2010             summer         night          tl_distance           25
- 2010             winter         day            tl_distance           25
- 2010             winter         night          tl_distance           25
+ 2020             intermediate   day            r_heating             27.2
+ 2020             intermediate   night          r_heating             27.2
+ 2020             winter         day            r_heating            108.9
+ 2020             winter         night          r_heating             54.5
 
- 2010             intermediate   day            r_wheating            30
- 2010             intermediate   night          r_wheating            30
- 2010             summer         day            r_wheating            15
- 2010             summer         night          r_wheating            15
- 2010             winter         day            r_wheating            15
- 2010             winter         night          r_wheating            15
+ 2025             intermediate   day            r_heating             28.4
+ 2025             intermediate   night          r_heating             28.4
+ 2025             winter         day            r_heating            113.7
+ 2025             winter         night          r_heating             56.8
+
+ 2030             intermediate   day            r_heating             29.7
+ 2030             intermediate   night          r_heating             29.7
+ 2030             winter         day            r_heating            118.7
+ 2030             winter         night          r_heating             59.3
+
+ 2035             intermediate   day            r_heating             31.0
+ 2035             intermediate   night          r_heating             31.0
+ 2035             winter         day            r_heating            123.9
+ 2035             winter         night          r_heating             61.9
+
+ 2040             intermediate  day             r_heating             32.3
+ 2040             intermediate  night           r_heating             32.3
+ 2040             winter        day             r_heating            129.3
+ 2040             winter        night           r_heating             64.6
+
+ 2045             intermediate  day             r_heating             33.6
+ 2045             intermediate  night           r_heating             33.6
+ 2045             winter        day             r_heating            134.7
+ 2045             winter        night           r_heating             67.3
+
+ 2010             intermediate   day            r_lighting            25
+ 2010             intermediate   night          r_lighting            25
+ 2010             summer         day            r_lighting            12.5
+ 2010             summer         night          r_lighting            12.5
+ 2010             winter         day            r_lighting            12.5
+ 2010             winter         night          r_lighting            12.5
 
  2015             intermediate   day            r_lighting            26.1
  2015             intermediate   night          r_lighting            26.1
@@ -182,60 +226,12 @@ param  Demand  :=
  2015             winter         day            r_lighting            13
  2015             winter         night          r_lighting            13
 
- 2015             intermediate   day            r_heating             26.1
- 2015             intermediate   night          r_heating             26.1
- 2015             winter         day            r_heating            104.4
- 2015             winter         night          r_heating             52.2
-
- 2015             intermediate   day            r_cooling             25
- 2015             intermediate   night          r_cooling             25
- 2015             summer         day            r_cooling            150.3
- 2015             summer         night          r_cooling             50.1
-
- 2015             intermediate   day            tl_distance           50
- 2015             intermediate   night          tl_distance           50
- 2015             summer         day            tl_distance           25
- 2015             summer         night          tl_distance           25
- 2015             winter         day            tl_distance           25
- 2015             winter         night          tl_distance           25
-
- 2015             intermediate   day            r_wheating            31.3
- 2015             intermediate   night          r_wheating            31.3
- 2015             summer         day            r_wheating            15.7
- 2015             summer         night          r_wheating            15.7
- 2015             winter         day            r_wheating            15.7
- 2015             winter         night          r_wheating            15.7
-
  2020             intermediate   day            r_lighting            27.2
  2020             intermediate   night          r_lighting            27.2
  2020             summer         day            r_lighting            13.6
  2020             summer         night          r_lighting            13.6
  2020             winter         day            r_lighting            13.6
  2020             winter         night          r_lighting            13.6
-
- 2020             intermediate   day            r_heating             27.2
- 2020             intermediate   night          r_heating             27.2
- 2020             winter         day            r_heating            108.9
- 2020             winter         night          r_heating             54.5
-
- 2020             intermediate   day            r_cooling             26.1
- 2020             intermediate   night          r_cooling             26.1
- 2020             summer         day            r_cooling            156.9
- 2020             summer         night          r_cooling             52.3
-
- 2020             intermediate   day            tl_distance           50.1
- 2020             intermediate   night          tl_distance           50.1
- 2020             summer         day            tl_distance           25
- 2020             summer         night          tl_distance           25
- 2020             winter         day            tl_distance           25
- 2020             winter         night          tl_distance           25
-
- 2020             intermediate   day            r_wheating            32.7
- 2020             intermediate   night          r_wheating            32.7
- 2020             summer         day            r_wheating            16.3
- 2020             summer         night          r_wheating            16.3
- 2020             winter         day            r_wheating            16.3
- 2020             winter         night          r_wheating            16.3
 
  2025             intermediate   day            r_lighting            28.4
  2025             intermediate   night          r_lighting            28.4
@@ -244,60 +240,12 @@ param  Demand  :=
  2025             winter         day            r_lighting            14.2
  2025             winter         night          r_lighting            14.2
 
- 2025             intermediate   day            r_heating             28.4
- 2025             intermediate   night          r_heating             28.4
- 2025             winter         day            r_heating            113.7
- 2025             winter         night          r_heating             56.8
-
- 2025             intermediate   day            r_cooling             27.3
- 2025             intermediate   night          r_cooling             27.3
- 2025             summer         day            r_cooling            163.7
- 2025             summer         night          r_cooling             54.6
-
- 2025             intermediate   day            tl_distance           50.1
- 2025             intermediate   night          tl_distance           50.1
- 2025             summer         day            tl_distance           25.1
- 2025             summer         night          tl_distance           25.1
- 2025             winter         day            tl_distance           25.1
- 2025             winter         night          tl_distance           25.1
-
- 2025             intermediate   day            r_wheating            34.1
- 2025             intermediate   night          r_wheating            34.1
- 2025             summer         day            r_wheating            17.1
- 2025             summer         night          r_wheating            17.1
- 2025             winter         day            r_wheating            17.1
- 2025             winter         night          r_wheating            17.1
-
  2030             intermediate   day            r_lighting            29.7
  2030             intermediate   night          r_lighting            29.7
  2030             summer         day            r_lighting            14.8
  2030             summer         night          r_lighting            14.8
  2030             winter         day            r_lighting            14.8
  2030             winter         night          r_lighting            14.8
-
- 2030             intermediate   day            r_heating             29.7
- 2030             intermediate   night          r_heating             29.7
- 2030             winter         day            r_heating            118.7
- 2030             winter         night          r_heating             59.3
-
- 2030             intermediate   day            r_cooling             28.5
- 2030             intermediate   night          r_cooling             28.5
- 2030             summer         day            r_cooling            170.9
- 2030             summer         night          r_cooling             57.0
-
- 2030             intermediate   day            tl_distance           50.2
- 2030             intermediate   night          tl_distance           50.2
- 2030             summer         day            tl_distance           25.1
- 2030             summer         night          tl_distance           25.1
- 2030             winter         day            tl_distance           25.1
- 2030             winter         night          tl_distance           25.1
-
- 2030             intermediate   day            r_wheating            35.6
- 2030             intermediate   night          r_wheating            35.6
- 2030             summer         day            r_wheating            17.8
- 2030             summer         night          r_wheating            17.8
- 2030             winter         day            r_wheating            17.8
- 2030             winter         night          r_wheating            17.8
 
  2035             intermediate   day            r_lighting            31
  2035             intermediate   night          r_lighting            31
@@ -306,15 +254,110 @@ param  Demand  :=
  2035             winter         day            r_lighting            15.5
  2035             winter         night          r_lighting            15.5
 
- 2035             intermediate   day            r_heating             31.0
- 2035             intermediate   night          r_heating             31.0
- 2035             winter         day            r_heating            123.9
- 2035             winter         night          r_heating             61.9
+ 2040             intermediate   day            r_lighting            32.3
+ 2040             intermediate   night          r_lighting            32.3
+ 2040             summer         day            r_lighting            16.2
+ 2040             summer         night          r_lighting            16.2
+ 2040             winter         day            r_lighting            16.2
+ 2040             winter         night          r_lighting            16.2
 
- 2035             intermediate   day            r_cooling             29.7
- 2035             intermediate   night          r_cooling             29.7
- 2035             summer         day            r_cooling            178.4
- 2035             summer         night          r_cooling             59.5
+ 2045             intermediate   day            r_lighting            33.6
+ 2045             intermediate   night          r_lighting            33.6
+ 2045             summer         day            r_lighting            16.9
+ 2045             summer         night          r_lighting            16.9
+ 2045             winter         day            r_lighting            16.9
+ 2045             winter         night          r_lighting            16.9
+
+ 2010             intermediate   day            r_wheating            30
+ 2010             intermediate   night          r_wheating            30
+ 2010             summer         day            r_wheating            15
+ 2010             summer         night          r_wheating            15
+ 2010             winter         day            r_wheating            15
+ 2010             winter         night          r_wheating            15
+
+ 2015             intermediate   day            r_wheating            31.3
+ 2015             intermediate   night          r_wheating            31.3
+ 2015             summer         day            r_wheating            15.7
+ 2015             summer         night          r_wheating            15.7
+ 2015             winter         day            r_wheating            15.7
+ 2015             winter         night          r_wheating            15.7
+
+ 2020             intermediate   day            r_wheating            32.7
+ 2020             intermediate   night          r_wheating            32.7
+ 2020             summer         day            r_wheating            16.3
+ 2020             summer         night          r_wheating            16.3
+ 2020             winter         day            r_wheating            16.3
+ 2020             winter         night          r_wheating            16.3
+
+ 2025             intermediate   day            r_wheating            34.1
+ 2025             intermediate   night          r_wheating            34.1
+ 2025             summer         day            r_wheating            17.1
+ 2025             summer         night          r_wheating            17.1
+ 2025             winter         day            r_wheating            17.1
+ 2025             winter         night          r_wheating            17.1
+
+ 2030             intermediate   day            r_wheating            35.6
+ 2030             intermediate   night          r_wheating            35.6
+ 2030             summer         day            r_wheating            17.8
+ 2030             summer         night          r_wheating            17.8
+ 2030             winter         day            r_wheating            17.8
+ 2030             winter         night          r_wheating            17.8
+
+ 2035             intermediate   day            r_wheating            37.2
+ 2035             intermediate   night          r_wheating            37.2
+ 2035             summer         day            r_wheating            18.6
+ 2035             summer         night          r_wheating            18.6
+ 2035             winter         day            r_wheating            18.6
+ 2035             winter         night          r_wheating            18.6
+
+ 2040             intermediate   day            r_wheating            38.8
+ 2040             intermediate   night          r_wheating            38.8
+ 2040             summer         day            r_wheating            19.4
+ 2040             summer         night          r_wheating            19.4
+ 2040             winter         day            r_wheating            19.4
+ 2040             winter         night          r_wheating            19.4
+
+ 2045             intermediate   day            r_wheating            40.4
+ 2045             intermediate   night          r_wheating            40.4
+ 2045             summer         day            r_wheating            20.2
+ 2045             summer         night          r_wheating            20.2
+ 2045             winter         day            r_wheating            20.2
+ 2045             winter         night          r_wheating            20.2
+
+ 2010             intermediate   day            tl_distance           50
+ 2010             intermediate   night          tl_distance           50
+ 2010             summer         day            tl_distance           25
+ 2010             summer         night          tl_distance           25
+ 2010             winter         day            tl_distance           25
+ 2010             winter         night          tl_distance           25
+
+ 2015             intermediate   day            tl_distance           50
+ 2015             intermediate   night          tl_distance           50
+ 2015             summer         day            tl_distance           25
+ 2015             summer         night          tl_distance           25
+ 2015             winter         day            tl_distance           25
+ 2015             winter         night          tl_distance           25
+
+ 2020             intermediate   day            tl_distance           50.1
+ 2020             intermediate   night          tl_distance           50.1
+ 2020             summer         day            tl_distance           25
+ 2020             summer         night          tl_distance           25
+ 2020             winter         day            tl_distance           25
+ 2020             winter         night          tl_distance           25
+
+ 2025             intermediate   day            tl_distance           50.1
+ 2025             intermediate   night          tl_distance           50.1
+ 2025             summer         day            tl_distance           25.1
+ 2025             summer         night          tl_distance           25.1
+ 2025             winter         day            tl_distance           25.1
+ 2025             winter         night          tl_distance           25.1
+
+ 2030             intermediate   day            tl_distance           50.2
+ 2030             intermediate   night          tl_distance           50.2
+ 2030             summer         day            tl_distance           25.1
+ 2030             summer         night          tl_distance           25.1
+ 2030             winter         day            tl_distance           25.1
+ 2030             winter         night          tl_distance           25.1
 
  2035             intermediate   day            tl_distance           50.2
  2035             intermediate   night          tl_distance           50.2
@@ -323,12 +366,19 @@ param  Demand  :=
  2035             winter         day            tl_distance           25.1
  2035             winter         night          tl_distance           25.1
 
- 2035             intermediate   day            r_wheating            37.2
- 2035             intermediate   night          r_wheating            37.2
- 2035             summer         day            r_wheating            18.6
- 2035             summer         night          r_wheating            18.6
- 2035             winter         day            r_wheating            18.6
- 2035             winter         night          r_wheating            18.6
+ 2040             intermediate   day            tl_distance           50.3
+ 2040             intermediate   night          tl_distance           50.3
+ 2040             summer         day            tl_distance           25.2
+ 2040             summer         night          tl_distance           25.2
+ 2040             winter         day            tl_distance           25.2
+ 2040             winter         night          tl_distance           25.2
+
+ 2045             intermediate   day            tl_distance           50.4
+ 2045             intermediate   night          tl_distance           50.4
+ 2045             summer         day            tl_distance           25.2
+ 2045             summer         night          tl_distance           25.2
+ 2045             winter         day            tl_distance           25.2
+ 2045             winter         night          tl_distance           25.2
 	;
 
 
@@ -348,6 +398,8 @@ param  LifetimeTech  :=
  e_coal           2025            45
  e_coal           2030            45
  e_coal           2035            45
+ e_coal           2040            45
+ e_coal           2045            45
 
  e_nuclear        2010            45
  e_nuclear        2015            45
@@ -355,6 +407,8 @@ param  LifetimeTech  :=
  e_nuclear        2025            45
  e_nuclear        2030            45
  e_nuclear        2035            45
+ e_nuclear        2040            45
+ e_nuclear        2045            45
 
  p_refinery       2010            40
  p_refinery       2015            40
@@ -362,6 +416,8 @@ param  LifetimeTech  :=
  p_refinery       2025            40
  p_refinery       2030            40
  p_refinery       2035            40
+ p_refinery       2040            40
+ p_refinery       2045            40
 
  r_furnace        2010            20
  r_furnace        2015            20
@@ -369,6 +425,8 @@ param  LifetimeTech  :=
  r_furnace        2025            20
  r_furnace        2030            20
  r_furnace        2035            20
+ r_furnace        2040            20
+ r_furnace        2045            20
 
  r_geoth          2010            20
  r_geoth          2015            20
@@ -376,6 +434,8 @@ param  LifetimeTech  :=
  r_geoth          2025            20
  r_geoth          2030            20
  r_geoth          2035            20
+ r_geoth          2040            20
+ r_geoth          2045            20
 
  r_ac             2010            15
  r_ac             2015            15
@@ -383,6 +443,8 @@ param  LifetimeTech  :=
  r_ac             2025            15
  r_ac             2030            15
  r_ac             2035            15
+ r_ac             2040            15
+ r_ac             2045            15
 
  r_cfl            2010            10
  r_cfl            2015            10
@@ -390,6 +452,8 @@ param  LifetimeTech  :=
  r_cfl            2025            10
  r_cfl            2030            10
  r_cfl            2035            10
+ r_cfl            2040            10
+ r_cfl            2045            10
 
  r_incand         2010             1
  r_incand         2015             1
@@ -397,6 +461,8 @@ param  LifetimeTech  :=
  r_incand         2025             1
  r_incand         2030             1
  r_incand         2035             1
+ r_incand         2040             1
+ r_incand         2045             1
 
  r_led            2010            20
  r_led            2015            20
@@ -404,6 +470,8 @@ param  LifetimeTech  :=
  r_led            2025            20
  r_led            2030            20
  r_led            2035            20
+ r_led            2040            20
+ r_led            2045            20
 
  r_swheater       2010            20
  r_swheater       2015            20
@@ -411,6 +479,8 @@ param  LifetimeTech  :=
  r_swheater       2025            20
  r_swheater       2030            20
  r_swheater       2035            20
+ r_swheater       2040            20
+ r_swheater       2045            20
 
  r_ngwheater      2010            15
  r_ngwheater      2015            15
@@ -418,6 +488,8 @@ param  LifetimeTech  :=
  r_ngwheater      2025            15
  r_ngwheater      2030            15
  r_ngwheater      2035            15
+ r_ngwheater      2040            15
+ r_ngwheater      2045            15
 
  r_ewheater       2010            15
  r_ewheater       2015            15
@@ -425,6 +497,8 @@ param  LifetimeTech  :=
  r_ewheater       2025            15
  r_ewheater       2030            15
  r_ewheater       2035            15
+ r_ewheater       2040            15
+ r_ewheater       2045            15
 
  tl_dslcar        2010            15
  tl_dslcar        2015            15
@@ -432,6 +506,8 @@ param  LifetimeTech  :=
  tl_dslcar        2025            15
  tl_dslcar        2030            15
  tl_dslcar        2035            15
+ tl_dslcar        2040            15
+ tl_dslcar        2045            15
 
  tl_elccar        2010            15
  tl_elccar        2015            15
@@ -439,6 +515,8 @@ param  LifetimeTech  :=
  tl_elccar        2025            15
  tl_elccar        2030            15
  tl_elccar        2035            15
+ tl_elccar        2040            15
+ tl_elccar        2045            15
 
  tl_ethcar        2010            15
  tl_ethcar        2015            15
@@ -446,6 +524,8 @@ param  LifetimeTech  :=
  tl_ethcar        2025            15
  tl_ethcar        2030            15
  tl_ethcar        2035            15
+ tl_ethcar        2040            15
+ tl_ethcar        2045            15
 
  tl_gascar        2010            15
  tl_gascar        2015            15
@@ -453,6 +533,8 @@ param  LifetimeTech  :=
  tl_gascar        2025            15
  tl_gascar        2030            15
  tl_gascar        2035            15
+ tl_gascar        2040            15
+ tl_gascar        2045            15
 	;
 
 param  LifetimeLoan  :=
@@ -463,6 +545,8 @@ param  LifetimeLoan  :=
  e_coal        2025            45
  e_coal        2030            45
  e_coal        2035            45
+ e_coal        2040            45
+ e_coal        2045            45
 
  e_nuclear     2010            45
  e_nuclear     2015            45
@@ -470,6 +554,8 @@ param  LifetimeLoan  :=
  e_nuclear     2025            45
  e_nuclear     2030            45
  e_nuclear     2035            45
+ e_nuclear     2040            45
+ e_nuclear     2045            45
 
  p_refinery    2010            40
  p_refinery    2015            40
@@ -477,6 +563,8 @@ param  LifetimeLoan  :=
  p_refinery    2025            40
  p_refinery    2030            40
  p_refinery    2035            40
+ p_refinery    2040            40
+ p_refinery    2045            40
 
  r_furnace     2010            20
  r_furnace     2015            20
@@ -484,6 +572,8 @@ param  LifetimeLoan  :=
  r_furnace     2025            20
  r_furnace     2030            20
  r_furnace     2035            20
+ r_furnace     2040            20
+ r_furnace     2045            20
 
  r_geoth       2010            20
  r_geoth       2015            20
@@ -491,6 +581,8 @@ param  LifetimeLoan  :=
  r_geoth       2025            20
  r_geoth       2030            20
  r_geoth       2035            20
+ r_geoth       2040            20
+ r_geoth       2045            20
 
  r_ac          2010            15
  r_ac          2015            15
@@ -498,6 +590,8 @@ param  LifetimeLoan  :=
  r_ac          2025            15
  r_ac          2030            15
  r_ac          2035            15
+ r_ac          2040            15
+ r_ac          2045            15
 
  r_cfl         2010            10
  r_cfl         2015            10
@@ -505,6 +599,8 @@ param  LifetimeLoan  :=
  r_cfl         2025            10
  r_cfl         2030            10
  r_cfl         2035            10
+ r_cfl         2040            10
+ r_cfl         2045            10
 
  r_incand      2010             1
  r_incand      2015             1
@@ -512,6 +608,8 @@ param  LifetimeLoan  :=
  r_incand      2025             1
  r_incand      2030             1
  r_incand      2035             1
+ r_incand      2040             1
+ r_incand      2045             1
 
  r_led         2010            20
  r_led         2015            20
@@ -519,6 +617,8 @@ param  LifetimeLoan  :=
  r_led         2025            20
  r_led         2030            20
  r_led         2035            20
+ r_led         2040            20
+ r_led         2045            20
 
  r_swheater    2010            20
  r_swheater    2015            20
@@ -526,6 +626,8 @@ param  LifetimeLoan  :=
  r_swheater    2025            20
  r_swheater    2030            20
  r_swheater    2035            20
+ r_swheater    2040            20
+ r_swheater    2045            20
 
  r_ngwheater   2010            15
  r_ngwheater   2015            15
@@ -533,6 +635,8 @@ param  LifetimeLoan  :=
  r_ngwheater   2025            15
  r_ngwheater   2030            15
  r_ngwheater   2035            15
+ r_ngwheater   2040            15
+ r_ngwheater   2045            15
 
  r_ewheater    2010            15
  r_ewheater    2015            15
@@ -540,6 +644,8 @@ param  LifetimeLoan  :=
  r_ewheater    2025            15
  r_ewheater    2030            15
  r_ewheater    2035            15
+ r_ewheater    2040            15
+ r_ewheater    2045            15
 
  tl_dslcar     2010            15
  tl_dslcar     2015            15
@@ -547,6 +653,8 @@ param  LifetimeLoan  :=
  tl_dslcar     2025            15
  tl_dslcar     2030            15
  tl_dslcar     2035            15
+ tl_dslcar     2040            15
+ tl_dslcar     2045            15
 
  tl_elccar     2010            15
  tl_elccar     2015            15
@@ -554,6 +662,8 @@ param  LifetimeLoan  :=
  tl_elccar     2025            15
  tl_elccar     2030            15
  tl_elccar     2035            15
+ tl_elccar     2040            15
+ tl_elccar     2045            15
 
  tl_gascar     2010            15
  tl_gascar     2015            15
@@ -561,6 +671,8 @@ param  LifetimeLoan  :=
  tl_gascar     2025            15
  tl_gascar     2030            15
  tl_gascar     2035            15
+ tl_gascar     2040            15
+ tl_gascar     2045            15
 	;
 
 
@@ -572,6 +684,8 @@ param  CostInvest  :=
  e_coal         2025             2809
  e_coal         2030             2809
  e_coal         2035             2809
+ e_coal         2040             2809
+ e_coal         2045             2809
 
  e_hydro        2010             2221
  e_hydro        2015             2221
@@ -579,6 +693,8 @@ param  CostInvest  :=
  e_hydro        2025             2221
  e_hydro        2030             2221
  e_hydro        2035             2221
+ e_hydro        2040             2221
+ e_hydro        2045             2221
 
  e_ngcc         2010              991
  e_ngcc         2015              991
@@ -586,6 +702,8 @@ param  CostInvest  :=
  e_ngcc         2025              991
  e_ngcc         2030              991
  e_ngcc         2035              991
+ e_ngcc         2040              991
+ e_ngcc         2045              991
 
  e_ngsc         2010              658
  e_ngsc         2015              658
@@ -593,6 +711,8 @@ param  CostInvest  :=
  e_ngsc         2025              658
  e_ngsc         2030              658
  e_ngsc         2035              658
+ e_ngsc         2040              658
+ e_ngsc         2045              658
 
  e_nuclear      2010             5275
  e_nuclear      2015             5275
@@ -600,6 +720,8 @@ param  CostInvest  :=
  e_nuclear      2025             5275
  e_nuclear      2030             5275
  e_nuclear      2035             5275
+ e_nuclear      2040             5275
+ e_nuclear      2045             5275
 
  e_wind         2010             2409
  e_wind         2015             2409
@@ -607,6 +729,8 @@ param  CostInvest  :=
  e_wind         2025             2409
  e_wind         2030             2409
  e_wind         2035             2409
+ e_wind         2040             2409
+ e_wind         2045             2409
 
  p_refinery     2010                1.10
  p_refinery     2015                1.10
@@ -614,6 +738,8 @@ param  CostInvest  :=
  p_refinery     2025                1.10
  p_refinery     2030                1.10
  p_refinery     2035                1.10
+ p_refinery     2040                1.10
+ p_refinery     2045                1.10
 
  r_furnace      2010                3.9
  r_furnace      2015                3.9
@@ -621,6 +747,8 @@ param  CostInvest  :=
  r_furnace      2025                3.9
  r_furnace      2030                3.9
  r_furnace      2035                3.9
+ r_furnace      2040                3.9
+ r_furnace      2045                3.9
 
  r_geoth        2010               11.4
  r_geoth        2015               11.4
@@ -628,6 +756,8 @@ param  CostInvest  :=
  r_geoth        2025               11.4
  r_geoth        2030               11.4
  r_geoth        2035               11.4
+ r_geoth        2040               11.4
+ r_geoth        2045               11.4
 
  r_ac           2010                7.4
  r_ac           2015                7.4
@@ -635,6 +765,8 @@ param  CostInvest  :=
  r_ac           2025                7.4
  r_ac           2030                7.4
  r_ac           2035                7.4
+ r_ac           2040                7.4
+ r_ac           2045                7.4
 
  r_cfl          2010                2.4
  r_cfl          2015                2.4
@@ -642,6 +774,8 @@ param  CostInvest  :=
  r_cfl          2025                2.4
  r_cfl          2030                2.4
  r_cfl          2035                2.4
+ r_cfl          2040                2.4
+ r_cfl          2045                2.4
 
  r_incand       2010                0.27
  r_incand       2015                0.27
@@ -649,6 +783,8 @@ param  CostInvest  :=
  r_incand       2025                0.27
  r_incand       2030                0.27
  r_incand       2035                0.27
+ r_incand       2040                0.27
+ r_incand       2045                0.27
 
  r_led          2010               68.2
  r_led          2015               68.2
@@ -656,27 +792,35 @@ param  CostInvest  :=
  r_led          2025               68.2
  r_led          2030               68.2
  r_led          2035               68.2
+ r_led          2040               68.2
+ r_led          2045               68.2
 
- r_swheater    2010                32.2
- r_swheater    2015                32.2
- r_swheater    2020                32.2
- r_swheater    2025                32.2
- r_swheater    2030                32.2
- r_swheater    2035                32.2
+ r_swheater     2010               32.2
+ r_swheater     2015               32.2
+ r_swheater     2020               32.2
+ r_swheater     2025               32.2
+ r_swheater     2030               32.2
+ r_swheater     2035               32.2
+ r_swheater     2040               32.2
+ r_swheater     2045               32.2
 
- r_ngwheater   2010                 3.2
- r_ngwheater   2015                 3.2
- r_ngwheater   2020                 3.2
- r_ngwheater   2025                 3.2
- r_ngwheater   2030                 3.2
- r_ngwheater   2035                 3.2
+ r_ngwheater    2010                3.2
+ r_ngwheater    2015                3.2
+ r_ngwheater    2020                3.2
+ r_ngwheater    2025                3.2
+ r_ngwheater    2030                3.2
+ r_ngwheater    2035                3.2
+ r_ngwheater    2040                3.2
+ r_ngwheater    2045                3.2
 
- r_ewheater    2010                 3.3
- r_ewheater    2015                 3.3
- r_ewheater    2020                 3.3
- r_ewheater    2025                 3.3
- r_ewheater    2030                 3.3
- r_ewheater    2035                 3.3
+ r_ewheater     2010                3.3
+ r_ewheater     2015                3.3
+ r_ewheater     2020                3.3
+ r_ewheater     2025                3.3
+ r_ewheater     2030                3.3
+ r_ewheater     2035                3.3
+ r_ewheater     2040                3.3
+ r_ewheater     2045                3.3
 
  tl_dslcar      2010             2700
  tl_dslcar      2015             2700
@@ -684,6 +828,8 @@ param  CostInvest  :=
  tl_dslcar      2025             2700
  tl_dslcar      2030             2700
  tl_dslcar      2035             2700
+ tl_dslcar      2040             2700
+ tl_dslcar      2045             2700
 
  tl_elccar      2010             9800
  tl_elccar      2015             9800
@@ -691,6 +837,8 @@ param  CostInvest  :=
  tl_elccar      2025             9800
  tl_elccar      2030             9800
  tl_elccar      2035             9800
+ tl_elccar      2040             9800
+ tl_elccar      2045             9800
 
  tl_gascar      2010             2300
  tl_gascar      2015             2300
@@ -698,6 +846,8 @@ param  CostInvest  :=
  tl_gascar      2025             2300
  tl_gascar      2030             2300
  tl_gascar      2035             2300
+ tl_gascar      2040             2300
+ tl_gascar      2045             2300
 
  tl_ethcar      2010             2300
  tl_ethcar      2015             2300
@@ -705,6 +855,8 @@ param  CostInvest  :=
  tl_ethcar      2025             2300
  tl_ethcar      2030             2300
  tl_ethcar      2035             2300
+ tl_ethcar      2040             2300
+ tl_ethcar      2045             2300
 	;
 
 param  CostFixed  :=
@@ -715,21 +867,36 @@ param  CostFixed  :=
  2025              e_coal             2010               29.3
  2030              e_coal             2010               29.3
  2035              e_coal             2010               29.3
+ 2040              e_coal             2010               29.3
+ 2045              e_coal             2010               29.3
  2015              e_coal             2015               29.3
  2020              e_coal             2015               29.3
  2025              e_coal             2015               29.3
  2030              e_coal             2015               29.3
  2035              e_coal             2015               29.3
+ 2040              e_coal             2015               29.3
+ 2045              e_coal             2015               29.3
  2020              e_coal             2020               29.3
  2025              e_coal             2020               29.3
  2030              e_coal             2020               29.3
  2035              e_coal             2020               29.3
+ 2040              e_coal             2020               29.3
+ 2045              e_coal             2020               29.3
  2025              e_coal             2025               29.3
  2030              e_coal             2025               29.3
  2035              e_coal             2025               29.3
+ 2040              e_coal             2025               29.3
+ 2045              e_coal             2025               29.3
  2030              e_coal             2030               29.3
  2035              e_coal             2030               29.3
+ 2040              e_coal             2030               29.3
+ 2045              e_coal             2030               29.3
  2035              e_coal             2035               29.3
+ 2040              e_coal             2035               29.3
+ 2045              e_coal             2035               29.3
+ 2040              e_coal             2040               29.3
+ 2045              e_coal             2040               29.3
+ 2045              e_coal             2045               29.3
 
  2010              e_hydro            2010               13.6
  2015              e_hydro            2010               13.6
@@ -742,16 +909,28 @@ param  CostFixed  :=
  2025              e_hydro            2015               13.6
  2030              e_hydro            2015               13.6
  2035              e_hydro            2015               13.6
+ 2040              e_hydro            2015               13.6
  2020              e_hydro            2020               13.6
  2025              e_hydro            2020               13.6
  2030              e_hydro            2020               13.6
  2035              e_hydro            2020               13.6
+ 2040              e_hydro            2020               13.6
+ 2045              e_hydro            2020               13.6
  2025              e_hydro            2025               13.6
  2030              e_hydro            2025               13.6
  2035              e_hydro            2025               13.6
+ 2040              e_hydro            2025               13.6
+ 2045              e_hydro            2025               13.6
  2030              e_hydro            2030               13.6
  2035              e_hydro            2030               13.6
+ 2040              e_hydro            2030               13.6
+ 2045              e_hydro            2030               13.6
  2035              e_hydro            2035               13.6
+ 2040              e_hydro            2035               13.6
+ 2045              e_hydro            2035               13.6
+ 2040              e_hydro            2040               13.6
+ 2045              e_hydro            2040               13.6
+ 2045              e_hydro            2045               13.6
 
  2010              e_ngcc             2010               14.4
  2015              e_ngcc             2010               14.4
@@ -764,16 +943,28 @@ param  CostFixed  :=
  2025              e_ngcc             2015               14.4
  2030              e_ngcc             2015               14.4
  2035              e_ngcc             2015               14.4
+ 2040              e_ngcc             2015               14.4
  2020              e_ngcc             2020               14.4
  2025              e_ngcc             2020               14.4
  2030              e_ngcc             2020               14.4
  2035              e_ngcc             2020               14.4
+ 2040              e_ngcc             2020               14.4
+ 2045              e_ngcc             2020               14.4
  2025              e_ngcc             2025               14.4
  2030              e_ngcc             2025               14.4
  2035              e_ngcc             2025               14.4
+ 2040              e_ngcc             2025               14.4
+ 2045              e_ngcc             2025               14.4
  2030              e_ngcc             2030               14.4
  2035              e_ngcc             2030               14.4
+ 2040              e_ngcc             2030               14.4
+ 2045              e_ngcc             2030               14.4
  2035              e_ngcc             2035               14.4
+ 2040              e_ngcc             2035               14.4
+ 2045              e_ngcc             2035               14.4
+ 2040              e_ngcc             2040               14.4
+ 2045              e_ngcc             2040               14.4
+ 2045              e_ngcc             2045               14.4
 
  2010              e_ngsc             2010               14.5
  2015              e_ngsc             2010               14.5
@@ -786,16 +977,28 @@ param  CostFixed  :=
  2025              e_ngsc             2015               14.5
  2030              e_ngsc             2015               14.5
  2035              e_ngsc             2015               14.5
+ 2040              e_ngsc             2015               14.5
  2020              e_ngsc             2020               14.5
  2025              e_ngsc             2020               14.5
  2030              e_ngsc             2020               14.5
  2035              e_ngsc             2020               14.5
+ 2040              e_ngsc             2020               14.5
+ 2045              e_ngsc             2020               14.5
  2025              e_ngsc             2025               14.5
  2030              e_ngsc             2025               14.5
  2035              e_ngsc             2025               14.5
+ 2040              e_ngsc             2025               14.5
+ 2045              e_ngsc             2025               14.5
  2030              e_ngsc             2030               14.5
  2035              e_ngsc             2030               14.5
+ 2040              e_ngsc             2030               14.5
+ 2045              e_ngsc             2030               14.5
  2035              e_ngsc             2035               14.5
+ 2040              e_ngsc             2035               14.5
+ 2045              e_ngsc             2035               14.5
+ 2040              e_ngsc             2040               14.5
+ 2045              e_ngsc             2040               14.5
+ 2045              e_ngsc             2045               14.5
 
  2010              e_nuclear          2010               87.7
  2015              e_nuclear          2010               87.7
@@ -803,21 +1006,36 @@ param  CostFixed  :=
  2025              e_nuclear          2010               87.7
  2030              e_nuclear          2010               87.7
  2035              e_nuclear          2010               87.7
+ 2040              e_nuclear          2010               87.7
+ 2045              e_nuclear          2010               87.7
  2015              e_nuclear          2015               87.7
  2020              e_nuclear          2015               87.7
  2025              e_nuclear          2015               87.7
  2030              e_nuclear          2015               87.7
  2035              e_nuclear          2015               87.7
+ 2040              e_nuclear          2015               87.7
+ 2045              e_nuclear          2015               87.7
  2020              e_nuclear          2020               87.7
  2025              e_nuclear          2020               87.7
  2030              e_nuclear          2020               87.7
  2035              e_nuclear          2020               87.7
+ 2040              e_nuclear          2020               87.7
+ 2045              e_nuclear          2020               87.7
  2025              e_nuclear          2025               87.7
  2030              e_nuclear          2025               87.7
  2035              e_nuclear          2025               87.7
+ 2040              e_nuclear          2025               87.7
+ 2045              e_nuclear          2025               87.7
  2030              e_nuclear          2030               87.7
  2035              e_nuclear          2030               87.7
+ 2040              e_nuclear          2030               87.7
+ 2045              e_nuclear          2030               87.7
  2035              e_nuclear          2035               87.7
+ 2040              e_nuclear          2035               87.7
+ 2045              e_nuclear          2035               87.7
+ 2040              e_nuclear          2040               87.7
+ 2045              e_nuclear          2040               87.7
+ 2045              e_nuclear          2045               87.7
 	;
 
 
@@ -829,6 +1047,8 @@ param  CostMarginal  :=
  2025              imp_coal           2010                3.1
  2030              imp_coal           2010                3.1
  2035              imp_coal           2010                3.1
+ 2040              imp_coal           2010                3.1
+ 2045              imp_coal           2010                3.1
 
  2010              imp_ethanol        2010               20.5
  2015              imp_ethanol        2010               20.5
@@ -836,6 +1056,8 @@ param  CostMarginal  :=
  2025              imp_ethanol        2010               20.5
  2030              imp_ethanol        2010               20.5
  2035              imp_ethanol        2010               20.5
+ 2040              imp_ethanol        2010               20.5
+ 2045              imp_ethanol        2010               20.5
 
  2010              imp_natgas         2010               10.7
  2015              imp_natgas         2010               10.7
@@ -843,6 +1065,8 @@ param  CostMarginal  :=
  2025              imp_natgas         2010               10.7
  2030              imp_natgas         2010               10.7
  2035              imp_natgas         2010               10.7
+ 2040              imp_natgas         2010               10.7
+ 2045              imp_natgas         2010               10.7
 
  2010              imp_oil            2010               16.3
  2015              imp_oil            2010               16.3
@@ -850,6 +1074,8 @@ param  CostMarginal  :=
  2025              imp_oil            2010               16.3
  2030              imp_oil            2010               16.3
  2035              imp_oil            2010               16.3
+ 2040              imp_oil            2010               16.3
+ 2045              imp_oil            2010               16.3
 
  2010              imp_uranium        2010               30.1
  2015              imp_uranium        2010               30.1
@@ -857,6 +1083,8 @@ param  CostMarginal  :=
  2025              imp_uranium        2010               30.1
  2030              imp_uranium        2010               30.1
  2035              imp_uranium        2010               30.1
+ 2040              imp_uranium        2010               30.1
+ 2045              imp_uranium        2010               30.1
 
  2010              e_coal             2010                1.2
  2015              e_coal             2010                1.2
@@ -864,21 +1092,36 @@ param  CostMarginal  :=
  2025              e_coal             2010                1.2
  2030              e_coal             2010                1.2
  2035              e_coal             2010                1.2
+ 2040              e_coal             2010                1.2
+ 2045              e_coal             2010                1.2
  2015              e_coal             2015                1.2
  2020              e_coal             2015                1.2
  2025              e_coal             2015                1.2
  2030              e_coal             2015                1.2
  2035              e_coal             2015                1.2
+ 2040              e_coal             2015                1.2
+ 2045              e_coal             2015                1.2
  2020              e_coal             2020                1.2
  2025              e_coal             2020                1.2
  2030              e_coal             2020                1.2
  2035              e_coal             2020                1.2
+ 2040              e_coal             2020                1.2
+ 2045              e_coal             2020                1.2
  2025              e_coal             2025                1.2
  2030              e_coal             2025                1.2
  2035              e_coal             2025                1.2
+ 2040              e_coal             2025                1.2
+ 2045              e_coal             2025                1.2
  2030              e_coal             2030                1.2
  2035              e_coal             2030                1.2
+ 2040              e_coal             2030                1.2
+ 2045              e_coal             2030                1.2
  2035              e_coal             2035                1.2
+ 2040              e_coal             2035                1.2
+ 2045              e_coal             2035                1.2
+ 2040              e_coal             2040                1.2
+ 2045              e_coal             2040                1.2
+ 2045              e_coal             2045                1.2
 
  2010              e_hydro            2010                0.7
  2015              e_hydro            2010                0.7
@@ -891,16 +1134,28 @@ param  CostMarginal  :=
  2025              e_hydro            2015                0.7
  2030              e_hydro            2015                0.7
  2035              e_hydro            2015                0.7
+ 2040              e_hydro            2015                0.7
  2020              e_hydro            2020                0.7
  2025              e_hydro            2020                0.7
  2030              e_hydro            2020                0.7
  2035              e_hydro            2020                0.7
+ 2040              e_hydro            2020                0.7
+ 2045              e_hydro            2020                0.7
  2025              e_hydro            2025                0.7
  2030              e_hydro            2025                0.7
  2035              e_hydro            2025                0.7
+ 2040              e_hydro            2025                0.7
+ 2045              e_hydro            2025                0.7
  2030              e_hydro            2030                0.7
  2035              e_hydro            2030                0.7
+ 2040              e_hydro            2030                0.7
+ 2045              e_hydro            2030                0.7
  2035              e_hydro            2035                0.7
+ 2040              e_hydro            2035                0.7
+ 2045              e_hydro            2035                0.7
+ 2040              e_hydro            2040                0.7
+ 2045              e_hydro            2040                0.7
+ 2045              e_hydro            2045                0.7
 
  2010              e_ngcc             2010                0.9
  2015              e_ngcc             2010                0.9
@@ -913,16 +1168,28 @@ param  CostMarginal  :=
  2025              e_ngcc             2015                0.9
  2030              e_ngcc             2015                0.9
  2035              e_ngcc             2015                0.9
+ 2040              e_ngcc             2015                0.9
  2020              e_ngcc             2020                0.9
  2025              e_ngcc             2020                0.9
  2030              e_ngcc             2020                0.9
  2035              e_ngcc             2020                0.9
+ 2040              e_ngcc             2020                0.9
+ 2045              e_ngcc             2020                0.9
  2025              e_ngcc             2025                0.9
  2030              e_ngcc             2025                0.9
  2035              e_ngcc             2025                0.9
+ 2040              e_ngcc             2025                0.9
+ 2045              e_ngcc             2025                0.9
  2030              e_ngcc             2030                0.9
  2035              e_ngcc             2030                0.9
+ 2040              e_ngcc             2030                0.9
+ 2045              e_ngcc             2030                0.9
  2035              e_ngcc             2035                0.9
+ 2040              e_ngcc             2035                0.9
+ 2045              e_ngcc             2035                0.9
+ 2040              e_ngcc             2040                0.9
+ 2045              e_ngcc             2040                0.9
+ 2045              e_ngcc             2045                0.9
 
  2010              e_ngsc             2010                1.9
  2015              e_ngsc             2010                1.9
@@ -935,16 +1202,28 @@ param  CostMarginal  :=
  2025              e_ngsc             2015                1.9
  2030              e_ngsc             2015                1.9
  2035              e_ngsc             2015                1.9
+ 2040              e_ngsc             2015                1.9
  2020              e_ngsc             2020                1.9
  2025              e_ngsc             2020                1.9
  2030              e_ngsc             2020                1.9
  2035              e_ngsc             2020                1.9
+ 2040              e_ngsc             2020                1.9
+ 2045              e_ngsc             2020                1.9
  2025              e_ngsc             2025                1.9
  2030              e_ngsc             2025                1.9
  2035              e_ngsc             2025                1.9
+ 2040              e_ngsc             2025                1.9
+ 2045              e_ngsc             2025                1.9
  2030              e_ngsc             2030                1.9
  2035              e_ngsc             2030                1.9
+ 2040              e_ngsc             2030                1.9
+ 2045              e_ngsc             2030                1.9
  2035              e_ngsc             2035                1.9
+ 2040              e_ngsc             2035                1.9
+ 2045              e_ngsc             2035                1.9
+ 2040              e_ngsc             2040                1.9
+ 2045              e_ngsc             2040                1.9
+ 2045              e_ngsc             2045                1.9
 
  2010              e_nuclear          2010                0.6
  2015              e_nuclear          2010                0.6
@@ -952,21 +1231,36 @@ param  CostMarginal  :=
  2025              e_nuclear          2010                0.6
  2030              e_nuclear          2010                0.6
  2035              e_nuclear          2010                0.6
+ 2040              e_nuclear          2010                0.6
+ 2045              e_nuclear          2010                0.6
  2015              e_nuclear          2015                0.6
  2020              e_nuclear          2015                0.6
  2025              e_nuclear          2015                0.6
  2030              e_nuclear          2015                0.6
  2035              e_nuclear          2015                0.6
+ 2040              e_nuclear          2015                0.6
+ 2045              e_nuclear          2015                0.6
  2020              e_nuclear          2020                0.6
  2025              e_nuclear          2020                0.6
  2030              e_nuclear          2020                0.6
  2035              e_nuclear          2020                0.6
+ 2040              e_nuclear          2020                0.6
+ 2045              e_nuclear          2020                0.6
  2025              e_nuclear          2025                0.6
  2030              e_nuclear          2025                0.6
  2035              e_nuclear          2025                0.6
+ 2040              e_nuclear          2025                0.6
+ 2045              e_nuclear          2025                0.6
  2030              e_nuclear          2030                0.6
  2035              e_nuclear          2030                0.6
+ 2040              e_nuclear          2030                0.6
+ 2045              e_nuclear          2030                0.6
  2035              e_nuclear          2035                0.6
+ 2040              e_nuclear          2035                0.6
+ 2045              e_nuclear          2035                0.6
+ 2040              e_nuclear          2040                0.6
+ 2045              e_nuclear          2040                0.6
+ 2045              e_nuclear          2045                0.6
 	;
 
  param  CapacityFactor  :=
@@ -1007,6 +1301,18 @@ param  CostMarginal  :=
  summer        night     e_coal       2035          0.85
  intermediate  day       e_coal       2035          0.85
  intermediate  night     e_coal       2035          0.85
+ winter        day       e_coal       2040          0.85
+ winter        night     e_coal       2040          0.85
+ summer        day       e_coal       2040          0.85
+ summer        night     e_coal       2040          0.85
+ intermediate  day       e_coal       2040          0.85
+ intermediate  night     e_coal       2040          0.85
+ winter        day       e_coal       2045          0.85
+ winter        night     e_coal       2045          0.85
+ summer        day       e_coal       2045          0.85
+ summer        night     e_coal       2045          0.85
+ intermediate  day       e_coal       2045          0.85
+ intermediate  night     e_coal       2045          0.85
 
  winter        day       e_hydro      2010          0.5
  winter        night     e_hydro      2010          0.5
@@ -1044,6 +1350,18 @@ param  CostMarginal  :=
  summer        night     e_hydro      2035          0.5
  intermediate  day       e_hydro      2035          0.5
  intermediate  night     e_hydro      2035          0.5
+ winter        day       e_hydro      2040          0.5
+ winter        night     e_hydro      2040          0.5
+ summer        day       e_hydro      2040          0.5
+ summer        night     e_hydro      2040          0.5
+ intermediate  day       e_hydro      2040          0.5
+ intermediate  night     e_hydro      2040          0.5
+ winter        day       e_hydro      2045          0.5
+ winter        night     e_hydro      2045          0.5
+ summer        day       e_hydro      2045          0.5
+ summer        night     e_hydro      2045          0.5
+ intermediate  day       e_hydro      2045          0.5
+ intermediate  night     e_hydro      2045          0.5
 
  winter        day       e_wind       2010          0.30
  winter        night     e_wind       2010          0.30
@@ -1081,6 +1399,18 @@ param  CostMarginal  :=
  summer        night     e_wind       2035          0.30
  intermediate  day       e_wind       2035          0.30
  intermediate  night     e_wind       2035          0.30
+ winter        day       e_wind       2040          0.30
+ winter        night     e_wind       2040          0.30
+ summer        day       e_wind       2040          0.30
+ summer        night     e_wind       2040          0.30
+ intermediate  day       e_wind       2040          0.30
+ intermediate  night     e_wind       2040          0.30
+ winter        day       e_wind       2045          0.30
+ winter        night     e_wind       2045          0.30
+ summer        day       e_wind       2045          0.30
+ summer        night     e_wind       2045          0.30
+ intermediate  day       e_wind       2045          0.30
+ intermediate  night     e_wind       2045          0.30
 
  winter        day       e_ngcc       2010          0.95
  winter        night     e_ngcc       2010          0.95
@@ -1118,6 +1448,18 @@ param  CostMarginal  :=
  summer        night     e_ngcc       2035          0.95
  intermediate  day       e_ngcc       2035          0.95
  intermediate  night     e_ngcc       2035          0.95
+ winter        day       e_ngcc       2040          0.95
+ winter        night     e_ngcc       2040          0.95
+ summer        day       e_ngcc       2040          0.95
+ summer        night     e_ngcc       2040          0.95
+ intermediate  day       e_ngcc       2040          0.95
+ intermediate  night     e_ngcc       2040          0.95
+ winter        day       e_ngcc       2045          0.95
+ winter        night     e_ngcc       2045          0.95
+ summer        day       e_ngcc       2045          0.95
+ summer        night     e_ngcc       2045          0.95
+ intermediate  day       e_ngcc       2045          0.95
+ intermediate  night     e_ngcc       2045          0.95
 
  winter        day       e_ngsc       2010          0.92
  winter        night     e_ngsc       2010          0.92
@@ -1155,6 +1497,18 @@ param  CostMarginal  :=
  summer        night     e_ngsc       2035          0.92
  intermediate  day       e_ngsc       2035          0.92
  intermediate  night     e_ngsc       2035          0.92
+ winter        day       e_ngsc       2040          0.92
+ winter        night     e_ngsc       2040          0.92
+ summer        day       e_ngsc       2040          0.92
+ summer        night     e_ngsc       2040          0.92
+ intermediate  day       e_ngsc       2040          0.92
+ intermediate  night     e_ngsc       2040          0.92
+ winter        day       e_ngsc       2045          0.92
+ winter        night     e_ngsc       2045          0.92
+ summer        day       e_ngsc       2045          0.92
+ summer        night     e_ngsc       2045          0.92
+ intermediate  day       e_ngsc       2045          0.92
+ intermediate  night     e_ngsc       2045          0.92
 
  winter        day       e_nuclear    2010          0.90
  winter        night     e_nuclear    2010          0.90
@@ -1192,6 +1546,18 @@ param  CostMarginal  :=
  summer        night     e_nuclear    2035          0.90
  intermediate  day       e_nuclear    2035          0.90
  intermediate  night     e_nuclear    2035          0.90
+ winter        day       e_ngsc       2040          0.92
+ winter        night     e_ngsc       2040          0.92
+ summer        day       e_ngsc       2040          0.92
+ summer        night     e_ngsc       2040          0.92
+ intermediate  day       e_ngsc       2040          0.92
+ intermediate  night     e_ngsc       2040          0.92
+ winter        day       e_ngsc       2045          0.92
+ winter        night     e_ngsc       2045          0.92
+ summer        day       e_ngsc       2045          0.92
+ summer        night     e_ngsc       2045          0.92
+ intermediate  day       e_ngsc       2045          0.92
+ intermediate  night     e_ngsc       2045          0.92
 	;
 
 param TechOutputSplit :=
@@ -1209,6 +1575,8 @@ param MaxCapacity :=
  2025               e_hydro        1
  2030               e_hydro        1
  2035               e_hydro        1
+ 2040               e_hydro        1
+ 2045               e_hydro        1
 	;
 
 
@@ -1228,6 +1596,8 @@ param MaxCapacity :=
  coal             e_coal          2025           electricity        0.38
  coal             e_coal          2030           electricity        0.38
  coal             e_coal          2035           electricity        0.38
+ coal             e_coal          2040           electricity        0.38
+ coal             e_coal          2045           electricity        0.38
 
  water            e_hydro         2010           electricity        0.85
  water            e_hydro         2015           electricity        0.85
@@ -1235,6 +1605,8 @@ param MaxCapacity :=
  water            e_hydro         2025           electricity        0.85
  water            e_hydro         2030           electricity        0.85
  water            e_hydro         2035           electricity        0.85
+ water            e_hydro         2040           electricity        0.85
+ water            e_hydro         2045           electricity        0.85
 
  natgas           e_ngcc          2010           electricity        0.54
  natgas           e_ngcc          2015           electricity        0.54
@@ -1242,6 +1614,8 @@ param MaxCapacity :=
  natgas           e_ngcc          2025           electricity        0.54
  natgas           e_ngcc          2030           electricity        0.54
  natgas           e_ngcc          2035           electricity        0.54
+ natgas           e_ngcc          2040           electricity        0.54
+ natgas           e_ngcc          2045           electricity        0.54
 
  natgas           e_ngsc          2010           electricity        0.40
  natgas           e_ngsc          2015           electricity        0.40
@@ -1249,6 +1623,8 @@ param MaxCapacity :=
  natgas           e_ngsc          2025           electricity        0.40
  natgas           e_ngsc          2030           electricity        0.40
  natgas           e_ngsc          2035           electricity        0.40
+ natgas           e_ngsc          2040           electricity        0.40
+ natgas           e_ngsc          2045           electricity        0.40
 
  uranium          e_nuclear       2010           electricity        0.33
  uranium          e_nuclear       2015           electricity        0.33
@@ -1256,6 +1632,8 @@ param MaxCapacity :=
  uranium          e_nuclear       2025           electricity        0.33
  uranium          e_nuclear       2030           electricity        0.33
  uranium          e_nuclear       2035           electricity        0.33
+ uranium          e_nuclear       2040           electricity        0.33
+ uranium          e_nuclear       2045           electricity        0.33
 
  wind             e_wind          2010           electricity        0.50
  wind             e_wind          2015           electricity        0.50
@@ -1263,6 +1641,8 @@ param MaxCapacity :=
  wind             e_wind          2025           electricity        0.50
  wind             e_wind          2030           electricity        0.50
  wind             e_wind          2035           electricity        0.50
+ wind             e_wind          2040           electricity        0.50
+ wind             e_wind          2045           electricity        0.50
 
  oil              p_refinery      2010           diesel             0.85
  oil              p_refinery      2015           diesel             0.85
@@ -1270,12 +1650,16 @@ param MaxCapacity :=
  oil              p_refinery      2025           diesel             0.85
  oil              p_refinery      2030           diesel             0.85
  oil              p_refinery      2035           diesel             0.85
+ oil              p_refinery      2040           diesel             0.85
+ oil              p_refinery      2045           diesel             0.85
  oil              p_refinery      2010           gasoline           0.90
  oil              p_refinery      2015           gasoline           0.90
  oil              p_refinery      2020           gasoline           0.90
  oil              p_refinery      2025           gasoline           0.90
  oil              p_refinery      2030           gasoline           0.90
  oil              p_refinery      2035           gasoline           0.90
+ oil              p_refinery      2040           gasoline           0.90
+ oil              p_refinery      2045           gasoline           0.90
 
  natgas           r_furnace       2010           r_heating          0.90
  natgas           r_furnace       2015           r_heating          0.90
@@ -1283,6 +1667,8 @@ param MaxCapacity :=
  natgas           r_furnace       2025           r_heating          0.90
  natgas           r_furnace       2030           r_heating          0.90
  natgas           r_furnace       2035           r_heating          0.90
+ natgas           r_furnace       2040           r_heating          0.90
+ natgas           r_furnace       2045           r_heating          0.90
 
  electricity      r_geoth         2010           r_heating          3.5
  electricity      r_geoth         2015           r_heating          3.5
@@ -1290,6 +1676,8 @@ param MaxCapacity :=
  electricity      r_geoth         2025           r_heating          3.5
  electricity      r_geoth         2030           r_heating          3.5
  electricity      r_geoth         2035           r_heating          3.5
+ electricity      r_geoth         2040           r_heating          3.5
+ electricity      r_geoth         2045           r_heating          3.5
 
  electricity      r_geoth         2010           r_cooling          4.7
  electricity      r_geoth         2015           r_cooling          4.7
@@ -1297,6 +1685,8 @@ param MaxCapacity :=
  electricity      r_geoth         2025           r_cooling          4.7
  electricity      r_geoth         2030           r_cooling          4.7
  electricity      r_geoth         2035           r_cooling          4.7
+ electricity      r_geoth         2040           r_cooling          4.7
+ electricity      r_geoth         2045           r_cooling          4.7
 
  electricity      r_ac            2010           r_cooling          3.8
  electricity      r_ac            2015           r_cooling          3.8
@@ -1304,6 +1694,8 @@ param MaxCapacity :=
  electricity      r_ac            2025           r_cooling          3.8
  electricity      r_ac            2030           r_cooling          3.8
  electricity      r_ac            2035           r_cooling          3.8
+ electricity      r_ac            2040           r_cooling          3.8
+ electricity      r_ac            2045           r_cooling          3.8
 
  electricity      r_cfl           2010           r_lighting         2
  electricity      r_cfl           2015           r_lighting         2
@@ -1311,6 +1703,8 @@ param MaxCapacity :=
  electricity      r_cfl           2025           r_lighting         2
  electricity      r_cfl           2030           r_lighting         2
  electricity      r_cfl           2035           r_lighting         2
+ electricity      r_cfl           2040           r_lighting         2
+ electricity      r_cfl           2045           r_lighting         2
 
  electricity      r_incand        2010           r_lighting         0.45
  electricity      r_incand        2015           r_lighting         0.45
@@ -1318,6 +1712,8 @@ param MaxCapacity :=
  electricity      r_incand        2025           r_lighting         0.45
  electricity      r_incand        2030           r_lighting         0.45
  electricity      r_incand        2035           r_lighting         0.45
+ electricity      r_incand        2040           r_lighting         0.45
+ electricity      r_incand        2045           r_lighting         0.45
 
  electricity      r_led           2010           r_lighting         3.1
  electricity      r_led           2015           r_lighting         3.1
@@ -1325,6 +1721,8 @@ param MaxCapacity :=
  electricity      r_led           2025           r_lighting         3.1
  electricity      r_led           2030           r_lighting         3.1
  electricity      r_led           2035           r_lighting         3.1
+ electricity      r_led           2040           r_lighting         3.1
+ electricity      r_led           2045           r_lighting         3.1
 
  electricity      r_ewheater      2010           r_wheating         0.9
  electricity      r_ewheater      2015           r_wheating         0.9
@@ -1332,6 +1730,8 @@ param MaxCapacity :=
  electricity      r_ewheater      2025           r_wheating         0.9
  electricity      r_ewheater      2030           r_wheating         0.9
  electricity      r_ewheater      2035           r_wheating         0.9
+ electricity      r_ewheater      2040           r_wheating         0.9
+ electricity      r_ewheater      2045           r_wheating         0.9
 
  natgas           r_ngwheater     2010           r_wheating         0.6
  natgas           r_ngwheater     2015           r_wheating         0.6
@@ -1339,6 +1739,8 @@ param MaxCapacity :=
  natgas           r_ngwheater     2025           r_wheating         0.6
  natgas           r_ngwheater     2030           r_wheating         0.6
  natgas           r_ngwheater     2035           r_wheating         0.6
+ natgas           r_ngwheater     2040           r_wheating         0.6
+ natgas           r_ngwheater     2045           r_wheating         0.6
 
  electricity      r_swheater      2010           r_wheating         4
  electricity      r_swheater      2015           r_wheating         4
@@ -1346,6 +1748,8 @@ param MaxCapacity :=
  electricity      r_swheater      2025           r_wheating         4
  electricity      r_swheater      2030           r_wheating         4
  electricity      r_swheater      2035           r_wheating         4
+ electricity      r_swheater      2040           r_wheating         4
+ electricity      r_swheater      2045           r_wheating         4
 
  diesel           tl_dslcar       2010           tl_distance        0.24
  diesel           tl_dslcar       2015           tl_distance        0.24
@@ -1353,6 +1757,8 @@ param MaxCapacity :=
  diesel           tl_dslcar       2025           tl_distance        0.24
  diesel           tl_dslcar       2030           tl_distance        0.24
  diesel           tl_dslcar       2035           tl_distance        0.24
+ diesel           tl_dslcar       2040           tl_distance        0.24
+ diesel           tl_dslcar       2045           tl_distance        0.24
 
  electricity      tl_elccar       2010           tl_distance        0.42
  electricity      tl_elccar       2015           tl_distance        0.42
@@ -1360,6 +1766,8 @@ param MaxCapacity :=
  electricity      tl_elccar       2025           tl_distance        0.42
  electricity      tl_elccar       2030           tl_distance        0.42
  electricity      tl_elccar       2035           tl_distance        0.42
+ electricity      tl_elccar       2040           tl_distance        0.42
+ electricity      tl_elccar       2045           tl_distance        0.42
 
  ethanol          tl_ethcar       2010           tl_distance        0.20
  ethanol          tl_ethcar       2015           tl_distance        0.20
@@ -1367,6 +1775,8 @@ param MaxCapacity :=
  ethanol          tl_ethcar       2025           tl_distance        0.20
  ethanol          tl_ethcar       2030           tl_distance        0.20
  ethanol          tl_ethcar       2035           tl_distance        0.20
+ ethanol          tl_ethcar       2040           tl_distance        0.20
+ ethanol          tl_ethcar       2045           tl_distance        0.20
 
  gasoline         tl_gascar       2010           tl_distance        0.20
  gasoline         tl_gascar       2015           tl_distance        0.20
@@ -1374,5 +1784,7 @@ param MaxCapacity :=
  gasoline         tl_gascar       2025           tl_distance        0.20
  gasoline         tl_gascar       2030           tl_distance        0.20
  gasoline         tl_gascar       2035           tl_distance        0.20
+ gasoline         tl_gascar       2040           tl_distance        0.20
+ gasoline         tl_gascar       2045           tl_distance        0.20
 	;
 
