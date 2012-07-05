@@ -246,7 +246,7 @@ def InitializeProcessParameters ( M ):
 		if l_vin in M.vintage_exist:
 			if l_process not in l_exist_indices:
 				msg = ('Warning: %s has a specified Efficiency, but does not '
-				  'have any existing install base (ExistingCapacity)\n.')
+				  'have any existing install base (ExistingCapacity).\n')
 				SE.write( msg % str(l_process) )
 				continue
 			if 0 == M.ExistingCapacity[ l_process ]:
