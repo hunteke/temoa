@@ -116,7 +116,7 @@ Notes:
   tightly coupled (not coupled at all!) to the internal Pyomo data structure.
 """
 
-	from temoa_lib import g_activeActivityIndices, ProcessInputs, ProcessOutputs
+	from temoa_lib import g_activeActivity_ptv, ProcessInputs, ProcessOutputs
 
 	M               = kwargs.get( 'model' )
 	ffmt            = kwargs.get( 'image_format' )
@@ -174,7 +174,7 @@ strict digraph TemoaModel {
 
 	p_fmt = '%s, %s, %s'   # "Process format"
 
-	for l_per, l_tech, l_vin in g_activeActivityIndices:
+	for l_per, l_tech, l_vin in g_activeActivity_ptv:
 		techs.add( (p_fmt % (l_per, l_tech, l_vin), None) )
 		for l_inp in ProcessInputs( l_per, l_tech, l_vin ):
 			carriers.add( (l_inp, None) )
@@ -767,7 +767,7 @@ def CreateDetailedModelDiagram ( **kwargs ):
 
 
 def CreateTechResultsDiagrams ( **kwargs ):
-	from temoa_lib import g_activeCapacityAvailableIndices, g_processInputs,   \
+	from temoa_lib import g_activeCapacityAvailable_pt, g_processInputs,   \
 	  ProcessVintages, ProcessInputs, ProcessOutputsByInput
 
 	M                  = kwargs.get( 'model' )
@@ -838,7 +838,7 @@ strict digraph model {
 	vnode_attr_fmt = 'href="results_%%s_p%%sv%%s_segments.%s", ' % ffmt
 	vnode_attr_fmt += 'label="%s\\nCap: %.2f"'
 
-	for per, tech in g_activeCapacityAvailableIndices:
+	for per, tech in g_activeCapacityAvailable_pt:
 		total_cap = M.V_CapacityAvailableByPeriodAndTech[per, tech].value
 
 		# energy/vintage nodes, in/out edges
@@ -906,7 +906,7 @@ strict digraph model {
 
 
 def CreatePartialSegmentsDiagram ( **kwargs ):
-	from temoa_lib import g_activeCapacityAvailableIndices, g_processInputs,   \
+	from temoa_lib import g_activeCapacityAvailable_pt, g_processInputs,   \
 	  ProcessVintages, ProcessInputs, ProcessOutputsByInput
 
 	M                  = kwargs.get( 'model' )
@@ -974,7 +974,7 @@ strict digraph model {
 """
 	enode_attr_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
 
-	for p, t in g_activeCapacityAvailableIndices:
+	for p, t in g_activeCapacityAvailable_pt:
 		total_cap = M.V_CapacityAvailableByPeriodAndTech[p, t].value
 
 		for v in ProcessVintages( p, t ):
@@ -1344,7 +1344,7 @@ strict digraph model {
 					else:
 						dflows.add( (tt, oo, None) )
 
-		for ee, ii, tt, vv, oo in M.EmissionActivity.keys():
+		for ee, ii, tt, vv, oo in M.EmissionActivity.sparse_keys():
 			if ValidActivity( pp, tt, vv ):
 				amt = EmiO[ee, pp, tt].value
 				if amt < epsilon: continue
