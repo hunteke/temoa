@@ -141,24 +141,6 @@ GlobalDiscountRate and the length of each period.  One may refer to this
 	return value(rate_multiplier)
 
 
-def ParamLoanLifeFraction_rule ( M, p, t, v ):
-	"""\
-For any technology investment loan that will end between periods (as opposed to
-on a period boundary), calculate the fraction of the final period that loan
-payments must still be made.
-
-This function relies on being called only with ('period', 'tech', 'vintage')
-combinations of processes that will end in 'period'.
-"""
-	eol_year = v + M.LifetimeLoan[t, v].value
-
-	  # number of years into final period loan is complete
-	frac = eol_year - p
-
-	frac /= float( M.PeriodLength[ p ].value )
-	return frac
-
-
 def ParamTechLifeFraction_rule ( M, p, t, v ):
 	"""\
 For any technology that will cease operation (rust out, be decommissioned, etc.)

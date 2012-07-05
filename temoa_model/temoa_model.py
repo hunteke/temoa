@@ -161,7 +161,6 @@ CapacityFactor(tech_all, vintage_all)
 	M.TechLifeFrac_ptv = Set( dimen=3, rule=TechLifeFracIndices )
 
 	M.DiscountRate  = Param( M.DiscountRate_tv, default=0.05 )
-	M.LoanLifeFrac  = Param( M.LoanLifeFrac_ptv, rule=ParamLoanLifeFraction_rule )
 	M.TechLifeFrac  = Param( M.TechLifeFrac_ptv, rule=ParamTechLifeFraction_rule )
 	M.LoanAnnualize = Param( M.Loan_tv, rule=ParamLoanAnnualize_rule )
 
