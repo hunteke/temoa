@@ -739,7 +739,7 @@ def BaseloadDiurnalConstraintIndices ( M ):
 	return indices
 
 
-def CapacityFractionalLifetimeConstraintIndices ( M ):
+def FractionalLifeActivityLimitConstraintIndices ( M ):
 	indices = set(
 	  (l_per, l_season, l_tod, l_tech, l_vin, l_carrier)
 

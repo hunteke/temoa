@@ -180,7 +180,6 @@ CapacityFactor(tech_all, vintage_all)
 	M.ActivityByPeriodTechAndVintageVar_ptv = Set(
 	  dimen=3, rule=ActivityByPeriodTechAndVintageVarIndices )
 
-	M.CapacityByOutput_tvo = Set( dimen=3, rule=CapacityByOutputVariableIndices )
 	M.CapacityVar_tv = Set( dimen=2, rule=CapacityVariableIndices )
 	M.CapacityAvailableVar_pt = Set(
 	  dimen=2, rule=CapacityAvailableVariableIndices )
@@ -195,7 +194,6 @@ CapacityFactor(tech_all, vintage_all)
 	#   Derived decision variables
 	M.V_Activity = Var( M.ActivityVar_psdtv, domain=NonNegativeReals )
 
-	M.V_CapacityByOutput = Var( M.CapacityByOutput_tvo, domain=NonNegativeReals )
 	M.V_Capacity         = Var( M.CapacityVar_tv,       domain=NonNegativeReals )
 
 	M.V_ActivityByPeriodTechAndVintage = Var(
@@ -217,14 +215,14 @@ CapacityFactor(tech_all, vintage_all)
 	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
 	M.CapacityByOutputConstraint_psdtvo = Set(
 	  dimen=6, rule=CapacityByOutputConstraintIndices )
-	M.CapacityFractionalLifetimeConstraint_psdtvo = Set(
-	  dimen=6, rule=CapacityFractionalLifetimeConstraintIndices )
 	M.CommodityBalanceConstraint_psdc = Set(
 	  dimen=4, rule=CommodityBalanceConstraintIndices )
 	M.DemandConstraint_psdc = Set( dimen=4, rule=lambda M: M.Demand.sparse_iterkeys() )
 	M.DemandActivityConstraint_psdtv_dem_s0d0 = Set( dimen=8, rule=DemandActivityConstraintIndices )
 	M.ExistingCapacityConstraint_tv = Set(
 	  dimen=2, rule=lambda M: M.ExistingCapacity.sparse_iterkeys() )
+	M.FractionalLifeActivityLimitConstraint_psdtvo = Set(
+	  dimen=6, rule=FractionalLifeActivityLimitConstraintIndices )
 	M.MaxCapacityConstraint_pt = Set(
 	  dimen=2, rule=lambda M: M.MaxCapacity.sparse_iterkeys() )
 	M.MinCapacityConstraint_pt = Set(
@@ -249,8 +247,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.ActivityConstraint = Constraint( M.ActivityVar_psdtv, rule=Activity_Constraint )
 	M.ActivityByPeriodTechAndVintageConstraint = Constraint( M.ActivityByPeriodTechAndVintageVar_ptv, rule=ActivityByPeriodTechAndVintage_Constraint )
 
-	M.CapacityByOutputConstraint = Constraint( M.CapacityByOutputConstraint_psdtvo, rule=CapacityByOutput_Constraint )
-	M.CapacityConstraint         = Constraint( M.CapacityVar_tv, rule=Capacity_Constraint )
+	M.CapacityConstraint = Constraint( M.ActivityVar_psdtv, rule=Capacity_Constraint )
 
 	M.ExistingCapacityConstraint = Constraint( M.ExistingCapacityConstraint_tv, rule=ExistingCapacity_Constraint )
 
@@ -275,7 +272,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVar_pt, rule=CapacityAvailableByPeriodAndTech_Constraint )
 
-	M.FractionalLifeActivityLimitConstraint = Constraint( M.CapacityFractionalLifetimeConstraint_psdtvo, rule=FractionalLifeActivityLimit_Constraint )
+	M.FractionalLifeActivityLimitConstraint = Constraint( M.FractionalLifeActivityLimitConstraint_psdtvo, rule=FractionalLifeActivityLimit_Constraint )
 
 	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraint_pt, rule=MinCapacity_Constraint )
 	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraint_pt, rule=MaxCapacity_Constraint )

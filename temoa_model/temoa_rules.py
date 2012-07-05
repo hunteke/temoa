@@ -533,72 +533,38 @@ oil refinery, crude oil *cannot* be converted all to one type of fuel.
 	return expr
 
 
-def CapacityByOutput_Constraint ( M, p, s, d, t, v, o ):
+def Capacity_Constraint ( M, p, s, d, t, v ):
 	r"""
 
-Temoa's definition of a process capacity is the total size of installation
-required to meet all of that process' demands.  There are a number of real-world
-processes which have multiple and independent energy outputs (the most prevalent
-example being an oil refinery which converts crude oil to multiple forms of
-petrol), so rather than a single Capacity calculation based on the
-process' total activity, Temoa delineates the amount of capacity needed by
-output.  The reason why is made clear in the FractionalLifeActivityLimit
-constraint :eq:`FractionalLifeActivityLimit`.
-
-.. math::
-   :label: CapacityByOutput
-
-       \left (
-               CF_{t, v}
-         \cdot C2A_{t}
-         \cdot SEG_{s, d}
-       \right )
-       \cdot \textbf{CAPO}_{t, v, o}
-   \ge
-   \sum_{I} \textbf{FO}_{p, s, d, i, t, v, o}
-
-   \forall \{p, s, d, t, v, o\} \in \Theta_{\text{capacity by output}}
-"""
-	actual_activity = sum(
-	  M.V_FlowOut[p, s, d, S_i, t, v, o]
-
-	  for S_i in ProcessInputs( p, t, v )
-	)
-
-	produceable = (
-	    M.V_CapacityByOutput[t, v, o]
-	  * (
-	      M.CapacityFactor[s, d, t, v].value
-	    * M.SegFrac[s, d].value
-	    * M.CapacityToActivity[ t ].value
-	  )
-	)
-
-	expr = ( produceable >= actual_activity )
-	return expr
-
-
-def Capacity_Constraint ( M, t, v ):
-	r"""
-Given that Temoa already calculates process capacity by output
-:eq:`CapacityByOutput`, the total capacity of a process is merely the summation
-of necessary output capacity.
+Temoa's definition of a process' capacity is the total size of installation
+required to meet all of that process' demands.  The Activity convenience
+variable represents exactly that, so the calculation on the left hand side of
+the inequality is the maximum amount of energy a process can produce in the time
+slice ``<s``,\ ``d>``.
 
 .. math::
    :label: Capacity
 
-   \textbf{CAP}_{t, v} = \sum_{O} \textbf{CAPO}_{t, v, o}
+       \left (
+               \text{CF}_{t, v}
+         \cdot \text{C2A}_{t}
+         \cdot \text{SEG}_{s, d}
+       \right )
+       \cdot \textbf{CAP}_{t, v}
+   \ge
+       \textbf{ACT}_{p, s, d, t, v}
 
-   \forall \{t, v\} \in \Theta_{\text{Capacity}}
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 """
-	cap = sum(
-	  M.V_CapacityByOutput[t, v, S_o]
-
-	  for tmp_t, tmp_v, S_o in M.V_CapacityByOutput.iterkeys()
-	  if tmp_t == t and tmp_v == v
+	produceable = (
+	  (   value(M.CapacityFactor[s, d, t, v])
+	    * value(M.CapacityToActivity[ t ])
+	    * value(M.SegFrac[s, d]) )
+	  * M.V_Capacity[t, v]
 	)
 
-	return M.V_Capacity[t, v] == cap
+	expr = (produceable >= M.V_Activity[p, s, d, t, v])
+	return expr
 
 
 def CapacityInvest_Constraint ( M, t, v ):
