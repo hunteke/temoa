@@ -5,13 +5,14 @@ from temoa_lib import *
 
 def TotalCost_rule ( M ):
 	r"""
+
 The objective function makes use of the :math:`Activity` and :math:`Capacity`
 proxy variables to calculate the costs associated with supplying the system with
-energy.  This implementation sums up all the costs incurred in the optimal
-solution, and is simplistically :math:`C_{tot} = C_{loans} + C_{fixed} +
-C_{marginal}`.  Similarly, each sub-part is merely a summation of the costs
-incurred, multiplied by an annual discount factor to calculate the time-value in
-year :math:`P_0` dollars.
+energy.  This implementation sums up all the costs incurred by the solution, and
+is simplistically :math:`C_{tot} = C_{loans} + C_{fixed} + C_{marginal}`.
+Similarly, each sub-part is merely a summation of the costs incurred, multiplied
+by an annual discount factor to calculate the time-value in year :math:`P_0`
+dollars.
 
 .. math::
    C_{loans} & = \sum_{t, v \in \Theta_{IC}} \left (
@@ -38,13 +39,15 @@ year :math:`P_0` dollars.
      \right )
 
 In the last sub-equation, :math:`R_p` is the equivalent operation to the inner
-summation of the other two sub-equations.  Due to the fact that Temoa optimizes
-only a single characteristic year within each period, the difference is that
-where the inner summations specifically account for the fixed and loan costs of
+summation of the other two sub-equations.  The difference is that where the
+inner summations specifically account for the fixed and loan costs of
 partial-period processes, the activity is constant for all years within a
 period.  There is thus no need to calculate the time-value of money factor for
 each process, and instead, :math:`R_p` is calculated once for each period, as a
-pseudo-parameter.
+pseudo-parameter.  While this amounts to little more than an efficiency of model
+generation, it is pedogogically significant in that it highlights the fact that
+Temoa optimizes only a single characteristic year within each period.
+
 """
 	P_0 = min( M.time_optimize )
 
@@ -687,15 +690,17 @@ amount of energy leaving a process cannot exceed the amount coming in."
 
 
 def DemandActivity_Constraint ( M, p, s, d, t, v, dem, s_0, d_0 ):
-	r"""\
+	r"""
+
 For end-use demands, it is unreasonable to let the optimizer only allow use in a
 single time slice.  For instance, if household A buys a natural gas furnace
 while household B buys an electric furnace, then both units should be used
 throughout the year.  Without this constraint, the model might choose to only
-use the electric during the day, and the natural gas during the night.
+use the electric furnace during the day, and the natural gas furnace during the
+night.
 
 In English, this constraint states that "the ratio of a process activity to
-demand is constant for all time slices." Note that if a demand is not specified
+demand is constant for all time slices."  Note that if a demand is not specified
 in a given time slice, or is zero, then this constraint will not be considered
 for that slice and demand.  This is transparently handled by the :math:`\Theta`
 superset.
@@ -774,8 +779,10 @@ counted.
 	expr = (supply >= M.Demand[p, s, d, dem])
 	return expr
 
-# End constraint rules
-##############################################################################
+
+"""
+ End constraint rules
+"""
 
 ##############################################################################
 # Additional and derived (informational) variable constraints
