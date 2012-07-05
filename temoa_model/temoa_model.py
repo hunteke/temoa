@@ -123,7 +123,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.CapacityToActivity = Param( M.tech_all,  default=1 )
 
 	M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
-	M.Efficiency   = Param( M.commodity_carrier, M.tech_all, M.vintage_all, M.commodity_carrier )
+	M.Efficiency   = Param( M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier )
 
 	M.CapacityFactor_sdtv = Set( dimen=4, rule=CapacityFactorIndices )
 	M.CapacityFactor      = Param( M.CapacityFactor_sdtv, default=1 )
