@@ -1,0 +1,12 @@
+digraph coal {
+	rankdir = "LR" ;
+	node [ style="filled", shape="circle" ] ;
+	edge [ arrowhead="vee", labelfontcolor="lightgreen" ] ;
+
+	coal [ label="coal" ];
+	coal_plant [ shape="box", color="darkseagreen", label="coal_plant\n\ninstalled capacity\nefficiency\ninstall cost\nfixed cost\nmarginal cost\nemission per unit activity\nuseful life\nloan life\n..." ] ;
+	electricity [ label="electricity" ];
+
+	coal -> coal_plant [ label="Input, (V_FlowIn)" ];
+	coal_plant -> electricity [ label="Output, (V_FlowOut)"];
+}
