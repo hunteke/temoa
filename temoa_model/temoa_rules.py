@@ -97,7 +97,6 @@ Objective_rule = TotalCost_rule
 
 
 def ParamModelLoanLife_rule ( M, t, v ):
-	P_0 = min( M.time_optimize )
 	loan_length = M.LifetimeLoan[t, v].value
 	mll = min( loan_length, max(M.time_future) - v )
 
