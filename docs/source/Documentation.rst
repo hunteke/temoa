@@ -70,49 +70,97 @@ electronically available.
 Conventions
 -----------
 
-We use the word 'Temoa' somewhat interchangeably to describe the project as a
-whole, as well as the optimization model.  When the context does not make it
-obvious which is meant, we delineate with "Temoa Project" and "Temoa model".
+ * We use the word 'Temoa' somewhat interchangeably to describe the project as a
+   whole, as well as the optimization model.  When the context does not make it
+   obvious which is meant, we delineate with "Temoa Project" and "Temoa model".
 
-Though TEMOA is an acronym for 'Tools for Energy Model Optimization and
-Analysis', we generally use 'Temoa' as a proper noun, and so forgo the need for
-all-caps.  Regardless, either are acceptable, persuant to the needs of the
-situation.
+ * Though TEMOA is an acronym for 'Tools for Energy Model Optimization and
+   Analysis', we generally use 'Temoa' as a proper noun, and so forgo the need
+   for all-caps.  Regardless, either are acceptable, persuant to the needs of
+   the situation.
 
-In the mathematical notation, we use CAPITALIZATION to denote a container, like
-a set, or an indexed variable.  In many cases, only a single letter is used, so
-we use the lower case to represent an item from the set.  For example, 'T'
-represents the set of all technologies and 't' represents a single item from
-'T'.
+ * In the mathematical notation, we use CAPITALIZATION to denote a container,
+   like a set, indexed variable, or indexed parameter.  Sets use only a single
+   letter, so we use the lower case to represent an item from the set.  For
+   example, :math:`T` represents the set of all technologies and :math:`t`
+   represents a single item from :math:`T`.
 
-Temoa makes the assumption that all costs are paid for through loans, rather
-than with lump-sum sales.
+ * Variables are named V\_VarName within the code to aid readability.  However,
+   in the documentation where there is benefit of italics and other font
+   manipulations, we elide the 'V\_' prefix.
 
-Where appropriate, we try to put the variable on the right side of a
-coefficient.
+ * In all equations, we **bold** variables to distinguish them from parameters.
+   Take, for example, this excerpt from the Temoa default objective function:
 
-We generally try to put the limiting aspect of an equation on the right hand
-side of the relational operator, and the aspect being limited on the left hand
-side.  (e.g. FO < ResourceCap)
+   .. math::
+      C_{marginal} & = \sum_{p, t, v \in \Theta_{MC}} \left (
+              MC_{p, t, v}
+        \cdot R_p
+        \cdot \textbf{ACT}_{t, v}
+        \right )
 
-We use the word 'process' to refer to the tuple of technology and vintage.
+   Note that :math:`C_{marginal}` is not bold, as it is a temporary variable
+   used for clarity while constructing the objective function.  It is not a
+   structural variable and the solver never sees it.
 
-We use the symbol :math:`\mathbb{Z}` to mean "the set of all integers"
+ * Where appropriate, we put the variable on the right side of the coefficient.
+   In other words, this is not a preferred form of the previous equation:
 
-We use the symbol :math:`\mathbb{I}` to mean the unit interval [0, 1].
+   .. math::
 
-We use the symbol :math:`\mathbb{R}` to denote the set of real numbers, and
-:math:`\mathbb{R}^+_0` to denote non-negative real numbers.
+      C_{marginal} & = \sum_{p, t, v \in \Theta_{MC}} \left (
+              \textbf{ACT}_{t, v}
+        \cdot R_p
+        \cdot MC_{p, t, v}
+        \right )
 
-We use the symbol :math:`\mathbb{N}` to mean the natural numbers (1, 2, 3, ...).
+ * We generally put the limiting or defining aspect of an equation on the right
+   hand side of the relational operator, and the aspect being limited or defined
+   on the left hand side.  For example, Temoa's mathematical definition of a
+   process capacity (eq. :eq:`Capacity`) depends on that process' activity:
 
-In the equations, we bold all variables to distinguish them from parameters.  In
-the documentation, we italicize both, under the assumption that there are only 5
-variables of interest.
+   .. math::
 
-Variables are named V\_VarName within the code to help readability.  However, in
-documentation where there is benefit of italics and other font manipulations, we
-elide the 'V\_' prefix.
+          \left (
+                  \text{CF}_{t, v}
+            \cdot \text{C2A}_{t}
+            \cdot \text{SEG}_{s, d}
+          \right )
+          \cdot \textbf{CAP}_{t, v}
+      \ge
+          \textbf{ACT}_{p, s, d, t, v}
+
+      \\
+      \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+
+ * We use the word 'process' to refer to the tuple of technology and vintage
+   (``<t,v>``), when knowing the vintage of a process is not pertinent to the
+   context at hand.
+
+ * Mathematical notation:
+
+   * We use the symbol :math:`\mathbb{I}` to represent the unit interval ([0,
+     1]).
+
+   * We use the symbol :math:`\mathbb{Z}` to represent "the set of all
+     integers."
+
+   * We use the symbol :math:`\mathbb{N}` to represent natural numbers (i.e.,
+     integers greater than zero: 1, 2, 3, :math:`\ldots`).
+
+   * We use the symbol :math:`\mathbb{R}` to denote the set of real numbers, and
+     :math:`\mathbb{R}^+_0` to denote non-negative real numbers.
+
+
+Temoa Origin and Pronunciation
+------------------------------
+
+While we use 'temoa' as an acronym, it is an actual word in the Nahuatl (Aztec)
+language, meaning "to seek something."
+
+One pronounces the word 'Temoa' as "teh", "moe", "uh", like the first part of
+the word "Tech", and the last syllable of the word "Shenandoah".
+
 
 Bug Reporting
 -------------
@@ -124,6 +172,7 @@ inconsistency, or general "that could be improved", we want to hear about it.
 If you are a software developer-type, feel free to open an issue on our `Github
 Issue tracker`_\ .  If you would rather not create a Github account, feel free
 to let us know the issue on our `mailing list`_\ .
+
 
 =======
 tl;dnr!
@@ -224,13 +273,44 @@ can be broken down into per-process segments.  For example, the coal power plant
 takes as input coal and produces electricity, and is subject to various costs
 (e.g. marginal cost) and constraints (e.g. efficiency) along the way.
 
-.. figure:: images/coal_process.*
+.. graphviz::
    :align: center
    :alt: A single process, with various engineering characteristics.
-   :figclass: align-center
+   :caption: The model does not assign any weight to the input or output
+             commodities of a process, just the engineering characteristics for
+             use of the process itself.
 
-   The model does not assign any weight to the input or output commodities of a
-   process, just the engineering characteristics for use of the process itself.
+
+   digraph coal {
+   	rankdir = "LR" ;
+   	node [ style="filled", shape="circle" ] ;
+   	edge [ arrowhead="vee", labelfontcolor="lightgreen" ] ;
+
+   	coal [ label="coal" ];
+   	coal_plant [ shape="none", style="rounded", label=<
+   <font color="#666666" face="Helvetica Bold">
+   <table border="0" cellborder="0" cellspacing="0">
+   	<tr>
+   		<td cellpadding="4" align="center" bgcolor="green4"><font color="#ffffff">Process: coal_power_plant</font></td>
+   	</tr>
+   	<tr><td></td></tr>
+   	<tr><td align="left">installed capacity</td></tr>
+   	<tr><td align="left">efficiency</td></tr>
+   	<tr><td align="left">install cost</td></tr>
+   	<tr><td align="left">fixed cost</td></tr>
+   	<tr><td align="left">marginal cost</td></tr>
+   	<tr><td align="left">emission per unit activity</td></tr>
+   	<tr><td align="left">useful life</td></tr>
+   	<tr><td align="left">loan life</td></tr>
+   	<tr><td align="left">...</td></tr>
+   </table>
+   </font>> ] ;
+   	electricity [ label="electricity" ];
+
+   	coal -> coal_plant [ label="Input, (V_FlowIn)" ];
+   	coal_plant -> electricity [ label="Output, (V_FlowOut)"];
+   }
+
 
 The modeler defines the processes and engineering characteristics through an
 amalgam of sets and parameters, described in the next few sections.  Temoa then
@@ -241,51 +321,32 @@ Sets
 ----
 
 .. _table_set:
-.. table:: List of all Temoa sets with which a modeler might interact.  The
-           asterisked (\*) elements are automatically derived by the model and
-           are not user-specifiable.
 
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | Set                    | Temoa Name                  | Data Type          | Short Description                                                                    |
-   +========================+=============================+====================+======================================================================================+
-   | :math:`\text{E}`       | time_existing               | :math:`\mathbb{Z}` | model periods before optimization begins                                             |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{H}`       | time_horizon                | :math:`\mathbb{Z}` | model time scale of interest;                                                        |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{F}`       | time_future                 | :math:`\mathbb{Z}` | model periods beyond H;                                                              |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`{}^*\text{P}`   | time_optimize               | :math:`\mathbb{Z}` | model time periods to optimize; (:math:`(H \cup F) - \text{max}(F)`)                 |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`{}^*\text{V}`   | vintage_all                 | :math:`\mathbb{Z}` | possible tech vintages; (:math:`E \cup P`)                                           |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{S}`       | time_season                 | string             | seasonal divisions (e.g. winter, summer)                                             |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{D}`       | time_of_day                 | string             | time-of-day divisions (e.g. morning)                                                 |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{T}_r`     | tech_resource               | string             | resource extraction techs                                                            |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{T}_p`     | tech_production             | string             | techs producing intermediate commodities                                             |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`{}^*\text{T}`   | tech_all                    | string             | all technologies to be modeled; (:math:`T_r \cup T_p`)                               |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{T}_b`     | tech_baseload               | string             | baseload electric generators; (:math:`T_b \subset T`)                                |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{T}_s`     | tech_storage                | string             | storage technologies; (:math:`T_s \subset T`)                                        |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{C}_d`     | commodity_demand            | string             | end-use demand commodities                                                           |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{C}_e`     | commodity_emissions         | string             | emission commodities (e.g. :math:`\text{CO}_\text{2}`, :math:`\text{NO}_\text{x}`)   |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{C}_p`     | commodity_physical          | string             | general energy forms (e.g. electricity, coal, uranium, oil)                          |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`{}^*\text{C}_c` | commodity_carrier           | string             | physical energy carriers and end-use demands (:math:`\text{C}_p \cup \text{C}_d`)    |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`{}^*\text{C}`   | commodity_all               | string             | union of all commodity sets                                                          |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{I}`       |                             | string             | alias of :math:`\text{C}_p`; used in documentation only to mean "input"              |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
-   | :math:`\text{O}`       |                             | string             | alias of :math:`\text{C}_c`; used in documentation only to mean "output"             |
-   +------------------------+-----------------------------+--------------------+--------------------------------------------------------------------------------------+
+.. csv-table:: List of all Temoa sets with which a modeler might interact.  The
+             asterisked (\*) elements are automatically derived by the model and
+             are not user-specifiable.
+   :header: "Set","Temoa Name","Data Type","Short Description"
+   :widths: 10, 25, 15, 50
+
+   ":math:`\text{E}`","time_existing",":math:`\mathbb{Z}`","model periods before optimization begins"
+   ":math:`\text{H}`","time_horizon",":math:`\mathbb{Z}`","model time scale of interest;"
+   ":math:`\text{F}`","time_future",":math:`\mathbb{Z}`","model periods beyond H;"
+   ":math:`{}^*\text{P}`","time_optimize",":math:`\mathbb{Z}`","model time periods to optimize; (:math:`(H \cup F) - \text{max}(F)`)"
+   ":math:`{}^*\text{V}`","vintage_all",":math:`\mathbb{Z}`","possible tech vintages; (:math:`E \cup P`)"
+   ":math:`\text{S}`","time_season","string","seasonal divisions (e.g. winter, summer)"
+   ":math:`\text{D}`","time_of_day","string","time-of-day divisions (e.g. morning)"
+   ":math:`\text{T}_r`","tech_resource","string","resource extraction techs"
+   ":math:`\text{T}_p`","tech_production","string","techs producing intermediate commodities"
+   ":math:`{}^*\text{T}`","tech_all","string","all technologies to be modeled; (:math:`T_r \cup T_p`)"
+   ":math:`\text{T}_b`","tech_baseload","string","baseload electric generators; (:math:`T_b \subset T`)"
+   ":math:`\text{T}_s`","tech_storage","string","storage technologies; (:math:`T_s \subset T`)"
+   ":math:`\text{C}_d`","commodity_demand","string","end-use demand commodities"
+   ":math:`\text{C}_e`","commodity_emissions","string","emission commodities (e.g. :math:`\text{CO}_\text{2}`, :math:`\text{NO}_\text{x}`)"
+   ":math:`\text{C}_p`","commodity_physical","string","general energy forms (e.g. electricity, coal, uranium, oil)"
+   ":math:`{}^*\text{C}_c`","commodity_carrier","string","physical energy carriers and end-use demands (:math:`\text{C}_p \cup \text{C}_d`)"
+   ":math:`{}^*\text{C}`","commodity_all","string","union of all commodity sets"
+   ":math:`\text{I}`","","string","alias of :math:`\text{C}_p`; used in documentation only to mean "input""
+   ":math:`\text{O}`","","string","alias of :math:`\text{C}_c`; used in documentation only to mean "output""
 
 Temoa uses two different set notation styles, one for paper and code
 representation (e.g. this documentation), and one that attempts to conform to
@@ -431,7 +492,7 @@ It defines the Activity variable for every valid combination of ``p``, ``s``,
 notation, this might include nonsensical items in each summation, like perhaps
 an input of electricity and an output of sunlight for a diesel powered vehicle.
 However, in this context, summing over I and O implicitly only includes the
-valid combinations of :math:`\Theta{FO}`.
+valid combinations of :math:`\Theta_{flow}`.
 
 
 Parameters
@@ -439,59 +500,35 @@ Parameters
 
 .. _table_parameter:
 
-.. table:: List of Temoa parameters with which a modeler might interact.  The
-           asterisked (\*) elements are automatically derived by the model and
-           are not user-specifiable.
+.. csv-table:: List of Temoa parameters with which a modeler might interact.
+           The asterisked (\*) elements are automatically derived by the model
+           and are not user-specifiable.
+   :header: "Parameter","Temoa Name","Domain","Short Description"
+   :widths: 12, 25, 5, 50
 
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | Parameter                      | Temoa Name         | Domain                         | Short Description                                            |
-   +================================+====================+================================+==============================================================+
-   | :math:`\text{CF}_{s,d,t,v}`    | CapacityFactor     | :math:`\mathbb{I}`             | Capacity factor of a process                                 |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{C2A}_{t,v}`       | Capacity2Activity  | :math:`\mathbb{R}^+_0`         | Converts from capacity to activity units                     |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{FC}_{p,t,v}`      | CostFixed          | :math:`\mathbb{R}`             | Fixed operations \& maintenance cost                         |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{IC}_{t,v}`        | CostInvest         | :math:`\mathbb{R}`             | Tech-specific investment cost                                |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{MC}_{p,t,v}`      | CostMarginal       | :math:`\mathbb{R}`             | Variable operations \& maintenance cost                      |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{DEM}_{p,s,d,c}`   | Demand             | :math:`\mathbb{R}^+_0`         | End-use demands                                              |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{DR}_t`            | DiscountRate       | :math:`\mathbb{R}`             | Tech-specific interest rate on investment                    |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{EFF}_{i,t,v,o}`   | Efficiency         | :math:`\mathbb{R}^+_0`         | Tech- and commodity-specific efficiency                      |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{EAC}_{i,t,v,o,e}` | EmissionsActivity  | :math:`\mathbb{R}`             | Tech-specific emissions rate                                 |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{ELM}_{p,e}`       | EmissionsLimit     | :math:`\mathbb{R}^+_0`         | Emissions limit by time period                               |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{ECAP}_{t,v}`      | ExistingCapacity   | :math:`\mathbb{R}^+_0`         | Pre-existing capacity                                        |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{GDR}`             | GlobalDiscountRate | :math:`\mathbb{R}`             | Global rate used to calculate present cost                   |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{LLN}_{t,v}`       | LifetimeLoan       | :math:`\mathbb{N}`             | Tech- and vintage-specific loan term                         |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{LTC}_{p,t,v}`     | LifetimeTech       | :math:`\mathbb{N}`             | Tech- and vintage-specific lifetime                          |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{MAX}_{p,t}`       | MaxCapacity        | :math:`\mathbb{R}^+_0`         | maximum tech-specific capacity by period                     |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{MIN}_{p,t}`       | MinCapacity        | :math:`\mathbb{R}^+_0`         | minimum tech-specific capacity by period                     |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{RSC}_{p,c}`       | ResourceBound      | :math:`\mathbb{R}^+_0`         | Upper bound on resource capacity                             |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{SEG}_{s,d}`       | SegFrac            | :math:`\mathbb{I}`             | Fraction of yr represented by each (s, d) tuple              |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`\text{SPL}_{i,t,o}`     | TechOutputSplit    | :math:`\mathbb{I}`             | Fraction of total tech output by input commodity             |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`{}^*\text{LA}_{t,v}`    | LoanAnnualize      | :math:`\mathbb{R}^+_0`         | loan amortization by tech and vintage; based on :math:`DR_t` |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`{}^*\text{LEN}_p`       | PeriodLength       | :math:`\mathbb{N}`             | Number of years in period :math:`p`                          |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`{}^*\text{R}_p`         | PeriodRate         | :math:`\mathbb{R}`             | Converts future annual cost to discounted period cost        |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
-   | :math:`{}^*\text{TLF}_{p,t,v}` | TechLifetimeFrac   | :math:`\mathbb{I}`             | Fraction of last time period that tech is active             |
-   +--------------------------------+--------------------+--------------------------------+--------------------------------------------------------------+
+   ":math:`\text{CF}_{s,d,t,v}`","CapacityFactor",":math:`\mathbb{I}`","Capacity factor of a process"
+   ":math:`\text{C2A}_{t,v}`","Capacity2Activity",":math:`\mathbb{R}^+_0`","Converts from capacity to activity units"
+   ":math:`\text{FC}_{p,t,v}`","CostFixed",":math:`\mathbb{R}`","Fixed operations \& maintenance cost"
+   ":math:`\text{IC}_{t,v}`","CostInvest",":math:`\mathbb{R}`","Tech-specific investment cost"
+   ":math:`\text{MC}_{p,t,v}`","CostMarginal",":math:`\mathbb{R}`","Variable operations \& maintenance cost"
+   ":math:`\text{DEM}_{p,s,d,c}`","Demand",":math:`\mathbb{R}^+_0`","End-use demands"
+   ":math:`\text{DR}_t`","DiscountRate",":math:`\mathbb{R}`","Tech-specific interest rate on investment"
+   ":math:`\text{EFF}_{i,t,v,o}`","Efficiency",":math:`\mathbb{R}^+_0`","Tech- and commodity-specific efficiency"
+   ":math:`\text{EAC}_{i,t,v,o,e}`","EmissionsActivity",":math:`\mathbb{R}`","Tech-specific emissions rate"
+   ":math:`\text{ELM}_{p,e}`","EmissionsLimit",":math:`\mathbb{R}^+_0`","Emissions limit by time period"
+   ":math:`\text{ECAP}_{t,v}`","ExistingCapacity",":math:`\mathbb{R}^+_0`","Pre-existing capacity"
+   ":math:`\text{GDR}`","GlobalDiscountRate",":math:`\mathbb{R}`","Global rate used to calculate present cost"
+   ":math:`\text{LLN}_{t,v}`","LifetimeLoan",":math:`\mathbb{N}`","Tech- and vintage-specific loan term"
+   ":math:`\text{LTC}_{p,t,v}`","LifetimeTech",":math:`\mathbb{N}`","Tech- and vintage-specific lifetime"
+   ":math:`\text{MAX}_{p,t}`","MaxCapacity",":math:`\mathbb{R}^+_0`","maximum tech-specific capacity by period"
+   ":math:`\text{MIN}_{p,t}`","MinCapacity",":math:`\mathbb{R}^+_0`","minimum tech-specific capacity by period"
+   ":math:`\text{RSC}_{p,c}`","ResourceBound",":math:`\mathbb{R}^+_0`","Upper bound on resource capacity"
+   ":math:`\text{SEG}_{s,d}`","SegFrac",":math:`\mathbb{I}`","Fraction of yr represented by each (s, d) tuple"
+   ":math:`\text{SPL}_{i,t,o}`","TechOutputSplit",":math:`\mathbb{I}`","Fraction of total tech output by input commodity"
+   ":math:`{}^*\text{LA}_{t,v}`","LoanAnnualize",":math:`\mathbb{R}^+_0`","loan amortization by tech and vintage; based on :math:`DR_t`"
+   ":math:`{}^*\text{LEN}_p`","PeriodLength",":math:`\mathbb{N}`","Number of years in period :math:`p`"
+   ":math:`{}^*\text{R}_p`","PeriodRate",":math:`\mathbb{R}`","Converts future annual cost to discounted period cost"
+   ":math:`{}^*\text{TLF}_{p,t,v}`","TechLifetimeFrac",":math:`\mathbb{I}`","Fraction of last time period that tech is active"
 
 
 .. _influential_efficiency:
@@ -543,12 +580,12 @@ out to an activity of
 
    {1 GW} \cdot {8,760 \tfrac{hr}{yr}} \cdot {10^{-3} \tfrac{T}{G}} = {8.75 TWh}
 
-The best place to see this in use is in the CapacityConstraint (explained
-below).  When comparing one capacity to another, the comparison is easy, unit
-wise.  However, when one *needs* to compare capacity and activity, how does one
-reconcile the units?  One way to think about the utility of this parameter is in
-the context of the question: "How much activity would this capacity create, if
-used 100% of the time?"
+The best place to see this in use is in the CapacityConstraint (explained in
+section 3.4).  When comparing one capacity to another, the comparison is easy,
+unit wise.  However, when one *needs* to compare capacity and activity, how does
+one reconcile the units?  One way to think about the utility of this parameter
+is in the context of the question: "How much activity would this capacity
+create, if used 100% of the time?"
 
 
 Parameter: CostFixed (:math:`{FC}_{p \in P,t \in T,v \in V}`)
@@ -571,7 +608,7 @@ Parameter: CostInvest (:math:`{IC}_{t \in T,v \in P}`)
 
 This parameter is basically the cost of the loan.  Unlike the CostFixed and
 CostMarginal parameters, CostInvest only applies to vintages of technologies
-within the model optimization horizon (:math:`time_optimize`).  Like CostFixed,
+within the model optimization horizon (:math:`time\_optimize`).  Like CostFixed,
 CostInvest is specified in units of currency per unit of capacity and is only
 used in the default objective function.
 
@@ -635,6 +672,7 @@ vintage-specific characteristics within the same period.  Thus, Temoa treats
 existing technological capacity as full-blown processes, requiring all of the
 engineering characteristics of a standard process.  This is Temoa's answer to
 what some call "residual capacity."
+
 
 .. _GDR:
 
@@ -742,10 +780,11 @@ discount rate (the DiscountRate parameter).  It is calculated via the formula:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Given that the modeler may specify arbitrary period boundaries, this parameter
-calculates the number of years contained in each.  The final year is the largest
-element in :math:`time\_future` which is specifically not included in the list
-of periods in :math:`time\_optimize` (:math:`P`).  The length calculation for
-each period then exploits the fact that the ``time`` sets are ordered:
+specifies the number of years contained in each period.  The final year is the
+largest element in :math:`time\_future` which is specifically not included in
+the list of periods in :math:`time\_optimize` (:math:`P`).  The length
+calculation for each period then exploits the fact that the ``time`` sets are
+ordered:
 
 .. math::
 
@@ -773,16 +812,17 @@ generation.  The formula is:
 
    R_p = \sum_{y = 0}^{{LEN}_p} \frac{1}{{(1 + GDR)}^{(P_0 - p - y)}}
 
+   \\
    \forall p \in P
 
 
 \*Parameter: TechLifeFrac (:math:`{TLF}_{p \in P,t \in T,v \in V}`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The modeler may specify a useful lifetime of a process that means the process
+The modeler may specify a useful lifetime of a process such that the process
 will be decommissioned part way through a period.  Rather than attempt to
-delineate each year within the period, Temoa makes the choice to average the
-the total output of the process over the entire period, but limit the
+delineate each year within that final period, Temoa makes the choice to average
+the the total output of the process over the entire period but limit the
 available capacity and output of the decommissioning process by the ratio of how
 long through the period the process is active.  This parameter is that ratio,
 formally defined as:
@@ -791,49 +831,90 @@ formally defined as:
 
    TLF_{p,t,v} = \frac{v + LTC_{t,v} - p}{LEN_p}
 
+   \\
    \forall \{p,t,v\} & \in \Theta_\text{Activity by PTV} | \\
    v + LTC_{t,v} & \notin P, \\
    v + LTC_{t,v} & \le max(F), \\
    p & = max(P | p < v + LTC_{t,v})
 
+Note that this parameter is defined only for the final period of these "partial
+period" processes.  As an example, if a model has ``P = {2010, 2012, 2020}``,
+and a process ``<t,v> = <car,2010>`` has a useful lifetime of 5 years, then this
+parameter would include only the last activity index for the process.  Namely,
+:math:`p = 2012` as ``<p,t,v> = <2012,car,2010>``.  Note that this parameter
+does *not* cover any technology whose end of useful life falls on a period
+boundary.
 
 
 Variables
 ---------
 
 .. _table_variable:
-.. table:: List of Temoa variables.
 
-   +----------------------------+----------------------+------------------------+--------------------------------------------------------------------+
-   | Variable                   | Temoa Name           | Domain                 | Short Description                                                  |
-   +============================+======================+========================+====================================================================+
-   | :math:`FI_{p,s,d,i,t,v,o}` | V_FlowIn             | :math:`\mathbb{R}^+_0` | Commodity flow into a tech to produce a given output               |
-   +----------------------------+----------------------+------------------------+--------------------------------------------------------------------+
-   | :math:`FO_{p,s,d,i,t,v,o}` | V_FlowOut            | :math:`\mathbb{R}^+_0` | Commodity flow out of a tech based on a given input                |
-   +----------------------------+----------------------+------------------------+--------------------------------------------------------------------+
-   | :math:`ACT_{p,s,d,t,v}`    | V_Activity           | :math:`\mathbb{R}^+_0` | Total tech commodity production in each (s, d) tuple               |
-   +----------------------------+----------------------+------------------------+--------------------------------------------------------------------+
-   | :math:`CAP_{t,v}`          | V_Capacity           | :math:`\mathbb{R}^+_0` | Required tech capacity to support associated activity              |
-   +----------------------------+----------------------+------------------------+--------------------------------------------------------------------+
-   | :math:`CAPAVL_{p,t}`       | V_CapacityAvailable- | :math:`\mathbb{R}^+_0` | The Capacity of technology :math:`t` available in period :math:`p` |
-   |                            |    ByPeriodAndTech   |                        |                                                                    |
-   +----------------------------+----------------------+------------------------+--------------------------------------------------------------------+
+.. tabularcolumns:: |l|L|c|l|
+
+.. raw:: latex
+
+   \begin{threeparttable}
+   \capstart\caption{Temoa's Main Variables}
+
+   \begin{tabulary}{\linewidth}{| l | p{3cm} | c | l |}
+   \hline
+   \textbf{Variable} & \textbf{Temoa Name} & \textbf{Domain} & \textbf{Short Description}
+   \\\hline
+
+   $FI_{p,s,d,i,t,v,o}$ & V\_FlowIn & $\mathbb{R}^+_0$   & Commodity flow into a tech to produce a given output
+   \\\hline
+
+   $FO_{p,s,d,i,t,v,o}$ & V\_FlowOut & $\mathbb{R}^+_0$  & Commodity flow out of a tech based on a given input
+   \\\hline
+
+   $ACT_{p,s,d,t,v}$    & V\_Activity & $\mathbb{R}^+_0$ & Total tech commodity production in each (s, d) tuple
+   \\\hline
+
+   $CAP_{t,v}$          & V\_Capacity & $\mathbb{R}^+_0$ & Required tech capacity to support associated activity
+   \\\hline
+
+   $CAPAVL_{p,t}$       & V\_CapacityAvailable\-ByPeriodAndTech & $\mathbb{R}^+_0$ & The Capacity of technology $t$ available in period $p$
+   \\\hline
+   \end{tabulary}
+
+   \end{threeparttable}
+
+.. only:: html
+
+   .. csv-table:: Temoa's Main Variables
+      :header: "Variable","Temoa Name","Domain","Short Description"
+      :widths: 15, 15, 10, 60
+
+      ":math:`FI_{p,s,d,i,t,v,o}`","V\_FlowIn",":math:`\mathbb{R}^+_0`","Commodity flow into a tech to produce a given output"
+      ":math:`FO_{p,s,d,i,t,v,o}`","V_FlowOut",":math:`\mathbb{R}^+_0`","Commodity flow out of a tech based on a given input"
+      ":math:`ACT_{p,s,d,t,v}`","V_Activity",":math:`\mathbb{R}^+_0`","Total tech commodity production in each (s, d) tuple"
+      ":math:`CAP_{t,v}`","V_Capacity",":math:`\mathbb{R}^+_0`","Required tech capacity to support associated activity"
+      ":math:`CAPAVL_{p,t}`","V_CapacityAvailable\-ByPeriodAndTech",":math:`\mathbb{R}^+_0`","The Capacity of technology :math:`t` available in period :math:`p`"
+
 
 The most fundamental variables in the Temoa formulation are :math:`FlowIn` and
 :math:`FlowOut`.  They describe the commodity flows into and out of a process in
-a given time slice.  They are related through the ProcessBalance constraint,
-which in essence, guarantees the conservation of energy for each process.
+a given time slice.  They are related through the ProcessBalance constraint
+:eq:`ProcessBalance`, which in essence, guarantees the conservation of energy
+for each process.
 
 The Activity variable is defined as the sum over all inputs and outpus of a
-process in a given time slice.  At this time, one potential "gotcha" is that for
-a process with multiple inputs or outputs, there is no attempt to reconcile
-energy units.
+process in a given time slice (see equation :eq:`Activity`).  At this time, one
+potential "gotcha" is that for a process with multiple inputs or outputs, there
+is no attempt to reconcile energy units: Temoa assumes all inputs are
+comparable, and as no understanding of units.  The onus is on the modeler to
+ensure that all inputs and outputs have similar units.\ [#units_comparison]_
 
-The Capacity variable is the most interesting of the bunch.  A simple definition
-based solely on the total activity of a process would ignore the fact that some
-processes have more than output.  Instead, Temoa first calculates the capacity
-on a per-output basis, and then calculates the total capacity as the sum of the
-individual output capacities.
+The Capacity variable is used in the default objective function as the amount of
+capacity of a process to build.  It is indexed for each process, and Temoa
+constrains the Capacity variable to at least be able to meet the Activity of
+that process in all time slices in which it is active :eq:`Capacity`.
+
+Finally, CapacityAvailableByPeriodAndTech is a convenience variable that is
+not strictly necessary, but used where the individual vintages of a technology
+are not warranted (e.g. in calco).
 
 The equations governing these variables are shown in the Constraints section,
 below.
@@ -1707,7 +1788,6 @@ If you want to see the log of commits, use the command git log:
 
    $ git log -1
    commit b5bddea7312c34c5c44fe5cce2830cbf5b9f0f3b
-   Author: Kevin Hunter <hunteke@earlham.edu>
    Date:   Thu Jul 5 03:23:11 2012 -0400
 
        Update two APIs
@@ -1747,7 +1827,7 @@ You can also explore the various development branches in the repository:
    compare_with_utopia-20.py  utopia-markal-15.dat
 
 To view exactly what changes you have made since the most recent commit to the
-	repository use the ``diff`` command to ``git``:
+repository use the ``diff`` command to ``git``:
 
 .. code::
 
@@ -1993,13 +2073,15 @@ already chosen ``M`` to represent the Pyomo model instance, ``t`` to represent
 
 The complete list we have already chosen:
 
- * ``p`` to represent a period item from ``time_optimize``
- * ``s`` to represent a season item from ``time_season``
- * ``d`` to represent a time of day item from ``time_of_day``
- * ``i`` to represent an input to a process
- * ``t`` to represent a technology
- * ``v`` to represent a vintage
- * ``o`` to represent an output of a process
+ * :math:`p` to represent a period item from :math:`time\_optimize`
+ * :math:`s` to represent a season item from :math:`time\_season`
+ * :math:`d` to represent a time of day item from :math:`time\_of\_day`
+ * :math:`i` to represent an input to a process, an item from
+   :math:`commodity\_physical`
+ * :math:`t` to represent a technology from :math:`tech\_all`
+ * :math:`v` to represent a vintage from :math:`vintage\_all`
+ * :math:`o` to represent an output of a process, an item from
+   :math:`commodity\_carrier`
 
 Note also the order of presentation, even in this list.  In order to reduce the
 number mental "question marks" one might have while discovering Temoa, we
@@ -2040,8 +2122,8 @@ be:
 This reads closer to the more familar mathematical notation of ``5 < a < 10``
 and translates to English as "If a is between 5 and 10, do something."  The
 semantic meaning that ``a`` should be *between* 5 and 10 is more readily
-apparent and easier for the "next person" to understand (who may very well be
-you in six months!).
+apparent from just the visual placement between 5 and 10, and is easier for the
+"next person" to understand (who may very well be you in six months!).
 
 Consider the reverse case:
 
@@ -2050,7 +2132,7 @@ Consider the reverse case:
    if ( a < 5 or a > 10 ):
       doSomething()
 
-On the number line, this says that must fall before 5 or beyond 10.  But the
+On the number line, this says that a must fall before 5 or beyond 10.  But the
 intent might more easily be understood if altered as above:
 
 .. code-block:: python
@@ -2131,6 +2213,61 @@ Miscellanous Style Coventions
       a = b[a, b]           # good
 
 
+Patches and Commits to the Repository
+-------------------------------------
+
+In terms of code quality and maintaining a legible "audit trail," every patch
+should meet a basic standard of quality:
+
+ * Every commit to the repository must include an appropriate summary message
+   about the accompanying code changes.  Include enough context that one reading
+   the patch need not also inspect the code to get a high-level understanding of
+   the changes.  For example, "Fixed broken algorithm" does not convey much
+   information.  A more appropriate and complete summary message might be::
+
+      Fixed broken storage algorithm
+
+      The previous implementation erroneously assumed that only the energy flow
+      out of a storage device mattered.  However, Temoa needs to know the energy
+      flow in to all devices so that it can appropriately calculate the
+      inter-process commodity balance.
+
+      License: AGPL-3.0
+
+   If there is any external information that would be helpful, such as a bug
+   report, include a "clickable" link to it, such that one reading the patch as
+   via an email or online, can immediately view the external information.
+
+   Specifically, commit messages should follow the form::
+
+      A subject line of 50 characters or less
+       [ an empty line ]
+      * http://any.com/
+      * http://relevant.org/some/path/
+      * http://urls.edu/~some/other/path/
+
+      Any amount and format of text, such that it conforms to a line-width of 72
+      characters.  Bonus points for being aware of the Github Markdown syntax:
+      https://github.com/blog/926-shiny-new-commit-styles
+
+      License: AGPL-3.0
+
+ * Ensure that each commit contains no more than one *logical* change to the
+   code base.  This is very important for later auditing.  If you have not
+   developed in a logical manner (like most of us don't), :code:`git add -p` is
+   the answer
+
+ * If you are not a core maintainer of the project, all commits must also
+   include a specific reference to the license under which you are giving your
+   code to the project.  Note that Temoa will not accept any patches that
+   are not licensed under AGPL-3.0.  A line like this at the end of your commit
+   will suffice::
+
+      ... the last line of the commit message.
+
+      License: AGPL-3.0
+
+.. _OpenSourceNote:
 
 =======================
 A note on "Open Source"
@@ -2153,7 +2290,8 @@ of an analysis.
 .. [#open_source_realities] The two main goals behind Temoa are transparency and
    recreatability, hence the AGPL license.  Unfortunately, there are some harsh
    realities in the current climate of EEO modeling, so this license is not a
-   guarantee of openness.  This documentation touches on the issues involved.
+   guarantee of openness.  This documentation touches on the issues involved in
+   the final section, :ref:`OpenSourceNote`.
 
 .. [#elided_math] However, the code is freely inspectable: ``temoa_lib.py``.
    You are also welcome to inquire on the Temoa Project forum.  Please see
@@ -2176,6 +2314,9 @@ of an analysis.
    sets :math:`time\_horizon` and :math:`time\_future`, less the last element of
    the latter, so as to be able to calculate a period length for the final
    element in :math:`time\_optimize`.
+
+.. [#units_comparison] There is an open ticket to address the lack of unit
+   awareness in Temoa.  See `issue 5`_ in our issue tracker.
 
 .. [#web_browser_svg] SVG support in web browsers is currently hit or miss.  The
    most recent versions of Chromium, Google Chrome, and Mozilla Firefox support
@@ -2213,3 +2354,4 @@ of an analysis.
 .. _Tarbomb: https://en.wikipedia.org/wiki/Tar_(file_format)#Tarbom
 .. _generally accepted relative rates: http://www.forecasts.org/inflation.htm
 .. _Temoa repository: https://github.com/hunteke/temoa/
+.. _issue 5: https://github.com/hunteke/temoa/issues/5

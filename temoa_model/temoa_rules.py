@@ -6,36 +6,41 @@ from temoa_lib import *
 def TotalCost_rule ( M ):
 	r"""
 
-The objective function makes use of the :math:`Activity` and :math:`Capacity`
-proxy variables to calculate the costs associated with supplying the system with
-energy.  This implementation sums up all the costs incurred by the solution, and
-is simplistically :math:`C_{tot} = C_{loans} + C_{fixed} + C_{marginal}`.
-Similarly, each sub-part is merely a summation of the costs incurred, multiplied
-by an annual discount factor to calculate the time-value in year :math:`P_0`
-dollars.
+Using the :math:`Activity` and :math:`Capacity` proxy variables, the Temoa
+objective funciton calculates the costs associated with supplying the system
+with energy, under the assumption that all costs are paid for through loans
+(rather than with lump-sum sales).  This implementation sums up all the costs
+incurred by the solution, and is simplistically :math:`C_{tot} = C_{loans} +
+C_{fixed} + C_{marginal}`.  Similarly, each sub-part is merely a summation of
+the costs incurred, multiplied by an annual discount factor to calculate the
+time-value in year :math:`P_0` dollars.
 
 .. math::
    C_{loans} & = \sum_{t, v \in \Theta_{IC}} \left (
-           \textbf{CAP}_{t, v}
-     \cdot IC_{t, v}
-     \cdot LA_{t, v}
-     \cdot {\sum_{y = v - P_0}^{v - P_0 + MLL_{t, v}}
-               \frac{1}{(1 + GDR)^y}}
+     \left [
+             IC_{t, v}
+       \cdot LA_{t, v}
+       \cdot {\sum_{y = v - P_0}^{v - P_0 + MLL_{t, v}}
+                 \left ( \frac{1}{(1 + GDR)^y} \right ) }
+     \right ]
+     \cdot \textbf{CAP}_{t, v}
      \right )
 
 .. math::
    C_{fixed} & = \sum_{p, t, v \in \Theta_{FC}} \left (
-           \textbf{CAP}_{t, v}
-     \cdot FC_{p, t, v}
-     \cdot {\sum_{y = v - P_0}^{v - P_0 + TPL_{t, v}}
-               \frac{1}{(1 + GDR)^y}}
+     \left [
+             FC_{p, t, v}
+       \cdot {\sum_{y = v - P_0}^{v - P_0 + TPL_{t, v}}
+                 \left ( \frac{1}{(1 + GDR)^y} \right ) }
+     \right ]
+     \cdot \textbf{CAP}_{t, v}
      \right )
 
 .. math::
    C_{marginal} & = \sum_{p, t, v \in \Theta_{MC}} \left (
-           \textbf{ACT}_{t, v}
-     \cdot MC_{p, t, v}
+           MC_{p, t, v}
      \cdot R_p
+     \cdot \textbf{ACT}_{t, v}
      \right )
 
 In the last sub-equation, :math:`R_p` is the equivalent operation to the inner
@@ -257,7 +262,7 @@ allows the modeler to assign an upper bound per period to each emission.
 
    \\
    \forall \{p, e\} \in ELM_{ind}
-	"""
+"""
 	emission_limit = M.EmissionLimit[p, e]
 
 	actual_emissions = sum(
@@ -329,6 +334,8 @@ nature of seasons.  (Currently, each slice is completely independent of other
 slices.)
 
 .. math::
+   :label: Storage
+
    \sum_{D} \left (
             EFF_{i, t, v, o}
       \cdot \textbf{FI}_{p, s, d, i, t, v, o}
@@ -475,13 +482,6 @@ is 3 years in, the FractionalLifetimeActivity constraint ensures that Temoa can
 only utilize :math:`\tfrac{3}{8}` of the process' installed capacity in that
 period.
 
-This constraint also highlights why Temoa needs to delineate installed capacity
-by output (as referenced in the CapacityByOutput constraint
-:eq:`CapacityByOutput`).  If the FractionalLifeActivityLimit did not also limit
-the individual outputs to the average, the optimizer could game the outputs by
-over-limiting one output one in favor of another.  For example, in context of an
-oil refinery, crude oil *cannot* be converted all to one type of fuel.
-
 .. math::
    :label: FractionalLifeActivityLimit
 
@@ -495,7 +495,6 @@ oil refinery, crude oil *cannot* be converted all to one type of fuel.
        \right )
 
    \forall \{p, s, d, t, v, o\} \in \Theta_{\text{fractional life activity}}
-
 """
 	max_output = (
 	    M.V_Capacity[t, v]
@@ -538,6 +537,7 @@ slice ``<s``,\ ``d>``.
    \ge
        \textbf{ACT}_{p, s, d, t, v}
 
+   \\
    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 """
 	produceable = (
@@ -623,9 +623,11 @@ In English, this constraint states that "for each commodity, the total amount
 of energy generated must at least meet the amount of needed input energy."
 
 .. math::
-   \sum_{I, T, V} FO_{p, s, d, i, t, v, c}
+   :label: CommodityBalance
+
+   \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, c}
    \ge
-   \sum_{T, V, O} FI_{p, s, d, c, t, v, o}
+   \sum_{T, V, O} \textbf{FI}_{p, s, d, c, t, v, o}
 
    \\
    \forall \{p, s, d, c\} \in \Theta_{\text{commodity balance}}
@@ -707,9 +709,9 @@ superset.
 .. math::
    :label: DemandActivity
 
-      DEM_{p, s, d, dem} \cdot \sum_{I} FO_{p, s_0, d_0, i, t, v, dem}
+      DEM_{p, s, d, dem} \cdot \sum_{I} \textbf{FO}_{p, s_0, d_0, i, t, v, dem}
    =
-      DEM_{p, s_0, d_0, dem} \cdot \sum_{I} FO_{p, s, d, i, t, v, dem}
+      DEM_{p, s_0, d_0, dem} \cdot \sum_{I} \textbf{FO}_{p, s, d, i, t, v, dem}
 
    \\
    \forall \{p, s, d, t, v, dem, s_0, s_0\} \in \Theta_{\text{demand activity}}
@@ -755,7 +757,7 @@ counted.
 .. math::
    :label: Demand
 
-   \sum_{I, T, V} FO_{p, s, d, i, t, v, dem} \ge DEM_{p, s, d, dem}
+   \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, dem} \ge DEM_{p, s, d, dem}
 
    \\
    \forall \{p, s, d, dem\} \in \Theta_{\text{demand parameter}}
