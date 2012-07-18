@@ -164,7 +164,7 @@ def validate_TechOutputSplit ( M ):
 
 	for i, t in left_side:
 		total = sum(
-		  M.TechOutputSplit[i, t, o].value
+		  value( M.TechOutputSplit[i, t, o] )
 		  for o in left_side[i, t]
 		)
 

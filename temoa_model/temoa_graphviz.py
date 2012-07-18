@@ -7,6 +7,8 @@ from shutil import rmtree
 from subprocess import call
 from sys import stderr as SE
 
+from coopr.pyomo import value
+
 
 def _getLen ( key ):
 	def wrapped ( obj ):
@@ -435,8 +437,8 @@ are named model_<tech>.<format>
 			if tmp != l_tech: continue
 
 			if show_capacity:
-				pattr = pattr_fmt % (l_per, PeriodCap[l_per, l_tech].value)
-				vattr = vattr_fmt % (l_vin, VintageCap[l_tech, l_vin].value)
+				pattr = pattr_fmt % (l_per, value( PeriodCap[l_per, l_tech] ))
+				vattr = vattr_fmt % (l_vin, value( VintageCap[l_tech, l_vin] ))
 			pnodes.add( (p_fmt % l_per, pattr) )
 			vnodes.add( (v_fmt % l_vin, vattr) )
 
@@ -508,7 +510,7 @@ are named model_<tech>.<format>
 
 					attr_args = dict()
 					if show_capacity:
-						val = VintageCap[l_tech, l_vin].value
+						val = value( VintageCap[l_tech, l_vin] )
 						attr_args.update(p=l_per, v=l_vin, val=val)
 					vnodes.add( (v_fmt % (l_per, l_vin),
 					  vattr % attr_args ) )
@@ -839,7 +841,7 @@ strict digraph model {
 	vnode_attr_fmt += 'label="%s\\nCap: %.2f"'
 
 	for per, tech in g_activeCapacityAvailable_pt:
-		total_cap = M.V_CapacityAvailableByPeriodAndTech[per, tech].value
+		total_cap = value( M.V_CapacityAvailableByPeriodAndTech[per, tech] )
 
 		# energy/vintage nodes, in/out edges
 		enodes, vnodes, iedges, oedges = set(), set(), set(), set()
@@ -853,12 +855,12 @@ strict digraph model {
 			for l_inp in ProcessInputs( per, tech, l_vin ):
 				for l_out in ProcessOutputsByInput( per, tech, l_vin, l_inp ):
 					flowin = sum(
-					  M.V_FlowIn[per, ssn, tod, l_inp, tech, l_vin, l_out].value
+					  value( M.V_FlowIn[per, ssn, tod, l_inp, tech, l_vin, l_out] )
 					  for ssn in M.time_season
 					  for tod in M.time_of_day
 					)
 					flowout = sum(
-					  M.V_FlowOut[per, ssn, tod, l_inp, tech, l_vin, l_out].value
+					  value( M.V_FlowOut[per, ssn, tod, l_inp, tech, l_vin, l_out] )
 					  for ssn in M.time_season
 					  for tod in M.time_of_day
 					)
@@ -975,7 +977,7 @@ strict digraph model {
 	enode_attr_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
 
 	for p, t in g_activeCapacityAvailable_pt:
-		total_cap = M.V_CapacityAvailableByPeriodAndTech[p, t].value
+		total_cap = value( M.V_CapacityAvailableByPeriodAndTech[p, t] )
 
 		for v in ProcessVintages( p, t ):
 			if not M.V_ActivityByPeriodTechAndVintage[p, t, v]:
@@ -989,9 +991,9 @@ strict digraph model {
 					snodes, enodes, iedges, oedges = set(), set(), set(), set()
 					for s in M.time_season:
 						for d in M.time_of_day:
-							flowin = M.V_FlowIn[p, s, d, i, t, v, o].value
+							flowin = value( M.V_FlowIn[p, s, d, i, t, v, o] )
 							if not flowin: continue
-							flowout = M.V_FlowOut[p, s, d, i, t, v, o].value
+							flowout = value( M.V_FlowOut[p, s, d, i, t, v, o] )
 							snode = "%s, %s" % (s, d)
 							snodes.add( (snode, None) )
 							enodes.add( (i, enode_attr_fmt % (i, p)) )
@@ -1108,13 +1110,13 @@ strict digraph result_commodity_%(commodity)s {
 		for i in ProcessInputs( p, t, v ):
 			for o in ProcessOutputsByInput( p, t, v, i ):
 				flowin = sum(
-				  FI[p, s, d, i, t, v, o].value
+				  value( FI[p, s, d, i, t, v, o] )
 				  for s in M.time_season
 				  for d in M.time_of_day
 				)
 				if flowin:
 					flowout = sum(
-					  FO[p, s, d, i, t, v, o].value
+					  value( FO[p, s, d, i, t, v, o] )
 					  for s in M.time_season
 					  for d in M.time_of_day
 					)
@@ -1328,7 +1330,7 @@ strict digraph model {
 
 			for vv in ProcessVintages( pp, tt ):
 				for ii in ProcessInputs( pp, tt, vv ):
-					inp = EI[pp, ii, tt].value
+					inp = value( EI[pp, ii, tt] )
 					if inp >= epsilon:
 						eflowsi.add( (ii, tt, flow_fmt % inp) )
 						ecarriers.add( (ii, commodity_fmt % (ii, pp)) )
@@ -1336,7 +1338,7 @@ strict digraph model {
 					else:
 						dflows.add( (ii, tt, None) )
 				for oo in ProcessOutputs( pp, tt, vv ):
-					out = EO[pp, tt, oo].value
+					out = value( EO[pp, tt, oo] )
 					if out >= epsilon:
 						eflowso.add( (tt, oo, flow_fmt % out) )
 						ecarriers.add( (oo, commodity_fmt % (oo, pp)) )
@@ -1346,7 +1348,7 @@ strict digraph model {
 
 		for ee, ii, tt, vv, oo in M.EmissionActivity.sparse_keys():
 			if ValidActivity( pp, tt, vv ):
-				amt = EmiO[ee, pp, tt].value
+				amt = value( EmiO[ee, pp, tt] )
 				if amt < epsilon: continue
 
 				eflowso.add( (tt, ee, flow_fmt % amt) )

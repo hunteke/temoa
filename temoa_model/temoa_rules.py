@@ -55,15 +55,16 @@ Temoa optimizes only a single characteristic year within each period.
 
 """
 	P_0 = min( M.time_optimize )
+	GDR = value( M.GlobalDiscountRate )
 
 	loan_costs = sum(
 	    M.V_CapacityInvest[S_t, S_v]
 	  * (
-	      M.CostInvest[S_t, S_v].value
-	    * M.LoanAnnualize[S_t, S_v].value
-	    * sum( (1 + M.GlobalDiscountRate.value) ** -y
+	      value( M.CostInvest[S_t, S_v] )
+	    * value( M.LoanAnnualize[S_t, S_v] )
+	    * sum( (1 + GDR) ** -y
 	        for y in range( S_v - P_0,
-	                        S_v - P_0 + M.ModelLoanLife[S_t, S_v].value )
+	                        S_v - P_0 + value( M.ModelLoanLife[S_t, S_v] ))
 	      )
 	  )
 
@@ -73,10 +74,10 @@ Temoa optimizes only a single characteristic year within each period.
 	fixed_costs = sum(
 	    M.V_CapacityFixed[S_t, S_v]
 	  * (
-	      M.CostFixed[S_p, S_t, S_v].value
-	    * sum( (1 + M.GlobalDiscountRate.value) ** -y
+	      value( M.CostFixed[S_p, S_t, S_v] )
+	    * sum( (1 + GDR) ** -y
 	        for y in range( S_p - P_0,
-	                        S_p - P_0 + M.ModelTechLife[S_p, S_t, S_v].value )
+	                        S_p - P_0 + value( M.ModelTechLife[S_p, S_t, S_v] ))
 	      )
 	    )
 
@@ -86,8 +87,8 @@ Temoa optimizes only a single characteristic year within each period.
 	marg_costs = sum(
 	    M.V_ActivityByPeriodTechAndVintage[S_p, S_t, S_v]
 	  * (
-	      M.CostMarginal[S_p, S_t, S_v].value
-	    * M.PeriodRate[ S_p ].value
+	      value( M.CostMarginal[S_p, S_t, S_v] )
+	    * value( M.PeriodRate[ S_p ] )
 	  )
 
 	  for S_p, S_t, S_v in M.CostMarginal.sparse_iterkeys()
@@ -102,15 +103,15 @@ Objective_rule = TotalCost_rule
 
 
 def ParamModelLoanLife_rule ( M, t, v ):
-	loan_length = M.LifetimeLoan[t, v].value
+	loan_length = value( M.LifetimeLoan[t, v] )
 	mll = min( loan_length, max(M.time_future) - v )
 
 	return mll
 
 
 def ParamModelTechLife_rule ( M, p, t, v ):
-	life_length = M.LifetimeTech[t, v].value
-	tpl = min( v + life_length - p, M.PeriodLength[ p ].value )
+	life_length = value( M.LifetimeTech[t, v] )
+	tpl = min( v + life_length - p, value(M.PeriodLength[ p ]) )
 
 	return tpl
 
@@ -157,20 +158,20 @@ the final period that the technology is still able to create useful output.
 This function must be called only with ('period', 'tech', 'vintage')
 combinations of processes that will end in 'period'.
 """
-	eol_year = v + M.LifetimeTech[t, v].value
+	eol_year = v + value( M.LifetimeTech[t, v] )
 
 	  # number of years into final period loan is complete
 	frac  = eol_year - p
-	frac /= float( M.PeriodLength[ p ].value )
+	frac /= float(value( M.PeriodLength[ p ] ))
 	return frac
 
 
 def ParamLoanAnnualize_rule ( M, t, v ):
 	process = (t, v)
 	annualized_rate = (
-	    M.DiscountRate[ process ].value
-	  / (1 - (1 + M.DiscountRate[ process ].value)
-	         **(- M.LifetimeLoan[ process ].value)
+	    value( M.DiscountRate[ process ] )
+	  / (1 - (1 + value( M.DiscountRate[ process ] ))
+	         **(- value( M.LifetimeLoan[ process ] ))
 	    )
 	)
 
@@ -236,9 +237,9 @@ slices must be equivalent."
 	#   computationally, however, multiplication is cheaper than division, so:
 	#       (ActA * SegB) == (ActB * SegA)
 	expr = (
-	    M.V_Activity[p, s, d, t, v]   * M.SegFrac[s, d_0].value
+	    M.V_Activity[p, s, d, t, v]   * M.SegFrac[s, d_0]
 	 ==
-	    M.V_Activity[p, s, d_0, t, v] * M.SegFrac[s, d].value
+	    M.V_Activity[p, s, d_0, t, v] * M.SegFrac[s, d]
 	)
 	return expr
 
@@ -267,7 +268,7 @@ allows the modeler to assign an upper bound per period to each emission.
 
 	actual_emissions = sum(
 	    M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, S_o]
-	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o].value
+	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o]
 
 	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
 	  if tmp_e == e
@@ -289,7 +290,7 @@ allows the modeler to assign an upper bound per period to each emission.
 def MinCapacity_Constraint ( M, p, t ):
 	r""" See MaxCapacity_Constraint """
 
-	min_cap = M.MinCapacity[p, t].value
+	min_cap = value( M.MinCapacity[p, t] )
 	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] >= min_cap)
 	return expr
 
@@ -315,7 +316,7 @@ for these constraints are period and tech_all, not tech and vintage.
 
    \forall \{p, t\} \in \Theta_{\text{MaxCapacity parameter}}
 """
-	max_cap = M.MaxCapacity[p, t].value
+	max_cap = value( M.MaxCapacity[p, t] )
 	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] <= max_cap)
 	return expr
 
@@ -346,7 +347,7 @@ slices.)
    \forall \{p, s, i, t, v, o\} \in \Theta_{\text{storage}}
 """
 	total_out_in = sum(
-	    M.Efficiency[i, t, v, o].value
+	    M.Efficiency[i, t, v, o]
 	  * M.V_FlowIn[p, s, S_d, i, t, v, o]
 	  - M.V_FlowOut[p, s, S_d, i, t, v, o]
 
@@ -419,8 +420,8 @@ Generalized, the constraint in set notation is:
 		return Constraint.Skip
 
 	prev = outputs[ index -1 ]
-	prev_split = M.TechOutputSplit[i, t, prev].value
-	split = M.TechOutputSplit[i, t, o].value
+	prev_split = M.TechOutputSplit[i, t, prev]
+	split = M.TechOutputSplit[i, t, o]
 
 	expr = (
 	    M.V_FlowOut[p, s, d, i, t, v, o]
@@ -499,10 +500,10 @@ period.
 	max_output = (
 	    M.V_Capacity[t, v]
 	  * (
-	      M.CapacityFactor[s, d, t, v].value
-	    * M.CapacityToActivity[ t ].value
-	    * M.TechLifeFrac[p, t, v].value
-	    * M.SegFrac[s, d].value
+	      value( M.CapacityFactor[s, d, t, v] )
+	    * value( M.CapacityToActivity[ t ] )
+	    * value( M.TechLifeFrac[p, t, v] )
+	    * value( M.SegFrac[s, d] )
 	  )
 	)
 
@@ -684,7 +685,7 @@ amount of energy leaving a process cannot exceed the amount coming in."
 	    M.V_FlowOut[p, s, d, i, t, v, o]
 	      <=
 	    M.V_FlowIn[p, s, d, i, t, v, o]
-	  * M.Efficiency[i, t, v, o].value
+	  * value( M.Efficiency[i, t, v, o] )
 	)
 
 	return expr
@@ -729,9 +730,9 @@ superset.
 	)
 
 	expr = (
-	  act_a * M.Demand[p, s, d, dem].value
+	  act_a * M.Demand[p, s, d, dem]
 	     ==
-	  act_b * M.Demand[p, s_0, d_0, dem].value
+	  act_b * M.Demand[p, s_0, d_0, dem]
 	)
 	return expr
 
@@ -945,7 +946,7 @@ the installed capacity is available for use for the period.
 	cap_avail = sum( M.V_Capacity[t, S_v] for S_v in non_dying )
 	cap_avail += sum(
 	    M.V_Capacity[t, S_v]
-	  * M.TechLifeFrac[p, t, S_v].value
+	  * value( M.TechLifeFrac[p, t, S_v] )
 
 	  for S_v in dying_vintages
 	)
@@ -957,7 +958,7 @@ the installed capacity is available for use for the period.
 def InvestmentByTech_Constraint ( M, t ):
 	investment = sum(
 	    M.V_Capacity[t, S_v]
-	  * M.CostInvest[t, S_v].value
+	  * M.CostInvest[t, S_v]
 
 	  for S_t, S_v in M.CostInvest.sparse_iterkeys()
 	  if S_t == t
@@ -974,7 +975,7 @@ def InvestmentByTechAndVintage_Constraint ( M, t, v ):
 	if (t, v) not in M.CostInvest.sparse_keys():
 		return Constraint.Skip
 
-	investment = M.V_Capacity[t, v] * M.CostInvest[t, v].value
+	investment = M.V_Capacity[t, v] * M.CostInvest[t, v]
 	expr = ( M.V_InvestmentByTechAndVintage[t, v] == investment)
 	return expr
 
@@ -982,7 +983,7 @@ def InvestmentByTechAndVintage_Constraint ( M, t, v ):
 def EmissionActivityTotal_Constraint ( M, e ):
 	emission_total = sum(
 	    M.V_FlowOut[S_p, S_s, S_d, S_i, S_t, S_v, S_o]
-	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o].value
+	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o]
 
 	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
 	  if tmp_e == e
@@ -1021,7 +1022,7 @@ def EmissionActivityByPeriod_Constraint ( M, e, p ):
 def EmissionActivityByTech_Constraint ( M, e, t ):
 	emission_total = sum(
 	    M.V_FlowOut[S_p, S_s, S_d, S_i, t, S_v, S_o]
-	  * M.EmissionActivity[e, S_i, t, S_v, S_o].value
+	  * M.EmissionActivity[e, S_i, t, S_v, S_o]
 
 	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
 	  if tmp_e == e and S_t == t
@@ -1041,7 +1042,7 @@ def EmissionActivityByTech_Constraint ( M, e, t ):
 def EmissionActivityByPeriodAndTech_Constraint ( M, e, p, t ):
 	emission_total = sum(
 	    M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, S_o]
-	  * M.EmissionActivity[e, S_i, t, S_v, S_o].value
+	  * M.EmissionActivity[e, S_i, t, S_v, S_o]
 
 	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
 	  if tmp_e == e and S_t == t
@@ -1060,7 +1061,7 @@ def EmissionActivityByPeriodAndTech_Constraint ( M, e, p, t ):
 def EmissionActivityByTechAndVintage_Constraint ( M, e, t, v ):
 	emission_total = sum(
 	    M.V_FlowOut[S_p, S_s, S_d, S_i, t, v, S_o]
-	  * M.EmissionActivity[e, S_i, t, v, S_o].value
+	  * M.EmissionActivity[e, S_i, t, v, S_o]
 
 	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
 	  if tmp_e == e and S_t == t and S_v == v

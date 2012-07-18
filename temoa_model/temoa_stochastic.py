@@ -10,15 +10,16 @@ Stochastic objective function.
 TODO: update with LaTeX version of equation.
 	"""
 	P_0 = min( M.time_optimize )
+	GDR = value( M.GlobalDiscountRate )
 
 	loan_costs = sum(
 	    M.V_CapacityInvest[S_t, S_v]
 	  * (
-	      M.CostInvest[S_t, S_v].value
-	    * M.LoanAnnualize[S_t, S_v].value
-	    * sum( (1 + M.GlobalDiscountRate.value) ** -y
+	      value( M.CostInvest[S_t, S_v] )
+	    * value(M.LoanAnnualize[S_t, S_v])
+	    * sum( (1 + GDR) ** -y
 	        for y in range( S_v - P_0,
-	                        S_v - P_0 + M.ModelLoanLife[S_t, S_v].value )
+	                        S_v - P_0 + value( M.ModelLoanLife[S_t, S_v] ))
 	      )
 	  )
 
@@ -29,10 +30,10 @@ TODO: update with LaTeX version of equation.
 	fixed_costs = sum(
 	    M.V_CapacityFixed[S_t, S_v]
 	  * (
-	      M.CostFixed[p, S_t, S_v].value
-	    * sum( (1 + M.GlobalDiscountRate.value) ** -y
+	      value( M.CostFixed[p, S_t, S_v])
+	    * sum( (1 + GDR) ** -y
 	        for y in range( p - P_0,
-	                        p - P_0 + M.ModelTechLife[p, S_t, S_v].value )
+	                        p - P_0 + (M.ModelTechLife[p, S_t, S_v]) )
 	      )
 	    )
 
@@ -43,8 +44,8 @@ TODO: update with LaTeX version of equation.
 	marg_costs = sum(
 	    M.V_ActivityByPeriodTechAndVintage[p, S_t, S_v]
 	  * (
-	      M.CostMarginal[p, S_t, S_v].value
-	    * M.PeriodRate[ p ].value
+	      value(M.CostMarginal[p, S_t, S_v])
+	    * value(M.PeriodRate[ p ])
 	  )
 
 	  for S_p, S_t, S_v in M.CostMarginal.sparse_iterkeys()
