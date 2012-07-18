@@ -980,6 +980,8 @@ def parse_args ( ):
 	import argparse
 
 	parser = argparse.ArgumentParser()
+	graphviz = parser.add_argument_group('Graphviz Options')
+	solver   = parser.add_argument_group('Solver Options')
 
 	parser.add_argument('dot_dat',
 	  type=str,
@@ -988,7 +990,7 @@ def parse_args ( ):
 	       'e.g. "data.dat"'
 	)
 
-	parser.add_argument( '--graph_format',
+	graphviz.add_argument( '--graph_format',
 	  help='Create a system-wide visual depiction of the model.  The '
 	       'available options are the formats available to Graphviz.  To get '
 	       'a list of available formats, use the "dot" command: dot -Txxx. '
@@ -997,26 +999,43 @@ def parse_args ( ):
 	  dest='graph_format',
 	  default=None)
 
-	parser.add_argument('--show_capacity',
+	graphviz.add_argument('--show_capacity',
 	  help='Choose whether or not the capacity shows up in the subgraphs.  '
 	       '[Default: not shown]',
 	  action='store_true',
 	  dest='show_capacity',
 	  default=False)
 
-	parser.add_argument( '--graph_type',
-	  help='Choose the type of subgraph depiction desired. The available '
-	       'options are "explicit_vintages" and "separate_vintages".  '
-	       '[Default: separate_vintages]',
+	graphviz.add_argument( '--graph_type',
+	  help='Choose the type of subgraph depiction desired.  [Default: '
+	       'separate_vintages]',
 	  action='store',
 	  dest='graph_type',
+	  choices=('explicit_vintages', 'separate_vintages'),
 	  default='separate_vintages')
 
-	parser.add_argument('--use_splines',
+	graphviz.add_argument('--use_splines',
 	  help='Choose whether the subgraph edges needs to be straight or curved.'
 	       '  [Default: use straight lines, not splines]',
 	  action='store_true',
 	  dest='splinevar',
+	  default=False)
+
+	solver.add_argument('--symbolic_solver_labels',
+	  help='When interfacing with the solver, use model-derived symbol names.  '
+	       'For example, "V_Capacity(coal_plant,2000)" instead of "x(47)".  '
+	       'Mainly used for debugging purposes.  [Default: use x(47) style]',
+	  action='store_true',
+	  dest='useSymbolLabels',
+	  default=False)
+
+	solver.add_argument('--generate_solver_lp_file',
+	  help='Request that solver create an LP representation of the optimization '
+	       'problem.  Mainly used for model debugging purposes.  The file name '
+	       'will have the same base name as the first dot_dat file specified.  '
+	       '[Default: do not create solver LP file]',
+	  action='store_true',
+	  dest='generateSolverLP',
 	  default=False)
 
 	options = parser.parse_args()
@@ -1050,9 +1069,9 @@ def temoa_solve ( model ):
 
 	opt = SolverFactory('glpk')
 	opt.keepFiles = False
-	   # output GLPK LP understanding of model
-	   #   Potentially want to incorporate this as an actual command line arg.
-	# opt.options.wlp = path.basename( options.dot_dat[0] )[:-4] + '.lp'
+	opt.generateSymbolicLabels = options.useSymbolLabels
+	if options.generateSolverLP:
+		opt.options.wlp = path.basename( options.dot_dat[0] )[:-4] + '.lp'
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
