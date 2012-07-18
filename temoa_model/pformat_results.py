@@ -1,9 +1,8 @@
-import re
 from sys import stderr as SE
 from cStringIO import StringIO
 
 def pformat_results ( pyomo_instance, pyomo_result ):
-	from coopr.pyomo import Objective
+	from coopr.pyomo import Objective, Var, Constraint
 
 	instance = pyomo_instance
 	result = pyomo_result
@@ -43,38 +42,38 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	Vars = soln.Variable
 	Cons = soln.Constraint
 
-	underscore = re.compile('_+')
+	var_sm = dict()   # variable "symbol mapping"
+	con_sm = dict()
+
+	def create_symbol_map ( smap, stype ):
+		for name, group in instance.active_components( stype ).iteritems():
+			for item in group.itervalues():
+				if item.index.__class__ is tuple:
+					parts = [name, '[', ','.join(str(i) for i in item.index), ']']
+					smap[ item.name ] = (name, ''.join(parts) )
+				else:
+					smap[ item.name ] = (name, item.name )
+
+	create_symbol_map( var_sm, Var )
+	create_symbol_map( con_sm, Constraint )
 
 	var_info = sorted(
-	  (ii.split('(')[0],
-	   ''.join((ii.split('(')[0], '(', underscore.sub(',', ii.split('(')[1] ) ))
-	     .replace('(,', '(')
-	     .replace(',)', ')'),
-	   Vars[ ii ]['Value']
-	  )
+	  ( var_sm[ var_name ], Vars[ var_name ]['Value'] )
 
-	  for ii in Vars
-	  if abs(Vars[ ii ]['Value']) > 1e-15
+	  for var_name in Vars
+	  if abs(Vars[ var_name ]['Value']) > 1e-15
 	)
 
 	con_info = sorted(
-	  (ii.split('[')[0][4:],
-	   ii[4:-1]     # [4:-1] removes the c_[uel]_ part of name
-	     .replace('_,', ',')
-	     .replace(',_', ',')
-	     .replace('(_', '(')
-	     .replace('_)', ')'),
-	   Cons[ ii ]['Value']
-	  )
+	  ( con_sm[ con_name ], Cons[ con_name ]['Value'] )
 
-	  for ii in Cons
-	  if 'c_' == ii[:2]            # all Coopr constraint keys begin with c_
-	  if abs(Cons[ ii ].value) > 1e-15    # i.e. "if it's non-zero"
+	  for con_name in Cons
+	  if abs(Cons[ con_name ].value) > 1e-15    # i.e. "if it's non-zero"
 	)
 
 	# remove the no-longer-necessary sorting key.
-	con_info = [ (con, val) for sortkey, con, val in con_info ]
-	var_info = [ (var, val) for sortkey, var, val in var_info ]
+	con_info = [ (con, val) for (sortkey, con), val in con_info ]
+	var_info = [ (var, val) for (sortkey, var), val in var_info ]
 
 	def get_int_padding ( obj ):
 		val = obj[ 1 ]         # obj is 2-tuple, defined within var_info

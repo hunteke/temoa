@@ -1080,6 +1080,7 @@ def temoa_solve ( model ):
 
 	SE.write( '[        ] Formatting results.' ); SE.flush()
 	# ... print the easier-to-read/parse format
+	result = instance.update_results( result )
 	formatted_results = pformat_results( instance, result )
 	SE.write( '\r[%8.2f\n' % duration() )
 	SO.write( formatted_results )
