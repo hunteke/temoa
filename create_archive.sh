@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# This script creates the 'temoa.py' zip archive/executable.  I do not know if
+# it is portable, but I know that it correctly creates the executable with the
+# Ubuntu Linux distribution's version of Zip, Info-ZIP.
+
+# To create the archive, execute with no arguments (in this directory), or
+# with '--save'.  The save argument merely saves the temporary zip file from
+# which 'temoa.py' is created.
+
 CLEANUP=true
 
 PKG_NAME=temoa.py
