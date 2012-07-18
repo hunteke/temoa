@@ -979,6 +979,17 @@ This is the implementation of imat in the rest of the documentation.
 def parse_args ( ):
 	import argparse
 
+	from coopr.opt import SolverFactory as SF
+	from pyutilib.component.core import PluginGlobals
+
+	logger = PluginGlobals.env().log
+	logger.disabled = True  # no need for warnings: it's what we're testing!
+	available_solvers = sorted( solver   # name of solver; a string
+	  for solver in filter( lambda x: '_' != x[0], SF.services() )
+	  if SF( solver ).available( False )
+	)
+	logger.disabled = False
+
 	parser = argparse.ArgumentParser()
 	graphviz = parser.add_argument_group('Graphviz Options')
 	solver   = parser.add_argument_group('Solver Options')
@@ -1021,6 +1032,15 @@ def parse_args ( ):
 	  dest='splinevar',
 	  default=False)
 
+	solver.add_argument('--solver',
+	  help="Which backend solver to use.  See 'pyomo --help-solvers' for a list "
+	       'of solvers with which Coopr can interface.  The list shown here is '
+	       'what Coopr can currently find on this system.  [Default: glpk]',
+	  action='store',
+	  choices=available_solvers,
+	  dest='solver',
+	  default='glpk')
+
 	solver.add_argument('--symbolic_solver_labels',
 	  help='When interfacing with the solver, use model-derived symbol names.  '
 	       'For example, "V_Capacity(coal_plant,2000)" instead of "x(47)".  '
@@ -1036,6 +1056,16 @@ def parse_args ( ):
 	       '[Default: do not create solver LP file]',
 	  action='store_true',
 	  dest='generateSolverLP',
+	  default=False)
+
+	solver.add_argument('--keep_coopr_lp_file',
+	  help='Save the LP file as written by Pyomo.  This is distinct from the '
+	       "solver's generated LP file, but /should/ represent the same model.  "
+	       'Mainly used for debugging purposes.  The file name will have the '
+	       'same base name as the first dot_dat file specified.  '
+	       '[Default: remove Pyomo LP]',
+	  action='store_true',
+	  dest='keepPyomoLP',
 	  default=False)
 
 	options = parser.parse_args()
@@ -1067,11 +1097,12 @@ def temoa_solve ( model ):
 	options = parse_args()
 	dot_dats = options.dot_dat
 
-	opt = SolverFactory('glpk')
-	opt.keepFiles = False
+	opt = SolverFactory( options.solver )
+	opt.keepFiles = options.keepPyomoLP
 	opt.generateSymbolicLabels = options.useSymbolLabels
 	if options.generateSolverLP:
 		opt.options.wlp = path.basename( options.dot_dat[0] )[:-4] + '.lp'
+		SE.write('\nSolver will write file: {}\n\n'.format( opt.options.wlp ))
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
