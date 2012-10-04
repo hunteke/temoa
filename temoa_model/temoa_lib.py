@@ -990,6 +990,15 @@ def parse_args ( ):
 	)
 	logger.disabled = False
 
+	if 'cplex' in available_solvers:
+		default_solver = 'cplex'
+	elif 'gurobi' in available_solvers:
+		default_solver = 'gurobi'
+	elif 'cbc' in available_solvers:
+		default_solver = 'cbc'
+	else:
+		default_solver = 'glpk'
+
 	parser = argparse.ArgumentParser()
 	graphviz = parser.add_argument_group('Graphviz Options')
 	solver   = parser.add_argument_group('Solver Options')
@@ -1035,11 +1044,12 @@ def parse_args ( ):
 	solver.add_argument('--solver',
 	  help="Which backend solver to use.  See 'pyomo --help-solvers' for a list "
 	       'of solvers with which Coopr can interface.  The list shown here is '
-	       'what Coopr can currently find on this system.  [Default: glpk]',
+	       'what Coopr can currently find on this system.  [Default: {}]'
+	       .format(default_solver),
 	  action='store',
 	  choices=available_solvers,
 	  dest='solver',
-	  default='glpk')
+	  default=default_solver)
 
 	solver.add_argument('--symbolic_solver_labels',
 	  help='When interfacing with the solver, use model-derived symbol names.  '
@@ -1130,8 +1140,8 @@ def temoa_solve ( model ):
 
 	SE.write( '[        ] Formatting results.' ); SE.flush()
 	# ... print the easier-to-read/parse format
-	result = instance.update_results( result )
-	formatted_results = pformat_results( instance, result )
+	updated_results = instance.update_results( result )
+	formatted_results = pformat_results( instance, updated_results )
 	SE.write( '\r[%8.2f\n' % duration() )
 	SO.write( formatted_results )
 
