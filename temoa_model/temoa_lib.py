@@ -990,14 +990,22 @@ def parse_args ( ):
 	)
 	logger.disabled = False
 
-	if 'cplex' in available_solvers:
-		default_solver = 'cplex'
-	elif 'gurobi' in available_solvers:
-		default_solver = 'gurobi'
-	elif 'cbc' in available_solvers:
-		default_solver = 'cbc'
+	if available_solvers:
+		if 'cplex' in available_solvers:
+			default_solver = 'cplex'
+		elif 'gurobi' in available_solvers:
+			default_solver = 'gurobi'
+		elif 'cbc' in available_solvers:
+			default_solver = 'cbc'
+		elif 'glpk' in available_solvers:
+			default_solver = 'glpk'
+		else:
+			default_solver = available_solvers[0]
 	else:
-		default_solver = 'glpk'
+		default_solver = 'NONE'
+		SE.write('\nNOTICE: Coopr did not find any suitable solvers.  Temoa will '
+		   'not be able to solve any models.  If you need help, ask on the '
+		   'Temoa Project forum: http://temoaproject.org/\n\n' )
 
 	parser = argparse.ArgumentParser()
 	graphviz = parser.add_argument_group('Graphviz Options')
@@ -1108,11 +1116,16 @@ def temoa_solve ( model ):
 	dot_dats = options.dot_dat
 
 	opt = SolverFactory( options.solver )
-	opt.keepFiles = options.keepPyomoLP
-	opt.generateSymbolicLabels = options.useSymbolLabels
-	if options.generateSolverLP:
-		opt.options.wlp = path.basename( options.dot_dat[0] )[:-4] + '.lp'
-		SE.write('\nSolver will write file: {}\n\n'.format( opt.options.wlp ))
+	if opt:
+		opt.keepFiles = options.keepPyomoLP
+		opt.generateSymbolicLabels = options.useSymbolLabels
+		if options.generateSolverLP:
+			opt.options.wlp = path.basename( options.dot_dat[0] )[:-4] + '.lp'
+			SE.write('\nSolver will write file: {}\n\n'.format( opt.options.wlp ))
+
+	elif options.solver != 'NONE':
+		SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
+			.format( options.solver ))
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
@@ -1135,8 +1148,12 @@ def temoa_solve ( model ):
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	SE.write( '[        ] Solving.'); SE.flush()
-	result = opt.solve( instance )
-	SE.write( '\r[%8.2f\n' % duration() )
+	if opt:
+		result = opt.solve( instance )
+		SE.write( '\r[%8.2f\n' % duration() )
+	else:
+		SE.write( '\r---------- Not solving: no available solver\n' )
+		raise SystemExit
 
 	SE.write( '[        ] Formatting results.' ); SE.flush()
 	# ... print the easier-to-read/parse format
