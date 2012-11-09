@@ -134,7 +134,7 @@ def validate_SegFrac ( M ):
 		format = "%%-%ds = %%s" % key_padding
 			# Works out to something like "%-25s = %s"
 
-		items = sorted( M.SegFrac.data().items() )
+		items = sorted( M.SegFrac.items() )
 		items = '\n   '.join( format % (str(k), v) for k, v in items )
 
 		msg = ('The values of the SegFrac parameter do not sum to 1.  Each item '
