@@ -46,7 +46,7 @@ explicitly use the Coopr path:
 %s
 """ % msg
 
-	raise ImportError, msg
+	raise ImportError( msg )
 
 
 ###############################################################################
@@ -59,8 +59,8 @@ def CommodityBalanceConstraintErrorCheck (
 	if int is type(l_vflow_out):
 		flow_in_expr = StringIO()
 		l_vflow_in.pprint( ostream=flow_in_expr )
-		msg = ("Unable to meet an interprocess '%s' transfer in (%s, %s, %s).\n"
-		  'No flow out.  Constraint flow in:\n   %s\n'
+		msg = ("Unable to meet an interprocess '{}' transfer in ({}, {}, {}).\n"
+		  'No flow out.  Constraint flow in:\n   {}\n'
 		  'Possible reasons:\n'
 		  " - Is there a missing period in set 'time_horizon'?\n"
 		  " - Is there a missing tech in set 'tech_resource'?\n"
@@ -68,20 +68,21 @@ def CommodityBalanceConstraintErrorCheck (
 		  " - Is there a missing commodity in set 'commodity_physical'?\n"
 		  ' - Are there missing entries in the Efficiency parameter?\n'
 		  ' - Does a tech need a longer LifetimeTech parameter setting?')
-		raise ValueError, msg % (A_carrier, A_season, A_time_of_day, A_period,
-		                         flow_in_expr.getvalue() )
+		raise ValueError( msg.format(
+		  A_carrier, A_season, A_time_of_day, A_period, flow_in_expr.getvalue()
+		))
 
 
 def DemandConstraintErrorCheck (
   l_supply, A_comm, A_period, A_season, A_time_of_day
 ):
 	if int is type( l_supply ):
-		msg = ("Error: Demand '%s' for (%s, %s, %s) unable to be met by any "
+		msg = ("Error: Demand '{}' for ({}, {}, {}) unable to be met by any "
 		  'technology.\n\tPossible reasons:\n'
 		  ' - Is the Efficiency parameter missing an entry for this demand?\n'
 		  ' - Does a tech that satisfies this demand need a longer LifetimeTech?'
 		  '\n')
-		raise ValueError, msg % (A_comm, A_period, A_season, A_time_of_day)
+		raise ValueError( msg.format(A_comm, A_period, A_season, A_time_of_day) )
 
 # End Temoa rule "partials"
 ###############################################################################
@@ -95,13 +96,13 @@ def validate_time ( M ):
 	if not len( M.time_horizon ):
 		msg = ('Set "time_horizon" is empty!  Please specify at least one '
 		  'period in set time_horizon.')
-		raise ValueError, msg
+		raise ValueError( msg )
 
 	if not len( M.time_future ):
 		msg = ('Set "time_future" is empty!  Please specify at least one year '
 		  'in set time_future, so that the model may ascertain a final period '
 		  'period length for optimization and economic accounting.')
-		raise ValueError, msg
+		raise ValueError( msg )
 
 	""" Ensure that the time_exist < time_horizon < time_future """
 	exist    = len( M.time_exist ) and max( M.time_exist ) or -maxint
@@ -111,12 +112,12 @@ def validate_time ( M ):
 
 	if not ( exist < horizonl ):
 		msg = ('All items in time_horizon must be larger than in time_exist.\n'
-		  'time_exist max:   %s\ntime_horizon min: %s')
-		raise ValueError, msg % (exist, horizonl)
+		  'time_exist max:   {}\ntime_horizon min: {}')
+		raise ValueError( msg.format(exist, horizonl) )
 	elif not ( horizonh < future ):
 		msg = ('All items in time_future must be larger that in time_horizon.\n'
-		  'time_horizon max:   %s\ntime_future min:    %s')
-		raise ValueError, msg % (horizonh, future)
+		  'time_horizon max:   {}\ntime_future min:    {}')
+		raise ValueError( msg.format(horizonh, future) )
 
 	return tuple()
 
@@ -142,9 +143,9 @@ def validate_SegFrac ( M ):
 
 		msg = ('The values of the SegFrac parameter do not sum to 1.  Each item '
 		  'in SegFrac represents a fraction of a year, so they must total to '
-		  '1.  Current values:\n   %s\n\tsum = %s')
+		  '1.  Current values:\n   {}\n\tsum = {}')
 
-		raise ValueError, msg % (items, total)
+		raise ValueError( msg.format(items, total ))
 
 	return tuple()
 
@@ -153,7 +154,7 @@ def validate_TechOutputSplit ( M ):
 	msg = ('A set of output fractional values specified in TechOutputSplit do '
 	  'not sum to 1.  Each item specified in TechOutputSplit represents a '
 	  'fraction of the input carrier converted to the output carrier, so '
-	  'they must total to 1.  Current values:\n   %s\n\tsum = %s')
+	  'they must total to 1.  Current values:\n   {}\n\tsum = {}')
 
 	split_indices = M.TechOutputSplit.sparse_keys()
 
@@ -173,7 +174,7 @@ def validate_TechOutputSplit ( M ):
 
 		if abs(total -1) > 1e-10:
 			items = '\n   '.join(
-			  "%s: %s" % (
+			  "{}: {}".format(
 			    str((i, t, o)),
 			    value(M.TechOutputSplit[l_inp, l_tech, l_out])
 			  )
@@ -182,7 +183,7 @@ def validate_TechOutputSplit ( M ):
 			  if (l_inp, l_tech, l_out) in split_indices
 			)
 
-			raise ValueError, msg % (items, l_total)
+			raise ValueError( msg.format(items, l_total) )
 
 	return set()
 
@@ -1103,7 +1104,7 @@ def temoa_solve ( model ):
 		  "installed Coopr with Python 2.6 or less, you'll need to reinstall "
 		  'Coopr, taking care to install with a Python 2.7 (or greater) '
 		  'executable.')
-		raise SystemExit, msg
+		raise SystemExit( msg )
 
 	from time import clock
 
@@ -1136,8 +1137,8 @@ def temoa_solve ( model ):
 	mdata = ModelData()
 	for f in dot_dats:
 		if f[-4:] != '.dat':
-			SE.write( "Expecting a dot dat (data.dat) file, found %s\n" % f )
-			raise SystemExit
+			msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
+			raise SystemExit( msg.format( f ))
 		mdata.add( f )
 	mdata.read( model )
 	SE.write( '\r[%8.2f\n' % duration() )

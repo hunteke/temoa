@@ -1,6 +1,6 @@
 #!/usr/bin/env coopr_python
 
-__all__ = [ 'temoa_create_model', ]
+__all__ = ( 'temoa_create_model', )
 
 from temoa_rules import *
 
