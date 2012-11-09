@@ -652,7 +652,7 @@ of energy generated must at least meet the amount of needed input energy."
 	  for S_i in ProcessInputsByOutput( p, S_t, S_v, c )
 	)
 
-	CommodityBalanceConstraintErrorCheck( vflow_out, vflow_in, c, s, d, p )
+	CommodityBalanceConstraintErrorCheck( vflow_out, vflow_in, p, s, d, c )
 
 	expr = (vflow_out >= vflow_in)
 	return expr
@@ -776,7 +776,7 @@ counted.
 	  for S_i in ProcessInputsByOutput( p, S_t, S_v, dem )
 	)
 
-	DemandConstraintErrorCheck ( supply, dem, p, s, d )
+	DemandConstraintErrorCheck( supply, p, s, d, dem )
 
 	expr = (supply >= M.Demand[p, s, d, dem])
 	return expr
