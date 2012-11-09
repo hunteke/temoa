@@ -985,7 +985,7 @@ def parse_args ( ):
 
 	logger = PluginGlobals.env().log
 	logger.disabled = True  # no need for warnings: it's what we're testing!
-	available_solvers = sorted( solver   # name of solver; a string
+	available_solvers = set( solver   # name of solver; a string
 	  for solver in filter( lambda x: '_' != x[0], SF.services() )
 	  if SF( solver ).available( False )
 	)
@@ -1056,7 +1056,7 @@ def parse_args ( ):
 	       'what Coopr can currently find on this system.  [Default: {}]'
 	       .format(default_solver),
 	  action='store',
-	  choices=available_solvers,
+	  choices=sorted(available_solvers),
 	  dest='solver',
 	  default=default_solver)
 
