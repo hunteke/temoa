@@ -718,6 +718,7 @@ superset.
    \forall \{p, s, d, t, v, dem, s_0, s_0\} \in \Theta_{\text{demand activity}}
 """
 
+	DSD = M.DemandSpecificDistribution   # lazy programmer
 	act_a = sum(
 	  M.V_FlowOut[p, s_0, d_0, S_i, t, v, dem]
 
@@ -730,9 +731,9 @@ superset.
 	)
 
 	expr = (
-	  act_a * M.Demand[p, s, d, dem]
+	  act_a * M.Demand[p, dem] * DSD[s, d, dem]
 	     ==
-	  act_b * M.Demand[p, s_0, d_0, dem]
+	  act_b * M.Demand[p, dem] * DSD[s_0, d_0, dem]
 	)
 	return expr
 
@@ -763,11 +764,6 @@ counted.
    \\
    \forall \{p, s, d, dem\} \in \Theta_{\text{demand parameter}}
 """
-	if not (M.Demand[p, s, d, dem] > 0):
-		# User must have supplied a 0 demand: no need to create a useless
-		# constraint like X >= 0
-		return Constraint.Skip
-
 	supply = sum(
 	  M.V_FlowOut[p, s, d, S_i, S_t, S_v, dem]
 
@@ -778,7 +774,7 @@ counted.
 
 	DemandConstraintErrorCheck( supply, p, s, d, dem )
 
-	expr = (supply >= M.Demand[p, s, d, dem])
+	expr = (supply >= M.Demand[p, dem] * M.DemandSpecificDistribution[s, d, dem])
 	return expr
 
 

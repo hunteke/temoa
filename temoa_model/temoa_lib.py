@@ -1,4 +1,6 @@
 from cStringIO import StringIO
+from itertools import product as cross_product
+from operator import itemgetter as iget
 from os import path
 from sys import argv, stderr as SE, stdout as SO
 
@@ -52,6 +54,9 @@ explicitly use the Coopr path:
 class TemoaError ( Exception ): pass
 class TemoaValidationError ( TemoaError ): pass
 class TemoaFlowError ( TemoaError ): pass
+
+def get_str_padding ( obj ):
+	return len(str( obj ))
 
 ###############################################################################
 # Temoa rule "partial" functions (excised from indidivual constraints for
@@ -131,8 +136,6 @@ def validate_SegFrac ( M ):
 		# errors inherent in float manipulations and representations, so instead
 		# compare against an epsilon value of "close enough".
 
-		def get_str_padding ( obj ):
-			return len(str( obj ))
 		key_padding = max(map( get_str_padding, M.SegFrac.sparse_iterkeys() ))
 
 		format = "%%-%ds = %%s" % key_padding
@@ -146,6 +149,125 @@ def validate_SegFrac ( M ):
 		  '1.  Current values:\n   {}\n\tsum = {}')
 
 		raise TemoaValidationError( msg.format(items, total ))
+
+	return tuple()
+
+
+def CreateDemands ( M ):
+	# Steps to create the demand distributions
+	# 1. Use Demand keys to ensure that all demands in commodity_demand are used
+	#
+	# 2. Find any slices not set in DemandDefaultDistribution, and set them
+	#    based on the associated SegFrac slice.
+	#
+	# 3. Validate that the DemandDefaultDistribution sums to 1.
+	#
+	# 4. Find any per-demand DemandSpecificDistribution values not set, and set
+	#    set them from DemandDefaultDistribution.  Note that this only sets a
+	#    distribution for an end-use demand if the user has *not* specified _any_
+	#    anything for that end-use demand.  Thus, it is up to the user to fully
+	#    specify the distribution, or not.  No in-between.
+	#
+	# 5. Validate that the per-demand distributions sum to 1.
+
+	# Step 0: some setup for a couple of reusable items
+
+	# iget(2): 2 = magic number to specify the third column.  Currently the
+	# demand in the tuple (s, d, dem)
+	DSD_dem_getter = iget(2)
+
+	# Step 1
+	used_dems = set(dem for p, dem in M.Demand.sparse_iterkeys())
+	unused_dems = sorted(M.commodity_demand.difference( used_dems ))
+	if unused_dems:
+		for dem in unused_dems:
+			msg = ("Warning: Demand '{}' is unused\n")
+			SE.write( msg.format( dem ) )
+
+	# Step 2
+	DDD = M.DemandDefaultDistribution   # Shorter, for us lazy programmer types
+	unset_defaults = set(M.SegFrac.sparse_iterkeys())
+	unset_defaults.difference_update(
+	   DDD.sparse_iterkeys() )
+	if unset_defaults:
+		# Some hackery because Pyomo thinks that this Param is constructed.
+		# However, in our view, it is not yet, because we're specifically
+		# targeting values that have not yet been constructed, that we know are
+		# valid, and that we will need.
+		DDD._constructed = False
+		for tslice in unset_defaults:
+			DDD[ tslice ] = M.SegFrac[ tslice ]
+		DDD._constructed = True
+
+	# Step 3
+	total = sum( i for i in DDD.itervalues() )
+	if abs(float(total) - 1.0) > 1e-15:
+		# We can't explicitly test for "!= 1.0" because of incremental roundoff
+		# errors inherent in float manipulations and representations, so instead
+		# compare against an epsilon value of "close enough".
+
+		key_padding = max(map( get_str_padding, DDD.sparse_iterkeys() ))
+
+		format = "%%-%ds = %%s" % key_padding
+			# Works out to something like "%-25s = %s"
+
+		items = sorted( DDD.items() )
+		items = '\n   '.join( format % (str(k), v) for k, v in items )
+
+		msg = ('The values of the DemandDefaultDistribution parameter do not '
+		  'sum to 1.  The DemandDefaultDistribution specifies how end-use '
+		  'demands are distributed among the time slices (i.e., time_season, '
+		  'time_of_day), so together, the data must total to 1.  Current '
+		  'values:\n   {}\n\tsum = {}')
+
+		raise TemoaValidationError( msg.format(items, total) )
+
+	# Step 4
+	DSD = M.DemandSpecificDistribution
+
+	demands_specified = set(map( DSD_dem_getter,
+	   (i for i in DSD.sparse_iterkeys()) ))
+	unset_demand_distributions = used_dems.difference( demands_specified )
+	unset_distributions = set(
+	   cross_product(M.time_season, M.time_of_day, unset_demand_distributions))
+
+	if unset_distributions:
+		# Some hackery because Pyomo thinks that this Param is constructed.
+		# However, in our view, it is not yet, because we're specifically
+		# targeting values that have not yet been constructed, that we know are
+		# valid, and that we will need.
+		DSD._constructed = False
+		for s, d, dem in unset_distributions:
+			DSD[s, d, dem] = DDD[s, d]
+		DSD._constructed = True
+
+	# Step 5
+	for dem in used_dems:
+		keys = (k for k in DSD.sparse_iterkeys() if DSD_dem_getter(k) == dem )
+		total = sum( DSD[ i ] for i in keys )
+
+		if abs(float(total) - 1.0) > 1e-15:
+			# We can't explicitly test for "!= 1.0" because of incremental roundoff
+			# errors inherent in float manipulations and representations, so
+			# instead compare against an epsilon value of "close enough".
+
+			keys = [k for k in DSD.sparse_iterkeys() if DSD_dem_getter(k) == dem ]
+			key_padding = max(map( get_str_padding, keys ))
+
+			format = "%%-%ds = %%s" % key_padding
+				# Works out to something like "%-25s = %s"
+
+			items = sorted( (k, DSD[k]) for k in keys )
+			items = '\n   '.join( format % (str(k), v) for k, v in items )
+
+			msg = ('The values of the DemandSpecificDistribution parameter do not '
+			  'sum to 1.  The DemandSpecificDistribution specifies how end-use '
+			  'demands (e.g., {}) are distributed per time-slice (i.e., '
+			  'time_season, time_of_day).  Within each end-use Demand, then, the '
+			  'distribution must total to 1.  Demand-specific distribution in '
+			  'error: {}\n\n   {}\n\tsum = {}')
+
+			raise TemoaValidationError( msg.format(dem, dem, items, total) )
 
 	return tuple()
 
@@ -703,7 +825,7 @@ def DemandActivityConstraintIndices ( M ):
 	indices = set()
 
 	dem_slices = dict()
-	for p, s, d, dem in M.Demand.sparse_iterkeys():
+	for p, s, d, dem in M.DemandConstraint_psdc:
 		if (p, dem) not in dem_slices:
 			dem_slices[p, dem] = set()
 		dem_slices[p, dem].add( (s, d) )
@@ -725,6 +847,27 @@ def DemandActivityConstraintIndices ( M ):
 
 	return indices
 
+
+def DemandConstraintIndices ( M ):
+
+	used_dems = set(dem for p, dem in M.Demand.sparse_iterkeys())
+	DSD_keys = M.DemandSpecificDistribution.sparse_keys()
+	dem_slices = { dem : set(
+	    (s, d)
+	    for s in M.time_season
+	    for d in M.time_of_day
+	    if (s, d, dem) in DSD_keys )
+	  for dem in used_dems
+	}
+
+	indices = set(
+	  (p, s, d, dem)
+
+	  for p, dem in M.Demand.sparse_iterkeys()
+	  for s, d in dem_slices[ dem ]
+	)
+
+	return indices
 
 def BaseloadDiurnalConstraintIndices ( M ):
 	indices = set(

@@ -27,6 +27,8 @@ set  tech_production  :=
  t_coal
  t_natgas
  t_oil_refinery
+ e_heater
+ g_heater
  t_dslcar
  t_gascar
  t_elccar
@@ -54,18 +56,11 @@ set  commodity_emissions  :=
 
 set  commodity_demand  :=
  transport_distance
+ heating
 	;
 
 
 param  GlobalDiscountRate  :=  0.03 ;
-
-
-param  SegFrac  :=
- summer  day    0.4
- summer  night  0.1
- winter  day    0.3
- winter  night  0.2
-	;
 
 
 param  CapacityToActivity  :=
@@ -107,26 +102,36 @@ param  ResourceBound  :=
  2025          coal         1000000
 	;
 
+
+param  SegFrac  :=
+ summer  day    0.4
+ summer  night  0.1
+ winter  day    0.3
+ winter  night  0.2
+	;
+
+
+param DemandDefaultDistribution  :=
+ summer  day   0.3
+ summer  night 0.2
+	;
+
+
+param  DemandSpecificDistribution  :=
+ summer  night  transport_distance   .3
+ winter  day    transport_distance   .3
+ winter  night  transport_distance   .4
+	;
+
 param  Demand  :=
- 2010  summer  day    transport_distance   40
- 2015  summer  day    transport_distance   51.05
- 2020  summer  day    transport_distance   65.16
- 2025  summer  day    transport_distance   83.16
-
- 2010  summer  night  transport_distance   20
- 2015  summer  night  transport_distance   25.53
- 2020  summer  night  transport_distance   32.58
- 2025  summer  night  transport_distance   41.58
-
- 2010  winter  day    transport_distance   30
- 2015  winter  day    transport_distance   38.29
- 2020  winter  day    transport_distance   48.87
- 2025  winter  day    transport_distance   62.37
-
- 2010  winter  night  transport_distance   30
- 2015  winter  night  transport_distance   38.29
- 2020  winter  night  transport_distance   48.87
- 2025  winter  night  transport_distance   62.37
+ 2010  transport_distance   120
+ 2015  transport_distance   153.16
+ 2020  transport_distance   195.47
+ 2025  transport_distance   249.48
+ 2010  heating              10
+ 2015  heating              20
+ 2020  heating              40
+ 2025  heating              80
 	;
 
 
@@ -237,6 +242,28 @@ param  CostFixed  :=
  2025         t_natgas          2020        5.1
  2025         t_natgas          2025        4.9
 
+ 2010         g_heater          2010        6
+ 2015         g_heater          2010        6
+ 2020         g_heater          2010        6
+ 2025         g_heater          2010        6
+ 2015         g_heater          2015        5.5
+ 2020         g_heater          2015        5.5
+ 2025         g_heater          2015        5.5
+ 2020         g_heater          2020        5.1
+ 2025         g_heater          2020        5.1
+ 2025         g_heater          2025        4.9
+
+ 2010         e_heater          2010        6
+ 2015         e_heater          2010        6
+ 2020         e_heater          2010        6
+ 2025         e_heater          2010        6
+ 2015         e_heater          2015        5.5
+ 2020         e_heater          2015        5.5
+ 2025         e_heater          2015        5.5
+ 2020         e_heater          2020        5.1
+ 2025         e_heater          2020        5.1
+ 2025         e_heater          2025        4.9
+
  2010         t_oil_refinery    2010        6
  2015         t_oil_refinery    2010        6
  2020         t_oil_refinery    2010        6
@@ -318,6 +345,16 @@ param  Efficiency  :=
  natural_gas      t_natgas          2015       electricity            0.52
  natural_gas      t_natgas          2020       electricity            0.53
  natural_gas      t_natgas          2025       electricity            0.55
+
+ natural_gas      g_heater          2010       heating                0.50
+ natural_gas      g_heater          2015       heating                0.52
+ natural_gas      g_heater          2020       heating                0.53
+ natural_gas      g_heater          2025       heating                0.55
+
+ electricity      e_heater          2010       heating                0.50
+ electricity      e_heater          2015       heating                0.52
+ electricity      e_heater          2020       heating                0.53
+ electricity      e_heater          2025       heating                0.55
 
  electricity      t_elccar          2000       transport_distance     0.20
  electricity      t_elccar          2010       transport_distance     0.40

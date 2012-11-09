@@ -140,7 +140,13 @@ CapacityFactor(tech_all, vintage_all)
 	# Constraints.
 	M.IntializeProcessParameters = Set( rule=InitializeProcessParameters )
 
-	M.Demand        = Param( M.time_optimize,  M.time_season,  M.time_of_day,  M.commodity_demand )
+	M.DemandDefaultDistribution  = Param( M.time_season, M.time_of_day )
+	M.DemandSpecificDistribution = Param( M.time_season, M.time_of_day, M.commodity_demand )
+	M.Demand        = Param( M.time_optimize,  M.commodity_demand )
+
+	# always-empty Set; hack to perform Demand initialization and validation
+	M.initialize_Demands = Set( rule=CreateDemands )
+
 	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical )
 
 	M.CostFixed_ptv    = Set( dimen=3, rule=CostFixedIndices )
@@ -216,7 +222,7 @@ CapacityFactor(tech_all, vintage_all)
 	  dimen=6, rule=CapacityByOutputConstraintIndices )
 	M.CommodityBalanceConstraint_psdc = Set(
 	  dimen=4, rule=CommodityBalanceConstraintIndices )
-	M.DemandConstraint_psdc = Set( dimen=4, rule=lambda M: M.Demand.sparse_iterkeys() )
+	M.DemandConstraint_psdc = Set( dimen=4, rule=DemandConstraintIndices )
 	M.DemandActivityConstraint_psdtv_dem_s0d0 = Set( dimen=8, rule=DemandActivityConstraintIndices )
 	M.ExistingCapacityConstraint_tv = Set(
 	  dimen=2, rule=lambda M: M.ExistingCapacity.sparse_iterkeys() )

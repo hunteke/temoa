@@ -93,6 +93,20 @@ param  SegFrac  :=        # PARAMETER NQHR
 	;
 
 
+param  DemandSpecificDistribution  :=
+ inter   day     RH  .12
+ inter   night   RH  .06
+ winter  day     RH  .5467
+ winter  night   RH  .2733
+
+ inter   day     RL  .15
+ inter   night   RL  .05
+ summer  day     RL  .15
+ summer  night   RL  .05
+ winter  day     RL  .50
+ winter  night   RL  .10
+	;
+
 param  CapacityToActivity  :=         # PARAMETER TCH_CAPU
 # tech       # value
  E01          31.54
@@ -133,63 +147,18 @@ param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
 
 
 param  Demand  :=        # TABLE DM_DEM
-# year   # season   # time_of_day   # demand    # value    # Utopia percentages
- 1990     inter      day             RH           3.024     # 12%
- 1990     inter      night           RH           1.512     #  6%
- 1990     winter     day             RH          13.77684   # 54.67%
- 1990     winter     night           RH           6.88716   # 27.33%
+# year,  demand,  value
+ 1990     RH       25.2
+ 2000     RH       37.8
+ 2010     RH       56.7
 
- 2000     inter      day             RH           4.536     # 12%
- 2000     inter      night           RH           2.268     #  6%
- 2000     winter     day             RH          20.66526   # 54.67%
- 2000     winter     night           RH          10.33074   # 27.33%
+ 1990     RL        5.6
+ 2000     RL        8.4
+ 2010     RL       12.6
 
- 2010     inter      day             RH           6.804     # 12%
- 2010     inter      night           RH           3.402     #  6%
- 2010     winter     day             RH          30.99789   # 54.67%
- 2010     winter     night           RH          15.49611   # 27.33%
-
- 1990     inter      day             RL           0.84      # 15%
- 1990     inter      night           RL           0.28      #  5%
- 1990     summer     day             RL           0.84      # 15%
- 1990     summer     night           RL           0.28      #  5%
- 1990     winter     day             RL           2.8       # 50%
- 1990     winter     night           RL           0.56      # 10%
-
- 2000     inter      day             RL           1.26      # 15%
- 2000     inter      night           RL           0.42      #  5%
- 2000     summer     day             RL           1.26      # 15%
- 2000     summer     night           RL           0.42      #  5%
- 2000     winter     day             RL           4.2       # 50%
- 2000     winter     night           RL           0.84      # 10%
-
- 2010     inter      day             RL           1.89      # 15%
- 2010     inter      night           RL           0.63      #  5%
- 2010     summer     day             RL           1.89      # 15%
- 2010     summer     night           RL           0.63      #  5%
- 2010     winter     day             RL           6.3       # 50%
- 2010     winter     night           RL           1.26      # 10%
-
- 1990     inter      day             TX           0.86684   # 16.67%
- 1990     inter      night           TX           0.43316   #  8.33%
- 1990     summer     day             TX           0.86684   # 16.67%
- 1990     summer     night           TX           0.43316   #  8.33%
- 1990     winter     day             TX           1.73316   # 33.33%
- 1990     winter     night           TX           0.86684   # 16.67%
-
- 2000     inter      day             TX           1.30026   # 16.67%
- 2000     inter      night           TX           0.64974   #  8.33%
- 2000     summer     day             TX           1.30026   # 16.67%
- 2000     summer     night           TX           0.64974   #  8.33%
- 2000     winter     day             TX           2.59974   # 33.33%
- 2000     winter     night           TX           1.30026   # 16.67%
-
- 2010     inter      day             TX           1.948723  # 16.67%
- 2010     inter      night           TX           0.973777  #  8.33%
- 2010     summer     day             TX           1.948723  # 16.67%
- 2010     summer     night           TX           0.973777  #  8.33%
- 2010     winter     day             TX           3.896277  # 33.33%
- 2010     winter     night           TX           1.948723  # 16.67%
+ 1990     TX        5.2
+ 2000     TX        7.8
+ 2010     TX       11.69
 	;
 
 
