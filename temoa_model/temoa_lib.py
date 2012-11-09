@@ -49,6 +49,10 @@ explicitly use the Coopr path:
 	raise ImportError( msg )
 
 
+class TemoaError ( Exception ): pass
+class TemoaValidationError ( TemoaError ): pass
+class TemoaFlowError ( TemoaError ): pass
+
 ###############################################################################
 # Temoa rule "partial" functions (excised from indidivual constraints for
 #   readability)
@@ -66,7 +70,7 @@ def CommodityBalanceConstraintErrorCheck ( vflow_out, vflow_in, p, s, d, c ):
 		  " - Is there a missing commodity in set 'commodity_physical'?\n"
 		  ' - Are there missing entries in the Efficiency parameter?\n'
 		  ' - Does a tech need a longer LifetimeTech parameter setting?')
-		raise ValueError( msg.format(
+		raise TemoaFlowError( msg.format(
 		  c, s, d, p, flow_in_expr.getvalue()
 		))
 
@@ -78,7 +82,7 @@ def DemandConstraintErrorCheck ( supply, p, s, d, dem ):
 		  ' - Is the Efficiency parameter missing an entry for this demand?\n'
 		  ' - Does a tech that satisfies this demand need a longer LifetimeTech?'
 		  '\n')
-		raise ValueError( msg.format(dem, p, s, d) )
+		raise TemoaFlowError( msg.format(dem, p, s, d) )
 
 # End Temoa rule "partials"
 ###############################################################################
@@ -92,13 +96,13 @@ def validate_time ( M ):
 	if not len( M.time_horizon ):
 		msg = ('Set "time_horizon" is empty!  Please specify at least one '
 		  'period in set time_horizon.')
-		raise ValueError( msg )
+		raise TemoaValidationError( msg )
 
 	if not len( M.time_future ):
 		msg = ('Set "time_future" is empty!  Please specify at least one year '
 		  'in set time_future, so that the model may ascertain a final period '
 		  'period length for optimization and economic accounting.')
-		raise ValueError( msg )
+		raise TemoaValidationError( msg )
 
 	""" Ensure that the time_exist < time_horizon < time_future """
 	exist    = len( M.time_exist ) and max( M.time_exist ) or -maxint
@@ -109,11 +113,11 @@ def validate_time ( M ):
 	if not ( exist < horizonl ):
 		msg = ('All items in time_horizon must be larger than in time_exist.\n'
 		  'time_exist max:   {}\ntime_horizon min: {}')
-		raise ValueError( msg.format(exist, horizonl) )
+		raise TemoaValidationError( msg.format(exist, horizonl) )
 	elif not ( horizonh < future ):
 		msg = ('All items in time_future must be larger that in time_horizon.\n'
 		  'time_horizon max:   {}\ntime_future min:    {}')
-		raise ValueError( msg.format(horizonh, future) )
+		raise TemoaValidationError( msg.format(horizonh, future) )
 
 	return tuple()
 
@@ -141,7 +145,7 @@ def validate_SegFrac ( M ):
 		  'in SegFrac represents a fraction of a year, so they must total to '
 		  '1.  Current values:\n   {}\n\tsum = {}')
 
-		raise ValueError( msg.format(items, total ))
+		raise TemoaValidationError( msg.format(items, total ))
 
 	return tuple()
 
@@ -178,7 +182,7 @@ def validate_TechOutputSplit ( M ):
 		  if (i, t, o) in split_indices
 		)
 
-		raise ValueError( msg.format(items, l_total) )
+		raise TemoaValidationError( msg.format(items, l_total) )
 
 	return set()
 
