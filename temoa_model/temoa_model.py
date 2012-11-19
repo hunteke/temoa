@@ -149,10 +149,14 @@ CapacityFactor(tech_all, vintage_all)
 	M.CapacityFactor_sdtv = Set( dimen=4, rule=CapacityFactorIndices )
 	M.CapacityFactor      = Param( M.CapacityFactor_sdtv, default=1 )
 
+	M.LifetimeTechDefault = Param( M.tech_all, default=30 )
+	M.LifetimeLoanDefault = Param( M.tech_all, default=10 )
 	M.LifetimeTech_tv = Set( dimen=2, rule=LifetimeTechIndices )
 	M.LifetimeLoan_tv = Set( dimen=2, rule=LifetimeLoanIndices )
-	M.LifetimeTech = Param( M.LifetimeTech_tv,  default=30 )  # in years
-	M.LifetimeLoan = Param( M.LifetimeLoan_tv,  default=10 )  # in years
+	M.LifetimeTech = Param( M.LifetimeTech_tv )  # in years
+	M.LifetimeLoan = Param( M.LifetimeLoan_tv )  # in years
+
+	M.initialize_Lifetimes = Set( rule=CreateLifetimes )
 
 	# always empty set, like the validation hacks above.  Temoa uses a couple
 	# of global variables to precalculate some oft-used results in constraint

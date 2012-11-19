@@ -192,134 +192,62 @@ param  MaxCapacity  :=   # roughly NRAT_RTY2
 	;
 
 
+param  LifetimeTechDefault  :=
+ E01   40
+ E21   40
+ E31  100
+ E51  100
+ E70   40
+ RHE   30
+ RHO   30
+ RL1   10
+ SRE   50
+ TXD   15
+ TXE   15
+ TXG   15
+
+ # added because /every/ process in TEMOA is a technology
+ IMPDSL1         1000
+ IMPGSL1         1000
+ IMPHCO1         1000
+ IMPOIL1         1000
+ IMPURN1         1000
+
+ IMPHYD          1000
+ IMPFEQ          1000
+	;
+
+
 param  LifetimeTech  :=        # PARAMETER TCH_LIFE
 # Temoa tech name   # vintage    # value
- E01                 1960         40        # for existing cap.
- E01                 1970         40        # for existing cap.
- E01                 1980         40        # for existing cap.
- E01                 1990         40
- E01                 2000         40
- E01                 2010         40
-
- E21                 1990         40
- E21                 2000         40
- E21                 2010         40
-
- E31                 1980        100        # for existing cap.
- E31                 1990        100
- E31                 2000        100
- E31                 2010        100
-
- E51                 1980        100
- E51                 1990        100
- E51                 2000        100
- E51                 2010        100
-
- E70                 1960         40        # for existing cap.
- E70                 1970         40        # for existing cap.
- E70                 1980         40        # for existing cap.
- E70                 1990         40
- E70                 2000         40
- E70                 2010         40
-
- RHE                 1990         30
- RHE                 2000         30
- RHE                 2010         30
-
- RHO                 1970         30        # for existing cap.
- RHO                 1980         30        # for existing cap.
- RHO                 1990         30
- RHO                 2000         30
- RHO                 2010         30
-
  RL1                 1980         20        # for existing cap.
- RL1                 1990         10
- RL1                 2000         10
- RL1                 2010         10
-
- SRE                 1990         50
- SRE                 2000         50
- SRE                 2010         50
 
  TXD                 1970         30        # for existing cap.
  TXD                 1980         30        # for existing cap.
- TXD                 1990         15
- TXD                 2000         15
- TXD                 2010         15
-
- TXE                 1990         15
- TXE                 2000         15
- TXE                 2010         15
 
  TXG                 1970         30        # for existing cap.
  TXG                 1980         30        # for existing cap.
- TXG                 1990         15
- TXG                 2000         15
- TXG                 2010         15
-
- # added because /every/ process in TEMOA is a technology
- IMPDSL1      1990     1000
- IMPGSL1      1990     1000
- IMPHCO1      1990     1000
- IMPOIL1      1990     1000
- IMPURN1      1990     1000
-
- IMPHYD       1990     1000
- IMPFEQ       1990     1000
 	;
 
-param  LifetimeLoan  :=
-   # This is a basically a copy of LifetimeTech, but for Loan Amortization.
+
+param  LifetimeLoanDefault  :=
+   # This is basically a copy of LifetimeTech, but for loan amortization.
    # This is what allows the tech and loan life to be separate entities.
-# Temoa tech name     # vintage    # value   # Utopia tech name
- E01                   1990         40
- E01                   2000         40
- E01                   2010         40
-
- E21                   1990         40
- E21                   2000         40
- E21                   2010         40
-
- E31                   1990        100
- E31                   2000        100
- E31                   2010        100
-
- E51                   1990        100
- E51                   2000        100
- E51                   2010        100
-
- E70                   1990         40
- E70                   2000         40
- E70                   2010         40
-
- RHE                   1990         30
- RHE                   2000         30
- RHE                   2010         30
-
- RHO                   1990         30
- RHO                   2000         30
- RHO                   2010         30
-
- RL1                   1990         10
- RL1                   2000         10
- RL1                   2010         10
-
- SRE                   1990         50
- SRE                   2000         50
- SRE                   2010         50
-
- TXD                   1990         15
- TXD                   2000         15
- TXD                   2010         15
-
- TXE                   1990         15
- TXE                   2000         15
- TXE                   2010         15
-
- TXG                   1990         15
- TXG                   2000         15
- TXG                   2010         15
+# Temoa tech name, value
+ E01               40
+ E21               40
+ E31              100
+ E51              100
+ E70               40
+ RHE               30
+ RHO               30
+ RL1               10
+ SRE               50
+ TXD               15
+ TXE               15
+ TXG               15
 	;
+
 
 param CapacityFactor :=
 # season # day # tech       # vintage    # value

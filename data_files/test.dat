@@ -141,42 +141,16 @@ param  TechOutputSplit  :=    # roughly TABLE PRC_OUT
  crude_oil         t_oil_refinery    gasoline            0.3
 	;
 
-param  LifetimeTech  :=
-# tech            # vintage   # lifetime in years
- imp_coal          2000        30
- imp_oil           2010        30
- imp_dsl           2000        30
- imp_gsl           2000        30
-
- t_coal            2000        30
- t_coal            2010        30
- t_coal            2015        30
- t_coal            2020        30
- t_coal            2025        30
-
- t_natgas          2000        27
- t_natgas          2010        27
- t_natgas          2015        27
- t_natgas          2020        27
- t_natgas          2025        27
-
- t_elccar          2000        22
- t_elccar          2010        22
- t_elccar          2015        22
- t_elccar          2020        22
- t_elccar          2025        22
-
- t_dslcar          2000        18
- t_dslcar          2010        18
- t_dslcar          2015        18
- t_dslcar          2020        18
- t_dslcar          2025        18
-
- t_gascar          2000        11
- t_gascar          2010        11
- t_gascar          2015        11
- t_gascar          2020        11
- t_gascar          2025        11
+param  LifetimeTechDefault  :=
+ imp_coal   30
+ imp_oil    30
+ imp_dsl    30
+ imp_gsl    30
+ t_coal     30
+ t_natgas   27
+ t_elccar   22
+ t_dslcar   18
+ t_gascar   11
 	;
 
 

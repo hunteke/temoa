@@ -175,6 +175,47 @@ def validate_SegFrac ( M ):
 	return tuple()
 
 
+def CreateLifetimes ( M ):
+	# Steps
+	#  1. Collect all possible processes
+	#  2. Find the ones _not_ specified in LifetimeTech and LifetimeLoan
+	#  3. Set them, based on Lifetime*Default.
+
+	# Shorter names, for us lazy programmer types
+	LLN = M.LifetimeLoan
+	LTC = M.LifetimeTech
+
+	# Step 1
+	lprocesses = set( (t, v) for t, v in M.LifetimeLoan_tv )
+	processes  = set( (t, v) for t, v in M.LifetimeTech_tv )
+
+
+	# Step 2
+	unspecified_loan_lives = lprocesses.difference( LLN.sparse_iterkeys() )
+	unspecified_tech_lives = processes.difference( LTC.sparse_iterkeys() )
+
+	# Step 3
+
+	# Some hackery: We futz with _constructed because Pyomo thinks that this
+	# Param is already constructed.  However, in our view, it is not yet,
+	# because we're specifically targeting values that have not yet been
+	# constructed, that we know are valid, and that we will need.
+
+	if unspecified_loan_lives:
+		LLN._constructed = False
+		for t, v in unspecified_loan_lives:
+			LLN[t, v] = M.LifetimeLoanDefault[ t ]
+		LLN._constructed = True
+
+	if unspecified_tech_lives:
+		LTC._constructed = False
+		for t, v in unspecified_tech_lives:
+			LTC[t, v] = M.LifetimeTechDefault[ t ]
+		LTC._constructed = True
+
+	return tuple()
+
+
 def CreateDemands ( M ):
 	# Steps to create the demand distributions
 	# 1. Use Demand keys to ensure that all demands in commodity_demand are used
