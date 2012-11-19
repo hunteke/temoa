@@ -175,6 +175,47 @@ def validate_SegFrac ( M ):
 	return tuple()
 
 
+def CreateCapacityFactors ( M ):
+	# Steps
+	#  1. Collect all possible processes
+	#  2. Find the ones _not_ specified in CapacityFactor
+	#  3. Set them, based on CapacityFactorDefault.
+
+	# Shorter names, for us lazy programmer types
+	CF = M.CapacityFactor
+
+	# Step 1
+	processes  = set( (t, v) for i, t, v, o in M.Efficiency.sparse_iterkeys() )
+
+	all_cfs = set(
+	  (s, d, t, v)
+
+	  for s, d, (t, v) in cross_product(
+	    M.time_season,
+	    M.time_of_day,
+	    processes
+	  )
+	)
+
+	# Step 2
+	unspecified_cfs = all_cfs.difference( CF.sparse_iterkeys() )
+
+	# Step 3
+
+	# Some hackery: We futz with _constructed because Pyomo thinks that this
+	# Param is already constructed.  However, in our view, it is not yet,
+	# because we're specifically targeting values that have not yet been
+	# constructed, that we know are valid, and that we will need.
+
+	if unspecified_cfs:
+		CF._constructed = False
+		for s, d, t, v in unspecified_cfs:
+			CF[s, d, t, v] = M.CapacityFactorDefault[s, d, t]
+		CF._constructed = True
+
+	return tuple()
+
+
 def CreateLifetimes ( M ):
 	# Steps
 	#  1. Collect all possible processes
