@@ -1492,15 +1492,5 @@ def temoa_solve ( model ):
 	elif options.ecgw:
 		solve_cost_of_guessing_wrong( model, opt, options )
 
-	if not ( SO.isatty() or SE.isatty() ):
-		SO.write( "\n\nNotice: You are not receiving 'standard error' messages."
-		  "  Temoa uses the 'standard error' file to send meta information "
-		  "on the progress of the solve.  If you aren't intentionally "
-		  "ignoring standard error messages, you may correct the issue by "
-		  "updating coopr/src/coopr.misc/coopr/misc/scripts.py as per this "
-		  "coopr changeset: "
-		  "https://software.sandia.gov/trac/coopr/changeset/5363\n")
-
-
 # End direct invocation methods
 ###############################################################################
