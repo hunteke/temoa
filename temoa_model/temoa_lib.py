@@ -74,8 +74,9 @@ explicitly use the Coopr path:
 
 
 class TemoaError ( Exception ): pass
-class TemoaValidationError ( TemoaError ): pass
+class TemoaCommandLineArgumentError ( TemoaError ): pass
 class TemoaFlowError ( TemoaError ): pass
+class TemoaValidationError ( TemoaError ): pass
 
 def get_str_padding ( obj ):
 	return len(str( obj ))
@@ -1225,10 +1226,18 @@ This is the implementation of imat in the rest of the documentation.
 # Miscellaneous routines
 
 def parse_args ( ):
-	import argparse
+	import argparse, platform
 
 	from coopr.opt import SolverFactory as SF
 	from pyutilib.component.core import PluginGlobals
+
+	# used for some error messages below.
+	red_bold = cyan_bold = reset = ''
+	if platform.system() != 'Windows' and SE.isatty():
+		red_bold  = '\x1b[1;31m'
+		cyan_bold = '\x1b[1;36m'
+		reset     = '\x1b[0m'
+
 
 	logger = PluginGlobals.env().log
 	logger.disabled = True  # no need for warnings: it's what we're testing!
@@ -1256,15 +1265,19 @@ def parse_args ( ):
 		   'Temoa Project forum: http://temoaproject.org/\n\n' )
 
 	parser = argparse.ArgumentParser()
-	graphviz = parser.add_argument_group('Graphviz Options')
-	solver   = parser.add_argument_group('Solver Options')
+	parser.prog = path.basename( argv[0].strip('/') )
+
+	graphviz   = parser.add_argument_group('Graphviz Options')
+	solver     = parser.add_argument_group('Solver Options')
+	stochastic = parser.add_argument_group('Stochastic Options')
 
 	parser.add_argument('dot_dat',
 	  type=str,
-	  nargs='+',
+	  nargs='*',
 	  help='AMPL-format data file(s) with which to create a model instance. '
 	       'e.g. "data.dat"'
 	)
+
 
 	graphviz.add_argument( '--graph_format',
 	  help='Create a system-wide visual depiction of the model.  The '
@@ -1296,6 +1309,7 @@ def parse_args ( ):
 	  action='store_true',
 	  dest='splinevar',
 	  default=False)
+
 
 	solver.add_argument('--solver',
 	  help="Which backend solver to use.  See 'pyomo --help-solvers' for a list "
@@ -1334,7 +1348,54 @@ def parse_args ( ):
 	  dest='keepPyomoLP',
 	  default=False)
 
+
+	stochastic.add_argument('--ecgw',
+	  help='"Expected Cost of Guessing Wrong" -- Calculate the costs of '
+	       'choosing the wrong scenario of a stochastic tree.  Specify the '
+	       'path to the stochastic scenario directory.  (i.e., where to find '
+	       'ScenarioStructure.dat)',
+	  action='store',
+	  metavar='STOCHASTIC_DIRECTORY',
+	  dest='ecgw',
+	  default=None)
+
 	options = parser.parse_args()
+
+	# It would be nice if this implemented with add_mutually_exclusive_group
+	# but I /also/ want them in separate groups for display.  Bummer.
+	if not (options.dot_dat or options.ecgw):
+		usage = parser.format_usage()
+		msg = ('Missing a data file to optimize (e.g., test.dat)')
+		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
+		raise TemoaCommandLineArgumentError( msg )
+
+	elif options.dot_dat and options.ecgw:
+		usage = parser.format_usage()
+		msg = ('Conflicting option and arguments: --ecgw and data files\n\n'
+		       '--ecgw is for performing an analysis on a directory of data '
+		       'files, as are used in a stochastic analysis with PySP.  Please '
+		       'remove either of --ecgw or the data files from the command '
+		       'line.')
+		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
+		raise TemoaCommandLineArgumentError( msg )
+	elif options.ecgw:
+		# can this be subsumed directly into the argparse module functionality?
+		from os.path import isdir, isfile, join
+		edir = options.ecgw
+
+		if not isdir( options.ecgw ):
+			msg = "{}--ecgw requires a directory.{}".format( red_bold, reset )
+			msg = "{}\n\nSupplied path: '{}'".format( msg, edir )
+			raise TemoaCommandLineArgumentError( msg )
+
+		structure_file = join( edir, 'ScenarioStructure.dat' )
+		if not isfile( structure_file ):
+			msg = "'{}{}{}' does not appear to contain a PySP stochastic program."
+			msg = '{}{}{}'.format( red_bold, msg, reset )
+			raise TemoaCommandLineArgumentError(
+			   msg.format( reset, edir, red_bold ))
+		options.ecgw = structure_file
+
 	return options
 
 # End miscellaneous routines
@@ -1343,37 +1404,19 @@ def parse_args ( ):
 ###############################################################################
 # Direct invocation methods (when modeler runs via "python model.py ..."
 
-def temoa_solve ( model ):
-	from sys import argv, version_info
-
-	if version_info < (2, 7):
-		msg = ("Temoa requires Python v2.7 to run.\n\nIf you've "
-		  "installed Coopr with Python 2.6 or less, you'll need to reinstall "
-		  'Coopr, taking care to install with a Python 2.7 (or greater) '
-		  'executable.')
-		raise SystemExit( msg )
-
+def solve_perfect_foresight ( model, optimizer, options ):
 	from time import clock
 
-	from coopr.opt import SolverFactory
 	from coopr.pyomo import ModelData
 
 	from pformat_results import pformat_results
 
-	options = parse_args()
+	opt = optimizer              # for us lazy programmer types
 	dot_dats = options.dot_dat
 
-	opt = SolverFactory( options.solver )
-	if opt:
-		opt.keepFiles = options.keepPyomoLP
-		opt.generateSymbolicLabels = options.useSymbolLabels
-		if options.generateSolverLP:
-			opt.options.wlp = path.basename( options.dot_dat[0] )[:-4] + '.lp'
-			SE.write('\nSolver will write file: {}\n\n'.format( opt.options.wlp ))
-
-	elif options.solver != 'NONE':
-		SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
-			.format( options.solver ))
+	if options.generateSolverLP:
+		opt.options.wlp = path.basename( dot_dats[0] )[:-4] + '.lp'
+		SE.write('\nSolver will write file: {}\n\n'.format( opt.options.wlp ))
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
 	# Recreate the pyomo command's ability to specify multiple "dot dat" files
@@ -1401,7 +1444,7 @@ def temoa_solve ( model ):
 		SE.write( '\r[%8.2f\n' % duration() )
 	else:
 		SE.write( '\r---------- Not solving: no available solver\n' )
-		raise SystemExit
+		return
 
 	SE.write( '[        ] Formatting results.' ); SE.flush()
 	# ... print the easier-to-read/parse format
@@ -1415,6 +1458,39 @@ def temoa_solve ( model ):
 		instance.load( result )
 		CreateModelDiagrams( instance, options )
 		SE.write( '\r[%8.2f\n' % duration() )
+
+
+def solve_cost_of_guessing_wrong ( model, optimizer, options ):
+	pass
+
+
+def temoa_solve ( model ):
+	from sys import argv, version_info
+
+	if version_info < (2, 7):
+		msg = ("Temoa requires Python v2.7 to run.\n\nIf you've "
+		  "installed Coopr with Python 2.6 or less, you'll need to reinstall "
+		  'Coopr, taking care to install with a Python 2.7 (or greater) '
+		  'executable.')
+		raise SystemExit( msg )
+
+	options = parse_args()
+
+	from coopr.opt import SolverFactory
+
+	opt = SolverFactory( options.solver )
+	if opt:
+		opt.keepFiles = options.keepPyomoLP
+		opt.generateSymbolicLabels = options.useSymbolLabels
+
+	elif options.solver != 'NONE':
+		SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
+			.format( options.solver ))
+
+	if options.dot_dat:
+		solve_perfect_foresight( model, opt, options )
+	elif options.ecgw:
+		solve_cost_of_guessing_wrong( model, opt, options )
 
 	if not ( SO.isatty() or SE.isatty() ):
 		SO.write( "\n\nNotice: You are not receiving 'standard error' messages."
