@@ -1343,7 +1343,7 @@ def parse_args ( ):
 	       "solver's generated LP file, but /should/ represent the same model.  "
 	       'Mainly used for debugging purposes.  The file name will have the '
 	       'same base name as the first dot_dat file specified.  '
-	       '[Default: remove Pyomo LP]',
+	       '[Default: remove Pyomo LP file]',
 	  action='store_true',
 	  dest='keepPyomoLP',
 	  default=False)
