@@ -1534,8 +1534,10 @@ def solve_cost_of_guessing_wrong ( optimizer, options ):
 		for node in nodes:
 			f = node + '.dat'
 			if not isfile( f ):
-				msg = "Missing data file '{}' for scenario '{}'"
-				raise TemoaError( msg.format(f, gamblers_guess ))
+				msg = ('Cannot complete ECGW analysis due to a missing data '
+				   'file.  Either update your ScenarioStructure.dat file, or '
+				   "replace the missing file.\n\n  Missing file: '{}'\n")
+				raise TemoaError( msg.format( f ))
 
 	# Step 5: Begin the solves.
 	results = defaultdict(list)
