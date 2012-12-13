@@ -1394,7 +1394,6 @@ def parse_args ( ):
 			msg = '{}{}{}'.format( red_bold, msg, reset )
 			raise TemoaCommandLineArgumentError(
 			   msg.format( reset, edir, red_bold ))
-		options.ecgw = structure_file
 
 	return options
 
@@ -1460,8 +1459,216 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		SE.write( '\r[%8.2f\n' % duration() )
 
 
-def solve_cost_of_guessing_wrong ( model, optimizer, options ):
-	pass
+def solve_cost_of_guessing_wrong ( optimizer, options ):
+	import csv
+
+	from cStringIO import StringIO
+	from collections import deque, defaultdict
+	from multiprocessing import Pool, Manager
+	from os import getcwd, chdir
+	from os.path import isfile, abspath
+
+	from coopr.pyomo import ModelData, Var
+	from coopr.pysp.util.scenariomodels import scenario_tree_model
+	from coopr.pysp.phutils import extractVariableNameAndIndex
+
+	from pformat_results import pformat_results
+	from temoa_model import temoa_create_model
+
+	opt = optimizer    # a shorter name for us lazy programmer types
+
+	pwd = abspath( getcwd() )
+	chdir( options.ecgw )
+	sStructure = scenario_tree_model.create( filename='ScenarioStructure.dat' )
+
+	# Step 1: find the root node.  PySP doesn't make this very easy ...
+
+	# a child -> parent mapping, because every child has only one parent, but
+	# not vice-versa
+	ctpTree = dict()
+
+	to_process = deque()
+	to_process.extend( sStructure.Children.keys() )
+	while to_process:
+		node = to_process.pop()
+		if node in sStructure.Children:
+			# it's a parent!
+			new_nodes = set( sStructure.Children[ node ] )
+			to_process.extend( new_nodes )
+			ctpTree.update({n : node for n in new_nodes })
+
+	                 # parents           -     children
+	root_node = (set( ctpTree.values() ) - set( ctpTree.keys() )).pop()
+
+	# Step 2: start from the root node to find all non-anticipative nodes
+	nonanticipative = [ root_node ]
+	to_process.extend( sStructure.Children[ root_node ] )
+	while to_process:
+		node = to_process.pop()
+		if sStructure.ConditionalProbability[ node ] == 1:
+			nonanticipative.append( node )
+
+	# Step 3: collect the non-anticipative variables to be set
+	variables_to_fix = defaultdict(set)
+	to_process.extend( nonanticipative )
+	for node in to_process:
+		stage = sStructure.NodeStage[ node ]
+		for var_string in sStructure.StageVariables[ stage ]:
+			vname, index = extractVariableNameAndIndex( var_string )
+			variables_to_fix[ vname ].add( index )
+
+	# Step 4: build the scenarios to solve
+	leaf_node_keys = sStructure.ScenarioLeafNode.items()
+	scenarios = dict()
+	for name, node in leaf_node_keys:
+		s = list()
+		while node in ctpTree:
+			s.append( node )
+			node = ctpTree[ node ]  # the parent of node
+		s.append( root_node )
+		s.reverse()
+		scenarios[ name ] = tuple(s)
+
+	# Step 4.5: check that all required data files exist as expected
+	for sname, nodes in scenarios.iteritems():
+		for node in nodes:
+			f = node + '.dat'
+			if not isfile( f ):
+				msg = "Missing data file '{}' for scenario '{}'"
+				raise TemoaError( msg.format(f, gamblers_guess ))
+
+	# Step 5: Begin the solves.
+	results = defaultdict(list)
+	data = list()  # for CSV conversion, after processing
+	for gamblers_guess, gamblers_nodes in sorted( scenarios.items() ):
+		variable_values = defaultdict(list)
+		total_costs = dict()
+
+		msg = ("Solving all possible scenarios for the Gambler's guess of "
+		       "scenario: '{}'\n")
+		SE.write( msg.format( gamblers_guess ))
+
+		# Step 5.1: Choose each scenario in turn as the "Gamblers Gambit", ...
+		mdata = ModelData()
+		for node in gamblers_nodes:
+			mdata.add( node + '.dat' )
+		model = temoa_create_model( "Gambit {}".format( gamblers_guess ))
+		mdata.read( model )
+
+		#  ... solve it, and ...
+		the_gamble = model.create( mdata )
+
+		sol = opt.solve( the_gamble )
+		the_gamble.load( sol )
+
+		total_costs[ gamblers_guess ] = the_gamble.TotalCost()
+
+		for vname in the_gamble.active_components( Var ):
+			var = getattr(the_gamble, vname)
+			for i, v in var.iteritems():
+				variable_values[ v.name.replace("'", '') ].append((
+				  gamblers_guess, v.value ))
+
+		# Step 5.2: Save the variable values from the gambit
+		fixed_values = dict()
+		for vname, indices in variables_to_fix.iteritems():
+			var = getattr(the_gamble, vname)
+			fixed_values[ vname ] = list(var[ i ].value for i in sorted( indices ))
+
+		# ensure we don't mistakenly use a variable below (defensive programming)
+		del mdata, model, the_gamble
+
+		# Step 5.3: Solve every other scenario, but ...
+		wrong_guesses = sorted(
+		  (s, n) for s, n in scenarios.iteritems()
+		  if s != gamblers_guess )
+		for sname, nodes in wrong_guesses:
+			SE.write( '  Solving wrong guess: {}\n'.format( sname ))
+
+			mdata = ModelData()
+			for node in nodes:
+				SE.write( '    Adding file: {}\n'.format( node + '.dat' ))
+				mdata.add( node + '.dat' )
+			model = temoa_create_model( '{}: {}'.format( gamblers_guess, sname ))
+			mdata.read( model )
+
+			wg = model.create( mdata )     # wg = "wrong guess"
+
+			# ... ensure that the non-anticipative variables are fixed per the
+			# solution to the Gambler's Gambit.
+			model_vars = list()  # save vars for later so we don't need to use ...
+			for vname, indices in variables_to_fix.iteritems():
+				var = getattr(wg, vname)    # ... the costly getattr twice
+				for index, val in zip(sorted( indices ), fixed_values[ vname ]):
+					v = var[ index ]
+					model_vars.append( v )
+					v.fixed = True
+					v.set_value( val )
+			wg.preprocess()
+
+			# Then do the solve.
+			sol = opt.solve( wg )
+			wg.load( sol )
+			total_costs[ sname ] = wg.TotalCost()
+
+			for vname in wg.active_components( Var ):
+				var = getattr(wg, vname)
+				for i, v in var.iteritems():
+					variable_values[ v.name.replace("'", '') ].append(
+					  (sname, v.value) )
+
+			# ensure we don't make a mistake between loop iterations.
+			del mdata, model, model_vars, sol, wg
+
+		data.append( ("Gambler's Guess:", gamblers_guess) )
+		data.append(tuple())
+
+		row = ['Total Scenario Costs', gamblers_guess]
+		row.extend(sname for sname, nodes in wrong_guesses)
+		data.append( row )
+		data.append( ['',] + [ total_costs[i] for i in row[1:]] )
+		data.append(tuple())
+
+		data.append(('Fixed variables',))
+		for vname, indices in sorted(variables_to_fix.iteritems()):
+			for index, val in zip(sorted(indices), fixed_values[ vname ]):
+				vfmt = ','.join('{}' for i in xrange(len(index)))
+				vfmt = '{}[{}]'.format(vname, vfmt)
+				# Works out to "vname[{},{},{}...]" for the length of index
+
+				var = vfmt.format(*index)
+				data.append((var, val))
+
+		data.append(tuple())
+
+		row = ['Variable', gamblers_guess]
+		row.extend( s[0] for s in wrong_guesses )
+		data.append( row )
+		for v, vals in sorted( variable_values.iteritems() ):
+			guess_val = filter(lambda x: x[0] == gamblers_guess, vals)[0][1]
+			other_vals = filter(lambda x: x[0] != gamblers_guess, vals)
+			row = [ v, guess_val ]
+			row.extend( j for i, j in other_vals )
+
+			# if they are all 0, then there's no need to mention this variable
+			if True not in ( i != 0 for i in row[1:] ): continue
+
+			data.append( row )
+
+		data.extend(((),()))
+		del variable_values
+
+	chdir( pwd )
+
+	csv_data = StringIO()
+	writer = csv.writer( csv_data ); writer.writerows( data )
+	SO.write( csv_data.getvalue() )
+
+	# Step 6: print the results to stdout
+#	for name, result_set in results.iteritems():
+#		for sname, pformatted_sol in result_set:
+#			SO.write( '{}\n\n{}\n\n'.format( sname, pformatted_sol ))
+#		SO.write( '-------\n' )
 
 
 def temoa_solve ( model ):
@@ -1490,7 +1697,7 @@ def temoa_solve ( model ):
 	if options.dot_dat:
 		solve_perfect_foresight( model, opt, options )
 	elif options.ecgw:
-		solve_cost_of_guessing_wrong( model, opt, options )
+		solve_cost_of_guessing_wrong( opt, options )
 
 # End direct invocation methods
 ###############################################################################
