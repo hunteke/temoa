@@ -26,6 +26,8 @@ from operator import itemgetter as iget
 from os import path
 from sys import argv, stderr as SE, stdout as SO
 
+from IPython import embed as II
+
 from temoa_graphviz import CreateModelDiagrams
 
 try:
@@ -80,6 +82,43 @@ class TemoaValidationError ( TemoaError ): pass
 
 def get_str_padding ( obj ):
 	return len(str( obj ))
+
+from itertools import islice, izip
+
+def iter_in_chunks ( iterable, chunk_size ):
+	"""
+Group iterable items into chunks.
+
+Given an iterable, e.g. ('a', 1, 'b', 2, 'c', 3), this function converts this
+length / chunk_size tuples.  The 'length' in the previous sentence is a
+misnomer, however, as this function works with any iterable.
+
+Caveat emptor: with the last example (below), note that incomplete tuples are
+   silently discarded.  This function assumes an there are only "complete"
+   chunks within the iterable; there are no 'partial chunks'.
+
+For example:
+
+    >>> some_tuple = ('a', 1, 'b', 2, 'c', 3)
+    >>> for i in iter_in_chunks( some_tuple, 2 )
+    >>>    print i
+    ('a', 1)
+    ('b', 2)
+    ('c', 3)
+
+    >>> for i in iter_in_chunks( some_tuple, 3 )
+    >>>    print i
+    ('a', 1, 'b')
+    (2, 'c', 3)
+
+    >>> for i in iter_in_chunks( some_tuple, 4 )
+    >>>    print i
+    ('a', 1, 'b', 2)
+
+"""
+
+	return izip( *[islice(iterable, i, None, chunk_size)
+	             for i in xrange(chunk_size)] )
 
 ###############################################################################
 # Temoa rule "partial" functions (excised from indidivual constraints for
@@ -1459,7 +1498,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		SE.write( '\r[%8.2f\n' % duration() )
 
 
-def solve_cost_of_guessing_wrong ( optimizer, options ):
+def solve_minimum_cost_of_guessing_wrong ( optimizer, options ):
 	import csv
 
 	from cStringIO import StringIO
@@ -1474,6 +1513,7 @@ def solve_cost_of_guessing_wrong ( optimizer, options ):
 
 	from pformat_results import pformat_results
 	from temoa_model import temoa_create_model
+	from temoa_rules import PeriodCost_rule
 
 	opt = optimizer    # a shorter name for us lazy programmer types
 
@@ -1500,44 +1540,219 @@ def solve_cost_of_guessing_wrong ( optimizer, options ):
 	                 # parents           -     children
 	root_node = (set( ctpTree.values() ) - set( ctpTree.keys() )).pop()
 
-	# Step 2: start from the root node to find all non-anticipative nodes
-	nonanticipative = [ root_node ]
-	to_process.extend( sStructure.Children[ root_node ] )
-	while to_process:
-		node = to_process.pop()
-		if sStructure.ConditionalProbability[ node ] == 1:
-			nonanticipative.append( node )
+	ptcTree = defaultdict( list )
+	for c, p in ctpTree.iteritems():
+		ptcTree[ p ].append( c )
 
-	# Step 3: collect the non-anticipative variables to be set
-	variables_to_fix = defaultdict(set)
-	to_process.extend( nonanticipative )
-	for node in to_process:
-		stage = sStructure.NodeStage[ node ]
-		for var_string in sStructure.StageVariables[ stage ]:
-			vname, index = extractVariableNameAndIndex( var_string )
-			variables_to_fix[ vname ].add( index )
+	def recur ( sub_root, results, current_assumptions ):
 
-	# Step 4: build the scenarios to solve
-	leaf_node_keys = sStructure.ScenarioLeafNode.items()
-	scenarios = dict()
-	for name, node in leaf_node_keys:
-		s = list()
+		# Step 1: What are /this/ sub-root node's leaf nodes?
+		leaf_nodes = list()
+		to_process = deque()
+		to_process.extend( ptcTree[ sub_root ] )
+		while to_process:
+			n = to_process.pop()
+			if n in ptcTree:
+				to_process.extend( ptcTree[ n ] )  # n is a parent
+			else:
+				leaf_nodes.append( n )             # n is a leaf node
+
+		# Step 2: build each possible scenario in this node's bundle
+		sub_scenarios = list()
+		for node in leaf_nodes:
+			s = list()
+			while node in ctpTree:
+				s.append( node )
+				node = ctpTree[ node ]  # the parent of node
+			s.append( node )  # node is now the root node of the entire tree
+			s.reverse()
+			sub_scenarios.append( tuple(s) )
+
+		for s_files in sub_scenarios:
+			mdata = ModelData()
+			for node in s_files:
+				node += '.dat'
+				SE.write( '    Adding file: {}\n'.format( node ))
+				mdata.add( node )
+			model = temoa_create_model()
+			mdata.read( model )
+			m = model.create( mdata )
+
+			s = s_files[ -1 ]      # represent the scenario by the final node
+
+			# -1 = don't fix /this/ stage's variables!
+			stages_to_fix = sub_root.split('s')[:-1]
+			to_assume = iter( current_assumptions.split(',') )
+
+			model_vars = list()
+			fixing = assume = ''
+			for stage in stages_to_fix:
+				fixing += stage
+				assume += to_assume.next()
+				to_fix = results[ '|'.join( (fixing, assume, s) ) ][0]
+
+				# set the already decided variables
+				for vname, values in to_fix.iteritems():
+					m_var = getattr(m, vname)
+
+					for index, val in iter_in_chunks( values, chunk_size=2 ):
+						v = m_var[ index ]
+						v.fixed = True
+						v.set_value( val )
+						model_vars.append( v )   # needed because Coopr preprocesses ...
+
+				fixing += 's'
+				assume += ','
+			del stages_to_fix, to_assume
+
+			m.preprocess()   # now remove from the model the variables we fixed
+
+			sol = opt.solve( m )
+			m.load( sol )
+
+			vars_to_save = defaultdict( set )
+			node_variables = defaultdict( list )
+			stage = sStructure.NodeStage[ sub_root ]
+			for var_string in sStructure.StageVariables[ stage ]:
+				vname, index = extractVariableNameAndIndex( var_string )
+				vars_to_save[ vname ].add( index )
+			for vname, indices in vars_to_save.iteritems():
+				m_var = getattr(m, vname)
+				for index in indices:
+					val = value( m_var[ index ])
+					node_variables[ vname ].append( (index, val ) )
+			II()
+
+			# remove leading 's' in stage
+			stage = int( sStructure.NodeStage[ sub_root ][1:] )
+			node_cost = value( PeriodCost_rule( m, stage ))
+			results[ '|'.join( (sub_root, current_assumptions, s) ) ] = (
+			   node_variables, node_cost
+			)
+
+		if sub_root in ptcTree:
+			for child in ptcTree[ sub_root ]:
+				recur( child, results, ','.join( (current_assumptions, s) ))
+
+	results = dict()
+	print "First recurrance:", root_node
+	recur( root_node, results, '' )
+
+	print results
+
+	return
+
+
+
+
+
+	#############################333
+
+	def calculate_recursive_expected_costs ( root, fixed_variables ):
+
+		# Step 1: What are /this/ sub-root node's leaf nodes?
+		leaf_nodes = list()
+		to_process = deque()
+		to_process.extend( ptcTree[ root ] )
+		while to_process:
+			n = to_process.pop()
+			if n in ptcTree:
+				# it's a parent
+				to_process.extend( ptcTree[ n ] )
+			else:
+				# n is a leaf node
+				leaf_nodes.append( n )
+
+		# Step 2: start from this subroot node and work "up" the ptcTree to find
+		#         the currently non-anticipative nodes.  (i.e., variables to set)
+		nodes_to_fix = [ root ]
+		node = root
 		while node in ctpTree:
-			s.append( node )
-			node = ctpTree[ node ]  # the parent of node
-		s.append( root_node )
-		s.reverse()
-		scenarios[ name ] = tuple(s)
+			node = ctpTree[ node ]  # node is now parent of previous iteration
+			nodes_to_fix.append( node )
 
-	# Step 4.5: check that all required data files exist as expected
-	for sname, nodes in scenarios.iteritems():
-		for node in nodes:
-			f = node + '.dat'
-			if not isfile( f ):
-				msg = ('Cannot complete ECGW analysis due to a missing data '
-				   'file.  Either update your ScenarioStructure.dat file, or '
-				   "replace the missing file.\n\n  Missing file: '{}'\n")
-				raise TemoaError( msg.format( f ))
+		# Step 3: build each possible sub scenario of this root's bundle
+		scenarios = list()
+		for node in leaf_nodes:
+			s = list()
+			while node in ctpTree:
+				s.append( node )
+				node = ctpTree[ node ]  # the parent of node
+			s.append( node )  # node is now the root node of the entire tree
+			s.reverse()
+			scenarios.append( tuple(s) )
+
+			# Each of these scenarios begins with the root node: we can't only use
+			# the sub-scenario parts because we need to set the already decided
+			# variables.
+
+		# Step 4: for each scenario, create the model, fix the already decided
+		#         variables, solve, and then recur
+		for nodes in scenarios:
+			# 4a: create the model
+			# nodes = an ordered list of nodes in a scenario
+			mdata = ModelData()
+			for node in nodes:
+				node += '.dat'
+				SE.write( '    Adding file: {}\n'.format( node ))
+				mdata.add( node )
+			model = temoa_create_model( 'Root: {}'.format( root ))
+			mdata.read( model )
+
+			wg = model.create( mdata )   # wg = "wrong guess"
+
+			# 4b: set the already decided variables
+			model_vars = list()
+			for vname, values in fixed_variables.iteritems():
+				m_var = getattr(wg, vname)
+
+				for index, val in iter_in_chunks( values, chunk_size=2 ):
+					v = m_var[ index ]
+					v.fixed = True
+					v.set_value( val )
+					model_vars.append( v )
+			wg.preprocess()
+
+			# 4c: solve this scenario
+			sol = opt.solve( wg )
+			wg.load( sol )
+			II()
+
+			variables_to_fix = defaultdict( set )
+			child_fixed_variables = defaultdict( list )
+			to_process.extend( nodes_to_fix )
+			for node in to_process:
+				stage = sStructure.NodeStage[ node ]
+				for var_string in sStructure.StageVariables[ stage ]:
+					vname, index = extractVariableNameAndIndex( var_string )
+					variables_to_fix[ vname ].add( index )
+			for vname, indices in variables_to_fix.iteritems():
+				m_var = getattr(wg, vname)
+				for index in indices:
+					val = value( m_var[ index ])
+					child_fixed_variables[ vname ].append( (index, val) )
+
+			# 4d: recur
+			if root in ptcTree:
+				for node in ptcTree[ root ]:
+					calculate_recursive_expected_costs( node, child_fixed_variables )
+
+			# ensure no mistake between loop iterations (defensive programming?!)
+			del model_vars, variables_to_fix, child_fixed_variables
+
+		print "Node: ", root
+		print "Fixed_variables: %s ..." % str(fixed_variables)
+
+		# Step 2: prepare list of all possible scenarios of guessing X, but Y
+		#         happens.  (e.g, guess Rs0s0, and Rs0s0 happens; guess Rs0s0,
+		#         Rs0s1 happens; etc.)
+
+		#return (expected_costs, weights)
+
+	calculate_recursive_expected_costs( 'R', fixed_variables={} )
+
+
+	raise SystemExit
 
 	# Step 5: Begin the solves.
 	results = defaultdict(list)
@@ -1589,8 +1804,9 @@ def solve_cost_of_guessing_wrong ( optimizer, options ):
 
 			mdata = ModelData()
 			for node in nodes:
-				SE.write( '    Adding file: {}\n'.format( node + '.dat' ))
-				mdata.add( node + '.dat' )
+				node += '.dat'
+				SE.write( '    Adding file: {}\n'.format( node ))
+				mdata.add( node )
 			model = temoa_create_model( '{}: {}'.format( gamblers_guess, sname ))
 			mdata.read( model )
 
@@ -1666,12 +1882,6 @@ def solve_cost_of_guessing_wrong ( optimizer, options ):
 	writer = csv.writer( csv_data ); writer.writerows( data )
 	SO.write( csv_data.getvalue() )
 
-	# Step 6: print the results to stdout
-#	for name, result_set in results.iteritems():
-#		for sname, pformatted_sol in result_set:
-#			SO.write( '{}\n\n{}\n\n'.format( sname, pformatted_sol ))
-#		SO.write( '-------\n' )
-
 
 def temoa_solve ( model ):
 	from sys import argv, version_info
@@ -1699,7 +1909,7 @@ def temoa_solve ( model ):
 	if options.dot_dat:
 		solve_perfect_foresight( model, opt, options )
 	elif options.ecgw:
-		solve_cost_of_guessing_wrong( opt, options )
+		solve_minimum_cost_of_guessing_wrong( opt, options )
 
 # End direct invocation methods
 ###############################################################################

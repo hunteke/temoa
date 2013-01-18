@@ -187,16 +187,16 @@ CapacityFactor(tech_all, vintage_all)
 	M.Loan_tv          = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
 	M.ModelLoanLife_tv = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
 	M.ModelTechLife_tv = Set( dimen=3, rule=ModelTechLifeIndices )
-	M.ModelLoanLife = Param( M.ModelLoanLife_tv, rule=ParamModelLoanLife_rule )
-	M.ModelTechLife = Param( M.ModelTechLife_tv, rule=ParamModelTechLife_rule )
+	M.ModelLoanLife = Param( M.ModelLoanLife_tv, initialize=ParamModelLoanLife_rule )
+	M.ModelTechLife = Param( M.ModelTechLife_tv, initialize=ParamModelTechLife_rule )
 
 	M.DiscountRate_tv = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
 	M.LoanLifeFrac_ptv = Set( dimen=3, rule=LoanLifeFracIndices )
 	M.TechLifeFrac_ptv = Set( dimen=3, rule=TechLifeFracIndices )
 
-	M.DiscountRate  = Param( M.DiscountRate_tv, default=0.05 )
-	M.TechLifeFrac  = Param( M.TechLifeFrac_ptv, rule=ParamTechLifeFraction_rule )
-	M.LoanAnnualize = Param( M.Loan_tv, rule=ParamLoanAnnualize_rule )
+	M.DiscountRate  = Param( M.DiscountRate_tv, default=0.0192448765618044 )
+	M.TechLifeFrac  = Param( M.TechLifeFrac_ptv, initialize=ParamTechLifeFraction_rule )
+	M.LoanAnnualize = Param( M.Loan_tv, initialize=ParamLoanAnnualize_rule )
 
 	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
 	# always-empty Set; hack to perform inter-Set or inter-Param validation

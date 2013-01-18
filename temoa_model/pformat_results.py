@@ -69,11 +69,8 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	def create_symbol_map ( smap, stype ):
 		for name, group in instance.active_components( stype ).iteritems():
 			for item in group.itervalues():
-				if item.index.__class__ is tuple:
-					parts = [name, '[', ','.join(str(i) for i in item.index), ']']
-					smap[ item.name ] = (name, ''.join(parts) )
-				else:
-					smap[ item.name ] = (name, item.name )
+				cname = item.cname()
+				smap[ cname ] = (name, cname.replace("'", '') )
 
 	create_symbol_map( var_sm, Var )
 	create_symbol_map( con_sm, Constraint )

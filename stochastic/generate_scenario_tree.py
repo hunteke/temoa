@@ -237,7 +237,7 @@ class TreeNode ( object ):
 			if len( params ) > 1:
 				data += '\n' + '\n'.join(p.as_ampl() for p in params[1:])
 		else:
-			data = '# Decision: HedgingStrategy (no change from R.dat)'
+			data = '# Decision: HedgingStrategy (no change from R.dat)\n'
 
 		with open( self.bname + '.dat', 'w' ) as f:
 			f.write( data )

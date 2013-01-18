@@ -75,6 +75,10 @@ generation, it is pedogogically significant in that it highlights the fact that
 Temoa optimizes only a single characteristic year within each period.
 
 """
+	return sum( PeriodCost_rule(M, p) for p in M.time_optimize )
+
+
+def PeriodCost_rule ( M, p ):
 	P_0 = min( M.time_optimize )
 	GDR = value( M.GlobalDiscountRate )
 
@@ -90,34 +94,37 @@ Temoa optimizes only a single characteristic year within each period.
 	  )
 
 	  for S_t, S_v in M.CostInvest.sparse_iterkeys()
+	  if S_v == p
 	)
 
 	fixed_costs = sum(
 	    M.V_CapacityFixed[S_t, S_v]
 	  * (
-	      value( M.CostFixed[S_p, S_t, S_v] )
+	      value( M.CostFixed[p, S_t, S_v] )
 	    * sum( (1 + GDR) ** -y
-	        for y in range( S_p - P_0,
-	                        S_p - P_0 + value( M.ModelTechLife[S_p, S_t, S_v] ))
+	        for y in range( p - P_0,
+	                        p - P_0 + value( M.ModelTechLife[p, S_t, S_v] ))
 	      )
 	    )
 
 	  for S_p, S_t, S_v in M.CostFixed.sparse_iterkeys()
+	  if S_p == p
 	)
 
 	marg_costs = sum(
-	    M.V_ActivityByPeriodTechAndVintage[S_p, S_t, S_v]
+	    M.V_ActivityByPeriodTechAndVintage[p, S_t, S_v]
 	  * (
-	      value( M.CostMarginal[S_p, S_t, S_v] )
-	    * value( M.PeriodRate[ S_p ] )
+	      value( M.CostMarginal[p, S_t, S_v] )
+	    * value( M.PeriodRate[ p ] )
 	  )
 
 	  for S_p, S_t, S_v in M.CostMarginal.sparse_iterkeys()
+	  if S_p == p
 	)
 
-	costs = (loan_costs + fixed_costs + marg_costs)
-	return costs
-Objective_rule = TotalCost_rule
+	period_costs = (loan_costs + fixed_costs + marg_costs)
+	return period_costs
+
 
 ##############################################################################
 #   Initializaton rules

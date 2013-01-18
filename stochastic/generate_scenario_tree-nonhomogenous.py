@@ -87,7 +87,10 @@ class Param ( object ):
 					break
 
 			items[ mine ] = Storage()
-			items[ mine ].value = param[ actual ].value   # pulled from model
+			try:
+				items[ mine ].value = param[ actual ]   # pulled from model
+			except ValueError:
+				items[ mine ].value = 0
 			items[ mine ].rate  = rate
 
 		self.items      = items
@@ -283,7 +286,7 @@ def write_scenario_file ( stochasticset, tree ):
 
 	child_fmt     = 'set  Children[%s]  :=\n  %s\n\t;\n'
 	scenario_fmt  = 'S%(i)s  Rs%(i)s'
-	stages_fmt    = 'set  StageVariables[s%s]  :=\n  %s\n\t;'
+	stages_fmt    = 'set  StageVariables[s{}]  :=\n  {}\n\t;'
 	stagecost_fmt = 's%s StochasticPointCost[%s]'
 
 	leaves      = '\n  '.join( scenario_fmt % {'i' : i} for i in scenarios )
@@ -305,22 +308,26 @@ def write_scenario_file ( stochasticset, tree ):
 	# models.  The short of it is that this script was written prior to Temoa's
 	# implementation with sparse sets, so now we have to ensure that only the
 	# sparse sets are used:
-	svars = tuple(
-	  (ii[0], ii[5])
-	  for ii in instance.V_FlowOut.keys()
-	)
 
-	stage_var_sets = (
-	  stages_fmt % (
-	    se,
-	    '\n  '.join(
-	      sorted( 'V_FlowOut[%s,%s,%s,%s,%s,%s,%s]' % index
-	              for index in instance.V_FlowOut.keys()
-	              if index[0] == se
-	            )
-	      ))
-	  for se in stochasticset   # "stochastic element" = se
-	)
+	stage_var_sets = list()
+	for se in stochasticset:  # se = "stochastic element"
+		flow_keys = [index for index in instance.V_FlowOut.keys()
+		             if index[0] == se]
+		processes = [(t, v) for p, s, d, i, t, v, o in flow_keys
+		             if v == se]
+
+		stage_vars = list()
+		stage_vars.extend(
+		  sorted('V_FlowIn[{},{},{},{},{},{},{}]'.format( *index )
+		    for index in flow_keys))
+		stage_vars.extend(
+		  sorted('V_FlowOut[{},{},{},{},{},{},{}]'.format( *index )
+		    for index in flow_keys ))
+		stage_vars.extend(
+		  sorted('V_Capacity[{},{}]'.format( *index )
+		     for index in processes ))
+
+		stage_var_sets.append( stages_fmt.format( se, '\n  '.join( stage_vars )))
 	stage_var_sets = '\n\n'.join( stage_var_sets )
 
 	structure = '''\

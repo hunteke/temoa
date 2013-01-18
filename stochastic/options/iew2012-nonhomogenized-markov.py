@@ -4,9 +4,9 @@ force = True
 
 dirname    = 'temoa_island_markoved'
 modelpath  = '../temoa_model.py'
-dotdatpath = '../data_files/temoa_island.dat'
+dotdatpath = '../data_files/iew2012.dat'
 stochasticset = 'time_optimize'
-stochastic_points = (2020, 2025, 2030, 2035, 2040, 2045)
+stochastic_points = (2020, 2025, 2030, 2035)
 stochastic_indices = {'CostMarginal': 0}
 types = (
   'DDD', 'DDU', 'DUD', 'DUU',

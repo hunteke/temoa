@@ -145,194 +145,76 @@ param  ResourceBound  :=
 	;
 
 
+param  DemandSpecificDistribution  :=
+ intermediate   day            r_lighting    0.25
+ intermediate   night          r_lighting    0.25
+ summer         day            r_lighting    0.125
+ summer         night          r_lighting    0.125
+ winter         day            r_lighting    0.125
+ winter         night          r_lighting    0.125
+
+ intermediate   day            r_heating     0.125
+ intermediate   night          r_heating     0.125
+ winter         day            r_heating     0.5
+ winter         night          r_heating     0.25
+
+ intermediate   day            r_cooling     0.1
+ intermediate   night          r_cooling     0.1
+ summer         day            r_cooling     0.6
+ summer         night          r_cooling     0.2
+
+ intermediate   day            tl_distance   0.25
+ intermediate   night          tl_distance   0.25
+ summer         day            tl_distance   0.125
+ summer         night          tl_distance   0.125
+ winter         day            tl_distance   0.125
+ winter         night          tl_distance   0.125
+
+ intermediate   day            r_wheating    0.25
+ intermediate   night          r_wheating    0.25
+ summer         day            r_wheating    0.125
+ summer         night          r_wheating    0.125
+ winter         day            r_wheating    0.125
+ winter         night          r_wheating    0.125
+	;
+
+
 param  Demand  :=
 # time_optimize  # time_season  # time_of_day  # commodity_demand    # value
- 2010             intermediate   day            r_lighting            25
- 2010             intermediate   night          r_lighting            25
- 2010             summer         day            r_lighting            12.5
- 2010             summer         night          r_lighting            12.5
- 2010             winter         day            r_lighting            12.5
- 2010             winter         night          r_lighting            12.5
+ 2010             r_lighting            100
+ 2015             r_lighting            104.2
+ 2020             r_lighting            108.8
+ 2025             r_lighting            113.6
+ 2030             r_lighting            118.6
+ 2035             r_lighting            124
 
- 2010             intermediate   day            r_heating             25
- 2010             intermediate   night          r_heating             25
- 2010             winter         day            r_heating            100
- 2010             winter         night          r_heating             50
+ 2010             r_heating             200
+ 2015             r_heating             208.8
+ 2020             r_heating             217.8
+ 2025             r_heating             227.3
+ 2030             r_heating             237.4
+ 2035             r_heating             247.8
 
- 2010             intermediate   day            r_cooling             24
- 2010             intermediate   night          r_cooling             24
- 2010             summer         day            r_cooling            144
- 2010             summer         night          r_cooling             48
+ 2010             r_cooling             240
+ 2015             r_cooling             250.4
+ 2020             r_cooling             261.4
+ 2025             r_cooling             272.9
+ 2030             r_cooling             284.9
+ 2035             r_cooling             297.3
 
- 2010             intermediate   day            tl_distance            2.5
- 2010             intermediate   night          tl_distance            2.5
- 2010             summer         day            tl_distance            1.25
- 2010             summer         night          tl_distance            1.25
- 2010             winter         day            tl_distance            1.25
- 2010             winter         night          tl_distance            1.25
+ 2010             tl_distance            10
+ 2015             tl_distance            10
+ 2020             tl_distance            10
+ 2025             tl_distance            10.02
+ 2030             tl_distance            10.02
+ 2035             tl_distance            10.06
 
- 2010             intermediate   day            r_wheating            30
- 2010             intermediate   night          r_wheating            30
- 2010             summer         day            r_wheating            15
- 2010             summer         night          r_wheating            15
- 2010             winter         day            r_wheating            15
- 2010             winter         night          r_wheating            15
-
- 2015             intermediate   day            r_lighting            26.1
- 2015             intermediate   night          r_lighting            26.1
- 2015             summer         day            r_lighting            13
- 2015             summer         night          r_lighting            13
- 2015             winter         day            r_lighting            13
- 2015             winter         night          r_lighting            13
-
- 2015             intermediate   day            r_heating             26.1
- 2015             intermediate   night          r_heating             26.1
- 2015             winter         day            r_heating            104.4
- 2015             winter         night          r_heating             52.2
-
- 2015             intermediate   day            r_cooling             25
- 2015             intermediate   night          r_cooling             25
- 2015             summer         day            r_cooling            150.3
- 2015             summer         night          r_cooling             50.1
-
- 2015             intermediate   day            tl_distance            2.5
- 2015             intermediate   night          tl_distance            2.5
- 2015             summer         day            tl_distance            1.25
- 2015             summer         night          tl_distance            1.25
- 2015             winter         day            tl_distance            1.25
- 2015             winter         night          tl_distance            1.25
-
- 2015             intermediate   day            r_wheating            31.3
- 2015             intermediate   night          r_wheating            31.3
- 2015             summer         day            r_wheating            15.7
- 2015             summer         night          r_wheating            15.7
- 2015             winter         day            r_wheating            15.7
- 2015             winter         night          r_wheating            15.7
-
- 2020             intermediate   day            r_lighting            27.2
- 2020             intermediate   night          r_lighting            27.2
- 2020             summer         day            r_lighting            13.6
- 2020             summer         night          r_lighting            13.6
- 2020             winter         day            r_lighting            13.6
- 2020             winter         night          r_lighting            13.6
-
- 2020             intermediate   day            r_heating             27.2
- 2020             intermediate   night          r_heating             27.2
- 2020             winter         day            r_heating            108.9
- 2020             winter         night          r_heating             54.5
-
- 2020             intermediate   day            r_cooling             26.1
- 2020             intermediate   night          r_cooling             26.1
- 2020             summer         day            r_cooling            156.9
- 2020             summer         night          r_cooling             52.3
-
- 2020             intermediate   day            tl_distance            2.5
- 2020             intermediate   night          tl_distance            2.5
- 2020             summer         day            tl_distance            1.25
- 2020             summer         night          tl_distance            1.25
- 2020             winter         day            tl_distance            1.25
- 2020             winter         night          tl_distance            1.25
-
- 2020             intermediate   day            r_wheating            32.7
- 2020             intermediate   night          r_wheating            32.7
- 2020             summer         day            r_wheating            16.3
- 2020             summer         night          r_wheating            16.3
- 2020             winter         day            r_wheating            16.3
- 2020             winter         night          r_wheating            16.3
-
- 2025             intermediate   day            r_lighting            28.4
- 2025             intermediate   night          r_lighting            28.4
- 2025             summer         day            r_lighting            14.2
- 2025             summer         night          r_lighting            14.2
- 2025             winter         day            r_lighting            14.2
- 2025             winter         night          r_lighting            14.2
-
- 2025             intermediate   day            r_heating             28.4
- 2025             intermediate   night          r_heating             28.4
- 2025             winter         day            r_heating            113.7
- 2025             winter         night          r_heating             56.8
-
- 2025             intermediate   day            r_cooling             27.3
- 2025             intermediate   night          r_cooling             27.3
- 2025             summer         day            r_cooling            163.7
- 2025             summer         night          r_cooling             54.6
-
- 2025             intermediate   day            tl_distance            2.51
- 2025             intermediate   night          tl_distance            2.51
- 2025             summer         day            tl_distance            1.25
- 2025             summer         night          tl_distance            1.25
- 2025             winter         day            tl_distance            1.25
- 2025             winter         night          tl_distance            1.25
-
- 2025             intermediate   day            r_wheating            34.1
- 2025             intermediate   night          r_wheating            34.1
- 2025             summer         day            r_wheating            17.1
- 2025             summer         night          r_wheating            17.1
- 2025             winter         day            r_wheating            17.1
- 2025             winter         night          r_wheating            17.1
-
- 2030             intermediate   day            r_lighting            29.7
- 2030             intermediate   night          r_lighting            29.7
- 2030             summer         day            r_lighting            14.8
- 2030             summer         night          r_lighting            14.8
- 2030             winter         day            r_lighting            14.8
- 2030             winter         night          r_lighting            14.8
-
- 2030             intermediate   day            r_heating             29.7
- 2030             intermediate   night          r_heating             29.7
- 2030             winter         day            r_heating            118.7
- 2030             winter         night          r_heating             59.3
-
- 2030             intermediate   day            r_cooling             28.5
- 2030             intermediate   night          r_cooling             28.5
- 2030             summer         day            r_cooling            170.9
- 2030             summer         night          r_cooling             57.0
-
- 2030             intermediate   day            tl_distance            2.51
- 2030             intermediate   night          tl_distance            2.51
- 2030             summer         day            tl_distance            1.25
- 2030             summer         night          tl_distance            1.25
- 2030             winter         day            tl_distance            1.25
- 2030             winter         night          tl_distance            1.25
-
- 2030             intermediate   day            r_wheating            35.6
- 2030             intermediate   night          r_wheating            35.6
- 2030             summer         day            r_wheating            17.8
- 2030             summer         night          r_wheating            17.8
- 2030             winter         day            r_wheating            17.8
- 2030             winter         night          r_wheating            17.8
-
- 2035             intermediate   day            r_lighting            31
- 2035             intermediate   night          r_lighting            31
- 2035             summer         day            r_lighting            15.5
- 2035             summer         night          r_lighting            15.5
- 2035             winter         day            r_lighting            15.5
- 2035             winter         night          r_lighting            15.5
-
- 2035             intermediate   day            r_heating             31.0
- 2035             intermediate   night          r_heating             31.0
- 2035             winter         day            r_heating            123.9
- 2035             winter         night          r_heating             61.9
-
- 2035             intermediate   day            r_cooling             29.7
- 2035             intermediate   night          r_cooling             29.7
- 2035             summer         day            r_cooling            178.4
- 2035             summer         night          r_cooling             59.5
-
- 2035             intermediate   day            tl_distance            2.51
- 2035             intermediate   night          tl_distance            2.51
- 2035             summer         day            tl_distance            1.26
- 2035             summer         night          tl_distance            1.26
- 2035             winter         day            tl_distance            1.26
- 2035             winter         night          tl_distance            1.26
-
- 2035             intermediate   day            r_wheating            37.2
- 2035             intermediate   night          r_wheating            37.2
- 2035             summer         day            r_wheating            18.6
- 2035             summer         night          r_wheating            18.6
- 2035             winter         day            r_wheating            18.6
- 2035             winter         night          r_wheating            18.6
-
+ 2010             r_wheating            120
+ 2015             r_wheating            125.4
+ 2020             r_wheating            130.6
+ 2025             r_wheating            136.6
+ 2030             r_wheating            142.3
+ 2035             r_wheating            148.8
 	;
 
 

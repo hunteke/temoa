@@ -37,7 +37,7 @@ TODO: update with LaTeX version of equation.
 	    M.V_CapacityInvest[S_t, S_v]
 	  * (
 	      value( M.CostInvest[S_t, S_v] )
-	    * value(M.LoanAnnualize[S_t, S_v])
+	    * value( M.LoanAnnualize[S_t, S_v] )
 	    * sum( (1 + GDR) ** -y
 	        for y in range( S_v - P_0,
 	                        S_v - P_0 + value( M.ModelLoanLife[S_t, S_v] ))
@@ -51,10 +51,10 @@ TODO: update with LaTeX version of equation.
 	fixed_costs = sum(
 	    M.V_CapacityFixed[S_t, S_v]
 	  * (
-	      value( M.CostFixed[p, S_t, S_v])
+	      value( M.CostFixed[p, S_t, S_v] )
 	    * sum( (1 + GDR) ** -y
 	        for y in range( p - P_0,
-	                        p - P_0 + (M.ModelTechLife[p, S_t, S_v]) )
+	                        p - P_0 + value( M.ModelTechLife[p, S_t, S_v] ))
 	      )
 	    )
 
@@ -65,8 +65,8 @@ TODO: update with LaTeX version of equation.
 	marg_costs = sum(
 	    M.V_ActivityByPeriodTechAndVintage[p, S_t, S_v]
 	  * (
-	      value(M.CostMarginal[p, S_t, S_v])
-	    * value(M.PeriodRate[ p ])
+	      value( M.CostMarginal[p, S_t, S_v] )
+	    * value( M.PeriodRate[ p ] )
 	  )
 
 	  for S_p, S_t, S_v in M.CostMarginal.sparse_iterkeys()
