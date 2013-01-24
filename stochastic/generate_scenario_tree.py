@@ -11,7 +11,6 @@ from textwrap import TextWrapper
 
 from coopr.pyomo.base.sets import _SetProduct, _SetContainer
 
-
 SE = sys.stderr
 instance = None
 
@@ -50,7 +49,7 @@ class Param ( object ):
 
 		if isinstance( pindex, _SetProduct ):
 			getname = lambda x: x.name
-			indices = [ getname(i) for i in param._index_set ]
+			indices = [ getname(i) for i in pindex.set_tuple ]
 			skeys = lambda: (' '.join(str(i) for i in k) for k in self.model_keys)
 
 			keys = param.keys()
@@ -89,7 +88,10 @@ class Param ( object ):
 					break
 
 			items[ mine ] = Storage()
-			items[ mine ].value = param[ actual ].value   # pulled from model
+			try:
+				items[ mine ].value = param[ actual ]   # pulled from model
+			except ValueError:
+				items[ mine ].value = 0
 			items[ mine ].rate  = rate
 
 		self.items      = items
@@ -235,7 +237,7 @@ class TreeNode ( object ):
 			if len( params ) > 1:
 				data += '\n' + '\n'.join(p.as_ampl() for p in params[1:])
 		else:
-			data = '# Decision: HedgingStrategy (no change from R.dat)'
+			data = '# Decision: HedgingStrategy (no change from R.dat)\n'
 
 		with open( self.bname + '.dat', 'w' ) as f:
 			f.write( data )
@@ -283,7 +285,7 @@ def write_scenario_file ( stochasticset, tree ):
 
 	child_fmt     = 'set  Children[%s]  :=\n  %s\n\t;\n'
 	scenario_fmt  = 'S%(i)s  Rs%(i)s'
-	stages_fmt    = 'set  StageVariables[s%s]  :=\n  %s\n\t;'
+	stages_fmt    = 'set  StageVariables[s{}]  :=\n  {}\n\t;'
 	stagecost_fmt = 's%s StochasticPointCost[%s]'
 
 	leaves      = '\n  '.join( scenario_fmt % {'i' : i} for i in scenarios )
@@ -301,26 +303,29 @@ def write_scenario_file ( stochasticset, tree ):
 	  for c in children
 	)
 
-	# XXX: Temporary and absolute hack, that currently only works for Temoa
-	# models.  The short of it is that this script was written prior to Temoa's
-	# implementation with sparse sets, so now we have to ensure that only the
-	# sparse sets are used:
-	svars = tuple(
-	  (ii[0], ii[5])
-	  for ii in instance.V_FlowOut.keys()
-	)
+	# XXX: Absolute hack, that currently only works for Temoa models.  I have
+	# not yet thought about how to make this generic.  Can it be done?
 
-	stage_var_sets = (
-	  stages_fmt % (
-	    se,
-	    '\n  '.join(
-	      sorted( 'V_FlowOut[%s,%s,%s,%s,%s,%s,%s]' % index
-	              for index in instance.V_FlowOut.keys()
-	              if index[0] == se
-	            )
-	      ))
-	  for se in stochasticset   # "stochastic element" = se
-	)
+	stage_var_sets = list()
+	for se in stochasticset:  # se = "stochastic element"
+		flow_keys = [index for index in instance.V_FlowOut.keys()
+		             if index[0] == se]
+		processes = [(t, v) for p, s, d, i, t, v, o in flow_keys
+		             if v == se]
+
+		stage_vars = list()
+		stage_vars.extend(
+		  sorted('V_FlowIn[{},{},{},{},{},{},{}]'.format( *index )
+		    for index in flow_keys))
+		stage_vars.extend(
+		  sorted('V_FlowOut[{},{},{},{},{},{},{}]'.format( *index )
+		    for index in flow_keys ))
+		stage_vars.extend(
+		  sorted('V_Capacity[{},{}]'.format( *index )
+		     for index in processes ))
+
+		stage_var_sets.append( stages_fmt.format( se, '\n  '.join( stage_vars )))
+
 	stage_var_sets = '\n\n'.join( stage_var_sets )
 
 	structure = '''\
