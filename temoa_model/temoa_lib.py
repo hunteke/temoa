@@ -366,12 +366,12 @@ def CreateDemands ( M ):
 
 			msg = ('The values of the DemandSpecificDistribution parameter do not '
 			  'sum to 1.  The DemandSpecificDistribution specifies how end-use '
-			  'demands (e.g., {}) are distributed per time-slice (i.e., '
-			  'time_season, time_of_day).  Within each end-use Demand, then, the '
-			  'distribution must total to 1.  Demand-specific distribution in '
-			  'error: {}\n\n   {}\n\tsum = {}')
+			  'demands are distributed per time-slice (i.e., time_season, '
+			  'time_of_day).  Within each end-use Demand, then, the distribution '
+			  'must total to 1.\n\n   Demand-specific distribution in error: '
+			  ' {}\n\n   {}\n\tsum = {}')
 
-			raise TemoaValidationError( msg.format(dem, dem, items, total) )
+			raise TemoaValidationError( msg.format(dem, items, total) )
 
 	return tuple()
 
