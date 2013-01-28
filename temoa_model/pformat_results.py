@@ -19,8 +19,11 @@ an archive may not have received this license file.  If not, see
 <http://www.gnu.org/licenses/>.
 """
 
-from sys import stderr as SE
+__all__ = ('pformat_results',)
+
+from collections import defaultdict
 from cStringIO import StringIO
+from sys import stderr as SE
 
 def pformat_results ( pyomo_instance, pyomo_result ):
 	from coopr.pyomo import Objective, Var, Constraint
@@ -63,38 +66,24 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	Vars = soln.Variable
 	Cons = soln.Constraint
 
-	var_sm = dict()   # variable "symbol mapping"
-	con_sm = dict()
+	def collect_result_data( cgroup, clist, epsilon):
+		# ctype = "Component group"; i.e., Vars or Cons
+		# clist = "Component list"; i.e., where to store the data
+		# epsilon = absolute value below which to ignore a result
+		results = defaultdict(list)
+		for name, data in cgroup.iteritems():
+			if not (abs( data['Value'] ) > epsilon ): continue
 
-	def create_symbol_map ( smap, stype ):
-		for name, group in instance.active_components( stype ).iteritems():
-			for item in group.itervalues():
-				if item.index.__class__ is tuple:
-					parts = [name, '[', ','.join(str(i) for i in item.index), ']']
-					smap[ item.name ] = (name, ''.join(parts) )
-				else:
-					smap[ item.name ] = (name, item.name )
+			# name looks like "Something[some,index]"
+			group, index = name[:-1].split('[')
+			results[ group ].append( (name.replace("'", ''), data['Value']) )
+		clist.extend( t for i in sorted( results ) for t in sorted(results[i]))
 
-	create_symbol_map( var_sm, Var )
-	create_symbol_map( con_sm, Constraint )
+	var_info = list()
+	con_info = list()
 
-	var_info = sorted(
-	  ( var_sm[ var_name ], Vars[ var_name ]['Value'] )
-
-	  for var_name in Vars
-	  if abs(Vars[ var_name ]['Value']) > 1e-15
-	)
-
-	con_info = sorted(
-	  ( con_sm[ con_name ], Cons[ con_name ]['Value'] )
-
-	  for con_name in Cons
-	  if abs(Cons[ con_name ].value) > 1e-15    # i.e. "if it's non-zero"
-	)
-
-	# remove the no-longer-necessary sorting key.
-	con_info = [ (con, val) for (sortkey, con), val in con_info ]
-	var_info = [ (var, val) for (sortkey, var), val in var_info ]
+	collect_result_data( Vars, var_info, epsilon=1e-9 )
+	collect_result_data( Cons, con_info, epsilon=1e-9 )
 
 	def get_int_padding ( obj ):
 		val = obj[ 1 ]         # obj is 2-tuple, defined within var_info
@@ -148,3 +137,4 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 			run_output.write( format % (int_part, dec_part, key) )
 
 	return run_output.getvalue()
+
