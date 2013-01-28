@@ -180,6 +180,13 @@ CapacityFactor(tech_all, vintage_all)
 	M.CostFixed_ptv    = Set( dimen=3, rule=CostFixedIndices )
 	M.CostMarginal_ptv = Set( dimen=3, rule=CostMarginalIndices )
 	M.CostInvest_tv    = Set( dimen=2, rule=CostInvestIndices )
+	M.CostFixedVintageDefault_tv = Set( dimen=2,
+	   rule=lambda M: set((t, v) for p, t, v in M.CostFixed_ptv ) )
+	M.CostMarginalVintageDefault_tv = Set( dimen=2,
+	   rule=lambda M: set((t, v) for p, t, v in M.CostMarginal_ptv ) )
+
+	M.CostFixedVintageDefault    = Param( M.CostFixedVintageDefault_tv )
+	M.CostMarginalVintageDefault = Param( M.CostMarginalVintageDefault_tv )
 	M.CostFixed    = Param( M.CostFixed_ptv )
 	M.CostMarginal = Param( M.CostMarginal_ptv )
 	M.CostInvest   = Param( M.CostInvest_tv )

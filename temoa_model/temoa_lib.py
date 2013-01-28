@@ -373,7 +373,45 @@ def CreateDemands ( M ):
 
 			raise TemoaValidationError( msg.format(dem, items, total) )
 
-	return tuple()
+
+def CreateCosts ( M ):
+	# Steps
+	#  1. Collect all possible cost indices (CostFixed, CostMarginal)
+	#  2. Find the ones _not_ specified in CostFixed and CostMarginal
+	#  3. Set them, based on Cost*VintageDefault
+
+	# Shorter names, for us lazy programmer types
+	CF = M.CostFixed
+	CM = M.CostMarginal
+
+	# Step 1
+	fixed_indices = set( (p, t, v) for p, t, v in M.CostFixed_ptv )
+	marg_indices  = set( (p, t, v) for p, t, v in M.CostMarginal_ptv )
+
+	# Step 2
+	unspecified_fixed_prices = fixed_indices.difference( CF.sparse_iterkeys() )
+	unspecified_marg_prices  = marg_indices.difference( CM.sparse_iterkeys() )
+
+	# Step 3
+
+	# Some hackery: We futz with _constructed because Pyomo thinks that this
+	# Param is already constructed.  However, in our view, it is not yet,
+	# because we're specifically targeting values that have not yet been
+	# constructed, that we know are valid, and that we will need.
+
+	if unspecified_fixed_prices:
+		CF._constructed = False
+		for p, t, v in unspecified_fixed_prices:
+			if (t, v) in M.CostFixedVintageDefault:
+				CF[p, t, v] = M.CostFixedVintageDefault[t, v]
+		CF._constructed = True
+
+	if unspecified_marg_prices:
+		CM._constructed = False
+		for p, t, v in unspecified_marg_prices:
+			if (t, v) in M.CostMarginalVintageDefault:
+				CM[p, t, v] = M.CostMarginalVintageDefault[t, v]
+		CM._constructed = True
 
 
 def validate_TechOutputSplit ( M ):

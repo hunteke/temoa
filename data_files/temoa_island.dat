@@ -449,408 +449,107 @@ param  CostInvest  :=
  tl_ethcar      2045             2300
 	;
 
-param  CostFixed  :=
-# time_optimize   # tech_all         # vintage_all       # cost
- 2010              e_coal             2010               29.3
- 2015              e_coal             2010               29.3
- 2020              e_coal             2010               29.3
- 2025              e_coal             2010               29.3
- 2030              e_coal             2010               29.3
- 2035              e_coal             2010               29.3
- 2040              e_coal             2010               29.3
- 2045              e_coal             2010               29.3
- 2015              e_coal             2015               29.3
- 2020              e_coal             2015               29.3
- 2025              e_coal             2015               29.3
- 2030              e_coal             2015               29.3
- 2035              e_coal             2015               29.3
- 2040              e_coal             2015               29.3
- 2045              e_coal             2015               29.3
- 2020              e_coal             2020               29.3
- 2025              e_coal             2020               29.3
- 2030              e_coal             2020               29.3
- 2035              e_coal             2020               29.3
- 2040              e_coal             2020               29.3
- 2045              e_coal             2020               29.3
- 2025              e_coal             2025               29.3
- 2030              e_coal             2025               29.3
- 2035              e_coal             2025               29.3
- 2040              e_coal             2025               29.3
- 2045              e_coal             2025               29.3
- 2030              e_coal             2030               29.3
- 2035              e_coal             2030               29.3
- 2040              e_coal             2030               29.3
- 2045              e_coal             2030               29.3
- 2035              e_coal             2035               29.3
- 2040              e_coal             2035               29.3
- 2045              e_coal             2035               29.3
- 2040              e_coal             2040               29.3
- 2045              e_coal             2040               29.3
- 2045              e_coal             2045               29.3
 
- 2010              e_hydro            2010               13.6
- 2015              e_hydro            2010               13.6
- 2020              e_hydro            2010               13.6
- 2025              e_hydro            2010               13.6
- 2030              e_hydro            2010               13.6
- 2035              e_hydro            2010               13.6
- 2015              e_hydro            2015               13.6
- 2020              e_hydro            2015               13.6
- 2025              e_hydro            2015               13.6
- 2030              e_hydro            2015               13.6
- 2035              e_hydro            2015               13.6
- 2040              e_hydro            2015               13.6
- 2020              e_hydro            2020               13.6
- 2025              e_hydro            2020               13.6
- 2030              e_hydro            2020               13.6
- 2035              e_hydro            2020               13.6
- 2040              e_hydro            2020               13.6
- 2045              e_hydro            2020               13.6
- 2025              e_hydro            2025               13.6
- 2030              e_hydro            2025               13.6
- 2035              e_hydro            2025               13.6
- 2040              e_hydro            2025               13.6
- 2045              e_hydro            2025               13.6
- 2030              e_hydro            2030               13.6
- 2035              e_hydro            2030               13.6
- 2040              e_hydro            2030               13.6
- 2045              e_hydro            2030               13.6
- 2035              e_hydro            2035               13.6
- 2040              e_hydro            2035               13.6
- 2045              e_hydro            2035               13.6
- 2040              e_hydro            2040               13.6
- 2045              e_hydro            2040               13.6
- 2045              e_hydro            2045               13.6
+param  CostFixedVintageDefault  :=
+ e_coal             2010               29.3
+ e_coal             2015               29.3
+ e_coal             2020               29.3
+ e_coal             2025               29.3
+ e_coal             2030               29.3
+ e_coal             2035               29.3
+ e_coal             2040               29.3
+ e_coal             2045               29.3
 
- 2010              e_ngcc             2010               14.4
- 2015              e_ngcc             2010               14.4
- 2020              e_ngcc             2010               14.4
- 2025              e_ngcc             2010               14.4
- 2030              e_ngcc             2010               14.4
- 2035              e_ngcc             2010               14.4
- 2015              e_ngcc             2015               14.4
- 2020              e_ngcc             2015               14.4
- 2025              e_ngcc             2015               14.4
- 2030              e_ngcc             2015               14.4
- 2035              e_ngcc             2015               14.4
- 2040              e_ngcc             2015               14.4
- 2020              e_ngcc             2020               14.4
- 2025              e_ngcc             2020               14.4
- 2030              e_ngcc             2020               14.4
- 2035              e_ngcc             2020               14.4
- 2040              e_ngcc             2020               14.4
- 2045              e_ngcc             2020               14.4
- 2025              e_ngcc             2025               14.4
- 2030              e_ngcc             2025               14.4
- 2035              e_ngcc             2025               14.4
- 2040              e_ngcc             2025               14.4
- 2045              e_ngcc             2025               14.4
- 2030              e_ngcc             2030               14.4
- 2035              e_ngcc             2030               14.4
- 2040              e_ngcc             2030               14.4
- 2045              e_ngcc             2030               14.4
- 2035              e_ngcc             2035               14.4
- 2040              e_ngcc             2035               14.4
- 2045              e_ngcc             2035               14.4
- 2040              e_ngcc             2040               14.4
- 2045              e_ngcc             2040               14.4
- 2045              e_ngcc             2045               14.4
+ e_hydro            2010               13.6
+ e_hydro            2015               13.6
+ e_hydro            2020               13.6
+ e_hydro            2025               13.6
+ e_hydro            2030               13.6
+ e_hydro            2035               13.6
+ e_hydro            2040               13.6
+ e_hydro            2045               13.6
 
- 2010              e_ngsc             2010               14.5
- 2015              e_ngsc             2010               14.5
- 2020              e_ngsc             2010               14.5
- 2025              e_ngsc             2010               14.5
- 2030              e_ngsc             2010               14.5
- 2035              e_ngsc             2010               14.5
- 2015              e_ngsc             2015               14.5
- 2020              e_ngsc             2015               14.5
- 2025              e_ngsc             2015               14.5
- 2030              e_ngsc             2015               14.5
- 2035              e_ngsc             2015               14.5
- 2040              e_ngsc             2015               14.5
- 2020              e_ngsc             2020               14.5
- 2025              e_ngsc             2020               14.5
- 2030              e_ngsc             2020               14.5
- 2035              e_ngsc             2020               14.5
- 2040              e_ngsc             2020               14.5
- 2045              e_ngsc             2020               14.5
- 2025              e_ngsc             2025               14.5
- 2030              e_ngsc             2025               14.5
- 2035              e_ngsc             2025               14.5
- 2040              e_ngsc             2025               14.5
- 2045              e_ngsc             2025               14.5
- 2030              e_ngsc             2030               14.5
- 2035              e_ngsc             2030               14.5
- 2040              e_ngsc             2030               14.5
- 2045              e_ngsc             2030               14.5
- 2035              e_ngsc             2035               14.5
- 2040              e_ngsc             2035               14.5
- 2045              e_ngsc             2035               14.5
- 2040              e_ngsc             2040               14.5
- 2045              e_ngsc             2040               14.5
- 2045              e_ngsc             2045               14.5
+ e_ngcc             2010               14.4
+ e_ngcc             2015               14.4
+ e_ngcc             2020               14.4
+ e_ngcc             2025               14.4
+ e_ngcc             2030               14.4
+ e_ngcc             2035               14.4
+ e_ngcc             2040               14.4
+ e_ngcc             2045               14.4
 
- 2010              e_nuclear          2010               87.7
- 2015              e_nuclear          2010               87.7
- 2020              e_nuclear          2010               87.7
- 2025              e_nuclear          2010               87.7
- 2030              e_nuclear          2010               87.7
- 2035              e_nuclear          2010               87.7
- 2040              e_nuclear          2010               87.7
- 2045              e_nuclear          2010               87.7
- 2015              e_nuclear          2015               87.7
- 2020              e_nuclear          2015               87.7
- 2025              e_nuclear          2015               87.7
- 2030              e_nuclear          2015               87.7
- 2035              e_nuclear          2015               87.7
- 2040              e_nuclear          2015               87.7
- 2045              e_nuclear          2015               87.7
- 2020              e_nuclear          2020               87.7
- 2025              e_nuclear          2020               87.7
- 2030              e_nuclear          2020               87.7
- 2035              e_nuclear          2020               87.7
- 2040              e_nuclear          2020               87.7
- 2045              e_nuclear          2020               87.7
- 2025              e_nuclear          2025               87.7
- 2030              e_nuclear          2025               87.7
- 2035              e_nuclear          2025               87.7
- 2040              e_nuclear          2025               87.7
- 2045              e_nuclear          2025               87.7
- 2030              e_nuclear          2030               87.7
- 2035              e_nuclear          2030               87.7
- 2040              e_nuclear          2030               87.7
- 2045              e_nuclear          2030               87.7
- 2035              e_nuclear          2035               87.7
- 2040              e_nuclear          2035               87.7
- 2045              e_nuclear          2035               87.7
- 2040              e_nuclear          2040               87.7
- 2045              e_nuclear          2040               87.7
- 2045              e_nuclear          2045               87.7
+ e_ngsc             2010               14.5
+ e_ngsc             2015               14.5
+ e_ngsc             2020               14.5
+ e_ngsc             2025               14.5
+ e_ngsc             2030               14.5
+ e_ngsc             2035               14.5
+ e_ngsc             2040               14.5
+ e_ngsc             2045               14.5
+
+ e_nuclear          2010               87.7
+ e_nuclear          2015               87.7
+ e_nuclear          2020               87.7
+ e_nuclear          2025               87.7
+ e_nuclear          2030               87.7
+ e_nuclear          2035               87.7
+ e_nuclear          2040               87.7
+ e_nuclear          2045               87.7
 	;
 
 
-param  CostMarginal  :=
+param  CostMarginalVintageDefault  :=
 # time_optimize   # tech_all         # vintage_all       # cost
- 2010              imp_coal           2010                3.1
- 2015              imp_coal           2010                3.1
- 2020              imp_coal           2010                3.1
- 2025              imp_coal           2010                3.1
- 2030              imp_coal           2010                3.1
- 2035              imp_coal           2010                3.1
- 2040              imp_coal           2010                3.1
- 2045              imp_coal           2010                3.1
+ imp_coal           2010                3.1
+ imp_ethanol        2010               20.5
+ imp_natgas         2010               10.7
+ imp_oil            2010               16.3
+ imp_uranium        2010               30.1
 
- 2010              imp_ethanol        2010               20.5
- 2015              imp_ethanol        2010               20.5
- 2020              imp_ethanol        2010               20.5
- 2025              imp_ethanol        2010               20.5
- 2030              imp_ethanol        2010               20.5
- 2035              imp_ethanol        2010               20.5
- 2040              imp_ethanol        2010               20.5
- 2045              imp_ethanol        2010               20.5
+ e_coal             2010                1.2
+ e_coal             2015                1.2
+ e_coal             2020                1.2
+ e_coal             2025                1.2
+ e_coal             2030                1.2
+ e_coal             2035                1.2
+ e_coal             2040                1.2
+ e_coal             2045                1.2
 
- 2010              imp_natgas         2010               10.7
- 2015              imp_natgas         2010               10.7
- 2020              imp_natgas         2010               10.7
- 2025              imp_natgas         2010               10.7
- 2030              imp_natgas         2010               10.7
- 2035              imp_natgas         2010               10.7
- 2040              imp_natgas         2010               10.7
- 2045              imp_natgas         2010               10.7
+ e_hydro            2010                0.7
+ e_hydro            2015                0.7
+ e_hydro            2020                0.7
+ e_hydro            2025                0.7
+ e_hydro            2030                0.7
+ e_hydro            2035                0.7
+ e_hydro            2040                0.7
+ e_hydro            2045                0.7
 
- 2010              imp_oil            2010               16.3
- 2015              imp_oil            2010               16.3
- 2020              imp_oil            2010               16.3
- 2025              imp_oil            2010               16.3
- 2030              imp_oil            2010               16.3
- 2035              imp_oil            2010               16.3
- 2040              imp_oil            2010               16.3
- 2045              imp_oil            2010               16.3
+ e_ngcc             2010                0.9
+ e_ngcc             2015                0.9
+ e_ngcc             2020                0.9
+ e_ngcc             2025                0.9
+ e_ngcc             2030                0.9
+ e_ngcc             2035                0.9
+ e_ngcc             2040                0.9
+ e_ngcc             2045                0.9
 
- 2010              imp_uranium        2010               30.1
- 2015              imp_uranium        2010               30.1
- 2020              imp_uranium        2010               30.1
- 2025              imp_uranium        2010               30.1
- 2030              imp_uranium        2010               30.1
- 2035              imp_uranium        2010               30.1
- 2040              imp_uranium        2010               30.1
- 2045              imp_uranium        2010               30.1
+ e_ngsc             2010                1.9
+ e_ngsc             2015                1.9
+ e_ngsc             2020                1.9
+ e_ngsc             2025                1.9
+ e_ngsc             2030                1.9
+ e_ngsc             2035                1.9
+ e_ngsc             2040                1.9
+ e_ngsc             2045                1.9
 
- 2010              e_coal             2010                1.2
- 2015              e_coal             2010                1.2
- 2020              e_coal             2010                1.2
- 2025              e_coal             2010                1.2
- 2030              e_coal             2010                1.2
- 2035              e_coal             2010                1.2
- 2040              e_coal             2010                1.2
- 2045              e_coal             2010                1.2
- 2015              e_coal             2015                1.2
- 2020              e_coal             2015                1.2
- 2025              e_coal             2015                1.2
- 2030              e_coal             2015                1.2
- 2035              e_coal             2015                1.2
- 2040              e_coal             2015                1.2
- 2045              e_coal             2015                1.2
- 2020              e_coal             2020                1.2
- 2025              e_coal             2020                1.2
- 2030              e_coal             2020                1.2
- 2035              e_coal             2020                1.2
- 2040              e_coal             2020                1.2
- 2045              e_coal             2020                1.2
- 2025              e_coal             2025                1.2
- 2030              e_coal             2025                1.2
- 2035              e_coal             2025                1.2
- 2040              e_coal             2025                1.2
- 2045              e_coal             2025                1.2
- 2030              e_coal             2030                1.2
- 2035              e_coal             2030                1.2
- 2040              e_coal             2030                1.2
- 2045              e_coal             2030                1.2
- 2035              e_coal             2035                1.2
- 2040              e_coal             2035                1.2
- 2045              e_coal             2035                1.2
- 2040              e_coal             2040                1.2
- 2045              e_coal             2040                1.2
- 2045              e_coal             2045                1.2
-
- 2010              e_hydro            2010                0.7
- 2015              e_hydro            2010                0.7
- 2020              e_hydro            2010                0.7
- 2025              e_hydro            2010                0.7
- 2030              e_hydro            2010                0.7
- 2035              e_hydro            2010                0.7
- 2015              e_hydro            2015                0.7
- 2020              e_hydro            2015                0.7
- 2025              e_hydro            2015                0.7
- 2030              e_hydro            2015                0.7
- 2035              e_hydro            2015                0.7
- 2040              e_hydro            2015                0.7
- 2020              e_hydro            2020                0.7
- 2025              e_hydro            2020                0.7
- 2030              e_hydro            2020                0.7
- 2035              e_hydro            2020                0.7
- 2040              e_hydro            2020                0.7
- 2045              e_hydro            2020                0.7
- 2025              e_hydro            2025                0.7
- 2030              e_hydro            2025                0.7
- 2035              e_hydro            2025                0.7
- 2040              e_hydro            2025                0.7
- 2045              e_hydro            2025                0.7
- 2030              e_hydro            2030                0.7
- 2035              e_hydro            2030                0.7
- 2040              e_hydro            2030                0.7
- 2045              e_hydro            2030                0.7
- 2035              e_hydro            2035                0.7
- 2040              e_hydro            2035                0.7
- 2045              e_hydro            2035                0.7
- 2040              e_hydro            2040                0.7
- 2045              e_hydro            2040                0.7
- 2045              e_hydro            2045                0.7
-
- 2010              e_ngcc             2010                0.9
- 2015              e_ngcc             2010                0.9
- 2020              e_ngcc             2010                0.9
- 2025              e_ngcc             2010                0.9
- 2030              e_ngcc             2010                0.9
- 2035              e_ngcc             2010                0.9
- 2015              e_ngcc             2015                0.9
- 2020              e_ngcc             2015                0.9
- 2025              e_ngcc             2015                0.9
- 2030              e_ngcc             2015                0.9
- 2035              e_ngcc             2015                0.9
- 2040              e_ngcc             2015                0.9
- 2020              e_ngcc             2020                0.9
- 2025              e_ngcc             2020                0.9
- 2030              e_ngcc             2020                0.9
- 2035              e_ngcc             2020                0.9
- 2040              e_ngcc             2020                0.9
- 2045              e_ngcc             2020                0.9
- 2025              e_ngcc             2025                0.9
- 2030              e_ngcc             2025                0.9
- 2035              e_ngcc             2025                0.9
- 2040              e_ngcc             2025                0.9
- 2045              e_ngcc             2025                0.9
- 2030              e_ngcc             2030                0.9
- 2035              e_ngcc             2030                0.9
- 2040              e_ngcc             2030                0.9
- 2045              e_ngcc             2030                0.9
- 2035              e_ngcc             2035                0.9
- 2040              e_ngcc             2035                0.9
- 2045              e_ngcc             2035                0.9
- 2040              e_ngcc             2040                0.9
- 2045              e_ngcc             2040                0.9
- 2045              e_ngcc             2045                0.9
-
- 2010              e_ngsc             2010                1.9
- 2015              e_ngsc             2010                1.9
- 2020              e_ngsc             2010                1.9
- 2025              e_ngsc             2010                1.9
- 2030              e_ngsc             2010                1.9
- 2035              e_ngsc             2010                1.9
- 2015              e_ngsc             2015                1.9
- 2020              e_ngsc             2015                1.9
- 2025              e_ngsc             2015                1.9
- 2030              e_ngsc             2015                1.9
- 2035              e_ngsc             2015                1.9
- 2040              e_ngsc             2015                1.9
- 2020              e_ngsc             2020                1.9
- 2025              e_ngsc             2020                1.9
- 2030              e_ngsc             2020                1.9
- 2035              e_ngsc             2020                1.9
- 2040              e_ngsc             2020                1.9
- 2045              e_ngsc             2020                1.9
- 2025              e_ngsc             2025                1.9
- 2030              e_ngsc             2025                1.9
- 2035              e_ngsc             2025                1.9
- 2040              e_ngsc             2025                1.9
- 2045              e_ngsc             2025                1.9
- 2030              e_ngsc             2030                1.9
- 2035              e_ngsc             2030                1.9
- 2040              e_ngsc             2030                1.9
- 2045              e_ngsc             2030                1.9
- 2035              e_ngsc             2035                1.9
- 2040              e_ngsc             2035                1.9
- 2045              e_ngsc             2035                1.9
- 2040              e_ngsc             2040                1.9
- 2045              e_ngsc             2040                1.9
- 2045              e_ngsc             2045                1.9
-
- 2010              e_nuclear          2010                0.6
- 2015              e_nuclear          2010                0.6
- 2020              e_nuclear          2010                0.6
- 2025              e_nuclear          2010                0.6
- 2030              e_nuclear          2010                0.6
- 2035              e_nuclear          2010                0.6
- 2040              e_nuclear          2010                0.6
- 2045              e_nuclear          2010                0.6
- 2015              e_nuclear          2015                0.6
- 2020              e_nuclear          2015                0.6
- 2025              e_nuclear          2015                0.6
- 2030              e_nuclear          2015                0.6
- 2035              e_nuclear          2015                0.6
- 2040              e_nuclear          2015                0.6
- 2045              e_nuclear          2015                0.6
- 2020              e_nuclear          2020                0.6
- 2025              e_nuclear          2020                0.6
- 2030              e_nuclear          2020                0.6
- 2035              e_nuclear          2020                0.6
- 2040              e_nuclear          2020                0.6
- 2045              e_nuclear          2020                0.6
- 2025              e_nuclear          2025                0.6
- 2030              e_nuclear          2025                0.6
- 2035              e_nuclear          2025                0.6
- 2040              e_nuclear          2025                0.6
- 2045              e_nuclear          2025                0.6
- 2030              e_nuclear          2030                0.6
- 2035              e_nuclear          2030                0.6
- 2040              e_nuclear          2030                0.6
- 2045              e_nuclear          2030                0.6
- 2035              e_nuclear          2035                0.6
- 2040              e_nuclear          2035                0.6
- 2045              e_nuclear          2035                0.6
- 2040              e_nuclear          2040                0.6
- 2045              e_nuclear          2040                0.6
- 2045              e_nuclear          2045                0.6
+ e_nuclear          2010                0.6
+ e_nuclear          2015                0.6
+ e_nuclear          2020                0.6
+ e_nuclear          2025                0.6
+ e_nuclear          2030                0.6
+ e_nuclear          2035                0.6
+ e_nuclear          2040                0.6
+ e_nuclear          2045                0.6
 	;
 
  param  CapacityFactor  :=
