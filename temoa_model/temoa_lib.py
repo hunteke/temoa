@@ -146,8 +146,6 @@ def validate_time ( M ):
 		  'time_horizon max:   {}\ntime_future min:    {}')
 		raise TemoaValidationError( msg.format(horizonh, future) )
 
-	return tuple()
-
 
 def validate_SegFrac ( M ):
 
@@ -171,8 +169,6 @@ def validate_SegFrac ( M ):
 		  '1.  Current values:\n   {}\n\tsum = {}')
 
 		raise TemoaValidationError( msg.format(items, total ))
-
-	return tuple()
 
 
 def CreateCapacityFactors ( M ):
@@ -253,8 +249,6 @@ def CreateLifetimes ( M ):
 		for t, v in unspecified_tech_lives:
 			LTC[t, v] = M.LifetimeTechDefault[ t ]
 		LTC._constructed = True
-
-	return tuple()
 
 
 def CreateDemands ( M ):
