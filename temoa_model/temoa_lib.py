@@ -1600,7 +1600,7 @@ def solve_cost_of_guessing ( optimizer, options ):
 		for vname in the_gamble.active_components( Var ):
 			var = getattr(the_gamble, vname)
 			for i, v in var.iteritems():
-				variable_values[ v.name.replace("'", '') ].append((
+				variable_values[ v.cname().replace("'", '') ].append((
 				  gamblers_guess, v.value ))
 
 		# Step 5.2: Save the variable values from the gambit
@@ -1648,7 +1648,7 @@ def solve_cost_of_guessing ( optimizer, options ):
 			for vname in wg.active_components( Var ):
 				var = getattr(wg, vname)
 				for i, v in var.iteritems():
-					variable_values[ v.name.replace("'", '') ].append(
+					variable_values[ v.cname().replace("'", '') ].append(
 					  (sname, v.value) )
 
 			# ensure we don't make a mistake between loop iterations.
