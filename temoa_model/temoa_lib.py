@@ -1605,9 +1605,17 @@ def solve_cost_of_guessing ( optimizer, options ):
 
 		# Step 5.2: Save the variable values from the gambit
 		fixed_values = dict()
+
 		for vname, indices in variables_to_fix.iteritems():
 			var = getattr(the_gamble, vname)
-			fixed_values[ vname ] = list(var[ i ].value for i in sorted( indices ))
+			values = list()
+			for i in sorted( indices ):
+				val = value(var[ i ])
+				if val < 1e-9:
+					val = 0
+				values.append( val )
+			fixed_values[ vname ] = values
+			del values
 
 		# ensure we don't mistakenly use a variable below (defensive programming)
 		del mdata, model, the_gamble
@@ -1666,6 +1674,7 @@ def solve_cost_of_guessing ( optimizer, options ):
 		data.append(('Fixed variables',))
 		for vname, indices in sorted(variables_to_fix.iteritems()):
 			for index, val in zip(sorted(indices), fixed_values[ vname ]):
+				if val < 1e-9: continue
 				vfmt = ','.join('{}' for i in xrange(len(index)))
 				vfmt = '{}[{}]'.format(vname, vfmt)
 				# Works out to "vname[{},{},{}...]" for the length of index
@@ -1681,8 +1690,12 @@ def solve_cost_of_guessing ( optimizer, options ):
 		for v, vals in sorted( variable_values.iteritems() ):
 			guess_val = filter(lambda x: x[0] == gamblers_guess, vals)[0][1]
 			other_vals = filter(lambda x: x[0] != gamblers_guess, vals)
+
 			row = [ v, guess_val ]
 			row.extend( j for i, j in other_vals )
+			for i, val in enumerate(row[1:]):
+				if val < 1e-9:
+					row[1 + i] = 0
 
 			# if they are all 0, then there's no need to mention this variable
 			if True not in ( i != 0 for i in row[1:] ): continue
