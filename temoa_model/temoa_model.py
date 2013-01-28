@@ -113,8 +113,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.vintage_optimize = Set( ordered=True, initialize=init_set_vintage_optimize)
 	M.vintage_all      = Set( ordered=True, initialize=init_set_vintage_all)
 
-	# always-empty Set; hack to perform inter-Set or inter-Param validation
-	M.validate_time    = Set( initialize=validate_time )
+	# perform some basic validation on the time sets as a whole.
+	M.validate_time    = BuildAction( rule=validate_time )
 
 	M.time_season     = Set()
 	M.time_of_day     = Set()
@@ -138,8 +138,8 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.SegFrac = Param( M.time_season, M.time_of_day )
 
-	# always-empty Set; hack to perform inter-Set or inter-Param validation
-	M.validate_SegFrac = Set( initialize=validate_SegFrac )
+	# Ensure that all the time slices specified in SegFrac sum to 1
+	M.validate_SegFrac = BuildAction( rule=validate_SegFrac )
 
 	M.CapacityToActivity = Param( M.tech_all,  default=1 )
 
@@ -159,7 +159,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.LifetimeTech = Param( M.LifetimeTech_tv )  # in years
 	M.LifetimeLoan = Param( M.LifetimeLoan_tv )  # in years
 
-	M.initialize_Lifetimes = Set( rule=CreateLifetimes )
+	M.initialize_Lifetimes = BuildAction( rule=CreateLifetimes )
 
 	# always empty set, like the validation hacks above.  Temoa uses a couple
 	# of global variables to precalculate some oft-used results in constraint
@@ -172,17 +172,25 @@ CapacityFactor(tech_all, vintage_all)
 	M.DemandSpecificDistribution = Param( M.time_season, M.time_of_day, M.commodity_demand )
 	M.Demand        = Param( M.time_optimize,  M.commodity_demand )
 
-	# always-empty Set; hack to perform Demand initialization and validation
-	M.initialize_Demands = Set( rule=CreateDemands )
+	M.initialize_Demands = BuildAction( rule=CreateDemands )
 
 	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical )
 
 	M.CostFixed_ptv    = Set( dimen=3, rule=CostFixedIndices )
 	M.CostMarginal_ptv = Set( dimen=3, rule=CostMarginalIndices )
 	M.CostInvest_tv    = Set( dimen=2, rule=CostInvestIndices )
+	M.CostFixedVintageDefault_tv = Set( dimen=2,
+	   rule=lambda M: set((t, v) for p, t, v in M.CostFixed_ptv ) )
+	M.CostMarginalVintageDefault_tv = Set( dimen=2,
+	   rule=lambda M: set((t, v) for p, t, v in M.CostMarginal_ptv ) )
+
+	M.CostFixedVintageDefault    = Param( M.CostFixedVintageDefault_tv )
+	M.CostMarginalVintageDefault = Param( M.CostMarginalVintageDefault_tv )
 	M.CostFixed    = Param( M.CostFixed_ptv )
 	M.CostMarginal = Param( M.CostMarginal_ptv )
 	M.CostInvest   = Param( M.CostInvest_tv )
+
+	M.initialize_Costs = BuildAction( rule=CreateCosts )
 
 	M.Loan_tv          = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
 	M.ModelLoanLife_tv = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
@@ -194,7 +202,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.LoanLifeFrac_ptv = Set( dimen=3, rule=LoanLifeFracIndices )
 	M.TechLifeFrac_ptv = Set( dimen=3, rule=TechLifeFracIndices )
 
-	M.DiscountRate  = Param( M.DiscountRate_tv, default=0.0192448765618044 )
+	M.DiscountRate  = Param( M.DiscountRate_tv, default=0.05 )
 	M.TechLifeFrac  = Param( M.TechLifeFrac_ptv, initialize=ParamTechLifeFraction_rule )
 	M.LoanAnnualize = Param( M.Loan_tv, initialize=ParamLoanAnnualize_rule )
 
