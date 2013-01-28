@@ -1381,42 +1381,42 @@ def parse_args ( ):
 	  default=False)
 
 
-	stochastic.add_argument('--ecgw',
+	stochastic.add_argument('--ecg',
 	  help='"Expected Cost of Guessing Wrong" -- Calculate the costs of '
 	       'choosing the wrong scenario of a stochastic tree.  Specify the '
 	       'path to the stochastic scenario directory.  (i.e., where to find '
 	       'ScenarioStructure.dat)',
 	  action='store',
 	  metavar='STOCHASTIC_DIRECTORY',
-	  dest='ecgw',
+	  dest='ecg',
 	  default=None)
 
 	options = parser.parse_args()
 
 	# It would be nice if this implemented with add_mutually_exclusive_group
 	# but I /also/ want them in separate groups for display.  Bummer.
-	if not (options.dot_dat or options.ecgw):
+	if not (options.dot_dat or options.ecg):
 		usage = parser.format_usage()
 		msg = ('Missing a data file to optimize (e.g., test.dat)')
 		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
 		raise TemoaCommandLineArgumentError( msg )
 
-	elif options.dot_dat and options.ecgw:
+	elif options.dot_dat and options.ecg:
 		usage = parser.format_usage()
-		msg = ('Conflicting option and arguments: --ecgw and data files\n\n'
-		       '--ecgw is for performing an analysis on a directory of data '
+		msg = ('Conflicting option and arguments: --ecg and data files\n\n'
+		       '--ecg is for performing an analysis on a directory of data '
 		       'files, as are used in a stochastic analysis with PySP.  Please '
-		       'remove either of --ecgw or the data files from the command '
+		       'remove either of --ecg or the data files from the command '
 		       'line.')
 		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
 		raise TemoaCommandLineArgumentError( msg )
-	elif options.ecgw:
+	elif options.ecg:
 		# can this be subsumed directly into the argparse module functionality?
 		from os.path import isdir, isfile, join
-		edir = options.ecgw
+		edir = options.ecg
 
-		if not isdir( options.ecgw ):
-			msg = "{}--ecgw requires a directory.{}".format( red_bold, reset )
+		if not isdir( options.ecg ):
+			msg = "{}--ecg requires a directory.{}".format( red_bold, reset )
 			msg = "{}\n\nSupplied path: '{}'".format( msg, edir )
 			raise TemoaCommandLineArgumentError( msg )
 
@@ -1491,7 +1491,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		SE.write( '\r[%8.2f\n' % duration() )
 
 
-def solve_cost_of_guessing_wrong ( optimizer, options ):
+def solve_cost_of_guessing ( optimizer, options ):
 	import csv
 
 	from cStringIO import StringIO
@@ -1510,7 +1510,7 @@ def solve_cost_of_guessing_wrong ( optimizer, options ):
 	opt = optimizer    # a shorter name for us lazy programmer types
 
 	pwd = abspath( getcwd() )
-	chdir( options.ecgw )
+	chdir( options.ecg )
 	sStructure = scenario_tree_model.create( filename='ScenarioStructure.dat' )
 
 	# Step 1: find the root node.  PySP doesn't make this very easy ...
@@ -1730,8 +1730,8 @@ def temoa_solve ( model ):
 
 	if options.dot_dat:
 		solve_perfect_foresight( model, opt, options )
-	elif options.ecgw:
-		solve_cost_of_guessing_wrong( opt, options )
+	elif options.ecg:
+		solve_cost_of_guessing( opt, options )
 
 # End direct invocation methods
 ###############################################################################
