@@ -315,14 +315,14 @@ def write_scenario_file ( stochasticset, tree ):
 
 		stage_vars = list()
 		stage_vars.extend(
-		  sorted('V_FlowIn[{},{},{},{},{},{},{}]'.format( *index )
-		    for index in flow_keys))
+		  sorted(set('V_FlowIn[{},{},{},{},{},{},{}]'.format( *index )
+		    for index in flow_keys)))
 		stage_vars.extend(
-		  sorted('V_FlowOut[{},{},{},{},{},{},{}]'.format( *index )
-		    for index in flow_keys ))
+		  sorted(set('V_FlowOut[{},{},{},{},{},{},{}]'.format( *index )
+		    for index in flow_keys )))
 		stage_vars.extend(
-		  sorted('V_Capacity[{},{}]'.format( *index )
-		     for index in processes ))
+		  sorted(set('V_Capacity[{},{}]'.format( *index )
+		     for index in processes )))
 
 		stage_var_sets.append( stages_fmt.format( se, '\n  '.join( stage_vars )))
 

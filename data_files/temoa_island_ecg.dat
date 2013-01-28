@@ -1,0 +1,1085 @@
+data;
+
+
+set  time_horizon :=  2014  2020  2026  2032  2038  2044  2050  2056 ;
+set  time_future  :=  2062 ;
+
+set  time_season  :=  W S I ; # Winter, Summer, Intermediate
+set  time_of_day  :=  D N ;   # Day, Night
+
+set  tech_resource  :=
+ imp_coal
+ imp_ethanol
+ imp_natgas
+ imp_oil
+ imp_uranium
+ dom_water
+ dom_wind
+	;
+
+set  tech_production  :=
+ e_coal
+ e_hydro
+ e_ngcc
+ e_ngsc
+ e_nuclear
+ e_wind
+
+ p_refinery
+
+ r_ac
+ r_furnace
+ r_geoth
+
+ r_cfl
+ r_incand
+ r_led
+
+ r_ewheater
+ r_ngwheater
+ r_swheater
+
+ tl_dslcar
+ tl_elccar
+ tl_ethcar
+ tl_gascar
+	;
+
+
+set  tech_baseload  :=
+ e_coal
+ e_nuclear
+	;
+
+
+set  commodity_physical  :=
+ coal
+ diesel
+ electricity
+ ethanol
+ resource
+ gasoline
+ natgas
+ oil
+ water
+ wind
+ uranium
+	;
+
+set  commodity_emissions  :=
+ co2
+	;
+
+set  commodity_demand  :=
+ r_cooling     # PJ/yr
+ r_heating     # PJ/yr
+ r_lighting    # billion lumens/yr
+ r_wheating    # PJ/yr
+ tl_distance   # billion vehicle miles traveled (bvmt) / yr
+	;
+
+
+param  GlobalDiscountRate  :=  0.05 ;
+
+param  SegFrac  :=
+# time_season  # time_of_day    # value
+ W  D   0.125
+ W  N   0.125
+
+ S  D   0.125
+ S  N   0.125
+
+ I  D   0.250
+ I  N   0.250
+	;
+
+
+param  CapacityToActivity  :=
+# tech_all        # value
+ e_coal            31.536    # GW -> PJ/yr
+ e_hydro           31.536    # GW -> PJ/yr
+ e_nuclear         31.536    # GW -> PJ/yr
+ e_wind            31.536    # GW -> PJ/yr
+ e_ngcc            31.536    # GW -> PJ/yr
+ e_ngsc            31.536    # GW -> PJ/yr
+	;
+
+
+param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
+# Emission  # input      # tech         # vintage  # output     # amount released per unit activity
+ co2         resource     imp_natgas     2014       natgas       50.3  # kilotonnes/PJ
+ co2         resource     imp_coal       2014       coal         88.3  # kilotonnes/PJ
+
+ co2         oil          p_refinery     2014       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2020       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2026       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2032       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2038       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2044       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2050       diesel       69.4  # kilotonnes/PJ
+ co2         oil          p_refinery     2056       diesel       69.4  # kilotonnes/PJ
+
+ co2         oil          p_refinery     2014       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2020       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2026       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2032       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2038       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2044       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2050       gasoline     67.2  # kilotonnes/PJ
+ co2         oil          p_refinery     2056       gasoline     67.2  # kilotonnes/PJ
+	;
+
+
+param  EmissionLimit  :=
+ 2014   101825
+	;
+
+
+param  DemandSpecificDistribution  :=
+ I  D  r_cooling    0.1
+ I  N  r_cooling    0.1
+ S  D  r_cooling    0.6
+ S  N  r_cooling    0.2
+
+ I  D  r_heating    0.125
+ I  N  r_heating    0.125
+ W  D  r_heating    0.5
+ W  N  r_heating    0.25
+
+ I  D  r_lighting   0.25
+ I  N  r_lighting   0.25
+ S  D  r_lighting   0.125
+ S  N  r_lighting   0.125
+ W  D  r_lighting   0.125
+ W  N  r_lighting   0.125
+
+ I  D  r_wheating   0.25
+ I  N  r_wheating   0.25
+ S  D  r_wheating   0.125
+ S  N  r_wheating   0.125
+ W  D  r_wheating   0.125
+ W  N  r_wheating   0.125
+
+ I  D  tl_distance  0.25
+ I  N  tl_distance  0.25
+ S  D  tl_distance  0.125
+ S  N  tl_distance  0.125
+ W  D  tl_distance  0.125
+ W  N  tl_distance  0.125
+
+	;
+
+
+param  Demand  :=
+# time_optimize  # commodity_demand    # value
+
+ 2014    r_cooling    240.00
+ 2020    r_cooling    250.40
+ 2026    r_cooling    261.25
+ 2032    r_cooling    272.73
+ 2038    r_cooling    284.73
+ 2044    r_cooling    297.25
+ 2050    r_cooling    310.18
+ 2056    r_cooling    323.75
+
+ 2014    r_heating    200.00
+ 2020    r_heating    208.80
+ 2026    r_heating    217.99
+ 2032    r_heating    227.38
+ 2038    r_heating    237.30
+ 2044    r_heating    247.85
+ 2050    r_heating    258.70
+ 2056    r_heating    269.87
+
+ 2014    r_lighting   100.00
+ 2020    r_lighting   104.20
+ 2026    r_lighting   108.58
+ 2032    r_lighting   113.37
+ 2038    r_lighting   118.37
+ 2044    r_lighting   123.58
+ 2050    r_lighting   129.21
+ 2056    r_lighting   134.83
+
+ 2014    r_wheating   120.00
+ 2020    r_wheating   125.40
+ 2026    r_wheating   131.04
+ 2032    r_wheating   136.48
+ 2038    r_wheating   142.75
+ 2044    r_wheating   148.81
+ 2050    r_wheating   155.50
+ 2056    r_wheating   162.18
+
+ 2014    tl_distance  200.00
+ 2020    tl_distance  200.23
+ 2026    tl_distance  200.46
+ 2032    tl_distance  200.69
+ 2038    tl_distance  200.92
+ 2044    tl_distance  201.15
+ 2050    tl_distance  201.38
+ 2056    tl_distance  201.62
+
+	;
+
+
+param  LifetimeTechDefault  :=
+# tech_all       # value (years)
+ e_coal           45
+ e_nuclear        45
+ p_refinery       40
+ r_ac             15
+ r_cfl            10
+ r_ewheater       15
+ r_furnace        20
+ r_geoth          20
+ r_incand          1
+ r_led            20
+ r_ngwheater      15
+ r_swheater       20
+ tl_dslcar        15
+ tl_elccar        15
+ tl_ethcar        15
+ tl_gascar        15
+	;
+
+param  LifetimeTech  :=
+# tech_all       # vintage_all    # value (years)
+ imp_coal         2014          1000
+ imp_ethanol      2014          1000
+ imp_natgas       2014          1000
+ imp_oil          2014          1000
+ imp_uranium      2014          1000
+ dom_wind         2014          1000
+ dom_water        2014          1000
+	;
+
+param  LifetimeLoanDefault  :=
+# tech_all       # value (years)
+ e_coal           45
+ e_nuclear        45
+ p_refinery       40
+ r_ac             15
+ r_cfl            10
+ r_ewheater       15
+ r_furnace        20
+ r_geoth          20
+ r_incand          1
+ r_led            20
+ r_ngwheater      15
+ r_swheater       20
+ tl_dslcar        15
+ tl_elccar        15
+ tl_gascar        15
+	;
+
+
+param  CostInvest  :=
+# tech_all     # vintage_all    # value
+ e_coal         2014             2809
+ e_coal         2020             2809
+ e_coal         2026             2809
+ e_coal         2032             2809
+ e_coal         2038             2809
+ e_coal         2044             2809
+ e_coal         2050             2809
+ e_coal         2056             2809
+
+ e_hydro        2014             2221
+ e_hydro        2020             2221
+ e_hydro        2026             2221
+ e_hydro        2032             2221
+ e_hydro        2038             2221
+ e_hydro        2044             2221
+ e_hydro        2050             2221
+ e_hydro        2056             2221
+
+ e_ngcc         2014              991
+ e_ngcc         2020              991
+ e_ngcc         2026              991
+ e_ngcc         2032              991
+ e_ngcc         2038              991
+ e_ngcc         2044              991
+ e_ngcc         2050              991
+ e_ngcc         2056              991
+
+ e_ngsc         2014              658
+ e_ngsc         2020              658
+ e_ngsc         2026              658
+ e_ngsc         2032              658
+ e_ngsc         2038              658
+ e_ngsc         2044              658
+ e_ngsc         2050              658
+ e_ngsc         2056              658
+
+ e_nuclear      2014             5275
+ e_nuclear      2020             5275
+ e_nuclear      2026             5275
+ e_nuclear      2032             5275
+ e_nuclear      2038             5275
+ e_nuclear      2044             5275
+ e_nuclear      2050             5275
+ e_nuclear      2056             5275
+
+ e_wind         2014             2409
+ e_wind         2020             2409
+ e_wind         2026             2409
+ e_wind         2032             2409
+ e_wind         2038             2409
+ e_wind         2044             2409
+ e_wind         2050             2409
+ e_wind         2056             2409
+
+ p_refinery     2014                1.10
+ p_refinery     2020                1.10
+ p_refinery     2026                1.10
+ p_refinery     2032                1.10
+ p_refinery     2038                1.10
+ p_refinery     2044                1.10
+ p_refinery     2050                1.10
+ p_refinery     2056                1.10
+
+ r_furnace      2014                3.9
+ r_furnace      2020                3.9
+ r_furnace      2026                3.9
+ r_furnace      2032                3.9
+ r_furnace      2038                3.9
+ r_furnace      2044                3.9
+ r_furnace      2050                3.9
+ r_furnace      2056                3.9
+
+ r_geoth        2014               11.4
+ r_geoth        2020               11.4
+ r_geoth        2026               11.4
+ r_geoth        2032               11.4
+ r_geoth        2038               11.4
+ r_geoth        2044               11.4
+ r_geoth        2050               11.4
+ r_geoth        2056               11.4
+
+ r_ac           2014                7.4
+ r_ac           2020                7.4
+ r_ac           2026                7.4
+ r_ac           2032                7.4
+ r_ac           2038                7.4
+ r_ac           2044                7.4
+ r_ac           2050                7.4
+ r_ac           2056                7.4
+
+ r_cfl          2014                2.4
+ r_cfl          2020                2.4
+ r_cfl          2026                2.4
+ r_cfl          2032                2.4
+ r_cfl          2038                2.4
+ r_cfl          2044                2.4
+ r_cfl          2050                2.4
+ r_cfl          2056                2.4
+
+ r_incand       2014                0.27
+ r_incand       2020                0.27
+ r_incand       2026                0.27
+ r_incand       2032                0.27
+ r_incand       2038                0.27
+ r_incand       2044                0.27
+ r_incand       2050                0.27
+ r_incand       2056                0.27
+
+ r_led          2014               68.2
+ r_led          2020               68.2
+ r_led          2026               68.2
+ r_led          2032               68.2
+ r_led          2038               68.2
+ r_led          2044               68.2
+ r_led          2050               68.2
+ r_led          2056               68.2
+
+ r_swheater     2014               32.2
+ r_swheater     2020               32.2
+ r_swheater     2026               32.2
+ r_swheater     2032               32.2
+ r_swheater     2038               32.2
+ r_swheater     2044               32.2
+ r_swheater     2050               32.2
+ r_swheater     2056               32.2
+
+ r_ngwheater    2014                3.2
+ r_ngwheater    2020                3.2
+ r_ngwheater    2026                3.2
+ r_ngwheater    2032                3.2
+ r_ngwheater    2038                3.2
+ r_ngwheater    2044                3.2
+ r_ngwheater    2050                3.2
+ r_ngwheater    2056                3.2
+
+ r_ewheater     2014                3.3
+ r_ewheater     2020                3.3
+ r_ewheater     2026                3.3
+ r_ewheater     2032                3.3
+ r_ewheater     2038                3.3
+ r_ewheater     2044                3.3
+ r_ewheater     2050                3.3
+ r_ewheater     2056                3.3
+
+ tl_dslcar      2014             2700
+ tl_dslcar      2020             2700
+ tl_dslcar      2026             2700
+ tl_dslcar      2032             2700
+ tl_dslcar      2038             2700
+ tl_dslcar      2044             2700
+ tl_dslcar      2050             2700
+ tl_dslcar      2056             2700
+
+ tl_elccar      2014             9800
+ tl_elccar      2020             9800
+ tl_elccar      2026             9800
+ tl_elccar      2032             9800
+ tl_elccar      2038             9800
+ tl_elccar      2044             9800
+ tl_elccar      2050             9800
+ tl_elccar      2056             9800
+
+ tl_gascar      2014             2300
+ tl_gascar      2020             2300
+ tl_gascar      2026             2300
+ tl_gascar      2032             2300
+ tl_gascar      2038             2300
+ tl_gascar      2044             2300
+ tl_gascar      2050             2300
+ tl_gascar      2056             2300
+
+ tl_ethcar      2014             2300
+ tl_ethcar      2020             2300
+ tl_ethcar      2026             2300
+ tl_ethcar      2032             2300
+ tl_ethcar      2038             2300
+ tl_ethcar      2044             2300
+ tl_ethcar      2050             2300
+ tl_ethcar      2056             2300
+	;
+
+
+param  CostFixedVintageDefault  :=
+ e_coal             2014               29.3
+ e_coal             2020               29.3
+ e_coal             2026               29.3
+ e_coal             2032               29.3
+ e_coal             2038               29.3
+ e_coal             2044               29.3
+ e_coal             2050               29.3
+ e_coal             2056               29.3
+
+ e_hydro            2014               13.6
+ e_hydro            2020               13.6
+ e_hydro            2026               13.6
+ e_hydro            2032               13.6
+ e_hydro            2038               13.6
+ e_hydro            2044               13.6
+ e_hydro            2050               13.6
+ e_hydro            2056               13.6
+
+ e_ngcc             2014               14.4
+ e_ngcc             2020               14.4
+ e_ngcc             2026               14.4
+ e_ngcc             2032               14.4
+ e_ngcc             2038               14.4
+ e_ngcc             2044               14.4
+ e_ngcc             2050               14.4
+ e_ngcc             2056               14.4
+
+ e_ngsc             2014               14.5
+ e_ngsc             2020               14.5
+ e_ngsc             2026               14.5
+ e_ngsc             2032               14.5
+ e_ngsc             2038               14.5
+ e_ngsc             2044               14.5
+ e_ngsc             2050               14.5
+ e_ngsc             2056               14.5
+
+ e_nuclear          2014               87.7
+ e_nuclear          2020               87.7
+ e_nuclear          2026               87.7
+ e_nuclear          2032               87.7
+ e_nuclear          2038               87.7
+ e_nuclear          2044               87.7
+ e_nuclear          2050               87.7
+ e_nuclear          2056               87.7
+	;
+
+
+param  CostMarginalVintageDefault  :=
+# time_optimize   # tech_all         # vintage_all       # cost
+ imp_coal           2014                3.1
+ imp_ethanol        2014               20.5
+ imp_natgas         2014               10.7
+ imp_oil            2014               16.3
+ imp_uranium        2014               30.1
+
+ e_coal             2014                1.2
+ e_coal             2020                1.2
+ e_coal             2026                1.2
+ e_coal             2032                1.2
+ e_coal             2038                1.2
+ e_coal             2044                1.2
+ e_coal             2050                1.2
+ e_coal             2056                1.2
+
+ e_hydro            2014                0.7
+ e_hydro            2020                0.7
+ e_hydro            2026                0.7
+ e_hydro            2032                0.7
+ e_hydro            2038                0.7
+ e_hydro            2044                0.7
+ e_hydro            2050                0.7
+ e_hydro            2056                0.7
+
+ e_ngcc             2014                0.9
+ e_ngcc             2020                0.9
+ e_ngcc             2026                0.9
+ e_ngcc             2032                0.9
+ e_ngcc             2038                0.9
+ e_ngcc             2044                0.9
+ e_ngcc             2050                0.9
+ e_ngcc             2056                0.9
+
+ e_ngsc             2014                1.9
+ e_ngsc             2020                1.9
+ e_ngsc             2026                1.9
+ e_ngsc             2032                1.9
+ e_ngsc             2038                1.9
+ e_ngsc             2044                1.9
+ e_ngsc             2050                1.9
+ e_ngsc             2056                1.9
+
+ e_nuclear          2014                0.6
+ e_nuclear          2020                0.6
+ e_nuclear          2026                0.6
+ e_nuclear          2032                0.6
+ e_nuclear          2038                0.6
+ e_nuclear          2044                0.6
+ e_nuclear          2050                0.6
+ e_nuclear          2056                0.6
+	;
+
+ param  CapacityFactor  :=
+# season      # diurnal # tech_all  # vintage_all  # capacity factor value
+ W  D     e_coal       2014          0.85
+ W  N     e_coal       2014          0.85
+ S  D     e_coal       2014          0.85
+ S  N     e_coal       2014          0.85
+ I  D     e_coal       2014          0.85
+ I  N     e_coal       2014          0.85
+ W  D     e_coal       2020          0.85
+ W  N     e_coal       2020          0.85
+ S  D     e_coal       2020          0.85
+ S  N     e_coal       2020          0.85
+ I  D     e_coal       2020          0.85
+ I  N     e_coal       2020          0.85
+ W  D     e_coal       2026          0.85
+ W  N     e_coal       2026          0.85
+ S  D     e_coal       2026          0.85
+ S  N     e_coal       2026          0.85
+ I  D     e_coal       2026          0.85
+ I  N     e_coal       2026          0.85
+ W  D     e_coal       2032          0.85
+ W  N     e_coal       2032          0.85
+ S  D     e_coal       2032          0.85
+ S  N     e_coal       2032          0.85
+ I  D     e_coal       2032          0.85
+ I  N     e_coal       2032          0.85
+ W  D     e_coal       2038          0.85
+ W  N     e_coal       2038          0.85
+ S  D     e_coal       2038          0.85
+ S  N     e_coal       2038          0.85
+ I  D     e_coal       2038          0.85
+ I  N     e_coal       2038          0.85
+ W  D     e_coal       2044          0.85
+ W  N     e_coal       2044          0.85
+ S  D     e_coal       2044          0.85
+ S  N     e_coal       2044          0.85
+ I  D     e_coal       2044          0.85
+ I  N     e_coal       2044          0.85
+ W  D     e_coal       2050          0.85
+ W  N     e_coal       2050          0.85
+ S  D     e_coal       2050          0.85
+ S  N     e_coal       2050          0.85
+ I  D     e_coal       2050          0.85
+ I  N     e_coal       2050          0.85
+ W  D     e_coal       2056          0.85
+ W  N     e_coal       2056          0.85
+ S  D     e_coal       2056          0.85
+ S  N     e_coal       2056          0.85
+ I  D     e_coal       2056          0.85
+ I  N     e_coal       2056          0.85
+
+ W  D     e_hydro      2014          0.5
+ W  N     e_hydro      2014          0.5
+ S  D     e_hydro      2014          0.5
+ S  N     e_hydro      2014          0.5
+ I  D     e_hydro      2014          0.5
+ I  N     e_hydro      2014          0.5
+ W  D     e_hydro      2020          0.5
+ W  N     e_hydro      2020          0.5
+ S  D     e_hydro      2020          0.5
+ S  N     e_hydro      2020          0.5
+ I  D     e_hydro      2020          0.5
+ I  N     e_hydro      2020          0.5
+ W  D     e_hydro      2026          0.5
+ W  N     e_hydro      2026          0.5
+ S  D     e_hydro      2026          0.5
+ S  N     e_hydro      2026          0.5
+ I  D     e_hydro      2026          0.5
+ I  N     e_hydro      2026          0.5
+ W  D     e_hydro      2032          0.5
+ W  N     e_hydro      2032          0.5
+ S  D     e_hydro      2032          0.5
+ S  N     e_hydro      2032          0.5
+ I  D     e_hydro      2032          0.5
+ I  N     e_hydro      2032          0.5
+ W  D     e_hydro      2038          0.5
+ W  N     e_hydro      2038          0.5
+ S  D     e_hydro      2038          0.5
+ S  N     e_hydro      2038          0.5
+ I  D     e_hydro      2038          0.5
+ I  N     e_hydro      2038          0.5
+ W  D     e_hydro      2044          0.5
+ W  N     e_hydro      2044          0.5
+ S  D     e_hydro      2044          0.5
+ S  N     e_hydro      2044          0.5
+ I  D     e_hydro      2044          0.5
+ I  N     e_hydro      2044          0.5
+ W  D     e_hydro      2050          0.5
+ W  N     e_hydro      2050          0.5
+ S  D     e_hydro      2050          0.5
+ S  N     e_hydro      2050          0.5
+ I  D     e_hydro      2050          0.5
+ I  N     e_hydro      2050          0.5
+ W  D     e_hydro      2056          0.5
+ W  N     e_hydro      2056          0.5
+ S  D     e_hydro      2056          0.5
+ S  N     e_hydro      2056          0.5
+ I  D     e_hydro      2056          0.5
+ I  N     e_hydro      2056          0.5
+
+ W  D     e_wind       2014          0.30
+ W  N     e_wind       2014          0.30
+ S  D     e_wind       2014          0.30
+ S  N     e_wind       2014          0.30
+ I  D     e_wind       2014          0.30
+ I  N     e_wind       2014          0.30
+ W  D     e_wind       2020          0.30
+ W  N     e_wind       2020          0.30
+ S  D     e_wind       2020          0.30
+ S  N     e_wind       2020          0.30
+ I  D     e_wind       2020          0.30
+ I  N     e_wind       2020          0.30
+ W  D     e_wind       2026          0.30
+ W  N     e_wind       2026          0.30
+ S  D     e_wind       2026          0.30
+ S  N     e_wind       2026          0.30
+ I  D     e_wind       2026          0.30
+ I  N     e_wind       2026          0.30
+ W  D     e_wind       2032          0.30
+ W  N     e_wind       2032          0.30
+ S  D     e_wind       2032          0.30
+ S  N     e_wind       2032          0.30
+ I  D     e_wind       2032          0.30
+ I  N     e_wind       2032          0.30
+ W  D     e_wind       2038          0.30
+ W  N     e_wind       2038          0.30
+ S  D     e_wind       2038          0.30
+ S  N     e_wind       2038          0.30
+ I  D     e_wind       2038          0.30
+ I  N     e_wind       2038          0.30
+ W  D     e_wind       2044          0.30
+ W  N     e_wind       2044          0.30
+ S  D     e_wind       2044          0.30
+ S  N     e_wind       2044          0.30
+ I  D     e_wind       2044          0.30
+ I  N     e_wind       2044          0.30
+ W  D     e_wind       2050          0.30
+ W  N     e_wind       2050          0.30
+ S  D     e_wind       2050          0.30
+ S  N     e_wind       2050          0.30
+ I  D     e_wind       2050          0.30
+ I  N     e_wind       2050          0.30
+ W  D     e_wind       2056          0.30
+ W  N     e_wind       2056          0.30
+ S  D     e_wind       2056          0.30
+ S  N     e_wind       2056          0.30
+ I  D     e_wind       2056          0.30
+ I  N     e_wind       2056          0.30
+
+ W  D     e_ngcc       2014          0.95
+ W  N     e_ngcc       2014          0.95
+ S  D     e_ngcc       2014          0.95
+ S  N     e_ngcc       2014          0.95
+ I  D     e_ngcc       2014          0.95
+ I  N     e_ngcc       2014          0.95
+ W  D     e_ngcc       2020          0.95
+ W  N     e_ngcc       2020          0.95
+ S  D     e_ngcc       2020          0.95
+ S  N     e_ngcc       2020          0.95
+ I  D     e_ngcc       2020          0.95
+ I  N     e_ngcc       2020          0.95
+ W  D     e_ngcc       2026          0.95
+ W  N     e_ngcc       2026          0.95
+ S  D     e_ngcc       2026          0.95
+ S  N     e_ngcc       2026          0.95
+ I  D     e_ngcc       2026          0.95
+ I  N     e_ngcc       2026          0.95
+ W  D     e_ngcc       2032          0.95
+ W  N     e_ngcc       2032          0.95
+ S  D     e_ngcc       2032          0.95
+ S  N     e_ngcc       2032          0.95
+ I  D     e_ngcc       2032          0.95
+ I  N     e_ngcc       2032          0.95
+ W  D     e_ngcc       2038          0.95
+ W  N     e_ngcc       2038          0.95
+ S  D     e_ngcc       2038          0.95
+ S  N     e_ngcc       2038          0.95
+ I  D     e_ngcc       2038          0.95
+ I  N     e_ngcc       2038          0.95
+ W  D     e_ngcc       2044          0.95
+ W  N     e_ngcc       2044          0.95
+ S  D     e_ngcc       2044          0.95
+ S  N     e_ngcc       2044          0.95
+ I  D     e_ngcc       2044          0.95
+ I  N     e_ngcc       2044          0.95
+ W  D     e_ngcc       2050          0.95
+ W  N     e_ngcc       2050          0.95
+ S  D     e_ngcc       2050          0.95
+ S  N     e_ngcc       2050          0.95
+ I  D     e_ngcc       2050          0.95
+ I  N     e_ngcc       2050          0.95
+ W  D     e_ngcc       2056          0.95
+ W  N     e_ngcc       2056          0.95
+ S  D     e_ngcc       2056          0.95
+ S  N     e_ngcc       2056          0.95
+ I  D     e_ngcc       2056          0.95
+ I  N     e_ngcc       2056          0.95
+
+ W  D     e_ngsc       2014          0.92
+ W  N     e_ngsc       2014          0.92
+ S  D     e_ngsc       2014          0.92
+ S  N     e_ngsc       2014          0.92
+ I  D     e_ngsc       2014          0.92
+ I  N     e_ngsc       2014          0.92
+ W  D     e_ngsc       2020          0.92
+ W  N     e_ngsc       2020          0.92
+ S  D     e_ngsc       2020          0.92
+ S  N     e_ngsc       2020          0.92
+ I  D     e_ngsc       2020          0.92
+ I  N     e_ngsc       2020          0.92
+ W  D     e_ngsc       2026          0.92
+ W  N     e_ngsc       2026          0.92
+ S  D     e_ngsc       2026          0.92
+ S  N     e_ngsc       2026          0.92
+ I  D     e_ngsc       2026          0.92
+ I  N     e_ngsc       2026          0.92
+ W  D     e_ngsc       2032          0.92
+ W  N     e_ngsc       2032          0.92
+ S  D     e_ngsc       2032          0.92
+ S  N     e_ngsc       2032          0.92
+ I  D     e_ngsc       2032          0.92
+ I  N     e_ngsc       2032          0.92
+ W  D     e_ngsc       2038          0.92
+ W  N     e_ngsc       2038          0.92
+ S  D     e_ngsc       2038          0.92
+ S  N     e_ngsc       2038          0.92
+ I  D     e_ngsc       2038          0.92
+ I  N     e_ngsc       2038          0.92
+ W  D     e_ngsc       2044          0.92
+ W  N     e_ngsc       2044          0.92
+ S  D     e_ngsc       2044          0.92
+ S  N     e_ngsc       2044          0.92
+ I  D     e_ngsc       2044          0.92
+ I  N     e_ngsc       2044          0.92
+ W  D     e_ngsc       2050          0.92
+ W  N     e_ngsc       2050          0.92
+ S  D     e_ngsc       2050          0.92
+ S  N     e_ngsc       2050          0.92
+ I  D     e_ngsc       2050          0.92
+ I  N     e_ngsc       2050          0.92
+ W  D     e_ngsc       2056          0.92
+ W  N     e_ngsc       2056          0.92
+ S  D     e_ngsc       2056          0.92
+ S  N     e_ngsc       2056          0.92
+ I  D     e_ngsc       2056          0.92
+ I  N     e_ngsc       2056          0.92
+
+ W  D     e_nuclear    2014          0.90
+ W  N     e_nuclear    2014          0.90
+ S  D     e_nuclear    2014          0.90
+ S  N     e_nuclear    2014          0.90
+ I  D     e_nuclear    2014          0.90
+ I  N     e_nuclear    2014          0.90
+ W  D     e_nuclear    2020          0.90
+ W  N     e_nuclear    2020          0.90
+ S  D     e_nuclear    2020          0.90
+ S  N     e_nuclear    2020          0.90
+ I  D     e_nuclear    2020          0.90
+ I  N     e_nuclear    2020          0.90
+ W  D     e_nuclear    2026          0.90
+ W  N     e_nuclear    2026          0.90
+ S  D     e_nuclear    2026          0.90
+ S  N     e_nuclear    2026          0.90
+ I  D     e_nuclear    2026          0.90
+ I  N     e_nuclear    2026          0.90
+ W  D     e_nuclear    2032          0.90
+ W  N     e_nuclear    2032          0.90
+ S  D     e_nuclear    2032          0.90
+ S  N     e_nuclear    2032          0.90
+ I  D     e_nuclear    2032          0.90
+ I  N     e_nuclear    2032          0.90
+ W  D     e_nuclear    2038          0.90
+ W  N     e_nuclear    2038          0.90
+ S  D     e_nuclear    2038          0.90
+ S  N     e_nuclear    2038          0.90
+ I  D     e_nuclear    2038          0.90
+ I  N     e_nuclear    2038          0.90
+ W  D     e_nuclear    2044          0.90
+ W  N     e_nuclear    2044          0.90
+ S  D     e_nuclear    2044          0.90
+ S  N     e_nuclear    2044          0.90
+ I  D     e_nuclear    2044          0.90
+ I  N     e_nuclear    2044          0.90
+ W  D     e_ngsc       2050          0.92
+ W  N     e_ngsc       2050          0.92
+ S  D     e_ngsc       2050          0.92
+ S  N     e_ngsc       2050          0.92
+ I  D     e_ngsc       2050          0.92
+ I  N     e_ngsc       2050          0.92
+ W  D     e_ngsc       2056          0.92
+ W  N     e_ngsc       2056          0.92
+ S  D     e_ngsc       2056          0.92
+ S  N     e_ngsc       2056          0.92
+ I  D     e_ngsc       2056          0.92
+ I  N     e_ngsc       2056          0.92
+	;
+
+param TechOutputSplit :=
+# input carrier  # tech_all    # output carrier    # fractional output
+ electricity      r_geoth       r_cooling           0.5
+ electricity      r_geoth       r_heating           0.5
+	;
+
+param MaxCapacity :=
+# time_optimize    # tech_all     # max capacity
+ 2014               e_hydro        1
+ 2020               e_hydro        1
+ 2026               e_hydro        1
+ 2026               e_hydro        1
+ 2032               e_hydro        1
+ 2038               e_hydro        1
+ 2044               e_hydro        1
+ 2050               e_hydro        1
+ 2056               e_hydro        1
+	;
+
+
+ param  Efficiency  :=
+# input carrier  # tech_all      # vintage_all  # output carrier   # eff. value
+ resource         imp_coal        2014           coal               1
+ resource         imp_ethanol     2014           ethanol            1
+ resource         imp_natgas      2014           natgas             1
+ resource         imp_oil         2014           oil                1
+ resource         imp_uranium     2014           uranium            1
+ resource         dom_wind        2014           wind               1
+ resource         dom_water       2014           water              1
+
+ coal             e_coal          2014           electricity        0.38
+ coal             e_coal          2020           electricity        0.38
+ coal             e_coal          2026           electricity        0.38
+ coal             e_coal          2032           electricity        0.38
+ coal             e_coal          2038           electricity        0.38
+ coal             e_coal          2044           electricity        0.38
+ coal             e_coal          2050           electricity        0.38
+ coal             e_coal          2056           electricity        0.38
+
+ water            e_hydro         2014           electricity        0.85
+ water            e_hydro         2020           electricity        0.85
+ water            e_hydro         2026           electricity        0.85
+ water            e_hydro         2032           electricity        0.85
+ water            e_hydro         2038           electricity        0.85
+ water            e_hydro         2044           electricity        0.85
+ water            e_hydro         2050           electricity        0.85
+ water            e_hydro         2056           electricity        0.85
+
+ natgas           e_ngcc          2014           electricity        0.54
+ natgas           e_ngcc          2020           electricity        0.54
+ natgas           e_ngcc          2026           electricity        0.54
+ natgas           e_ngcc          2032           electricity        0.54
+ natgas           e_ngcc          2038           electricity        0.54
+ natgas           e_ngcc          2044           electricity        0.54
+ natgas           e_ngcc          2050           electricity        0.54
+ natgas           e_ngcc          2056           electricity        0.54
+
+ natgas           e_ngsc          2014           electricity        0.40
+ natgas           e_ngsc          2020           electricity        0.40
+ natgas           e_ngsc          2026           electricity        0.40
+ natgas           e_ngsc          2032           electricity        0.40
+ natgas           e_ngsc          2038           electricity        0.40
+ natgas           e_ngsc          2044           electricity        0.40
+ natgas           e_ngsc          2050           electricity        0.40
+ natgas           e_ngsc          2056           electricity        0.40
+
+ uranium          e_nuclear       2014           electricity        0.33
+ uranium          e_nuclear       2020           electricity        0.33
+ uranium          e_nuclear       2026           electricity        0.33
+ uranium          e_nuclear       2032           electricity        0.33
+ uranium          e_nuclear       2038           electricity        0.33
+ uranium          e_nuclear       2044           electricity        0.33
+ uranium          e_nuclear       2050           electricity        0.33
+ uranium          e_nuclear       2056           electricity        0.33
+
+ wind             e_wind          2014           electricity        0.50
+ wind             e_wind          2020           electricity        0.50
+ wind             e_wind          2026           electricity        0.50
+ wind             e_wind          2032           electricity        0.50
+ wind             e_wind          2038           electricity        0.50
+ wind             e_wind          2044           electricity        0.50
+ wind             e_wind          2050           electricity        0.50
+ wind             e_wind          2056           electricity        0.50
+
+ oil              p_refinery      2014           diesel             0.85
+ oil              p_refinery      2020           diesel             0.85
+ oil              p_refinery      2026           diesel             0.85
+ oil              p_refinery      2032           diesel             0.85
+ oil              p_refinery      2038           diesel             0.85
+ oil              p_refinery      2044           diesel             0.85
+ oil              p_refinery      2050           diesel             0.85
+ oil              p_refinery      2056           diesel             0.85
+ oil              p_refinery      2014           gasoline           0.90
+ oil              p_refinery      2020           gasoline           0.90
+ oil              p_refinery      2026           gasoline           0.90
+ oil              p_refinery      2032           gasoline           0.90
+ oil              p_refinery      2038           gasoline           0.90
+ oil              p_refinery      2044           gasoline           0.90
+ oil              p_refinery      2050           gasoline           0.90
+ oil              p_refinery      2056           gasoline           0.90
+
+ natgas           r_furnace       2014           r_heating          0.90
+ natgas           r_furnace       2020           r_heating          0.90
+ natgas           r_furnace       2026           r_heating          0.90
+ natgas           r_furnace       2032           r_heating          0.90
+ natgas           r_furnace       2038           r_heating          0.90
+ natgas           r_furnace       2044           r_heating          0.90
+ natgas           r_furnace       2050           r_heating          0.90
+ natgas           r_furnace       2056           r_heating          0.90
+
+ electricity      r_geoth         2014           r_heating          3.5
+ electricity      r_geoth         2020           r_heating          3.5
+ electricity      r_geoth         2026           r_heating          3.5
+ electricity      r_geoth         2032           r_heating          3.5
+ electricity      r_geoth         2038           r_heating          3.5
+ electricity      r_geoth         2044           r_heating          3.5
+ electricity      r_geoth         2050           r_heating          3.5
+ electricity      r_geoth         2056           r_heating          3.5
+
+ electricity      r_geoth         2014           r_cooling          4.7
+ electricity      r_geoth         2020           r_cooling          4.7
+ electricity      r_geoth         2026           r_cooling          4.7
+ electricity      r_geoth         2032           r_cooling          4.7
+ electricity      r_geoth         2038           r_cooling          4.7
+ electricity      r_geoth         2044           r_cooling          4.7
+ electricity      r_geoth         2050           r_cooling          4.7
+ electricity      r_geoth         2056           r_cooling          4.7
+
+ electricity      r_ac            2014           r_cooling          3.8
+ electricity      r_ac            2020           r_cooling          3.8
+ electricity      r_ac            2026           r_cooling          3.8
+ electricity      r_ac            2032           r_cooling          3.8
+ electricity      r_ac            2038           r_cooling          3.8
+ electricity      r_ac            2044           r_cooling          3.8
+ electricity      r_ac            2050           r_cooling          3.8
+ electricity      r_ac            2056           r_cooling          3.8
+
+ electricity      r_cfl           2014           r_lighting         2
+ electricity      r_cfl           2020           r_lighting         2
+ electricity      r_cfl           2026           r_lighting         2
+ electricity      r_cfl           2032           r_lighting         2
+ electricity      r_cfl           2038           r_lighting         2
+ electricity      r_cfl           2044           r_lighting         2
+ electricity      r_cfl           2050           r_lighting         2
+ electricity      r_cfl           2056           r_lighting         2
+
+ electricity      r_incand        2014           r_lighting         0.45
+ electricity      r_incand        2020           r_lighting         0.45
+ electricity      r_incand        2026           r_lighting         0.45
+ electricity      r_incand        2032           r_lighting         0.45
+ electricity      r_incand        2038           r_lighting         0.45
+ electricity      r_incand        2044           r_lighting         0.45
+ electricity      r_incand        2050           r_lighting         0.45
+ electricity      r_incand        2056           r_lighting         0.45
+
+ electricity      r_led           2014           r_lighting         3.1
+ electricity      r_led           2020           r_lighting         3.1
+ electricity      r_led           2026           r_lighting         3.1
+ electricity      r_led           2032           r_lighting         3.1
+ electricity      r_led           2038           r_lighting         3.1
+ electricity      r_led           2044           r_lighting         3.1
+ electricity      r_led           2050           r_lighting         3.1
+ electricity      r_led           2056           r_lighting         3.1
+
+ electricity      r_ewheater      2014           r_wheating         0.9
+ electricity      r_ewheater      2020           r_wheating         0.9
+ electricity      r_ewheater      2026           r_wheating         0.9
+ electricity      r_ewheater      2032           r_wheating         0.9
+ electricity      r_ewheater      2038           r_wheating         0.9
+ electricity      r_ewheater      2044           r_wheating         0.9
+ electricity      r_ewheater      2050           r_wheating         0.9
+ electricity      r_ewheater      2056           r_wheating         0.9
+
+ natgas           r_ngwheater     2014           r_wheating         0.6
+ natgas           r_ngwheater     2020           r_wheating         0.6
+ natgas           r_ngwheater     2026           r_wheating         0.6
+ natgas           r_ngwheater     2032           r_wheating         0.6
+ natgas           r_ngwheater     2038           r_wheating         0.6
+ natgas           r_ngwheater     2044           r_wheating         0.6
+ natgas           r_ngwheater     2050           r_wheating         0.6
+ natgas           r_ngwheater     2056           r_wheating         0.6
+
+ electricity      r_swheater      2014           r_wheating         4
+ electricity      r_swheater      2020           r_wheating         4
+ electricity      r_swheater      2026           r_wheating         4
+ electricity      r_swheater      2032           r_wheating         4
+ electricity      r_swheater      2038           r_wheating         4
+ electricity      r_swheater      2044           r_wheating         4
+ electricity      r_swheater      2050           r_wheating         4
+ electricity      r_swheater      2056           r_wheating         4
+
+ diesel           tl_dslcar       2014           tl_distance        0.24
+ diesel           tl_dslcar       2020           tl_distance        0.24
+ diesel           tl_dslcar       2026           tl_distance        0.24
+ diesel           tl_dslcar       2032           tl_distance        0.24
+ diesel           tl_dslcar       2038           tl_distance        0.24
+ diesel           tl_dslcar       2044           tl_distance        0.24
+ diesel           tl_dslcar       2050           tl_distance        0.24
+ diesel           tl_dslcar       2056           tl_distance        0.24
+
+ electricity      tl_elccar       2014           tl_distance        0.42
+ electricity      tl_elccar       2020           tl_distance        0.42
+ electricity      tl_elccar       2026           tl_distance        0.42
+ electricity      tl_elccar       2032           tl_distance        0.42
+ electricity      tl_elccar       2038           tl_distance        0.42
+ electricity      tl_elccar       2044           tl_distance        0.42
+ electricity      tl_elccar       2050           tl_distance        0.42
+ electricity      tl_elccar       2056           tl_distance        0.42
+
+ ethanol          tl_ethcar       2014           tl_distance        0.20
+ ethanol          tl_ethcar       2020           tl_distance        0.20
+ ethanol          tl_ethcar       2026           tl_distance        0.20
+ ethanol          tl_ethcar       2032           tl_distance        0.20
+ ethanol          tl_ethcar       2038           tl_distance        0.20
+ ethanol          tl_ethcar       2044           tl_distance        0.20
+ ethanol          tl_ethcar       2050           tl_distance        0.20
+ ethanol          tl_ethcar       2056           tl_distance        0.20
+
+ gasoline         tl_gascar       2014           tl_distance        0.20
+ gasoline         tl_gascar       2020           tl_distance        0.20
+ gasoline         tl_gascar       2026           tl_distance        0.20
+ gasoline         tl_gascar       2032           tl_distance        0.20
+ gasoline         tl_gascar       2038           tl_distance        0.20
+ gasoline         tl_gascar       2044           tl_distance        0.20
+ gasoline         tl_gascar       2050           tl_distance        0.20
+ gasoline         tl_gascar       2056           tl_distance        0.20
+	;
+
