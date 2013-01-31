@@ -1530,14 +1530,12 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		SE.write( '\r[%8.2f\n' % duration() )
 
 
-def solve_minimum_cost_of_guessing_wrong ( optimizer, options ):
-	import csv
+def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
+	import csv, gc
 
-	from cStringIO import StringIO
 	from collections import deque, defaultdict
-	from multiprocessing import Pool, Manager
 	from os import getcwd, chdir
-	from os.path import isfile, abspath
+	from os.path import isfile, abspath, exists
 
 	from coopr.pyomo import ModelData, Var
 	from coopr.pysp.util.scenariomodels import scenario_tree_model
@@ -1576,343 +1574,138 @@ def solve_minimum_cost_of_guessing_wrong ( optimizer, options ):
 	for c, p in ctpTree.iteritems():
 		ptcTree[ p ].append( c )
 
-	def recur ( sub_root, results, current_assumptions ):
+	leaf_nodes = set(ctpTree.keys()) - set(ctpTree.values())
 
-		# Step 1: What are /this/ sub-root node's leaf nodes?
-		leaf_nodes = list()
-		to_process = deque()
-		to_process.extend( ptcTree[ sub_root ] )
-		while to_process:
-			n = to_process.pop()
-			if n in ptcTree:
-				to_process.extend( ptcTree[ n ] )  # n is a parent
-			else:
-				leaf_nodes.append( n )             # n is a leaf node
+	scenario_nodes = dict()
+	for node in leaf_nodes:
+		s = list()
+		scenario_nodes[ node ] = s
+		while node in ctpTree:
+			s.append( node )
+			node = ctpTree[ node ]
+		s.append( node )
+		s.reverse()
 
-		# Step 2: build each possible scenario in this node's bundle
-		sub_scenarios = list()
-		for node in leaf_nodes:
-			s = list()
-			while node in ctpTree:
-				s.append( node )
-				node = ctpTree[ node ]  # the parent of node
-			s.append( node )  # node is now the root node of the entire tree
-			s.reverse()
-			sub_scenarios.append( tuple(s) )
+	leaf_nodes_by_node = defaultdict(set)
+	for fnode in leaf_nodes:
+		node = fnode
+		while node in ctpTree:
+			leaf_nodes_by_node[ node ].add( fnode )
+			node = ctpTree[ node ]
+		leaf_nodes_by_node[ node ].add( fnode ) # get the root node
 
-		for s_files in sub_scenarios:
-			mdata = ModelData()
-			for node in s_files:
-				node += '.dat'
-				SE.write( '    Adding file: {}\n'.format( node ))
-				mdata.add( node )
-			model = temoa_create_model()
-			mdata.read( model )
-			m = model.create( mdata )
+	VariableStore = defaultdict(dict)
+	def recur ( parent, assumptions, this_root, assume ):
+		msg = "Solving from node '{}', having assumed '{}' and assuming '{}'.\n"
+		SE.write( msg.format( this_root, assumptions, assume ) )
 
-			s = s_files[ -1 ]      # represent the scenario by the final node
+		stage = sStructure.NodeStage[ this_root ]
+		stage_variables = sStructure.StageVariables[ stage ]
 
-			# -1 = don't fix /this/ stage's variables!
-			stages_to_fix = sub_root.split('s')[:-1]
-			to_assume = iter( current_assumptions.split(',') )
+		# Step 1: Build the model based on current assumption
+		mdata = ModelData()
+		for node in scenario_nodes[ assume ]:
+			mdata.add( node + '.dat' )
+		model = temoa_create_model()
+		mdata.read( model )
+		m = model.create( mdata )
 
-			model_vars = list()
-			fixing = assume = ''
-			for stage in stages_to_fix:
-				fixing += stage
-				assume += to_assume.next()
-				to_fix = results[ '|'.join( (fixing, assume, s) ) ][0]
+		# Step 2: fix any variables associated with previously made assumptions
+		if parent:
+			stages_to_fix = parent.split('s')
+			stage_assumptions = assumptions.split(',')
 
-				# set the already decided variables
-				for vname, values in to_fix.iteritems():
+			assumed = sfixing = ''
+			for s, a in zip( stages_to_fix, stage_assumptions ):
+				sfixing += s
+				assumed += a
+
+				variables, stage_cost = VariableStore[ sfixing ][ assumed ]
+				for vname, values in variables.iteritems():
 					m_var = getattr(m, vname)
-
-					for index, val in iter_in_chunks( values, chunk_size=2 ):
+					for index, val in values:
 						v = m_var[ index ]
 						v.fixed = True
 						v.set_value( val )
-						model_vars.append( v )   # needed because Coopr preprocesses ...
 
-				fixing += 's'
-				assume += ','
-			del stages_to_fix, to_assume
+				sfixing += 's'
+				assumed += ','
 
-			m.preprocess()   # now remove from the model the variables we fixed
+			# defensively delete these now that we no longer need them
+			del assumed, sfixing, s, a, stages_to_fix, stage_assumptions
 
-			sol = opt.solve( m )
-			m.load( sol )
+		m.preprocess()   # to remove the now-fixed variables
+		sol = opt.solve( m )
+		m.load( sol )
 
-			vars_to_save = defaultdict( set )
-			node_variables = defaultdict( list )
-			stage = sStructure.NodeStage[ sub_root ]
-			for var_string in sStructure.StageVariables[ stage ]:
-				vname, index = extractVariableNameAndIndex( var_string )
-				vars_to_save[ vname ].add( index )
-			for vname, indices in vars_to_save.iteritems():
-				m_var = getattr(m, vname)
-				for index in indices:
+		# Step 4: Save the variables values associated with /this/ node's
+		#         assumptions and solution
+		vars_to_save = defaultdict( set )
+		node_vars    = defaultdict( list )
+
+		for var_string in stage_variables:
+			vname, index = extractVariableNameAndIndex( var_string )
+			vars_to_save[ vname ].add( index )
+
+		for vname, indices in vars_to_save.iteritems():
+			m_var = getattr(m, vname)
+			for index in indices:
+				try:
 					val = value( m_var[ index ])
-					node_variables[ vname ].append( (index, val ) )
-			II()
+				except:
+					if 'infeasible' in str( sol ):
+						SE.write( '\n    ---> Solver found problem infeasible <---\n\n' )
+					raise
+				if val < epsilon:
+					# variables can't be negative, and they may be when within an
+					# epsilon of 0 (because the solver said "good enough")
+					val = 0
+				node_vars[ vname ].append( (index, val) )
 
-			# remove leading 's' in stage
-			stage = int( sStructure.NodeStage[ sub_root ][1:] )
-			node_cost = value( PeriodCost_rule( m, stage ))
-			results[ '|'.join( (sub_root, current_assumptions, s) ) ] = (
-			   node_variables, node_cost
-			)
+		period = int( stage[1:] )  # remove the leading s; e.g., s1990 -> 1990
+		node_cost = value( PeriodCost_rule( m, period ))
 
-		if sub_root in ptcTree:
-			for child in ptcTree[ sub_root ]:
-				recur( child, results, ','.join( (current_assumptions, s) ))
+		if assumptions:
+			node_assumptions = assumptions.split(',')
+		else:
+			node_assumptions = list()
+		node_assumptions.append( assume )
+		node_assumptions = ','.join( node_assumptions )
 
-	results = dict()
-	print "First recurrance:", root_node
-	recur( root_node, results, '' )
+		VariableStore[ this_root ][ node_assumptions ] = (node_vars, node_cost)
 
-	print results
+		del m, mdata, model, sol
+		gc.collect()
 
-	return
+		# Step 5: Recur
+		if this_root in ptcTree:
+			for child in ptcTree[ this_root ]:
+				for fs in leaf_nodes_by_node[ child ]:
+					recur( this_root, node_assumptions, child, fs )
 
+	for fs in leaf_nodes_by_node[ 'R' ]:
+		recur( parent='', assumptions='', this_root='R', assume=fs )
 
+	data = list()
+	data.append(('','','','"Previously Assumed" is a chronologically ordered list of assumptions made, up to "this" node',))
+	data.append(('At Node', 'Previously Assumed', 'Node Cost'))
+	last = tuple()
+	for node in sorted( VariableStore, key=lambda x: (len(x), x) ):
+		if len(last) != len( node ):
+			data.append( tuple() )  # blank line between levels of recursion
 
+		for assumed in sorted( VariableStore[ node ], key=lambda x: (len(x), x) ):
+			variables, cost = VariableStore[ node ][ assumed ]
+			data.append( (node, assumed, cost) )
 
+		last = node
 
-	#############################333
-
-	def calculate_recursive_expected_costs ( root, fixed_variables ):
-
-		# Step 1: What are /this/ sub-root node's leaf nodes?
-		leaf_nodes = list()
-		to_process = deque()
-		to_process.extend( ptcTree[ root ] )
-		while to_process:
-			n = to_process.pop()
-			if n in ptcTree:
-				# it's a parent
-				to_process.extend( ptcTree[ n ] )
-			else:
-				# n is a leaf node
-				leaf_nodes.append( n )
-
-		# Step 2: start from this subroot node and work "up" the ptcTree to find
-		#         the currently non-anticipative nodes.  (i.e., variables to set)
-		nodes_to_fix = [ root ]
-		node = root
-		while node in ctpTree:
-			node = ctpTree[ node ]  # node is now parent of previous iteration
-			nodes_to_fix.append( node )
-
-		# Step 3: build each possible sub scenario of this root's bundle
-		scenarios = list()
-		for node in leaf_nodes:
-			s = list()
-			while node in ctpTree:
-				s.append( node )
-				node = ctpTree[ node ]  # the parent of node
-			s.append( node )  # node is now the root node of the entire tree
-			s.reverse()
-			scenarios.append( tuple(s) )
-
-			# Each of these scenarios begins with the root node: we can't only use
-			# the sub-scenario parts because we need to set the already decided
-			# variables.
-
-		# Step 4: for each scenario, create the model, fix the already decided
-		#         variables, solve, and then recur
-		for nodes in scenarios:
-			# 4a: create the model
-			# nodes = an ordered list of nodes in a scenario
-			mdata = ModelData()
-			for node in nodes:
-				node += '.dat'
-				SE.write( '    Adding file: {}\n'.format( node ))
-				mdata.add( node )
-			model = temoa_create_model( 'Root: {}'.format( root ))
-			mdata.read( model )
-
-			wg = model.create( mdata )   # wg = "wrong guess"
-
-			# 4b: set the already decided variables
-			model_vars = list()
-			for vname, values in fixed_variables.iteritems():
-				m_var = getattr(wg, vname)
-
-				for index, val in iter_in_chunks( values, chunk_size=2 ):
-					v = m_var[ index ]
-					v.fixed = True
-					v.set_value( val )
-					model_vars.append( v )
-			wg.preprocess()
-
-			# 4c: solve this scenario
-			sol = opt.solve( wg )
-			wg.load( sol )
-			II()
-
-			variables_to_fix = defaultdict( set )
-			child_fixed_variables = defaultdict( list )
-			to_process.extend( nodes_to_fix )
-			for node in to_process:
-				stage = sStructure.NodeStage[ node ]
-				for var_string in sStructure.StageVariables[ stage ]:
-					vname, index = extractVariableNameAndIndex( var_string )
-					variables_to_fix[ vname ].add( index )
-			for vname, indices in variables_to_fix.iteritems():
-				m_var = getattr(wg, vname)
-				for index in indices:
-					val = value( m_var[ index ])
-					child_fixed_variables[ vname ].append( (index, val) )
-
-			# 4d: recur
-			if root in ptcTree:
-				for node in ptcTree[ root ]:
-					calculate_recursive_expected_costs( node, child_fixed_variables )
-
-			# ensure no mistake between loop iterations (defensive programming?!)
-			del model_vars, variables_to_fix, child_fixed_variables
-
-		print "Node: ", root
-		print "Fixed_variables: %s ..." % str(fixed_variables)
-
-		# Step 2: prepare list of all possible scenarios of guessing X, but Y
-		#         happens.  (e.g, guess Rs0s0, and Rs0s0 happens; guess Rs0s0,
-		#         Rs0s1 happens; etc.)
-
-		#return (expected_costs, weights)
-
-	calculate_recursive_expected_costs( 'R', fixed_variables={} )
-
-
-	raise SystemExit
-
-	# Step 5: Begin the solves.
-	results = defaultdict(list)
-	data = list()  # for CSV conversion, after processing
-	for gamblers_guess, gamblers_nodes in sorted( scenarios.items() ):
-		variable_values = defaultdict(list)
-		total_costs = dict()
-
-		msg = ("Solving all possible scenarios for the Gambler's guess of "
-		       "scenario: '{}'\n")
-		SE.write( msg.format( gamblers_guess ))
-
-		# Step 5.1: Choose each scenario in turn as the "Gamblers Gambit", ...
-		mdata = ModelData()
-		for node in gamblers_nodes:
-			mdata.add( node + '.dat' )
-		model = temoa_create_model( "Gambit {}".format( gamblers_guess ))
-		mdata.read( model )
-
-		#  ... solve it, and ...
-		the_gamble = model.create( mdata )
-
-		sol = opt.solve( the_gamble )
-		the_gamble.load( sol )
-
-		total_costs[ gamblers_guess ] = the_gamble.TotalCost()
-
-		for vname in the_gamble.active_components( Var ):
-			var = getattr(the_gamble, vname)
-			for i, v in var.iteritems():
-				variable_values[ v.name.replace("'", '') ].append((
-				  gamblers_guess, v.value ))
-
-		# Step 5.2: Save the variable values from the gambit
-		fixed_values = dict()
-		for vname, indices in variables_to_fix.iteritems():
-			var = getattr(the_gamble, vname)
-			fixed_values[ vname ] = list(var[ i ].value for i in sorted( indices ))
-
-		# ensure we don't mistakenly use a variable below (defensive programming)
-		del mdata, model, the_gamble
-
-		# Step 5.3: Solve every other scenario, but ...
-		wrong_guesses = sorted(
-		  (s, n) for s, n in scenarios.iteritems()
-		  if s != gamblers_guess )
-		for sname, nodes in wrong_guesses:
-			SE.write( '  Solving wrong guess: {}\n'.format( sname ))
-
-			mdata = ModelData()
-			for node in nodes:
-				node += '.dat'
-				SE.write( '    Adding file: {}\n'.format( node ))
-				mdata.add( node )
-			model = temoa_create_model( '{}: {}'.format( gamblers_guess, sname ))
-			mdata.read( model )
-
-			wg = model.create( mdata )     # wg = "wrong guess"
-
-			# ... ensure that the non-anticipative variables are fixed per the
-			# solution to the Gambler's Gambit.
-			model_vars = list()  # save vars for later so we don't need to use ...
-			for vname, indices in variables_to_fix.iteritems():
-				var = getattr(wg, vname)    # ... the costly getattr twice
-				for index, val in zip(sorted( indices ), fixed_values[ vname ]):
-					v = var[ index ]
-					model_vars.append( v )
-					v.fixed = True
-					v.set_value( val )
-			wg.preprocess()
-
-			# Then do the solve.
-			sol = opt.solve( wg )
-			wg.load( sol )
-			total_costs[ sname ] = wg.TotalCost()
-
-			for vname in wg.active_components( Var ):
-				var = getattr(wg, vname)
-				for i, v in var.iteritems():
-					variable_values[ v.name.replace("'", '') ].append(
-					  (sname, v.value) )
-
-			# ensure we don't make a mistake between loop iterations.
-			del mdata, model, model_vars, sol, wg
-
-		data.append( ("Gambler's Guess:", gamblers_guess) )
-		data.append(tuple())
-
-		row = ['Total Scenario Costs', gamblers_guess]
-		row.extend(sname for sname, nodes in wrong_guesses)
-		data.append( row )
-		data.append( ['',] + [ total_costs[i] for i in row[1:]] )
-		data.append(tuple())
-
-		data.append(('Fixed variables',))
-		for vname, indices in sorted(variables_to_fix.iteritems()):
-			for index, val in zip(sorted(indices), fixed_values[ vname ]):
-				vfmt = ','.join('{}' for i in xrange(len(index)))
-				vfmt = '{}[{}]'.format(vname, vfmt)
-				# Works out to "vname[{},{},{}...]" for the length of index
-
-				var = vfmt.format(*index)
-				data.append((var, val))
-
-		data.append(tuple())
-
-		row = ['Variable', gamblers_guess]
-		row.extend( s[0] for s in wrong_guesses )
-		data.append( row )
-		for v, vals in sorted( variable_values.iteritems() ):
-			guess_val = filter(lambda x: x[0] == gamblers_guess, vals)[0][1]
-			other_vals = filter(lambda x: x[0] != gamblers_guess, vals)
-			row = [ v, guess_val ]
-			row.extend( j for i, j in other_vals )
-
-			# if they are all 0, then there's no need to mention this variable
-			if True not in ( i != 0 for i in row[1:] ): continue
-
-			data.append( row )
-
-		data.extend(((),()))
-		del variable_values
-
+	import csv, cStringIO
+	csvdata = cStringIO.StringIO()
+	writer = csv.writer( csvdata ); writer.writerows( data )
+	print csvdata.getvalue()
 	chdir( pwd )
 
-	csv_data = StringIO()
-	writer = csv.writer( csv_data ); writer.writerows( data )
-	SO.write( csv_data.getvalue() )
 
 
 def temoa_solve ( model ):
@@ -1941,7 +1734,7 @@ def temoa_solve ( model ):
 	if options.dot_dat:
 		solve_perfect_foresight( model, opt, options )
 	elif options.ecgw:
-		solve_minimum_cost_of_guessing_wrong( opt, options )
+		solve_true_cost_of_guessing( opt, options )
 
 # End direct invocation methods
 ###############################################################################

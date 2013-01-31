@@ -247,15 +247,13 @@ CapacityFactor(tech_all, vintage_all)
 	  domain=NonNegativeReals
 	)
 
-	M.V_CapacityInvest = Var( M.CapacityVar_tv, domain=NonNegativeReals )
-	M.V_CapacityFixed  = Var( M.CapacityVar_tv, domain=NonNegativeReals )
+	# M.V_CapacityInvest = Var( M.CapacityVar_tv, domain=NonNegativeReals )
+	# M.V_CapacityFixed  = Var( M.CapacityVar_tv, domain=NonNegativeReals )
 
 	AddReportingVariables( M )
 
 	M.BaseloadDiurnalConstraint_psdtv = Set(
 	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
-	M.CapacityByOutputConstraint_psdtvo = Set(
-	  dimen=6, rule=CapacityByOutputConstraintIndices )
 	M.CommodityBalanceConstraint_psdc = Set(
 	  dimen=4, rule=CommodityBalanceConstraintIndices )
 	M.DemandConstraint_psdc = Set( dimen=4, rule=DemandConstraintIndices )
@@ -292,8 +290,8 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.ExistingCapacityConstraint = Constraint( M.ExistingCapacityConstraint_tv, rule=ExistingCapacity_Constraint )
 
-	M.CapacityInvestConstraint = Constraint( M.CapacityVar_tv, rule=CapacityInvest_Constraint )
-	M.CapacityFixedConstraint  = Constraint( M.CapacityVar_tv, rule=CapacityFixed_Constraint )
+	# M.CapacityInvestConstraint = Constraint( M.CapacityVar_tv, rule=CapacityInvest_Constraint )
+	# M.CapacityFixedConstraint  = Constraint( M.CapacityVar_tv, rule=CapacityFixed_Constraint )
 
 	#   Model Constraints
 	#    - in driving order.  (e.g., without Demand, none of the others are
