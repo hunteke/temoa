@@ -315,14 +315,14 @@ def write_scenario_file ( stochasticset, tree ):
 
 		stage_vars = list()
 		stage_vars.extend(
-		  sorted('V_FlowIn[{},{},{},{},{},{},{}]'.format( *index )
-		    for index in flow_keys))
+		  sorted(set('V_FlowIn[{},{},{},{},{},{},{}]'.format( *index )
+		    for index in flow_keys )))
 		stage_vars.extend(
-		  sorted('V_FlowOut[{},{},{},{},{},{},{}]'.format( *index )
-		    for index in flow_keys ))
+		  sorted(set('V_FlowOut[{},{},{},{},{},{},{}]'.format( *index )
+		    for index in flow_keys )))
 		stage_vars.extend(
-		  sorted('V_Capacity[{},{}]'.format( *index )
-		     for index in processes ))
+		  sorted(set('V_Capacity[{},{}]'.format( *index )
+		     for index in processes )))
 
 		stage_var_sets.append( stages_fmt.format( se, '\n  '.join( stage_vars )))
 
@@ -587,7 +587,7 @@ def main ( ):
 	node_count = 0
 
 	inform( '[      ] Writing scenario "dot dat" files:       ')
-	tree.write_dat_files()
+	#tree.write_dat_files()
 	write_scenario_file( all_spoints, tree )
 	inform( '\r[%6.2f] Writing scenario "dot dat" files\n' % duration() )
 
