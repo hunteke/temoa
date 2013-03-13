@@ -26,8 +26,6 @@ from operator import itemgetter as iget
 from os import path
 from sys import argv, stderr as SE, stdout as SO
 
-from IPython import embed as II
-
 from temoa_graphviz import CreateModelDiagrams
 
 try:
@@ -1533,6 +1531,8 @@ def solve_perfect_foresight ( model, optimizer, options ):
 def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	import csv, gc
 
+	import multiprocessing as MP
+
 	from collections import deque, defaultdict
 	from os import getcwd, chdir
 	from os.path import isfile, abspath, exists
@@ -1544,8 +1544,6 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	from pformat_results import pformat_results
 	from temoa_model import temoa_create_model
 	from temoa_rules import PeriodCost_rule
-
-	opt = optimizer    # a shorter name for us lazy programmer types
 
 	pwd = abspath( getcwd() )
 	chdir( options.ecgw )
@@ -1595,17 +1593,32 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		leaf_nodes_by_node[ node ].add( fnode ) # get the root node
 
 	VariableStore = defaultdict(dict)
-	def recur ( parent, assumptions, this_root, assume ):
+
+	##### Begin multiprocessing function #####
+
+	def ProcessNode ( *args ):
+		( q,
+		  var_store,
+		  s_structure,
+		  scen_nodes,
+		  leaf_nodes_per_node,
+		  opt,
+		  ptcTree,
+		  parent,
+		  assumptions,
+		  this_root,
+		  assume ) = args
+
 		msg = "Solving from node '{}', having assumed '{}' and assuming '{}'.\n"
 		SE.write( msg.format( this_root, assumptions, assume ) )
 
-		stage = sStructure.NodeStage[ this_root ]
-		stage_variables = sStructure.StageVariables[ stage ]
+		stage = s_structure.NodeStage[ this_root ]
+		stage_variables = s_structure.StageVariables[ stage ]
 
 		# Step 1: Build the model based on current assumption
 		mdata = ModelData()
-		for node in scenario_nodes[ assume ]:
-			mdata.add( node + '.dat' )
+		for node_name in scen_nodes[ assume ]:
+			mdata.add( node_name + '.dat' )
 		model = temoa_create_model()
 		mdata.read( model )
 		m = model.create( mdata )
@@ -1620,7 +1633,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 				sfixing += s
 				assumed += a
 
-				variables, stage_cost = VariableStore[ sfixing ][ assumed ]
+				variables, stage_cost = var_store[ sfixing ][ assumed ]
 				for vname, values in variables.iteritems():
 					m_var = getattr(m, vname)
 					for index, val in values:
@@ -1672,19 +1685,74 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		node_assumptions.append( assume )
 		node_assumptions = ','.join( node_assumptions )
 
-		VariableStore[ this_root ][ node_assumptions ] = (node_vars, node_cost)
-
-		del m, mdata, model, sol
-		gc.collect()
-
-		# Step 5: Recur
+		# Step 5: Tell master on what to recur
+		to_recur = tuple()
 		if this_root in ptcTree:
-			for child in ptcTree[ this_root ]:
-				for fs in leaf_nodes_by_node[ child ]:
-					recur( this_root, node_assumptions, child, fs )
+			to_recur = tuple(
+			  (child, fs)   # recur( this_root, node_assumptions, child, fs )
+			  for child in ptcTree[ this_root ]
+			  for fs in leaf_nodes_by_node[ child ]
+			)
+		q.put( (this_root, assumptions, node_assumptions, assume,
+		        node_vars, node_cost, to_recur) )
 
+	###### End multiprocessing function #####
+
+	data_from_sub = MP.Queue()
+	processes = list()  # keep track of processes so we can remove zombies
+
+	jobs_capacity = int( MP.cpu_count() * 1.5)
+	def do_work ( func, *args ):
+		func( *args )
+
+	outstanding_jobs = 0
 	for fs in leaf_nodes_by_node[ 'R' ]:
-		recur( parent='', assumptions='', this_root='R', assume=fs )
+		args = (
+		  ProcessNode,  data_from_sub,  VariableStore,  sStructure,
+		  scenario_nodes,  leaf_nodes_by_node,  optimizer,  ptcTree,
+		  '',                  # parent
+		  '',                  # assumptions,
+		  'R',                 # this_root,
+		  fs,                  # assume
+		)
+		outstanding_jobs += 1
+
+		processes.append( MP.Process( target=do_work, args=args ) )
+		processes[-1].start()
+
+	from collections import deque
+	process_args = deque()
+	while outstanding_jobs:
+		outstanding_jobs -= 1
+		results = data_from_sub.get()
+		node, assumptions, node_assumptions, assumed, node_vars, node_cost, to_recur = results
+
+		for child, fs in to_recur:
+			args = (
+			  ProcessNode,  data_from_sub,  VariableStore,  sStructure,
+			  scenario_nodes,  leaf_nodes_by_node,  optimizer,  ptcTree,
+			  node,                # becomes new parent
+			  node_assumptions,    # parent's assumptions
+			  child,               # becomes new this_root
+			  fs                   # what to assume assume
+			)
+			process_args.append( args )
+
+		VariableStore[ node ][ node_assumptions ] = (node_vars, node_cost)
+		del node_assumptions, assumed, node_vars, node_cost, to_recur, results
+
+		for p in processes:
+			# 'is_alive', as opposed to 'join', because this does not block. 'join'
+			# will block, even if only for epsilon time.  From the Python docs,
+			# however, this also will join the process.
+			p.is_alive()
+
+		while outstanding_jobs < jobs_capacity and process_args:
+			outstanding_jobs += 1
+			args = process_args.popleft()
+
+			processes.append( MP.Process( target=do_work, args=args ) )
+			processes[-1].start()
 
 	data = list()
 	data.append(('','','','"Previously Assumed" is a chronologically ordered list of assumptions made, up to "this" node',))
