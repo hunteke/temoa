@@ -34,7 +34,7 @@ TODO: update with LaTeX version of equation.
 	GDR = value( M.GlobalDiscountRate )
 
 	loan_costs = sum(
-	    M.V_CapacityInvest[S_t, S_v]
+	    M.V_Capacity[S_t, S_v]
 	  * (
 	      value( M.CostInvest[S_t, S_v] )
 	    * value( M.LoanAnnualize[S_t, S_v] )
@@ -49,7 +49,7 @@ TODO: update with LaTeX version of equation.
 	)
 
 	fixed_costs = sum(
-	    M.V_CapacityFixed[S_t, S_v]
+	    M.V_Capacity[S_t, S_v]
 	  * (
 	      value( M.CostFixed[p, S_t, S_v] )
 	    * sum( (1 + GDR) ** -y
