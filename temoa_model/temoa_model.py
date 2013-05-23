@@ -192,15 +192,15 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.initialize_Costs = BuildAction( rule=CreateCosts )
 
-	M.Loan_tv          = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
-	M.ModelLoanLife_tv = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
-	M.ModelTechLife_tv = Set( dimen=3, rule=ModelTechLifeIndices )
-	M.ModelLoanLife = Param( M.ModelLoanLife_tv, initialize=ParamModelLoanLife_rule )
-	M.ModelTechLife = Param( M.ModelTechLife_tv, initialize=ParamModelTechLife_rule )
+	M.Loan_tv           = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
+	M.ModelLoanLife_tv  = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
+	M.ModelTechLife_ptv = Set( dimen=3, rule=ModelTechLifeIndices )
+	M.ModelLoanLife = Param( M.ModelLoanLife_tv,  initialize=ParamModelLoanLife_rule )
+	M.ModelTechLife = Param( M.ModelTechLife_ptv, initialize=ParamModelTechLife_rule )
 
 	M.DiscountRate_tv = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
 	M.LoanLifeFrac_ptv = Set( dimen=3, rule=LoanLifeFracIndices )
-	M.TechLifeFrac_ptv = Set( dimen=3, rule=TechLifeFracIndices )
+	M.TechLifeFrac_ptv = Set( dimen=3, rule=ModelTechLifeIndices )
 
 	M.DiscountRate  = Param( M.DiscountRate_tv, default=0.05 )
 	M.TechLifeFrac  = Param( M.TechLifeFrac_ptv, initialize=ParamTechLifeFraction_rule )
@@ -247,9 +247,6 @@ CapacityFactor(tech_all, vintage_all)
 	  domain=NonNegativeReals
 	)
 
-	# M.V_CapacityInvest = Var( M.CapacityVar_tv, domain=NonNegativeReals )
-	# M.V_CapacityFixed  = Var( M.CapacityVar_tv, domain=NonNegativeReals )
-
 	AddReportingVariables( M )
 
 	M.BaseloadDiurnalConstraint_psdtv = Set(
@@ -260,8 +257,6 @@ CapacityFactor(tech_all, vintage_all)
 	M.DemandActivityConstraint_psdtv_dem_s0d0 = Set( dimen=8, rule=DemandActivityConstraintIndices )
 	M.ExistingCapacityConstraint_tv = Set(
 	  dimen=2, rule=lambda M: M.ExistingCapacity.sparse_iterkeys() )
-	M.FractionalLifeActivityLimitConstraint_psdtvo = Set(
-	  dimen=6, rule=FractionalLifeActivityLimitConstraintIndices )
 	M.MaxCapacityConstraint_pt = Set(
 	  dimen=2, rule=lambda M: M.MaxCapacity.sparse_iterkeys() )
 	M.MinCapacityConstraint_pt = Set(
@@ -310,8 +305,6 @@ CapacityFactor(tech_all, vintage_all)
 	M.TechOutputSplitConstraint = Constraint( M.TechOutputSplitConstraint_psditvo, rule=TechOutputSplit_Constraint )
 
 	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVar_pt, rule=CapacityAvailableByPeriodAndTech_Constraint )
-
-	M.FractionalLifeActivityLimitConstraint = Constraint( M.FractionalLifeActivityLimitConstraint_psdtvo, rule=FractionalLifeActivityLimit_Constraint )
 
 	M.MinCapacityConstraint = Constraint( M.MinCapacityConstraint_pt, rule=MinCapacity_Constraint )
 	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraint_pt, rule=MaxCapacity_Constraint )

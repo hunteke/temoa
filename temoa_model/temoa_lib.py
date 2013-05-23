@@ -707,29 +707,10 @@ process is active.
 	return indices
 
 
-def TechLifeFracIndices ( M ):
-	"""\
-Returns the set of (period, tech, vintage) tuples of processes that die between
-period boundaries.  The tuple indicates the last period in which a process is
-active.
-"""
-	l_periods = set( M.time_optimize )
-	l_max_year = max( M.time_future )
-
-	indices = set()
-	for t, v in g_activeCapacity_tv:
-		l_death_year = v + value(M.LifetimeTech[t, v])
-		if l_death_year < l_max_year and l_death_year not in l_periods:
-			p = max( yy for yy in M.time_optimize if yy < l_death_year )
-			indices.add( (p, t, v) )
-
-	return indices
-
-
 def ModelTechLifeIndices ( M ):
-	"""
-Returns the set of (period, tech, vintage) tuples.  The tuple indicates the
-periods in which a process is active, distinct from TechLifeFracIndices that
+	"""\
+Returns the set of sensical (period, tech, vintage) tuples.  The tuple indicates
+the periods in which a process is active, distinct from TechLifeFracIndices that
 returns indices only for processes that EOL mid-period.
 """
 	return g_activeActivity_ptv

@@ -179,18 +179,24 @@ GlobalDiscountRate and the length of each period.  One may refer to this
 
 def ParamTechLifeFraction_rule ( M, p, t, v ):
 	"""\
-For any technology that will cease operation (rust out, be decommissioned, etc.)
-between periods (as opposed to on a period boundary), calculate the fraction of
-the final period that the technology is still able to create useful output.
 
-This function must be called only with ('period', 'tech', 'vintage')
-combinations of processes that will end in 'period'.
+Calculate the fraction of period p that process <t, v> operates.
+
+For most processes and periods, this will likely be one, but for any process
+that will cease operation (rust out, be decommissioned, etc.) between periods,
+calculate the fraction of the period that the technology is able to
+create useful output.
 """
 	eol_year = v + value( M.LifetimeTech[t, v] )
+	frac  = eol_year - p
+	period_length = value( M.PeriodLength[ p ] )
+	if frac >= period_length:
+		# try to avoid floating point round-off errors for the common case.
+		return 1
 
 	  # number of years into final period loan is complete
-	frac  = eol_year - p
-	frac /= float(value( M.PeriodLength[ p ] ))
+
+	frac /= float( period_length )
 	return frac
 
 
@@ -495,56 +501,6 @@ accounting exercise for the modeler.
 	return expr
 
 
-def FractionalLifeActivityLimit_Constraint ( M, p, s, d, t, v, o ):
-	r"""
-
-Temoa has no requirement that process lifetimes must fall on a period boundary.
-In context of Temoa's simplification that each period is :math:`n` copies of a
-single characteristic year, an open question is how best to deal with processes
-with an end-of-life (EOL) that occurs mid period.
-
-Rather than attempt to delineate each year within a period and force
-partial-period processes to operate strictly until the end of their life,
-Temoa's approach instead averages the amount of energy these processes can emit
-over the period.  For example, if a period is 8 years long, and a process' EOL
-is 3 years in, the FractionalLifetimeActivity constraint ensures that Temoa can
-only utilize :math:`\tfrac{3}{8}` of the process' installed capacity in that
-period.
-
-.. math::
-   :label: FractionalLifeActivityLimit
-
-       \sum_{I} \textbf{FO}_{p, s, d, i, t, v, o}
-   \le
-       \left (
-               CF_{t, v}
-         \cdot C2A_{t}
-         \cdot TFL_{p, t, v}
-         \cdot SEG_{s, d}
-       \right )
-
-   \forall \{p, s, d, t, v, o\} \in \Theta_{\text{fractional life activity}}
-"""
-	max_output = (
-	    M.V_Capacity[t, v]
-	  * (
-	      value( M.CapacityFactor[s, d, t, v] )
-	    * value( M.CapacityToActivity[ t ] )
-	    * value( M.TechLifeFrac[p, t, v] )
-	    * value( M.SegFrac[s, d] )
-	  )
-	)
-
-	S_o = sum(
-	  M.V_FlowOut[p, s, d, S_i, t, v, o]
-
-	  for S_i in ProcessInputsByOutput( p, t, v, o )
-	)
-
-	expr = (S_o <= max_output)
-	return expr
-
-
 def Capacity_Constraint ( M, p, s, d, t, v ):
 	r"""
 
@@ -561,6 +517,7 @@ slice ``<s``,\ ``d>``.
                \text{CF}_{t, v}
          \cdot \text{C2A}_{t}
          \cdot \text{SEG}_{s, d}
+         \cdot \text{TLF}_{p, t, v}
        \right )
        \cdot \textbf{CAP}_{t, v}
    \ge
@@ -570,9 +527,10 @@ slice ``<s``,\ ``d>``.
    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 """
 	produceable = (
-	  (   value(M.CapacityFactor[s, d, t, v])
-	    * value(M.CapacityToActivity[ t ])
-	    * value(M.SegFrac[s, d]) )
+	  (   value( M.CapacityFactor[s, d, t, v] )
+	    * value( M.CapacityToActivity[ t ] )
+	    * value( M.SegFrac[s, d]) )
+	    * value( M.TechLifeFrac[p, t, v] )
 	  * M.V_Capacity[t, v]
 	)
 
@@ -960,19 +918,11 @@ only as much percentage as its lifespan through the period.  For example, if a
 period is 8 years, and a process dies 3 years into the period, then only 3/8 of
 the installed capacity is available for use for the period.
 """
-	dying_vintages = set( S_v
+	cap_avail = sum(
+	    value( M.TechLifeFrac[p, t, S_v] )
+	  * M.V_Capacity[t, S_v]
 
-	  for S_p, S_t, S_v in M.TechLifeFrac.sparse_iterkeys()
-	  if S_p == p and S_t == t
-	)
-	non_dying = ProcessVintages( p, t ) - dying_vintages
-
-	cap_avail = sum( M.V_Capacity[t, S_v] for S_v in non_dying )
-	cap_avail += sum(
-	    M.V_Capacity[t, S_v]
-	  * value( M.TechLifeFrac[p, t, S_v] )
-
-	  for S_v in dying_vintages
+	  for S_v in ProcessVintages( p, t )
 	)
 
 	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] == cap_avail)
