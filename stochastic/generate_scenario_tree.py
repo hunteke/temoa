@@ -45,7 +45,7 @@ class Param ( object ):
 		param = getattr( instance, name ) # intentionally die if not found.
 
 		indices = tuple()
-		pindex = param.index()
+		pindex = param.index_set()
 
 		if isinstance( pindex, _SetProduct ):
 			getname = lambda x: x.name
@@ -75,6 +75,7 @@ class Param ( object ):
 
 		for actual, mine in zip(model_keys, my_keys):
 			rate = 1
+
 			for pattern, r in rates:
 				keys = pattern.split(',')
 				match = True
@@ -126,7 +127,7 @@ class Param ( object ):
 
 
 	def as_ampl ( self, comment='' ):
-		pindex = self.param.index()
+		pindex = self.param.index_set()
 		if comment:
 			comment = '# Decision: %s\n\n' % str(comment)
 
@@ -134,9 +135,9 @@ class Param ( object ):
 		if isinstance( keys, str ):
 			keys = [ keys ]
 
-		# Together, these functions return the length of a printed version of
-		# a number, in characters.  They are used to make columns of data line up
-		# so one may have an easier time getting an overall sense of a data file.
+		# Together, these functions return the length of a printed version of a
+		# number, in characters.  They are used to make columns of data line up so
+		# one may have an easier time getting an overall sense of a data file.
 		def get_int_padding ( v ):
 			return len(str(int(v)))
 		def get_str_padding ( index ):
@@ -587,7 +588,7 @@ def main ( ):
 	node_count = 0
 
 	inform( '[      ] Writing scenario "dot dat" files:       ')
-	#tree.write_dat_files()
+	tree.write_dat_files()
 	write_scenario_file( all_spoints, tree )
 	inform( '\r[%6.2f] Writing scenario "dot dat" files\n' % duration() )
 
