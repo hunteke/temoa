@@ -132,7 +132,7 @@ def PeriodCost_rule ( M, p ):
 
 def ParamModelLoanLife_rule ( M, t, v ):
 	loan_length = value( M.LifetimeLoan[t, v] )
-	mll = min( loan_length, max(M.time_future) - v )
+	mll = min( loan_length, max(M.time_horizon) - v )
 
 	return mll
 
@@ -148,13 +148,11 @@ def ParamPeriodLength ( M, p ):
 	# This specifically does not use time_optimize because this function is
 	# called /over/ time_optimize.
 	periods = sorted( M.time_horizon )
-	periods.extend( sorted(M.time_future) )
 
 	i = periods.index( p )
 
 	# The +1 won't fail, because this rule is called over time_optimize, which
-	# lacks the last period in time_future.  In fact, this is the whole point of
-	# having at least one period in time_future.
+	# lacks the last period in time_horizon.
 	length = periods[i +1] - periods[ i ]
 
 	return length

@@ -39,16 +39,11 @@ It is not possible to directly set this Set or Parameter in a "dot dat" file.
 time_exist   - the periods prior to the model.  Mainly utilized to populate the
                capacity of installed technologies prior to those the
                optimization is allowed to alter.
-time_horizon - the periods of interest.  Though the model will optimize through
-               time_future, Temoa will report results only for this set.
-time_future  - the periods following time_horizon.
-*time_optimize - the union of time_horizon and time_future, less the final
-                 period.  The model will optimize over this set.
-*time_report - the union of time_exist and time_horizon.
-*time_all    - the union of time_optimize and time_exist
+time_horizon - the year boundaries of the periods of interest.
+*time_optimize - time_horizon less the final (largest) year.  The model will
+                 optimize over this set.
 *vintage_exist  - copy of time_exist, for unambiguous contextual use
-*vintage_future - copy of time_future, for unambiguous contextual use
-*vintage_all - a copy of time_all, for unambiguous contextual use.
+*vintage_all - the union of time_optimize and time_exist
 
 time_season  - the seasons of interest.  For example, winter might have
                different cooling demand characteristics than summer.
@@ -101,17 +96,14 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.time_exist      = Set( ordered=True, within=Integers )
 	M.time_horizon    = Set( ordered=True, within=Integers )
-	M.time_future     = Set( ordered=True, within=Integers )
 	M.time_optimize   = Set( ordered=True, initialize=init_set_time_optimize )
-	M.time_all        = M.time_exist | M.time_optimize
 
 	# These next sets are just various copies of the time_ sets, but
 	# unfortunately must be manually copied because of a few outstanding bugs
 	# within Pyomo (Jul 2011)
 	M.vintage_exist    = Set( ordered=True, initialize=init_set_vintage_exist)
-	M.vintage_future   = Set( ordered=True, initialize=init_set_vintage_future)
 	M.vintage_optimize = Set( ordered=True, initialize=init_set_vintage_optimize)
-	M.vintage_all      = Set( ordered=True, initialize=init_set_vintage_all)
+	M.vintage_all      = M.time_exist | M.time_optimize
 
 	# perform some basic validation on the time sets as a whole.
 	M.validate_time    = BuildAction( rule=validate_time )

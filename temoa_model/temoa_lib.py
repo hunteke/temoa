@@ -158,31 +158,23 @@ def DemandConstraintErrorCheck ( supply, p, s, d, dem ):
 def validate_time ( M ):
 	from sys import maxint
 
-	if not len( M.time_horizon ):
-		msg = ('Set "time_horizon" is empty!  Please specify at least one '
-		  'period in set time_horizon.')
+	if len( M.time_horizon ) < 2:
+		msg = ('Set "time_horizon" needs at least 2 specified years.  Temoa '
+		  'treats the integer numbers specified in this set as boundary years '
+		  'between periods, and uses them to automatically ascertain the length '
+		  '(in years) of each period.  Note that this means that there will be '
+		  'one less optimization period than the number of elements in this set.'
+		)
 		raise TemoaValidationError( msg )
 
-	if not len( M.time_future ):
-		msg = ('Set "time_future" is empty!  Please specify at least one year '
-		  'in set time_future, so that the model may ascertain a final period '
-		  'period length for optimization and economic accounting.')
-		raise TemoaValidationError( msg )
-
-	""" Ensure that the time_exist < time_horizon < time_future """
+	# Ensure that the time_exist < time_horizon
 	exist    = len( M.time_exist ) and max( M.time_exist ) or -maxint
 	horizonl = min( M.time_horizon )  # horizon "low"
-	horizonh = max( M.time_horizon )  # horizon "high"
-	future   = min( M.time_future )
 
 	if not ( exist < horizonl ):
 		msg = ('All items in time_horizon must be larger than in time_exist.\n'
 		  'time_exist max:   {}\ntime_horizon min: {}')
 		raise TemoaValidationError( msg.format(exist, horizonl) )
-	elif not ( horizonh < future ):
-		msg = ('All items in time_future must be larger that in time_horizon.\n'
-		  'time_horizon max:   {}\ntime_future min:    {}')
-		raise TemoaValidationError( msg.format(horizonh, future) )
 
 
 def validate_SegFrac ( M ):
@@ -484,26 +476,16 @@ def validate_TechOutputSplit ( M ):
 
 
 def init_set_time_optimize ( M ):
-	items = sorted( M.time_horizon )
-	items.extend( sorted( M.time_future ) )
-
-	return items[:-1]
+	return sorted( M.time_horizon )[:-1]
 
 
 def init_set_vintage_exist ( M ):
 	return sorted( M.time_exist )
 
 
-def init_set_vintage_future ( M ):
-	return sorted( M.time_future )
-
-
 def init_set_vintage_optimize ( M ):
 	return sorted( M.time_optimize )
 
-
-def init_set_vintage_all ( M ):
-	return sorted( M.time_all )
 
 # end validation and initialization routines
 ##############################################################################
@@ -695,7 +677,7 @@ between period boundaries.  The tuple indicates the last period in which a
 process is active.
 """
 	l_periods = set( M.time_optimize )
-	l_max_year = max( M.time_future )
+	l_max_year = max( M.time_horizon )
 
 	indices = set()
 	for t, v in M.LifetimeLoan.sparse_iterkeys():

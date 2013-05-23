@@ -9,8 +9,7 @@ data ;
 
 
 set  time_exist    :=  1960  1970  1980 ;
-set  time_horizon  :=  2010  1990  2000 ;
-set  time_future   :=  2020 ;
+set  time_horizon  :=  2010  1990  2000  2020 ;
 
 set  time_season  :=  inter  summer  winter ;
 set  time_of_day  :=  day  night ;
