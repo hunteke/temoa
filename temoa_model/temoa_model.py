@@ -94,9 +94,9 @@ CapacityFactor(tech_all, vintage_all)
 	"""
 	M = AbstractModel( name )
 
-	M.time_exist      = Set( ordered=True, within=Integers )
-	M.time_future    = Set( ordered=True, within=Integers )
-	M.time_optimize   = Set( ordered=True, initialize=init_set_time_optimize )
+	M.time_exist    = Set( ordered=True )  # check for integerness performed
+	M.time_future   = Set( ordered=True )  # (with reasoning) in temoa_lib
+	M.time_optimize = Set( ordered=True, initialize=init_set_time_optimize )
 
 	# These next sets are just various copies of the time_ sets, but
 	# unfortunately must be manually copied because of a few outstanding bugs
