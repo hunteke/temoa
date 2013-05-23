@@ -1149,7 +1149,7 @@ strict digraph result_commodity_%(commodity)s {
 	node_attr_fmt = 'href="../results/results_%%s_%%s.%s"' % ffmt
 	rc_node_fmt = 'color="%s", href="%s", shape="circle"'
 
-	for l_per in M.time_horizon:
+	for l_per in M.time_future:
 		url = period_results_url_fmt % l_per
 		for l_carrier in used_carriers:
 			# enabled/disabled nodes/edges

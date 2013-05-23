@@ -129,7 +129,7 @@ def CommodityBalanceConstraintErrorCheck ( vflow_out, vflow_in, p, s, d, c ):
 		msg = ("Unable to meet an interprocess '{}' transfer in ({}, {}, {}).\n"
 		  'No flow out.  Constraint flow in:\n   {}\n'
 		  'Possible reasons:\n'
-		  " - Is there a missing period in set 'time_horizon'?\n"
+		  " - Is there a missing period in set 'time_future'?\n"
 		  " - Is there a missing tech in set 'tech_resource'?\n"
 		  " - Is there a missing tech in set 'tech_production'?\n"
 		  " - Is there a missing commodity in set 'commodity_physical'?\n"
@@ -158,8 +158,8 @@ def DemandConstraintErrorCheck ( supply, p, s, d, dem ):
 def validate_time ( M ):
 	from sys import maxint
 
-	if len( M.time_horizon ) < 2:
-		msg = ('Set "time_horizon" needs at least 2 specified years.  Temoa '
+	if len( M.time_future ) < 2:
+		msg = ('Set "time_future" needs at least 2 specified years.  Temoa '
 		  'treats the integer numbers specified in this set as boundary years '
 		  'between periods, and uses them to automatically ascertain the length '
 		  '(in years) of each period.  Note that this means that there will be '
@@ -167,13 +167,13 @@ def validate_time ( M ):
 		)
 		raise TemoaValidationError( msg )
 
-	# Ensure that the time_exist < time_horizon
+	# Ensure that the time_exist < time_future
 	exist    = len( M.time_exist ) and max( M.time_exist ) or -maxint
-	horizonl = min( M.time_horizon )  # horizon "low"
+	horizonl = min( M.time_future )  # horizon "low"
 
 	if not ( exist < horizonl ):
-		msg = ('All items in time_horizon must be larger than in time_exist.\n'
-		  'time_exist max:   {}\ntime_horizon min: {}')
+		msg = ('All items in time_future must be larger than in time_exist.\n'
+		  'time_exist max:   {}\ntime_future min: {}')
 		raise TemoaValidationError( msg.format(exist, horizonl) )
 
 
@@ -476,7 +476,7 @@ def validate_TechOutputSplit ( M ):
 
 
 def init_set_time_optimize ( M ):
-	return sorted( M.time_horizon )[:-1]
+	return sorted( M.time_future )[:-1]
 
 
 def init_set_vintage_exist ( M ):
@@ -513,7 +513,7 @@ def InitializeProcessParameters ( M ):
 	global g_activeCapacity_tv
 	global g_activeCapacityAvailable_pt
 
-	l_first_period = min( M.time_horizon )
+	l_first_period = min( M.time_future )
 	l_exist_indices = M.ExistingCapacity.sparse_keys()
 	l_used_techs = set()
 
@@ -536,7 +536,7 @@ def InitializeProcessParameters ( M ):
 			if v + l_lifetime <= l_first_period:
 				msg = ('\nWarning: %s specified as ExistingCapacity, but its '
 				  'LifetimeTech parameter does not extend past the beginning of '
-				  'time_horizon.  (i.e. useless parameter)'
+				  'time_future.  (i.e. useless parameter)'
 				  '\n\tLifetime:     %s'
 				  '\n\tFirst period: %s\n')
 				SE.write( msg % (l_process, l_lifetime, l_first_period) )
@@ -677,7 +677,7 @@ between period boundaries.  The tuple indicates the last period in which a
 process is active.
 """
 	l_periods = set( M.time_optimize )
-	l_max_year = max( M.time_horizon )
+	l_max_year = max( M.time_future )
 
 	indices = set()
 	for t, v in M.LifetimeLoan.sparse_iterkeys():
@@ -714,7 +714,7 @@ process indices that may be specified in the LifetimeTech parameter.
 
 def LifetimeLoanIndices ( M ):
 	"""\
-Based on the Efficiency parameter's indices and time_horizon parameter, this
+Based on the Efficiency parameter's indices and time_future parameter, this
 function returns the set of process indices that may be specified in the
 CostInvest parameter.
 """

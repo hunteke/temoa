@@ -39,8 +39,8 @@ It is not possible to directly set this Set or Parameter in a "dot dat" file.
 time_exist   - the periods prior to the model.  Mainly utilized to populate the
                capacity of installed technologies prior to those the
                optimization is allowed to alter.
-time_horizon - the year boundaries of the periods of interest.
-*time_optimize - time_horizon less the final (largest) year.  The model will
+time_future - the year boundaries of the periods of interest.
+*time_optimize - time_future less the final (largest) year.  The model will
                  optimize over this set.
 *vintage_exist  - copy of time_exist, for unambiguous contextual use
 *vintage_all - the union of time_optimize and time_exist
@@ -95,7 +95,7 @@ CapacityFactor(tech_all, vintage_all)
 	M = AbstractModel( name )
 
 	M.time_exist      = Set( ordered=True, within=Integers )
-	M.time_horizon    = Set( ordered=True, within=Integers )
+	M.time_future    = Set( ordered=True, within=Integers )
 	M.time_optimize   = Set( ordered=True, initialize=init_set_time_optimize )
 
 	# These next sets are just various copies of the time_ sets, but
