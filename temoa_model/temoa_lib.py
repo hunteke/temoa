@@ -1478,7 +1478,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	for f in dot_dats:
 		if f[-4:] != '.dat':
 			msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
-			raise SystemExit( msg.format( f ))
+			raise TemoaValidationError( msg.format( f ))
 		mdata.add( f )
 	mdata.read( model )
 	SE.write( '\r[%8.2f\n' % duration() )
@@ -1780,6 +1780,8 @@ def temoa_solve ( model ):
 	elif options.solver != 'NONE':
 		SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
 			.format( options.solver ))
+		SE.write( "Please press enter to continue or Ctrl+C to quit." )
+		raw_input()
 
 	if options.dot_dat:
 		solve_perfect_foresight( model, opt, options )
