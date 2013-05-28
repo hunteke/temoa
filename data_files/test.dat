@@ -8,9 +8,8 @@ data;
 # a "real" or "typical" energy system, and is /solely/ meant to test basic
 # Temoa functionality.  All numbers in this file are suspect.
 
-set  time_exist   :=  1990  2000 ;
-set  time_horizon :=  2010  2015  2020  2025 ;
-set  time_future  :=  2030 ;
+set  time_exist  :=  1990  2000 ;
+set  time_future :=  2010  2015  2020  2025  2030;
 
 set  time_season  :=  summer winter ;
 set  time_of_day  :=  day  night ;
@@ -283,7 +282,7 @@ param  CostFixed  :=
 	;
 
 
-# param  CostMarginal  :=
+# param  CostVariable  :=
 # # period        # tech                # vintage       # cost
 # 	;
 

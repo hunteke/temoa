@@ -26,4 +26,3 @@ try:
 	temoa_solve( model )
 except TemoaError, e:
 	raise SystemExit( '\n' + str(e) )
-

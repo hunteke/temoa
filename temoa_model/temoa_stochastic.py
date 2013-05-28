@@ -62,7 +62,7 @@ TODO: update with LaTeX version of equation.
 	  if S_p == p
 	)
 
-	marg_costs = sum(
+	variable_costs = sum(
 	    M.V_ActivityByPeriodTechAndVintage[p, S_t, S_v]
 	  * (
 	      value( M.CostMarginal[p, S_t, S_v] )
@@ -73,7 +73,7 @@ TODO: update with LaTeX version of equation.
 	  if S_p == p
 	)
 
-	sp_cost = (loan_costs + fixed_costs + marg_costs)
+	sp_cost = (loan_costs + fixed_costs + variable_costs)
 
 	expr = (M.StochasticPointCost[ p ] == sp_cost)
 	return expr

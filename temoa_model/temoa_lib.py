@@ -419,21 +419,21 @@ def CreateDemands ( M ):
 
 def CreateCosts ( M ):
 	# Steps
-	#  1. Collect all possible cost indices (CostFixed, CostMarginal)
-	#  2. Find the ones _not_ specified in CostFixed and CostMarginal
+	#  1. Collect all possible cost indices (CostFixed, CostVariable)
+	#  2. Find the ones _not_ specified in CostFixed and CostVariable
 	#  3. Set them, based on Cost*VintageDefault
 
 	# Shorter names, for us lazy programmer types
 	CF = M.CostFixed
-	CM = M.CostMarginal
+	CV = M.CostVariable
 
 	# Step 1
 	fixed_indices = set( (p, t, v) for p, t, v in M.CostFixed_ptv )
-	marg_indices  = set( (p, t, v) for p, t, v in M.CostMarginal_ptv )
+	var_indices   = set( (p, t, v) for p, t, v in M.CostVariable_ptv )
 
 	# Step 2
 	unspecified_fixed_prices = fixed_indices.difference( CF.sparse_iterkeys() )
-	unspecified_marg_prices  = marg_indices.difference( CM.sparse_iterkeys() )
+	unspecified_var_prices   = var_indices.difference( CV.sparse_iterkeys() )
 
 	# Step 3
 
@@ -449,12 +449,12 @@ def CreateCosts ( M ):
 				CF[p, t, v] = M.CostFixedVintageDefault[t, v]
 		CF._constructed = True
 
-	if unspecified_marg_prices:
-		CM._constructed = False
-		for p, t, v in unspecified_marg_prices:
-			if (t, v) in M.CostMarginalVintageDefault:
-				CM[p, t, v] = M.CostMarginalVintageDefault[t, v]
-		CM._constructed = True
+	if unspecified_var_prices:
+		CV._constructed = False
+		for p, t, v in unspecified_var_prices:
+			if (t, v) in M.CostVariableVintageDefault:
+				CV[p, t, v] = M.CostVariableVintageDefault[t, v]
+		CV._constructed = True
 
 
 def validate_TechOutputSplit ( M ):
@@ -664,7 +664,7 @@ def CostFixedIndices ( M ):
 	return g_activeActivity_ptv
 
 
-def CostMarginalIndices ( M ):
+def CostVariableIndices ( M ):
 	return g_activeActivity_ptv
 
 

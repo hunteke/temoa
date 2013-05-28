@@ -671,7 +671,7 @@ param  CostFixed  :=        # TABLE TCH_FIXOM
 	;
 
 
-param  CostMarginal  :=        # TABLE NSEP_COST1, TCH_VAROM
+param  CostVariable  :=        # TABLE NSEP_COST1, TCH_VAROM
 # period   # technology            # vintage   # value
  1990       IMPDSL1                 1990         10
  2000       IMPDSL1                 1990         10

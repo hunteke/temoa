@@ -32,7 +32,7 @@ objective funciton calculates the costs associated with supplying the system
 with energy, under the assumption that all costs are paid for through loans
 (rather than with lump-sum sales).  This implementation sums up all the costs
 incurred by the solution, and is simplistically :math:`C_{tot} = C_{loans} +
-C_{fixed} + C_{marginal}`.  Similarly, each sub-part is merely a summation of
+C_{fixed} + C_{variable}`.  Similarly, each sub-part is merely a summation of
 the costs incurred, multiplied by an annual discount factor to calculate the
 time-value in year :math:`P_0` dollars.
 
@@ -58,7 +58,7 @@ time-value in year :math:`P_0` dollars.
      \right )
 
 .. math::
-   C_{marginal} & = \sum_{p, t, v \in \Theta_{MC}} \left (
+   C_{variable} & = \sum_{p, t, v \in \Theta_{MC}} \left (
            MC_{p, t, v}
      \cdot R_p
      \cdot \textbf{ACT}_{t, v}
@@ -111,18 +111,18 @@ def PeriodCost_rule ( M, p ):
 	  if S_p == p
 	)
 
-	marg_costs = sum(
+	variable_costs = sum(
 	    M.V_ActivityByPeriodTechAndVintage[p, S_t, S_v]
 	  * (
-	      value( M.CostMarginal[p, S_t, S_v] )
+	      value( M.CostVariable[p, S_t, S_v] )
 	    * value( M.PeriodRate[ p ] )
 	  )
 
-	  for S_p, S_t, S_v in M.CostMarginal.sparse_iterkeys()
+	  for S_p, S_t, S_v in M.CostVariable.sparse_iterkeys()
 	  if S_p == p
 	)
 
-	period_costs = (loan_costs + fixed_costs + marg_costs)
+	period_costs = (loan_costs + fixed_costs + variable_costs)
 	return period_costs
 
 
