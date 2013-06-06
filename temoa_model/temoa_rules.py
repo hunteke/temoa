@@ -390,10 +390,44 @@ slices.)
 	return expr
 
 
+def TechInputSplit_Constraint ( M, p, s, d, i, t, v, o ):
+	r"""
+
+Some processes take a single output and make multiple inputs.  A subset of these
+processes have a constant ratio of outputs relative to their input.  See
+TechOutputSplit_Constraint for the analogous math reasoning.
+"""
+	split_indices = M.TechInputSplit.sparse_keys()
+
+	inputs = sorted(
+	  inp
+
+	  for inp in M.commodity_physical
+	  if (inp, t, o) in split_indices
+	)
+
+	index = inputs.index( i )
+	if 0 == index:
+		return Constraint.Skip
+
+	prev = inputs[ index -1 ]
+	prev_split = M.TechInputSplit[prev, t, o]
+	split = M.TechInputSplit[i, t, o]
+
+	expr = (
+	    M.V_FlowIn[p, s, d, i, t, v, o]
+	  * split
+	  ==
+	    M.V_FlowIn[p, s, d, prev, t, v, o]
+	  * prev_split
+	)
+	return expr
+
+
 def TechOutputSplit_Constraint ( M, p, s, d, i, t, v, o ):
 	r"""
 
-Some processes take a single output and make multiple outputs.  A subset of
+Some processes take a single input and make multiple outputs.  A subset of
 these processes have a constant ratio of outputs relative to their input.  The
 most canonical example is that of an oil refinery.  Crude oil is composed of
 many different types of hydrocarbons, and the refinery process exploits the fact

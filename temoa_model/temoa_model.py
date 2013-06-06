@@ -198,6 +198,7 @@ CapacityFactor(tech_all, vintage_all)
 	M.TechLifeFrac  = Param( M.TechLifeFrac_ptv, initialize=ParamTechLifeFraction_rule )
 	M.LoanAnnualize = Param( M.Loan_tv, initialize=ParamLoanAnnualize_rule )
 
+	M.TechInputSplit  = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
 	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
 	# always-empty Set; hack to perform inter-Set or inter-Param validation
 	M.validate_TechOutputSplit = Set( initialize=validate_TechOutputSplit )
@@ -258,6 +259,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.ResourceConstraint_pr = Set(
 	  dimen=2, rule=lambda M: M.ResourceBound.sparse_iterkeys() )
 	M.StorageConstraint_psitvo = Set( dimen=6, rule=StorageConstraintIndices )
+	M.TechInputSplitConstraint_psditvo = Set(
+	  dimen=7, rule=TechInputSplitConstraintIndices )
 	M.TechOutputSplitConstraint_psditvo = Set(
 	  dimen=7, rule=TechOutputSplitConstraintIndices )
 
@@ -294,6 +297,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.StorageConstraint = Constraint( M.StorageConstraint_psitvo, rule=Storage_Constraint )
 
+	M.TechInputSplitConstraint  = Constraint( M.TechInputSplitConstraint_psditvo,  rule=TechInputSplit_Constraint )
 	M.TechOutputSplitConstraint = Constraint( M.TechOutputSplitConstraint_psditvo, rule=TechOutputSplit_Constraint )
 
 	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVar_pt, rule=CapacityAvailableByPeriodAndTech_Constraint )

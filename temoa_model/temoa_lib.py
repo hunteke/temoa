@@ -23,13 +23,17 @@ an archive may not have received this license file.  If not, see
 from cStringIO import StringIO
 from itertools import product as cross_product
 from operator import itemgetter as iget
-from os import path
-from sys import argv, stderr as SE, stdout as SO
+from os import path, close as os_close
+from sys import argv, stderr as SE
 
 from temoa_graphviz import CreateModelDiagrams
 
 try:
-	from coopr.pyomo import *
+	from coopr.pyomo import (
+	  AbstractModel, BuildAction, Constraint, NonNegativeReals, Objective, Param,
+	  Reals, Set, Var, minimize, value
+	)
+
 except:
 
 	import sys
@@ -1100,6 +1104,20 @@ def StorageConstraintIndices ( M ):
 	return indices
 
 
+def TechInputSplitConstraintIndices ( M ):
+	indices = set(
+	  (p, s, d, i, t, v, o)
+
+	  for i, t, o in M.TechInputSplit.sparse_iterkeys()
+	  for p in M.time_optimize
+	  for v in ProcessVintages( p, t )
+	  for s in M.time_season
+	  for d in M.time_of_day
+	)
+
+	return indices
+
+
 def TechOutputSplitConstraintIndices ( M ):
 	indices = set(
 	  (p, s, d, i, t, v, o)
@@ -1456,6 +1474,7 @@ def parse_args ( ):
 
 def solve_perfect_foresight ( model, optimizer, options ):
 	from time import clock
+	import sys, os, gc
 
 	from coopr.pyomo import ModelData
 
@@ -1501,7 +1520,16 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	updated_results = instance.update_results( result )
 	formatted_results = pformat_results( instance, updated_results )
 	SE.write( '\r[%8.2f\n' % duration() )
-	SO.write( formatted_results )
+	sys.stdout.write( formatted_results )
+
+	# we can't simply call SO.close() here, because we use multiprocess.Process
+	# in _graphviz, which also calls close() -- an operation that may only be
+	# called once on a file object.  We also can't simply close stdout, because
+	# Python treats it specially with a guarantee that std* objects are /never/
+	# closed.  XXX: And still, for now, this doesn't appear to work at all
+	sys.stdout.flush()
+	os.close( sys.stdout.fileno() )
+	sys.stdout = open( '/dev/null', 'w' )
 
 	if options.graph_format:
 		SE.write( '[        ] Creating Temoa model diagrams.' ); SE.flush()
@@ -1775,7 +1803,7 @@ def temoa_solve ( model ):
 	opt = SolverFactory( options.solver )
 	if opt:
 		opt.keepFiles = options.keepPyomoLP
-		opt.generateSymbolicLabels = options.useSymbolLabels
+		opt.symbolic_solver_labels = options.useSymbolLabels
 
 	elif options.solver != 'NONE':
 		SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
