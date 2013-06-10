@@ -21,61 +21,12 @@ an archive may not have received this license file.  If not, see
 <http://www.gnu.org/licenses/>.
 """
 
-from temoa_lib import *
-from temoa_model import *
+from temoa_lib import Var, Objective, Constraint, NonNegativeReals, minimize
+from temoa_model import temoa_create_model
+from temoa_rules import PeriodCost_rule
 
 def StochasticPointObjective_rule ( M, p ):
-	"""\
-Stochastic objective function.
-
-TODO: update with LaTeX version of equation.
-	"""
-	P_0 = min( M.time_optimize )
-	GDR = value( M.GlobalDiscountRate )
-
-	loan_costs = sum(
-	    M.V_Capacity[S_t, S_v]
-	  * (
-	      value( M.CostInvest[S_t, S_v] )
-	    * value( M.LoanAnnualize[S_t, S_v] )
-	    * sum( (1 + GDR) ** -y
-	        for y in range( S_v - P_0,
-	                        S_v - P_0 + value( M.ModelLoanLife[S_t, S_v] ))
-	      )
-	  )
-
-	  for S_t, S_v in M.CostInvest.sparse_iterkeys()
-	  if S_v == p
-	)
-
-	fixed_costs = sum(
-	    M.V_Capacity[S_t, S_v]
-	  * (
-	      value( M.CostFixed[p, S_t, S_v] )
-	    * sum( (1 + GDR) ** -y
-	        for y in range( p - P_0,
-	                        p - P_0 + value( M.ModelTechLife[p, S_t, S_v] ))
-	      )
-	    )
-
-	  for S_p, S_t, S_v in M.CostFixed.sparse_iterkeys()
-	  if S_p == p
-	)
-
-	variable_costs = sum(
-	    M.V_ActivityByPeriodTechAndVintage[p, S_t, S_v]
-	  * (
-	      value( M.CostMarginal[p, S_t, S_v] )
-	    * value( M.PeriodRate[ p ] )
-	  )
-
-	  for S_p, S_t, S_v in M.CostMarginal.sparse_iterkeys()
-	  if S_p == p
-	)
-
-	sp_cost = (loan_costs + fixed_costs + variable_costs)
-
-	expr = (M.StochasticPointCost[ p ] == sp_cost)
+	expr = ( M.StochasticPointCost[ p ] == PeriodCost_rule( M, p ) )
 	return expr
 
 def Objective_rule ( M ):
@@ -86,4 +37,6 @@ M = model = temoa_create_model( 'TEMOA Stochastic' )
 M.StochasticPointCost = Var( M.time_optimize, within=NonNegativeReals )
 M.StochasticPointCostConstraint = Constraint( M.time_optimize, rule=StochasticPointObjective_rule )
 
+del M.TotalCost
 M.TotalCost = Objective( rule=Objective_rule, sense=minimize )
+
