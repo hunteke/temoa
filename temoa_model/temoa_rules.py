@@ -793,22 +793,33 @@ counted.
 	DemandConstraintErrorCheck( supply, p, s, d, dem )
 
 	expr = (supply >= M.Demand[p, dem] * M.DemandSpecificDistribution[s, d, dem])
+
 	return expr
 
 
 def GrowthRateConstraint_rule ( M, p, t ):
-	if p == M.time_optimize.first(): return Constraint.Skip
-
-	periods = sorted(M.time_optimize)
-	p_prev = periods.index( p )
-	p_prev = periods[ p_prev -1]
-
 	GRS = value( M.GrowthRateSeed[ t ] )
 	GRM = value( M.GrowthRateMax[ t ] )
-	prev_period = GRM * (M.V_CapacityAvailableByPeriodAndTech[p_prev, t] + GRS)
+	CapPT = M.V_CapacityAvailableByPeriodAndTech
 
-	expr = ( M.V_CapacityAvailableByPeriodAndTech[p, t] <= prev_period )
+	periods = sorted(set(p_ for p_, t_ in CapPT if t_ == t) )
+
+	print "Tech:", t, "   Periods: ", str(periods)
+
+	if p not in periods:
+		return Constraint.Skip
+
+	if p == periods[0]:
+		expr = ( CapPT[p, t] <= GRS )
+
+	else:
+		p_prev = periods.index( p )
+		p_prev = periods[ p_prev -1]
+
+		expr = ( CapPT[p, t] <= GRM * CapPT[p_prev, t] + GRS )
+
 	return expr
+
 
 """
  End constraint rules

@@ -44,6 +44,8 @@ set  tech_production  :=
  e_solar_centralized_thermal_s    # ESOLSTCEN: Solar Thermal Centralized Generation
  e_wind
 
+ e_dummy
+
  p_refinery
 
  r_ac
@@ -79,8 +81,9 @@ set  tech_baseload  :=
  e_coal
  e_coal_igcc_s                    # ECOALIGCC:  Integrated Coal Gasif. Combined Cycle
  e_coal_igcc_seq_s                # ECOALIGCCS: Integrated Coal Gasif. Combined Cycle -- CO2 Capt.
- e_r_coal_s                       # ECOASTMR:   Residual Coal Steam
  e_nuclear
+ e_r_coal_s                       # ECOASTMR:   Residual Coal Steam
+ e_r_nuclear_s
 	;
 
 
@@ -334,6 +337,7 @@ param  LifetimeTechDefault  :=
  r_ac                           15
  r_cfl                          10
  r_dummy                         5
+ e_dummy                         5
  r_ewheater                     12
  r_furnace                      20
  r_geoth                        20
@@ -528,6 +532,16 @@ param  CostInvest  :=
  r_dummy        2045                0.00001
  r_dummy        2050                0.00001
 
+ e_dummy        2010                9999999999
+ e_dummy        2015                9999999999
+ e_dummy        2020                9999999999
+ e_dummy        2025                9999999999
+ e_dummy        2030                9999999999
+ e_dummy        2035                9999999999
+ e_dummy        2040                9999999999
+ e_dummy        2045                9999999999
+ e_dummy        2050                9999999999
+
  r_incand       2010                0.27
  r_incand       2015                0.27
  r_incand       2020                0.27
@@ -659,15 +673,15 @@ param  CostInvest  :=
  e_solar_centralized_thermal_s       2045            4384   # M$/GW
  e_solar_centralized_thermal_s       2050            4384   # M$/GW
 
- e_geo_binary_steam_s                2010            2393   # M$/GW
- e_geo_binary_steam_s                2015            2393   # M$/GW
- e_geo_binary_steam_s                2020            2393   # M$/GW
- e_geo_binary_steam_s                2025            2393   # M$/GW
- e_geo_binary_steam_s                2030            2393   # M$/GW
- e_geo_binary_steam_s                2035            2393   # M$/GW
- e_geo_binary_steam_s                2040            2393   # M$/GW
- e_geo_binary_steam_s                2045            2393   # M$/GW
- e_geo_binary_steam_s                2050            2393   # M$/GW
+ e_geo_binary_steam_s                2010            999999999 # 2393   # M$/GW
+ e_geo_binary_steam_s                2015            999999999 # 2393   # M$/GW
+ e_geo_binary_steam_s                2020            999999999 # 2393   # M$/GW
+ e_geo_binary_steam_s                2025            999999999 # 2393   # M$/GW
+ e_geo_binary_steam_s                2030            999999999 # 2393   # M$/GW
+ e_geo_binary_steam_s                2035            999999999 # 2393   # M$/GW
+ e_geo_binary_steam_s                2040            999999999 # 2393   # M$/GW
+ e_geo_binary_steam_s                2045            999999999 # 2393   # M$/GW
+ e_geo_binary_steam_s                2050            999999999 # 2393   # M$/GW
 
  e_coal_igcc_s                       2010            3010   # M$/GW
  e_coal_igcc_s                       2015            3010   # M$/GW
@@ -1190,6 +1204,20 @@ param  CapacityFactorDefault  :=
  winter        day      e_r_hydro      0.5
  winter        night    e_r_hydro      0.5
 
+ intermediate  day      e_r_nuclear_s  0.88
+ intermediate  night    e_r_nuclear_s  0.88
+ summer        day      e_r_nuclear_s  0.88
+ summer        night    e_r_nuclear_s  0.88
+ winter        day      e_r_nuclear_s  0.88
+ winter        night    e_r_nuclear_s  0.88
+
+ intermediate  day      e_r_wind_s     0.28
+ intermediate  night    e_r_wind_s     0.28
+ summer        day      e_r_wind_s     0.28
+ summer        night    e_r_wind_s     0.28
+ winter        day      e_r_wind_s     0.28
+ winter        night    e_r_wind_s     0.28
+
 	;
 
 #param  CapacityFactor  :=
@@ -1234,27 +1262,46 @@ param MaxCapacity :=
  2010               e_hydro               0
  2010               e_ngcc                0
  2010               e_ngcc_seq_s          0
- 2015               e_ngcc_seq_s          0
  2010               e_ngsc                0
  2010               e_nuclear             0
+ 2010               e_solar_centralized_pv_s      0
  2010               e_wind                0
  2010               r_ngwheater           0
+
 	;
 
 
 param  GrowthRateMax  :=
-  e_nuclear   1.1
-  e_wind      1.1
-  e_geo_binary_steam_s    1.1
-  e_ngcc_seq_s    1.1
+
+ e_coal                    1.1
+ e_coal_igcc_s             1.1
+ e_coal_igcc_seq_s         1.1
+ e_geo_binary_steam_s      1.1
+ e_hydro                   1.1
+ e_ngcc                    1.1
+ e_ngcc_seq_s              1.1
+ e_ngsc                    1.1
+ e_nuclear                 1.1
+ e_solar_centralized_pv_s  1.1
+ e_solar_centralized_thermal_s  1.1
+ e_wind                    1.1
 	;
 
 
 param  GrowthRateSeed  :=
-  e_nuclear   10     # GW
-  e_wind      10     # GW
-  e_geo_binary_steam_s    5 # GW
-  e_ngcc_seq_s  10   # GW
+ e_coal                     10   # GW
+ e_coal_igcc_s              10   # GW
+ e_coal_igcc_seq_s          10   # GW
+ e_geo_binary_steam_s        5   # GW
+ e_hydro                    10   # GW
+ e_ngcc                     10   # GW
+ e_ngcc_seq_s               10   # GW
+ e_ngsc                     10   # GW
+ e_nuclear                  10   # GW
+ e_solar_centralized_pv_s   10   # GW
+ e_solar_centralized_thermal_s   10   # GW
+ e_wind                     10   # GW
+
 	;
 
 
@@ -1527,6 +1574,16 @@ param  GrowthRateSeed  :=
  electricity      r_dummy         2040           r_appliance        1
  electricity      r_dummy         2045           r_appliance        1
  electricity      r_dummy         2050           r_appliance        1
+
+ resource         e_dummy         2010           electricity        1
+ resource         e_dummy         2015           electricity        1
+ resource         e_dummy         2020           electricity        1
+ resource         e_dummy         2025           electricity        1
+ resource         e_dummy         2030           electricity        1
+ resource         e_dummy         2035           electricity        1
+ resource         e_dummy         2040           electricity        1
+ resource         e_dummy         2045           electricity        1
+ resource         e_dummy         2050           electricity        1
 
  electricity      r_ewheater      2010           r_wheating         0.9
  electricity      r_ewheater      2015           r_wheating         0.9
@@ -1808,8 +1865,8 @@ param  ExistingCapacity  :=
 
  e_r_hydro               2005    28
 
- e_r_ngcc_s              1970     0.329  # 0.20
- e_r_ngcc_s              2005     0.329  # 31      # 164.67
+ e_r_ngcc_s              1970    20.17   # 0.20
+ e_r_ngcc_s              2005    20.17   # 31      # 164.67
 
  e_r_ngsc_s              1970     7.61  # 0.64
  e_r_ngsc_s              1975     7.61  # 1.93
