@@ -796,6 +796,20 @@ counted.
 	return expr
 
 
+def GrowthRateConstraint_rule ( M, p, t ):
+	if p == M.time_optimize.first(): return Constraint.Skip
+
+	periods = sorted(M.time_optimize)
+	p_prev = periods.index( p )
+	p_prev = periods[ p_prev -1]
+
+	GRS = value( M.GrowthRateSeed[ t ] )
+	GRM = value( M.GrowthRateMax[ t ] )
+	prev_period = GRM * (M.V_CapacityAvailableByPeriodAndTech[p_prev, t] + GRS)
+
+	expr = ( M.V_CapacityAvailableByPeriodAndTech[p, t] <= prev_period )
+	return expr
+
 """
  End constraint rules
 """

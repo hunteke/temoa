@@ -153,6 +153,9 @@ CapacityFactor(tech_all, vintage_all)
 
 	M.initialize_Lifetimes = BuildAction( rule=CreateLifetimes )
 
+	M.GrowthRateMax = Param( M.tech_all )
+	M.GrowthRateSeed = Param( M.tech_all )
+
 	# always empty set, like the validation hacks above.  Temoa uses a couple
 	# of global variables to precalculate some oft-used results in constraint
 	# generation.  This is therefore intentially placed after all Set and Param
@@ -267,6 +270,11 @@ CapacityFactor(tech_all, vintage_all)
 	M.EmissionLimitConstraint_pe = Set(
 	  dimen=2, rule=lambda M: M.EmissionLimit.sparse_iterkeys() )
 
+	from itertools import product
+	M.GrowthRateMaxConstraint_tv = Set(
+	  dimen=2, rule=lambda M: set(product( M.time_optimize, M.GrowthRateMax.sparse_iterkeys() )) )
+
+
 	# Objective
 	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
 
@@ -306,6 +314,8 @@ CapacityFactor(tech_all, vintage_all)
 	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraint_pt, rule=MaxCapacity_Constraint )
 
 	M.EmissionLimitConstraint = Constraint( M.EmissionLimitConstraint_pe, rule=EmissionLimit_Constraint)
+
+	M.GrowthRateConstraint = Constraint( M.GrowthRateMaxConstraint_tv, rule=GrowthRateConstraint_rule )
 
 
 	return M
