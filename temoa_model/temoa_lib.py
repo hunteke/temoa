@@ -1464,6 +1464,10 @@ def parse_args ( ):
 			raise TemoaCommandLineArgumentError(
 			   msg.format( reset, edir, red_bold ))
 
+	s_choice = str( options.solver ).upper()
+	SE.write('Notice: Using the {} solver interface.\n'.format( s_choice ))
+	SE.flush()
+
 	return options
 
 # End miscellaneous routines
