@@ -804,8 +804,6 @@ def GrowthRateConstraint_rule ( M, p, t ):
 
 	periods = sorted(set(p_ for p_, t_ in CapPT if t_ == t) )
 
-	print "Tech:", t, "   Periods: ", str(periods)
-
 	if p not in periods:
 		return Constraint.Skip
 
