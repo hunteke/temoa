@@ -81,6 +81,7 @@ class TemoaError ( Exception ): pass
 class TemoaCommandLineArgumentError ( TemoaError ): pass
 class TemoaFlowError ( TemoaError ): pass
 class TemoaValidationError ( TemoaError ): pass
+class TemoaNoExecutableError ( TemoaError ): pass
 
 def get_str_padding ( obj ):
 	return len(str( obj ))
@@ -1463,6 +1464,23 @@ def parse_args ( ):
 			msg = '{}{}{}'.format( red_bold, msg, reset )
 			raise TemoaCommandLineArgumentError(
 			   msg.format( reset, edir, red_bold ))
+
+	if options.graph_format:
+		try:
+			from subprocess import call
+			from os import devnull
+
+			with open(devnull, 'wb') as fnull:
+				call(('dot', '-Txxx'), stdout=fnull, stderr=fnull)
+
+		except OSError:
+			msg = ('Missing Graphviz.\n\nYou have requested to generate Graphviz '
+			  'images of your model.  Unfortunately, Python is not able to find '
+			  'the "dot" executable from the Graphviz suite.  Do you need to '
+			  'install the Graphviz suite?  If you need help with this step, '
+			  'please Google, or consult the Temoa forum.\n\n')
+
+			raise TemoaNoExecutableError( msg )
 
 	s_choice = str( options.solver ).upper()
 	SE.write('Notice: Using the {} solver interface.\n'.format( s_choice ))
