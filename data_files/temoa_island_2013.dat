@@ -164,64 +164,84 @@ param  CapacityToActivity  :=
 
 param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
 # Emission, input,       tech,                vintage,   output,         amount released per unit activity
- co2         resource     imp_coal             2015       coal            88.3  # kilotonnes/PJ
- co2         resource     imp_coal             2020       coal            88.3  # kilotonnes/PJ
- co2         resource     imp_coal             2025       coal            88.3  # kilotonnes/PJ
- co2         resource     imp_coal             2030       coal            88.3  # kilotonnes/PJ
- co2         resource     imp_coal             2035       coal            88.3  # kilotonnes/PJ
- co2         resource     imp_coal             2040       coal            88.3  # kilotonnes/PJ
- co2         resource     imp_coal             2045       coal            88.3  # kilotonnes/PJ
- co2         resource     imp_coal             2050       coal            88.3  # kilotonnes/PJ
+# co2         resource     imp_coal             2015       coal            88.3  # kilotonnes/PJ
+# co2         resource     imp_coal             2020       coal            88.3  # kilotonnes/PJ
+# co2         resource     imp_coal             2025       coal            88.3  # kilotonnes/PJ
+# co2         resource     imp_coal             2030       coal            88.3  # kilotonnes/PJ
+# co2         resource     imp_coal             2035       coal            88.3  # kilotonnes/PJ
+# co2         resource     imp_coal             2040       coal            88.3  # kilotonnes/PJ
+# co2         resource     imp_coal             2045       coal            88.3  # kilotonnes/PJ
+# co2         resource     imp_coal             2050       coal            88.3  # kilotonnes/PJ
 
- co2         coal         e_coal_igcc_seq_s    2010       electricity   -193.35766423357664233577  # kilotonnes/PJ (-90% of 88.3/eff)
- co2         coal         e_coal_igcc_seq_s    2015       electricity   -193.35766423357664233577  # kilotonnes/PJ (-90% of 88.3/eff)
- co2         coal         e_coal_igcc_seq_s    2020       electricity   -193.35766423357664233577  # kilotonnes/PJ (-90% of 88.3/eff)
- co2         coal         e_coal_igcc_seq_s    2025       electricity   -193.35766423357664233577  # kilotonnes/PJ (-90% of 88.3/eff)
- co2         coal         e_coal_igcc_seq_s    2030       electricity   -193.35766423357664233577  # kilotonnes/PJ (-90% of 88.3/eff)
- co2         coal         e_coal_igcc_seq_s    2035       electricity   -193.35766423357664233577  # kilotonnes/PJ (-90% of 88.3/eff)
- co2         coal         e_coal_igcc_seq_s    2040       electricity   -193.35766423357664233577  # kilotonnes/PJ (-90% of 88.3/eff)
- co2         coal         e_coal_igcc_seq_s    2045       electricity   -193.35766423357664233577  # kilotonnes/PJ (-90% of 88.3/eff)
- co2         coal         e_coal_igcc_seq_s    2050       electricity   -193.35766423357664233577  # kilotonnes/PJ (-90% of 88.3/eff)
+ co2         coal         e_coal                2010       electricity     232.4  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal                2015       electricity     232.4  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal                2020       electricity     232.4  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal                2025       electricity     232.4  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal                2030       electricity     232.4  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal                2035       electricity     232.4  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal                2040       electricity     232.4  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal                2045       electricity     232.4  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal                2050       electricity     232.4  # kilotonnes/PJ (88.3/eff)
 
- co2         resource     imp_natgas           2010       natgas          50.3  # kilotonnes/PJ
- co2         resource     imp_natgas           2015       natgas          50.3  # kilotonnes/PJ
- co2         resource     imp_natgas           2020       natgas          50.3  # kilotonnes/PJ
- co2         resource     imp_natgas           2025       natgas          50.3  # kilotonnes/PJ
- co2         resource     imp_natgas           2030       natgas          50.3  # kilotonnes/PJ
- co2         resource     imp_natgas           2035       natgas          50.3  # kilotonnes/PJ
- co2         resource     imp_natgas           2040       natgas          50.3  # kilotonnes/PJ
- co2         resource     imp_natgas           2045       natgas          50.3  # kilotonnes/PJ
- co2         resource     imp_natgas           2050       natgas          50.3  # kilotonnes/PJ
+ co2         coal         e_coal_igcc_s         2010       electricity     225.3  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal_igcc_s         2015       electricity     225.3  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal_igcc_s         2020       electricity     225.3  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal_igcc_s         2025       electricity     225.3  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal_igcc_s         2030       electricity     225.3  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal_igcc_s         2035       electricity     225.3  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal_igcc_s         2040       electricity     225.3  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal_igcc_s         2045       electricity     225.3  # kilotonnes/PJ (88.3/eff)
+ co2         coal         e_coal_igcc_s         2050       electricity     225.3  # kilotonnes/PJ (88.3/eff)
+ 
+ co2         coal         e_coal_igcc_seq_s     2010       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
+ co2         coal         e_coal_igcc_seq_s     2015       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
+ co2         coal         e_coal_igcc_seq_s     2020       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
+ co2         coal         e_coal_igcc_seq_s     2025       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
+ co2         coal         e_coal_igcc_seq_s     2030       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
+ co2         coal         e_coal_igcc_seq_s     2035       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
+ co2         coal         e_coal_igcc_seq_s     2040       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
+ co2         coal         e_coal_igcc_seq_s     2045       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
+ co2         coal         e_coal_igcc_seq_s     2050       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
 
- co2         natgas       e_ngcc_seq_s         2010       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
- co2         natgas       e_ngcc_seq_s         2015       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
- co2         natgas       e_ngcc_seq_s         2020       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
- co2         natgas       e_ngcc_seq_s         2025       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
- co2         natgas       e_ngcc_seq_s         2030       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
- co2         natgas       e_ngcc_seq_s         2035       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
- co2         natgas       e_ngcc_seq_s         2040       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
- co2         natgas       e_ngcc_seq_s         2045       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
- co2         natgas       e_ngcc_seq_s         2050       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
+ co2         resource     imp_natgas            2010       natgas          50.3  # kilotonnes/PJ
+ co2         resource     imp_natgas            2015       natgas          50.3  # kilotonnes/PJ
+ co2         resource     imp_natgas            2020       natgas          50.3  # kilotonnes/PJ
+ co2         resource     imp_natgas            2025       natgas          50.3  # kilotonnes/PJ
+ co2         resource     imp_natgas            2030       natgas          50.3  # kilotonnes/PJ
+ co2         resource     imp_natgas            2035       natgas          50.3  # kilotonnes/PJ
+ co2         resource     imp_natgas            2040       natgas          50.3  # kilotonnes/PJ
+ co2         resource     imp_natgas            2045       natgas          50.3  # kilotonnes/PJ
+ co2         resource     imp_natgas            2050       natgas          50.3  # kilotonnes/PJ
 
- co2         oil          p_refinery           2010       diesel          69.4  # kilotonnes/PJ
- co2         oil          p_refinery           2015       diesel          69.4  # kilotonnes/PJ
- co2         oil          p_refinery           2020       diesel          69.4  # kilotonnes/PJ
- co2         oil          p_refinery           2025       diesel          69.4  # kilotonnes/PJ
- co2         oil          p_refinery           2030       diesel          69.4  # kilotonnes/PJ
- co2         oil          p_refinery           2035       diesel          69.4  # kilotonnes/PJ
- co2         oil          p_refinery           2040       diesel          69.4  # kilotonnes/PJ
- co2         oil          p_refinery           2045       diesel          69.4  # kilotonnes/PJ
- co2         oil          p_refinery           2050       diesel          69.4  # kilotonnes/PJ
+# co2         natgas       e_ngcc_seq_s         2010       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
+# co2         natgas       e_ngcc_seq_s         2015       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
+# co2         natgas       e_ngcc_seq_s         2020       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
+# co2         natgas       e_ngcc_seq_s         2025       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
+# co2         natgas       e_ngcc_seq_s         2030       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
+# co2         natgas       e_ngcc_seq_s         2035       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
+# co2         natgas       e_ngcc_seq_s         2040       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
+# co2         natgas       e_ngcc_seq_s         2045       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
+# co2         natgas       e_ngcc_seq_s         2050       electricity   -101.73033707865168539326  # kilotonnes/PJ (-90% of 50.3/eff)
 
- co2         oil          p_refinery           2010       gasoline        67.2  # kilotonnes/PJ
- co2         oil          p_refinery           2015       gasoline        67.2  # kilotonnes/PJ
- co2         oil          p_refinery           2020       gasoline        67.2  # kilotonnes/PJ
- co2         oil          p_refinery           2025       gasoline        67.2  # kilotonnes/PJ
- co2         oil          p_refinery           2030       gasoline        67.2  # kilotonnes/PJ
- co2         oil          p_refinery           2035       gasoline        67.2  # kilotonnes/PJ
- co2         oil          p_refinery           2040       gasoline        67.2  # kilotonnes/PJ
- co2         oil          p_refinery           2045       gasoline        67.2  # kilotonnes/PJ
- co2         oil          p_refinery           2050       gasoline        67.2  # kilotonnes/PJ
+ co2         oil          p_refinery            2010       diesel          69.4  # kilotonnes/PJ
+ co2         oil          p_refinery            2015       diesel          69.4  # kilotonnes/PJ
+ co2         oil          p_refinery            2020       diesel          69.4  # kilotonnes/PJ
+ co2         oil          p_refinery            2025       diesel          69.4  # kilotonnes/PJ
+ co2         oil          p_refinery            2030       diesel          69.4  # kilotonnes/PJ
+ co2         oil          p_refinery            2035       diesel          69.4  # kilotonnes/PJ
+ co2         oil          p_refinery            2040       diesel          69.4  # kilotonnes/PJ
+ co2         oil          p_refinery            2045       diesel          69.4  # kilotonnes/PJ
+ co2         oil          p_refinery            2050       diesel          69.4  # kilotonnes/PJ
+                                                
+ co2         oil          p_refinery            2010       gasoline        67.2  # kilotonnes/PJ
+ co2         oil          p_refinery            2015       gasoline        67.2  # kilotonnes/PJ
+ co2         oil          p_refinery            2020       gasoline        67.2  # kilotonnes/PJ
+ co2         oil          p_refinery            2025       gasoline        67.2  # kilotonnes/PJ
+ co2         oil          p_refinery            2030       gasoline        67.2  # kilotonnes/PJ
+ co2         oil          p_refinery            2035       gasoline        67.2  # kilotonnes/PJ
+ co2         oil          p_refinery            2040       gasoline        67.2  # kilotonnes/PJ
+ co2         oil          p_refinery            2045       gasoline        67.2  # kilotonnes/PJ
+ co2         oil          p_refinery            2050       gasoline        67.2  # kilotonnes/PJ
 	;
 
 
@@ -412,15 +432,15 @@ param  LifetimeLoanDefault  :=
 
 param  CostInvest  :=
 # tech_all     # vintage_all    # value
- e_coal         2010             2809
- e_coal         2015             2809
- e_coal         2020             2809
- e_coal         2025             2809
- e_coal         2030             2809
- e_coal         2035             2809
- e_coal         2040             2809
- e_coal         2045             2809
- e_coal         2050             2809
+ e_coal         2010             2883  #AEO 2012
+ e_coal         2015             2883  #AEO 2012
+ e_coal         2020             2883  #AEO 2012
+ e_coal         2025             2883  #AEO 2012
+ e_coal         2030             2883  #AEO 2012
+ e_coal         2035             2883  #AEO 2012
+ e_coal         2040             2883  #AEO 2012
+ e_coal         2045             2883  #AEO 2012
+ e_coal         2050             2883  #AEO 2012
 
  e_hydro        2010             3221
  e_hydro        2015             3221
@@ -432,45 +452,45 @@ param  CostInvest  :=
  e_hydro        2045             3221
  e_hydro        2050             3221
 
- e_ngcc         2010              991
- e_ngcc         2015              991
- e_ngcc         2020              991
- e_ngcc         2025              991
- e_ngcc         2030              991
- e_ngcc         2035              991
- e_ngcc         2040              991
- e_ngcc         2045              991
- e_ngcc         2050              991
+ e_ngcc         2010             1006  #AEO 2012
+ e_ngcc         2015             1006  #AEO 2012
+ e_ngcc         2020             1006  #AEO 2012
+ e_ngcc         2025             1006  #AEO 2012
+ e_ngcc         2030             1006  #AEO 2012
+ e_ngcc         2035             1006  #AEO 2012
+ e_ngcc         2040             1006  #AEO 2012
+ e_ngcc         2045             1006  #AEO 2012
+ e_ngcc         2050             1006  #AEO 2012
 
- e_ngsc         2010              658
- e_ngsc         2015              658
- e_ngsc         2020              658
- e_ngsc         2025              658
- e_ngsc         2030              658
- e_ngsc         2035              658
- e_ngsc         2040              658
- e_ngsc         2045              658
- e_ngsc         2050              658
+ e_ngsc         2010              956  #AEO 2012
+ e_ngsc         2015              956  #AEO 2012
+ e_ngsc         2020              956  #AEO 2012
+ e_ngsc         2025              956  #AEO 2012
+ e_ngsc         2030              956  #AEO 2012
+ e_ngsc         2035              956  #AEO 2012
+ e_ngsc         2040              956  #AEO 2012
+ e_ngsc         2045              956  #AEO 2012
+ e_ngsc         2050              956  #AEO 2012
 
- e_nuclear      2010             5275
- e_nuclear      2015             5275
- e_nuclear      2020             5275
- e_nuclear      2025             5275
- e_nuclear      2030             5275
- e_nuclear      2035             5275
- e_nuclear      2040             5275
- e_nuclear      2045             5275
- e_nuclear      2050             5275
+ e_nuclear      2010             5429  #AEO 2012
+ e_nuclear      2015             5429  #AEO 2012
+ e_nuclear      2020             5429  #AEO 2012
+ e_nuclear      2025             5429  #AEO 2012
+ e_nuclear      2030             5429  #AEO 2012
+ e_nuclear      2035             5429  #AEO 2012
+ e_nuclear      2040             5429  #AEO 2012
+ e_nuclear      2045             5429  #AEO 2012
+ e_nuclear      2050             5429  #AEO 2012
 
- e_wind         2010             2409
- e_wind         2015             2409
- e_wind         2020             2409
- e_wind         2025             2409
- e_wind         2030             2409
- e_wind         2035             2409
- e_wind         2040             2409
- e_wind         2045             2409
- e_wind         2050             2409
+ e_wind         2010             2175  #AEO 2012
+ e_wind         2015             2175  #AEO 2012
+ e_wind         2020             2175  #AEO 2012
+ e_wind         2025             2175  #AEO 2012
+ e_wind         2030             2175  #AEO 2012
+ e_wind         2035             2175  #AEO 2012
+ e_wind         2040             2175  #AEO 2012
+ e_wind         2045             2175  #AEO 2012
+ e_wind         2050             2175  #AEO 2012
 
  p_refinery     2010                1.10
  p_refinery     2015                1.10
@@ -634,64 +654,64 @@ param  CostInvest  :=
 
  # Added Summer 2013
 
- e_coal_igcc_seq_s                   2010            4852   # M$/GW
- e_coal_igcc_seq_s                   2015            4852   # M$/GW
- e_coal_igcc_seq_s                   2020            4852   # M$/GW
- e_coal_igcc_seq_s                   2025            4852   # M$/GW
- e_coal_igcc_seq_s                   2030            4852   # M$/GW
- e_coal_igcc_seq_s                   2035            4852   # M$/GW
- e_coal_igcc_seq_s                   2040            4852   # M$/GW
- e_coal_igcc_seq_s                   2045            4852   # M$/GW
- e_coal_igcc_seq_s                   2050            4852   # M$/GW
+ e_coal_igcc_seq_s                   2010            2059   # M$/GW; AEO 2012
+ e_coal_igcc_seq_s                   2015            2059   # M$/GW; AEO 2012
+ e_coal_igcc_seq_s                   2020            2059   # M$/GW; AEO 2012
+ e_coal_igcc_seq_s                   2025            2059   # M$/GW; AEO 2012
+ e_coal_igcc_seq_s                   2030            2059   # M$/GW; AEO 2012
+ e_coal_igcc_seq_s                   2035            2059   # M$/GW; AEO 2012
+ e_coal_igcc_seq_s                   2040            2059   # M$/GW; AEO 2012
+ e_coal_igcc_seq_s                   2045            2059   # M$/GW; AEO 2012
+ e_coal_igcc_seq_s                   2050            2059   # M$/GW; AEO 2012
 
- e_ngcc_seq_s                        2010            1834   # M$/GW
- e_ngcc_seq_s                        2015            1834   # M$/GW
- e_ngcc_seq_s                        2020            1834   # M$/GW
- e_ngcc_seq_s                        2025            1834   # M$/GW
- e_ngcc_seq_s                        2030            1834   # M$/GW
- e_ngcc_seq_s                        2035            1834   # M$/GW
- e_ngcc_seq_s                        2040            1834   # M$/GW
- e_ngcc_seq_s                        2045            1834   # M$/GW
- e_ngcc_seq_s                        2050            1834   # M$/GW
+ e_ngcc_seq_s                        2010            2059   # M$/GW; AEO 2012
+ e_ngcc_seq_s                        2015            2059   # M$/GW; AEO 2012
+ e_ngcc_seq_s                        2020            2059   # M$/GW; AEO 2012
+ e_ngcc_seq_s                        2025            2059   # M$/GW; AEO 2012
+ e_ngcc_seq_s                        2030            2059   # M$/GW; AEO 2012
+ e_ngcc_seq_s                        2035            2059   # M$/GW; AEO 2012
+ e_ngcc_seq_s                        2040            2059   # M$/GW; AEO 2012
+ e_ngcc_seq_s                        2045            2059   # M$/GW; AEO 2012
+ e_ngcc_seq_s                        2050            2059   # M$/GW; AEO 2012
 
- e_solar_centralized_pv_s            2010            4528   # M$/GW
- e_solar_centralized_pv_s            2015            4528   # M$/GW
- e_solar_centralized_pv_s            2020            4528   # M$/GW
- e_solar_centralized_pv_s            2025            4528   # M$/GW
- e_solar_centralized_pv_s            2030            4528   # M$/GW
- e_solar_centralized_pv_s            2035            4528   # M$/GW
- e_solar_centralized_pv_s            2040            4528   # M$/GW
- e_solar_centralized_pv_s            2045            4528   # M$/GW
- e_solar_centralized_pv_s            2050            4528   # M$/GW
+ e_solar_centralized_pv_s            2010            3805   # M$/GW; AEO 2012
+ e_solar_centralized_pv_s            2015            3805   # M$/GW; AEO 2012
+ e_solar_centralized_pv_s            2020            3805   # M$/GW; AEO 2012
+ e_solar_centralized_pv_s            2025            3805   # M$/GW; AEO 2012
+ e_solar_centralized_pv_s            2030            3805   # M$/GW; AEO 2012
+ e_solar_centralized_pv_s            2035            3805   # M$/GW; AEO 2012
+ e_solar_centralized_pv_s            2040            3805   # M$/GW; AEO 2012
+ e_solar_centralized_pv_s            2045            3805   # M$/GW; AEO 2012
+ e_solar_centralized_pv_s            2050            3805   # M$/GW; AEO 2012
 
- e_solar_centralized_thermal_s       2015            4384   # M$/GW
- e_solar_centralized_thermal_s       2020            4384   # M$/GW
- e_solar_centralized_thermal_s       2025            4384   # M$/GW
- e_solar_centralized_thermal_s       2030            4384   # M$/GW
- e_solar_centralized_thermal_s       2035            4384   # M$/GW
- e_solar_centralized_thermal_s       2040            4384   # M$/GW
- e_solar_centralized_thermal_s       2045            4384   # M$/GW
- e_solar_centralized_thermal_s       2050            4384   # M$/GW
+ e_solar_centralized_thermal_s       2015            4979   # M$/GW; AEO 2012
+ e_solar_centralized_thermal_s       2020            4979   # M$/GW; AEO 2012
+ e_solar_centralized_thermal_s       2025            4979   # M$/GW; AEO 2012
+ e_solar_centralized_thermal_s       2030            4979   # M$/GW; AEO 2012
+ e_solar_centralized_thermal_s       2035            4979   # M$/GW; AEO 2012
+ e_solar_centralized_thermal_s       2040            4979   # M$/GW; AEO 2012
+ e_solar_centralized_thermal_s       2045            4979   # M$/GW; AEO 2012
+ e_solar_centralized_thermal_s       2050            4979   # M$/GW; AEO 2012
 
- e_geo_binary_steam_s                2010            999999999 # 2393   # M$/GW
- e_geo_binary_steam_s                2015            999999999 # 2393   # M$/GW
- e_geo_binary_steam_s                2020            999999999 # 2393   # M$/GW
- e_geo_binary_steam_s                2025            999999999 # 2393   # M$/GW
- e_geo_binary_steam_s                2030            999999999 # 2393   # M$/GW
- e_geo_binary_steam_s                2035            999999999 # 2393   # M$/GW
- e_geo_binary_steam_s                2040            999999999 # 2393   # M$/GW
- e_geo_binary_steam_s                2045            999999999 # 2393   # M$/GW
- e_geo_binary_steam_s                2050            999999999 # 2393   # M$/GW
+ e_geo_binary_steam_s                2010            2567   # M$/GW; AEO 2012
+ e_geo_binary_steam_s                2015            2567   # M$/GW; AEO 2012
+ e_geo_binary_steam_s                2020            2567   # M$/GW; AEO 2012
+ e_geo_binary_steam_s                2025            2567   # M$/GW; AEO 2012
+ e_geo_binary_steam_s                2030            2567   # M$/GW; AEO 2012
+ e_geo_binary_steam_s                2035            2567   # M$/GW; AEO 2012
+ e_geo_binary_steam_s                2040            2567   # M$/GW; AEO 2012
+ e_geo_binary_steam_s                2045            2567   # M$/GW; AEO 2012
+ e_geo_binary_steam_s                2050            2567   # M$/GW; AEO 2012
 
- e_coal_igcc_s                       2010            3010   # M$/GW
- e_coal_igcc_s                       2015            3010   # M$/GW
- e_coal_igcc_s                       2020            3010   # M$/GW
- e_coal_igcc_s                       2025            3010   # M$/GW
- e_coal_igcc_s                       2030            3010   # M$/GW
- e_coal_igcc_s                       2035            3010   # M$/GW
- e_coal_igcc_s                       2040            3010   # M$/GW
- e_coal_igcc_s                       2045            3010   # M$/GW
- e_coal_igcc_s                       2050            3010   # M$/GW
+ e_coal_igcc_s                       2010            3718   # M$/GW; AEO 2012
+ e_coal_igcc_s                       2015            3718   # M$/GW; AEO 2012
+ e_coal_igcc_s                       2020            3718   # M$/GW; AEO 2012
+ e_coal_igcc_s                       2025            3718   # M$/GW; AEO 2012
+ e_coal_igcc_s                       2030            3718   # M$/GW; AEO 2012
+ e_coal_igcc_s                       2035            3718   # M$/GW; AEO 2012
+ e_coal_igcc_s                       2040            3718   # M$/GW; AEO 2012
+ e_coal_igcc_s                       2045            3718   # M$/GW; AEO 2012
+ e_coal_igcc_s                       2050            3718   # M$/GW; AEO 2012
 
  tl_phev_gsl_10_s                    2020            2739   # M$/bnvmt
  tl_phev_gsl_10_s                    2025            2706   # M$/bnvmt
@@ -734,15 +754,15 @@ param  CostInvest  :=
 
 
 param  CostFixedVintageDefault  :=
- e_coal             2010               29.3
- e_coal             2015               29.3
- e_coal             2020               29.3
- e_coal             2025               29.3
- e_coal             2030               29.3
- e_coal             2035               29.3
- e_coal             2040               29.3
- e_coal             2045               29.3
- e_coal             2050               29.3
+ e_coal             2010               30.6  #AEO 2012
+ e_coal             2015               30.6  #AEO 2012
+ e_coal             2020               30.6  #AEO 2012
+ e_coal             2025               30.6  #AEO 2012
+ e_coal             2030               30.6  #AEO 2012
+ e_coal             2035               30.6  #AEO 2012
+ e_coal             2040               30.6  #AEO 2012
+ e_coal             2045               30.6  #AEO 2012
+ e_coal             2050               30.6  #AEO 2012
 
  e_hydro            2010               13.6
  e_hydro            2015               13.6
@@ -754,98 +774,98 @@ param  CostFixedVintageDefault  :=
  e_hydro            2045               13.6
  e_hydro            2050               13.6
 
- e_ngcc             2010               14.4
- e_ngcc             2015               14.4
- e_ngcc             2020               14.4
- e_ngcc             2025               14.4
- e_ngcc             2030               14.4
- e_ngcc             2035               14.4
- e_ngcc             2040               14.4
- e_ngcc             2045               14.4
- e_ngcc             2050               14.4
+ e_ngcc             2010               15.1  #AEO 2012
+ e_ngcc             2015               15.1  #AEO 2012
+ e_ngcc             2020               15.1  #AEO 2012
+ e_ngcc             2025               15.1  #AEO 2012
+ e_ngcc             2030               15.1  #AEO 2012
+ e_ngcc             2035               15.1  #AEO 2012
+ e_ngcc             2040               15.1  #AEO 2012
+ e_ngcc             2045               15.1  #AEO 2012
+ e_ngcc             2050               15.1  #AEO 2012
 
- e_ngsc             2010               14.5
- e_ngsc             2015               14.5
- e_ngsc             2020               14.5
- e_ngsc             2025               14.5
- e_ngsc             2030               14.5
- e_ngsc             2035               14.5
- e_ngsc             2040               14.5
- e_ngsc             2045               14.5
- e_ngsc             2050               14.5
+ e_ngsc             2010               7.21  #AEO 2012
+ e_ngsc             2015               7.21  #AEO 2012
+ e_ngsc             2020               7.21  #AEO 2012
+ e_ngsc             2025               7.21  #AEO 2012
+ e_ngsc             2030               7.21  #AEO 2012
+ e_ngsc             2035               7.21  #AEO 2012
+ e_ngsc             2040               7.21  #AEO 2012
+ e_ngsc             2045               7.21  #AEO 2012
+ e_ngsc             2050               7.21  #AEO 2012
 
- e_nuclear          2010               87.7
- e_nuclear          2015               87.7
- e_nuclear          2020               87.7
- e_nuclear          2025               87.7
- e_nuclear          2030               87.7
- e_nuclear          2035               87.7
- e_nuclear          2040               87.7
- e_nuclear          2045               87.7
- e_nuclear          2050               87.7
+ e_nuclear          2010               91.7  #AEO 2012
+ e_nuclear          2015               91.7  #AEO 2012
+ e_nuclear          2020               91.7  #AEO 2012
+ e_nuclear          2025               91.7  #AEO 2012
+ e_nuclear          2030               91.7  #AEO 2012
+ e_nuclear          2035               91.7  #AEO 2012
+ e_nuclear          2040               91.7  #AEO 2012
+ e_nuclear          2045               91.7  #AEO 2012
+ e_nuclear          2050               91.7  #AEO 2012
 
  # Added Summer 2013
 
- e_coal_igcc_s                      2010        45.076  # M $/GW
- e_coal_igcc_s                      2015        45.076  # M $/GW
- e_coal_igcc_s                      2020        45.076  # M $/GW
- e_coal_igcc_s                      2025        45.076  # M $/GW
- e_coal_igcc_s                      2030        45.076  # M $/GW
- e_coal_igcc_s                      2035        45.076  # M $/GW
- e_coal_igcc_s                      2040        45.076  # M $/GW
- e_coal_igcc_s                      2045        45.076  # M $/GW
- e_coal_igcc_s                      2050        45.076  # M $/GW
+ e_coal_igcc_s                      2010        50.49  # M $/GW; AEO 2012  
+ e_coal_igcc_s                      2015        50.49  # M $/GW; AEO 2012
+ e_coal_igcc_s                      2020        50.49  # M $/GW; AEO 2012
+ e_coal_igcc_s                      2025        50.49  # M $/GW; AEO 2012
+ e_coal_igcc_s                      2030        50.49  # M $/GW; AEO 2012
+ e_coal_igcc_s                      2035        50.49  # M $/GW; AEO 2012
+ e_coal_igcc_s                      2040        50.49  # M $/GW; AEO 2012
+ e_coal_igcc_s                      2045        50.49  # M $/GW; AEO 2012
+ e_coal_igcc_s                      2050        50.49  # M $/GW; AEO 2012
 
- e_coal_igcc_seq_s                  2010        63.881  # M $/GW
- e_coal_igcc_seq_s                  2015        63.881  # M $/GW
- e_coal_igcc_seq_s                  2020        63.881  # M $/GW
- e_coal_igcc_seq_s                  2025        63.881  # M $/GW
- e_coal_igcc_seq_s                  2030        63.881  # M $/GW
- e_coal_igcc_seq_s                  2035        63.881  # M $/GW
- e_coal_igcc_seq_s                  2040        63.881  # M $/GW
- e_coal_igcc_seq_s                  2045        63.881  # M $/GW
- e_coal_igcc_seq_s                  2050        63.881  # M $/GW
+ e_coal_igcc_seq_s                  2010        65.31  # M $/GW; AEO 2012
+ e_coal_igcc_seq_s                  2015        65.31  # M $/GW; AEO 2012
+ e_coal_igcc_seq_s                  2020        65.31  # M $/GW; AEO 2012
+ e_coal_igcc_seq_s                  2025        65.31  # M $/GW; AEO 2012
+ e_coal_igcc_seq_s                  2030        65.31  # M $/GW; AEO 2012
+ e_coal_igcc_seq_s                  2035        65.31  # M $/GW; AEO 2012
+ e_coal_igcc_seq_s                  2040        65.31  # M $/GW; AEO 2012
+ e_coal_igcc_seq_s                  2045        65.31  # M $/GW; AEO 2012
+ e_coal_igcc_seq_s                  2050        65.31  # M $/GW; AEO 2012
 
- e_geo_binary_steam_s               2010       100.126  # M $/GW
- e_geo_binary_steam_s               2015       100.126  # M $/GW
- e_geo_binary_steam_s               2020       100.126  # M $/GW
- e_geo_binary_steam_s               2025       100.126  # M $/GW
- e_geo_binary_steam_s               2030       100.126  # M $/GW
- e_geo_binary_steam_s               2035       100.126  # M $/GW
- e_geo_binary_steam_s               2040       100.126  # M $/GW
- e_geo_binary_steam_s               2045       100.126  # M $/GW
- e_geo_binary_steam_s               2050       100.126  # M $/GW
+ e_geo_binary_steam_s               2010       110.94  # M $/GW; AEO 2012
+ e_geo_binary_steam_s               2015       110.94  # M $/GW; AEO 2012
+ e_geo_binary_steam_s               2020       110.94  # M $/GW; AEO 2012
+ e_geo_binary_steam_s               2025       110.94  # M $/GW; AEO 2012
+ e_geo_binary_steam_s               2030       110.94  # M $/GW; AEO 2012
+ e_geo_binary_steam_s               2035       110.94  # M $/GW; AEO 2012
+ e_geo_binary_steam_s               2040       110.94  # M $/GW; AEO 2012
+ e_geo_binary_steam_s               2045       110.94  # M $/GW; AEO 2012
+ e_geo_binary_steam_s               2050       110.94  # M $/GW; AEO 2012
 
  e_r_hydro                          2005        13.6    # M $/GW
 
- e_ngcc_seq_s                       2010        27.885  # M $/GW
- e_ngcc_seq_s                       2015        27.885  # M $/GW
- e_ngcc_seq_s                       2020        27.885  # M $/GW
- e_ngcc_seq_s                       2025        27.885  # M $/GW
- e_ngcc_seq_s                       2030        27.885  # M $/GW
- e_ngcc_seq_s                       2035        27.885  # M $/GW
- e_ngcc_seq_s                       2040        27.885  # M $/GW
- e_ngcc_seq_s                       2045        27.885  # M $/GW
- e_ngcc_seq_s                       2050        27.885  # M $/GW
+ e_ngcc_seq_s                       2010        31.23  # M $/GW; AEO 2012
+ e_ngcc_seq_s                       2015        31.23  # M $/GW; AEO 2012
+ e_ngcc_seq_s                       2020        31.23  # M $/GW; AEO 2012
+ e_ngcc_seq_s                       2025        31.23  # M $/GW; AEO 2012
+ e_ngcc_seq_s                       2030        31.23  # M $/GW; AEO 2012
+ e_ngcc_seq_s                       2035        31.23  # M $/GW; AEO 2012
+ e_ngcc_seq_s                       2040        31.23  # M $/GW; AEO 2012
+ e_ngcc_seq_s                       2045        31.23  # M $/GW; AEO 2012
+ e_ngcc_seq_s                       2050        31.23  # M $/GW; AEO 2012
 
- e_solar_centralized_pv_s           2010        15.394  # M $/GW
- e_solar_centralized_pv_s           2015        15.394  # M $/GW
- e_solar_centralized_pv_s           2020        15.394  # M $/GW
- e_solar_centralized_pv_s           2025        15.394  # M $/GW
- e_solar_centralized_pv_s           2030        15.394  # M $/GW
- e_solar_centralized_pv_s           2035        15.394  # M $/GW
- e_solar_centralized_pv_s           2040        15.394  # M $/GW
- e_solar_centralized_pv_s           2045        15.394  # M $/GW
- e_solar_centralized_pv_s           2050        15.394  # M $/GW
+ e_solar_centralized_pv_s           2010        21.37  # M $/GW; AEO 2012
+ e_solar_centralized_pv_s           2015        21.37  # M $/GW; AEO 2012
+ e_solar_centralized_pv_s           2020        21.37  # M $/GW; AEO 2012
+ e_solar_centralized_pv_s           2025        21.37  # M $/GW; AEO 2012
+ e_solar_centralized_pv_s           2030        21.37  # M $/GW; AEO 2012
+ e_solar_centralized_pv_s           2035        21.37  # M $/GW; AEO 2012
+ e_solar_centralized_pv_s           2040        21.37  # M $/GW; AEO 2012
+ e_solar_centralized_pv_s           2045        21.37  # M $/GW; AEO 2012
+ e_solar_centralized_pv_s           2050        21.37  # M $/GW; AEO 2012
 
- e_solar_centralized_thermal_s      2015        58.995  # M $/GW
- e_solar_centralized_thermal_s      2020        58.995  # M $/GW
- e_solar_centralized_thermal_s      2025        58.995  # M $/GW
- e_solar_centralized_thermal_s      2030        58.995  # M $/GW
- e_solar_centralized_thermal_s      2035        58.995  # M $/GW
- e_solar_centralized_thermal_s      2040        58.995  # M $/GW
- e_solar_centralized_thermal_s      2045        58.995  # M $/GW
- e_solar_centralized_thermal_s      2050        58.995  # M $/GW
+ e_solar_centralized_thermal_s      2015        66.09  # M $/GW; AEO 2012
+ e_solar_centralized_thermal_s      2020        66.09  # M $/GW; AEO 2012
+ e_solar_centralized_thermal_s      2025        66.09  # M $/GW; AEO 2012
+ e_solar_centralized_thermal_s      2030        66.09  # M $/GW; AEO 2012
+ e_solar_centralized_thermal_s      2035        66.09  # M $/GW; AEO 2012
+ e_solar_centralized_thermal_s      2040        66.09  # M $/GW; AEO 2012
+ e_solar_centralized_thermal_s      2045        66.09  # M $/GW; AEO 2012
+ e_solar_centralized_thermal_s      2050        66.09  # M $/GW; AEO 2012
 
  # Existing Processes
 
@@ -919,15 +939,15 @@ param  CostVariableVintageDefault  :=
  imp_ethanol                        2045               20.5     # M $/PJ
  imp_ethanol                        2050               20.5     # M $/PJ
 
- imp_natgas                         2010                4.2     # M $/PJ
- imp_natgas                         2015                4.2     # M $/PJ
- imp_natgas                         2020                4.2     # M $/PJ
- imp_natgas                         2025                4.2     # M $/PJ
- imp_natgas                         2030                4.2     # M $/PJ
- imp_natgas                         2035                4.2     # M $/PJ
- imp_natgas                         2040                4.2     # M $/PJ
- imp_natgas                         2045                4.2     # M $/PJ
- imp_natgas                         2050                4.2     # M $/PJ
+ imp_natgas                         2010               7.0   #Adjusted above 4.2 $M $/PJ to account for higher future prices
+ imp_natgas                         2015               7.0   #Adjusted above 4.2 $M $/PJ to account for higher future prices
+ imp_natgas                         2020               7.0   #Adjusted above 4.2 $M $/PJ to account for higher future prices
+ imp_natgas                         2025               7.0   #Adjusted above 4.2 $M $/PJ to account for higher future prices
+ imp_natgas                         2030               7.0   #Adjusted above 4.2 $M $/PJ to account for higher future prices
+ imp_natgas                         2035               7.0   #Adjusted above 4.2 $M $/PJ to account for higher future prices
+ imp_natgas                         2040               7.0   #Adjusted above 4.2 $M $/PJ to account for higher future prices
+ imp_natgas                         2045               7.0   #Adjusted above 4.2 $M $/PJ to account for higher future prices
+ imp_natgas                         2050               7.0   #Adjusted above 4.2 $M $/PJ to account for higher future prices
 
  imp_oil                            2010               16.3     # M $/PJ
  imp_oil                            2015               16.3     # M $/PJ
@@ -979,88 +999,88 @@ param  CostVariableVintageDefault  :=
  e_ngcc                             2045                0.9     # M $/PJ
  e_ngcc                             2050                0.9     # M $/PJ
 
- e_ngsc                             2010                1.9     # M $/PJ
- e_ngsc                             2015                1.9     # M $/PJ
- e_ngsc                             2020                1.9     # M $/PJ
- e_ngsc                             2025                1.9     # M $/PJ
- e_ngsc                             2030                1.9     # M $/PJ
- e_ngsc                             2035                1.9     # M $/PJ
- e_ngsc                             2040                1.9     # M $/PJ
- e_ngsc                             2045                1.9     # M $/PJ
- e_ngsc                             2050                1.9     # M $/PJ
+ e_ngsc                             2010                4.2     # M $/PJ
+ e_ngsc                             2015                4.2     # M $/PJ
+ e_ngsc                             2020                4.2     # M $/PJ
+ e_ngsc                             2025                4.2     # M $/PJ
+ e_ngsc                             2030                4.2     # M $/PJ
+ e_ngsc                             2035                4.2     # M $/PJ
+ e_ngsc                             2040                4.2     # M $/PJ
+ e_ngsc                             2045                4.2     # M $/PJ
+ e_ngsc                             2050                4.2     # M $/PJ
 
- e_nuclear                          2010                2.14    # M $/PJ
- e_nuclear                          2015                2.14    # M $/PJ
- e_nuclear                          2020                2.14    # M $/PJ
- e_nuclear                          2025                2.14    # M $/PJ
- e_nuclear                          2030                2.14    # M $/PJ
- e_nuclear                          2035                2.14    # M $/PJ
- e_nuclear                          2040                2.14    # M $/PJ
- e_nuclear                          2045                2.14    # M $/PJ
- e_nuclear                          2050                2.14    # M $/PJ
+ e_nuclear                          2010                0.58    # M $/PJ
+ e_nuclear                          2015                0.58    # M $/PJ
+ e_nuclear                          2020                0.58    # M $/PJ
+ e_nuclear                          2025                0.58    # M $/PJ
+ e_nuclear                          2030                0.58    # M $/PJ
+ e_nuclear                          2035                0.58    # M $/PJ
+ e_nuclear                          2040                0.58    # M $/PJ
+ e_nuclear                          2045                0.58    # M $/PJ
+ e_nuclear                          2050                0.58    # M $/PJ
 
  # Added Summer 2013
 
- e_coal_igcc_s                      2010    12.872
- e_coal_igcc_s                      2015    12.872
- e_coal_igcc_s                      2020    12.872
- e_coal_igcc_s                      2025    12.872
- e_coal_igcc_s                      2030    12.872
- e_coal_igcc_s                      2035    12.872
- e_coal_igcc_s                      2040    12.872
- e_coal_igcc_s                      2045    12.872
- e_coal_igcc_s                      2050    12.872
+ e_coal_igcc_s                      2010    1.99
+ e_coal_igcc_s                      2015    1.99
+ e_coal_igcc_s                      2020    1.99
+ e_coal_igcc_s                      2025    1.99
+ e_coal_igcc_s                      2030    1.99
+ e_coal_igcc_s                      2035    1.99
+ e_coal_igcc_s                      2040    1.99
+ e_coal_igcc_s                      2045    1.99
+ e_coal_igcc_s                      2050    1.99
 
- e_coal_igcc_seq_s                  2010    13.171
- e_coal_igcc_seq_s                  2015    13.171
- e_coal_igcc_seq_s                  2020    13.171
- e_coal_igcc_seq_s                  2025    13.171
- e_coal_igcc_seq_s                  2030    13.171
- e_coal_igcc_seq_s                  2035    13.171
- e_coal_igcc_seq_s                  2040    13.171
- e_coal_igcc_seq_s                  2045    13.171
- e_coal_igcc_seq_s                  2050    13.171
+ e_coal_igcc_seq_s                  2010    1.85
+ e_coal_igcc_seq_s                  2015    1.85
+ e_coal_igcc_seq_s                  2020    1.85
+ e_coal_igcc_seq_s                  2025    1.85
+ e_coal_igcc_seq_s                  2030    1.85
+ e_coal_igcc_seq_s                  2035    1.85
+ e_coal_igcc_seq_s                  2040    1.85
+ e_coal_igcc_seq_s                  2045    1.85
+ e_coal_igcc_seq_s                  2050    1.85
 
- e_geo_binary_steam_s               2010    13.581
- e_geo_binary_steam_s               2015    13.581
- e_geo_binary_steam_s               2020    13.581
- e_geo_binary_steam_s               2025    13.581
- e_geo_binary_steam_s               2030    13.581
- e_geo_binary_steam_s               2035    13.581
- e_geo_binary_steam_s               2040    13.581
- e_geo_binary_steam_s               2045    13.581
- e_geo_binary_steam_s               2050    13.581
+ e_geo_binary_steam_s               2010    0.00
+ e_geo_binary_steam_s               2015    0.00
+ e_geo_binary_steam_s               2020    0.00
+ e_geo_binary_steam_s               2025    0.00
+ e_geo_binary_steam_s               2030    0.00
+ e_geo_binary_steam_s               2035    0.00
+ e_geo_binary_steam_s               2040    0.00
+ e_geo_binary_steam_s               2045    0.00
+ e_geo_binary_steam_s               2050    0.00
 
  e_r_hydro                          2005     0.7     # M $/PJ
 
- e_ngcc_seq_s                       2010    12.764
- e_ngcc_seq_s                       2015    12.764
- e_ngcc_seq_s                       2020    12.764
- e_ngcc_seq_s                       2025    12.764
- e_ngcc_seq_s                       2030    12.764
- e_ngcc_seq_s                       2035    12.764
- e_ngcc_seq_s                       2040    12.764
- e_ngcc_seq_s                       2045    12.764
- e_ngcc_seq_s                       2050    12.764
+ e_ngcc_seq_s                       2010    1.85
+ e_ngcc_seq_s                       2015    1.85
+ e_ngcc_seq_s                       2020    1.85
+ e_ngcc_seq_s                       2025    1.85
+ e_ngcc_seq_s                       2030    1.85
+ e_ngcc_seq_s                       2035    1.85
+ e_ngcc_seq_s                       2040    1.85
+ e_ngcc_seq_s                       2045    1.85
+ e_ngcc_seq_s                       2050    1.85
 
- e_solar_centralized_pv_s           2010    11.111
- e_solar_centralized_pv_s           2015    11.111
- e_solar_centralized_pv_s           2020    11.111
- e_solar_centralized_pv_s           2025    11.111
- e_solar_centralized_pv_s           2030    11.111
- e_solar_centralized_pv_s           2035    11.111
- e_solar_centralized_pv_s           2040    11.111
- e_solar_centralized_pv_s           2045    11.111
- e_solar_centralized_pv_s           2050    11.111
+ e_solar_centralized_pv_s           2010    0.0
+ e_solar_centralized_pv_s           2015    0.0
+ e_solar_centralized_pv_s           2020    0.0
+ e_solar_centralized_pv_s           2025    0.0
+ e_solar_centralized_pv_s           2030    0.0
+ e_solar_centralized_pv_s           2035    0.0
+ e_solar_centralized_pv_s           2040    0.0
+ e_solar_centralized_pv_s           2045    0.0
+ e_solar_centralized_pv_s           2050    0.0
 
- e_solar_centralized_thermal_s      2015    11.111
- e_solar_centralized_thermal_s      2020    11.111
- e_solar_centralized_thermal_s      2025    11.111
- e_solar_centralized_thermal_s      2030    11.111
- e_solar_centralized_thermal_s      2035    11.111
- e_solar_centralized_thermal_s      2040    11.111
- e_solar_centralized_thermal_s      2045    11.111
- e_solar_centralized_thermal_s      2050    11.111
+ e_solar_centralized_thermal_s      2015    0.0
+ e_solar_centralized_thermal_s      2020    0.0
+ e_solar_centralized_thermal_s      2025    0.0
+ e_solar_centralized_thermal_s      2030    0.0
+ e_solar_centralized_thermal_s      2035    0.0
+ e_solar_centralized_thermal_s      2040    0.0
+ e_solar_centralized_thermal_s      2045    0.0
+ e_solar_centralized_thermal_s      2050    0.0
 
  # Existing Processes
 
@@ -1266,8 +1286,18 @@ param MaxCapacity :=
  2010               e_nuclear             0
  2010               e_solar_centralized_pv_s      0
  2010               e_wind                0
- 2010               r_ngwheater           0
+ #2010               r_ngwheater           0
 
+ 2010               e_ngcc_seq_s          0
+ 2015               e_ngcc_seq_s          0
+ 2020               e_ngcc_seq_s          0
+ 2025               e_ngcc_seq_s          0
+ 2030               e_ngcc_seq_s          0
+ 2035               e_ngcc_seq_s          0
+ 2040               e_ngcc_seq_s          0
+ 2045               e_ngcc_seq_s          0
+ 2050               e_ngcc_seq_s          0
+ 
 	;
 
 
@@ -1285,6 +1315,7 @@ param  GrowthRateMax  :=
  e_solar_centralized_pv_s  1.1
  e_solar_centralized_thermal_s  1.1
  e_wind                    1.1
+
 	;
 
 
@@ -1294,7 +1325,7 @@ param  GrowthRateSeed  :=
  e_coal_igcc_seq_s          10   # GW
  e_geo_binary_steam_s        5   # GW
  e_hydro                    10   # GW
- e_ngcc                     10   # GW
+ e_ngcc                     50   # GW
  e_ngcc_seq_s               10   # GW
  e_ngsc                     10   # GW
  e_nuclear                  10   # GW
@@ -1680,15 +1711,15 @@ param  GrowthRateSeed  :=
  coal             e_coal_igcc_s   2045           electricity        0.392
  coal             e_coal_igcc_s   2050           electricity        0.392
 
- coal             e_coal_igcc_seq_s    2010      electricity        0.411
- coal             e_coal_igcc_seq_s    2015      electricity        0.411
- coal             e_coal_igcc_seq_s    2020      electricity        0.411
- coal             e_coal_igcc_seq_s    2025      electricity        0.411
- coal             e_coal_igcc_seq_s    2030      electricity        0.411
- coal             e_coal_igcc_seq_s    2035      electricity        0.411
- coal             e_coal_igcc_seq_s    2040      electricity        0.411
- coal             e_coal_igcc_seq_s    2045      electricity        0.411
- coal             e_coal_igcc_seq_s    2050      electricity        0.411
+ coal             e_coal_igcc_seq_s    2010      electricity        0.313  #80% of IGCC value
+ coal             e_coal_igcc_seq_s    2015      electricity        0.313  #80% of IGCC value
+ coal             e_coal_igcc_seq_s    2020      electricity        0.313  #80% of IGCC value
+ coal             e_coal_igcc_seq_s    2025      electricity        0.313  #80% of IGCC value
+ coal             e_coal_igcc_seq_s    2030      electricity        0.313  #80% of IGCC value
+ coal             e_coal_igcc_seq_s    2035      electricity        0.313  #80% of IGCC value
+ coal             e_coal_igcc_seq_s    2040      electricity        0.313  #80% of IGCC value
+ coal             e_coal_igcc_seq_s    2045      electricity        0.313  #80% of IGCC value
+ coal             e_coal_igcc_seq_s    2050      electricity        0.313  #80% of IGCC value
 
  geo              e_geo_binary_steam_s   2010    electricity        0.350
  geo              e_geo_binary_steam_s   2015    electricity        0.350
