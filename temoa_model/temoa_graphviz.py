@@ -784,11 +784,6 @@ strict digraph model {
 	call( cmd )
 
 
-def CreateDetailedModelDiagram ( **kwargs ):
-	SE.write( "CreateDetailedModelDiagram - not yet implemented\n" )
-	# Need to spec out what it details a bit more.
-
-
 def CreateTechResultsDiagrams ( **kwargs ):
 	from temoa_lib import g_activeCapacityAvailable_pt, g_processInputs,   \
 	  ProcessVintages, ProcessInputs, ProcessOutputsByInput
@@ -1496,7 +1491,6 @@ def CreateModelDiagrams ( M, options ):
 	  CreateCommodityPartialGraphs,
 	  CreateProcessPartialGraphs,
 	  CreateMainModelDiagram,
-	  CreateDetailedModelDiagram,
 	  CreateTechResultsDiagrams,
 	  CreateCommodityPartialResults,
 	  CreateMainResultsDiagram,
