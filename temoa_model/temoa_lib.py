@@ -1561,9 +1561,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 
 
 def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
-	import csv, gc
-
-	import multiprocessing as MP
+	import multiprocessing as MP, os, cPickle as pickle
 
 	from collections import deque, defaultdict
 	from os import getcwd, chdir
@@ -1573,7 +1571,6 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	from coopr.pysp.util.scenariomodels import scenario_tree_model
 	from coopr.pysp.phutils import extractVariableNameAndIndex
 
-	from pformat_results import pformat_results
 	from temoa_model import temoa_create_model
 	from temoa_rules import PeriodCost_rule
 
@@ -1624,180 +1621,268 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 			node = ctpTree[ node ]
 		leaf_nodes_by_node[ node ].add( fnode ) # get the root node
 
-	VariableStore = defaultdict(dict)
 
-	##### Begin multiprocessing function #####
+	def build_full_solve_dict ( tree, node, ptc ):
+		if node not in ptc: return
 
-	def ProcessNode ( *args ):
-		( q,
-		  var_store,
-		  s_structure,
-		  scen_nodes,
-		  leaf_nodes_per_node,
-		  opt,
-		  ptcTree,
-		  parent,
-		  assumptions,
-		  this_root,
-		  assume ) = args
+		for child in ptc[ node ]:
+			if child not in tree:
+				tree[ child ] = tree[ node ]  # i.e., CondProb = 100%
+			build_full_solve_dict( tree, child, ptc )
 
-		msg = "Solving from node '{}', having assumed '{}' and assuming '{}'.\n"
-		SE.write( msg.format( this_root, assumptions, assume ) )
 
-		stage = s_structure.NodeStage[ this_root ]
-		stage_variables = s_structure.StageVariables[ stage ]
+	def build_minimal_solve_dict ( tree, leaves_by_node, node, last, ptc ):
+		assume = tuple( leaves_by_node[ node ] )
+		if last:
+			assume = tuple( sorted( ','.join(i)
+			  for i in cross_product( last, assume ))
+			)
+		for i, a in enumerate(assume):
+			items = a.split(',')
+			if items.count( node ) == len( items ):
+				assume = tuple( assume[:i] + assume[i+1:] )
+				break
 
-		# Step 1: Build the model based on current assumption
+		tree[ node ] = assume
+
+		while node in ptc and len( ptc[ node ] ) == 1:
+			node = ptc[ node ][0]
+
+		if node in ptc:
+			for child in ptc[ node ]:
+				build_minimal_solve_dict( tree, leaves_by_node, child, assume, ptc )
+
+	##### Begin multiprocessing functino #####
+
+	def do_solve (
+	  sem,                # BoundedSemaphore
+	  opt,
+	  scen_nodes,         # nodes to scenario: { scen : [R, Rs0, ... scen] }
+	  this_node,          # a string, representing which node in the tree
+	  this_assumptions,   # Assumptions so far, comma separated, last one is
+	                      # the assumptions to make from this_node
+	  assumption_events,  # MP.Event dictionary
+	  file_locks,         # MP.Lock dict: to prevent read/write collisions
+	  s_structure         # PySP Scenario structure object
+	):
+
+		CP = s_structure.ConditionalProbability
+
+		assumptions = this_assumptions.split(',')
+		assumed_fs = assumptions[-1]
+		assumptions = assumptions[:-1]
+
+		node_path = scenario_nodes[ assumed_fs ]
+		node_index = node_path.index( this_node )
+
+		# path_so_far = nodes to here, _not_ including here
+		path_so_far = node_path[0:node_index]
+
+		# nodes from here to assumed_fs, _including_ here
+		this_subpath = node_path[node_index:]
+
+		# Before we can open files to read assumption data, we ensure that the
+		# data has been saved by another process
+		for i in assumptions:
+			assumption_events[ i ].wait()
+
+		msg = ("Solving from node '{}', having assumed '{}' and assuming "
+		  "'{}'.\n")
+		SE.write( msg.format( this_node, ','.join(assumptions), assumed_fs ))
+
 		mdata = ModelData()
-		for node_name in scen_nodes[ assume ]:
+		for node_name in scen_nodes[ assumed_fs ]:
 			mdata.add( node_name + '.dat' )
 		model = temoa_create_model()
 		mdata.read( model )
 		m = model.create( mdata )
 
-		# Step 2: fix any variables associated with previously made assumptions
-		if parent:
-			stages_to_fix = parent.split('s')
-			stage_assumptions = assumptions.split(',')
+		# path_so_far includes CP of 1.
+		for node, assumed in izip(path_so_far, assumptions):
+			fname = node + '.pickle'
 
-			assumed = sfixing = ''
-			for s, a in zip( stages_to_fix, stage_assumptions ):
-				sfixing += s
-				assumed += a
+			with file_locks[ n ]:
+				with open( fname, 'rb' ) as f:
+					saved_data = pickle.load( f )[ assumed_fs ]
+			# the pickle loaded a dict, saved_data is now a tuple of
+			#  (node_cost, {'var' : (index, val, index, val ...)})
 
-				variables, stage_cost = var_store[ sfixing ][ assumed ]
-				for vname, values in variables.iteritems():
-					m_var = getattr(m, vname)
-					for index, val in values:
-						v = m_var[ index ]
-						v.fixed = True
-						v.set_value( val )
+			node_cost, var_values = saved_data
+			# Fix variables per what was pickled previously
+			for vname, values in var_values.iteritems():
+				m_var = getattr(m, vname)
+				for index, val in iter_in_chunks( values, 2 ):
+					v = m_var[ index ]
+					v.fixed = True
+					v.set_value( val )
 
-				sfixing += 's'
-				assumed += ','
+		# do the preprocess and solve.
+		m.preprocess()
+		results = opt.solve( m )
+		m.load( results )
 
-			# defensively delete these now that we no longer need them
-			del assumed, sfixing, s, a, stages_to_fix, stage_assumptions
+		# now, save the variables for any subsequent runs
+		node_assumptions = this_assumptions
+		for node in this_subpath:
+			stage = s_structure.NodeStage[ node ]
+			stage_vars = s_structure.StageVariables[ stage ]
 
-		m.preprocess()   # to remove the now-fixed variables
-		sol = opt.solve( m )
-		m.load( sol )
+			# Cheat, and assume some knowledge of the underlying data
+			#   This removes the leading s; e.g., s1990 -> 1990
+			period = int( stage[1:] )
+			node_cost = value( PeriodCost_rule( m, period ))
 
-		# Step 4: Save the variables values associated with /this/ node's
-		#         assumptions and solution
-		vars_to_save = defaultdict( set )
-		node_vars    = defaultdict( list )
+			vars_to_save = defaultdict( set )
+			node_vars    = defaultdict( list )
+			for var_string in stage_vars:
+				vname, index = extractVariableNameAndIndex( var_string )
+				vars_to_save[ vname ].add( index )
 
-		for var_string in stage_variables:
-			vname, index = extractVariableNameAndIndex( var_string )
-			vars_to_save[ vname ].add( index )
+			for vname, indices in vars_to_save.iteritems():
+				m_var = getattr(m, vname)
+				for index in indices:
+					try:
+						val = value( m_var[ index ] )
+					except:
+						if 'infeasible' in str( sol ):
 
-		for vname, indices in vars_to_save.iteritems():
-			m_var = getattr(m, vname)
-			for index in indices:
-				try:
-					val = value( m_var[ index ])
-				except:
-					if 'infeasible' in str( sol ):
-						SE.write( '\n    ---> Solver found problem infeasible <---\n\n' )
-					raise
-				if val < epsilon:
-					# variables can't be negative, and they may be when within an
-					# epsilon of 0 (because the solver said "good enough")
-					val = 0
-				node_vars[ vname ].append( (index, val) )
+							msg = ( '    ---> Solver found problem infeasible <---' )
+							SE.write( '\n' + msg + '\n\n')
+						raise
+					if val < epsilon:
+						# variables can't be negative, and they may be when within an
+						# epsilon of 0 (because the solver said "good enough")
+						val = 0
+					node_vars[ vname ].extend( (index, val) )
 
-		period = int( stage[1:] )  # remove the leading s; e.g., s1990 -> 1990
-		node_cost = value( PeriodCost_rule( m, period ))
+			data_to_save = (node_cost, node_vars)
 
-		if assumptions:
-			node_assumptions = assumptions.split(',')
-		else:
-			node_assumptions = list()
-		node_assumptions.append( assume )
-		node_assumptions = ','.join( node_assumptions )
+			fname = node + '.pickle'
 
-		# Step 5: Tell master on what to recur
-		to_recur = tuple()
-		if this_root in ptcTree:
-			to_recur = tuple(
-			  (child, fs)   # recur( this_root, node_assumptions, child, fs )
-			  for child in ptcTree[ this_root ]
-			  for fs in leaf_nodes_by_node[ child ]
-			)
-		q.put( (this_root, assumptions, node_assumptions, assume,
-		        node_vars, node_cost, to_recur) )
+			with file_locks[ node ]:
+				with open( fname, 'rb' ) as f:
+					saved_node_data = pickle.load( f )
+
+				saved_node_data[ node_assumptions ] = data_to_save
+				with open( fname, 'wb' ) as f:
+					pickle.dump( saved_node_data, f, pickle.HIGHEST_PROTOCOL )
+
+				# Now that we've saved the assumption data for this node, any
+				# folks waiting for it may continue.  Let them know.
+				if node_assumptions in assumed_events:
+					assumed_events[ node_assumptions ].set()
+				if node in s_structure.Children:
+					if len( s_structure.Children[ node ] ) > 1:
+						node_assumptions += ',' + assumed_fs
+
+		# sem = the process BoundedSemaphor.  Still shared memory ...
+		sem.release()
+
 
 	###### End multiprocessing function #####
 
-	data_from_sub = MP.Queue()
-	processes = list()  # keep track of processes so we can remove zombies
 
-	jobs_capacity = int( MP.cpu_count() * 1.5)
-	def do_work ( func, *args ):
-		func( *args )
+	# Step 1: Find out what we need to solve
+	to_solve = dict()
+	build_minimal_solve_dict( to_solve, leaf_nodes_by_node, 'R', (), ptcTree )
 
-	outstanding_jobs = 0
-	for fs in leaf_nodes_by_node[ 'R' ]:
-		args = (
-		  ProcessNode,  data_from_sub,  VariableStore,  sStructure,
-		  scenario_nodes,  leaf_nodes_by_node,  optimizer,  ptcTree,
-		  '',                  # parent
-		  '',                  # assumptions,
-		  'R',                 # this_root,
-		  fs,                  # assume
-		)
-		outstanding_jobs += 1
+	# For printing the solution, need to include all nodes.
+	solved = dict( to_solve )
+	build_full_solve_dict( solved, 'R', ptcTree )
 
-		processes.append( MP.Process( target=do_work, args=args ) )
-		processes[-1].start()
+	file_locks     = dict()
+	assumed_events = dict()
 
-	from collections import deque
-	process_args = deque()
-	while outstanding_jobs:
-		outstanding_jobs -= 1
-		results = data_from_sub.get()
-		node, assumptions, node_assumptions, assumed, node_vars, node_cost, to_recur = results
+	# Step 2: Find out what -- if anything -- has already been processed
+	for n, assumptions in to_solve.iteritems():
+		fname = n + '.pickle'
+		f = os.open( fname, os.O_CREAT, 0600 )
+		with os.fdopen( f, 'rb' ) as f:
+			try:
+				saved_data = pickle.load( f )
+			except EOFError as e:
+				# an empty or corrupt file.  No matter.
+				saved_data = {}
 
-		for child, fs in to_recur:
+		for a in assumptions:
+			a_event = MP.Event()   # initially false
+			if a not in saved_data:
+				saved_data[ a ] = None
+			else:
+				a_event.set()
+
+			assumed_events[ a ] = a_event
+
+		with open( fname, 'wb' ) as f:
+			pickle.dump( saved_data, f, pickle.HIGHEST_PROTOCOL )
+
+		file_locks[ n ] = MP.Lock()
+
+	for n in sStructure.Nodes:
+		if n in to_solve: continue
+		file_locks[ n ] = MP.Lock()
+
+		fname = n + '.pickle'
+		f = os.open( fname, os.O_CREAT, 0600 )
+		with os.fdopen( f, 'rb' ) as pickle_file:
+			try:
+				saved_data = pickle.load( pickle_file )
+			except EOFError as e:
+				saved_data = {}
+
+		with open( fname, 'wb' ) as f:
+			pickle.dump( saved_data, f, pickle.HIGHEST_PROTOCOL )
+
+
+	process_sem = MP.BoundedSemaphore( int(MP.cpu_count() * 1.5) )
+
+	# sort is not necessary, but slightly helpful
+	for node, assumptions in sorted( to_solve.iteritems() ):
+		for a in assumptions:
+			process_sem.acquire()
+
 			args = (
-			  ProcessNode,  data_from_sub,  VariableStore,  sStructure,
-			  scenario_nodes,  leaf_nodes_by_node,  optimizer,  ptcTree,
-			  node,                # becomes new parent
-			  node_assumptions,    # parent's assumptions
-			  child,               # becomes new this_root
-			  fs                   # what to assume assume
+			  process_sem,
+			  optimizer,
+			  scenario_nodes,
+			  node,
+			  a,
+			  assumed_events,
+			  file_locks,
+			  sStructure
 			)
-			process_args.append( args )
 
-		VariableStore[ node ][ node_assumptions ] = (node_vars, node_cost)
-		del node_assumptions, assumed, node_vars, node_cost, to_recur, results
+			MP.Process( target=do_solve, args=args ).start()
+			#do_solve( *args )   # in case of need to debug: uncomment
+		MP.active_children()  # don't care who's active; just clean up zombies
 
-		for p in processes:
-			# 'is_alive', as opposed to 'join', because this does not block. 'join'
-			# will block, even if only for epsilon time.  From the Python docs,
-			# however, this also will join the process.
-			p.is_alive()
+	# _Now_ we care, because active children mean we can't read results yet.
+	processes = MP.active_children()
+	for p in processes:
+		p.join()
 
-		while outstanding_jobs < jobs_capacity and process_args:
-			outstanding_jobs += 1
-			args = process_args.popleft()
-
-			processes.append( MP.Process( target=do_work, args=args ) )
-			processes[-1].start()
-
+	# Finally: let's marshal the results and give 'em to the modeler!
 	data = list()
 	data.append(('','','','"Previously Assumed" is a chronologically ordered list of assumptions made, up to "this" node',))
 	data.append(('At Node', 'Previously Assumed', 'Node Cost'))
-	last = tuple()
-	for node in sorted( VariableStore, key=lambda x: (len(x), x) ):
-		if len(last) != len( node ):
-			data.append( tuple() )  # blank line between levels of recursion
 
-		for assumed in sorted( VariableStore[ node ], key=lambda x: (len(x), x) ):
-			variables, cost = VariableStore[ node ][ assumed ]
-			data.append( (node, assumed, cost) )
+	to_process.append( root_node )  # invariant from above: was empty deque
+	last = root_node                # for blank lines between stages
+	while to_process:
+		node = to_process.popleft()
+		if len( node ) != len( last ):
+			data.append( tuple() ) # blank line
 
+		fname = node + '.pickle'
+		with open( fname, 'rb' ) as f:
+			node_data = pickle.load( f )
+		for assumption in sorted( node_data ):
+			row = [ node, assumption, node_data[ assumption ][ 0 ] ]
+			data.append( row )
+		del node_data
+
+		if node in ptcTree:
+			to_process.extend( ptcTree[ node ] )
 		last = node
 
 	import csv, cStringIO
