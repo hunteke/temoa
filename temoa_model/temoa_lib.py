@@ -23,8 +23,16 @@ an archive may not have received this license file.  If not, see
 from cStringIO import StringIO
 from itertools import product as cross_product
 from operator import itemgetter as iget
-from os import path, close as os_close
+from os import path, close as os_close, nice as os_nice
 from sys import argv, stderr as SE
+
+# The assumption is that folks will run this either on their personal/business
+# machine, or on a cluster.  If on their PC, then it'll be the only thing
+# really running, and the rest of the machine can stay responsive.  Meanwhile,
+# the same argument applies for a cluster, in which case this lets use of Temoa
+# not impinge as rudely on other's work.  (And on most [all?] implementations,
+# 1000 = 19.  But 1000 is nice and round.)
+os_nice( 1000 )
 
 from temoa_graphviz import CreateModelDiagrams
 
@@ -82,6 +90,7 @@ class TemoaCommandLineArgumentError ( TemoaError ): pass
 class TemoaFlowError ( TemoaError ): pass
 class TemoaValidationError ( TemoaError ): pass
 class TemoaNoExecutableError ( TemoaError ): pass
+class TemoaInfeasibleError ( TemoaError ): pass
 
 def get_str_padding ( obj ):
 	return len(str( obj ))
@@ -1600,6 +1609,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	ptcTree = defaultdict( list )
 	for c, p in ctpTree.iteritems():
 		ptcTree[ p ].append( c )
+	ptcTree = dict( ptcTree )   # be slightly defensive; catch any additions
 
 	leaf_nodes = set(ctpTree.keys()) - set(ctpTree.values())
 
@@ -1620,6 +1630,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 			leaf_nodes_by_node[ node ].add( fnode )
 			node = ctpTree[ node ]
 		leaf_nodes_by_node[ node ].add( fnode ) # get the root node
+	leaf_nodes_by_node = dict( leaf_nodes_by_node )   # be slightly defensive
 
 
 	def build_full_solve_dict ( tree, node, ptc ):
@@ -1632,18 +1643,23 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 
 
 	def build_minimal_solve_dict ( tree, leaves_by_node, node, last, ptc ):
+		""" Remove redundant solves """
 		assume = tuple( leaves_by_node[ node ] )
+		new_assume = assume
 		if last:
 			assume = tuple( sorted( ','.join(i)
 			  for i in cross_product( last, assume ))
 			)
-		for i, a in enumerate(assume):
-			items = a.split(',')
-			if items.count( node ) == len( items ):
-				assume = tuple( assume[:i] + assume[i+1:] )
-				break
+			new_assume = list()
 
-		tree[ node ] = assume
+			for i, a in enumerate(assume):
+				items = a.split(',')
+				if items[ -1 ] != items[ -2 ]:
+					# This is the crux of the check: if the final two assumptions
+					# are the same, then the second is redundant.
+					new_assume.append( assume[i] )
+
+		tree[ node ] = tuple( new_assume )
 
 		while node in ptc and len( ptc[ node ] ) == 1:
 			node = ptc[ node ][0]
@@ -1652,19 +1668,30 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 			for child in ptc[ node ]:
 				build_minimal_solve_dict( tree, leaves_by_node, child, assume, ptc )
 
-	##### Begin multiprocessing functino #####
+	##### Begin multiprocessing function #####
 
 	def do_solve (
 	  sem,                # BoundedSemaphore
-	  opt,
+	  exc_q,              # This is an MP project: give exceptions to head
+	  solver_options,
+	  solve_counts,
 	  scen_nodes,         # nodes to scenario: { scen : [R, Rs0, ... scen] }
 	  this_node,          # a string, representing which node in the tree
 	  this_assumptions,   # Assumptions so far, comma separated, last one is
 	                      # the assumptions to make from this_node
-	  assumption_events,  # MP.Event dictionary
 	  file_locks,         # MP.Lock dict: to prevent read/write collisions
-	  s_structure         # PySP Scenario structure object
+	  s_structure,        # PySP Scenario structure object
 	):
+		try:
+			from setproctitle import setproctitle as setProcessTitle
+			solve_num, num_solves = solve_counts
+			msg = '({}/{}) Solving assumption: {}'
+			msg = msg.format( solve_num, num_solves, this_assumptions )
+			setProcessTitle( msg )
+		except ImportError, e:
+			pass
+
+		del msg
 
 		CP = s_structure.ConditionalProbability
 
@@ -1672,7 +1699,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		assumed_fs = assumptions[-1]
 		assumptions = assumptions[:-1]
 
-		node_path = scenario_nodes[ assumed_fs ]
+		node_path = scen_nodes[ assumed_fs ]
 		node_index = node_path.index( this_node )
 
 		# path_so_far = nodes to here, _not_ including here
@@ -1681,14 +1708,13 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		# nodes from here to assumed_fs, _including_ here
 		this_subpath = node_path[node_index:]
 
-		# Before we can open files to read assumption data, we ensure that the
-		# data has been saved by another process
-		for i in assumptions:
-			assumption_events[ i ].wait()
-
-		msg = ("Solving from node '{}', having assumed '{}' and assuming "
+		msg = ("({}) Solving from node '{}', having assumed '{}' and assuming "
 		  "'{}'.\n")
-		SE.write( msg.format( this_node, ','.join(assumptions), assumed_fs ))
+		SE.write( msg.format( solve_num, this_node, ','.join(assumptions),
+		   assumed_fs ))
+
+		from coopr.opt import SolverFactory
+		opt = SolverFactory( solver_options )
 
 		mdata = ModelData()
 		for node_name in scen_nodes[ assumed_fs ]:
@@ -1697,13 +1723,39 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		mdata.read( model )
 		m = model.create( mdata )
 
-		# path_so_far includes CP of 1.
-		for node, assumed in izip(path_so_far, assumptions):
+		# path_so_far includes nodes with CP of 1.
+		past_assumed = ''
+		last_assumed = ''               # TODO: this is currently a hack, because
+		i_assume = iter( assumptions )  # TODO: of an inconsistent data structure
+		for node in path_so_far:
+			if CP[ node ] < 1 or node == 'R':
+				assumed = next( i_assume )
+				if past_assumed:
+					past_assumed += ',' + assumed
+				else:
+					past_assumed += assumed
+			last_assumed = assumed        # TODO: hack: deal with CP = 1
+
 			fname = node + '.pickle'
 
 			with file_locks[ n ]:
+				# Gzip might be nice, but it takes long enough that it's a
+				# bottleneck.  I have not tried any compression less than the
+				# default (9), so it may yet be a win.  However, for now, it kills
+				# parallelism because it happens within the file locks (which are,
+				# unfortunately, a necessity)..
 				with open( fname, 'rb' ) as f:
-					saved_data = pickle.load( f )[ assumed_fs ]
+					try:
+						saved_data = pickle.load( f )[ past_assumed ]
+					except:
+						msg = ( 'An exception, while loading {}[{}], from node {}, '
+						  ' with path_so_far {};  my_assumptions: {}\n')
+						msg = msg.format( fname, past_assumed, this_node,
+						                  path_so_far, assumptions )
+						exception_q.put( TemoaError( msg ))
+						sem.release()
+						return
+
 			# the pickle loaded a dict, saved_data is now a tuple of
 			#  (node_cost, {'var' : (index, val, index, val ...)})
 
@@ -1720,6 +1772,14 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		m.preprocess()
 		results = opt.solve( m )
 		m.load( results )
+
+		if 'infeasible' in str( results['Solver'] ):
+			msg = ('Infeasible solve.  Node: {}, path_so_far {}; my_assumptions: '
+			  '{}\n\n  Writing fixed variable values to {}')
+			msg = msg.format( this_node, path_so_far, assumptions, fname )
+			exc_q.put( TemoaInfeasibleError( msg ) )
+			sem.release()
+			return
 
 		# now, save the variables for any subsequent runs
 		node_assumptions = this_assumptions
@@ -1766,11 +1826,9 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 				saved_node_data[ node_assumptions ] = data_to_save
 				with open( fname, 'wb' ) as f:
 					pickle.dump( saved_node_data, f, pickle.HIGHEST_PROTOCOL )
+					f.flush()
+					os.fdatasync( f.fileno() )
 
-				# Now that we've saved the assumption data for this node, any
-				# folks waiting for it may continue.  Let them know.
-				if node_assumptions in assumed_events:
-					assumed_events[ node_assumptions ].set()
 				if node in s_structure.Children:
 					if len( s_structure.Children[ node ] ) > 1:
 						node_assumptions += ',' + assumed_fs
@@ -1791,30 +1849,22 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	build_full_solve_dict( solved, 'R', ptcTree )
 
 	file_locks     = dict()
-	assumed_events = dict()
 
 	# Step 2: Find out what -- if anything -- has already been processed
 	for n, assumptions in to_solve.iteritems():
 		fname = n + '.pickle'
-		f = os.open( fname, os.O_CREAT, 0600 )
-		with os.fdopen( f, 'rb' ) as f:
+		fd = os.open( fname, os.O_CREAT, 0600 )
+		with os.fdopen( fd, 'rb' ) as f:
 			try:
 				saved_data = pickle.load( f )
 			except EOFError as e:
 				# an empty or corrupt file.  No matter.
 				saved_data = {}
 
-		for a in assumptions:
-			a_event = MP.Event()   # initially false
-			if a not in saved_data:
-				saved_data[ a ] = None
-			else:
-				a_event.set()
-
-			assumed_events[ a ] = a_event
-
 		with open( fname, 'wb' ) as f:
 			pickle.dump( saved_data, f, pickle.HIGHEST_PROTOCOL )
+			f.flush()
+			os.fdatasync( f.fileno() )
 
 		file_locks[ n ] = MP.Lock()
 
@@ -1832,29 +1882,134 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 
 		with open( fname, 'wb' ) as f:
 			pickle.dump( saved_data, f, pickle.HIGHEST_PROTOCOL )
+			f.flush()
+			os.fdatasync( f.fileno() )
 
 
-	process_sem = MP.BoundedSemaphore( int(MP.cpu_count() * 1.5) )
+	jobs_capacity = int( 1.5 * MP.cpu_count() )
+	process_sem = MP.BoundedSemaphore( jobs_capacity )
+	exception_q = MP.Queue()
 
-	# sort is not necessary, but slightly helpful
-	for node, assumptions in sorted( to_solve.iteritems() ):
-		for a in assumptions:
+	# sort is not strictly necessary, but doing so allows us to only start a
+	# small number of processes, rather than potentially overwhelming the OS
+	# process table.
+	last = ''
+
+	import inspect
+
+	def lineno():
+		"""Returns the current line number in our program."""
+		return inspect.currentframe().f_back.f_lineno
+
+	# In fact, sort is half of what we want.  Through observation, it appears
+	# that at larger ECIU stages (i.e. 4+ stage), one partial bottleneck is file
+	# access.  Since the amount of data that needs to be shared for 4-stage is
+	# ~110 MiB, and the amount of data to share for 5 stage is ~400 MiB, there
+	# are two steps that we could take to speed computation:
+	# 1. First, sorting is good, letting us do a stage wise progression.
+	#    However, we're getting hung on disk access, so we should instead solve
+	#    either from random nodes, or divide the list into slices and
+	#    round-robin through them.
+	# 2. For "reasonable" expected sizes of data, could use a tmpfs backing,
+	#    or some sort of shared memory approach
+	class Serial ( object ):
+		def __init__ ( self, beg=0 ):
+			self.beg = beg
+
+		def __call__ ( self ):
+			self.beg += 1
+			return self.beg
+
+	from itertools import cycle, islice
+	from operator import itemgetter
+
+	def roundrobin( *iterables ):
+		"roundrobin('ABC', 'D', 'EF') --> A D E B F C"
+		# Recipe credited to George Sakkis
+		pending = len(iterables)
+		nexts = cycle(iter(it).next for it in iterables)
+		while pending:
+			try:
+				for next in nexts:
+					yield next()
+			except StopIteration:
+				pending -= 1
+				nexts = cycle(islice(nexts, pending))
+
+	to_solve_stages = defaultdict( set )     # { 1 : set('R'), 2 : set('Rs0s0s0', 'Rs0s0s1'), }
+	stage_tracker = defaultdict( Serial() )  # { 'R' : 1, 'Rs0s0' : 2, ...}
+	for i in sorted( to_solve ):
+		stage_num = stage_tracker[ len(i) ]  # referencing it increments the Serial object
+		to_solve_stages[ stage_num ].add( i )
+
+	for stage, nodes in sorted( to_solve_stages.iteritems() ):
+
+		# first, attempt to relieve a file access bottleneck by accessing
+		# files in a chunked round-robin fashion.
+
+		# this is still a poor substitute for a depth-first traversal, but
+		# I have not yet figured that logic out.
+		indices = list(xrange( stage ))
+		indices.reverse()
+		iget = itemgetter( *indices )
+
+		assumptions_to_nodes = defaultdict(set)
+		for n in nodes:
+			for a in to_solve[ n ]:
+				assumptions_to_nodes[ a ].add( n )
+		to_solve_assumptions = assumptions_to_nodes.keys()
+		to_solve_assumptions = [i.split(',') for i in to_solve_assumptions]
+		to_solve_assumptions.sort( key=iget )
+		to_solve_assumptions = [','.join(i) for i in to_solve_assumptions]
+
+		to_solve_pairs = [
+		  (n, a)
+
+		  for a in to_solve_assumptions
+		  for n in assumptions_to_nodes[ a ]
+		]
+		del assumptions_to_nodes, to_solve_assumptions
+
+		step = int(len( to_solve_pairs ) / jobs_capacity)
+		step = max( 1, step )
+		iters = [islice( to_solve_pairs, i, i + step )
+		         for i in xrange( 0, len(to_solve_pairs), step )]
+
+		# Preparing to solve the next stage.  Let this stage finish, first.
+		active_children = MP.active_children()
+		for p in active_children:
+			p.join()
+
+		num_solves = len( to_solve_pairs )
+		solve_counter = 0
+		SE.write('\nThere are {} solves in this stage\n'.format( num_solves ))
+		for node, a in roundrobin( *iters ):
 			process_sem.acquire()
+			if not exception_q.empty():
+				for i in xrange( jobs_capacity -1 ):
+					process_sem.acquire()
+				e = exception_q.get()
+
+				raise e
+			solve_counter += 1  # For informing of progress through process names
 
 			args = (
 			  process_sem,
-			  optimizer,
+			  exception_q,
+			  options.solver,
+			  (solve_counter, num_solves),
 			  scenario_nodes,
 			  node,
 			  a,
-			  assumed_events,
 			  file_locks,
 			  sStructure
 			)
 
 			MP.Process( target=do_solve, args=args ).start()
-			#do_solve( *args )   # in case of need to debug: uncomment
-		MP.active_children()  # don't care who's active; just clean up zombies
+			# do_solve( *args )   # in case of need to debug: uncomment
+
+		# don't care who's active; just clean up any zombies at end stage
+		MP.active_children()
 
 	# _Now_ we care, because active children mean we can't read results yet.
 	processes = MP.active_children()
