@@ -230,8 +230,7 @@ CapacityFactor(tech_all, vintage_all)
 
 	#   Derived decision variables
 	M.V_Activity = Var( M.ActivityVar_psdtv, domain=NonNegativeReals )
-
-	M.V_Capacity         = Var( M.CapacityVar_tv,       domain=NonNegativeReals )
+	M.V_Capacity = Var( M.CapacityVar_tv,    domain=NonNegativeReals )
 
 	M.V_ActivityByPeriodTechAndVintage = Var(
 	  M.ActivityByPeriodTechAndVintageVar_ptv,
