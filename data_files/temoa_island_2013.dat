@@ -192,7 +192,7 @@ param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
  co2         coal         e_coal_igcc_s         2040       electricity     225.3  # kilotonnes/PJ (88.3/eff)
  co2         coal         e_coal_igcc_s         2045       electricity     225.3  # kilotonnes/PJ (88.3/eff)
  co2         coal         e_coal_igcc_s         2050       electricity     225.3  # kilotonnes/PJ (88.3/eff)
- 
+
  co2         coal         e_coal_igcc_seq_s     2010       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
  co2         coal         e_coal_igcc_seq_s     2015       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
  co2         coal         e_coal_igcc_seq_s     2020       electricity     28.21  # kilotonnes/PJ (10% of 88.3/eff)
@@ -232,7 +232,7 @@ param  EmissionActivity  :=        # TABLE NENV_TSEP, NENV_CAP
  co2         oil          p_refinery            2040       diesel          69.4  # kilotonnes/PJ
  co2         oil          p_refinery            2045       diesel          69.4  # kilotonnes/PJ
  co2         oil          p_refinery            2050       diesel          69.4  # kilotonnes/PJ
-                                                
+
  co2         oil          p_refinery            2010       gasoline        67.2  # kilotonnes/PJ
  co2         oil          p_refinery            2015       gasoline        67.2  # kilotonnes/PJ
  co2         oil          p_refinery            2020       gasoline        67.2  # kilotonnes/PJ
@@ -806,7 +806,7 @@ param  CostFixedVintageDefault  :=
 
  # Added Summer 2013
 
- e_coal_igcc_s                      2010        50.49  # M $/GW; AEO 2012  
+ e_coal_igcc_s                      2010        50.49  # M $/GW; AEO 2012
  e_coal_igcc_s                      2015        50.49  # M $/GW; AEO 2012
  e_coal_igcc_s                      2020        50.49  # M $/GW; AEO 2012
  e_coal_igcc_s                      2025        50.49  # M $/GW; AEO 2012
@@ -1297,7 +1297,7 @@ param MaxCapacity :=
  2040               e_ngcc_seq_s          0
  2045               e_ngcc_seq_s          0
  2050               e_ngcc_seq_s          0
- 
+
 	;
 
 
@@ -1336,7 +1336,7 @@ param  GrowthRateSeed  :=
 	;
 
 
- param  Efficiency  :=
+param  Efficiency  :=
 # input carrier  # tech_all      # vintage_all  # output carrier   # eff. value
 
  resource         dom_sun         2010           solar              1
