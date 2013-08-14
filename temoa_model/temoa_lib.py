@@ -1019,7 +1019,6 @@ def DemandActivityConstraintIndices ( M ):
 
 
 def DemandConstraintIndices ( M ):
-
 	used_dems = set(dem for p, dem in M.Demand.sparse_iterkeys())
 	DSD_keys = M.DemandSpecificDistribution.sparse_keys()
 	dem_slices = { dem : set(
@@ -1038,6 +1037,7 @@ def DemandConstraintIndices ( M ):
 	)
 
 	return indices
+
 
 def BaseloadDiurnalConstraintIndices ( M ):
 	indices = set(
