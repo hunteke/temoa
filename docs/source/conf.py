@@ -30,10 +30,11 @@ extensions = [
   'sphinx.ext.autodoc',
   'sphinx.ext.todo',
   'sphinx.ext.coverage',
-  'sphinx.ext.mathjax',
-  #'sphinx.ext.pngmath',
+  #'sphinx.ext.mathjax',
+  'sphinx.ext.pngmath',
   'sphinx.ext.ifconfig',
-  'sphinx.ext.viewcode'
+  'sphinx.ext.viewcode',
+  'sphinx.ext.graphviz',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -50,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Temoa Project'
-copyright = u'2012, Kevin Hunter, Joseph DeCarolis, Sarat Sreepathi'
+copyright = u'2011 - 2013, Kevin Hunter, Joseph DeCarolis, Sarat Sreepathi'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -186,8 +187,11 @@ latex_elements = {
 'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-'preamble': '\usepackage{amsmath,amssymb}',
+'preamble': open('preamble.tex', 'rb+').read(),
 }
+
+pngmath_latex_preamble = latex_elements['preamble']
+
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).

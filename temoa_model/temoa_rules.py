@@ -27,14 +27,15 @@ from temoa_lib import *
 def TotalCost_rule ( M ):
 	r"""
 
-Using the :math:`Activity` and :math:`Capacity` proxy variables, the Temoa
-objective funciton calculates the costs associated with supplying the system
-with energy, under the assumption that all costs are paid for through loans
-(rather than with lump-sum sales).  This implementation sums up all the costs
-incurred by the solution, and is simplistically :math:`C_{tot} = C_{loans} +
-C_{fixed} + C_{variable}`.  Similarly, each sub-part is merely a summation of
-the costs incurred, multiplied by an annual discount factor to calculate the
-time-value in year :math:`P_0` dollars.
+Using the :code:`Activity` and :code:`Capacity` variables, the Temoa objective
+funciton calculates the costs associated with supplying the system with energy,
+under the assumption that all costs are paid for through loans (rather than with
+lump-sum sales).  This implementation sums up all the costs incurred by the
+solution, and is defined as :math:`C_{tot} = \text{C}_\text{loans} +
+\text{C}_\text{fixed} + \text{C}_\text{variable}`.  Similarly, each term on the
+right-hand side is merely a summation of the costs incurred, multiplied by an
+annual discount factor to calculate the discounted cost in year
+:math:`\text{P}_0`.
 
 .. math::
    C_{loans} & = \sum_{t, v \in \Theta_{IC}} \left (
@@ -58,7 +59,7 @@ time-value in year :math:`P_0` dollars.
      \right )
 
 .. math::
-   C_{variable} & = \sum_{p, t, v \in \Theta_{MC}} \left (
+   C_{variable} & = \sum_{p, t, v \in \Theta_{VC}} \left (
            MC_{p, t, v}
      \cdot R_p
      \cdot \textbf{ACT}_{t, v}
@@ -222,12 +223,13 @@ thermodynamic properties are impossible to change over a short period of time
 (e.g.  hourly or daily).  These include coal and nuclear power plants, which
 take weeks to bring to an operational state, and similarly require weeks to
 fully shut down.  Temoa models this behavior by forcing technologies in the
-:math:`tech\_baseload` set to maintain a constant output for all daily slices.
+:code:`tech_baseload` set to maintain a constant output for all daily slices.
 Note that this allows the model to (not) use a baseload process in a season, and
-only applies over the :math:`time\_of\_day` set.
+only applies over the :code:`time_of_day` set.
 
-In English, this constraint states that "the ratio of activity in all daily
-slices must be equivalent."
+Ideally, this constraint would not be necessary, and baseload processes would
+simply not have a :math:`d` index.  However, implementing the more efficient
+functionality is currently on the Temoa TODO list.
 
 .. math::
    :label: BaseloadDaily
@@ -279,10 +281,11 @@ slices must be equivalent."
 def EmissionLimit_Constraint ( M, p, e ):
 	r"""
 
-A modeler can track emissions through use of the :math:`commodity\_emissions`
-set and :math:`EAC` parameter.  The EAC parameter is analogous to the efficiency
-table, tying emissions to a unit of activity.  The EmissionLimit constraint
-allows the modeler to assign an upper bound per period to each emission.
+A modeler can track emissions through use of the :code:`commodity_emissions`
+set and :code:`EmissionActivity` parameter.  The :math:`EAC` parameter is
+analogous to the efficiency table, tying emissions to a unit of activity.  The
+EmissionLimit constraint allows the modeler to assign an upper bound per period
+to each emission commodity.
 
 .. math::
    :label: EmissionLimit
@@ -357,14 +360,14 @@ def Storage_Constraint ( M, p, s, i, t, v, o ):
 	r"""
 
 Temoa's algorithm for storage is to ensure that the amount of energy entering
-and leaving a storage technology is in equilbrium over the course of a day.
+and leaving a storage technology is balanced over the course of a day,
+accounting for the conversion efficiency of the storage process.  This
 
-This simplistic algorithm relies on the assumption that the total amount of
-storage related energy is miniscule in relation to the amount of energy required
-by the system over a season.  If it were not, the algorithm would have to
-account for end-of-season effects and have an understanding of the circular
-nature of seasons.  (Currently, each slice is completely independent of other
-slices.)
+constraint relies on the assumption that the total amount of storage-related
+energy is small compared to the amount of energy required by the system over a
+season.  If it were not, the algorithm would have to account for
+season-to-season transitions, which would require an ordering of seasons within
+the model. Currently, each slice is completely independent of other slices.
 
 .. math::
    :label: Storage
@@ -582,19 +585,18 @@ def ExistingCapacity_Constraint ( M, t, v ):
 	r"""
 
 Temoa treats residual capacity from before the model's optimization horizon as
-first class processes.  These require every consideration in the dat file as do
-new vintage technologies (e.g. entries in the efficiency table), except the
-CostInvest parameter.
-
-In English, this constraint "exogenously sets the capacity of processes for
-model periods prior to the optimization horizon to user-specified values."
+regular processes, that require the same parameter specification in the data
+file as do new vintage technologies (e.g. entries in the efficiency table),
+except the :code:`CostInvest` parameter.  This constraint sets the capacity of
+processes for model periods that exist prior to the optimization horizon to
+user-specified values.
 
 .. math::
    :label: ExistingCapacity
 
    \textbf{CAP}_{t, v} = ECAP_{t, v}
 
-   \forall \{t, v\} \in \Theta_{\text{existing capacity parameter}}
+   \forall \{t, v\} \in \Theta_{\text{existing}}
 """
 	expr = ( M.V_Capacity[t, v] == M.ExistingCapacity[t, v] )
 	return expr
@@ -609,15 +611,15 @@ the amount of a particular resource Temoa may use in a period.
 .. math::
    :label: ResourceExtraction
 
-   \sum_{S, D, T, V} \textbf{FO}_{p, s, d, e, t, v, c} \le RSC_{p, c}
+   \sum_{S, D, I, t \in T^r, V} \textbf{FO}_{p, s, d, i, t, v, c} \le RSC_{p, c}
 
-   \forall \{p, c\} \in \Theta_{\text{resource bound parameter}},
-   e = \text{'ether'}
+   \forall \{p, c\} \in \Theta_{\text{resource bound parameter}}
 """
 	collected = sum(
 	  M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, r]
 
 	  for S_t, S_v in ProcessesByPeriodAndOutput( p, r )
+	  if S_t in M.tech_resource
 	  for S_i in ProcessInputsByOutput( p, S_t, S_v, r )
 	  for S_s in M.time_season
 	  for S_d in M.time_of_day
@@ -634,12 +636,9 @@ Where the Demand constraint :eq:`Demand` ensures that end-use demands are met,
 the CommodityBalance constraint ensures that the internal system demands are
 met.  That is, this is the constraint that ties the output of one process to the
 input of another.  At the same time, this constraint also conserves energy
-between process.  (But it does not account for transmission loss.) In this
+between process.  (But it does not account for transmission loss.)  In this
 manner, it is a corollary to both the ProcessBalance :eq:`ProcessBalance` and
 Demand :eq:`Demand` constraints.
-
-In English, this constraint states that "for each commodity, the total amount
-of energy generated must at least meet the amount of needed input energy."
 
 .. math::
    :label: CommodityBalance
@@ -678,15 +677,22 @@ of energy generated must at least meet the amount of needed input energy."
 
 def ProcessBalance_Constraint ( M, p, s, d, i, t, v, o ):
 	r"""
-The ProcessBalance constraint is the most fundamental constraint to the Temoa
-model.  It defines the basic relationship between the energy entering a process
-(:math:`\textbf{FI}`) and the energy leaving a processing (:math:`\textbf{FO}`).
-This constraint sets the FlowOut variable, upon which all other constraints
-rely.
 
-Conceptually, this constraint treats every process as a "black box", caring only
-about how efficient the process is.  In English, it states that "the
-amount of energy leaving a process cannot exceed the amount coming in."
+The ProcessBalance constraint is one of the most fundamental constraints in the
+Temoa model.  It defines the basic relationship between the energy entering a
+process (:math:`\textbf{FI}`) and the energy leaving a processing
+(:math:`\textbf{FO}`). This constraint sets the :code:`FlowOut` variable, upon
+which all other constraints rely.
+
+Conceptually, this constraint treats every process as a "black box," caring only
+about the process efficiency. In other words, the amount of energy leaving a
+process cannot exceed the amount coming in.
+
+Note that this constraint is an inequality -- not a strict equality.  In most
+sane cases, the optimal solution should make this constraint and supply should
+exactly meet demand.  If this constraint is not binding, it is likely a clue
+that the model under inspection could be more tightly specified and has at least
+one input data anomaly.
 
 .. math::
    :label: ProcessBalance
@@ -719,11 +725,10 @@ throughout the year.  Without this constraint, the model might choose to only
 use the electric furnace during the day, and the natural gas furnace during the
 night.
 
-In English, this constraint states that "the ratio of a process activity to
-demand is constant for all time slices."  Note that if a demand is not specified
-in a given time slice, or is zero, then this constraint will not be considered
-for that slice and demand.  This is transparently handled by the :math:`\Theta`
-superset.
+This constraint ensures that the ratio of a process activity to demand is
+constant for all time slices.  Note that if a demand is not specified in a given
+time slice, or is zero, then this constraint will not be considered for that
+slice and demand.  This is transparently handled by the :math:`\Theta` superset.
 
 .. math::
    :label: DemandActivity
@@ -733,7 +738,7 @@ superset.
       DEM_{p, s_0, d_0, dem} \cdot \sum_{I} \textbf{FO}_{p, s, d, i, t, v, dem}
 
    \\
-   \forall \{p, s, d, t, v, dem, s_0, s_0\} \in \Theta_{\text{demand activity}}
+   \forall \{p, s, d, t, v, dem, s_0, d_0\} \in \Theta_{\text{demand activity}}
 """
 
 	DSD = M.DemandSpecificDistribution   # lazy programmer
@@ -757,30 +762,35 @@ superset.
 
 
 def Demand_Constraint ( M, p, s, d, dem ):
-	r"""\
+	r"""
 
-Where the ProcessBalance constraint :eq:`ProcessBalance` defines the fundamental
-relationship of Temoa, the Demand constraint drives the model.  This
-constraint ensures that supply at least meets the demand specified by the Demand
-parameter in all periods and slices.
-
-In English, this constraint says that "the sum of all the demand output
-commodity (:math:`dem`) generated by FO must meet demand in each time slice."
-
-Note that this constraint's validity relies on the fact that the
-:math:`commodity\_demand` set is distinct from both :math:`commodity\_emissions`
-and :math:`commodity\_physical`.  In other words, an end-use demand must be
-exactly and only that: an end-use demand.  If an output could satisfy both an
-end-use and internal system demand, then the output from FO would be double
-counted.
+The Demand constraint drives the model.  This constraint ensures that supply at
+least meets the demand specified by the Demand parameter in all periods and
+slices, by ensuring that the sum of all the demand output commodity (:math:`c`)
+generated by :math:`\textbf{FO}` must meet the modeler-specified demand, in
+each time slice.
 
 .. math::
    :label: Demand
 
-   \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, dem} \ge DEM_{p, s, d, dem}
+   \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, dem}
+   \ge
+   {DEM}_{p, dem} \cdot {DSD}_{s, d, dem}
 
    \\
-   \forall \{p, s, d, dem\} \in \Theta_{\text{demand parameter}}
+   \forall \{p, s, d, dem\} \in \Theta_{\text{demand}}
+
+Note that the validity of this constraint relies on the fact that the
+:math:`C^d` set is distinct from both :math:`C^e` and :math:`C^p`. In other
+words, an end-use demand must only be an end-use demand.  Note that if an output
+could satisfy both an end-use and internal system demand, then the output from
+:math:`\textbf{FO}` would be double counted.
+
+Note also that this constraint is an inequality, not a strict equality.  "Supply
+must meet or exceed demand."  Like with the ProcessBalance constraint, if this
+constraint is not binding, it may be a clue that the model under inspection
+could be more tightly specified and could have at least one input data anomaly.
+
 """
 	supply = sum(
 	  M.V_FlowOut[p, s, d, S_i, S_t, S_v, dem]
@@ -962,16 +972,25 @@ def ActivityByPeriodInputTechAndVintage_Constraint ( M, p, i, t, v ):
 
 
 def CapacityAvailableByPeriodAndTech_Constraint ( M, p, t ):
-	"""
-This constraint sets V_CapacityAvailableByPeriodAndTech, a variable
-nominally for reporting, but also used in the Max and Min constraint
-calculations.  For any process with an end-of-life on a period boundary, all of
-its capacity is available for use.  However, for any process with an EOL that
-falls between periods, Temoa makes the simplifying assumption that the available
-capacity from the dying technology is available through the *whole period*, but
-only as much percentage as its lifespan through the period.  For example, if a
-period is 8 years, and a process dies 3 years into the period, then only 3/8 of
-the installed capacity is available for use for the period.
+	r"""
+The :math:`\textbf{CAPAVL}` variable is nominally for reporting solution values,
+but is also used in the Max and Min constraint calculations.  For any process
+with an end-of-life (EOL) on a period boundary, all of its capacity is available
+for use in all periods in which it is active (the process' TLF is 1). However,
+for any process with an EOL that falls between periods, Temoa makes the
+simplifying assumption that the available capacity from the expiring technology
+is available through the whole period, but only as much percentage as its
+lifespan through the period.  For example, if a process expires 3 years into an
+8 year period, then only :math:`\frac{3}{8}` of the installed capacity is
+available for use throughout the period.
+
+.. math::
+   :label: CapacityAvailable
+
+   \textbf{CAPAVL}_{p, t} = \sum_{V} {TLF}_{p, t, v} \cdot \textbf{CAP}
+
+   \\
+   \forall p \in \text{P}^o, t \in T
 """
 	cap_avail = sum(
 	    value( M.TechLifeFrac[p, t, S_v] )
