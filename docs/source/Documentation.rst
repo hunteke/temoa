@@ -55,15 +55,14 @@ independent third parties.  The only realistic method to make this happen is to
 have a freely available model, and to create an ecosystem of freely shared data
 and model inputs.
 
-For a longer explanation, please see "The TEMOA Project: Tools for Energy Model
-Optimization and Analysis", by DeCarolis, J. and Hunter, K. and Sreepathi, S.
-(2010) (available from `temoaproject.org/`_).  In summary, EEO model-based
-analyses are impossible to verify, complex enough as to be non-repeatable
-without electronic access to **exact** versions of code *and* data input, hardly
-address uncertainty, and yet are used to inform large-scale public policy.
-Especially in light of the last two points, we believe that EEO model analyses
-should be completely open, independently reproducible, electronically available,
-and address uncertainty about the future.
+For a longer explanation, please see :cite:`DeCarolis_etal_2010` (available from
+`temoaproject.org/`_).  In summary, EEO model-based analyses are impossible to
+verify, complex enough as to be non-repeatable without electronic access to
+**exact** versions of code *and* data input, hardly address uncertainty, and yet
+are used to inform large-scale public policy.  Especially in light of the last
+two points, we believe that EEO model analyses should be completely open,
+independently reproducible, electronically available, and address uncertainty
+about the future.
 
 
 Conventions
@@ -75,7 +74,7 @@ Conventions
 
  * Though TEMOA is an acronym for 'Tools for Energy Model Optimization and
    Analysis', we generally use 'Temoa' as a proper noun, and so forgo the need
-   for all-caps.  Regardless, either are acceptable, persuant to the needs of
+   for all-caps.  Regardless, either are acceptable, pursuant to the needs of
    the situation.
 
  * In the mathematical notation, we use CAPITALIZATION to denote a container,
@@ -178,8 +177,8 @@ Temoa strives for correctness.  Unfortunately, as an EEO model and software
 project there are plenty of levels and avenues for error.  If you spot a bug,
 inconsistency, or general "that could be improved", we want to hear about it.
 
-If you are a software developer-type, feel free to open an issue on our `Github
-Issue tracker`_\ .  If you would rather not create a Github account, feel free
+If you are a software developer-type, feel free to open an issue on our `GitHub
+Issue tracker`_\ .  If you would rather not create a GitHub account, feel free
 to let us know the issue on our `mailing list`_\ .
 
 
@@ -218,7 +217,7 @@ After the above 3 items are installed and tested, download both the
 `Temoa model`_ and the `example data sets`_.  Then run Temoa from your operating
 system's command line interface.  (In the example, lines beginning with the
 dollar symbol '``$``' canonically represent a Unix command line.  Windows
-prompts will likely end with a right carot '``>``'.)
+prompts will likely end with a right caret '``>``'.)
 
 .. parsed-literal::
 
@@ -404,7 +403,7 @@ and Temoa uses its elements to automatically calculate the length of each
 optimization period; modelers may exploit this to create variable period lengths
 within a model.  (To our knowledge, this capability is unique to Temoa.)  Temoa
 "names" each optimization period by the first year, and makes them easily
-accesible via the :code:`time_optimize` set.  This final "period" set is not
+accessible via the :code:`time_optimize` set.  This final "period" set is not
 user-specifiable, but is an exact duplicate of :code:`time_future`, less the
 largest element.  In the above example, since :math:`\text{P}^f = \setof{2010,
 2015, 2025}`, :code:`time_optimize` does not contain 2025: :math:`\text{P}^o =
@@ -471,9 +470,9 @@ ways.  The first is that Temoa places a restriction on the *time* set elements.
 Specifically, while most optimization programs treat set elements as arbitrary
 labels, Temoa assumes that all elements of the :code:`time_existing` and
 :code:`time_future` sets are integers.  Further, these sets are assumed to be
-ordered, such that the minimum element is "nought".  For example, if
+ordered, such that the minimum element is "naught".  For example, if
 :math:`\text{P}^f = \setof{2015, 2020, 2030}`, then :math:`P_0 = 2015`.  In
-other words, the capital :math:`\text{P}` with the nought subscript indicates
+other words, the capital :math:`\text{P}` with the naught subscript indicates
 the first element in the :code:`time_future` set.  We will explain the reason
 for this deviation shortly.
 
@@ -1217,19 +1216,19 @@ The Temoa Computational Implementation
 We have implemented Temoa within an algebraic modeling environment (AME).  AMEs
 provide both a convenient avenue to describe mathematical optimization models
 for a computational context, and allow for abstract model\ [#abstract_model]_
-formulations [Kallrath_2004]_.  In contrast to describing a model in a formal
-computer programming language like C or Java, AMEs generally have syntax that
-directly translates to standard mathematical notation.  Consequently, models
-written in AMEs are more easily understood by a wider variety of people.
+formulations :cite:`Kallrath_2004`.  In contrast to describing a model in a
+formal computer programming language like C or Java, AMEs generally have syntax
+that directly translates to standard mathematical notation.  Consequently,
+models written in AMEs are more easily understood by a wider variety of people.
 Further, by allowing abstract formulations, a model written with an AME may be
 used with many different input data sets.
 
 Three well-known and popular algebraic modeling environments are the General
-Algebraic Modeling System (GAMS) [Brooke_Rosenthal_2003]_, AMPL
-[Fourer_etal_1987]_, and GNU MathProg [Makhorin_2000]_.  All three environments
-provide concise syntax that closely resembles standard (paper) notation.  We
-decided to implement Temoa within a recently developed AME called Python
-Optimization Modeling Objects (Pyomo).
+Algebraic Modeling System (GAMS) :cite:`Brooke_Rosenthal_2003`, AMPL
+:cite:`Fourer_etal_1987`, and GNU MathProg :cite:`Makhorin_2000`.  All three
+environments provide concise syntax that closely resembles standard (paper)
+notation.  We decided to implement Temoa within a recently developed AME called
+Python Optimization Modeling Objects (Pyomo).
 
 Pyomo provides similar functionality to GAMS, AMPL, and MathProg, but is open
 source and written in the Python scripting language.  This has two general
@@ -2499,7 +2498,7 @@ of an analysis.
 .. _AMPL: http://www.ampl.com/
 .. _PDF: http://temoaproject.org/downloads/TemoaDocumentation.pdf
 .. _HTML: http://temoaproject.org/docs/
-.. _Github Issue tracker: https://github.com/hunteke/temoa/issues
+.. _GitHub Issue tracker: https://github.com/hunteke/temoa/issues
 .. _HTML version: http://temoaproject.org/docs/
 .. _code smell: https://en.wikipedia.org/wiki/Code_smell
 .. _PEP 8: http://www.python.org/dev/peps/pep-0008/
@@ -2511,11 +2510,6 @@ of an analysis.
 .. _Temoa repository: https://github.com/hunteke/temoa/
 .. _issue 5: https://github.com/hunteke/temoa/issues/5
 
-.. [Kallrath_2004] J. Kallrath. Modeling Languages in Mathematical Optimization, volume 88. Springer, 2004.
 
-.. [Brooke_Rosenthal_2003] A. Brooke and R. E. Rosenthal. GAMS. GAMS Development, 2003.
-
-.. [Fourer_etal_1987] R. Fourer, D. M. Gay, and B. W. Kernighan. AMPL: A Mathematical Programming Language.  AT&T Bell Laboratories, 1987.
-
-.. [Makhorin_2000] A. Makhorin. Modeling Language GNU MathProg. Relatório Técnico, 2000. Moscow Aviation Institute. Moscow, Russia.
+.. bibliography:: References.bib
 
