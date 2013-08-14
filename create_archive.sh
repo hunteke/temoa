@@ -8,6 +8,8 @@
 # with '--save'.  The save argument merely saves the temporary zip file from
 # which 'temoa.py' is created.
 
+set -e
+
 CLEANUP=true
 
 PKG_NAME=temoa.py
