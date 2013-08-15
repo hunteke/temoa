@@ -65,11 +65,11 @@ git checkout temoaproject.org
 
 mkdir -p ./docs/
 mv /tmp/TemoaDocumentationBuild/singlehtml/* ./docs/
-mv /tmp/TemoaDocumentationBuild/latex/TemoaProject.pdf ./download/
+mv /tmp/TemoaDocumentationBuild/latex/TemoaProject.pdf ./download/TemoaDocumentation.pdf
 mv /tmp/temoa.py ./download/
 
 chmod 755 ./download/temoa.py
-chmod 644 ./download/TemoaProject.pdf
+chmod 644 ./download/TemoaDocumentation.pdf
 
 rm -rf /tmp/TemoaDocumentationBuild/
 
@@ -81,3 +81,4 @@ tar -cf - * .htaccess | pv -s "$BYTES" | bzip2 --best | ssh temoaproject.org "ca
    mv '$WEBDIR' '$DELDIR' && mv '$UPDDIR' '$WEBDIR' && rm -rf '$DELDIR' '$UPDPKG'"
 
 rm -rf ./docs/
+rm -f ./download/{temoa.py,TemoaDocumentation.pdf}
