@@ -47,9 +47,22 @@ if [[ "0" != "$?" ]]; then
 	exit $ssh_error
 fi
 
-echo "Making documentation"
+echo "Making temoa.py"
 
 git checkout energysystem
+./create_archive.sh
+mv ./temoa.py /tmp/
+
+echo "Creating example_data_sets.zip"
+
+cp -ra ./data_files/ /tmp/example_data_sets/
+( cd /tmp
+  zip -r -9 example_data_sets.zip example_data_sets/
+  rm -rf ./example_data_sets/
+)
+
+echo "Making documentation"
+
 ( cd docs/
   make spelling
   echo -e "\n\nPotentially misspelled words:\n----------\n"
@@ -61,17 +74,6 @@ git checkout energysystem
   make latexpdf
 )
 
-echo "Making temoa.py"
-./create_archive.sh
-mv ./temoa.py /tmp/
-
-echo "Creating example_data_sets.zip"
-cp -ra ./data_files/ /tmp/example_data_sets/
-( cd /tmp
-  zip -r -9 example_data_sets.zip example_data_sets/
-  rm -rf ./example_data_sets/
-)
-
 find . -name "*.pyc" -delete
 
 git checkout temoaproject.org
@@ -79,7 +81,6 @@ git checkout temoaproject.org
 mkdir -p ./docs/
 mv /tmp/TemoaDocumentationBuild/singlehtml/* ./docs/
 mv /tmp/TemoaDocumentationBuild/latex/TemoaProject.pdf ./download/TemoaDocumentation.pdf
-mv /tmp/temoa.py ./download/
 mv /tmp/{temoa.py,example_data_sets.zip} ./download/
 
 chmod 755 ./download/temoa.py
