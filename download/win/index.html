@@ -26,17 +26,15 @@
 	<div id='content' class='pad'>
 		<h1 class='pagetitle'>Installing Temoa on Windows</h1>
 		<div class='entry page clear'>
-			<p>Installing Temoa on Windows requires you to install <a href='http://python.org/download/releases/2.7.2/#download' title='Download the Python scripting language, v2.7'>Python v2.7</a> and <a href='http://pypi.python.org/pypi/setuptools#files' title='A specialized method to install Python libraries'>SetupTools</a>.  Then, the <a href='/download/InstallTemoa_Windows.py'>Temoa Installer for Windows</a> will ensure that you have Coopr and the GLPK solver, and will augment your system path as appropriate.  (Note that though the Temoa Installer installs GLPK as a baseline solver, you are welcome to use any solver <a href='https://software.sandia.gov/trac/coopr/wiki/GettingStarted/Solvers' title='Coopr solver interface list'>compatible with Coopr</a>.)</p>
-
-			<h2>Installation Steps</h2>
+			<p>While it is technically possible to utilize Temoa directly on Windows, it has historically proven a difficult task to accomplish.  In theory, the same basic steps as for Linux are required, but we do not offer support for Windows:</p>
 			<ol>
-				<li>Install <a href='http://python.org/download/releases/2.7.2/#download' title='Download the Python scripting language, v2.7'>Python v2.7</a>.  Coopr does not yet support Python v3+, and Temoa requires at least v2.7.</li>
-				<li>Install <a href='http://pypi.python.org/pypi/setuptools#files' title='A specialized method to install Python libraries'>SetupTools</a>.  SetupTools is a method for installing Python-specific programs and libraries.</li>
-				<li>Download the <a href='/download/InstallTemoa_Windows.py'>Temoa Installer for Windows</a> and double-click to run it.  (Note that Python <em>must</em> be installed for this script to run.)</li>
-				<li>(Optional) Download the <a href='/download/example_data_sets.zip'>example data files</a> for testing.</li>
+				<li>Install <a href='http://python.org/download/' title='Download the Python scripting language, v2.7'>Python, v2.7</a>.  Coopr does not yet support python v3+ and Temoa requires at least v2.7.</li>
+				<li>Install <a href='https://software.sandia.gov/trac/coopr' title='The COmmon Optimization Python Repository project'>COOPR</a> (for the <abbr title='Algebraic Modeling Language'>AML</abbr> framework).</li>
+				<li>Download <a href='/download/temoa.py'>temoa.py</a>.</li>
+				<li>(optional) Download the <a href='/download/example_data_sets.zip'>example data files</a> for testing.</li>
 			</ol>
 
-			<p>After installation is complete, you may <a href='/download/#testing-installation'>test your installation by running a simple model</a>.</p>
+			<p>If you do not have success with the above installation path, we instead invite you to run a Linux distribution in a Virtual Machine.  We have a pre-build virtual machine with Linux and Coopr installed, but due to it's size (~2 GiB), we do not currently have permanent storage.  If you would like it, please ask on the <a href='https://groups.google.com/forum/#!forum/temoa-project' title='The TemoaProject Google Group'>Forum</a>.</p>
 		</div><!--end entry-->
 	</div><!--end content-->
 
