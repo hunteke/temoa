@@ -28,28 +28,38 @@
 		<div class='entry page clear'>
 			<p>The number if Nix distributions is fairly large, so we present here only two distribution specific instructions.  The gist is:</p>
 			<ul style='padding-left: 2em;'>
-				<li>Ensure you are running Python v2.7 or at least have Python v2.7 on the path.</li>
-				<li>Ensure you have Python SetupTools installed.</li>
-				<li>Use SetupTools to install Coopr.</li>
+				<li>Ensure you are running Python v2.7.</li>
+				<li>Install Subversion (for download Coopr).</li>
+				<li>Install the Coopr "Version of the Day".</li>
 				<li>Install the GLPK solver.</li>
 				<li>Download and use the <a href='/download/temoa.py' title='The Temoa Energy-Economy Optimization model.'>Temoa EEO model</a>.</li>
 				<li>(Optional) Download the <a href='/download/example_data_sets.zip'>example data files</a> for testing.</li>
 			</ul>
 			<h2>Instructions for Debian/Ubuntu</h2>
 			<ol>
-				<li>Open the your Ubuntu Software Center, and search for <code>Python2.7</code>.  Make sure it is installed.</li>
-				<li>Install the package <code>python-setuptools</code>.</li>
-				<li>Install the package <code>glpk</code>.</li>
-				<li>From a command line, execute <code>sudo easy_install-2.7 -U coopr</code>.</li>
+				<li>Open a terminal (often Ctrl+Alt+T will work).  In the terminal type the commands after the prompt symbols ($):</li>
+				<li><pre>  # go to you home directory (usually /home/username), or wherever you want to install Coopr
+$ cd
+
+  # update your system's index of available packages
+$ sudo apt-get update
+
+  # install three programs: glpsol (a basic LP solver), subversion, and graphviz (for auto-generated graphs from Temoa)
+$ sudo apt-get install  glpk-utils  subversion  graphviz
+
+$ python -V
+Python 2.7.4                # Ensure this reads like: Python 2.7.x
+
+  # the --trunk option means you'll be able to update much easier later.
+$ python coopr_votd --trunk
+
+  # Add the coopr binaries to your path.  This will enable you to just type 'coopr_python' to execute Coopr.
+$ echo "PATH=\"\$PATH\":$(pwd)/coopr/bin" >> .profile</pre></li>
+				<li>Logout and then back in, then run <code>$ pyomo</code> to test the Coopr installation.</li>
 			</ol>
-			<p>Once the last completes, you may execute the <a href='/download/temoa.py' title='The Temoa Energy-Economy Optimization model.'>Temoa EEO model</a> as <a href='/download/#testing-installation'>exemplified</a> on the main download page.</p>
+			<p>You may execute the <a href='/download/temoa.py' title='The Temoa Energy-Economy Optimization model.'>Temoa EEO model</a> as <a href='/download/#testing-installation'>exemplified</a> on the main download page.</p>
 			<h2>Instructions for Fedora</h2>
-			<p>Open a terminal, and type (or copy/paste) this series of commands:
-			<ol>
-				<li><code>sudo yum install python2.7 python-setuptools glpk</code></li>
-				<li><code>sudo easy_install-2.7 -U coopr</code></li>
-			</ol>
-			<p>Similar to the Debian-based instructions, assuming all goes well, you may test your setup as <a href='/download/#testing-installation'>indicated</a> on the main download page.</p>
+			<p>Open a terminal and replace the <code>apt-get</code> commands from above with <code>yum</code></p>
 		</div><!--end entry-->
 	</div><!--end content-->
 
