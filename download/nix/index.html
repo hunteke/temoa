@@ -36,10 +36,9 @@
 				<li>(Optional) Download the <a href='/download/example_data_sets.zip'>example data files</a> for testing.</li>
 			</ul>
 			<h2>Instructions for Debian/Ubuntu</h2>
-			<ol>
-				<li>Open a terminal (often Ctrl+Alt+T will work).  In the terminal type the commands after the prompt symbols (<code>$</code>):</li>
-				<li><pre>
-# go to you home directory (usually /home/username), or wherever
+			<p>Open a terminal (often Ctrl+Alt+T will work).  In the terminal type (or better: copy and paste) the commands after the prompt symbols (<code>$</code>):</p>
+			<pre style='border: 1px solid black; margin: 1em; padding: 1ex 1em; background: #ddd;'>
+  # go to you home directory (usually /home/username), or wherever
   # you want to install Coopr
 $ cd
 
@@ -57,10 +56,13 @@ Python 2.7.4                # Ensure this reads like: Python 2.7.x
 $ python coopr_votd --trunk
 
   # Add the coopr binaries to your path.  This will enable you to just
-  # type 'coopr_python' to execute Coopr.
-$ echo "PATH=\"\$PATH\":$(pwd)/coopr/bin" >> .profile</pre></li>
-				<li>Logout and then back in, then run <code>$ pyomo</code> to test the Coopr installation.</li>
-			</ol>
+  # type 'coopr_python' to execute Coopr.  Note the <strong>double</strong> caret '&gt;'.
+  # If you only use a single caret, then you will overwrite the file
+  # '.profile' rather than append to it.  It is probably best to just
+  # copy and paste this line.
+$ echo "PATH=\"\$PATH\":$(pwd)/coopr/bin" &gt;&gt; .profile
+</pre>
+			<p>Logout and then back in, then run <code>$ pyomo</code> to test the Coopr installation.</p>
 			<p>You may execute the <a href='/download/temoa.py' title='The Temoa Energy-Economy Optimization model.'>Temoa EEO model</a> as <a href='/download/#testing-installation'>exemplified</a> on the main download page.</p>
 			<h2>Instructions for Fedora</h2>
 			<p>Open a terminal and replace the <code>apt-get</code> commands from above with <code>yum</code></p>
