@@ -2,6 +2,12 @@
 
 set -e  # stop on error
 
+REMOTE_SERVER='temoaproject.org'
+UPDDIR='.temoaproject.org-updating'
+UPDPKG='.temoaproject.org-updating.tbz'
+DELDIR='.temoaproject.org-deleting'
+WEBDIR='temoaproject.org'
+
 if [[ -e "./docs/" ]]; then
 	echo
 	echo "Please remove the directory './docs/'.  This script will destroy anything"
@@ -29,10 +35,17 @@ if [[ -n "$(git diff)" ]]; then
 	exit 1
 fi
 
-UPDDIR='.temoaproject.org-updating'
-UPDPKG='.temoaproject.org-updating.tbz'
-DELDIR='.temoaproject.org-deleting'
-WEBDIR='temoaproject.org'
+echo "Testing ssh connection to $REMOTE_SERVER"
+ssh -n $REMOTE_SERVER
+ssh_error="$?"
+if [[ "0" != "$?" ]]; then
+	echo
+	echo "Unable to connect to '$REMOTE_SERVER' via ssh.  You will need to correct"
+	echo "this problem before continuing."
+	echo
+
+	exit $ssh_error
+fi
 
 echo "Making documentation"
 
@@ -67,18 +80,19 @@ mkdir -p ./docs/
 mv /tmp/TemoaDocumentationBuild/singlehtml/* ./docs/
 mv /tmp/TemoaDocumentationBuild/latex/TemoaProject.pdf ./download/TemoaDocumentation.pdf
 mv /tmp/temoa.py ./download/
+mv /tmp/{temoa.py,example_data_sets.zip} ./download/
 
 chmod 755 ./download/temoa.py
-chmod 644 ./download/TemoaDocumentation.pdf
+chmod 644 ./download/{example_data_sets.zip,TemoaDocumentation.pdf}
 
 rm -rf /tmp/TemoaDocumentationBuild/
 
 echo "Uploading to website"
 BYTES=$(tar --totals -cf - * .htaccess 2>&1 1> /dev/null | awk {'print $4'})
 
-tar -cf - * .htaccess | pv -s "$BYTES" | bzip2 --best | ssh temoaproject.org "cat > '$UPDPKG'" && \
-  ssh temoaproject.org "rm -rf '$UPDDIR' && mkdir '$UPDDIR' && (cd '$UPDDIR'; tar -xf ../'$UPDPKG') && \
+tar -cf - * .htaccess | pv -s "$BYTES" | bzip2 --best | ssh "$REMOTE_SERVER" "cat > '$UPDPKG'" && \
+  ssh "$REMOTE_SERVER" "rm -rf '$UPDDIR' && mkdir '$UPDDIR' && (cd '$UPDDIR'; tar -xf ../'$UPDPKG') && \
    mv '$WEBDIR' '$DELDIR' && mv '$UPDDIR' '$WEBDIR' && rm -rf '$DELDIR' '$UPDPKG'"
 
 rm -rf ./docs/
-rm -f ./download/{temoa.py,TemoaDocumentation.pdf}
+rm -f ./download/{temoa.py,TemoaDocumentation.pdf,example_data_sets.zip}
