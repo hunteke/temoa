@@ -754,9 +754,9 @@ slice and demand.  This is transparently handled by the :math:`\Theta` superset.
 	)
 
 	expr = (
-	  act_a * M.Demand[p, dem] * DSD[s, d, dem]
+	  act_a * DSD[s, d, dem]
 	     ==
-	  act_b * M.Demand[p, dem] * DSD[s_0, d_0, dem]
+	  act_b * DSD[s_0, d_0, dem]
 	)
 	return expr
 
