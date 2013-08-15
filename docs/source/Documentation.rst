@@ -2496,7 +2496,7 @@ of an analysis.
 .. _sources: https://en.wikipedia.org/wiki/Mathematical_optimization
 .. _GAMS: http://www.gams.com/
 .. _AMPL: http://www.ampl.com/
-.. _PDF: http://temoaproject.org/downloads/TemoaDocumentation.pdf
+.. _PDF: http://temoaproject.org/download/TemoaDocumentation.pdf
 .. _HTML: http://temoaproject.org/docs/
 .. _GitHub Issue tracker: https://github.com/hunteke/temoa/issues
 .. _HTML version: http://temoaproject.org/docs/
