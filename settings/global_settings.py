@@ -83,3 +83,10 @@ LOGGING = {
   }
 }
 
+JQUERYCD = {
+  'BASE'    : '//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3',
+  'UI'      : '//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3',
+  'COOKIE'  : '//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.3.1',
+}
+
+

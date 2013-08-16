@@ -47,10 +47,8 @@
 		<div class='items'></div>
 	</div>
 </div>
-<script type='text/javascript' src='{% static 'process_interface/js/jquery.min.js' %}'></script>
-<script type='text/javascript' src='{% static 'process_interface/js/jquery.cookie.js' %}'></script>
-<script type='text/javascript' src='{% static 'process_interface/js/jquery-ui.js' %}'></script>
-<script type='text/javascript' src='{% static 'process_interface/js/jquery.editable.min.js' %}'></script>
-<script type='text/javascript' src='{% static 'process_interface/js/process_interface.js' %}'></script>
-</body>
+<script type='text/javascript' src='{{ JQUERYCD.BASE   }}/jquery.min.js'></script>
+<script type='text/javascript' src='{{ JQUERYCD.UI     }}/jquery-ui.min.js'></script>
+<script type='text/javascript' src='{{ JQUERYCD.COOKIE }}/jquery.cookie.min.js'></script>
+<script type='text/javascript' src='{% static 'process_interface/js/process_interface.js' %}'></script></body>
 </html>

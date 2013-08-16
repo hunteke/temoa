@@ -12,6 +12,8 @@ from django.utils import simplejson as json
 from django.utils.datastructures import MultiValueDictKeyError
 from django.views.decorators.http import require_POST
 
+from settings import JQUERYCD
+
 from models import (
 	Analysis,
 	Commodity,
@@ -44,7 +46,7 @@ def home ( req ):
 
 
 def view ( req ):
-	c = {}
+	c = {'JQUERYCD': JQUERYCD}
 	c.update(csrf(req))
 	c.update( username='' )
 	if req.user.is_authenticated():

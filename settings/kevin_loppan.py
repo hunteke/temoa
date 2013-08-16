@@ -93,3 +93,14 @@ DATABASES = {
   }
 }
 
+# During development, one ostensibly reloads the active page thousands of
+# times.  Thus, for development purposes, it is better for the net to serve
+# these files locally.  To fallback to the regular content delivery network
+# (CDN), just don't set this setting.  To update the default, look to
+# global_settings.py
+JQUERYCD = {
+  'BASE'   : '/static/process_interface/js',
+  'UI'     : '/static/process_interface/js',
+  'COOKIE' : '/static/process_interface/js',
+}
+
