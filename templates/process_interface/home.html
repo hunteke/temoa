@@ -1,0 +1,18 @@
+{% load url from future %}{% load staticfiles %}<!DOCTYPE html>
+<html lang='{{ LANGUAGE_CODE|default:'en-us' }}'>
+<head>
+	<meta charset='utf-8'>
+	<title>TemoaDB | {% block title %}Home{% endblock %}</title>
+	<link rel='stylesheet' type='text/css' href='{% static 'process_interface/css/temoadb.css' %}' />
+</head>
+<body>
+<div id='wrapper' class='hbox center'>
+	<div id='launchers' class='vbox center'>
+		<ul class='hbox center'>
+			<li><a href='{% url 'process_interface:view' %}' title='View Data'>View Data</a></li>
+			<li><a href='{% url 'process_interface:tutorial' %}' title='Tutorial and help'>Tutorial</a></li>
+		</ul>
+	</div>
+</div>
+</body>
+</html>

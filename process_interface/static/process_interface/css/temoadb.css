@@ -1,0 +1,192 @@
+/* @import url(http://fonts.googleapis.com/css?family=Ubuntu:400,500,700|Ubuntu+Mono:400,700); */
+
+html { height: 100% ; background: #eee ; padding: 0; margin: 0; font-family: 'Ubuntu', sans-serif }
+
+body { height: 100% ; margin: 1em; }
+
+#wrapper { min-height: 100% ; width: 100% ; margin: 0; }
+
+#header { height: 4em; width: 100%; background-color: cyan; }
+
+#launchers { margin: 0  auto ; }
+#launchers ul { list-style: none outside none ; padding: 0 ; }
+#launchers ul li { float: left ; width: 15em ; border: 1px dotted blue ; margin: 0 2em ; }
+#launchers ul li a { overflow: hidden ; display: block ; height: 15em ; width: 15em ; }
+
+#processes {
+	background-color: gold;
+	clear: left;
+	float: left;
+}
+
+#process_characteristics h2, #technology_characteristics h2 { text-align: center; }
+
+#process_characteristics { background-color: red; opacity: 0.8; float: left; width: auto;}
+#process_characteristics .items { padding: 1em; border-spacing: 0; }
+#process_characteristics .items td { padding: 1ex 3ex 1ex 1ex;  }
+#process_characteristics .items .info { color: #777; font-weight: normal; font-style: italic; }
+#process_characteristics .items tbody { padding: 2em; background: gray; border-collapse: separate; }
+#process_characteristics .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
+#process_characteristics .items th[colspan='2'] { border-top: 1pt solid black; border-bottom: 1pt dotted black; background: #29f; font-size: 120%; }
+#process_characteristics .items .innertable { background: inherit; font-weight:normal; width: 100%; }
+#process_characteristics .items .innertable thead th { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid black; }
+#process_characteristics .items .innertable tbody { background: inherit; }
+#process_characteristics .items .innertable caption { font-size: 110%; font-weight: bold; }
+
+#process_characteristics .items form input[type='submit'] { visibility: hidden; width: 1px; height: 1px; }
+
+/* #technology_characteristics {position: fixed; } */
+#technology_characteristics { background-color: lightgreen; opacity: 0.8; float: right; }
+#technology_characteristics .items { padding: 1em; border-spacing: 0; }
+#technology_characteristics .items td { padding: 1ex 3ex 1ex 1ex;  }
+#technology_characteristics .items .info { color: #777; font-weight: normal; font-style: italic; }
+#technology_characteristics .items tbody { padding: 2em; background: gray; border-collapse: separate; }
+#technology_characteristics .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
+#technology_characteristics .items .innertable { background: inherit; font-weight:normal; width: 100%; }
+#technology_characteristics .items .innertable thead th { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid black; }
+#technology_characteristics .items .innertable tbody { background: inherit; }
+#technology_characteristics .items .innertable caption { font-size: 110%; font-weight: bold; }
+#technology_characteristics .items th[colspan='2'] { border-top: 1pt solid black; border-bottom: 1pt dotted black; background: #29f; font-size: 120%; }
+
+#technology_characteristics.fixed { position: fixed; top: 0; right: 1em; }
+
+#status { padding: 1em; position: fixed; bottom: 0; left: 1em; background: #ccc; z-index: 1000; opacity: 1; }
+
+input {
+	background: inherit;
+	border: 1pt solid;
+	width: 5em;
+}
+
+td img { height: 100%; text-align: center; margin: 0 auto 0 auto; display: block; }
+
+.clear { clear: both; }
+
+.hidden { visibility: hidden; }
+
+.odd  { background-color: #ddd; }
+.even { background-color: #fff; }
+
+.fixed { position: fixed; }
+
+.error { color: #f00; font-weight: bold; }
+
+.clickable { cursor: pointer; }
+
+/* To be used with elements that can be edited, like input elements, or
+   click/editable elements */
+.modifiable { font-family: 'Ubuntu Mono', mono; }
+
+/* jQuery selectable class */
+.ui-selectable-helper {
+	position: absolute;
+	z-index: 100;
+	border: 1px dotted black;
+}
+
+.ui-selecting { background: #ade; }
+.ui-selected  { background: #29f; }
+
+/* hbox and vbox classes */
+
+.hbox {
+	display: -webkit-box;
+	-webkit-box-orient: horizontal;
+	-webkit-box-align: stretch;
+
+	display: -moz-box;
+	-moz-box-orient: horizontal;
+	-moz-box-align: stretch;
+
+	display: box;
+	box-orient: horizontal;
+	box-align: stretch;
+}
+
+.hbox > * {
+	-webkit-box-flex: 0;
+	-moz-box-flex: 0;
+	box-flex: 0;
+	display: block;
+}
+
+.vbox {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-box-align: stretch;
+
+	display: -moz-box;
+	-moz-box-orient: vertical;
+	-moz-box-align: stretch;
+
+	display: box;
+	box-orient: vertical;
+	box-align: stretch;
+}
+
+.vbox > * {
+	-webkit-box-flex: 0;
+	-moz-box-flex: 0;
+	box-flex: 0;
+	display: block;
+}
+
+.spacer {
+	-webkit-box-flex: 1;
+	-moz-box-flex: 1;
+	box-flex: 1;
+}
+
+.reverse {
+	-webkit-box-direction: reverse;
+	-moz-box-direction: reverse;
+	box-direction: reverse;
+}
+
+.boxFlex0 {
+	-webkit-box-flex: 0;
+	-moz-box-flex: 0;
+	box-flex: 0;
+}
+
+.boxFlex1, .boxFlex {
+	-webkit-box-flex: 1;
+	-moz-box-flex: 1;
+	box-flex: 1;
+}
+
+.boxFlex2 {
+	-webkit-box-flex: 2;
+	-moz-box-flex: 2;
+	box-flex: 2;
+}
+
+.boxGroup1 {
+	-webkit-box-flex-group: 1;
+	-moz-box-flex-group: 1;
+	box-flex-group: 1;
+}
+
+.boxGroup2 {
+	-webkit-box-flex-group: 2;
+	-moz-box-flex-group: 2;
+	box-flex-group: 2;
+}
+
+.start {
+	-webkit-box-pack: start;
+	-moz-box-pack: start;
+	box-pack: start;
+}
+
+.end {
+	-webkit-box-pack: end;
+	-moz-box-pack: end;
+	box-pack: end;
+}
+
+.center {
+	-webkit-box-pack: center;
+	-moz-box-pack: center;
+	box-pack: center;
+}
