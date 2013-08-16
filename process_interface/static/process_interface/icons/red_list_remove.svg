@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="48px" width="48px" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/">
+	<metadata>
+		<rdf:RDF>
+			<cc:Work rdf:about="">
+				<dc:subject>
+					<rdf:Bag>
+						<rdf:li>unsorted</rdf:li>
+					</rdf:Bag>
+				</dc:subject>
+				<dc:publisher>
+					<cc:Agent rdf:about="http://www.openclipart.org/">
+						<dc:title>Open Clip Art Library, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors, Source: GNOME-Colors</dc:title>
+					</cc:Agent>
+				</dc:publisher>
+				<dc:format>image/svg+xml</dc:format>
+				<dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+				<cc:license rdf:resource="http://creativecommons.org/licenses/GPL/2.0/"/>
+				<dc:language>en</dc:language>
+			</cc:Work>
+		</rdf:RDF>
+	</metadata>
+	<defs>
+		<linearGradient id="linearGradient2785" y2="36.6437" gradientUnits="userSpaceOnUse" y1="8.54505" gradientTransform="matrix(1.0724657,0,0,1.0724657,-1.2644569,-1.3296196)" x2="24.5285" x1="19.748">
+			<stop stop-color="#FFF" offset="0"/>
+			<stop stop-color="#FFF" stop-opacity="0" offset="1"/>
+		</linearGradient>
+		<linearGradient id="linearGradient8008" y2="37.9247" gradientUnits="userSpaceOnUse" y1="13" gradientTransform="translate(0,-7.9598973e-5)" x2="22" x1="22.0418">
+			<stop stop-color="#c22f2f" offset="0"/>
+			<stop stop-color="#a40000" offset="1"/>
+		</linearGradient>
+		<radialGradient id="radialGradient7996" gradientUnits="userSpaceOnUse" cy="5" cx="27.5092" gradientTransform="matrix(1.8967893e-8,1.575188,-4.0026986,6.4379789e-8,44.013492,-30.403593)" r="19">
+			<stop stop-color="#e78181" offset="0"/>
+			<stop stop-color="#e15f5f" offset="0.25"/>
+			<stop stop-color="#c22f2f" offset="0.68"/>
+			<stop stop-color="#a40000" offset="1"/>
+		</radialGradient>
+		<linearGradient id="linearGradient7386" y2="36.893" gradientUnits="userSpaceOnUse" y1="31.4881" gradientTransform="matrix(1.1449541,0,0,1.8604651,-2.9788989,-40.500081)" x2="23.5631" x1="23.5631">
+			<stop stop-color="#000" stop-opacity="0.3137255" offset="0"/>
+			<stop stop-color="#000" stop-opacity="0.31" offset="1"/>
+		</linearGradient>
+	</defs>
+	<path opacity="0.3" style="enable-background:accumulate;marker-end:none;marker-start:none;marker-mid:none;" d="M6,16.9999c-1.97943,0.0221-1.9779,0-2,2v10c0.06629,1.9345,0.06476,1.9779,2,2h36c2,0,2,0.045,2-2v-10c0.0442-1.9566,0.0457-1.9779-2-2h-36z" fill-rule="nonzero" display="block" fill="url(#linearGradient7386)"/>
+	<path stroke-linejoin="round" d="M42.5,18.4999v11h-37v-11h37z" fill-rule="evenodd" stroke="url(#linearGradient8008)" stroke-linecap="butt" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="1" fill="url(#radialGradient7996)"/>
+	<path opacity="0.4" stroke-linejoin="round" d="M41.5,19.4999v9h-35v-9h35z" stroke="url(#linearGradient2785)" stroke-linecap="butt" stroke-miterlimit="4" stroke-dasharray="none" stroke-width="1" fill="none"/>
+</svg>
