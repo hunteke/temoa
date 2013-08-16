@@ -11,7 +11,7 @@ var logged_in = false;
 
 var hoverEl = null;
 
-var add_img       = '/static/process_interface/icons/blue_add.svg';
+var add_img       = '/static/process_interface/icons/blue_list_add.svg';
 var remove_img    = '/static/process_interface/icons/red_remove.svg';
 var checkmark_img = '/static/process_interface/icons/checkmark.svg';
 var x_mark_img    = '/static/process_interface/icons/x_mark.svg';
