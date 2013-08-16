@@ -1,2 +1,3 @@
 *.pyc
 jquery*js
+local_settings.py
