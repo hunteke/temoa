@@ -13,8 +13,6 @@ var hoverEl = null;
 
 var add_img       = '/static/process_interface/icons/blue_list_add.svg';
 var remove_img    = '/static/process_interface/icons/red_list_remove.svg';
-var checkmark_img = '/static/process_interface/icons/checkmark.svg';
-var x_mark_img    = '/static/process_interface/icons/x_mark.svg';
 
 var tabularAttributes = {
   CostFixed:        createParameterTable( ['Period', 'Value'] ),
@@ -626,15 +624,10 @@ function showProcessCharacteristics ( data ) {
 	}
 
 	function isSetMember ( $tRow, attr, $pData ) {
-		value = $pData.attr( attr );
-		var $img = $('<img/>').attr({
-		  'src'   : value ? checkmark_img : x_mark_img,
-		  'title' : 'Is a member of the set.'
-		});
-		$img.addClass( 'boolean' );
+		var is_member = $pData.attr( attr ) ? 'checkmark' : 'x_mark';
 
 		$tRow.append( $('<td/>').html( attr ));
-		$tRow.append( $('<td/>').append( $img ));
+		$tRow.append( $('<td/>').addClass( is_member ));
 
 		return true;
 	}

@@ -1,6 +1,6 @@
 /* @import url(http://fonts.googleapis.com/css?family=Ubuntu:400,500,700|Ubuntu+Mono:400,700); */
 
-html { height: 100% ; background: #eee ; padding: 0; margin: 0; font-family: 'Ubuntu', sans-serif }
+html { height: 100% ; background: #eee ; padding: 0; margin: 0; font-family: 'Ubuntu', sans-serif; font-size: 12pt; }
 
 body { height: 100% ; margin: 1em; }
 
@@ -23,9 +23,10 @@ body { height: 100% ; margin: 1em; }
 
 #process_characteristics { background-color: red; opacity: 0.8; float: left; width: auto;}
 #process_characteristics .items { padding: 1em; border-spacing: 0; }
+#process_characteristics .items table { border-collapse: collapse; }
 #process_characteristics .items td { padding: 1ex 3ex 1ex 1ex;  }
 #process_characteristics .items .info { color: #777; font-weight: normal; font-style: italic; }
-#process_characteristics .items tbody { padding: 2em; background: gray; border-collapse: separate; }
+#process_characteristics .items tbody { padding: 2em; background: gray; }
 #process_characteristics .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
 #process_characteristics .items th[colspan='2'] { border-top: 1pt solid black; border-bottom: 1pt dotted black; background: #29f; font-size: 120%; }
 #process_characteristics .items .innertable { background: inherit; font-weight:normal; width: 100%; }
@@ -35,7 +36,6 @@ body { height: 100% ; margin: 1em; }
 
 #process_characteristics .items form input[type='submit'] { visibility: hidden; width: 1px; height: 1px; }
 
-/* #technology_characteristics {position: fixed; } */
 #technology_characteristics { background-color: lightgreen; opacity: 0.8; float: right; }
 #technology_characteristics .items { padding: 1em; border-spacing: 0; }
 #technology_characteristics .items td { padding: 1ex 3ex 1ex 1ex;  }
@@ -58,7 +58,10 @@ input {
 	width: 5em;
 }
 
-td img { height: 100%; text-align: center; margin: 0 auto 0 auto; display: block; }
+tr.even td, tr.odd td { background-size: auto 100%; background-repeat: no-repeat; background-origin: content-box; background-position: center; }
+
+.checkmark { background: url('/static/process_interface/icons/white_on_green_checkmark.svg'); }
+.x_mark    { background: url('/static/process_interface/icons/x_mark.svg'); }
 
 .clear { clear: both; }
 
