@@ -131,21 +131,52 @@ function hideStatus ( nxt_func ) {
 
 
 function showStatus ( msg, cssclass ) {
-	var $status = $('#status');
+	var $st = $('#status');
 	if ( ! cssclass ) { cssclass = 'error' }
 
 	msg = escapeHTML( msg );
-
-	$status.html( msg );
-	$status.addClass( cssclass );
-	$status.removeClass( 'hidden' );
-	$status.clearQueue().stop(true, true).show().fadeIn( 1 ).delay( 1000 );
-
-	// flash twice
-	$status.fadeOut().fadeIn().delay( 1000 ).fadeOut().fadeIn();
-	$status.delay( 1000 ).fadeOut( 4000 ).queue( hideStatus );
+	$st.addClass( cssclass );
+	$st.removeClass( 'hidden' );
+	$st.html( msg );
+	var actions = {
+	  'error': function ( ) {
+	    $st.clearQueue().stop(true, true).show().fadeIn( 1 ).delay( 1000 );
+	    // flash twice
+	    $st.fadeOut().fadeIn().delay( 1000 ).fadeOut().fadeIn();
+	    $st.delay( 1000 ).fadeOut( 4000 ).queue( hideStatus );
+	  },
+	  'info' : function ( ) {
+	    $st.clearQueue().stop(true, true).show().fadeIn( 1 ).delay( 1000 );
+	    $st.fadeOut( 2000 ).queue( hideStatus );
+	  }
+	};
+	actions[ cssclass ]();
 }
 
+
+function deleteData ( $row ) {
+	var parameter = $row.data().parameter;
+	var pId = $row.parents('form:first').data().processid;
+	var aId = getCookie().selected_analysis['id'];
+	var submit_url = '/analysis/' + aId + '/update/process/' + pId + '/delete/';
+
+	submit_url += parameter;
+	$.post( submit_url )
+	.done( function ( response_data, textStatus, jqXHR ) {
+		var $inp = $row.find( 'input' );
+		var msg = "Parameter '" + parameter + "' removed from process.";
+		$inp.parent().html('');
+
+		showStatus( msg, 'info' );
+		getProcessesInfo();
+	})
+	.fail( function ( jqXHR, textStatus, errorThrown ) {
+		var server_msg = $( jqXHR ).attr( 'responseText' );
+		showStatus( 'Unknown failure removing parameter from process.  '
+		  + 'Server said: ' + server_msg );
+	});
+
+}
 
 function deleteDataRow ( $row ) {
 	AA = $row;
@@ -159,20 +190,8 @@ function deleteDataRow ( $row ) {
 	submit_url += parameter;
 	$.post( submit_url, {'rowid': $row.data().rowid } )
 	.done( function ( response_data, textStatus, jqXHR ) {
-		if ( $row.parent().children().length == 1 ) {
-			console.log( 'Removing entire inner table');
-			var $data = $(new Object());
+		getProcessesInfo();
 
-			$row = $row.parents('tr:first');
-			$row.empty()
-			$data.attr( parameter, null );
-
-			tabularAttributes[ parameter ]( $row, parameter, $data );
-		} else {
-			console.log( 'Removing single row:');
-			console.log( $row );
-			$row.remove();
-		}
 	})
 	.fail( function ( jqXHR, textStatus, errorThrown ) {
 		var server_msg = $( jqXHR ).attr( 'responseText' );
@@ -195,9 +214,11 @@ function submitUpdateParameter ( form ) {
 	var $tRow = $(inputs[ 0 ]).parents('tr:first');
 	var parameter = $tRow.data().parameter;
 	var to_submit = {'parameter' : parameter};
+	var rowid = null;
 
 	if ( $tRow.is('[data-rowid]') ) {
-		to_submit['rowid'] = $tRow.data().rowid;
+		rowid = $tRow.data().rowid;
+		to_submit['rowid'] = rowid;
 	}
 
 	for ( var i = 0; i < inputs.length; ++i ) {
@@ -206,8 +227,7 @@ function submitUpdateParameter ( form ) {
 		var val   = $tmp.val();
 
 		val = $.trim( val );
-		if ( ! val ) {
-			console.log( 'Deleting!' );
+		if ( ! val && ! rowid ) {
 			deleteData( $tRow );
 			return false;
 		}
@@ -386,7 +406,6 @@ function createParameterTable ( headers ) {
 					});
 					value[ 'NewRow' ].push( $newInput );
 				}
-
 
 				var $img = $('<img />');
 				$img.attr( {'src': add_img, 'title': 'No data; add new entry'} );
@@ -590,9 +609,6 @@ function showProcessCharacteristics ( data ) {
 			$tRow.append( $cell.html( val ) );
 
 			if ( logged_in ) {
-				var pId = $pData.attr( 'ProcessId' );
-				var submit_url = '/analysis/'  + aId + '/update/process/' + pId;
-				submit_url += '/' + attr;
 				$cell.dblclick( function ( ) {
 					// this == <td>
 					var $thisCell = $(this);
@@ -642,34 +658,29 @@ function showProcessCharacteristics ( data ) {
 		}
 
 		if ( logged_in ) {
-			var aId = getCookie().selected_analysis['id'];
-			var pId = $pData.attr( 'ProcessId' );
-			var submit_url = '/analysis/'  + aId + '/update/process/' + pId;
-			submit_url += '/' + attr;
+			$cell.dblclick( function ( ) {
+				// this == <td>
+				var $thisCell = $(this);
+				var $input = $('<input/>', {
+				  'class'  : 'modifiable',
+				  'name'   : 'value',
+				});
+				var value = $thisCell.html();
+				var name = $thisCell.data().name
+				$thisCell.empty();
+				$thisCell.append( $input );
 
-			$cell.editable({
-			  closeOnEnter: true,
-			  event: 'dblclick',
-			  emptyMessage: discrate,
-			  callback: function ( data ) {
-			    if ( data.content ) {
-			      data.$el.addClass( 'info' );
-			      $.post( submit_url, {'value': data.content} )
-			      .done( function ( response_data, textStatus, jqXHR ) {
-			        data.$el.html( data.content );
-			        data.$el.removeClass( 'info error' );
-			        data.$el.clearQueue().fadeOut().fadeIn();
-			      })
-			      .fail( function ( jqXHR, textStatus, errorThrown ) {
-			        data.$el.addClass( 'error' );
-			        var server_msg = $( jqXHR ).attr( 'responseText' );
-			        showStatus( 'Unable to update.  Server said: ' + server_msg );
-			      })
-			      .always( function ( ) {
-			        data.$el.removeClass( 'info' );
-			       });
-			     }
-			   }
+				$input.val( value );
+				$input.focus();
+				function cancel () {
+					$thisCell.html( value );
+					// flash to inform that the action was canceled
+					$thisCell.effect('pulsate', { times:2 }, 1000)
+				}
+				$input.blur( cancel );
+				$input.keydown( function ( e ) {
+					if ( 27 === e.keyCode ) { cancel() }
+				});
 			});
 		}
 
@@ -753,7 +764,7 @@ function showProcessCharacteristics ( data ) {
 		for ( var index in processAttributes ) {
 			var attr = processAttributes[ index ][ 0 ];
 			var func = processAttributes[ index ][ 1 ];
-			$tRow = $('<tr/>');
+			$tRow = $('<tr/>', {'data-parameter' : attr });
 
 			var newRow = func( $tRow, attr, $pData );
 
@@ -789,37 +800,37 @@ function showProcessCharacteristics ( data ) {
 	$('#process_characteristics').removeClass('hidden');
 }
 
-function showProcesses ( data ) {
-	getProcessesInfo = function ( ) {
-		// First, hide the process block to ensure that user is aware it's
-		// changing
-		$('#process_characteristics').addClass('hidden');
+function getProcessesInfo ( ) {
+	// First, hide the process block to ensure that user is aware it's
+	// changing
+	$('#process_characteristics').addClass('hidden');
 
-		var process_ids = new Array();
-		var $selected = $('#processes .items tbody tr.ui-selected');
-		$.each( $selected, function ( index, row ) {
-		  process_ids.push( $( row ).attr('data-processid') );
+	var process_ids = new Array();
+	var $selected = $('#processes .items tbody tr.ui-selected');
+	$.each( $selected, function ( index, row ) {
+	  process_ids.push( $( row ).attr('data-processid') );
+	});
+	if ( process_ids.length > 0 ) {
+		process_ids.sort( function(lhs, rhs) { return lhs - rhs; });
+		ids = process_ids.join(',');
+		var analysis_id = $('#filter_analyses_analysis').val();
+		$.ajax({
+		  url: '/analysis/' + analysis_id + '/process_info/' + ids,
+		  success: showProcessCharacteristics
 		});
-		if ( process_ids.length > 0 ) {
-			process_ids.sort( function(lhs, rhs) { return lhs - rhs; });
-			ids = process_ids.join(',');
-			var analysis_id = $('#filter_analyses_analysis').val();
-			$.ajax({
-			  url: '/analysis/' + analysis_id + '/process_info/' + ids,
-			  success: showProcessCharacteristics
-			});
 
-			// With the request out, set the cookie in case the page is reloaded
-			var $current = getCookie();
-			$current.selected_processes = process_ids;
-			setCookie( $current );
+		// With the request out, set the cookie in case the page is reloaded
+		var $current = getCookie();
+		$current.selected_processes = process_ids;
+		setCookie( $current );
 
-			// Finally, hide the Tech characteristics to keep the two columns
-			// in sync when they're displayed.
-			$('#technology_characteristics').addClass('hidden');
-		}
-	};
+		// Finally, hide the Tech characteristics to keep the two columns
+		// in sync when they're displayed.
+		$('#technology_characteristics').addClass('hidden');
+	}
+}
 
+function showProcesses ( data ) {
 	var $tbody = $('<tbody/>');
 	var noRow = 0;
 	var css = ['even', 'odd'];

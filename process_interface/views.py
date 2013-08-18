@@ -394,6 +394,7 @@ def update_analysis_process ( req, analysis_id, process_id ):
 				status = obj.pk
 
 		elif 'EmissionActivity' == parameter:
+			rowid    = req.POST['rowid']
 			pol_name = req.POST['Pollutant']
 			inp_name = req.POST['Input']
 			out_name = req.POST['Output']
@@ -427,8 +428,10 @@ def update_analysis_process ( req, analysis_id, process_id ):
 				status = obj.pk
 
 		elif 'CostFixed' == parameter:
+			rowid = req.POST['rowid']
 			year  = req.POST['Period']
 			value = req.POST['Value']
+
 			try:
 				period = Vintage.objects.get( analysis=analysis, vintage=year )
 			except ObjectDoesNotExist as e:
@@ -436,22 +439,24 @@ def update_analysis_process ( req, analysis_id, process_id ):
 				raise ValidationError( msg.format( year, analysis.name ))
 
 			with transaction.commit_on_success():
-				obj, created = Param_CostFixed.objects.get_or_create(
-				  period=period,
-				  process=process,
-				  defaults={'value': value}
-				)
+				if 'NewRow' == rowid:
+					obj = Param_CostFixed()
+				else:
+					obj = Param_CostFixed.objects.get( pk=rowid )
+
+				obj.period  = period
+				obj.process = process
+				obj.value   = value
 				obj.full_clean()
-				if not created:
-					obj.value = value
-					obj.full_clean()
-					obj.save()
+				obj.save()
 
 				status = obj.pk
 
 		elif 'CostVariable' == parameter:
+			rowid = req.POST['rowid']
 			year  = req.POST['Period']
 			value = req.POST['Value']
+
 			try:
 				period = Vintage.objects.get( analysis=analysis, vintage=year )
 			except ObjectDoesNotExist as e:
@@ -459,16 +464,16 @@ def update_analysis_process ( req, analysis_id, process_id ):
 				raise ValidationError( msg.format( year, analysis.name ))
 
 			with transaction.commit_on_success():
-				obj, created = Param_CostVariable.objects.get_or_create(
-				  period=period,
-				  process=process,
-				  defaults={'value': value}
-				)
+				if 'NewRow' == rowid:
+					obj = Param_CostVariable()
+				else:
+					obj = Param_CostVariable.objects.get( pk=rowid )
+
+				obj.period  = period,
+				obj.process = process,
+				obj.value   = value
 				obj.full_clean()
-				if not created:
-					obj.value = value
-					obj.full_clean()
-					obj.save()
+				obj.save()
 
 				status = obj.pk
 
@@ -506,19 +511,27 @@ def remove_analysis_process_datum ( req, analysis_id, process_id, parameter ):
 	status = 'Removed Successfully'
 	status_code = None
 	try:
-		if 'rowid' not in req.POST:
-			raise ValueError( 'No row specified to delete!' )
-		pk = req.POST['rowid']  # process=process assures that user is owner
 
-		if 'Efficiencies' == parameter:
-			obj = Param_Efficiency.objects.get( pk=pk, process=process )
-		elif 'EmissionActivity' == parameter:
-			obj = Param_EmissionActivity.objects.get(
-			  pk=pk, efficiency__process=process )
-		elif 'CostFixed' == parameter:
-			obj = Param_CostFixed.objects.get( pk=pk, process=process )
-		elif 'CostVariable' == parameter:
-			obj = Param_CostVariable.objects.get( pk=pk, process=process )
+		# first the individual parameters
+		if 'ExistingCapacity' == parameter:
+			obj = Param_ExistingCapacity.objects.get( process=process )
+		elif 'CostInvest' == parameter:
+			obj = Param_CostInvest.objects.get( process=process )
+		elif 'DiscountRate' == parameter:
+			obj = Param_DiscountRate.objects.get( process=process )
+		else:
+			# then those parameters that can have multiple entries per process
+			pk = req.POST['rowid']  # process=process assures that user is owner
+
+			if 'Efficiencies' == parameter:
+				obj = Param_Efficiency.objects.get( pk=pk, process=process )
+			elif 'EmissionActivity' == parameter:
+				obj = Param_EmissionActivity.objects.get(
+				  pk=pk, efficiency__process=process )
+			elif 'CostFixed' == parameter:
+				obj = Param_CostFixed.objects.get( pk=pk, process=process )
+			elif 'CostVariable' == parameter:
+				obj = Param_CostVariable.objects.get( pk=pk, process=process )
 
 		obj.delete()
 
