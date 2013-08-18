@@ -1,5 +1,5 @@
-var AA = null;
-var AB = null;
+var AA = null;  // Used for development.  Should remove these at some
+var AB = null;  // near point in the future
 var AC = null;
 
 var COOKIE = 'TemoaDB_UISettings';
@@ -34,7 +34,7 @@ var datalist = {
 
 // Function borrowed from the Django Online documentation on CSRF:
 // https://docs.djangoproject.com/en/dev/ref/contrib/csrf/
-function csrfSafeMethod(method) {
+function csrfSafeMethod ( method ) {
 	// these HTTP methods do not require CSRF protection
 	return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
@@ -179,9 +179,6 @@ function deleteData ( $row ) {
 }
 
 function deleteDataRow ( $row ) {
-	AA = $row;
-	console.log( AA );
-	console.log( AA.data().rowid );
 	var parameter = $row.data().parameter;
 	var pId = $row.parents('form:first').data().processid;
 	var aId = getCookie().selected_analysis['id'];
@@ -518,9 +515,6 @@ function selectUser ( ) {
 
 
 function showTechnologyCharacteristics ( data ) {
-	console.debug( 'Ignoring Tech Characteristics' );
-	return;
-
 	var booleanAttributes = {
 	  Baseload: createCheckbox( true ),
 	  Storage:  createCheckbox( true )
@@ -568,7 +562,6 @@ function showTechnologyCharacteristics ( data ) {
 	  } else if ( attr in specialAttributes ) {
 	    newRow = specialAttributes[ attr ]( $tr, attr, tData );
 	  } else {
-	    console.debug( '' + attr + ': ' + tData.attr( attr ) );
 	    $tr.append( $('<td/>').html( attr ));
 	    $tr.append( $('<td/>').html( tData.attr( attr )));
 	    newRow = true;
@@ -741,7 +734,6 @@ function showProcessCharacteristics ( data ) {
 
 		var $pData = $(data[ data_i ]);
 		var pId = $pData.attr( 'ProcessId' );
-		console.debug( "Building Process Table.  pId: " + pId );
 		var pName = $pData.attr( 'Technology' ) + ', ' + $pData.attr( 'Vintage' );
 
 		  // hidden by css
@@ -926,7 +918,6 @@ function BeginTemoaDBApp ( ) {
 			$tech.removeClass('fixed');
 		}
 	});
-	console.debug( 'App has begun.');
 }
 
 
