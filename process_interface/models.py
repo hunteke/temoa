@@ -137,18 +137,9 @@ class Param_LifetimeTech ( DM.Model ):
 
 
 
-class Param_LifetimeTech ( DM.Model ):
+class Param_LifetimeProcess ( DM.Model ):
 	process = DM.ForeignKey( Process, unique=True )
 	value   = DM.FloatField()
-
-	def __unicode__ ( self ):
-		return u'{}: {}'.format( process, self.value )
-
-
-
-class Param_LifetimeProcess ( DM.Model ):
-	process  = DM.ForeignKey( Process, unique=True )
-	value    = DM.FloatField()
 
 	def __unicode__ ( self ):
 		return u'{}: {}'.format( process, self.value )
