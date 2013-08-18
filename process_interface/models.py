@@ -435,8 +435,7 @@ class Param_CostInvest ( DM.Model ):
 	def clean ( self ):
 		from django.core.exceptions import ValidationError
 		if self.value == 0:
-			msg = ('Process investment cost must not be 0.\nAttempted value: {}')
-			raise ValidationError( msg.format( self.value))
+			raise ValidationError( 'Process investment cost must not be 0.' )
 
 
 
