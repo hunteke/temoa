@@ -27,6 +27,10 @@ from models import (
 	Param_ExistingCapacity,
 	Param_GrowthRateMax,
 	Param_GrowthRateSeed,
+	Param_LifetimeProcess,
+	Param_LifetimeProcessLoan,
+	Param_LifetimeTech,
+	Param_LifetimeTechLoan,
 	Param_TechInputSplit,
 	Param_TechOutputSplit,
 	Process,
@@ -148,9 +152,6 @@ def process_info ( req, analysis_id, process_ids ):
 	  pk__in=process_ids
 	))
 
-	# Collect the actual processes that the DB holds.  This /should/ be the
-	# same as what was sent, but for security or ACID, don't assume so.
-	process_ids = [ p.pk for p in processes ]
 	techs = set(p.technology for p in processes)
 
 	def null ( ):
@@ -207,20 +208,49 @@ def process_info ( req, analysis_id, process_ids ):
 	  for dr in Param_DiscountRate.objects.filter( process__in=processes )
 	})
 
+	LifetimeProcess = defaultdict( null )
+	LifetimeProcess.update({ lp.process: lp.value
+	  for lp in Param_LifetimeProcess.objects.filter( process__in=processes )
+	})
+
+	LifetimeProcessLoan = defaultdict( null )
+	LifetimeProcessLoan.update({ lpl.process: lpl.value
+	  for lpl in Param_LifetimeProcessLoan.objects.filter( process__in=processes )
+	})
+
+	LifetimeTech = defaultdict( null )
+	LifetimeTech.update({ lt.technology: lt.value
+	  for lt in Param_LifetimeTech.objects.filter(
+	    analysis=analysis,
+	    technology__in=techs )
+	})
+
+	LifetimeTechLoan = defaultdict( null )
+	LifetimeTechLoan.update({ ltl.technology: ltl.value
+	  for ltl in Param_LifetimeTechLoan.objects.filter(
+	    analysis=analysis,
+	    technology__in=techs )
+	})
+
 	process_characteristics = [
 	  {
-	    'ProcessId'         : p.pk,
-	    'Technology'        : unicode( p.technology ),
-	    'Vintage'           : p.vintage.vintage,
-	    'ExistingCapacity'  : ExistingCapacities[ p ],
-	    'Baseload'          : p.technology in BaseloadTechs,
-	    'Storage'           : p.technology in StorageTechs,
-	    'Efficiencies'      : Efficiencies[ p ],
-	    'EmissionActivity'  : EmissionActivities[ p ],
-	    'CostFixed'         : CostFixed[ p ],
-	    'CostInvest'        : CostInvest[ p ],
-	    'CostVariable'      : CostVariable[ p ],
-	    'DiscountRate'      : DiscountRate[ p ],
+	    'ProcessId'           : p.pk,
+	    'Baseload'            : p.technology in BaseloadTechs,
+	    'CostFixed'           : CostFixed[ p ],
+	    'CostInvest'          : CostInvest[ p ],
+	    'CostVariable'        : CostVariable[ p ],
+	    'DiscountRate'        : DiscountRate[ p ],
+	    'Efficiencies'        : Efficiencies[ p ],
+	    'EmissionActivity'    : EmissionActivities[ p ],
+	    'ExistingCapacity'    : ExistingCapacities[ p ],
+	    'GlobalDiscountRate'  : analysis.global_discount_rate,
+	    'LifetimeProcess'     : LifetimeProcess[ p ],
+	    'LifetimeProcessLoan' : LifetimeProcessLoan[ p ],
+	    'LifetimeTech'        : LifetimeTech[ p.technology ],
+	    'LifetimeTechLoan'    : LifetimeTechLoan[ p.technology ],
+	    'Storage'             : p.technology in StorageTechs,
+	    'Technology'          : unicode( p.technology ),
+	    'Vintage'             : p.vintage.vintage,
 	  }
 
 	  for p in processes
@@ -330,32 +360,60 @@ def update_analysis_process ( req, analysis_id, process_id ):
 	status_code = None
 
 	status = u'fail'  # assume failure until success
+	validParameters = {
+	  'CostInvest'          : Param_CostInvest,             # t,v
+	  'DiscountRate'        : Param_DiscountRate,           # t,v
+	  'ExistingCapacity'    : Param_ExistingCapacity,       # t,v
+	  'LifetimeProcess'     : Param_LifetimeProcess,        # t,v
+	  'LifetimeProcessLoan' : Param_LifetimeProcessLoan,    # t,v
+	  'CostFixed'           : Param_CostFixed,              # p,t,v
+	  'CostVariable'        : Param_CostVariable,           # p,t,v
+	  'Efficiencies'        : Param_Efficiency,             # i,t,v,o
+	  'EmissionActivity'    : Param_EmissionActivity,       # c,i,t,v,o
+	}
+	TV = ('CostInvest', 'DiscountRate', 'ExistingCapacity', 'LifetimeProcess',
+	      'LifetimeProcessLoan')
+	PTV = ('CostFixed', 'CostVariable')
 	try:
 		parameter = req.POST['parameter']
+		model = validParameters[ parameter ]
 
-		if 'ExistingCapacity' == parameter:
+		if parameter in TV:
 			value = req.POST['value']
 			with transaction.commit_on_success():
-				obj, created = Param_ExistingCapacity.objects.get_or_create(
+				obj, created = model.objects.get_or_create(
 				  process=process, defaults={'value': value} )
-				obj.full_clean()
-				if not created:
+				if created:
+					obj.full_clean()
+				else:
 					obj.value = value
 					obj.full_clean()
 					obj.save()
 
 				status = obj.pk
 
-		elif 'DiscountRate' == parameter:
-			value = req.POST['value']
+		elif parameter in PTV:
+			rowid = req.POST['rowid']
+			year  = req.POST['Period']
+			value = req.POST['Value']
+
+			try:
+				period = Vintage.objects.get( analysis=analysis, vintage=year )
+			except ObjectDoesNotExist as e:
+				msg = "Period '{}' does not exist in this analysis ({})."
+				raise ValidationError( msg.format( year, analysis.name ))
+
 			with transaction.commit_on_success():
-				obj, created = Param_DiscountRate.objects.get_or_create(
-				  process=process, defaults={'value': value} )
+				if 'NewRow' == rowid:
+					obj = model()
+				else:
+					obj = model.objects.get( pk=rowid )
+
+				obj.period  = period
+				obj.process = process
+				obj.value   = value
 				obj.full_clean()
-				if not created:
-					obj.value = value
-					obj.full_clean()
-					obj.save()
+				obj.save()
 
 				status = obj.pk
 
@@ -427,68 +485,15 @@ def update_analysis_process ( req, analysis_id, process_id ):
 
 				status = obj.pk
 
-		elif 'CostFixed' == parameter:
-			rowid = req.POST['rowid']
-			year  = req.POST['Period']
-			value = req.POST['Value']
-
-			try:
-				period = Vintage.objects.get( analysis=analysis, vintage=year )
-			except ObjectDoesNotExist as e:
-				msg = "Period '{}' does not exist in this analysis ({})."
-				raise ValidationError( msg.format( year, analysis.name ))
-
-			with transaction.commit_on_success():
-				if 'NewRow' == rowid:
-					obj = Param_CostFixed()
-				else:
-					obj = Param_CostFixed.objects.get( pk=rowid )
-
-				obj.period  = period
-				obj.process = process
-				obj.value   = value
-				obj.full_clean()
-				obj.save()
-
-				status = obj.pk
-
-		elif 'CostVariable' == parameter:
-			rowid = req.POST['rowid']
-			year  = req.POST['Period']
-			value = req.POST['Value']
-
-			try:
-				period = Vintage.objects.get( analysis=analysis, vintage=year )
-			except ObjectDoesNotExist as e:
-				msg = "Period '{}' does not exist in this analysis ({})."
-				raise ValidationError( msg.format( year, analysis.name ))
-
-			with transaction.commit_on_success():
-				if 'NewRow' == rowid:
-					obj = Param_CostVariable()
-				else:
-					obj = Param_CostVariable.objects.get( pk=rowid )
-
-				obj.period  = period,
-				obj.process = process,
-				obj.value   = value
-				obj.full_clean()
-				obj.save()
-
-				status = obj.pk
-
-
 	except ValidationError as e:
 		status_code = 422 # unprocessable entity
 		status = unicode( e.messages.pop() )
 	except ValueError as e:
 		status_code = 422 # unprocessable entity
 		status = unicode( e.message )
-	except MultiValueDictKeyError as e:
+	except (MultiValueDictKeyError, KeyError) as e:
 		status_code = 400 # bad request
 		status = 'Malformed request: You may need to reload the page.'
-		from pprint import pformat
-		print pformat( req.POST )
 
 	response = HttpResponse(
 		json.dumps( status ),
@@ -504,43 +509,51 @@ def update_analysis_process ( req, analysis_id, process_id ):
 @login_required
 @require_POST
 def remove_analysis_process_datum ( req, analysis_id, process_id, parameter ):
-	# first, ensure user owns the specified analysis
+	# first, ensure user owns the specified analysis and process
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	process = get_object_or_404( Process, pk=process_id, analysis=analysis )
 
 	status = 'Removed Successfully'
 	status_code = None
+	parameterToModel = {
+	  'CostInvest'          : Param_CostInvest,             # t,v
+	  'DiscountRate'        : Param_DiscountRate,           # t,v
+	  'ExistingCapacity'    : Param_ExistingCapacity,       # t,v
+	  'LifetimeProcess'     : Param_LifetimeProcess,        # t,v
+	  'LifetimeProcessLoan' : Param_LifetimeProcessLoan,    # t,v
+	  'CostFixed'           : Param_CostFixed,              # p,t,v
+	  'CostVariable'        : Param_CostVariable,           # p,t,v
+	  'Efficiencies'        : Param_Efficiency,             # i,t,v,o
+	  'EmissionActivity'    : Param_EmissionActivity,       # c,i,t,v,o
+	}
+	TV = ('CostInvest', 'DiscountRate', 'ExistingCapacity', 'LifetimeProcess',
+	      'LifetimeProcessLoan')
 	try:
+		model = parameterToModel[ parameter ]
 
-		# first the individual parameters
-		if 'ExistingCapacity' == parameter:
-			obj = Param_ExistingCapacity.objects.get( process=process )
-		elif 'CostInvest' == parameter:
-			obj = Param_CostInvest.objects.get( process=process )
-		elif 'DiscountRate' == parameter:
-			obj = Param_DiscountRate.objects.get( process=process )
+		# first the parameters where the process is the key
+		if parameter in TV:
+			obj = model.objects.get( process=process )
+
+		# then those parameters for which we're using a rowid
 		else:
-			# then those parameters that can have multiple entries per process
 			pk = req.POST['rowid']  # process=process assures that user is owner
-
-			if 'Efficiencies' == parameter:
-				obj = Param_Efficiency.objects.get( pk=pk, process=process )
-			elif 'EmissionActivity' == parameter:
-				obj = Param_EmissionActivity.objects.get(
-				  pk=pk, efficiency__process=process )
-			elif 'CostFixed' == parameter:
-				obj = Param_CostFixed.objects.get( pk=pk, process=process )
-			elif 'CostVariable' == parameter:
-				obj = Param_CostVariable.objects.get( pk=pk, process=process )
+			if 'EmissionActivity' == parameter:
+				obj = model.objects.get( pk=pk, efficiency__process=process )
+			else:
+				obj = model.objects.get( pk=pk, process=process )
 
 		obj.delete()
 
 	except ObjectDoesNotExist as e:
-		status_code = 422 # unprocessable entity
+		status_code = 204 # No Content
 		status = 'Content not there'
 	except ValueError as e:
 		status_code = 422 # unprocessable entity
 		status = e.message
+	except (MultiValueDictKeyError, KeyError) as e:
+		status_code = 400 # bad request
+		status = 'Malformed request: You may need to reload the page.'
 
 	response = HttpResponse(
 	  json.dumps( status ),
