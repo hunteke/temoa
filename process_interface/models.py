@@ -25,7 +25,7 @@ class Analysis ( DM.Model ):
 
 
 	def __unicode__ ( self ):
-		return u'({}) {}'.format( self.user.username, self.name )
+		return u'{} - {}'.format( self.user.username, self.name )
 
 
 
@@ -39,7 +39,7 @@ class Vintage ( DM.Model ):
 
 
 	def __unicode__ ( self ):
-		return unicode( self.vintage )
+		return '({}) {}'.format( self.analysis, self.vintage )
 
 
 
@@ -90,7 +90,7 @@ class Set_tech_baseload ( DM.Model ):
 		unique_together = ('analysis', 'technology',)
 
 	def __unicode__ ( self ):
-		return u'{}: {}'.format( self.analysis, self.technology )
+		return u'({}) {}'.format( self.analysis, self.technology )
 
 
 
@@ -103,7 +103,7 @@ class Set_tech_storage ( DM.Model ):
 		unique_together = ('analysis', 'technology',)
 
 	def __unicode__ ( self ):
-		return u'{}: {}'.format( self.analysis, self.technology )
+		return u'({}) {}'.format( self.analysis, self.technology )
 
 
 
@@ -133,7 +133,8 @@ class Param_LifetimeTech ( DM.Model ):
 	value      = DM.FloatField()
 
 	def __unicode__ ( self ):
-		return u'{}: {}'.format( process, self.value )
+		return u'({}) {}: {}'.format(
+		  self.analysis, self.technology.name, self.value )
 
 
 
@@ -142,7 +143,7 @@ class Param_LifetimeProcess ( DM.Model ):
 	value   = DM.FloatField()
 
 	def __unicode__ ( self ):
-		return u'{}: {}'.format( process, self.value )
+		return u'{}: {}'.format( self.process, self.value )
 
 
 
@@ -152,7 +153,8 @@ class Param_LifetimeTechLoan ( DM.Model ):
 	value      = DM.FloatField()
 
 	def __unicode__ ( self ):
-		return u'{}: {}'.format( process, self.value )
+		return u'({}) {}: {}'.format(
+		  self.analysis, self.technology, self.value )
 
 
 
@@ -161,7 +163,7 @@ class Param_LifetimeProcessLoan ( DM.Model ):
 	value    = DM.FloatField()
 
 	def __unicode__ ( self ):
-		return u'{}: {}'.format( process, self.value )
+		return u'{}: {}'.format( self.process, self.value )
 
 
 
