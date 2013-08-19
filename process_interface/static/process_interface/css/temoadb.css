@@ -24,7 +24,7 @@ body { height: 100% ; margin: 1em; }
 #process_characteristics { background-color: red; opacity: 0.8; float: left; width: auto;}
 #process_characteristics .items { padding: 1em; border-spacing: 0; }
 #process_characteristics .items table { border-collapse: collapse; }
-#process_characteristics .items td { padding: 1ex 3ex 1ex 1ex;  }
+#process_characteristics .items td { padding: .2ex 3ex .2ex 1ex;  }
 #process_characteristics .items .info { color: #777; font-weight: normal; font-style: italic; }
 #process_characteristics .items tbody { padding: 2em; background: gray; }
 #process_characteristics .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
@@ -32,6 +32,8 @@ body { height: 100% ; margin: 1em; }
 #process_characteristics .items .innertable { background: inherit; font-weight:normal; width: 100%; }
 #process_characteristics .items .innertable thead th { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid black; }
 #process_characteristics .items .innertable tbody { background: inherit; }
+#process_characteristics .items .innertable td { padding: 0; }
+#process_characteristics .items .innertable img { padding: 1ex; }
 #process_characteristics .items .innertable caption { font-size: 110%; font-weight: bold; }
 
 #process_characteristics .items form input[type='submit'] { visibility: hidden; width: 1px; height: 1px; }
