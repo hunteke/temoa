@@ -2071,7 +2071,16 @@ def temoa_solve ( model ):
 		SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
 			.format( options.solver ))
 		SE.write( "Please press enter to continue or Ctrl+C to quit." )
-		raw_input()
+		if SE.isatty():
+			raw_input()
+		else:
+			SE.write(
+			  '\n\n  Not stopping for user input because stderr is not a tty.'
+			  '\n  (This suggests that Temoa is currently running as part of a'
+			  '\n  a larger script and the user is not able to see this'
+			  '\n  message currently.  The user script is responsible for'
+			  '\n  handling this situation appropriately.\n\n')
+
 
 	if options.dot_dat:
 		solve_perfect_foresight( model, opt, options )
