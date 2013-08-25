@@ -1336,7 +1336,7 @@ def parse_args ( ):
 		elif 'glpk' in available_solvers:
 			default_solver = 'glpk'
 		else:
-			default_solver = available_solvers[0]
+			default_solver = iter(available_solvers).next()
 	else:
 		default_solver = 'NONE'
 		SE.write('\nNOTICE: Coopr did not find any suitable solvers.  Temoa will '
