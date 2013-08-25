@@ -1304,6 +1304,48 @@ This is the implementation of imat in the rest of the documentation.
 ###############################################################################
 # Miscellaneous routines
 
+def bibliographicalInformation ( ):
+	from sys import stdout as SO
+
+	msg = """
+Please cite the following paper if your use of Temoa leads to a publishable
+result:
+
+  Title:     Modeling for Insight Using Tools for Energy Model Optimization and Analysis (Temoa)
+  Authors:   Kevin Hunter, Sarat Sreepathi, Joseph F. DeCarolis
+  Date:      November, 2013
+  Publisher: Elsevier
+  Journal:   Energy Economics
+  Volume:    40
+  Pages:     339 - 349
+  ISSN:      0140-9883
+  DOI:       http://dx.doi.org/10.1016/j.eneco.2013.07.014
+  URL:       http://www.sciencedirect.com/science/article/pii/S014098831300159X
+
+For copy and paste or BibTex use:
+
+  Kevin Hunter, Sarat Sreepathi, Joseph F. DeCarolis, Modeling for Insight Using Tools for Energy Model Optimization and Analysis (Temoa), Energy Economics, Volume 40, November 2013, Pages 339-349, ISSN 0140-9883, http://dx.doi.org/10.1016/j.eneco.2013.07.014.
+
+  (BibTeX)
+@article{Hunter_etal_2013,
+  title   = "Modeling for {I}nsight {U}sing {T}ools for {E}nergy {M}odel {O}ptimization and {A}nalysis ({T}emoa)",
+  journal = "Energy Economics",
+  volume  = "40",
+  pages   = "339 - 349",
+  month   = "November",
+  year    = "2013",
+  issn    = "0140-9883",
+  doi     = "http://dx.doi.org/10.1016/j.eneco.2013.07.014",
+  url     = "http://www.sciencedirect.com/science/article/pii/S014098831300159X",
+  author  = "Kevin Hunter and Sarat Sreepathi and Joseph F. DeCarolis"
+}
+
+"""
+
+	SO.write( msg )
+	raise SystemExit
+
+
 def parse_args ( ):
 	import argparse, platform
 
@@ -1356,6 +1398,14 @@ def parse_args ( ):
 	  help='AMPL-format data file(s) with which to create a model instance. '
 	       'e.g. "data.dat"'
 	)
+
+
+	parser.add_argument( '--how_to_cite',
+	  help='Bibliographical information for citation, in the case that Temoa '
+	    'contributes to a project that leads to a scientific publication.',
+	  action='store_true',
+	  dest='how_to_cite',
+	  default=False)
 
 
 	graphviz.add_argument( '--graph_format',
@@ -1439,6 +1489,10 @@ def parse_args ( ):
 	  default=None)
 
 	options = parser.parse_args()
+
+	if options.how_to_cite:
+		bibliographicalInformation()
+		# this function exits.
 
 	# It would be nice if this implemented with add_mutually_exclusive_group
 	# but I /also/ want them in separate groups for display.  Bummer.

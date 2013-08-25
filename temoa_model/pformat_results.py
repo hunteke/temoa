@@ -136,5 +136,9 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 			if val < 0: int_part = "-%d" % int_part
 			run_output.write( format % (int_part, dec_part, key) )
 
+	run_output.write( '\n\nIf you use these results for a published article, '
+	  "please run Temoa with the '--how_to_cite' command line argument for "
+	  'citation information.\n')
+
 	return run_output.getvalue()
 
