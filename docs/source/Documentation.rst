@@ -2386,12 +2386,12 @@ should meet a basic standard of quality:
 
       Fixed broken storage algorithm
 
-      The previous implementation erroneously assumed that only the energy flow
-      out of a storage device mattered.  However, Temoa needs to know the energy
-      flow in to all devices so that it can appropriately calculate the
+      The previous implementation erroneously assumed that only the energy
+      flow out of a storage device mattered.  However, Temoa needs to know the
+      energy flow in to all devices so that it can appropriately calculate the
       inter-process commodity balance.
 
-      License: AGPL-3.0
+      License: AGPL-3.0+
 
    If there is any external information that would be helpful, such as a bug
    report, include a "clickable" link to it, such that one reading the patch as
@@ -2401,30 +2401,49 @@ should meet a basic standard of quality:
 
       A subject line of 50 characters or less
        [ an empty line ]
-      * http://any.com/
-      * http://relevant.org/some/path/
-      * http://urls.edu/~some/other/path/
+      1. http://any.com/
+      2. http://relevant.org/some/path/
+      3. http://urls.edu/~some/other/path/
+      4. https://github.com/blog/926-shiny-new-commit-styles
+      5. https://help.github.com/articles/github-flavored-markdown
+       [ another empty line ]
+      Any amount and format of text, such that it conforms to a line-width of
+      72 characters[4].  Bonus points for being aware of the Github Markdown
+      syntax[5].
 
-      Any amount and format of text, such that it conforms to a line-width of 72
-      characters.  Bonus points for being aware of the Github Markdown syntax:
-      https://github.com/blog/926-shiny-new-commit-styles
-
-      License: AGPL-3.0
+      License: AGPL-3.0+
 
  * Ensure that each commit contains no more than one *logical* change to the
    code base.  This is very important for later auditing.  If you have not
-   developed in a logical manner (like most of us don't), :code:`git add -p` is
-   the answer
+   developed in a logical manner (like many of us don't), :code:`git add -p` is
+   a very helpful tool.
 
  * If you are not a core maintainer of the project, all commits must also
    include a specific reference to the license under which you are giving your
    code to the project.  Note that Temoa will not accept any patches that
-   are not licensed under AGPL-3.0.  A line like this at the end of your commit
+   are not licensed under AGPL-3.0+.  A line like this at the end of your commit
    will suffice::
 
       ... the last line of the commit message.
 
-      License: AGPL-3.0
+      License: AGPL-3.0+
+
+   This indicates that you retain all rights to any intellectual property your
+   (set of) commit(s) creates, but that you license it to the Temoa Project
+   under the terms of the GNU Affero Public License, version 3, or later.  If
+   the Temoa Project incorporates your commit, then Temoa may not relicense
+   your (set of) patch(es), other than to increase the version number of the
+   AGPL license.  In short, the intellectual property remains yours, and the
+   Temoa Project would be but a licensee using your code similarly under the
+   terms of the AGPL.
+
+   Executing licensing in this manner -- rather than requesting IP assignment --
+   ensures that no one group of code contributers may unilaterally change the
+   license of Temoa, unless **all** contributers agree in writing in a
+   publically archived forum (such as the `Temoa Forum`_).
+
+ * When you are ready to submit your (set of) patch(es) to the Temoa Project,
+   we will utilize GitHub's `Pull Request`_ mechanism.
 
 .. _OpenSourceNote:
 
@@ -2490,8 +2509,9 @@ of an analysis.
 .. _example data sets: http://temoaproject.org/download/example_data_sets.zip
 .. _temoaproject.org/: http://temoaproject.org/
 .. _mailing list: https://groups.google.com/forum/#!forum/temoa-project
+.. _Temoa Forum: https://groups.google.com/forum/#!forum/temoa-project
 .. _various: http://xlinux.nist.gov/dads/HTML/optimization.html
-.. _available: http://www.solver.com/probtype.htm
+.. _available: http://www.stanford.edu/~boyd/cvxbook/
 .. _online: https://en.wikipedia.org/wiki/Optimization_problem
 .. _sources: https://en.wikipedia.org/wiki/Mathematical_optimization
 .. _GAMS: http://www.gams.com/
@@ -2505,10 +2525,11 @@ of an analysis.
 .. _PEP 3120: http://www.python.org/dev/peps/pep-3120/
 .. _list comprehension: http://docs.python.org/tutorial/datastructures.html#list-comprehensions
 .. _lambda function: http://docs.python.org/tutorial/controlflow.html#lambda-forms
-.. _Tarbomb: https://en.wikipedia.org/wiki/Tar_(file_format)#Tarbom
+.. _Tarbomb: https://en.wikipedia.org/wiki/Tar_(file_format)#Tarbomb
 .. _generally accepted relative rates: http://www.forecasts.org/inflation.htm
 .. _Temoa repository: https://github.com/hunteke/temoa/
 .. _issue 5: https://github.com/hunteke/temoa/issues/5
+.. _Pull Request: https://help.github.com/articles/using-pull-requests
 
 
 .. bibliography:: References.bib
