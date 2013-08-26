@@ -34,6 +34,9 @@ from sys import argv, stderr as SE
 # 1000 = 19.  But 1000 is nice and round.)
 os_nice( 1000 )
 
+TEMOA_GIT_VERSION  = 'HEAD'
+TEMOA_RELEASE_DATE = 'Today'
+
 from temoa_graphviz import CreateModelDiagrams
 
 try:
@@ -1304,6 +1307,54 @@ This is the implementation of imat in the rest of the documentation.
 ###############################################################################
 # Miscellaneous routines
 
+
+def version ( ):
+	from sys import stdout as SO
+	from os.path import basename, dirname
+
+	bname = basename( dirname( __file__ ))
+
+	if 'HEAD' == TEMOA_GIT_VERSION:
+		msg = """
+{}: Temoa Model, v"Bleeding Edge"
+
+You are using a development version of Temoa.  Use Git to determine the current
+branch name and number.  Command line hints:
+
+      # from within the code directory
+    $ git branch
+    $ git status    # to remind you of any changes you have made
+    $ git log -1    # -1 is optional, showing only the most recent commit
+"""
+
+		args = (bname,)
+
+	else:
+		msg = """
+{}: Temoa Model, Release Date: {}
+Git Hash: {}
+
+Temoa does not currently have version numbers, but uses the date of release as a
+proxy.  The hexadecimal Git Hash number uniquely identifies the exact
+branch/commit that created '{}'.
+"""
+
+		args = (bname, TEMOA_RELEASE_DATE, TEMOA_GIT_VERSION, bname)
+
+	msg += """
+Copyright (C) 2012, 2013 Kevin Hunter, Joseph F. DeCarolis
+
+We provide Temoa -- the model and associated scripts -- "as-is" with no express
+or implied warranty for accuracy or accessibility.  Temoa is a research tool,
+given in good faith to the community (anyone who uses Temoa for any purpose) as
+free software under the terms of the GNU Affero Public License, version 3 or, at
+your option, any later version (AGPLv3+).
+"""
+
+	SO.write( msg.format( *args ))
+	raise SystemExit
+
+
 def bibliographicalInformation ( ):
 	from sys import stdout as SO
 
@@ -1407,6 +1458,13 @@ def parse_args ( ):
 	  dest='how_to_cite',
 	  default=False)
 
+	parser.add_argument( '-V', '--version',
+	  help='Display the Temoa version information, then exit.',
+	  action='store_true',
+	  dest='version',
+	  default=False
+	)
+
 
 	graphviz.add_argument( '--graph_format',
 	  help='Create a system-wide visual depiction of the model.  The '
@@ -1489,6 +1547,10 @@ def parse_args ( ):
 	  default=None)
 
 	options = parser.parse_args()
+
+	if options.version:
+		version()
+		# this function exits
 
 	if options.how_to_cite:
 		bibliographicalInformation()
