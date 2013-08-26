@@ -50,8 +50,14 @@ fi
 echo "Making temoa.py"
 
 git checkout energysystem
+DATE=$(date +"%-l:%M%P %:::z %a, %d %b %Y")
+GIT_COMMIT=$(git rev-parse HEAD)
+(cd temoa_model/
+ sed -i "{ s/^\(TEMOA_GIT_VERSION  = \)'HEAD'$/\1'$GIT_COMMIT'/; s/^\(TEMOA_RELEASE_DATE = \)'Today'$/\1'$DATE'/; }" temoa_lib.py
+)
 ./create_archive.sh
 mv ./temoa.py /tmp/
+git checkout -- temoa_model/temoa_lib.py
 
 echo "Creating example_data_sets.zip"
 
