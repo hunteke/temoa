@@ -1,9 +1,10 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models as DM   # Django Models
 
 
 # One glaring deficiency with Django: lack of database level check constraints.
-# Django has the basic like, > 0, not null, and unique/unique_together, but it
+# Django has the basics like, > 0, not null, and unique/unique_together, but it
 # is not able to check things like "field 1 < field 2".  There is a _lot_ of
 # data interdependency in Temoa, so we will have to code these checks into the
 # Django views.  We can add most of these checks at the DB level with some
@@ -108,9 +109,14 @@ class Set_tech_storage ( DM.Model ):
 
 
 class Process ( DM.Model ):
-	analysis   = DM.ForeignKey( Analysis )
-	technology = DM.ForeignKey( Technology )
-	vintage    = DM.ForeignKey( Vintage )
+	analysis         = DM.ForeignKey( Analysis )
+	technology       = DM.ForeignKey( Technology )
+	vintage          = DM.ForeignKey( Vintage )
+	lifetime         = DM.FloatField( null=True )
+	loanlife         = DM.FloatField( null=True )
+	costinvest       = DM.FloatField( null=True )
+	discountrate     = DM.FloatField( null=True )
+	existingcapacity = DM.FloatField( null=True )
 
 	class Meta:
 		ordering = ('analysis', 'technology', 'vintage')
@@ -118,12 +124,41 @@ class Process ( DM.Model ):
 
 	def __unicode__ ( self ):
 		return u'({}) {}, {}'.format(
-		  self.analysis, self.technology, self.vintage )
+		  self.analysis, self.technology, self.vintage.vintage )
 
 
 	@property
 	def name ( self ):
 		return u'{}, {}'.format( self.technology.name, self.vintage.vintage )
+
+
+	def clean ( self ):
+		v = self.vintage.vintage
+		e = self.existingcapacity
+		l = self.lifetime
+		p0 = self.analysis.period_0
+
+		if e:
+			if v >= p0:
+				msg = ('Vintage is in optimization horizon: cannot specify '
+				  'existing capacity.')
+				raise ValidationError( msg )
+
+			if e <= 0:
+				msg = ('Must specify no existing (empty), or existing capacity '
+				  'greater than 0.')
+				raise ValidationError( msg )
+
+		if l:
+			if l <= 0:
+				msg = ('Invalid lifetime: processes must have either no lifetime, '
+				  'or a lifetime greater than 0.')
+				raise ValidationError( msg )
+
+			if v + l <= p0:
+				msg = ('Invalid lifetime: vintage would not be used in analysis: '
+				  '{} + {} <= {}')
+				raise ValidationError( msg.format( v, l, p0 ))
 
 
 
@@ -132,18 +167,14 @@ class Param_LifetimeTech ( DM.Model ):
 	technology = DM.ForeignKey( Technology )
 	value      = DM.FloatField()
 
+	class Meta:
+		unique_together = ('analysis', 'technology')
+
+
 	def __unicode__ ( self ):
 		return u'({}) {}: {}'.format(
 		  self.analysis, self.technology.name, self.value )
 
-
-
-class Param_LifetimeProcess ( DM.Model ):
-	process = DM.ForeignKey( Process, unique=True )
-	value   = DM.FloatField()
-
-	def __unicode__ ( self ):
-		return u'{}: {}'.format( self.process, self.value )
 
 
 
@@ -152,38 +183,13 @@ class Param_LifetimeTechLoan ( DM.Model ):
 	technology = DM.ForeignKey( Technology )
 	value      = DM.FloatField()
 
+	class Meta:
+		unique_together = ('analysis', 'technology')
+
+
 	def __unicode__ ( self ):
 		return u'({}) {}: {}'.format(
 		  self.analysis, self.technology, self.value )
-
-
-
-class Param_LifetimeProcessLoan ( DM.Model ):
-	process  = DM.ForeignKey( Process, unique=True )
-	value    = DM.FloatField()
-
-	def __unicode__ ( self ):
-		return u'{}: {}'.format( self.process, self.value )
-
-
-
-class Param_ExistingCapacity ( DM.Model ):
-	process = DM.ForeignKey( Process, unique=True )
-	value   = DM.FloatField()
-
-	class Meta:
-		ordering = ('process',)
-
-	def __unicode__ ( self ):
-		return u'{}: {}'.format( self.process, self.value )
-
-
-	def clean ( self ):
-		from django.core.exceptions import ValidationError
-		if not (self.value > 0):
-			msg = ('Process existing capacity must be greater than 0.'
-			  '\nAttempted value: {}')
-			raise ValidationError( msg.format( self.value))
 
 
 
@@ -210,6 +216,17 @@ class Set_commodity_demand ( DM.Model ):
 		return u'({}) {}'.format( self.analysis, self.commodity )
 
 
+	def save ( self, *args, **kwargs ):
+		# Currently, the assumption is that folks will call this in a transaction
+
+		super(Set_commodity_demand, self).save(*args, **kwargs)
+		obj, created = Set_commodity_output.objects.get_or_create(
+		  analysis  = self.analysis,
+		  commodity = self.commodity,
+		  demand    = self
+		)
+
+
 
 class Set_commodity_physical ( DM.Model ):
 	analysis  = DM.ForeignKey( Analysis )
@@ -220,6 +237,32 @@ class Set_commodity_physical ( DM.Model ):
 
 	def __unicode__ ( self ):
 		return u'({}) {}'.format( self.analysis, self.commodity )
+
+
+	def save ( self, *args, **kwargs ):
+		# Currently, the assumption is that folks will call this in a transaction
+
+		super(Set_commodity_physical, self).save(*args, **kwargs)
+		obj, created = Set_commodity_output.objects.get_or_create(
+		  analysis  = self.analysis,
+		  commodity = self.commodity,
+		  physical  = self
+		)
+
+
+
+class Set_commodity_output ( DM.Model ):
+	analysis  = DM.ForeignKey( Analysis )
+	commodity = DM.ForeignKey( Commodity )
+	demand    = DM.ForeignKey( Set_commodity_demand, null=True )
+	physical  = DM.ForeignKey( Set_commodity_physical, null=True )
+
+	class Meta:
+		unique_together = ('analysis', 'commodity',)
+
+
+	def __unicode__ ( self ):
+		return '({}) {}'.format( self.analysis, self.commodity )
 
 
 
@@ -329,13 +372,17 @@ class Param_CostFixed ( DM.Model ):
 
 	class Meta:
 		unique_together = ('period', 'process')
+		ordering = ('process', 'period')
 
 
 	def __unicode__ ( self ):
-		period   = self.period.vintage
-		analysis = self.process.analysis
-		tech     = self.process.technology
-		vintage  = self.process.vintage
+		try:
+			period   = self.period.vintage
+			analysis = self.process.analysis
+			tech     = self.process.technology
+			vintage  = self.process.vintage.vintage
+		except:
+			return u'(new - no period or process)'
 
 
 		return u'({}) {}, {}, {}: {}'.format(
@@ -343,16 +390,26 @@ class Param_CostFixed ( DM.Model ):
 
 
 	def clean ( self ):
-		from django.core.exceptions import ValidationError
-		if self.value == 0:
-			msg = ('Process fixed cost must not be 0, or it is a useless entry.  '
-			  'Consider removing the row instead of marking it 0.'
-			  '\nAttempted value: {}')
-			raise ValidationError( msg.format( self.value ))
+		per = self.period
+		p   = self.process
+		val = self.value
 
-		vint_analysis = self.period.analysis
-		analysis = self.process.analysis
-		if vint_analysis != analysis:
+		if val == 0:
+			msg = ('Process fixed cost must not be 0, or it is a useless entry.  '
+			  'Consider removing the row instead of marking it 0.')
+			raise ValidationError( msg )
+
+		if per.vintage < p.analysis.period_0:
+			msg = ('Process cannot have a cost before the optimization starts!  '
+			  '(period) {} < (start year) {}')
+			raise ValidationError( msg.format( per.vintage, p.analysis.period_0 ))
+
+		if per.vintage < p.vintage.vintage:
+			msg = ('Process cannot have a cost before it is built!  '
+			  '(period) {} < (vintage) {}')
+			raise ValidationError( msg.format( per.vintage, p.vintage.vintage ))
+
+		if per.analysis != p.analysis:
 			msg = ('Inconsistent analyses!  Attempted to connect a period from '
 			  "analysis '{}' to a process from analysis '{}'.  Either add period "
 			  "'{}' to analysis '{}' or add the process '{}' to "
@@ -379,10 +436,13 @@ class Param_CostVariable ( DM.Model ):
 
 
 	def __unicode__ ( self ):
-		period   = self.period.vintage
-		analysis = self.process.analysis
-		tech     = self.process.technology
-		vintage  = self.process.vintage
+		try:
+			analysis = self.process.analysis
+			period   = self.period.vintage
+			tech     = self.process.technology
+			vintage  = self.process.vintage.vintage
+		except:
+			return u'(new - no period or process)'
 
 
 		return u'({}) {}, {}, {}: {}'.format(
@@ -390,16 +450,26 @@ class Param_CostVariable ( DM.Model ):
 
 
 	def clean ( self ):
-		from django.core.exceptions import ValidationError
-		if self.value == 0:
-			msg = ('Process fixed cost must not be 0, or it is a useless entry.  '
-			  'Consider removing the row instead of marking it 0.'
-			  '\nAttempted value: {}')
-			raise ValidationError( msg.format( self.value ))
+		per = self.period
+		p   = self.process
+		val = self.value
 
-		vint_analysis = self.period.analysis
-		analysis = self.process.analysis
-		if vint_analysis != analysis:
+		if val == 0:
+			msg = ('Process fixed cost must not be 0, or it is a useless entry.  '
+			  'Consider removing the row instead of marking it 0.')
+			raise ValidationError( msg )
+
+		if per.vintage < p.analysis.period_0:
+			msg = ('Process cannot have a cost before the optimization starts!  '
+			  '(period) {} < (start year) {}')
+			raise ValidationError( msg.format( per.vintage, p.analysis.period_0 ))
+
+		if per.vintage < p.vintage.vintage:
+			msg = ('Process cannot have a cost before it is built!  '
+			  '(period) {} < (vintage) {}')
+			raise ValidationError( msg.format( per.vintage, p.vintage.vintage ))
+
+		if per.analysis != p.analysis:
 			msg = ('Inconsistent analyses!  Attempted to connect a period from '
 			  "analysis '{}' to a process from analysis '{}'.  Either add period "
 			  "'{}' to analysis '{}' or add the process '{}' to "
@@ -411,84 +481,76 @@ class Param_CostVariable ( DM.Model ):
 			))
 
 
-
-class Param_CostInvest ( DM.Model ):
-	process = DM.ForeignKey( Process, unique=True )
-	value   = DM.FloatField()
-
-
-	def __unicode__ ( self ):
-		analysis = self.process.analysis
-		tech     = self.process.technology
-		vintage  = self.process.vintage
-
-		return u'({}) {}, {}: {}'.format(
-		  analysis, tech, vintage, self.value )
-
-	def clean ( self ):
-		from django.core.exceptions import ValidationError
-		if self.value == 0:
-			raise ValidationError( 'Process investment cost must not be 0.' )
-
-
-
-class Param_DiscountRate ( DM.Model ):
-	process = DM.ForeignKey( Process, unique=True )
-	value   = DM.FloatField()
-
-	def __unicode__ ( self ):
-		analysis = self.process.analysis
-		tech     = self.process.process.technology
-		vintage  = self.process.process.vintage
-
-		return u'({}) {}, {}: {}'.format(
-		  analysis, tech, vintage, self.value )
-
+	update_with_data = classmethod( update_with_process_period_data )
 
 
 class Param_TechInputSplit ( DM.Model ):
-	# The check that technology and out_commodity are valid happens in valid()
+	# The check that technology is valid for this analysis is in valid()
 	inp_commodity = DM.ForeignKey( Set_commodity_physical )
 	technology    = DM.ForeignKey( Technology )
-	out_commodity = DM.ForeignKey( Commodity )
 	fraction      = DM.FloatField()
 
 
 	class Meta:
-		unique_together = ('inp_commodity', 'technology', 'out_commodity')
+		unique_together = ('inp_commodity', 'technology')
 
 
 	def __unicode__ ( self ):
 		analysis = self.inp_commodity.analysis
 		inp      = self.inp_commodity.commodity
 		tech     = self.technology
-		out      = self.out_commodity
 
-		return u'({}) {}, {}, {}: {}'.format(
-		  analysis, inp, tech, out, self.value )
+		return u'({}) {}, {}: {}'.format( analysis, inp, tech, self.fraction )
+
+
+	def clean ( self ):
+		if not (0 < self.fraction and self.fraction < 1):
+			msg = ('Fraction must greater than 0 and less than 1, else it is a '
+			  'useless specification.')
+			raise ValidationError( msg )
+
+		analysis = self.inp_commodity.analysis
+		analysis_techs = Technology.objects.filter(
+		  process__analysis=analysis ).distinct()
+		if self.technology not in analysis_techs:
+			msg = ("Technology class '{}' is not used in any processes of "
+			  'Analysis {}')
+			raise ValidationError( msg.format( self.technology, analysis ))
 
 
 
 class Param_TechOutputSplit ( DM.Model ):
-	# The check that technology and out_commodity are valid happens in valid()
-	inp_commodity = DM.ForeignKey( Set_commodity_physical )
+	# The check that technology is valid for this analysis is in valid()
 	technology    = DM.ForeignKey( Technology )
-	out_commodity = DM.ForeignKey( Commodity )
+	out_commodity = DM.ForeignKey( Set_commodity_output )
 	fraction      = DM.FloatField()
 
 
 	class Meta:
-		unique_together = ('inp_commodity', 'technology', 'out_commodity')
+		unique_together = ('technology', 'out_commodity',)
 
 
 	def __unicode__ ( self ):
-		analysis = self.inp_commodity.analysis
-		inp      = self.inp_commodity.commodity
+		analysis = self.out_commodity.analysis
+		out      = self.out_commodity.commodity
 		tech     = self.technology
-		out      = self.out_commodity
 
-		return u'({}) {}, {}, {}: {}'.format(
-		  analysis, inp, tech, out, self.fraction )
+		return u'({}) {}, {}: {}'.format( analysis, tech, out, self.fraction )
+
+
+	def clean ( self ):
+		if not (0 < self.fraction and self.fraction < 1):
+			msg = ('Fraction must greater than 0 and less than 1, else it is a '
+			  'useless specification.')
+			raise ValidationError( msg )
+
+		analysis = self.out_commodity.analysis
+		analysis_techs = Technology.objects.filter(
+		  process__analysis=analysis ).distinct()
+		if self.technology not in analysis_techs:
+			msg = ("Technology class '{}' is not used in any processes of "
+			  'Analysis {}')
+			raise ValidationError( msg.format( self.technology, analysis ))
 
 
 
@@ -553,11 +615,10 @@ class Param_EmissionLimit ( DM.Model ):
 
 
 class Param_Efficiency ( DM.Model ):
-	# check that Analysis ids match is in clean(), as is that out_commodity
-	# is valid.
+	# check that Analysis ids match is in clean()
 	inp_commodity = DM.ForeignKey( Set_commodity_physical )
 	process       = DM.ForeignKey( Process )
-	out_commodity = DM.ForeignKey( Commodity )
+	out_commodity = DM.ForeignKey( Set_commodity_output )
 	value         = DM.FloatField()
 
 	class Meta:
@@ -569,14 +630,13 @@ class Param_Efficiency ( DM.Model ):
 		inp      = self.inp_commodity.commodity
 		tech     = self.process.technology
 		vintage  = self.process.vintage
-		out      = self.out_commodity
+		out      = self.out_commodity.commodity
 
 		return u'({}) {} {} {} {}: {}'.format(
 		  analysis, inp, tech, vintage, out, self.value )
 
 
 	def clean ( self ):
-		from django.core.exceptions import ValidationError
 		if self.value == 0:
 			msg = ('Process efficiency must not be 0, or it is a useless entry.  '
 			  'Consider removing the efficiency instead of marking it 0.'
@@ -585,33 +645,16 @@ class Param_Efficiency ( DM.Model ):
 
 		inp_analysis = self.inp_commodity.analysis
 		analysis = self.process.analysis
-		if inp_analysis != analysis:
-			msg = ('Inconsistent analyses!  Attempted to connect an input '
-			  "commodity from analysis '{}' to a process from analysis '{}'.  "
-			  "Either add the input commodity '{}' to analysis '{}' or add the "
-			  "process '{}' to analysis '{}'.")
+		out_analysis = self.out_commodity.analysis
+		if inp_analysis != analysis or analysis != out_analysis:
+			msg = ('Inconsistent analyses!  (input, process, output) analyses '
+			  'passed: {}, {}, {}')
 			raise ValidationError( msg.format(
-			  inp_analysis, analysis,
-			  self.inp_commodity, analysis,
-			  self.process, inp_analysis
-			))
-
-		valid_demands = Set_commodity_demand.objects.filter( analysis=analysis )
-		valid_physical = Set_commodity_physical.objects.filter( analysis=analysis )
-
-		valid_outputs = (   set( i.commodity for i in valid_demands )
-		                  | set( i.commodity for i in valid_physical ))
-
-		if self.out_commodity not in valid_outputs:
-			msg = (u'Unable to connect process <{}> to invalid output commodity '
-			  "'{}'.  Do you need to add the commodity to this analysis ({})?")
-			raise ValidationError( msg.format(
-			  self.process.name, self.out_commodity, analysis.name ))
+			  inp_analysis, analysis, out_analysis ))
 
 
 
 class Param_EmissionActivity ( DM.Model ):
-	# The check that out_commodity is the union set happens in valid()
 	emission   = DM.ForeignKey( Set_commodity_emission )
 	efficiency = DM.ForeignKey( Param_Efficiency )
 	value      = DM.FloatField()
@@ -635,7 +678,6 @@ class Param_EmissionActivity ( DM.Model ):
 
 
 	def clean ( self ):
-		from django.core.exceptions import ValidationError
 		if self.value == 0:
 			msg = ('EmissionActivity must not be 0, or it is a useless entry.  '
 			  'Consider removing the activity instead of marking it 0.'
@@ -645,7 +687,7 @@ class Param_EmissionActivity ( DM.Model ):
 		emission_analysis = self.emission.analysis
 		analysis = self.efficiency.process.analysis
 		if emission_analysis != analysis:
-			msg = ('Inconsistent analyses!  Attempted to connect an pollutant '
+			msg = ('Inconsistent analyses!  Attempted to connect a pollutant '
 			  "commodity from analysis '{}' to a process from analysis '{}'.  "
 			  "Either add the input commodity '{}' to analysis '{}' or add the "
 			  "process '{}' to analysis '{}'.")
