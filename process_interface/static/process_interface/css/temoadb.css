@@ -8,6 +8,8 @@ body { height: 100% ; margin: 1em; }
 
 #header { height: 4em; width: 100%; background-color: cyan; }
 
+#ReloadLibs { float: right; }
+
 #launchers { margin: 0  auto ; }
 #launchers ul { list-style: none outside none ; padding: 0 ; }
 #launchers ul li { float: left ; width: 15em ; border: 1px dotted blue ; margin: 0 2em ; }
@@ -21,22 +23,29 @@ body { height: 100% ; margin: 1em; }
 
 #process_characteristics h2, #technology_characteristics h2 { text-align: center; }
 
-#process_characteristics { background-color: red; opacity: 0.8; float: left; width: auto;}
+#process_characteristics { background-color: transparent; opacity: 0.8; float: left; width: auto;}
 #process_characteristics .items { padding: 1em; border-spacing: 0; }
-#process_characteristics .items table { border-collapse: collapse; }
-#process_characteristics .items td { padding: .2ex 3ex .2ex 1ex;  }
+#process_characteristics .items table { border-collapse: collapse; border-width: 1pt 0.5pt; border-color: #000; border-style: solid; }
+#process_characteristics .items td { padding: 0.2ex 1em 0.2ex 1em;  }
 #process_characteristics .items .info { color: #777; font-weight: normal; font-style: italic; }
 #process_characteristics .items tbody { padding: 2em; background: gray; }
 #process_characteristics .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
-#process_characteristics .items th[colspan='2'] { border-top: 1pt solid black; border-bottom: 1pt dotted black; background: #29f; font-size: 120%; }
-#process_characteristics .items .innertable { background: inherit; font-weight:normal; width: 100%; }
-#process_characteristics .items .innertable thead th { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid black; }
-#process_characteristics .items .innertable tbody { background: inherit; }
-#process_characteristics .items .innertable td { padding: 0; }
-#process_characteristics .items .innertable img { padding: 1ex; }
-#process_characteristics .items .innertable caption { font-size: 110%; font-weight: bold; }
+#process_characteristics .items thead tr       { border-top: 1pt solid #000; border-bottom: 1pt dotted #000; background: #29f; font-size: 120%; }
+#process_characteristics .items thead tr.error { background: #f00; color: #fff; }
 
-#process_characteristics .items form input[type='submit'] { visibility: hidden; width: 1px; height: 1px; }
+#process_characteristics .items tr th { text-align: left; }
+#process_characteristics .items thead tr th { text-align: center; }
+#process_characteristics .items .innertable { background: inherit; font-weight:normal; width: 100%; }
+#process_characteristics .items table.innertable { border: 0; }
+#process_characteristics .items table.innertable thead tr { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid #000; background: inherit; }
+#process_characteristics .items table.innertable tbody { background: inherit; }
+#process_characteristics .items table.innertable td { padding: 0; }
+#process_characteristics .items table.innertable img { padding: 1ex; }
+#process_characteristics .items table.innertable thead th img { padding: 0;}
+#process_characteristics .items table.innertable caption { font-size: 90%; font-weight: bold; }
+
+#process_characteristics .items form input[type='submit'], #technology_characteristics .items form input[type='submit'] { display: none; width: 1px; height: 1px; }
+#process_characteristics .items form input[readonly] { background: transparent; color: #000; border: 0; text-align: center; }
 
 #technology_characteristics { background-color: lightgreen; opacity: 0.8; float: right; }
 #technology_characteristics .items { padding: 1em; border-spacing: 0; }
@@ -47,23 +56,19 @@ body { height: 100% ; margin: 1em; }
 #technology_characteristics .items .innertable { background: inherit; font-weight:normal; width: 100%; }
 #technology_characteristics .items .innertable thead th { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid black; }
 #technology_characteristics .items .innertable tbody { background: inherit; }
-#technology_characteristics .items .innertable caption { font-size: 110%; font-weight: bold; }
+#technology_characteristics .items .innertable caption { font-size: 110%; font-weight: bold; border-bottom: 1px dotted #000; }
 #technology_characteristics .items th[colspan='2'] { border-top: 1pt solid black; border-bottom: 1pt dotted black; background: #29f; font-size: 120%; }
 
 #technology_characteristics.fixed { position: fixed; top: 0; right: 1em; }
 
 #status { padding: 1em; position: fixed; bottom: 0; left: 1em; background: #ccc; z-index: 1000; opacity: 1; }
 
-input {
-	background: inherit;
-	border: 1pt solid;
-	width: 5em;
-}
+input { background: inherit; border: 1pt solid; width: 6em; text-align: right; }
 
 tr.even td, tr.odd td { background-size: auto 100%; background-repeat: no-repeat; background-origin: content-box; background-position: center; }
 
-.checkmark { background: url('/static/process_interface/icons/white_on_green_checkmark.svg'); }
-.x_mark    { background: url('/static/process_interface/icons/x_mark.svg'); }
+.is_member     { background: url('/static/process_interface/icons/white_on_green_checkmark.svg'); }
+.is_not_member { background: url('/static/process_interface/icons/x_mark.svg'); }
 
 .clear { clear: both; }
 

@@ -5,9 +5,8 @@
 	<title>TemoaDB | {% block title %}Interact{% endblock %}</title>
 
 	<link rel='stylesheet' type='text/css' href='{% static 'process_interface/css/temoadb.css' %}' />
-
 </head>
-<body data-csrftoken='{{ csrf_token }}' data-username='{{ username }}'>
+<body data-csrftoken='{{ csrf_token }}' {% if username %}data-username='{{ username }}'{% endif %}>
 <div id='wrapper'>
 	<div id='header'>
 		<noscript>
@@ -15,7 +14,8 @@
 			<p>It appears that either you have disabled Javascript, or your browser does not support it.  You may still use this web application via <a href='{% url 'process_interface:nojs' %}' title='A non-Javascript version of TemoaDB'>TemoaDB (no Javascript)</a>, but your interactions will be much slower and more clunky.  Alternatively, you may enable Javascript or install a Javascript-aware browser.</p>
 		</noscript>
 		<div id='status' class='hidden'></div>
-		<h2>Filter by username and Process</h2>
+		<button id='ReloadLibs'>Reload Libs</button>
+		<h2>TemoaDB</h2>
 		<select name='filter_analyses_username' id='filter_analyses_username'>
 			<option value='' disabled selected>Choose a username</option>
 			<option value='all'>All users</option>
@@ -27,7 +27,7 @@
 	<div id='processes' class='hidden'>
 		<h2>Processes</h2>
 		<div class='filter'>
-			<label>Process Filter: <input type='text' name='filter_process' size='10'></label>
+			<input type='text' name='filter_process' size='10' placeholder='Process Filter'>
 			<label>Glob<input type='radio' name='filter_type_process' value='glob' checked></label>
 			<label>RE<input type='radio' name='filter_type_process' value='re'></label>
 		</div>
@@ -39,7 +39,7 @@
 	<div id='technology_characteristics' class='hidden'>
 		<h2>Technology Characteristics</h2>
 		<div class='filter'></div>
-		<table class='items'></table>
+		<div class='items'></div>
 	</div>
 	<div id='process_characteristics' class='hidden'>
 		<h2>Process Characteristics</h2>
@@ -50,5 +50,7 @@
 <script type='text/javascript' src='{{ JQUERYCD.BASE   }}/jquery.min.js'></script>
 <script type='text/javascript' src='{{ JQUERYCD.UI     }}/jquery-ui.min.js'></script>
 <script type='text/javascript' src='{{ JQUERYCD.COOKIE }}/jquery.cookie.min.js'></script>
-<script type='text/javascript' src='{% static 'process_interface/js/process_interface.js' %}'></script></body>
+<script type='text/javascript' src='{% static 'process_interface/js/jquery-hotkeys.js' %}'></script>
+<!-- <script type='text/javascript' src='{% static 'process_interface/js/process_interface.js' %}'></script></body> -->
+<script type='text/javascript' src='{% static 'process_interface/js/TemoaDB.js' %}'></script></body>
 </html>

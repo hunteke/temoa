@@ -1,0 +1,79 @@
+{% load url from future %}{% for pc in process_characteristics %}
+<form method='post' action='{% url 'process_interface:update_analysis_process' analysis_id=analysis.pk process_id=pc.ProcessId %}'>
+<!-- <form method='post' action='/test'> -->
+{% csrf_token %}
+{{ pc.form.errors }}
+{% if pc.form.costfixed_datalist %}
+<datalist id='{{ pc.form.costfixed_datalist_id }}'>
+	{% for val in pc.form.costfixed_datalist %}
+	<option value='{{ val }}'>{% endfor %}
+</datalist>
+{% endif %}
+{% if pc.form.costvariable_datalist %}
+<datalist id='{{ pc.form.costvariable_datalist_id }}'>
+	{% for val in pc.form.costvariable_datalist %}
+	<option value='{{ val }}'>{% endfor %}
+</datalist>
+{% endif %}
+<input type='submit' name='' value='' />
+<table class='process'>
+	<thead><tr{{ pc.form.errors|yesno:" class=error," }}><th colspan='2'>{{ pc.Technology }}, {{ pc.Vintage }}</th></tr></thead>
+	<tbody>
+		<tr class='{% cycle 'odd' 'even' as rowclass %}{{ pc.form.discountrate.errors|yesno:' error,' }}'><th>{{ pc.form.discountrate.label_tag }}</th><td>{{ pc.form.discountrate }}</td></tr>
+		<tr class='{% cycle rowclass %}'><th>Baseload</th><td class='{{ pc.Baseload|yesno:'is_member,is_not_member' }}'></td></tr>
+		<tr class='{% cycle rowclass %}'><th>Storage</th><td class='{{ pc.Storage|yesno:'is_member,is_not_member' }}'></td></tr>
+		<tr class='{% cycle rowclass %}{{ pc.form.lifetime.errors|yesno:' error,' }}'><th>{{ pc.form.lifetime.label_tag }}</th><td>{{ pc.form.lifetime }}</td></tr>
+		<tr class='{% cycle rowclass %}{{ pc.form.loanlife.errors|yesno:' error,' }}'><th>{{ pc.form.loanlife.label_tag }}</th><td>{{ pc.form.loanlife }}</td></tr>
+		<tr class='{% cycle rowclass %}{{ pc.form.costinvest.errors|yesno:' error,' }}{{ pc.form.existingcapacity.errors|yesno:' error,' }}'><th>{{ pc.form.costinvest.label_tag }}{{ pc.form.existingcapacity.label_tag }}</th><td>{{ pc.form.costinvest }}{{ pc.form.existingcapacity }}</td></tr>
+
+		<tr class='{% cycle rowclass %}'><td colspan='2'>
+			<table class='innertable'>
+				<caption>Efficiency</caption>
+				<thead>
+					<tr><th></th><th>Input</th><th>Output</th><th>Percent</th></tr>
+				</thead>
+				<tbody>
+					{% for inp, out, eff in pc.form.efficiency %}
+						<tr class='{{ inp.errors|yesno:' error,' }}{{ out.errors|yesno:' error,' }}{{ eff.errors|yesno:' error,' }}'><td></td><td>{{ inp }}</td><td>{{ out }}</td><td>{{ eff }}</td></tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</td></tr>
+		{% if pc.form.costfixed %}
+			<tr class='{% cycle rowclass %}'><td colspan='2'>
+				<table class='innertable'>
+					<caption>Fixed Cost</caption>
+					<thead>
+						<tr><th></th><th>Period</th><th>Cost</th></tr>
+					</thead>
+					<tbody>
+						{% for period, cost in pc.form.costfixed %}
+							<tr class='{{ period.errors|yesno:' error,' }}{{ cost.errors|yesno:' error,' }}'><td></td><td>{{ period }}</td><td>{{ cost }}</td></tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</td></tr>
+		{% else %}{% comment %}pc.form.costfixed{% endcomment %}
+			<tr class='{% cycle rowclass %}'><th>Fixed Cost</th><td class='info'>No Lifetime</td></tr>
+		{% endif %}{% comment %}pc.form.costfixed{% endcomment %}
+		{% if pc.form.costvariable %}
+			<tr class='{% cycle rowclass %}'><td colspan='2'>
+				<table class='innertable'>
+					<caption>Variable Cost</caption>
+					<thead>
+						<tr><th></th><th>Period</th><th>Cost</th></tr>
+					</thead>
+					<tbody>
+						{% for period, cost in pc.form.costvariable %}
+							<tr class='{{ period.errors|yesno:' error,' }}{{ cost.errors|yesno:' error,' }}'><td></td><td>{{ period }}</td><td>{{ cost }}</td></tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</td></tr>
+		{% else %}{% comment %}pc.form.costvariable{% endcomment %}
+			<tr class='{% cycle rowclass %}'><th>Variable Cost</th><td class='info'>No Lifetime</td></tr>
+		{% endif %}{% comment %}pc.form.costvariable{% endcomment %}
+	</tbody>
+</table>
+<input type='submit'>
+</form>{% endfor %}

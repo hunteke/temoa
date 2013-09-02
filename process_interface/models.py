@@ -83,28 +83,22 @@ class Commodity ( DM.Model ):
 
 
 
-class Set_tech_baseload ( DM.Model ):
+class TechnologySetMember ( DM.Model ):
 	analysis   = DM.ForeignKey( Analysis )
 	technology = DM.ForeignKey( Technology )
 
 	class Meta:
-		unique_together = ('analysis', 'technology',)
-
-	def __unicode__ ( self ):
-		return u'({}) {}'.format( self.analysis, self.technology )
-
-
-
-class Set_tech_storage ( DM.Model ):
-	analysis = DM.ForeignKey( Analysis )
-	technology  = DM.ForeignKey( Technology )
-
-	class Meta:
+		abstract = True
 		ordering = ('analysis', 'technology')
 		unique_together = ('analysis', 'technology',)
 
 	def __unicode__ ( self ):
 		return u'({}) {}'.format( self.analysis, self.technology )
+
+
+
+class Set_tech_baseload ( TechnologySetMember ): pass
+class Set_tech_storage  ( TechnologySetMember ): pass
 
 
 
@@ -130,6 +124,19 @@ class Process ( DM.Model ):
 	@property
 	def name ( self ):
 		return u'{}, {}'.format( self.technology.name, self.vintage.vintage )
+
+
+	def update_with_data ( self, data ):
+		for attr in ('lifetime', 'loanlife', 'costinvest', 'discountrate',
+		  'existingcapacity'
+		):
+			if attr in data and data[attr]:
+				setattr( self, attr, data[attr] )
+			elif attr in data:
+				setattr( self, attr, None )
+
+		self.clean()
+		self.save()
 
 
 	def clean ( self ):
@@ -162,63 +169,44 @@ class Process ( DM.Model ):
 
 
 
-class Param_LifetimeTech ( DM.Model ):
+class LifetimeParameter ( DM.Model ):
 	analysis   = DM.ForeignKey( Analysis )
 	technology = DM.ForeignKey( Technology )
 	value      = DM.FloatField()
 
 	class Meta:
+		abstract = True
+		ordering = ('analysis', 'technology')
 		unique_together = ('analysis', 'technology')
-
 
 	def __unicode__ ( self ):
 		return u'({}) {}: {}'.format(
 		  self.analysis, self.technology.name, self.value )
 
 
-
-
-class Param_LifetimeTechLoan ( DM.Model ):
-	analysis   = DM.ForeignKey( Analysis )
-	technology = DM.ForeignKey( Technology )
-	value      = DM.FloatField()
-
-	class Meta:
-		unique_together = ('analysis', 'technology')
-
-
-	def __unicode__ ( self ):
-		return u'({}) {}: {}'.format(
-		  self.analysis, self.technology, self.value )
+class Param_LifetimeTech     ( LifetimeParameter ): pass
+class Param_LifetimeTechLoan ( LifetimeParameter ): pass
 
 
 
-class Set_commodity_emission ( DM.Model ):
+class CommoditySetMember ( DM.Model ):
 	analysis  = DM.ForeignKey( Analysis )
 	commodity = DM.ForeignKey( Commodity )
 
 	class Meta:
-		unique_together = ('analysis', 'commodity',)
+		abstract = True
+		ordering = ('analysis', 'commodity')
+		unique_together = ('analysis', 'commodity')
 
 	def __unicode__ ( self ):
 		return u'({}) {}'.format( self.analysis, self.commodity )
 
 
+class Set_commodity_emission ( CommoditySetMember ): pass
 
-class Set_commodity_demand ( DM.Model ):
-	analysis  = DM.ForeignKey( Analysis )
-	commodity = DM.ForeignKey( Commodity )
-
-	class Meta:
-		unique_together = ('analysis', 'commodity',)
-
-	def __unicode__ ( self ):
-		return u'({}) {}'.format( self.analysis, self.commodity )
-
-
+class Set_commodity_demand ( CommoditySetMember ):
 	def save ( self, *args, **kwargs ):
 		# Currently, the assumption is that folks will call this in a transaction
-
 		super(Set_commodity_demand, self).save(*args, **kwargs)
 		obj, created = Set_commodity_output.objects.get_or_create(
 		  analysis  = self.analysis,
@@ -226,22 +214,9 @@ class Set_commodity_demand ( DM.Model ):
 		  demand    = self
 		)
 
-
-
-class Set_commodity_physical ( DM.Model ):
-	analysis  = DM.ForeignKey( Analysis )
-	commodity = DM.ForeignKey( Commodity )
-
-	class Meta:
-		unique_together = ('analysis', 'commodity',)
-
-	def __unicode__ ( self ):
-		return u'({}) {}'.format( self.analysis, self.commodity )
-
-
+class Set_commodity_physical ( CommoditySetMember ):
 	def save ( self, *args, **kwargs ):
 		# Currently, the assumption is that folks will call this in a transaction
-
 		super(Set_commodity_physical, self).save(*args, **kwargs)
 		obj, created = Set_commodity_output.objects.get_or_create(
 		  analysis  = self.analysis,
@@ -250,19 +225,19 @@ class Set_commodity_physical ( DM.Model ):
 		)
 
 
-
-class Set_commodity_output ( DM.Model ):
-	analysis  = DM.ForeignKey( Analysis )
-	commodity = DM.ForeignKey( Commodity )
+class Set_commodity_output ( CommoditySetMember ):
 	demand    = DM.ForeignKey( Set_commodity_demand, null=True )
 	physical  = DM.ForeignKey( Set_commodity_physical, null=True )
 
-	class Meta:
-		unique_together = ('analysis', 'commodity',)
+	def clean ( self ):
+		if ( not (self.demand and self.physical)
+		     and (self.demand or  self.physical)
+		):
+			# the only acceptible entry for this table is one or the other
+			return
 
-
-	def __unicode__ ( self ):
-		return '({}) {}'.format( self.analysis, self.commodity )
+		msg = 'Output commodity must be either Physical or Demand commodity'
+		raise ValidationError( msg )
 
 
 
@@ -362,28 +337,26 @@ class Param_ResourceBound ( DM.Model ):
 
 
 
-class Param_CostFixed ( DM.Model ):
+class PeriodCostParameter ( DM.Model ):
 	# The check that period is >= Period_0 and is a valid analysis vintage
-	# happens in valid()
+	# happens in clean()
 	period  = DM.ForeignKey( Vintage )
 	process = DM.ForeignKey( Process )
 	value   = DM.FloatField()
 
-
 	class Meta:
+		abstract = True
 		unique_together = ('period', 'process')
-		ordering = ('process', 'period')
 
 
 	def __unicode__ ( self ):
 		try:
-			period   = self.period.vintage
 			analysis = self.process.analysis
+			period   = self.period.vintage
 			tech     = self.process.technology
 			vintage  = self.process.vintage.vintage
 		except:
 			return u'(new - no period or process)'
-
 
 		return u'({}) {}, {}, {}: {}'.format(
 		  analysis, period, tech, vintage, self.value )
@@ -395,17 +368,17 @@ class Param_CostFixed ( DM.Model ):
 		val = self.value
 
 		if val == 0:
-			msg = ('Process fixed cost must not be 0, or it is a useless entry.  '
-			  'Consider removing the row instead of marking it 0.')
+			msg = ('Cost must not be 0, or it is a useless entry.  Consider '
+			  'removing the row instead of marking it 0.')
 			raise ValidationError( msg )
 
 		if per.vintage < p.analysis.period_0:
-			msg = ('Process cannot have a cost before the optimization starts!  '
+			msg = ('Process cannot have a cost before the optimization starts.  '
 			  '(period) {} < (start year) {}')
 			raise ValidationError( msg.format( per.vintage, p.analysis.period_0 ))
 
 		if per.vintage < p.vintage.vintage:
-			msg = ('Process cannot have a cost before it is built!  '
+			msg = ('Process cannot have a cost before it is built.  '
 			  '(period) {} < (vintage) {}')
 			raise ValidationError( msg.format( per.vintage, p.vintage.vintage ))
 
@@ -421,67 +394,37 @@ class Param_CostFixed ( DM.Model ):
 			))
 
 
+	@classmethod
+	def update_with_data ( cls, *args, **kwargs ):
+		a   = kwargs['analysis']
+		per = kwargs['period']
+		p   = kwargs['process']
+		val = kwargs['value']
 
-
-class Param_CostVariable ( DM.Model ):
-	# The check that period is >= Period_0 and is a valid analysis vintage
-	# happens in valid()
-	period  = DM.ForeignKey( Vintage )
-	process = DM.ForeignKey( Process )
-	value   = DM.FloatField()
-
-
-	class Meta:
-		unique_together = ('period', 'process')
-
-
-	def __unicode__ ( self ):
 		try:
-			analysis = self.process.analysis
-			period   = self.period.vintage
-			tech     = self.process.technology
-			vintage  = self.process.vintage.vintage
-		except:
-			return u'(new - no period or process)'
+			per = Vintage.objects.get(analysis=a, vintage=per)
+		except ObjectDoesNotExist as e:
+			raise ValidationError('Specified vintage does not exist in analysis.')
+
+		if not val:
+			# remove the row
+			cls.objects.get(period=per, process=p).delete()
+		else:
+			obj, created = cls.objects.get_or_create(
+			  period=per,
+			  process=p,
+			  defaults={'value': val}
+			)
+
+			obj.value = val
+			obj.clean()
+			obj.save()
 
 
-		return u'({}) {}, {}, {}: {}'.format(
-		  analysis, period, tech, vintage, self.value )
 
+class Param_CostFixed ( PeriodCostParameter ): pass
+class Param_CostVariable ( PeriodCostParameter ): pass
 
-	def clean ( self ):
-		per = self.period
-		p   = self.process
-		val = self.value
-
-		if val == 0:
-			msg = ('Process fixed cost must not be 0, or it is a useless entry.  '
-			  'Consider removing the row instead of marking it 0.')
-			raise ValidationError( msg )
-
-		if per.vintage < p.analysis.period_0:
-			msg = ('Process cannot have a cost before the optimization starts!  '
-			  '(period) {} < (start year) {}')
-			raise ValidationError( msg.format( per.vintage, p.analysis.period_0 ))
-
-		if per.vintage < p.vintage.vintage:
-			msg = ('Process cannot have a cost before it is built!  '
-			  '(period) {} < (vintage) {}')
-			raise ValidationError( msg.format( per.vintage, p.vintage.vintage ))
-
-		if per.analysis != p.analysis:
-			msg = ('Inconsistent analyses!  Attempted to connect a period from '
-			  "analysis '{}' to a process from analysis '{}'.  Either add period "
-			  "'{}' to analysis '{}' or add the process '{}' to "
-			  "analysis '{}'.")
-			raise ValidationError( msg.format(
-			  vint_analysis, analysis,
-			  self.period.vintage, analysis,
-			  self.process, vint_analysis
-			))
-
-
-	update_with_data = classmethod( update_with_process_period_data )
 
 
 class Param_TechInputSplit ( DM.Model ):
@@ -554,17 +497,16 @@ class Param_TechOutputSplit ( DM.Model ):
 
 
 
-class Param_MinCapacity ( DM.Model ):
+class MinMaxParameter ( DM.Model ):
 	# The check that period is >= Period_0 and is a valid analysis vintage
-	# happens in valid()
+	# happens in clean()
 	period     = DM.ForeignKey( Vintage )
 	technology = DM.ForeignKey( Technology )
 	value      = DM.FloatField()
 
-
 	class Meta:
+		abstract = True
 		unique_together = ('period', 'technology')
-
 
 	def __unicode__ ( self ):
 		analysis = self.period.analysis
@@ -574,21 +516,23 @@ class Param_MinCapacity ( DM.Model ):
 		return u'({}) {}, {}: {}'.format( analysis, period, tech, self.value )
 
 
+	def clean ( self ):
+		a = self.period.analysis
+		p = self.period.vintage
+		p0 = a.period_0
+		t = self.technology
 
-class Param_MaxCapacity ( DM.Model ):
-	# The check that period is >= Period_0, is a valid analysis vintage, and
-	# technology is a valid analysis technology happens in valid()
-	period     = DM.ForeignKey( Vintage )
-	technology = DM.ForeignKey( Technology )
-	value      = DM.FloatField()
+		if p < p0:
+			msg = 'Specified capacity not in optimization horizon'
+			raise ValidationError( msg )
+
+		if t not in Technology.objects.filter( analysis=a ):
+			msg = 'Specified technology not in period analysis'
+			raise ValidationError( msg )
 
 
-	class Meta:
-		unique_together = ('period', 'technology')
-
-
-	def __unicode__ ( self ):
-		return u'{}, {}: {}'.format( self.period, self.technology, self.value )
+class Param_MinCapacity ( MinMaxParameter ): pass
+class Param_MaxCapacity ( MinMaxParameter ): pass
 
 
 
@@ -652,6 +596,59 @@ class Param_Efficiency ( DM.Model ):
 			raise ValidationError( msg.format(
 			  inp_analysis, analysis, out_analysis ))
 
+
+	@classmethod
+	def update_with_data ( cls, *args, **kwargs ):
+		a   = kwargs['analysis']
+		epk = kwargs['efficiency_pk']
+		inp = kwargs['inp_commodity']
+		p   = kwargs['process']
+		out = kwargs['out_commodity']
+		val = kwargs['value']
+
+		if epk:
+			obj = cls.objects.get( pk=epk )
+			inp = obj.inp_commodity
+			out = obj.out_commodity
+		else:
+			try:
+				inp = Set_commodity_physical.objects.get(
+				  analysis=a,
+				  commodity__name=inp )
+			except ObjectDoesNotExist as e:
+				msg = 'Specified input does not exist in analysis.'
+				raise ValidationError( msg )
+
+			try:
+				out = Set_commodity_output.objects.get(
+				  analysis=a,
+				  commodity__name=out )
+			except ObjectDoesNotExist as e:
+				msg = 'Specified output does not exist in analysis.'
+				raise ValidationError( msg )
+
+		if epk:
+			kwargs = {'pk' : epk}
+		elif inp and out:
+			kwargs = {
+			  'inp_commodity' : inp,
+			  'process'       : p,
+			  'out_commodity' : out
+			}
+		else:
+			raise Exception( 'Unknown error manipulation Efficiency data' )
+
+		if not val:
+			# remove the row
+			cls.objects.get( **kwargs ).delete()
+
+		else:
+			kwargs.update( defaults={'value': val} )
+			obj, created = cls.objects.get_or_create( **kwargs )
+
+			obj.value = val
+			obj.clean()
+			obj.save()
 
 
 class Param_EmissionActivity ( DM.Model ):

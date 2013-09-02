@@ -6,11 +6,14 @@ from views import (
   process_info,
   process_list,
   remove_analysis_process_datum,
+  remove_analysis_technology_datum,
   technology_info,
   tutorial,
   update_analysis_process,
+  update_analysis_technology,
   user,
   view,
+  test_view,
 )
 
 def Unimplemented ( msg ):
@@ -30,9 +33,13 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)$', analysis_info, name='analysis_info'),
   url(r'^analysis/(?P<analysis_id>\d+)/process_list$', process_list, name='process_list'),
   url(r'^analysis/(?P<analysis_id>\d+)/process_info/(?P<process_ids>(?:\d+,?)+)$', process_info, name='process_info' ),
-  url(r'^analysis/(?P<analysis_id>\d+)/technology_info/(?P<process_id>\d+)$', technology_info, name='technology_info'),
+  url(r'^analysis/(?P<analysis_id>\d+)/technology_info/(?P<process_ids>(?:\d+,?)+)$', technology_info, name='technology_info'),
+
+  url(r'^analysis/(?P<analysis_id>\d+)/update/technology/(?P<technology_id>\d+)$', update_analysis_technology, name='update_analysis_technology'),
+  url(r'^analysis/(?P<analysis_id>\d+)/update/technology/(?P<technology_id>\d+)/delete/(?P<parameter>\w+)$', remove_analysis_technology_datum, name='remove_analysis_technology_datum'),
 
   url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)$', update_analysis_process, name='update_analysis_process'),
   url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)/delete/(?P<parameter>\w+)$', remove_analysis_process_datum, name='remove_analysis_process_datum'),
+  url(r'^test$', test_view, name='test'),
 )
 
