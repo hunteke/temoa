@@ -63,6 +63,9 @@ STATICFILES_DIRS = (
   # Don't forget to use absolute paths, not relative paths.
 )
 
+MIDDLEWARE_CLASSES += [
+  'middleware.prettify_html.Prettify',
+]
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
@@ -79,6 +82,8 @@ TEMPLATE_DIRS = (
 TEMPLATE_CONTEXT_PROCESSORS += (
   "django.contrib.auth.context_processors.auth",
 )
+
+TEMPLATE_STRING_IF_INVALID = ''
 
 INSTALLED_APPS += [
   'django.contrib.admin',
