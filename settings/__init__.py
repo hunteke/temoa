@@ -29,8 +29,8 @@ curdir = dirname( abspath( __file__ ))
 if not isfile( pjoin( curdir, 'local_settings.py' )):
 	missing = pjoin( curdir, 'local_settings.py' )
 	example = pjoin( curdir, 'local_settings.example.py' )
-	msg = ("\n\n  Unable to access '{}' file.  Do you need to "
-	  "create it, based on '{}'?")
+	msg = ("\n\n  Unable to access '{}' file.  Do you need to create it, "
+	  "based on '{}'?")
 	raise IOError( msg.format( missing, example ))
 
   # Now, since it's there, import it without a try block, to let Python/Django
