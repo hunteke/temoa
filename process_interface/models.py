@@ -395,7 +395,7 @@ class PeriodCostParameter ( DM.Model ):
 
 
 	@classmethod
-	def update_with_data ( cls, *args, **kwargs ):
+	def new_with_data ( cls, *args, **kwargs ):
 		a   = kwargs['analysis']
 		per = kwargs['period']
 		p   = kwargs['process']
@@ -406,19 +406,14 @@ class PeriodCostParameter ( DM.Model ):
 		except ObjectDoesNotExist as e:
 			raise ValidationError('Specified vintage does not exist in analysis.')
 
-		if not val:
-			# remove the row
-			cls.objects.get(period=per, process=p).delete()
-		else:
-			obj, created = cls.objects.get_or_create(
-			  period=per,
-			  process=p,
-			  defaults={'value': val}
-			)
+		obj = cls()
+		obj.period  = per
+		obj.process = p
+		obj.value   = val
+		obj.clean()
+		obj.save()
 
-			obj.value = val
-			obj.clean()
-			obj.save()
+		return obj
 
 
 

@@ -43,7 +43,6 @@
 			<form method='post' action='{% url 'process_interface:update_efficiency' analysis_id=analysis.pk process_id=pc.ProcessId efficiency_id=eform.pk %}'>
 			{% csrf_token %}
 			<input type='submit' name='' value='Save' />
-			<input type='hidden' name='data_part' value='Param_Efficiency' />
 			<table class='innertable'>
 				<tbody>
 					<tr><td>{{ eform.inp }}</td><td>{{ eform.out }}</td><td>{{ eform.eff }}</td></tr>
@@ -67,10 +66,55 @@
 			<form method='post' action='{% url 'process_interface:update_emissionactivity' analysis_id=analysis.pk process_id=pc.ProcessId emissionactivity_id=form.pk %}'>
 			{% csrf_token %}
 			<input type='submit' name='' value='Save' />
-			<input type='hidden' name='data_part' value='Param_Efficiency' />
 			<table class='innertable'>
 				<tbody>
 					<tr><td>{{ form.pol }}</td><td>{{ form.eff }}</td><td>{{ form.val }}</td></tr>
+				</tbody>
+			</table>
+			</form>
+		</td></tr>
+		{% endfor %}
+		{% endif %}
+	</tbody>
+	<tbody class='{% cycle rowclass %}'>
+		<tr><th>Cost Fixed</th><td><button class='add' type='button' data-url='{% url 'process_interface:new_costfixed' analysis_id=analysis.pk process_id=pc.ProcessId %}'>Add</button></form></td></tr>
+		{% if pc.forms_costfixed %}
+		<tr class='title'><td colspan='2'>
+			<table class='innertable'>
+				<thead><tr><th>Period</th><th>Value</th></tr></thead>
+			</table>
+		</td></tr>
+		{% for form in pc.forms_costfixed %}
+		<tr><td colspan='2'>
+			<form method='post' action='{% url 'process_interface:update_costfixed' analysis_id=analysis.pk process_id=pc.ProcessId costfixed_id=form.pk %}'>
+			{% csrf_token %}
+			<input type='submit' name='' value='Save' />
+			<table class='innertable'>
+				<tbody>
+					<tr><td>{{ form.per }}</td><td>{{ form.val }}</td></tr>
+				</tbody>
+			</table>
+			</form>
+		</td></tr>
+		{% endfor %}
+		{% endif %}
+	</tbody>
+	<tbody class='{% cycle rowclass %}'>
+		<tr><th>Cost Variable</th><td><button class='add' type='button' data-url='{% url 'process_interface:new_costvariable' analysis_id=analysis.pk process_id=pc.ProcessId %}'>Add</button></form></td></tr>
+		{% if pc.forms_costvariable %}
+		<tr class='title'><td colspan='2'>
+			<table class='innertable'>
+				<thead><tr><th>Period</th><th>Value</th></tr></thead>
+			</table>
+		</td></tr>
+		{% for form in pc.forms_costvariable %}
+		<tr><td colspan='2'>
+			<form method='post' action='{% url 'process_interface:update_costvariable' analysis_id=analysis.pk process_id=pc.ProcessId costvariable_id=form.pk %}'>
+			{% csrf_token %}
+			<input type='submit' name='' value='Save' />
+			<table class='innertable'>
+				<tbody>
+					<tr><td>{{ form.per }}</td><td>{{ form.val }}</td></tr>
 				</tbody>
 			</table>
 			</form>

@@ -1,0 +1,10 @@
+{% load url from future %}
+<form method='post' action='{% url 'process_interface:update_costfixed' analysis_id=analysis.pk process_id=process.pk costfixed_id=form.pk %}'>
+{% csrf_token %}
+<input type='submit' name='' value='Save' />
+<table class='innertable'>
+	<tbody>
+		<tr><td>{{ form.per }}</td><td>{{ form.val }}</td></tr>
+	</tbody>
+</table>
+</form>

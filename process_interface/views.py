@@ -45,6 +45,12 @@ from models import (
 
 from forms import (
   ProcessForm,
+  CostFixedForm,
+  getCostFixedForm,
+  getCostFixedForms,
+  CostVariableForm,
+  getCostVariableForm,
+  getCostVariableForms,
   EfficiencyForm,
   getEfficiencyForm,
   getEfficiencyForms,
@@ -208,11 +214,23 @@ def get_process_info ( processes ):
 	    technology__in=techs )
 	})
 
+	CostFixed = defaultdict( dict )
+	for cf in Param_CostFixed.objects.filter( process__in=processes ):
+		CostFixed[ cf.process ][ cf.pk ] = ( cf.period.vintage, cf.value )
+	CostFixed = defaultdict( null, CostFixed )
+
+	CostVariable = defaultdict( dict )
+	for cv in Param_CostVariable.objects.filter( process__in=processes ):
+		CostVariable[ cv.process ][ cv.pk ] = ( cv.period.vintage, cv.value )
+	CostVariable = defaultdict( null, CostVariable )
+
 	process_characteristics = [
 	  {
 	    'ProcessId'           : p.pk,
 	    'Baseload'            : p.technology in BaseloadTechs,
+	    'CostFixed'           : CostFixed[ p ],
 	    'CostInvest'          : p.costinvest,
+	    'CostVariable'        : CostVariable[ p ],
 	    'DiscountRate'        : p.discountrate,
 	    'Efficiencies'        : Efficiencies[ p ],
 	    'EmissionActivity'    : EmissionActivities[ p ],
@@ -265,14 +283,18 @@ def process_info ( req, analysis_id, process_ids ):
 
 			effs = pc['Efficiencies']
 			emas = pc['EmissionActivity']
+			cf   = pc['CostFixed']
+			cv   = pc['CostVariable']
 
-			pform_kwargs  = { 'prefix' : p.pk }
-			eform_kwargs  = pform_kwargs
-			eaform_kwargs = { 'prefix' : p.pk, 'process' : p }
+			pform_kwargs  = { 'prefix' : 'pr' + str(p.pk) }
+			eform_kwargs  = { 'prefix' : 'ef' + str(p.pk) }
+			eaform_kwargs = { 'prefix' : 'ea' + str(p.pk), 'process' : p }
+			cfform_kwargs = { 'prefix' : 'cf' + str(p.pk), 'process' : p }
 
-			pc['form_process'] = ProcessForm( p, **pform_kwargs )  # process form
-			pc['forms_efficiency'] = getEfficiencyForms( a, effs, **eform_kwargs )
+			pc['form_process']           = ProcessForm( p, **pform_kwargs )  # process form
+			pc['forms_efficiency']       = getEfficiencyForms( a, effs, **eform_kwargs )
 			pc['forms_emissionactivity'] = getEmissionActivityForms( emas, **eaform_kwargs )
+			pc['forms_costfixed']        = getCostFixedForms( cf, **cfform_kwargs )
 
 		c.update( csrf(req) )
 		c.update( username=req.user.username )
@@ -292,6 +314,15 @@ def update_process ( req, analysis_id, process_id ):
 	process_characteristics = get_process_info( [process] )
 	pc = process_characteristics[0]
 
+	kwargs = { 'prefix' : 'pr' + str(process_id) }
+	form = ProcessForm( process, req.POST, **kwargs )
+
+	if form.is_valid():
+		clean = form.cleaned_data
+		with transaction.commit_on_success():
+			process.update_with_data( clean )
+			form = ProcessForm( process, **kwargs )
+
 	c = {}
 	c.update(
 	  username=req.user.username,
@@ -300,21 +331,10 @@ def update_process ( req, analysis_id, process_id ):
 	  technology=process.technology.name,
 	  vintage=process.vintage.vintage,
 	  Baseload=pc['Baseload'],
-	  Storage=pc['Storage']
+	  Storage=pc['Storage'],
+	  form=form
 	)
 	c.update( csrf(req) )
-
-	kwargs = { 'prefix' : process_id }
-	pform = ProcessForm( process, req.POST, **kwargs )
-
-	if pform.is_valid():
-		clean = pform.cleaned_data
-		with transaction.commit_on_success():
-			process.update_with_data( clean )
-			pform = ProcessForm( process, **kwargs )
-
-	c.update( pform=pform )
-
 	return render_to_response( template, c )
 
 
@@ -341,7 +361,7 @@ def new_efficiency ( req, analysis_id, process_id ):
 	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
 
 	template = 'process_interface/form_efficiency_new.html'
-	kwargs = { 'prefix' : process.pk }
+	kwargs = { 'prefix' : 'ef' + str(process.pk) }
 
 	if req.POST:
 		eform = EfficiencyForm( req.POST, analysis=analysis, prefix=process.pk )
@@ -361,14 +381,14 @@ def new_efficiency ( req, analysis_id, process_id ):
 				with transaction.commit_on_success():
 					try:
 						obj = Param_Efficiency.new_with_data( **data )
+						template = 'process_interface/form_efficiency.html'
+						eform = getEfficiencyForm( analysis, obj, **kwargs )
 					except IntegrityError as ie:
 						msg = ('Unable to save new Efficiency row.  A pairing of '
 						  '({}, {}) already exists.  Edit or remove that one '
 						  'instead.')
 						messages.error( req, msg.format( inp, out ))
 
-					template = 'process_interface/form_efficiency.html'
-					eform = getEfficiencyForm( analysis, obj, **kwargs )
 
 	else:
 		if req.GET and req.GET['header']:
@@ -392,13 +412,8 @@ def update_efficiency ( req, analysis_id, process_id, efficiency_id ):
 	  pk=efficiency_id, process=process )
 
 	template = 'process_interface/form_efficiency.html'
-
-	c = {}
-	c.update( analysis=analysis, process=process )
-	c.update( csrf(req) )
-	c.update( username=req.user.username )
-
-	kwargs = { 'prefix' : process.pk }
+	kwargs = { 'prefix' : 'ef' + str(process.pk) }
+	status = 200
 
 	eform = getEfficiencyForm( analysis, efficiency, req.POST, **kwargs )
 	if eform.is_valid():
@@ -417,7 +432,11 @@ def update_efficiency ( req, analysis_id, process_id, efficiency_id ):
 				efficiency.save()
 				eform = getEfficiencyForm( analysis, efficiency, **kwargs )
 
-	c.update( eform=eform )
+	c = {}
+	c.update( analysis=analysis, process=process, form=form )
+	c.update( csrf(req) )
+	c.update( username=req.user.username )
+	c.update(  )
 	return render_to_response( template, c )
 
 
@@ -427,7 +446,7 @@ def new_emissionactivity ( req, analysis_id, process_id ):
 	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
 
 	template = 'process_interface/form_emissionactivity_new.html'
-	kwargs = { 'prefix': process.pk, 'process': process }
+	kwargs = { 'prefix': 'ea' + str(process.pk), 'process': process }
 	status = 200  # HTTP Status code: 200 = everything's good
 
 	if req.POST:
@@ -452,14 +471,15 @@ def new_emissionactivity ( req, analysis_id, process_id ):
 				with transaction.commit_on_success():
 					try:
 						obj = Param_EmissionActivity.new_with_data( **data )
+						template = 'process_interface/form_emissionactivity.html'
+						form = getEmissionActivityForm( obj, **kwargs )
 					except IntegrityError as ie:
 						msg = ('Unable to save new EmissionActivity row.  A '
-						  'tuple of ({}, {}, {}) already exists.  Edit or remove '
-						  'that row instead.')
-						messages.error( req, msg.format( pol, inp, out ))
+						  'tuple of ({}, {}) already exists.  Edit or remove that '
+						  'row instead.')
+						messages.error( req, msg.format( pol, eff ))
+						status = 422
 
-					template = 'process_interface/form_emissionactivity.html'
-					form = getEmissionActivityForm( obj, **kwargs )
 
 	else:
 		if req.GET and req.GET['header']:
@@ -471,7 +491,6 @@ def new_emissionactivity ( req, analysis_id, process_id ):
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
 	return render(req, template, c, status=status)
-	return render_to_response( template, c )
 
 
 @login_required
@@ -486,16 +505,15 @@ def update_emissionactivity (
 	  pk=emissionactivity_id, efficiency__process=process )
 
 	template = 'process_interface/form_emissionactivity.html'
-
-	c = {}
-	c.update( analysis=analysis, process=process )
-	c.update( csrf(req) )
-	c.update( username=req.user.username )
-
-	kwargs = { 'prefix' : process.pk, 'process': process }
+	kwargs = { 'prefix' : 'ea' + str(process.pk), 'process': process }
+	status = 200
 
 	form = getEmissionActivityForm( emactivity, req.POST, **kwargs )
-	if form.is_valid():
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
+		messages.error( req, msg )
+	else:
 		# the only way to change inp/out is by making a new row: since e_id
 		# was passed via get, and it's now known good, we don't use the form's
 		# eff.
@@ -511,6 +529,192 @@ def update_emissionactivity (
 				emactivity.save()
 				form = getEmissionActivityForm( emactivity, **kwargs )
 
-	c.update( form=form )
-	return render_to_response( template, c )
+	c = {}
+	c.update( analysis=analysis, process=process, form=form )
+	c.update( csrf(req) )
+	return render( req, template, c, status=status )
+
+
+@login_required
+def new_costfixed ( req, analysis_id, process_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
+
+	template = 'process_interface/form_costfixed_new.html'
+	kwargs = { 'prefix': 'cf' + str(process.pk), 'process': process }
+	status = 200  # HTTP Status code: 200 = everything's good
+
+	if req.POST:
+		form = CostFixedForm( req.POST, **kwargs )
+		if not form.is_valid():
+			status = 422  # to let Javascript know there was an error
+			msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
+			messages.error( req, msg )
+		else:
+			clean = form.cleaned_data
+			per = clean['per']
+			val = clean['val']
+			if val:
+				data = {
+				  'analysis' : analysis,
+				  'process'  : process,
+				  'period'   : per,
+				  'value'    : val,
+				}
+				with transaction.commit_on_success():
+					try:
+						obj = Param_CostFixed.new_with_data( **data )
+						template = 'process_interface/form_costfixed.html'
+						form = getCostFixedForm( obj, **kwargs )
+					except IntegrityError as ie:
+						msg = ('Unable to save new CostFixed row.  A cost for '
+						  'period {} already exists.  Edit or remove that value '
+						  'instead.')
+						messages.error( req, msg.format( per ))
+						status = 422
+
+
+	else:
+		if req.GET and req.GET['header']:
+			template = 'process_interface/form_costfixed_new_header.html'
+
+		form = CostFixedForm( **kwargs )
+
+	c = {}
+	c.update( analysis=analysis, process=process, form=form )
+	c.update( csrf(req) )
+	return render( req, template, c, status=status )
+
+
+@login_required
+@require_POST
+def update_costfixed ( req, analysis_id, process_id, costfixed_id ):
+	# first, ensure user owns the specified analysis and efficiency
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
+	costfixed = get_object_or_404( Param_CostFixed,
+	  pk=costfixed_id, process=process )
+
+	template = 'process_interface/form_costfixed.html'
+	kwargs = { 'prefix' : 'cf' + str(process.pk), 'process' : process }
+	status = 200  # HTTP Status code: 200 = everything's good
+
+	form = getCostFixedForm( costfixed, req.POST, **kwargs )
+	if not form.is_valid():
+		status = 422 # unprocessable entity
+		msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
+		messages.error( req, msg )
+
+	else:
+		# the only way to change inp/out is by making a new row: since e_id
+		# was passed via get, and it's now known good, we don't use the form's
+		# eff.
+		clean = form.cleaned_data
+		value = clean['val']
+		with transaction.commit_on_success():
+			if not value:
+				costfixed.delete()
+				template = 'process_interface/form_costfixed_deleted.html'
+			else:
+				costfixed.value = value
+				costfixed.clean()
+				costfixed.save()
+				form = getCostFixedForm( costfixed, **kwargs )
+
+	c = {}
+	c.update( analysis=analysis, process=process, form=form )
+	c.update( csrf(req) )
+	return render( req, template, c, status=status )
+
+
+@login_required
+def new_costvariable ( req, analysis_id, process_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
+
+	template = 'process_interface/form_costvariable_new.html'
+	kwargs = { 'prefix': 'cf' + str(process.pk), 'process': process }
+	status = 200  # HTTP Status code: 200 = everything's good
+
+	if req.POST:
+		form = CostVariableForm( req.POST, **kwargs )
+		if not form.is_valid():
+			status = 422  # to let Javascript know there was an error
+			msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
+			messages.error( req, msg )
+		else:
+			clean = form.cleaned_data
+			per = clean['per']
+			val = clean['val']
+			if val:
+				data = {
+				  'analysis' : analysis,
+				  'process'  : process,
+				  'period'   : per,
+				  'value'    : val,
+				}
+				with transaction.commit_on_success():
+					try:
+						obj = Param_CostVariable.new_with_data( **data )
+						template = 'process_interface/form_costvariable.html'
+						form = getCostVariableForm( obj, **kwargs )
+					except IntegrityError as ie:
+						msg = ('Unable to save new CostVariable row.  A cost for '
+						  'period {} already exists.  Edit or remove that value '
+						  'instead.')
+						messages.error( req, msg.format( per ))
+						status = 422
+
+
+	else:
+		if req.GET and req.GET['header']:
+			template = 'process_interface/form_costvariable_new_header.html'
+
+		form = CostVariableForm( **kwargs )
+
+	c = {}
+	c.update( analysis=analysis, process=process, form=form )
+	c.update( csrf(req) )
+	return render( req, template, c, status=status )
+
+
+@login_required
+@require_POST
+def update_costvariable ( req, analysis_id, process_id, costvariable_id ):
+	# first, ensure user owns the specified analysis and efficiency
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
+	costvariable = get_object_or_404( Param_CostVariable,
+	  pk=costvariable_id, process=process )
+
+	template = 'process_interface/form_costvariable.html'
+	kwargs = { 'prefix' : 'cf' + str(process.pk), 'process' : process }
+	status = 200  # HTTP Status code: 200 = everything's good
+
+	form = getCostVariableForm( costvariable, req.POST, **kwargs )
+	if not form.is_valid():
+		status = 422 # unprocessable entity
+		msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
+		messages.error( req, msg )
+
+	else:
+		# the only way to change inp/out is by making a new row: since e_id
+		# was passed via get, and it's now known good, we don't use the form's
+		# eff.
+		clean = form.cleaned_data
+		value = clean['val']
+		with transaction.commit_on_success():
+			if not value:
+				costvariable.delete()
+				template = 'process_interface/form_costvariable_deleted.html'
+			else:
+				costvariable.value = value
+				costvariable.clean()
+				costvariable.save()
+				form = getCostVariableForm( costvariable, **kwargs )
+
+	c = {}
+	c.update( analysis=analysis, process=process, form=form )
+	c.update( csrf(req) )
+	return render( req, template, c, status=status )
 

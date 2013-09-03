@@ -12,6 +12,10 @@ from views import (
   update_efficiency,
   new_emissionactivity,
   update_emissionactivity,
+  new_costfixed,
+  update_costfixed,
+  new_costvariable,
+  update_costvariable,
   user,
   view,
   test_view,
@@ -39,6 +43,12 @@ urlpatterns = patterns('',
 
   url(r'^analysis/(?P<analysis_id>\d+)/create/process/(?P<process_id>\d+)/EmissionActivity$', new_emissionactivity, name='new_emissionactivity'),
   url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)/(?P<emissionactivity_id>\d+)/EmissionActivity$', update_emissionactivity, name='update_emissionactivity'),
+
+  url(r'^analysis/(?P<analysis_id>\d+)/create/process/(?P<process_id>\d+)/CostFixed$', new_costfixed, name='new_costfixed'),
+  url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)/(?P<costfixed_id>\d+)/CostFixed$', update_costfixed, name='update_costfixed'),
+
+  url(r'^analysis/(?P<analysis_id>\d+)/create/process/(?P<process_id>\d+)/CostVariable$', new_costvariable, name='new_costvariable'),
+  url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)/(?P<costvariable_id>\d+)/CostVariable$', update_costvariable, name='update_costvariable'),
 
   url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)$', update_process, name='update_process'),
 

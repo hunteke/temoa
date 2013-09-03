@@ -288,3 +288,126 @@ def getEmissionActivityForms ( emactivities, *args, **kwargs ):
 
 	return forms
 
+
+class CostForm ( F.Form ):
+	per = F.ChoiceField( label=_('Period') )
+	val = F.FloatField( required=False, label=_('Percent') )
+
+	class Meta:
+		abstract = True
+
+	def __init__( self, *args, **kwargs ):
+		process = kwargs.pop( 'process' )
+		pk  = kwargs.pop( 'pk',  None )
+		per = kwargs.pop( 'per', None )
+		val = kwargs.pop( 'val', None )
+		per_choices = kwargs.pop( 'per_choices', None )
+
+		analysis = process.analysis
+
+		if pk:
+			per_choices = ((per, per),)
+
+		if not per_choices:
+			per_choices = CostForm.getPeriodChoices( process )
+
+		super( CostForm, self ).__init__( *args, **kwargs )
+
+		flds = self.fields
+		flds['per'].initial = per
+		flds['val'].initial = val
+
+		flds['per'].choices = per_choices
+
+		if pk:
+			flds['per'].widget = F.TextInput()
+			flds['per'].widget.attrs.update( readonly=True )
+
+		self.pk = pk
+
+	@classmethod
+	def getPeriodChoices ( cls, process ):
+		p    = process
+		v    = p.vintage.vintage    # cannot be null
+		a    = p.analysis           # cannot be null
+		life = p.lifetime           # /could/ be null,
+		p_0  = a.period_0
+
+		if not life:
+			t = p.technology
+			plt = Param_LifetimeTech.objects.filter( analysis=a, technology=t )
+			if plt:
+				life = plt[0].value
+			else:
+				return (('Specify Lifetime','Specify Lifetime'),)
+
+		final_year = Vintage.objects.filter( analysis=a )
+		final_year = final_year.aggregate( Max('vintage') )['vintage__max']
+
+		active_periods = Vintage.objects.filter(
+		  analysis=a,
+		  vintage__gte=max(v, p_0),
+		  vintage__lt=min(v + life, final_year)
+		).distinct()
+
+		choices = sorted( (v.vintage, v.vintage) for v in active_periods )
+		return choices
+
+
+
+class CostFixedForm ( CostForm ): pass
+class CostVariableForm ( CostForm ): pass
+
+
+
+def getCostFixedForm ( costfixed, *args, **kwargs ):
+	kwargs.update(
+	  pk=costfixed.pk,
+	  per=costfixed.period.vintage,
+	  val=costfixed.value
+	)
+
+	return CostFixedForm( *args, **kwargs )
+
+
+def getCostFixedForms ( costfixed, *args, **kwargs ):
+	forms = []
+	if not costfixed:
+		return forms
+
+	process = kwargs['process']
+	per_choices = CostForm.getPeriodChoices( process )
+
+	kwargs.update( per_choices=per_choices )
+	for pk, (per, val) in sorted( costfixed.iteritems(), key=iget(1) ):
+		kwargs.update( pk=pk, per=per, val=val )
+		forms.append( CostFixedForm( *args, **kwargs ))
+
+	return forms
+
+
+def getCostVariableForm ( costvariable, *args, **kwargs ):
+	kwargs.update(
+	  pk=costvariable.pk,
+	  per=costvariable.period.vintage,
+	  val=costvariable.value
+	)
+
+	return CostVariableForm( *args, **kwargs )
+
+
+def getCostVariableForms ( costvariable, *args, **kwargs ):
+	forms = []
+	if not costvariable:
+		return forms
+
+	process = kwargs['process']
+	per_choices = CostForm.getPeriodChoices( process )
+
+	kwargs.update( per_choices=per_choices )
+	for pk, (per, val) in sorted( costvariable.iteritems(), key=iget(1) ):
+		kwargs.update( pk=pk, per=per, val=val )
+		forms.append( CostVariableForm( *args, **kwargs ))
+
+	return forms
+
