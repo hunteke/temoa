@@ -96,8 +96,8 @@ class ProcessForm ( F.Form ):
 
 
 class EfficiencyForm ( F.Form ):
-	inp    = F.ChoiceField( label=_('Input'),  widget=F.TextInput )
-	out    = F.ChoiceField( label=_('Output'), widget=F.TextInput )
+	inp    = F.ChoiceField( label=_('Input') )
+	out    = F.ChoiceField( label=_('Output') )
 	eff    = F.FloatField( required=False, label=_('Percent') )
 
 	def __init__( self, *args, **kwargs ):
@@ -108,6 +108,10 @@ class EfficiencyForm ( F.Form ):
 		eff = kwargs.pop( 'eff', None )
 		inp_choices = kwargs.pop( 'inp_choices', None )
 		out_choices = kwargs.pop( 'out_choices', None )
+
+		if pk:
+			inp_choices = ((inp, inp),)
+			out_choices = ((out, out),)
 
 		if not inp_choices:
 			inp_choices = EfficiencyForm.getInputChoices( analysis )
@@ -125,6 +129,8 @@ class EfficiencyForm ( F.Form ):
 		flds['out'].choices = out_choices
 
 		if pk:
+			flds['inp'].widget = F.TextInput()
+			flds['out'].widget = F.TextInput()
 			flds['inp'].widget.attrs.update( readonly=True )
 			flds['out'].widget.attrs.update( readonly=True )
 
@@ -182,8 +188,8 @@ def getEfficiencyForms ( analysis, efficiencies, *args, **kwargs ):
 
 
 class EmissionActivityForm ( F.Form ):
-	pol = F.ChoiceField( label=_('Pollutant'), widget=F.TextInput )
-	eff = F.ChoiceField( label=_('Efficiency'), widget=F.TextInput )
+	pol = F.ChoiceField( label=_('Pollutant') )
+	eff = F.ChoiceField( label=_('Efficiency') )
 	val = F.FloatField( required=False, label=_('Percent') )
 
 	def __init__( self, *args, **kwargs ):
@@ -196,6 +202,10 @@ class EmissionActivityForm ( F.Form ):
 		eff_choices = kwargs.pop( 'eff_choices', None )
 
 		analysis = process.analysis
+
+		if pk:
+			pol_choices = ((pol, pol),)
+			eff_choices = ((eff, eff),)
 
 		if not eff_choices:
 			pol_choices = EmissionActivityForm.getPollutantChoices( analysis )
@@ -213,6 +223,8 @@ class EmissionActivityForm ( F.Form ):
 		flds['eff'].choices = eff_choices
 
 		if pk:
+			flds['pol'].widget = F.TextInput()
+			flds['eff'].widget = F.TextInput()
 			flds['pol'].widget.attrs.update( readonly=True )
 			flds['eff'].widget.attrs.update( readonly=True )
 
