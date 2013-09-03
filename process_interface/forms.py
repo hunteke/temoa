@@ -170,16 +170,8 @@ def getEfficiencyForms ( analysis, efficiencies, *args, **kwargs ):
 	if not efficiencies:
 		return forms
 
-	inp_choices = [
-	  (cp.commodity.name, cp.commodity.name)
-
-	  for cp in Set_commodity_physical.objects.filter(analysis=analysis)
-	]
-	out_choices = [
-	  (cp.commodity.name, cp.commodity.name)
-
-	  for cp in Set_commodity_output.objects.filter(analysis=analysis)
-	]
+	inp_choices = EfficiencyForm.getInputChoices( analysis )
+	out_choices = EfficiencyForm.getOutputChoices( analysis )
 
 	kwargs.update(
 	  analysis=analysis,
