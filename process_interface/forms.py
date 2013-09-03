@@ -12,8 +12,10 @@ from models import (
   Vintage,
   Param_CostFixed,
   Param_CostVariable,
+  Param_Efficiency,
   Param_LifetimeTech,
   Param_LifetimeTechLoan,
+  Set_commodity_emission,
   Set_commodity_physical,
   Set_commodity_output
 )
@@ -72,128 +74,6 @@ class ProcessForm ( F.Form ):
 			)
 			setUpField('costinvest')
 
-		costfixed = []
-		periods_available = set( (p.vintage, p.vintage) for p in all_cfr )
-		dkey = 'id_{}costfixed_datalist'.format( str(prefix) + '-' )
-		for per, val in cur_cfr:
-			pkey, vkey = (
-			  'costfixed_{}_period'.format(per),
-			  'costfixed_{}_value'.format(per)
-			)
-			flds[ pkey ] = F.ChoiceField(
-			  label=_('Period'),
-			  widget=F.TextInput,
-			  required=False )
-			flds[ vkey ] = F.FloatField(
-			  label=_('Fixed Cost'),
-			  required=False )
-
-			if per and val:
-				forced_choice = set( ((per, per),) )
-				flds[ pkey ].widget.attrs['readonly'] = True
-				flds[ pkey ].choices = forced_choice
-				flds[ pkey ].initial = per
-				flds[ vkey ].initial = val
-
-				periods_available -= forced_choice
-			else:
-				new_key = pkey
-
-			costfixed.append( (self[pkey], self[vkey]) )
-
-		if periods_available:
-			periods_available = sorted( periods_available )
-			self.costfixed_datalist = [ i[0] for i in periods_available ]
-			self.costfixed_datalist_id = dkey
-
-			# And, for completeness ...
-			flds[ new_key ].choices = periods_available
-			flds[ new_key ].widget.attrs.update({ 'list' : dkey })
-
-		costvariable = []
-		periods_available = set( (p.vintage, p.vintage) for p in all_cfr )
-		dkey = 'id_{}costvariable_datalist'.format( str(prefix) + '-' )
-		for per, val in cur_cvr:
-			pkey, vkey = (
-			  'costvariable_{}_period'.format(per),
-			  'costvariable_{}_value'.format(per)
-			)
-			flds[ pkey ] = F.ChoiceField(
-			  label=_('Period'),
-			  initial=per if per else '',
-			  widget=F.TextInput,
-			  required=False )
-			flds[ vkey ] = F.FloatField(
-			  label=_('Variable Cost'),
-			  required=False )
-
-			if per and val:
-				forced_choice = set( ((per, per),) )
-				flds[ pkey ].widget.attrs['readonly'] = True
-				flds[ pkey ].choices = forced_choice
-				flds[ vkey ].initial = val
-
-				periods_available -= forced_choice
-			else:
-				new_key = pkey
-
-			costvariable.append( (self[pkey], self[vkey]) )
-
-		if periods_available:
-			periods_available = sorted( periods_available )
-			self.costvariable_datalist = [ i[0] for i in periods_available ]
-			self.costvariable_datalist_id = dkey
-
-			# And, for completeness ...
-			flds[ new_key ].choices = periods_available
-			flds[ new_key ].widget.attrs.update({ 'list' : dkey })
-
-		efficiency = []
-		inp_choices = [
-		  (cp.commodity.name, cp.commodity.name)
-
-		  for cp in Set_commodity_physical.objects.filter(analysis=a)
-		]
-		out_choices = [
-		  (cp.commodity.name, cp.commodity.name)
-
-		  for cp in Set_commodity_output.objects.filter(analysis=a)
-		]
-		for epk, (inp, out, val) in cur_effr:
-			ikey, okey, vkey = (
-			  'efficiency_{}_input'.format(  epk ),
-			  'efficiency_{}_output'.format( epk ),
-			  'efficiency_{}_value'.format(  epk )
-			)
-			flds[ ikey ] = F.ChoiceField(
-			  label=_('Input'),
-			  choices=inp_choices,
-			  widget=F.TextInput,
-			  required=False )
-			flds[ okey ] = F.ChoiceField(
-			  label=_('Output'),
-			  choices=out_choices,
-			  widget=F.TextInput,
-			  required=False )
-			flds[ vkey ] = F.FloatField(
-			  label=_('Percent'),
-			  required=False )
-
-			if inp and out and val:
-				flds[ ikey ].widget.attrs['readonly'] = True
-				flds[ okey ].widget.attrs['readonly'] = True
-				flds[ ikey ].initial = inp
-				flds[ okey ].initial = out
-				flds[ vkey ].initial = val
-			else:
-				new_keys = (ikey, okey, vkey)
-
-			efficiency.append( (self[ikey], self[okey], self[vkey]) )
-
-		self.efficiency   = efficiency
-		self.costfixed    = costfixed
-		self.costvariable = costvariable
-
 
 	def clean_lifetime ( self ):
 		life = self.cleaned_data['lifetime']
@@ -217,6 +97,100 @@ class ProcessForm ( F.Form ):
 
 		return life
 
+
+
+class EfficiencyForm ( F.Form ):
+	inp    = F.ChoiceField( label=_('Input'),  widget=F.TextInput )
+	out    = F.ChoiceField( label=_('Output'), widget=F.TextInput )
+	eff    = F.FloatField( required=False, label=_('Percent') )
+
+	def __init__( self, *args, **kwargs ):
+		analysis = kwargs.pop( 'analysis' )
+		pk  = kwargs.pop( 'pk',  None )
+		inp = kwargs.pop( 'inp', None )
+		out = kwargs.pop( 'out', None )
+		eff = kwargs.pop( 'eff', None )
+		inp_choices = kwargs.pop( 'inp_choices', None )
+		out_choices = kwargs.pop( 'out_choices', None )
+
+		if not inp_choices:
+			inp_choices = EfficiencyForm.getInputChoices( analysis )
+		if not out_choices:
+			out_choices = EfficiencyForm.getOutputChoices( analysis )
+
+		super( EfficiencyForm, self ).__init__( *args, **kwargs )
+
+		flds = self.fields
+		flds['inp'].initial = inp
+		flds['out'].initial = out
+		flds['eff'].initial = eff
+
+		flds['inp'].choices = inp_choices
+		flds['out'].choices = out_choices
+
+		if pk:
+			flds['inp'].widget.attrs.update( readonly=True )
+			flds['out'].widget.attrs.update( readonly=True )
+
+		self.pk = pk
+
+
+	@classmethod
+	def getInputChoices ( cls, analysis ):
+		choices = [ (cp.commodity.name, cp.commodity.name)
+		  for cp in Set_commodity_physical.objects.filter(analysis=analysis)
+		]
+
+		return choices
+
+	@classmethod
+	def getOutputChoices ( cls, analysis ):
+		choices = [ (cp.commodity.name, cp.commodity.name)
+		  for cp in Set_commodity_output.objects.filter(analysis=analysis)
+		]
+
+		return choices
+
+
+
+def getEfficiencyForm ( analysis, efficiency, *args, **kwargs ):
+	kwargs.update(
+	  analysis=analysis,
+	  pk=efficiency.pk,
+	  inp=efficiency.inp_commodity.commodity,
+	  out=efficiency.out_commodity.commodity,
+	  eff=efficiency.value
+	)
+
+	return EfficiencyForm( *args, **kwargs )
+
+
+def getEfficiencyForms ( analysis, efficiencies, *args, **kwargs ):
+	forms = []
+	if not efficiencies:
+		return forms
+
+	inp_choices = [
+	  (cp.commodity.name, cp.commodity.name)
+
+	  for cp in Set_commodity_physical.objects.filter(analysis=analysis)
+	]
+	out_choices = [
+	  (cp.commodity.name, cp.commodity.name)
+
+	  for cp in Set_commodity_output.objects.filter(analysis=analysis)
+	]
+
+	kwargs.update(
+	  analysis=analysis,
+	  inp_choices=inp_choices,
+	  out_choices=out_choices
+	)
+	for pk, (inp, out, eff) in sorted( efficiencies.iteritems(), key=iget(1) ):
+		kwargs.update( pk=pk, inp=inp, out=out, eff=eff )
+		forms.append( EfficiencyForm( *args, **kwargs ))
+
+	return forms
 
 
 def getFormCostRows ( param_type, process ):
@@ -272,3 +246,18 @@ def getFormEfficiencyRows ( efficiencies ):
 	return eff
 
 
+def getFormEmissionActivityRows ( emactivities, process ):
+	if emactivities:
+		ems = [
+		  (pk, (pol, inp, out, val))
+
+		  for pk, (pol, inp, out, val) in emactivities.iteritems()
+		]
+	else:
+		ems = []
+
+	effs = Param_Efficiency.objects.filter( process=process )
+	if len( effs ) > len( ems ):
+		ems.insert( 0, (None, (None, None, None, None)) )
+
+	return ems

@@ -28,10 +28,23 @@ body { height: 100% ; margin: 1em; }
 #process_characteristics .items table { border-collapse: collapse; border-width: 1pt 0.5pt; border-color: #000; border-style: solid; }
 #process_characteristics .items td { padding: 0.2ex 1em 0.2ex 1em;  }
 #process_characteristics .items .info { color: #777; font-weight: normal; font-style: italic; }
-#process_characteristics .items tbody { padding: 2em; background: gray; }
+#process_characteristics .items tbody { padding: 2em; }
 #process_characteristics .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
 #process_characteristics .items thead tr       { border-top: 1pt solid #000; border-bottom: 1pt dotted #000; background: #29f; font-size: 120%; }
 #process_characteristics .items thead tr.error { background: #f00; color: #fff; }
+#process_characteristics .items .process { width: 100%; }
+#process_characteristics .items button {
+	background-color: transparent;
+	background: url('/static/process_interface/icons/blue_list_add.svg');
+	background-repeat: no-repeat;
+	background-origin: content-box;
+	background-position: center;
+	background-size: 25px 25px;
+	width: 100%;
+	height: 25px;
+	color: transparent;
+	border: none;
+}
 
 #process_characteristics .items tr th { text-align: left; }
 #process_characteristics .items thead tr th { text-align: center; }

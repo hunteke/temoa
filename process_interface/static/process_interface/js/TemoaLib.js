@@ -71,28 +71,84 @@ function showStatus ( msg, cssclass ) {
 }
 
 
-function submitProcessForm ( ) {
+function addRow ( ) {
+	var $button = $(this);
+
+	var $tbody = $button.parents( 'tbody:first' );
+	var $new_rows = $tbody.find( 'form.new' );
+	if ( $new_rows.length > 0 ) {
+		return;
+	}
+
+	var url = $button.data().url;
+	var data = {}
+	var $children = $tbody.children();
+	if ( 1 === $children.length ) {
+		// There is no header, so request one
+		data['header'] = 'yes';
+	}
+
+	$.get( url, data )
+	.done( function ( response_data, textStatus, jqXHR ) {
+		var $newData = $( response_data );
+		if ( 1 === $children.length ) {
+			$tbody.append( $newData );
+		} else {
+			$( $tbody.children()[1]).after( $newData );
+		}
+
+		var $newForm = $newData.find('form');
+		$newForm.submit( submitForm )
+	});
+}
+
+function disable ( list_of_inputs ) {
+	for ( var i = 0; i < list_of_inputs.length; ++i ) {
+		$(list_of_inputs[ i ]).attr('disabled', 'true');
+	}
+}
+
+function enable ( list_of_inputs ) {
+	for ( var i = 0; i < list_of_inputs.length; ++i ) {
+		$(list_of_inputs[ i ]).removeAttr('disabled');
+	}
+}
+
+function submitForm ( ) {
 	var $form = $(this);
 
 	// First, serialize the data
 	var to_submit = $form.serialize();
 
-	// /then/ disabled the form
+	// /then/ disable the form
 	var inputs = $form.find('input');
-	for ( var i = 0; i < inputs.length; ++i ) {
-		$(inputs[ i ]).attr('disabled', 'true');
-	}
+	disable( inputs );
 	var submit_url = $form.attr('action');
 
 	$.post( submit_url, to_submit )
 	.done( function ( response_data, textStatus, jqXHR ) {
-		var $newForm = $( response_data );
+		var $newData = $( response_data );
+		var $newForm = $newData;
+
+		if ( ! $newData.is( 'form' ) ) {
+			$newForm = $newData.find( 'form' );
+		}
 		$form.replaceWith( $newForm );
-		$newForm.submit( submitProcessForm );
+		$newForm.submit( submitForm );
+		$newForm.find('input[type="text"]:first').focus();
 	})
 	.fail( function ( jqXHR, textStatus, errorThrown ) {
 		var server_msg = $( jqXHR ).attr( 'responseText' );
-		showStatus( 'Unable to alter process.  Server said: ' + server_msg );
+		$.get( '/session_messages/' )
+		.done( function( response_data, textStatus, jqXHR ) {
+			var $msgs = $( response_data );
+			// Though response_data is an array, assume only one message
+			var level = $msgs[0][0];
+			var msg   = $msgs[0][1];
+
+			showStatus( 'Unable to alter process.  Server said: ' + msg, level );
+			enable( inputs );
+		});
 	});
 
 	return false;  // don't submit through normal channels, please
@@ -109,7 +165,13 @@ function showProcessCharacteristics ( html_string ) {
 	var $forms = $pcItems.find( 'form' );
 	for ( var i = 0; i < $forms.length; ++i ) {
 		var $form = $( $forms[ i ] );
-		$form.submit( submitProcessForm );
+		$form.submit( submitForm );
+	}
+
+	var $buttons = $pcItems.find( 'button.add' );
+	for ( var i = 0; i < $buttons.length; ++i ) {
+		var $button = $( $buttons[ i ] );
+		$button.click( addRow );
 	}
 
 	$('#process_characteristics').removeClass('hidden');

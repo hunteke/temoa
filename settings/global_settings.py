@@ -26,7 +26,9 @@ TEMPLATE_LOADERS = [
   'django.template.loaders.app_directories.Loader',
 ]
 
-TEMPLATE_CONTEXT_PROCESSORS = []
+TEMPLATE_CONTEXT_PROCESSORS = [
+  'django.contrib.messages.context_processors.messages',
+]
 
 MIDDLEWARE_CLASSES = [
   'django.middleware.gzip.GZipMiddleware',
