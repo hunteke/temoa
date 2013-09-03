@@ -32,10 +32,6 @@ class ProcessForm ( F.Form ):
 	loanlife     = F.FloatField( required=False, label=_('Loan Lifetime') )
 
 	def __init__ ( self, process, *args, **kwargs ):
-		cur_cfr, all_cfr = kwargs.pop( 'CostFixedRows',    ((), ()) )
-		cur_cvr, all_cvr = kwargs.pop( 'CostVariableRows', ((), ()) )
-		cur_effr = kwargs.pop( 'EfficiencyRows',       () )
-		cur_emar = kwargs.pop( 'EmissionActivityRows', () )
 		super(ProcessForm, self).__init__(*args, **kwargs)
 		prefix = kwargs.get( 'prefix', '' )
 
@@ -185,71 +181,98 @@ def getEfficiencyForms ( analysis, efficiencies, *args, **kwargs ):
 	return forms
 
 
-def getFormCostRows ( param_type, process ):
-	cls = { 'fixed' : Param_CostFixed, 'variable' : Param_CostVariable }
-	param = cls[ param_type ]
+class EmissionActivityForm ( F.Form ):
+	pol = F.ChoiceField( label=_('Pollutant'), widget=F.TextInput )
+	eff = F.ChoiceField( label=_('Efficiency'), widget=F.TextInput )
+	val = F.FloatField( required=False, label=_('Percent') )
 
-	p    = process
-	v    = p.vintage.vintage    # cannot be null
-	a    = p.analysis           # cannot be null
-	life = p.lifetime           # /could/ be null,
-	p_0  = a.period_0
+	def __init__( self, *args, **kwargs ):
+		process = kwargs.pop( 'process' )
+		pk  = kwargs.pop( 'pk',  None )
+		pol = kwargs.pop( 'pol', None )
+		eff = kwargs.pop( 'eff', None )
+		val = kwargs.pop( 'val', None )
+		pol_choices = kwargs.pop( 'pol_choices', None )
+		eff_choices = kwargs.pop( 'eff_choices', None )
 
-	if not life:
-		t = p.technology
-		plt = Param_LifetimeTech.objects.filter( analysis=a, technology=t )
-		if plt:
-			life = plt[0].value
-		else:
-			return []
+		analysis = process.analysis
 
-	final_year = Vintage.objects.filter( analysis=a )
-	final_year = final_year.aggregate( Max('vintage') )['vintage__max']
+		if not eff_choices:
+			pol_choices = EmissionActivityForm.getPollutantChoices( analysis )
+		if not eff_choices:
+			eff_choices = EmissionActivityForm.getEfficiencyChoices( process )
 
-	active_periods = Vintage.objects.filter(
-	  analysis=a,
-	  vintage__gte=max(v, p_0),
-	  vintage__lt=min(v + life, final_year)
-	).distinct().order_by('vintage')
+		super( EmissionActivityForm, self ).__init__( *args, **kwargs )
 
-	cq = param.objects.filter(process=p, period__in=active_periods)
-	cq = cq.order_by('period__vintage')
+		flds = self.fields
+		flds['pol'].initial = pol
+		flds['eff'].initial = eff
+		flds['val'].initial = val
 
-	rows = [ (c.period.vintage, c.value) for c in cq ]
-	if len( rows ) < len( active_periods ):
-		rows.insert( 0, (None, None) )
+		flds['pol'].choices = pol_choices
+		flds['eff'].choices = eff_choices
 
-	return rows, active_periods
+		if pk:
+			flds['pol'].widget.attrs.update( readonly=True )
+			flds['eff'].widget.attrs.update( readonly=True )
 
-
-def getFormEfficiencyRows ( efficiencies ):
-	if efficiencies:
-		eff = [
-		  (pk, (inp, out, val))
-
-		  for pk, (inp, out, val) in efficiencies.iteritems()
-		  ]
-	else:
-		eff = []
-
-	eff.sort( key=iget(1) )
-	eff.insert( 0, (None, (None, None, None)) )
-
-	return eff
+		self.pk = pk
 
 
-def getFormEmissionActivityRows ( emactivities, process ):
-	if emactivities:
-		ems = [
-		  (pk, (pol, inp, out, val))
-
-		  for pk, (pol, inp, out, val) in emactivities.iteritems()
+	@classmethod
+	def getPollutantChoices ( cls, analysis ):
+		choices = [ (cp.commodity.name, cp.commodity.name)
+		  for cp in Set_commodity_emission.objects.filter(analysis=analysis)
 		]
-	else:
-		ems = []
 
-	effs = Param_Efficiency.objects.filter( process=process )
-	if len( effs ) > len( ems ):
-		ems.insert( 0, (None, (None, None, None, None)) )
+		return choices
 
-	return ems
+
+	@classmethod
+	def getEfficiencyChoices ( cls, process ):
+		choices = []
+		for eff in Param_Efficiency.objects.filter(process=process):
+			inp = eff.inp_commodity.commodity.name
+			out = eff.out_commodity.commodity.name
+			choice = '{}, {}'.format( inp, out )
+			choices.append( (choice, choice) )
+
+		return choices
+
+
+def getEmissionActivityForm ( emactivity, *args, **kwargs ):
+	inp = emactivity.efficiency.inp_commodity.commodity.name
+	out = emactivity.efficiency.out_commodity.commodity.name
+	eff = '{}, {}'.format( inp, out )
+
+	kwargs.update(
+	  pk=emactivity.pk,
+	  pol=emactivity.emission.commodity.name,
+	  eff=eff,
+	  val=emactivity.value
+	)
+
+	return EmissionActivityForm( *args, **kwargs )
+
+
+def getEmissionActivityForms ( emactivities, *args, **kwargs ):
+	forms = []
+	if not emactivities:
+		return forms
+
+	process = kwargs['process']
+	analysis = process.analysis
+	pol_choices = EmissionActivityForm.getPollutantChoices( analysis )
+	eff_choices = EmissionActivityForm.getEfficiencyChoices( process )
+
+	kwargs.update(
+	  pol_choices=pol_choices,
+	  eff_choices=eff_choices
+	)
+	for pk, (pol, inp, out, val) in sorted( emactivities.iteritems(), key=iget(1) ):
+		eff = '{}, {}'.format( inp, out )
+		kwargs.update( pk=pk, pol=pol, eff=eff, val=val )
+		forms.append( EmissionActivityForm( *args, **kwargs ))
+
+	return forms
+

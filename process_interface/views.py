@@ -11,7 +11,7 @@ from django.db import transaction
 from django.db.models import Max
 from django.db.utils import IntegrityError
 from django.http import HttpResponse, Http404
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render, render_to_response, get_object_or_404
 from django.utils import simplejson as json
 from django.utils.datastructures import MultiValueDictKeyError
 from django.views.decorators.http import require_POST
@@ -48,9 +48,9 @@ from forms import (
   EfficiencyForm,
   getEfficiencyForm,
   getEfficiencyForms,
-  getFormCostRows,
-  getFormEfficiencyRows,
-  getFormEmissionActivityRows,
+  EmissionActivityForm,
+  getEmissionActivityForm,
+  getEmissionActivityForms,
 )
 
 # Create your views here.
@@ -260,14 +260,19 @@ def process_info ( req, analysis_id, process_ids ):
 		a = analysis
 
 		for pc in process_characteristics:
+
 			p = procs[ pc['ProcessId'] ]
 
 			effs = pc['Efficiencies']
+			emas = pc['EmissionActivity']
 
-			kwargs = { 'prefix' : pc['ProcessId'] }
+			pform_kwargs  = { 'prefix' : p.pk }
+			eform_kwargs  = pform_kwargs
+			eaform_kwargs = { 'prefix' : p.pk, 'process' : p }
 
-			pc['form_process'] = ProcessForm( p, **kwargs )  # process form
-			pc['forms_efficiency'] = getEfficiencyForms( a, effs, **kwargs )
+			pc['form_process'] = ProcessForm( p, **pform_kwargs )  # process form
+			pc['forms_efficiency'] = getEfficiencyForms( a, effs, **eform_kwargs )
+			pc['forms_emissionactivity'] = getEmissionActivityForms( emas, **eaform_kwargs )
 
 		c.update( csrf(req) )
 		c.update( username=req.user.username )
@@ -416,4 +421,96 @@ def update_efficiency ( req, analysis_id, process_id, efficiency_id ):
 	return render_to_response( template, c )
 
 
+@login_required
+def new_emissionactivity ( req, analysis_id, process_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
+
+	template = 'process_interface/form_emissionactivity_new.html'
+	kwargs = { 'prefix': process.pk, 'process': process }
+	status = 200  # HTTP Status code: 200 = everything's good
+
+	if req.POST:
+		form = EmissionActivityForm( req.POST, **kwargs )
+		if not form.is_valid():
+			status = 422  # to let Javascript know there was an error
+			msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
+			messages.error( req, msg )
+		else:
+			clean = form.cleaned_data
+			pol = clean['pol']
+			eff = clean['eff']
+			val = clean['val']
+			if val:
+				data = {
+				  'analysis'   : analysis,
+				  'process'    : process,
+				  'pollutant'  : pol,
+				  'efficiency' : eff,
+				  'value'      : val,
+				}
+				with transaction.commit_on_success():
+					try:
+						obj = Param_EmissionActivity.new_with_data( **data )
+					except IntegrityError as ie:
+						msg = ('Unable to save new EmissionActivity row.  A '
+						  'tuple of ({}, {}, {}) already exists.  Edit or remove '
+						  'that row instead.')
+						messages.error( req, msg.format( pol, inp, out ))
+
+					template = 'process_interface/form_emissionactivity.html'
+					form = getEmissionActivityForm( obj, **kwargs )
+
+	else:
+		if req.GET and req.GET['header']:
+			template = 'process_interface/form_emissionactivity_new_header.html'
+
+		form = EmissionActivityForm( **kwargs )
+
+	c = {}
+	c.update( analysis=analysis, process=process, form=form )
+	c.update( csrf(req) )
+	return render(req, template, c, status=status)
+	return render_to_response( template, c )
+
+
+@login_required
+@require_POST
+def update_emissionactivity (
+  req, analysis_id, process_id, emissionactivity_id
+):
+	# first, ensure user owns the specified analysis and efficiency
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
+	emactivity = get_object_or_404( Param_EmissionActivity,
+	  pk=emissionactivity_id, efficiency__process=process )
+
+	template = 'process_interface/form_emissionactivity.html'
+
+	c = {}
+	c.update( analysis=analysis, process=process )
+	c.update( csrf(req) )
+	c.update( username=req.user.username )
+
+	kwargs = { 'prefix' : process.pk, 'process': process }
+
+	form = getEmissionActivityForm( emactivity, req.POST, **kwargs )
+	if form.is_valid():
+		# the only way to change inp/out is by making a new row: since e_id
+		# was passed via get, and it's now known good, we don't use the form's
+		# eff.
+		clean = form.cleaned_data
+		value = clean['val']
+		with transaction.commit_on_success():
+			if not value:
+				emactivity.delete()
+				template = 'process_interface/form_emissionactivity_deleted.html'
+			else:
+				emactivity.value = value
+				emactivity.clean()
+				emactivity.save()
+				form = getEmissionActivityForm( emactivity, **kwargs )
+
+	c.update( form=form )
+	return render_to_response( template, c )
 

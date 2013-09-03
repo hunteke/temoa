@@ -680,65 +680,41 @@ class Param_EmissionActivity ( DM.Model ):
 
 
 	@classmethod
-	def update_with_data ( cls, *args, **kwargs ):
+	def new_with_data ( cls, *args, **kwargs ):
 		a   = kwargs['analysis']
-		pk  = kwargs['emactivity_pk']
-		pol = kwargs['pollutant']
-		inp = kwargs['inp_commodity']
 		p   = kwargs['process']
-		out = kwargs['out_commodity']
+		pol = kwargs['pollutant']
+		eff = kwargs['efficiency']
 		val = kwargs['value']
 
-		if pk:
-			kwargs = {'pk' : pk}
-		else:
-			try:
-				pol = Set_commodity_emission.objects.get(
-				  analysis=a,
-				  commodity__name=pol )
-			except ObjectDoesNotExist as e:
-				msg = 'Specified pollutant does not exist in analysis.'
-				raise ValidationError( msg )
+		inp, out = eff.split(',')
+		inp = inp.strip()
+		out = out.strip()
+		try:
+			pol = Set_commodity_emission.objects.get(
+			  analysis=a,
+			  commodity__name=pol )
+		except ObjectDoesNotExist as e:
+			msg = 'Specified pollutant does not exist in analysis.'
+			raise ValidationError( msg )
 
-			try:
-				inp = Set_commodity_physical.objects.get(
-				  analysis=a,
-				  commodity__name=inp )
-			except ObjectDoesNotExist as e:
-				msg = 'Specified input does not exist in analysis.'
-				raise ValidationError( msg )
+		try:
+			eff = Param_Efficiency.objects.get(
+			  inp_commodity__commodity__name=inp,
+			  process=p,
+			  out_commodity__commodity__name=out )
+		except ObjectDoesNotExist as e:
+			msg = 'No matching efficiency for this process.'
+			raise ValidationError( msg )
 
-			try:
-				out = Set_commodity_output.objects.get(
-				  analysis=a,
-				  commodity__name=out )
-			except ObjectDoesNotExist as e:
-				msg = 'Specified output does not exist in analysis.'
-				raise ValidationError( msg )
+		obj = cls()
+		obj.emission   = pol
+		obj.efficiency = eff
+		obj.value      = val
+		obj.clean()
+		obj.save()
 
-			try:
-				eff = Param_Efficiency.objects.get(
-				  inp_commodity=inp, process=p, out_commodity=out )
-			except ObjectDoesNotExist as e:
-				msg = 'No matching efficiency for this process.'
-				raise ValidationError( msg )
-
-			kwargs = {
-			  'emission'   : pol,
-			  'efficiency' : eff,
-			}
-
-		if not val:
-			# remove the row
-			cls.objects.get( **kwargs ).delete()
-
-		else:
-			kwargs.update( defaults={'value': val} )
-			obj, created = cls.objects.get_or_create( **kwargs )
-
-			obj.value = val
-			obj.clean()
-			obj.save()
+		return obj
 
 
 

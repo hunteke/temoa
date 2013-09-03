@@ -10,23 +10,17 @@ from views import (
   update_process,
   new_efficiency,
   update_efficiency,
+  new_emissionactivity,
+  update_emissionactivity,
   user,
   view,
   test_view,
 )
 
-def Unimplemented ( msg ):
-	def view ( *args, **kwargs ):
-		# TODO: make this an actual view that does not rely on DEBUG = True
-		raise NotImplementedError( msg )
-	return view
-
-
 urlpatterns = patterns('',
   url(r'^$',          home,     name='home'),
   url(r'^interact/$', view,     name='view'),
   url(r'^tutorial/$', tutorial, name='tutorial'),
-  url(r'^nojs/$',     Unimplemented('The no-javascript version of TemoaDB is not yet implemented.' ),  name='nojs'),
   url(r'^user/list$',      user, name='users'),
   url(r'^user/(?P<username>\w+)/analyses$', analyses, name='analyses'),
 
@@ -41,11 +35,14 @@ urlpatterns = patterns('',
 #  url(r'^analysis/(?P<analysis_id>\d+)/update/technology/(?P<technology_id>\d+)/delete/(?P<parameter>\w+)$', remove_analysis_technology_datum, name='remove_analysis_technology_datum'),
 
   url(r'^analysis/(?P<analysis_id>\d+)/create/process/(?P<process_id>\d+)/Efficiency$', new_efficiency, name='new_efficiency'),
+  url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)/(?P<efficiency_id>\d+)/Efficiency$', update_efficiency, name='update_efficiency'),
+
+  url(r'^analysis/(?P<analysis_id>\d+)/create/process/(?P<process_id>\d+)/EmissionActivity$', new_emissionactivity, name='new_emissionactivity'),
+  url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)/(?P<emissionactivity_id>\d+)/EmissionActivity$', update_emissionactivity, name='update_emissionactivity'),
 
   url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)$', update_process, name='update_process'),
 
 #  url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)$', update_analysis_process, name='update_analysis_process'),
-  url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)/(?P<efficiency_id>\d+)/Efficiency$', update_efficiency, name='update_efficiency'),
 #  url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)/delete/(?P<parameter>\w+)$', remove_analysis_process_datum, name='remove_analysis_process_datum'),
   url(r'^test$', test_view, name='test'),
 )
