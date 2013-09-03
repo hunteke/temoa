@@ -1,0 +1,17 @@
+{% load url from future %}
+<tr class='title'><td colspan='2'>
+	<table class='innertable'>
+		<thead><tr><th>Input</th><th>Output</th><th>Percent</th></tr></thead>
+	</table>
+</td></tr>
+<tr><td colspan='2'>
+	<form class='new' method='post' action='{% url 'process_interface:new_efficiency' analysis_id=analysis.pk process_id=process.pk %}'>
+	{% csrf_token %}
+	<input type='submit' name='' value='Save' />
+	<table class='innertable'>
+		<tbody>
+			<tr><td>{{ eform.inp }}</td><td>{{ eform.out }}</td><td>{{ eform.eff }}</td></tr>
+		</tbody>
+	</table>
+	</form>
+</td></tr>

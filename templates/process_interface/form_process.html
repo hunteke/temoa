@@ -1,0 +1,15 @@
+<form method='post' action='{% url 'process_interface:update_process' analysis_id=analysis.pk process_id=process.pk %}'>
+{% csrf_token %}
+<input type='submit' name='' value='' />
+<table class='process'>
+	<thead><tr{{ pform.errors|yesno:" class=error," }}><th colspan='2'>{{ technology }}, {{ vintage }}</th></tr></thead>
+	<tbody>
+		<tr class='{% cycle 'odd' 'even' as rowclass %}{{ pform.discountrate.errors|yesno:' error,' }}'><th>{{ pform.discountrate.label_tag }}</th><td>{{ pform.discountrate }}</td></tr>
+		<tr class='{% cycle rowclass %}'><th>Baseload</th><td class='{{ Baseload|yesno:'is_member,is_not_member' }}'></td></tr>
+		<tr class='{% cycle rowclass %}'><th>Storage</th><td class='{{ Storage|yesno:'is_member,is_not_member' }}'></td></tr>
+		<tr class='{% cycle rowclass %}{{ pform.lifetime.errors|yesno:' error,' }}'><th>{{ pform.lifetime.label_tag }}</th><td>{{ pform.lifetime }}</td></tr>
+		<tr class='{% cycle rowclass %}{{ pform.loanlife.errors|yesno:' error,' }}'><th>{{ pform.loanlife.label_tag }}</th><td>{{ pform.loanlife }}</td></tr>
+		<tr class='{% cycle rowclass %}{{ pform.costinvest.errors|yesno:' error,' }}{{ pform.existingcapacity.errors|yesno:' error,' }}'><th>{{ pform.costinvest.label_tag }}{{ pform.existingcapacity.label_tag }}</th><td>{{ pform.costinvest }}{{ pform.existingcapacity }}</td></tr>
+	</tbody>
+</table>
+</form>

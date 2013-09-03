@@ -1,0 +1,10 @@
+{% load url from future %}
+<form method='post' action='{% url 'process_interface:update_emissionactivity' analysis_id=analysis.pk process_id=process.pk emissionactivity_id=form.pk %}'>
+{% csrf_token %}
+<input type='submit' name='' value='Save' />
+<table class='innertable'>
+	<tbody>
+		<tr><td>{{ form.pol }}</td><td>{{ form.eff }}</td><td>{{ form.val }}</td></tr>
+	</tbody>
+</table>
+</form>
