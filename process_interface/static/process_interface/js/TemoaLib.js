@@ -156,8 +156,6 @@ function submitForm ( ) {
 
 
 function showProcessCharacteristics ( html_string ) {
-	console.log("Process Data" );
-
 	var $pcItems = $('#process_characteristics .items');
 	$pcItems.empty();
 	$pcItems.append( html_string );
