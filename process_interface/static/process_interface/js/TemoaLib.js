@@ -191,9 +191,10 @@ function getProcessesInfo ( ) {
 		process_ids.sort( function(lhs, rhs) { return lhs - rhs; });
 		ids = process_ids.join(',');
 		var analysis_id = $('#filter_analyses_analysis').val();
-		$.ajax({
-		  url: '/analysis/' + analysis_id + '/process_info/' + ids,
-		  success: showProcessCharacteristics
+
+		$.get( '/analysis/' + analysis_id + '/process_info/' + ids )
+		.done( function ( response_data, textStatus, jqXHR ) {
+			showProcessCharacteristics( response_data );
 		});
 
 		// With the request out, set the cookie in case the page is reloaded
