@@ -180,6 +180,7 @@ function getProcessesInfo ( ) {
 	// First, hide the process block to ensure that user is aware it's
 	// changing
 	$('#process_characteristics').addClass('hidden');
+	$('#technology_characteristics').addClass('hidden');
 
 	var process_ids = new Array();
 	var $selected = $('#processes .items tbody tr.ui-selected');
@@ -200,9 +201,6 @@ function getProcessesInfo ( ) {
 		$current.selected_processes = process_ids;
 		setCookie( $current );
 
-		// Finally, hide the Tech characteristics to keep the two columns
-		// in sync when they're displayed.
-		$('#technology_characteristics').addClass('hidden');
 	}
 }
 
