@@ -1,0 +1,78 @@
+{% load url from future %}{% for pc in process_characteristics %}
+<div>
+<table class='process'>
+	<thead><tr{{ pc.form_process.errors|yesno:" class='error',"|safe }}><th colspan='2'>{{ pc.Technology }}, {{ pc.Vintage }}</th></tr></thead>
+	<tbody>
+		<tr class='{% cycle 'odd' 'even' as rowclass %}'><th>Discount Rate</th><td>{% if pc.DisocuntRate %}{{ pc.DiscountRate }}{% else %}<span class='info'>{{ pc.GlobalDiscountRate }} (GDR)</span>{% endif %}</td></tr>
+		<tr class='{% cycle rowclass %}'><th>Baseload</th><td class='{{ pc.Baseload|yesno:'is_member,is_not_member' }}'></td></tr>
+		<tr class='{% cycle rowclass %}'><th>Storage</th><td class='{{ pc.Storage|yesno:'is_member,is_not_member' }}'></td></tr>
+		<tr class='{% cycle rowclass %}'><th>Lifetime</th><td>{% if pc.LifetimeProcess %}{{ pc.LifetimeProcess }}{% endif %}</td></tr>
+		<tr class='{% cycle rowclass %}'><th>Loan Lifetime</th><td>{% if pc.LifetimeProcessLoan %}{{ pc.LifetimeProcessLoan }}{% endif %}</td></tr>
+		<tr class='{% cycle rowclass %}'><th>{% if pc.CostInvest %}Investment Cost</th><td>{{ pc.CostInvest }}{% elif pc.ExistingCapacity %}Existing Capacity</th><td>{{ pc.ExistingCapacity }}{% endif %}</td></tr>
+	</tbody>
+</table>
+
+<table class='process'>
+	<tbody class='{% cycle rowclass %}'>
+		<tr><th>Efficiency</th><td>{% if not pc.Efficiencies %}<span class='info'>-</span>{% endif %}</td></tr>
+		{% if pc.Efficiencies %}
+		<tr class='title'><td colspan='2'>
+			<table class='innertable'>
+				<thead><tr><th>Input</th><th>Output</th><th>Percent</th></tr></thead>
+				<tbody class='data'>
+				{% for id, items in pc.Efficiencies.iteritems %}
+					<tr><td>{{ items.0 }}</td><td>{{ items.1 }}</td><td>{{ items.2 }}</td></tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</td></tr>
+		{% endif %}
+	</tbody>
+	<tbody class='{% cycle rowclass %}'>
+		<tr><th>Emission Activity</th><td>{% if not pc.EmissionActivity %}<span class='info'>-</span>{% endif %}</td></tr>
+		{% if pc.EmissionActivity %}
+		<tr class='title'><td colspan='2'>
+			<table class='innertable'>
+				<thead><tr><th>Pollutant</th><th>Efficiency</th><th>Value</th></tr></thead>
+				<tbody class='data'>
+				{% for id, items in pc.EmissionActivity.iteritems %}
+					<tr><td>{{ items.0 }}</td><td>{{ items.1 }}, {{ items.2 }}</td><td>{{ items.3 }}</td></tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</td></tr>
+		{% endif %}
+	</tbody>
+	<tbody class='{% cycle rowclass %}'>
+		<tr><th>Fixed Cost</th><td>{% if not pc.CostFixed %}<span class='info'>-</span>{% endif %}</td></tr>
+		{% if pc.CostFixed %}
+		<tr class='title'><td colspan='2'>
+			<table class='innertable'>
+				<thead><tr><th>Period</th><th>Value</th></tr></thead>
+				<tbody class='data'>
+				{% for id, items in pc.CostFixed.iteritems %}
+					<tr><td>{{ items.0 }}</td><td>{{ items.1 }}</td></tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</td></tr>
+		{% endif %}
+	</tbody>
+	<tbody class='{% cycle rowclass %}'>
+		<tr><th>Variable Cost</th><td>{% if not pc.CostVariable %}<span class='info'>-</span>{% endif %}</td></tr>
+		{% if pc.CostVariable %}
+		<tr class='title'><td colspan='2'>
+			<table class='innertable'>
+				<thead><tr><th>Period</th><th>Value</th></tr></thead>
+				<tbody class='data'>
+				{% for id, items in pc.CostVariable.iteritems %}
+					<tr><td>{{ items.0 }}</td><td>{{ items.1 }}</td></tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</td></tr>
+		{% endif %}
+	</tbody>
+</table>
+{% endfor %}
+</div>

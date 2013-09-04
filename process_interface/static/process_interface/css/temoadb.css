@@ -46,6 +46,8 @@ body { height: 100% ; margin: 1em; }
 	border: none;
 }
 
+.innertable .data { font-family: monospace; text-align: right; }
+#process_characteristics .items .innertable .data td { padding-right: 1em; }
 #process_characteristics .items tr th { text-align: left; }
 #process_characteristics .items thead tr th { text-align: center; }
 #process_characteristics .items .innertable { background: inherit; font-weight:normal; width: 100%; }
