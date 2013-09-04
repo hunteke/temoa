@@ -75,6 +75,7 @@ body { height: 100% ; margin: 1em; }
 #technology_characteristics.fixed { position: fixed; top: 0; right: 1em; }
 
 #status { padding: 1em; position: fixed; bottom: 0; left: 1em; background: #ccc; z-index: 1000; opacity: 1; }
+#unauthorized { padding: 1em 1ex; min-width: 15em; max-width: 30em; width: 50%; z-index: -1000; position: fixed; bottom: 0; right: 0; opacity: 0.9; background: #aaa;}
 
 input { background: inherit; border: 1pt solid; width: 6em; text-align: right; }
 
