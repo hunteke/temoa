@@ -535,19 +535,24 @@ def update_efficiency ( req, analysis_id, process_id, efficiency_id ):
 		clean = form.cleaned_data
 		value = clean['eff']
 		with transaction.commit_on_success():
-			if not value:
-				efficiency.delete()
-				template = 'process_interface/form_efficiency_deleted.html'
-			else:
-				efficiency.value = value
-				efficiency.clean()
-				efficiency.save()
-				form = getEfficiencyForm( analysis, efficiency, **kwargs )
+			try:
+				if not value:
+					efficiency.delete()
+					template = 'process_interface/form_efficiency_deleted.html'
+				else:
+					efficiency.value = value
+					efficiency.clean()
+					efficiency.save()
+					form = getEfficiencyForm( analysis, efficiency, **kwargs )
+			except IntegrityError as ie:
+				msg = ('Unable to complete action.  Database said: {}')
+				messages.error( req, msg.format( ie ))
+				status = 422
 
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render_to_response( template, c )
+	return render( req, template, c, status=status )
 
 
 @login_required
