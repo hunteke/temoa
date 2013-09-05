@@ -358,8 +358,7 @@ def process_info ( req, analysis_id, process_ids ):
 	c.update( process_characteristics=process_characteristics )
 
 	if not req.user.is_authenticated():
-		template = 'process_interface/process_info.html'
-		c.update( username='' )
+		template = 'process_interface/info_all_process_parameters.html'
 
 	else:
 		template = 'process_interface/form_all_process_parameters.html'
