@@ -60,7 +60,7 @@ help_analysis_gdr  = _("""Also used as a fallback for process discount rates.  A
 class Analysis ( DM.Model ):
 	user        = DM.ForeignKey( User )
 	name        = DM.CharField( max_length=32767, help_text=help_analysis_name )
-	description = DM.TextField('Backround Information', help_text=help_analysis_desc)
+	description = DM.TextField('Background Information', help_text=help_analysis_desc)
 	period_0    = DM.IntegerField( help_text=help_analysis_per0 )
 	global_discount_rate = DM.FloatField( 'Global Discount Rate', help_text=help_analysis_gdr )
 
