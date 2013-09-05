@@ -2,20 +2,7 @@
 <div>
 <form method='post' action='{% url 'process_interface:update_process' analysis_id=analysis.pk process_id=pc.ProcessId %}'>
 {% csrf_token %}
-{% if pc.form_process.costfixed_datalist %}
-<datalist id='{{ pc.form_process.costfixed_datalist_id }}'>
-	{% for val in pc.form_process.costfixed_datalist %}
-	<option value='{{ val }}'>{% endfor %}
-</datalist>
-{% endif %}
-{% if pc.form_process.costvariable_datalist %}
-<datalist id='{{ pc.form_process.costvariable_datalist_id }}'>
-	{% for val in pc.form_process.costvariable_datalist %}
-	<option value='{{ val }}'>{% endfor %}
-</datalist>
-{% endif %}
 <input type='submit' name='' value='' />
-<input type='hidden' name='data_part' value='Process' />
 <table class='process'>
 	<thead><tr{{ pc.form_process.errors|yesno:" class='error',"|safe }}><th colspan='2'>{{ pc.Technology }}, {{ pc.Vintage }}</th></tr></thead>
 	<tbody>
