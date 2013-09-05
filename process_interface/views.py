@@ -400,6 +400,7 @@ def update_process ( req, analysis_id, process_id ):
 	process = get_object_or_404( Process, pk=process_id, analysis=analysis )
 
 	template = 'process_interface/form_process.html'
+	status = 200
 
 	process_characteristics = get_process_info( [process] )
 	pc = process_characteristics[0]
@@ -407,15 +408,24 @@ def update_process ( req, analysis_id, process_id ):
 	kwargs = { 'prefix' : 'pr' + str(process_id) }
 	form = ProcessForm( process, req.POST, **kwargs )
 
-	if form.is_valid():
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
+		messages.error( req, msg )
+
+	else:
 		clean = form.cleaned_data
 		with transaction.commit_on_success():
-			process.update_with_data( clean )
-			form = ProcessForm( process, **kwargs )
+			try:
+				process.update_with_data( clean )
+				form = ProcessForm( process, **kwargs )
+			except IntegrityError as ie:
+				msg = 'Unable to update process.  DB said: {}'
+				messages.error( req, msg.format( ie ))
+				status = 422
 
 	c = {}
 	c.update(
-	  username=req.user.username,
 	  analysis=analysis,
 	  process=process,
 	  technology=process.technology.name,
@@ -425,7 +435,7 @@ def update_process ( req, analysis_id, process_id ):
 	  form=form
 	)
 	c.update( csrf(req) )
-	return render_to_response( template, c )
+	return render( req, template, c, status=status )
 
 
 

@@ -138,7 +138,13 @@ function submitForm ( ) {
 		$newForm.find('input[type="text"]:first').focus();
 	})
 	.fail( function ( jqXHR, textStatus, errorThrown ) {
-		var server_msg = $( jqXHR ).attr( 'responseText' );
+		var $html = $( $( jqXHR ).attr('responseText') );
+		if ( $html.is( 'form' ) ) {
+			console.log( 'WEEEE' );
+			$form.replaceWith( $html );
+			$html.submit( submitForm );
+			$html.find('tr[class="error"] input[type="text"]:first ').focus();
+		}
 		$.get( '/session_messages/' )
 		.done( function( response_data, textStatus, jqXHR ) {
 			var $msgs = $( response_data );
