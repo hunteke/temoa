@@ -88,6 +88,7 @@ TEMPLATE_STRING_IF_INVALID = ''
 INSTALLED_APPS += [
   'django.contrib.admin',
   'django.contrib.admindocs',
+  'django_extensions',
 ]
 
 
