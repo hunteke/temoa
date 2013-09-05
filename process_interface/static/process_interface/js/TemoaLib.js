@@ -121,7 +121,7 @@ function submitForm ( ) {
 	var to_submit = $form.serialize();
 
 	// /then/ disable the form
-	var inputs = $form.find('input');
+	var inputs = $form.find('input,textarea');
 	disable( inputs );
 	var submit_url = $form.attr('action');
 
@@ -130,7 +130,7 @@ function submitForm ( ) {
 		var $newData = $( response_data );
 		var $newForm = $newData;
 
-		if ( ! $newData.is( 'form' ) ) {
+		if ( ! $newForm.is( 'form' ) ) {
 			$newForm = $newData.find( 'form' );
 		}
 		$form.replaceWith( $newForm );
@@ -146,7 +146,7 @@ function submitForm ( ) {
 			var level = $msgs[0][0];
 			var msg   = $msgs[0][1];
 
-			showStatus( 'Unable to alter process.  Server said: ' + msg, level );
+			showStatus( 'Unable to make change.  Server said: ' + msg, level );
 			enable( inputs );
 		});
 	});
@@ -190,7 +190,7 @@ function getProcessesInfo ( ) {
 	if ( process_ids.length > 0 ) {
 		process_ids.sort( function(lhs, rhs) { return lhs - rhs; });
 		ids = process_ids.join(',');
-		var analysis_id = $('#filter_analyses_analysis').val();
+		var analysis_id = getCookie().selected_analysis.id;
 
 		$.get( '/analysis/' + analysis_id + '/process_info/' + ids )
 		.done( function ( response_data, textStatus, jqXHR ) {
@@ -237,83 +237,74 @@ function showProcesses ( data ) {
 }
 
 
+function showAnalysis ( html_string ) {
+	var $html = $( html_string );
+	if ( $html.is( 'form' ) ) {
+		$html.submit( submitForm );
+	}
+
+	var $aInfo = $('#analysis_info');
+	$aInfo.empty().append( $html );
+
+	$aInfo.removeClass('hidden');
+}
+
+
 function selectAnalysis ( ) {
-	var analysis_id = $('#filter_analyses_analysis').val();
-	$.ajax({
-	  url: '/analysis/' + analysis_id + '/process_list',
-	  success: showProcesses
-	});
+	var analysis_id = $('#analysis_selection').val();
+	$('#processes').addClass('hidden');
+	$('#analysis_info').addClass('hidden');
 
-	$.ajax({
-	  url: '/analysis/' + analysis_id,
-	  success: function ( analysis_metadata ) {
-	    var $cookie = getCookie();
-	    $cookie.selected_analysis = analysis_metadata;
-	    setCookie( $cookie );
-	  }
-	});
-}
+	if ( ! analysis_id ) { return; }
 
+	var url = '/analysis/' + analysis_id;
 
-function selectUser ( ) {
-	// A selected user means we should update the list of analyses
-	username = $('#filter_analyses_username').val();
-	$.ajax({
-	  url: '/user/' + username + '/analyses',
-	  success: function ( data ) {
-	    data = data[0];
-	    var length = data.length;
-	    var options = {};
-	    for ( var i = 0; i < length; i += 2 ) {
-	      key = data[ i ];
-	      val = data[ i +1 ];
-	      options[ key ] = val;
-	    }
-	    var $analyses = $('#filter_analyses_analysis');
-	    $.each( options, function( val, text ) {
-	      $analyses.append( $('<option/>').val( val ).html( text ));
-	    });
-	    $analyses.change( selectAnalysis );
+	var $cookie = getCookie();
+	$cookie.selected_analysis = null
+	setCookie( $cookie );
 
-	    if ( length > 0 ) {
-	      selectAnalysis();
-	    }
-	  }
-	});
-
-	// With the request out, set the cookie in case the page is reloaded
-	var $current = getCookie();
-	$current.selected_username = username;
-	setCookie( $current );
-}
-
-
-function updateUserList ( ) {
-	$.get( '/user/list' )
-	.done( function ( data ) {
-		data = data[0];
-		var length = data.length;
-		var options = {};
-		for ( var i = 0; i < length; i += 2 ) {
-			key = data[ i ];
-			val = data[ i +1 ];
-			options[ key ] = val;
-		}
-
-		var $userlist = $('#filter_analyses_username');
-		$.each( options, function( val, text ) {
-			text = val + ' (' + text + ')';
-			$userlist.append( $('<option/>').val( val ).html( text ));
-		});
-
-		$userlist.change( selectUser );
-
+	$.get( url )
+	.done( function ( response_data, textStatus, jqXHR ) {
+		// $cookie.selected_analysis = response_data;
+		// setCookie( $cookie );
 		var $cookie = getCookie();
-		if ( $cookie.selected_username ) {
-			$userlist.val( $cookie.selected_username );
-			$userlist.change();
-		}
+		$cookie.selected_analysis = {'id': 1};
+		setCookie( $cookie );
+
+		showAnalysis( response_data );
 	});
+
+	if ( "New" === analysis_id ) { return; }
+
+	$.get( url + '/process_list' )
+	.done( function ( response_data, textStatus, jqXHR ) {
+		showProcesses( response_data );
+	});
+
+}
+
+
+function updateAnalysisList ( ) {
+	var url = '/analysis/list';
+	$.get( url )
+	.done( function ( response_data, textStatus, jqXHR ) {
+		var $cookie = getCookie();
+		var aId = null;
+		if ( $cookie.selected_analysis ) {
+			aId = $cookie.selected_analysis.id;
+		}
+		console.log( "aId: " + aId );
+		var $as = $('#analysis_selection');
+		$as.empty().append( response_data ).change( selectAnalysis );
+
+		console.log( 'HERE' );
+		if ( aId ) {
+			console.log( 'THERE' );
+			$as.val( aId );
+			$as.change();
+		}
+	})
+
 }
 
 
@@ -324,37 +315,13 @@ function BeginTemoaDBApp ( ) {
 		logged_in = true;
 	}
 
-	// Begin: Code adapted from Django documentation on CSRF
-	// var csrftoken = $body.data().csrftoken;
-	// if ( typeof( csrftoken ) !== "undefined" ) {
-	// 	$.ajaxSetup({
-	// 	  crossDomain: false,  // There should be no need to talk elsewhere.
-	// 	  beforeSend: function ( xhr, settings ) {
-	// 	    if ( ! csrfSafeMethod( settings.type )) {
-	// 	      xhr.setRequestHeader( 'X-CSRFToken', csrftoken );
-	// 	    }
-	// 	  }
-	// 	});
-	// } else {
-	// 	var msg = 'There was an error with the a security token from the ';
-	// 	msg += 'server.  Consequently, you will not be able to update any ';
-	// 	msg += 'values, only browse the currently available data.  Please ';
-	// 	msg += 'contact the Temoa Project (via a GitHub ticket, or the forums) ';
-	// 	msg += 'if this is a problem for you.';
-	// 	alert( msg );
-	// }
-	// End: borrowed code.
-
-	// $body.keydown( hideAddShowRemove );
-	// $body.keyup( function ( event ) { showAddHideRemove(); } );
-
 	$('#ReloadLibs').click( function () { reloadLibs( false ); } );
 	$(document).bind('keydown', 'ctrl+space', function () {
 		reloadLibs( false );
 	});
 	//$(document).bind('keydown', 'shift',
 
-	updateUserList();
+	updateAnalysisList();
 }
 
 console.clear();

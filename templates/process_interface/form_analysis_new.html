@@ -1,0 +1,8 @@
+{% load url from future %}
+<form method='post' action='{% url 'process_interface:analysis_new' %}'>
+	{% csrf_token %}
+	<input type='submit' name='' value=''>
+	<table>
+		{{ form.as_table }}
+	</table>
+</form>

@@ -1,7 +1,9 @@
 from django.conf.urls import patterns, include, url
 from views import (
-  analyses,
   analysis_info,
+  analysis_update,
+  analysis_new,
+  list_analyses,
   home,
   get_messages,
   process_info,
@@ -17,6 +19,7 @@ from views import (
   new_costvariable,
   update_costvariable,
   user,
+  user_analyses,
   view,
   test_view,
 )
@@ -26,11 +29,14 @@ urlpatterns = patterns('',
   url(r'^interact/$', view,     name='view'),
   url(r'^tutorial/$', tutorial, name='tutorial'),
   url(r'^user/list$',      user, name='users'),
-  url(r'^user/(?P<username>\w+)/analyses$', analyses, name='analyses'),
+  url(r'^user/(?P<username>\w+)/analyses$', user_analyses, name='user_analyses'),
 
   url(r'^session_messages/$', get_messages, name='session_messages'),
 
+  url(r'^analysis/list$',      list_analyses, name='list_analyses'),
+  url(r'^analysis/New$',       analysis_new, name='analysis_new'),
   url(r'^analysis/(?P<analysis_id>\d+)$', analysis_info, name='analysis_info'),
+  url(r'^analysis/(?P<analysis_id>\d+)/update$', analysis_update, name='analysis_update'),
   url(r'^analysis/(?P<analysis_id>\d+)/process_list$', process_list, name='process_list'),
   url(r'^analysis/(?P<analysis_id>\d+)/process_info/(?P<process_ids>(?:\d+,?)+)$', process_info, name='process_info' ),
 #  url(r'^analysis/(?P<analysis_id>\d+)/technology_info/(?P<process_ids>(?:\d+,?)+)$', technology_info, name='technology_info'),

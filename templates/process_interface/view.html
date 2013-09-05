@@ -19,12 +19,13 @@
 		{% endif %}
 		<button id='ReloadLibs'>Reload Libs</button>
 		<h2>TemoaDB</h2>
-		<select name='filter_analyses_username' id='filter_analyses_username'>
-			<option value='' disabled selected>Choose a username</option>
-			<option value='all'>All users</option>
+	</div>
+	<div id='analysis'>
+		<p><input type='text' id='analysis_filter' name='analysis_filter' size='15' placeholder='Analysis Filter'></p>
+		<select id='analysis_selection'>
+			<option value='' disabled selected>Loading analyses ...</option>
 		</select>
-		<select id='filter_analyses_analysis'></select>
-		<progress id='progress_bar' max='100' value='0' class='hidden'></progress>
+		<div id='analysis_info' class='hidden'></div>
 	</div>
 	<div class='clear'></div>
 	<div id='processes' class='hidden'>

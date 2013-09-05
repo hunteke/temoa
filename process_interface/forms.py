@@ -8,6 +8,7 @@ from django.forms.models import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
 
 from models import (
+  Analysis,
   Process,
   Vintage,
   Param_CostFixed,
@@ -21,6 +22,13 @@ from models import (
 )
 
 from IPython import embed as II
+
+
+class AnalysisForm ( F.ModelForm ):
+	class Meta:
+		model = Analysis
+		fields = ('name', 'description', 'period_0', 'global_discount_rate')
+
 
 
 class ProcessForm ( F.Form ):

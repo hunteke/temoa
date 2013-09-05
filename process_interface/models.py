@@ -1,6 +1,45 @@
+__all__ = (
+  'Analysis',
+  'Commodity',
+  'CommoditySetMember',
+  'LifetimeParameter',
+  'MinMaxParameter',
+  'Param_CapacityToActivity',
+  'Param_CostFixed',
+  'Param_CostVariable',
+  'Param_Demand',
+  'Param_DemandDefaultDistribution',
+  'Param_DemandSpecificDistribution',
+  'Param_Efficiency',
+  'Param_EmissionActivity',
+  'Param_EmissionLimit',
+  'Param_GrowthRateMax',
+  'Param_GrowthRateSeed',
+  'Param_LifetimeTech',
+  'Param_LifetimeTechLoan',
+  'Param_MaxCapacity',
+  'Param_MinCapacity',
+  'Param_ResourceBound',
+  'Param_SegFrac',
+  'Param_TechInputSplit',
+  'Param_TechOutputSplit',
+  'PeriodCostParameter',
+  'Process',
+  'Set_commodity_demand',
+  'Set_commodity_emission',
+  'Set_commodity_output',
+  'Set_commodity_physical',
+  'Set_tech_baseload',
+  'Set_tech_storage',
+  'Technology',
+  'TechnologySetMember',
+  'Vintage'
+)
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models as DM   # Django Models
+from django.utils.translation import ugettext_lazy as _
 
 
 # One glaring deficiency with Django: lack of database level check constraints.
@@ -13,12 +52,17 @@ from django.db import models as DM   # Django Models
 # integrity might become an issue.  For now, the /only/ supported interaction
 # will be through Django.
 
+help_analysis_name = _("""A "short" name for this analysis.  This will likely be how you reference this data set in conversation or publications, so choose it wisely.  For example, "XPL2003" might be a poor choice.""")
+help_analysis_desc = _("""Include here any "meta" information pertinent to this analysis.  You might include a general description of the analysis, links to relevant publications, other analyses, and so on.  Anything that would be helpful to another person trying to understand what you have done.  (Which may be you, 2 years later!)  Please use only text in this field: HTML entities will be escaped.  (To see the effect if this, log out and view the description field of this analysis.)""")
+help_analysis_per0 = _("""The start year of the analysis.  Years prior to this will be the "Existing Capacity" vintages, and years following will be in optimization horizon.  For more information, see the discussion of <a href='http://temoaproject.org/docs/index.html#sets' title='Set documentation section on temoaproject.org/'>P<sup>e</sup> and P<sup>f</sup></a> in the Temoa documentation.""")
+help_analysis_gdr  = _("""Also used as a fallback for process discount rates.  A typical value is 0.05 (5%).  See the Temoa documentation for more information about the <a href='http://temoaproject.org/docs/#globaldiscountrate' title='GDR explanation on temoaproject.org/'>GDR</a>.""")
+
 class Analysis ( DM.Model ):
 	user        = DM.ForeignKey( User )
-	name        = DM.CharField( max_length=32767 )
-	description = DM.TextField('Backround information')
-	period_0    = DM.IntegerField()
-	global_discount_rate = DM.FloatField()
+	name        = DM.CharField( max_length=32767, help_text=help_analysis_name )
+	description = DM.TextField('Backround Information', help_text=help_analysis_desc)
+	period_0    = DM.IntegerField( help_text=help_analysis_per0 )
+	global_discount_rate = DM.FloatField( 'Global Discount Rate', help_text=help_analysis_gdr )
 
 
 	class Meta:

@@ -21,6 +21,7 @@ body { height: 100% ; margin: 1em; }
 	float: left;
 }
 
+#analysis { border: 1px solid #000; min-height: 10ex; width: 100%; clear: both; }
 #process_characteristics h2, #technology_characteristics h2 { text-align: center; }
 
 #process_characteristics { background-color: transparent; opacity: 0.8; float: left; width: auto;}
@@ -58,8 +59,6 @@ body { height: 100% ; margin: 1em; }
 #process_characteristics .items table.innertable img { padding: 1ex; }
 #process_characteristics .items table.innertable thead th img { padding: 0;}
 #process_characteristics .items table.innertable caption { font-size: 90%; font-weight: bold; }
-
-#process_characteristics .items form input[type='submit'], #technology_characteristics .items form input[type='submit'] { display: none; width: 1px; height: 1px; }
 #process_characteristics .items form input[readonly] { background: transparent; color: #000; border: 0; text-align: center; }
 
 #technology_characteristics { background-color: lightgreen; opacity: 0.8; float: right; }
@@ -77,8 +76,9 @@ body { height: 100% ; margin: 1em; }
 #technology_characteristics.fixed { position: fixed; top: 0; right: 1em; }
 
 #status { padding: 1em; position: fixed; bottom: 0; left: 1em; background: #ccc; z-index: 1000; opacity: 1; }
-#unauthorized { padding: 1em 1ex; min-width: 15em; max-width: 30em; width: 50%; z-index: -1000; position: fixed; bottom: 0; right: 0; opacity: 0.9; background: #aaa;}
+#unauthorized { padding: 1em 1ex; min-width: 15em; max-width: 30em; width: 50%; z-index: -1000; position: fixed; bottom: 1ex; right: 1em; opacity: 0.9; background: #aaa;}
 
+input[type='submit'] { display: none; width: 1px; height: 1px; }
 input { background: inherit; border: 1pt solid; width: 6em; text-align: right; }
 
 tr.even td, tr.odd td { background-size: auto 100%; background-repeat: no-repeat; background-origin: content-box; background-position: center; }
