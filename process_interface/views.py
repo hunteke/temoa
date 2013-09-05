@@ -378,11 +378,13 @@ def process_info ( req, analysis_id, process_ids ):
 			eform_kwargs  = { 'prefix' : 'ef' + str(p.pk) }
 			eaform_kwargs = { 'prefix' : 'ea' + str(p.pk), 'process' : p }
 			cfform_kwargs = { 'prefix' : 'cf' + str(p.pk), 'process' : p }
+			cvform_kwargs = { 'prefix' : 'cv' + str(p.pk), 'process' : p }
 
 			pc['form_process']           = ProcessForm( p, **pform_kwargs )  # process form
 			pc['forms_efficiency']       = getEfficiencyForms( a, effs, **eform_kwargs )
 			pc['forms_emissionactivity'] = getEmissionActivityForms( emas, **eaform_kwargs )
 			pc['forms_costfixed']        = getCostFixedForms( cf, **cfform_kwargs )
+			pc['forms_costvariable']     = getCostVariableForms( cv, **cvform_kwargs )
 
 		c.update( csrf(req) )
 		c.update( username=req.user.username )
