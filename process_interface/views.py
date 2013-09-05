@@ -452,11 +452,17 @@ def new_efficiency ( req, analysis_id, process_id ):
 
 	template = 'process_interface/form_efficiency_new.html'
 	kwargs = { 'prefix' : 'ef' + str(process.pk) }
+	status = 200
 
 	if req.POST:
-		eform = EfficiencyForm( req.POST, analysis=analysis, prefix=process.pk )
-		if eform.is_valid():
-			clean = eform.cleaned_data
+		form = EfficiencyForm( req.POST, analysis=analysis, prefix=process.pk )
+		if not form.is_valid():
+			status = 422  # to let Javascript know there was an error
+			msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
+			messages.error( req, msg )
+
+		else:
+			clean = form.cleaned_data
 			inp = clean['inp']
 			out = clean['out']
 			value = clean['eff']
@@ -472,24 +478,25 @@ def new_efficiency ( req, analysis_id, process_id ):
 					try:
 						obj = Param_Efficiency.new_with_data( **data )
 						template = 'process_interface/form_efficiency.html'
-						eform = getEfficiencyForm( analysis, obj, **kwargs )
+						form = getEfficiencyForm( analysis, obj, **kwargs )
 					except IntegrityError as ie:
 						msg = ('Unable to save new Efficiency row.  A pairing of '
 						  '({}, {}) already exists.  Edit or remove that one '
 						  'instead.')
 						messages.error( req, msg.format( inp, out ))
+						status = 422
 
 
 	else:
 		if req.GET and req.GET['header']:
 			template = 'process_interface/form_efficiency_new_header.html'
 
-		eform = EfficiencyForm( analysis=analysis, **kwargs )
+		form = EfficiencyForm( analysis=analysis, **kwargs )
 
 	c = {}
-	c.update( analysis=analysis, process=process, eform=eform )
+	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render_to_response( template, c )
+	return render( req, template, c, status=status )
 
 
 @login_required
@@ -505,12 +512,17 @@ def update_efficiency ( req, analysis_id, process_id, efficiency_id ):
 	kwargs = { 'prefix' : 'ef' + str(process.pk) }
 	status = 200
 
-	eform = getEfficiencyForm( analysis, efficiency, req.POST, **kwargs )
-	if eform.is_valid():
+	form = getEfficiencyForm( analysis, efficiency, req.POST, **kwargs )
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
+		messages.error( req, msg )
+
+	else:
 		# the only way to change inp/out is by making a new row: since e_id
-		# was passed via get, and it's now know good, we don't use the forms
+		# was passed via get, and it's now known good, we don't use the forms
 		# inp/out.
-		clean = eform.cleaned_data
+		clean = form.cleaned_data
 		value = clean['eff']
 		with transaction.commit_on_success():
 			if not value:
@@ -520,13 +532,11 @@ def update_efficiency ( req, analysis_id, process_id, efficiency_id ):
 				efficiency.value = value
 				efficiency.clean()
 				efficiency.save()
-				eform = getEfficiencyForm( analysis, efficiency, **kwargs )
+				form = getEfficiencyForm( analysis, efficiency, **kwargs )
 
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	c.update( username=req.user.username )
-	c.update(  )
 	return render_to_response( template, c )
 
 
