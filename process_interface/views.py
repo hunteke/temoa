@@ -341,14 +341,15 @@ def get_process_info ( processes ):
 
 
 def process_info ( req, analysis_id, process_ids ):
-	# TODO: wrap DB access in a transaction, for robustness
-
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
 	process_ids = process_ids.split(',')
 	processes = Process.objects.filter(
 	  analysis=analysis,
 	  pk__in=process_ids
-	).distinct().order_by('technology__name', 'vintage__vintage').select_related()
+	).distinct().order_by(
+	  'technology__name',
+	  'vintage__vintage'
+	).select_related()
 
 	process_characteristics = get_process_info( processes )
 
@@ -578,7 +579,7 @@ def new_emissionactivity ( req, analysis_id, process_id ):
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render(req, template, c, status=status)
+	return render( req, template, c, status=status )
 
 
 @login_required
