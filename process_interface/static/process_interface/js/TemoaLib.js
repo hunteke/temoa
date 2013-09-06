@@ -147,6 +147,10 @@ function submitForm ( ) {
 			showStatus( 'Unable to make change.  Server said: ' + msg, level );
 			enable( inputs );
 		});
+	})
+	.always( function ( ) {
+		// reattach any change listeners
+		attachGlobalEventListeners()
 	});
 
 	return false;  // don't submit through normal channels, please
@@ -228,6 +232,10 @@ function showProcesses ( data ) {
 	$('#processes').removeClass('hidden');
 }
 
+
+function attachGlobalEventListeners ( ) {
+	$('#analysis_selection').change( selectAnalysis );
+}
 
 function showAnalysis ( html_string ) {
 	var $html = $( html_string );
