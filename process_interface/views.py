@@ -1,3 +1,4 @@
+from base64 import b64encode
 from collections import defaultdict
 from operator import itemgetter as i_get
 import re
@@ -64,25 +65,46 @@ from forms import (
 from IPython import embed as II
 
 
+def set_cookie ( req, res, **kwargs ):
+	cookie = {}
+	if req.user.is_authenticated():
+		cookie[ 'username' ] = req.user.username
+	else:
+		cookie[ 'username' ] = None
+
+	for key in ( 'analysis_id', 'process_ids',):
+		if key in kwargs:
+			cookie[ key ] = kwargs[ key ]
+
+	cookie = b64encode(json.dumps( cookie ))
+	res.set_cookie( 'ServerState', value=cookie, max_age=None ) # session only
+
 
 def home ( req ):
 	return render_to_response('process_interface/home.html')
 
 
 def view ( req ):
+	template = 'process_interface/view.html'
+
 	c = {'JQUERYCD': JQUERYCD}
 	c.update(csrf(req))
-	c.update( username='' )
+	c.update( username=None )
+
 	if req.user.is_authenticated():
 		c.update( username=req.user.username )
 
-	return render_to_response( 'process_interface/view.html', c )
+	res = render( req, template, c )
+	set_cookie( req, res )
+
+	return res
 
 
 def test_view ( req ):
 	from django.shortcuts import redirect
 	print req.POST
 	return redirect('http://localhost:8000/analysis/1/process_info/3,4?json')
+
 
 def tutorial ( req ):
 	raise Http404
@@ -105,7 +127,7 @@ def user ( req ):
 	return response
 
 
-def list_analyses ( req ):
+def get_analysis_list ( user ):
 	analyses = [
 	  { 'pk'   : a.pk,
 	    'name' : '{} - {}'.format( a.user.username, a.name )
@@ -113,12 +135,19 @@ def list_analyses ( req ):
 
 	  for a in Analysis.objects.all().order_by( 'user__username', 'name' ) ]
 
-	if req.user.is_authenticated():
+	if user.is_authenticated():
 		analyses.insert( 0, { 'pk': 'New', 'name' : 'Create Analysis ...' } )
+
+	return analyses
+
+
+def list_analyses ( req ):
+	analyses = get_analysis_list( req.user )
 
 	c = {}
 	c.update( analyses=analyses )
 	return render_to_response('process_interface/analyses_list.html', c)
+
 
 def user_analyses ( req, username ):
 	if 'all' == username:
@@ -145,8 +174,10 @@ def user_analyses ( req, username ):
 
 def analysis_info ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
+	analyses = get_analysis_list( req.user )
 
 	c = {}
+	c.update( analysis_id=analysis.pk, analyses=analyses )
 	c.update( csrf(req) )
 
 	if req.user.pk is not analysis.user.pk:
@@ -163,15 +194,18 @@ def analysis_info ( req, analysis_id ):
 	else:
 		template = 'process_interface/form_analysis.html'
 		form = AnalysisForm( instance=analysis )
-		c.update( form=form, analysis_id=analysis.pk )
+		c.update( form=form )
 
-	return render_to_response( template, c )
+	res = render( req, template, c )
+	set_cookie( req, res, analysis_id=analysis_id )
+	return res
 
 
 @login_required
 @require_POST
 def analysis_update ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	analyses = get_analysis_list( req.user )
 
 	template = 'process_interface/form_analysis.html'
 	status = 200
@@ -184,6 +218,10 @@ def analysis_update ( req, analysis_id ):
 			messages.error( req, msg )
 
 		else:
+			cd = form.cleaned_data
+			cd['name']        = cd['name'].translate( None, '\r\n' ).strip()
+			cd['description'] = cd['description'].translate( None, '\r' ).strip()
+			form.cleaned_data = cd
 			try:
 				form.save()
 			except IntegrityError as ie:
@@ -195,14 +233,17 @@ def analysis_update ( req, analysis_id ):
 		form = AnalysisForm( instance=analysis )
 
 	c = {}
-	c.update( form=form, analysis_id=analysis.pk )
+	c.update( form=form, analysis_id=analysis.pk, analyses=analyses )
 	c.update( csrf(req) )
 
-	return render( req, template, c, status=status )
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
 
 
 @login_required
 def analysis_new ( req ):
+	analyses = get_analysis_list( req.user )
 	template = 'process_interface/form_analysis_new.html'
 
 	status = 200
@@ -217,6 +258,10 @@ def analysis_new ( req ):
 			messages.error( req, msg )
 
 		else:
+			cd = form.cleaned_data
+			cd['name']        = cd['name'].translate( None, '\r\n' ).strip()
+			cd['description'] = cd['description'].translate( None, '\r' ).strip()
+			form.cleaned_data = cd
 			try:
 				form.save()
 				return analysis_update( req, analysis.pk )
@@ -230,10 +275,12 @@ def analysis_new ( req ):
 		form = AnalysisForm()
 
 	c = {}
-	c.update( form=form )
+	c.update( form=form, analyses=analyses )
 	c.update( csrf(req) )
 
-	return render( req, template, c, status=status )
+	res = render( req, template, c, status=status )
+	set_cookie( req, res, analysis_id='New' )
+	return res
 
 
 def process_list ( req, analysis_id ):
@@ -350,6 +397,7 @@ def process_info ( req, analysis_id, process_ids ):
 	  'technology__name',
 	  'vintage__vintage'
 	).select_related()
+	process_ids = sorted( p.pk for p in processes )
 
 	process_characteristics = get_process_info( processes )
 
@@ -389,7 +437,9 @@ def process_info ( req, analysis_id, process_ids ):
 		c.update( csrf(req) )
 		c.update( username=req.user.username )
 
-	return render_to_response( template, c )
+	res = render( req, template, c )
+	set_cookie( req, res, process_ids=process_ids )
+	return res
 
 
 @login_required
@@ -435,7 +485,10 @@ def update_process ( req, analysis_id, process_id ):
 	  form=form
 	)
 	c.update( csrf(req) )
-	return render( req, template, c, status=status )
+
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
 
 
 
@@ -506,7 +559,10 @@ def new_efficiency ( req, analysis_id, process_id ):
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render( req, template, c, status=status )
+
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
 
 
 @login_required
@@ -552,7 +608,10 @@ def update_efficiency ( req, analysis_id, process_id, efficiency_id ):
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render( req, template, c, status=status )
+
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
 
 
 @login_required
@@ -605,7 +664,10 @@ def new_emissionactivity ( req, analysis_id, process_id ):
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render( req, template, c, status=status )
+
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
 
 
 @login_required
@@ -647,7 +709,10 @@ def update_emissionactivity (
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render( req, template, c, status=status )
+
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
 
 
 @login_required
@@ -698,7 +763,10 @@ def new_costfixed ( req, analysis_id, process_id ):
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render( req, template, c, status=status )
+
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
 
 
 @login_required
@@ -739,7 +807,10 @@ def update_costfixed ( req, analysis_id, process_id, costfixed_id ):
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render( req, template, c, status=status )
+
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
 
 
 @login_required
@@ -790,7 +861,10 @@ def new_costvariable ( req, analysis_id, process_id ):
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render( req, template, c, status=status )
+
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
 
 
 @login_required
@@ -831,5 +905,8 @@ def update_costvariable ( req, analysis_id, process_id, costvariable_id ):
 	c = {}
 	c.update( analysis=analysis, process=process, form=form )
 	c.update( csrf(req) )
-	return render( req, template, c, status=status )
+
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
 

@@ -1,12 +1,5 @@
 var COOKIE = 'TemoaDB_UISettings';
 
-var logged_in = false;
-
-
-function setCookie ( obj ) {
-	$.cookie( COOKIE, JSON.stringify( obj ));
-}
-
 function getCookie ( ) {
 	var $obj = $.cookie( COOKIE );
 	if ( $obj ) {
@@ -14,9 +7,9 @@ function getCookie ( ) {
 	}
 
 	$obj = jQuery( new Object() );
-	$obj.selected_analysis  = null;
-	$obj.selected_processes = null;
-	$obj.selected_username  = null;
+	$obj.username    = null;
+	$obj.analysis_id = null;
+	$obj.process_ids = null;
 
 	return $obj;
 }
@@ -196,18 +189,12 @@ function getProcessesInfo ( ) {
 	if ( process_ids.length > 0 ) {
 		process_ids.sort( function(lhs, rhs) { return lhs - rhs; });
 		ids = process_ids.join(',');
-		var analysis_id = getCookie().selected_analysis.id;
+		var analysis_id = getCookie().analysis_id;
 
 		$.get( '/analysis/' + analysis_id + '/process_info/' + ids )
 		.done( function ( response_data, textStatus, jqXHR ) {
 			showProcessCharacteristics( response_data );
 		});
-
-		// With the request out, set the cookie in case the page is reloaded
-		var $current = getCookie();
-		$current.selected_processes = process_ids;
-		setCookie( $current );
-
 	}
 }
 
@@ -231,9 +218,9 @@ function showProcesses ( data ) {
 	$('#processes .items tbody').selectable({ stop: getProcessesInfo });
 
 	var $cookie = getCookie();
-	if ( $cookie.selected_processes ) {
-		for ( var i = 0; i < $cookie.selected_processes.length; ++i ) {
-			id = $cookie.selected_processes[ i ];
+	if ( $cookie.process_ids ) {
+		for ( var i = 0; i < $cookie.process_ids.length; ++i ) {
+			var id = $cookie.process_ids[ i ];
 			$('[data-processid="' + id + '"]').addClass( 'ui-selected' );
 		}
 		getProcessesInfo();
@@ -252,31 +239,24 @@ function showAnalysis ( html_string ) {
 	var $aInfo = $('#analysis_info');
 	$aInfo.empty().append( $html );
 
+	attachGlobalEventListeners();
 	$aInfo.removeClass('hidden');
 }
 
 
 function selectAnalysis ( ) {
 	var analysis_id = $('#analysis_selection').val();
+	if ( ! analysis_id ) { return; }
+
 	$('#processes').addClass('hidden');
 	$('#analysis_info').addClass('hidden');
-
-	if ( ! analysis_id ) { return; }
 
 	var url = '/analysis/' + analysis_id;
 
 	var $cookie = getCookie();
-	$cookie.selected_analysis = null
-	setCookie( $cookie );
 
 	$.get( url )
 	.done( function ( response_data, textStatus, jqXHR ) {
-		// $cookie.selected_analysis = response_data;
-		// setCookie( $cookie );
-		var $cookie = getCookie();
-		$cookie.selected_analysis = {'id': 1};
-		setCookie( $cookie );
-
 		showAnalysis( response_data );
 	});
 
@@ -296,10 +276,11 @@ function updateAnalysisList ( ) {
 	.done( function ( response_data, textStatus, jqXHR ) {
 		var $cookie = getCookie();
 		var aId = null;
-		if ( $cookie.selected_analysis ) {
-			aId = $cookie.selected_analysis.id;
+		if ( $cookie.analysis_id ) {
+			aId = $cookie.analysis_id;
 		}
 		console.log( "aId: " + aId );
+
 		var $as = $('#analysis_selection');
 		$as.empty().append( response_data ).change( selectAnalysis );
 
@@ -309,17 +290,41 @@ function updateAnalysisList ( ) {
 			$as.val( aId );
 			$as.change();
 		}
-	})
-
+		$('#analysis_info').removeClass('hidden');
+	});
 }
 
+function processCookie ( ) {
+	// These settings are set by the server.  Changing them -- maliciously or
+	// otherwise -- will only affect the client experience.  From a security
+	// perspective, they have no bearing on the choices the server makes.
+
+	var $ss = JSON.parse( atob( $.cookie( 'ServerState' )));
+	var $cookie = getCookie();
+	if ( 'analysis_id'   in $ss ) { $cookie.analysis_id   = $ss.analysis_id; }
+	if ( 'process_ids'   in $ss ) { $cookie.process_ids   = $ss.process_ids; }
+
+	if ( 'username'      in $ss ) {
+		$cookie.username      = $ss.username;
+		if ( $cookie.username ) { $('#unauthorized').addClass('hidden'); }
+		else                    { $('#unauthorized').removeClass('hidden'); }
+	}
+	$.cookie( COOKIE, JSON.stringify( $cookie ));
+
+	// To prove the above point, remove the cookie sent by the server
+	$.removeCookie( 'ServerState', { 'path' : '/' } );
+}
 
 function BeginTemoaDBApp ( ) {
 	// create clone after onChange registration of event
 	var $body = $('body');
-	if ( $body.data().username ) {
-		logged_in = true;
-	}
+
+	$.ajaxSetup({
+		crossDomain: false, //there should be no need to talk elsewhere
+		complete: function( jqXHR, textStatus ) {
+			processCookie( jqXHR );
+		}
+	});
 
 	$('#ReloadLibs').click( function () { reloadLibs( false ); } );
 	$(document).bind('keydown', 'ctrl+space', function () {

@@ -14,18 +14,19 @@
 			<p>It appears that either you have disabled Javascript, or your browser does not support it.  TemoaDB does not currently support a non-Javscript interaction.  There is no particular reason against supporting this interaction, other than developer time.  If this is of concern to you, the TemoaProject would welcome patches on this front.  Meanwhile, to use TemoaDB, you will need to turn on Javascript for at least this site.</p>
 		</noscript>
 		<div id='status' class='hidden'></div>
-		{% if not username %}
-		<div id='unauthorized'><strong>Guest</strong>: TemoaDB does not currently recognize you.  You may view and download any data in TemoaDB, but you will not be able to make changes.</div>
-		{% endif %}
+		<div id='unauthorized'{{ username|yesno:", class='hidden'"|safe><strong>Guest</strong>: TemoaDB does not currently recognize you.  You may view and download any data in TemoaDB, but you will not be able to make changes.</div>
 		<button id='ReloadLibs'>Reload Libs</button>
 		<h2>TemoaDB</h2>
 	</div>
 	<div id='analysis'>
-		<p><input type='text' id='analysis_filter' name='analysis_filter' size='15' placeholder='Analysis Filter'></p>
-		<select id='analysis_selection'>
-			<option value='' disabled selected>Loading analyses ...</option>
-		</select>
-		<div id='analysis_info' class='hidden'></div>
+		<div id='analysis_info' class='hidden'>
+			<form method='post' action=''>
+				<p><input type='text' id='analysis_filter' name='analysis_filter' size='15' placeholder='Analysis Filter'></p>
+				<select id='analysis_selection'>
+					<option value='' disabled selected>Loading analyses ...</option>
+				</select>
+			</form>
+		</div>
 	</div>
 	<div class='clear'></div>
 	<div id='processes' class='hidden'>
@@ -55,5 +56,5 @@
 <script type='text/javascript' src='{{ JQUERYCD.UI     }}/jquery-ui.min.js'></script>
 <script type='text/javascript' src='{{ JQUERYCD.COOKIE }}/jquery.cookie.min.js'></script>
 <script type='text/javascript' src='{% static 'process_interface/js/jquery-hotkeys.js' %}'></script>
-<script type='text/javascript' src='{% static 'process_interface/js/TemoaDB.js' %}'></script></body>
-</html>
+<script type='text/javascript' src='{% static 'process_interface/js/TemoaDB.js' %}'></script>
+</body></html>
