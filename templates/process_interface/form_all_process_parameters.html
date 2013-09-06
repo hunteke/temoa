@@ -41,7 +41,7 @@
 		{% endif %}
 	</tbody>
 	<tbody class='{% cycle rowclass %}'>
-		<tr><th>Emission Activity</th><td><button class='add' type='button' data-url='{% url 'process_interface:new_emissionactivity' analysis_id=analysis.pk process_id=pc.ProcessId %}'>Add</button></form></td></tr>
+		<tr><th>Emission Activity</th><td><button class='add' type='button' data-url='{% url 'process_interface:new_emissionactivity' analysis_id=analysis.pk process_id=pc.ProcessId %}'>Add</button></td></tr>
 		{% if pc.forms_emissionactivity %}
 		<tr class='title'><td colspan='2'>
 			<table class='innertable'>
@@ -64,7 +64,7 @@
 		{% endif %}
 	</tbody>
 	<tbody class='{% cycle rowclass %}'>
-		<tr><th>Cost Fixed</th><td><button class='add' type='button' data-url='{% url 'process_interface:new_costfixed' analysis_id=analysis.pk process_id=pc.ProcessId %}'>Add</button></form></td></tr>
+		<tr><th>Cost Fixed</th><td><button class='add' type='button' data-url='{% url 'process_interface:new_costfixed' analysis_id=analysis.pk process_id=pc.ProcessId %}'>Add</button></td></tr>
 		{% if pc.forms_costfixed %}
 		<tr class='title'><td colspan='2'>
 			<table class='innertable'>
@@ -87,7 +87,7 @@
 		{% endif %}
 	</tbody>
 	<tbody class='{% cycle rowclass %}'>
-		<tr><th>Cost Variable</th><td><button class='add' type='button' data-url='{% url 'process_interface:new_costvariable' analysis_id=analysis.pk process_id=pc.ProcessId %}'>Add</button></form></td></tr>
+		<tr><th>Cost Variable</th><td><button class='add' type='button' data-url='{% url 'process_interface:new_costvariable' analysis_id=analysis.pk process_id=pc.ProcessId %}'>Add</button></td></tr>
 		{% if pc.forms_costvariable %}
 		<tr class='title'><td colspan='2'>
 			<table class='innertable'>
