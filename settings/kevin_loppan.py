@@ -63,9 +63,10 @@ STATICFILES_DIRS = (
   # Don't forget to use absolute paths, not relative paths.
 )
 
-MIDDLEWARE_CLASSES += [
-  'middleware.prettify_html.Prettify',
-]
+#MIDDLEWARE_CLASSES += [
+#  'middleware.prettify_html.Prettify',
+#]
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
