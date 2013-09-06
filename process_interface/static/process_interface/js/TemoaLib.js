@@ -133,7 +133,6 @@ function submitForm ( ) {
 	.fail( function ( jqXHR, textStatus, errorThrown ) {
 		var $html = $( $( jqXHR ).attr('responseText') );
 		if ( $html.is( 'form' ) ) {
-			console.log( 'WEEEE' );
 			$form.replaceWith( $html );
 			$html.submit( submitForm );
 			$html.find('tr[class="error"] input[type="text"]:first ').focus();
