@@ -518,7 +518,7 @@ def new_efficiency ( req, analysis_id, process_id ):
 	status = 200
 
 	if req.POST:
-		form = EfficiencyForm( req.POST, analysis=analysis, prefix=process.pk )
+		form = EfficiencyForm( req.POST, analysis=analysis, **kwargs )
 		if not form.is_valid():
 			status = 422  # to let Javascript know there was an error
 			msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
