@@ -170,6 +170,36 @@ class Process ( DM.Model ):
 		return u'{}, {}'.format( self.technology.name, self.vintage.vintage )
 
 
+	@classmethod
+	def new_with_data ( cls, *args, **kwargs ):
+		a   = kwargs['analysis']
+		t   = kwargs['technology']
+		v   = kwargs['vintage']
+
+		  # the optional parameters
+		lifetime         = kwargs.get( 'lifetime', None )
+		loanlife         = kwargs.get( 'loanlife', None )
+		costinvest       = kwargs.get( 'costinvest', None )
+		discountrate     = kwargs.get( 'discountrate', None )
+		existingcapacity = kwargs.get( 'existingcapacity', None )
+
+		try:
+			v = Vintage.objects.get( analysis=a, vintage=v )
+		except ObjectDoesNotExist as e:
+			raise ValidationError('Specified vintage does not exist in analysis.')
+
+		obj = cls( analysis=a, vintage=v, technology=t )
+		obj.lifetime         = lifetime
+		obj.loanlife         = loanlife
+		obj.costinvest       = costinvest
+		obj.discountrate     = discountrate
+		obj.existingcapacity = existingcapacity
+		obj.clean()
+		obj.save()
+
+		return obj
+
+
 	def update_with_data ( self, data ):
 		for attr in ('lifetime', 'loanlife', 'costinvest', 'discountrate',
 		  'existingcapacity'
