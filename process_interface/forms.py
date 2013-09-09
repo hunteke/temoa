@@ -30,6 +30,18 @@ class AnalysisForm ( F.ModelForm ):
 		fields = ('name', 'description', 'period_0', 'global_discount_rate')
 
 
+	def clean_name ( self ):
+		data = self.cleaned_data['name']
+		data = re.sub(r'\r\n', '', data).strip()
+		return data
+
+
+	def clean_description ( self ):
+		data = self.cleaned_data['description']
+		data = re.sub(r'\r', '', data).strip()
+		return data
+
+
 
 class ProcessForm ( F.Form ):
 	"""

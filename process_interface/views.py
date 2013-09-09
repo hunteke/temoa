@@ -218,12 +218,9 @@ def analysis_update ( req, analysis_id ):
 			messages.error( req, msg )
 
 		else:
-			cd = form.cleaned_data
-			cd['name']        = cd['name'].translate( None, '\r\n' ).strip()
-			cd['description'] = cd['description'].translate( None, '\r' ).strip()
-			form.cleaned_data = cd
 			try:
 				form.save()
+				form = AnalysisForm( instance=analysis )
 			except IntegrityError as ie:
 				msg = 'Unable to update analysis.  Database said: {}'
 				messages.error( req, msg.format( ie ))
@@ -258,10 +255,6 @@ def analysis_new ( req ):
 			messages.error( req, msg )
 
 		else:
-			cd = form.cleaned_data
-			cd['name']        = cd['name'].translate( None, '\r\n' ).strip()
-			cd['description'] = cd['description'].translate( None, '\r' ).strip()
-			form.cleaned_data = cd
 			try:
 				form.save()
 				return analysis_update( req, analysis.pk )
