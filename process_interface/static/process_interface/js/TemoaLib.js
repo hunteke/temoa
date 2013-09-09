@@ -215,6 +215,7 @@ function submitForm ( ) {
 		$newForm.find('input[type="text"]:first').focus();
 	})
 	.fail( function ( jqXHR, textStatus, errorThrown ) {
+		enable( inputs ); // Let user fix error if server not replacing form.
 		var $html = $( $( jqXHR ).attr('responseText') );
 		if ( $html.is( 'form' ) ) {
 			$form.replaceWith( $html );
