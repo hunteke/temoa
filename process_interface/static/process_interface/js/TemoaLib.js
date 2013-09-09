@@ -303,8 +303,6 @@ function attachProcessListEvents ( ) {
 
 		for ( var i = 0; i < $selected.length; ++i ) {
 			var $el = $($selected[ i ] );
-			console.log( $el );
-			console.log( $el.hasClass( 'ui-selected' ) );
 			if ( ! $el.hasClass( 'ui-selected' ) ) {
 				do_load = true;
 				$el.addClass('ui-selected');
