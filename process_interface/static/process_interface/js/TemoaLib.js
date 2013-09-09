@@ -1,5 +1,7 @@
 var COOKIE = 'TemoaDB_UISettings';
 
+var hoverEl = null;
+
 function getCookie ( ) {
 	var $obj = $.cookie( COOKIE );
 	if ( $obj ) {
@@ -64,7 +66,35 @@ function showStatus ( msg, cssclass ) {
 }
 
 
-function addRow ( ) {
+function showRemoveButtons ( show_remove_buttons, el ) {
+	var $target = null
+	if ( el ) {
+		$target = $(el);
+	} else if ( hoverEl ) {
+		$target = $(hoverEl);
+	} else {
+		return;  // nothing to do!
+	}
+
+	var $to_hide, $to_show;
+	if ( show_remove_buttons ) {
+		$to_hide = $target.find('button.add');
+		$to_show = $target.find('button.remove.hidden');
+	} else {
+		$to_hide = $target.find('button.remove');
+		$to_show = $target.find('button.add.hidden');
+	}
+
+	for ( var i = 0; i < $to_hide.length; ++i ) {
+		$($to_hide[i]).addClass( 'hidden' );
+	}
+	for ( var i = 0; i < $to_show.length; ++i ) {
+		$($to_show[i]).removeClass( 'hidden' );
+	}
+};
+
+
+function addProcessDataRow ( ) {
 	var $button = $(this);
 
 	var $tbody = $button.parents( 'tbody:first' );
@@ -91,9 +121,63 @@ function addRow ( ) {
 		}
 
 		var $newForm = $newData.find('form');
-		$newForm.submit( submitForm )
+		$newForm.submit( submitForm );
 	});
 }
+
+function addNewProcessRow ( ) {
+	var $button = $(this);
+
+	var $tbody = $button.parents('table:first').children( 'tbody' );
+	var $new_rows = $tbody.find( 'tr.new' );
+	if ( $new_rows.length > 0 ) { return; }
+
+	var url = $button.data().url;
+	$.get( url )
+	.done( function ( response_data, textStatus, jqXHR ) {
+		// refind: it may have changed since we loaded the button, or
+		// concurrent to performing this operation.
+		var $row = $( response_data );
+		var $tbody = $button.parents('table:first').children( 'tbody' );
+
+		$row.find('button').click( function() {
+			$row.remove()
+		});
+
+		$tbody.prepend( $row );
+	});
+}
+
+
+function removeProcessRow ( ) {
+	var $button = $(this);
+
+	var url = $button.data().url;
+	var csrf = $button.parents('form').find('[name="csrfmiddlewaretoken"]');
+	csrftoken = csrf.val();
+
+	var req = $.ajax({
+		url: url,
+		type: 'DELETE',
+		dataType: 'html',
+		beforeSend: function ( xhr, settings ) {
+			if ( ! csrfSafeMethod( settings.type )) {
+				// if-block not specifically necessary, but following pattern
+				xhr.setRequestHeader( 'X-CSRFToken', csrftoken );
+			}
+		}
+	});
+
+	req.done( function ( data, textStatus, jqXHR ) {
+		showProcessList( data );
+		showStatus( 'Process successfully removed.', 'info' );
+	});
+	req.fail( function ( jqXHR, textStatus ) {
+		var msg = 'Unable to remove process from database.  Server said: ';
+		showStatus( msg + textStatus );
+	});
+}
+
 
 function disable ( list_of_inputs ) {
 	for ( var i = 0; i < list_of_inputs.length; ++i ) {
@@ -150,7 +234,7 @@ function submitForm ( ) {
 	})
 	.always( function ( ) {
 		// reattach any change listeners
-		attachGlobalEventListeners()
+		attachGlobalEventListeners();
 	});
 
 	return false;  // don't submit through normal channels, please
@@ -171,7 +255,7 @@ function showProcessCharacteristics ( html_string ) {
 	var $buttons = $pcItems.find( 'button.add' );
 	for ( var i = 0; i < $buttons.length; ++i ) {
 		var $button = $( $buttons[ i ] );
-		$button.click( addRow );
+		$button.click( addProcessDataRow );
 	}
 
 	$('#process_characteristics').removeClass('hidden');
@@ -202,32 +286,55 @@ function getProcessesInfo ( ) {
 }
 
 
-function showProcesses ( data ) {
-	var $tbody = $('<tbody/>');
-	var noRow = 0;
-	var css = ['even', 'odd'];
-	for ( var i in data ) {
-		id      = data[i][0];
-		tech    = data[i][1];
-		vintage = data[i][2];
+function attachProcessListEvents ( ) {
+	var $items = $('#processes .items');
+	var $thead = $items.children('thead');
+	var $tbody = $items.children('tbody');
 
-		noRow += 1;
-		$tr = $('<tr/>', { 'data-processid' : id, 'class' : css[noRow % 2] });
-		$tr.append( $('<td/>').html( tech ) );
-		$tr.append( $('<td/>').html( vintage ) );
-		$tbody.append( $tr );
-	}
-	$('#processes .items tbody').replaceWith( $tbody );
-	$('#processes .items tbody').selectable({ stop: getProcessesInfo });
+	$tbody.selectable({ stop: getProcessesInfo });
 
 	var $cookie = getCookie();
 	if ( $cookie.process_ids ) {
 		for ( var i = 0; i < $cookie.process_ids.length; ++i ) {
 			var id = $cookie.process_ids[ i ];
-			$('[data-processid="' + id + '"]').addClass( 'ui-selected' );
+			$tbody.find('[data-processid="' + id + '"]').addClass('ui-selected');
 		}
 		getProcessesInfo();
 	}
+
+	var $buttons = $thead.find( 'button.add' );
+	for ( var i = 0; i < $buttons.length; ++i ) {
+		var $button = $( $buttons[ i ] );
+		$button.click( addNewProcessRow );
+	}
+
+	$buttons = $tbody.find( 'button.remove' );
+	for ( var i = 0; i < $buttons.length; ++i ){
+		var $button = $( $buttons[ i ] );
+		$button.click( removeProcessRow );
+	}
+
+	var $form = $thead.parents('form');
+	if ( $form ) {
+		$form.submit( submitForm );
+	}
+
+	var $tr = $items.find('tr')
+	$tr.on('mouseenter', function() { hoverEl = this; });
+	$tr.on('mouseleave', function() {
+		if ( hoverEl === this ) {
+			hoverEl = null;
+		}
+		showRemoveButtons( false, this );
+	});
+}
+
+
+function showProcessList ( html_string ) {
+	var $items = $('#processes .items');
+	$items.replaceWith( html_string );
+
+	attachProcessListEvents();
 
 	$('#processes').removeClass('hidden');
 }
@@ -235,7 +342,9 @@ function showProcesses ( data ) {
 
 function attachGlobalEventListeners ( ) {
 	$('#analysis_selection').change( selectAnalysis );
+	attachProcessListEvents();
 }
+
 
 function showAnalysis ( html_string ) {
 	var $html = $( html_string );
@@ -271,7 +380,7 @@ function selectAnalysis ( ) {
 
 	$.get( url + '/process_list' )
 	.done( function ( response_data, textStatus, jqXHR ) {
-		showProcesses( response_data );
+		showProcessList( response_data );
 	});
 
 }
@@ -286,14 +395,11 @@ function updateAnalysisList ( ) {
 		if ( $cookie.analysis_id ) {
 			aId = $cookie.analysis_id;
 		}
-		console.log( "aId: " + aId );
 
 		var $as = $('#analysis_selection');
 		$as.empty().append( response_data ).change( selectAnalysis );
 
-		console.log( 'HERE' );
 		if ( aId ) {
-			console.log( 'THERE' );
 			$as.val( aId );
 			$as.change();
 		}
@@ -305,6 +411,9 @@ function processCookie ( ) {
 	// These settings are set by the server.  Changing them -- maliciously or
 	// otherwise -- will only affect the client experience.  From a security
 	// perspective, they have no bearing on the choices the server makes.
+
+	var $ss = $.cookie( 'ServerState' );
+	if ( ! $ss ) { return; }
 
 	var $ss = JSON.parse( atob( $.cookie( 'ServerState' )));
 	var $cookie = getCookie();
@@ -337,7 +446,13 @@ function BeginTemoaDBApp ( ) {
 	$(document).bind('keydown', 'ctrl+space', function () {
 		reloadLibs( false );
 	});
-	//$(document).bind('keydown', 'shift',
+
+	$(document).bind('keydown', 'shift', function () {
+		showRemoveButtons( true );
+	});
+	$(document).bind('keyup', 'shift', function () {
+		showRemoveButtons( false );
+	});
 
 	updateAnalysisList();
 }

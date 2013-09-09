@@ -47,6 +47,7 @@ from models import (
 from forms import (
   AnalysisForm,
   ProcessForm,
+  NewProcessForm,
   CostFixedForm,
   getCostFixedForm,
   getCostFixedForms,
@@ -379,6 +380,79 @@ def get_process_info ( processes ):
 	return process_characteristics
 
 
+def process_list ( req, analysis_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id )
+	processes = [
+	  (p.id, p.technology.name, p.vintage.vintage)
+
+	  for p in Process.objects.filter( analysis=analysis )
+	]
+
+	template = 'process_interface/process_list.html'
+
+	c = {}
+	c.update( processes=processes, analysis_id=analysis.pk )
+	if req.user.is_authenticated():
+		c.update( authed=True )
+		c.update( csrf(req) )
+
+	res = render( req, template, c )
+	set_cookie( req, res, analysis_id=analysis_id )
+	return res
+
+
+@login_required
+def process_new ( req, analysis_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+
+	template = 'process_interface/form_process_new.html'
+	kwargs = {
+	  'prefix'   : 'new_process' + str(analysis.pk),
+	  'analysis' : analysis
+	}
+	status = 200
+
+	if req.POST:
+		process = Process( analysis=analysis )
+		form = NewProcessForm( req.POST, instance=process, **kwargs )
+		if not form.is_valid():
+			status = 422  # to let Javascript know there was an error
+			msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
+			messages.error( req, msg )
+
+		else:
+			try:
+				form.save()
+				return process_list( req, analysis.pk )
+
+			except IntegrityError as ie:
+				t = form.cleaned_data[ 'technology' ]
+				v = form.cleaned_data[ 'vintage' ]
+				msg = ('Unable to create new Process ({}, {}).  It already exists!')
+				messages.error( req, msg.format( t, v, ie ))
+				status = 422
+
+	else:
+		form = NewProcessForm( **kwargs )
+
+	c = {}
+	c.update( analysis=analysis, form=form )
+	c.update( csrf(req) )
+
+	res = render( req, template, c, status=status )
+	set_cookie( req, res )
+	return res
+
+
+@login_required
+def process_remove ( req, analysis_id, process_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	process = get_object_or_404( Process, pk=process_id, analysis=analysis )
+
+	process.delete()
+
+	return process_list( req, analysis.pk )
+
 
 def process_info ( req, analysis_id, process_ids ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
@@ -541,7 +615,6 @@ def new_efficiency ( req, analysis_id, process_id ):
 						  'instead.')
 						messages.error( req, msg.format( inp, out ))
 						status = 422
-
 
 	else:
 		if req.GET and req.GET['header']:

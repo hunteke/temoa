@@ -23,6 +23,32 @@ from models import (
 
 from IPython import embed as II
 
+class CachedChoiceField ( F.ModelChoiceField ):
+	""" By default, Django assumes queryset, and utilizes queryset.all().  This
+	can be a problem if the field needs a dynamic set of choices that does not
+	easily fit within a SQL query.  This subclass allows the form to prepopulate
+	a field cache. """
+	def __init__ ( self, *args, **kwargs ):
+		# If choice_cache is already populuated, then utilize it.  Otherwise,
+		# fallback to the normal handling.
+		cache = kwargs.pop( 'cache', None )
+		super( CachedChoiceField, self ).__init__( *args, **kwargs )
+
+		if cache:
+			self.cache_choices = True
+			self.choice_cache = [ self.choice(c) for c in cache ]
+
+
+	def choice ( self, obj ):
+		return ( self.prepare_value(obj), self.label_from_instance(obj) )
+
+
+
+class VintageField ( CachedChoiceField ):
+	def label_from_instance ( self, obj ):
+		return u'{}'.format( obj.vintage )
+
+
 
 class AnalysisForm ( F.ModelForm ):
 	class Meta:
@@ -40,6 +66,21 @@ class AnalysisForm ( F.ModelForm ):
 		data = self.cleaned_data['description']
 		data = re.sub(r'\r', '', data).strip()
 		return data
+
+
+
+class NewProcessForm ( F.ModelForm ):
+	class Meta:
+		model = Process
+		fields = ('technology', 'vintage')
+
+	def __init__ ( self, *args, **kwargs ):
+		analysis = kwargs.pop( 'analysis' )
+		super( NewProcessForm, self ).__init__( *args, **kwargs )
+
+		flds = self.fields
+		query = Vintage.objects.filter( analysis=analysis ).order_by('vintage')
+		flds['vintage'] = VintageField( query, cache=list(query)[:-1] )
 
 
 

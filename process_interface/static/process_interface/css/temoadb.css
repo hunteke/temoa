@@ -34,17 +34,32 @@ body { height: 100% ; margin: 1em; }
 #process_characteristics .items thead tr       { border-top: 1pt solid #000; border-bottom: 1pt dotted #000; background: #29f; font-size: 120%; }
 #process_characteristics .items thead tr.error { background: #f00; color: #fff; }
 #process_characteristics .items .process { width: 100%; }
-#process_characteristics .items button {
+.items button {
 	background-color: transparent;
-	background: url('/static/process_interface/icons/blue_list_add.svg');
 	background-repeat: no-repeat;
 	background-origin: content-box;
 	background-position: center;
-	background-size: 25px 25px;
 	width: 100%;
-	height: 25px;
 	color: transparent;
 	border: none;
+	font-weight: bold;
+	background-image: url('/static/process_interface/icons/blue_list_add.svg');
+	background-size: 25px 25px;
+	height: 25px;
+}
+
+.items button:hover { color: #000; opacity: .8; font-weight: bold; };
+
+.items button.add {
+	background-image: url('/static/process_interface/icons/blue_list_add.svg');
+	background-size: 25px 25px;
+	height: 25px;
+}
+
+.items button.remove {
+	background-image: url('/static/process_interface/icons/red_list_remove.svg');
+	background-size: 38px 12px;
+	height: auto;
 }
 
 .innertable .data { font-family: monospace; text-align: right; }
@@ -78,8 +93,10 @@ body { height: 100% ; margin: 1em; }
 #status { padding: 1em; position: fixed; bottom: 0; left: 1em; background: #ccc; z-index: 1000; opacity: 1; }
 #unauthorized { padding: 1em 1ex; min-width: 15em; max-width: 30em; width: 50%; z-index: -1000; position: fixed; bottom: 1ex; right: 1em; opacity: 0.9; background: #aaa;}
 
+input[type='text'] { background: inherit; border: 1pt solid; width: 6em; text-align: right; }
+textarea { background: inherit; border: 1pt solid; width: 99%; }
 input[type='submit'] { display: none; width: 1px; height: 1px; }
-input { background: inherit; border: 1pt solid; width: 6em; text-align: right; }
+input.show[type='submit'] { display: inline; width: auto; height: auto; }
 
 tr.even td, tr.odd td { background-size: auto 100%; background-repeat: no-repeat; background-origin: content-box; background-position: center; }
 

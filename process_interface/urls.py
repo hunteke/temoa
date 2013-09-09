@@ -8,6 +8,8 @@ from views import (
   get_messages,
   process_info,
   process_list,
+  process_new,
+  process_remove,
   tutorial,
   update_process,
   new_efficiency,
@@ -39,6 +41,9 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/update$', analysis_update, name='analysis_update'),
   url(r'^analysis/(?P<analysis_id>\d+)/process_list$', process_list, name='process_list'),
   url(r'^analysis/(?P<analysis_id>\d+)/process_info/(?P<process_ids>(?:\d+,?)+)$', process_info, name='process_info' ),
+  url(r'^analysis/(?P<analysis_id>\d+)/create/process$', process_new, name='process_new' ),
+  url(r'^analysis/(?P<analysis_id>\d+)/remove/process/(?P<process_id>(?:\d+,?)+)$', process_remove, name='process_remove' ),
+
 #  url(r'^analysis/(?P<analysis_id>\d+)/technology_info/(?P<process_ids>(?:\d+,?)+)$', technology_info, name='technology_info'),
 
 #  url(r'^analysis/(?P<analysis_id>\d+)/update/technology/(?P<technology_id>\d+)$', update_analysis_technology, name='update_analysis_technology'),
