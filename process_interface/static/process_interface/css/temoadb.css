@@ -56,7 +56,7 @@ body { height: 100% ; margin: 1em; }
 	height: 25px;
 }
 
-.items button.remove {
+.items button.remove, .items button.cancel {
 	background-image: url('/static/process_interface/icons/red_list_remove.svg');
 	background-size: 38px 12px;
 	height: auto;

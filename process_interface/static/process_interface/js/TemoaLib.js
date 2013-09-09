@@ -291,37 +291,60 @@ function attachProcessListEvents ( ) {
 	var $thead = $items.children('thead');
 	var $tbody = $items.children('tbody');
 
-	$tbody.selectable({ stop: getProcessesInfo });
+	$tbody.selectable({ 'stop': getProcessesInfo });
 
 	var $cookie = getCookie();
 	if ( $cookie.process_ids ) {
-		for ( var i = 0; i < $cookie.process_ids.length; ++i ) {
-			var id = $cookie.process_ids[ i ];
-			$tbody.find('[data-processid="' + id + '"]').addClass('ui-selected');
+		var ids = $cookie.process_ids;
+		var do_load = false;
+		var sel = '[data-processid="' + ids.join('"],[data-processid="') + '"]';
+		var $selected = $tbody.find( sel );
+
+		for ( var i = 0; i < $selected.length; ++i ) {
+			var $el = $($selected[ i ] );
+			console.log( $el );
+			console.log( $el.hasClass( 'ui-selected' ) );
+			if ( ! $el.hasClass( 'ui-selected' ) ) {
+				do_load = true;
+				$el.addClass('ui-selected');
+			}
 		}
-		getProcessesInfo();
+		if ( do_load ) {
+			getProcessesInfo();
+		}
 	}
 
 	var $buttons = $thead.find( 'button.add' );
+	$buttons.off();
 	for ( var i = 0; i < $buttons.length; ++i ) {
 		var $button = $( $buttons[ i ] );
 		$button.click( addNewProcessRow );
 	}
 
 	$buttons = $tbody.find( 'button.remove' );
-	for ( var i = 0; i < $buttons.length; ++i ){
+	$buttons.off()
+	for ( var i = 0; i < $buttons.length; ++i ) {
 		var $button = $( $buttons[ i ] );
 		$button.click( removeProcessRow );
 	}
 
+	$buttons = $tbody.find( 'button.cancel' );
+	$buttons.off()
+	for ( var i = 0; i < $buttons.length; ++i ) {
+		var $button = $( $buttons[ i ] );
+		$button.click( function() { $(this).parents('tr:first').remove(); });
+	}
+
 	var $form = $thead.parents('form');
 	if ( $form ) {
+		$form.off()
 		$form.submit( submitForm );
 	}
 
-	var $tr = $items.find('tr')
-	$tr.on('mouseenter', function() { hoverEl = this; });
-	$tr.on('mouseleave', function() {
+	var $tr = $items.find('tr');
+	$tr.off();
+	$tr.mouseenter( function() { hoverEl = this; });
+	$tr.mouseleave( function() {
 		if ( hoverEl === this ) {
 			hoverEl = null;
 		}
@@ -341,7 +364,7 @@ function showProcessList ( html_string ) {
 
 
 function attachGlobalEventListeners ( ) {
-	$('#analysis_selection').change( selectAnalysis );
+	$('#analysis_selection').off().change( selectAnalysis );
 	attachProcessListEvents();
 }
 

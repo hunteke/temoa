@@ -420,6 +420,10 @@ def process_new ( req, analysis_id ):
 			msg = '\n'.join( m.as_text() for k, m in form.errors.iteritems() )
 			messages.error( req, msg )
 
+			res = HttpResponse( status=status )
+			set_cookie( req, res )
+			return res
+
 		else:
 			try:
 				form.save()
