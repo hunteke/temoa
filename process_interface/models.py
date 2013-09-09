@@ -214,10 +214,18 @@ class Process ( DM.Model ):
 
 
 	def clean ( self ):
-		v = self.vintage.vintage
+		try:
+			v = self.vintage.vintage
+		except ObjectDoesNotExist as e:
+			raise ValidationError('Process must have a vintage.')
 		e = self.existingcapacity
 		l = self.lifetime
-		p0 = self.analysis.period_0
+		try:
+			p0 = self.analysis.period_0
+		except ObjectDoesNotExist as e:
+			msg = ('Unexpected database error.  Does the analysis need a start '
+			  'period (Period 0)?')
+			raise ValidationError( msg )
 
 		if e:
 			if v >= p0:
