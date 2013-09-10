@@ -8,7 +8,11 @@ body { height: 100% ; margin: 1em; }
 
 #header { height: 4em; width: 100%; background-color: cyan; }
 
-#ReloadLibs { float: right; }
+#LogoutLink { float: right; }
+#LoginForm { float: right; }
+#ReloadLibs { float: right; display: none; }
+
+#technology_list { position: fixed; top: 1px; left: 50%; cursor: pointer; background-color: #ddd; }
 
 #launchers { margin: 0  auto ; }
 #launchers ul { list-style: none outside none ; padding: 0 ; }

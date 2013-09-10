@@ -4,14 +4,16 @@ from operator import itemgetter as i_get
 import re
 
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.context_processors import csrf
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.db.models import Max
 from django.db.utils import IntegrityError
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, render_to_response, get_object_or_404
 from django.utils import simplejson as json
 from django.utils.datastructures import MultiValueDictKeyError
@@ -45,6 +47,7 @@ from models import (
 )
 
 from forms import (
+  LoginForm,
   AnalysisForm,
   ProcessForm,
   NewProcessForm,
@@ -85,6 +88,30 @@ def home ( req ):
 	return render_to_response('process_interface/home.html')
 
 
+def login_view ( req ):
+	res = HttpResponseRedirect(reverse('process_interface:view') )
+
+	if req.POST:
+		form = LoginForm( req.POST )
+		if form.is_valid():
+			username = form.cleaned_data['username']
+			password = form.cleaned_data['password']
+			user = authenticate( username=username, password=password )
+			if user is not None:
+				if user.is_active:
+					login( req, user )
+
+	set_cookie( req, res )
+	return res
+
+
+def logout_view ( req ):
+	logout( req )
+	res = HttpResponseRedirect(reverse('process_interface:view') )
+	set_cookie( req, res )
+	return res
+
+
 def view ( req ):
 	template = 'process_interface/view.html'
 
@@ -94,6 +121,8 @@ def view ( req ):
 
 	if req.user.is_authenticated():
 		c.update( username=req.user.username )
+	else:
+		c.update( password_form=LoginForm() )
 
 	res = render( req, template, c )
 	set_cookie( req, res )

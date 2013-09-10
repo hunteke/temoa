@@ -4,6 +4,8 @@ from views import (
   analysis_update,
   analysis_new,
   list_analyses,
+  login_view,
+  logout_view,
   home,
   get_messages,
   process_info,
@@ -27,10 +29,12 @@ from views import (
 )
 
 urlpatterns = patterns('',
-  url(r'^$',          home,     name='home'),
-  url(r'^interact/$', view,     name='view'),
-  url(r'^tutorial/$', tutorial, name='tutorial'),
-  url(r'^user/list$',      user, name='users'),
+  url(r'^$',          home,       name='home'),
+  url(r'^login/$',    login_view, name='login'),
+  url(r'^logout/$',   logout_view, name='logout'),
+  url(r'^interact/$', view,       name='view'),
+  url(r'^tutorial/$', tutorial,   name='tutorial'),
+  url(r'^user/list$',      user,  name='users'),
   url(r'^user/(?P<username>\w+)/analyses$', user_analyses, name='user_analyses'),
 
   url(r'^session_messages/$', get_messages, name='session_messages'),

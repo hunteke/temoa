@@ -50,6 +50,11 @@ class VintageField ( CachedChoiceField ):
 
 
 
+class LoginForm ( F.Form ):
+	username = F.CharField( label=_('Username'), max_length=254 )
+	password = F.CharField( label=_('Password'), widget=F.PasswordInput() )
+
+
 class AnalysisForm ( F.ModelForm ):
 	class Meta:
 		model = Analysis
