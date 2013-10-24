@@ -226,11 +226,10 @@ class Process ( DM.Model ):
 			elif attr in data:
 				setattr( self, attr, None )
 
-		self.clean()
 		self.save()
 
 
-	def clean ( self ):
+	def save ( self ):
 		try:
 			v = self.vintage.vintage
 		except ObjectDoesNotExist as e:
@@ -283,6 +282,8 @@ class Process ( DM.Model ):
 				msg = ('Invalid lifetime: vintage would not be used in analysis: '
 				  '{} + {} <= {}')
 				raise ValidationError( msg.format( v, l, p0 ))
+
+		super( Process, self ).save()
 
 
 
@@ -348,10 +349,12 @@ class Param_CapacityToActivity ( DM.Model ):
 		return '({}) {}: {}'.format( a, t, self.value )
 
 
-	def clean ( self ):
+	def save ( self, *args, **kwargs ):
 		if self.value <= 0:
 			msg = 'CapacityToActivity value must be a positive value'
 			raise ValidationError( msg )
+
+		super( Param_CapacityToActivity, self ).save( *args, **kwargs )
 
 
 
@@ -388,10 +391,12 @@ class Param_DemandSpecificDistribution ( DM.Model ):
 		  analysis, season, time_of_day, self.demand, self.fraction )
 
 
-	def clean ( self ):
+	def save ( self ):
 		if self.demand.commodity_type.name != 'demand':
 			msg = 'Distribution commodity must be a type "demand".'
 			raise ValidationError( msg )
+
+		super( Param_DemandSpecificDistribution, self ).save()
 
 
 
@@ -415,10 +420,12 @@ class Param_Demand ( DM.Model ):
 		  analysis, commodity, self.period, self.value )
 
 
-	def clean ( self ):
+	def save ( self ):
 		if self.demand.commodity_type.name != 'demand':
 			msg = 'Demand value must be tied to a commodity of type "demand".'
 			raise ValidationError( msg )
+
+		super( Param_Demand, self ).save()
 
 
 
@@ -443,10 +450,12 @@ class Param_ResourceBound ( DM.Model ):
 		  analysis, period, commodity, self.value )
 
 
-	def clean ( self ):
+	def save ( self ):
 		if self.resource.commodity_type != 'physical':
 			msg = 'Resource commodity must be of type "physical".'
 			raise ValidationError( msg )
+
+		super( Param_ResourceBound, self ).save()
 
 
 
@@ -554,7 +563,7 @@ class Param_TechInputSplit ( DM.Model ):
 		return u'({}) {}, {}: {}'.format( analysis, inp, tech, self.fraction )
 
 
-	def clean ( self ):
+	def save ( self ):
 		if self.inp_commodity.commodity_type.name != 'physical':
 			msg = 'TechInputSplit commodity must be of type "physical".'
 			raise ValidationError( msg )
@@ -572,6 +581,7 @@ class Param_TechInputSplit ( DM.Model ):
 			  'Analysis {}')
 			raise ValidationError( msg.format( self.technology, analysis ))
 
+		super( Param_TechInputSplit, self ).save()
 
 
 class Param_TechOutputSplit ( DM.Model ):
@@ -593,7 +603,7 @@ class Param_TechOutputSplit ( DM.Model ):
 		return u'({}) {}, {}: {}'.format( analysis, tech, out, self.fraction )
 
 
-	def clean ( self ):
+	def save ( self ):
 		if self.out_commodity.commodity_type.name not in ('demand', 'physical'):
 			msg = ('TechOutputSplit commodity must be of type "demand" or '
 			  '"physical".')
@@ -611,6 +621,8 @@ class Param_TechOutputSplit ( DM.Model ):
 			msg = ("Technology class '{}' is not used in any processes of "
 			  'Analysis {}')
 			raise ValidationError( msg.format( self.technology, analysis ))
+
+		super( Param_TechOutputSplit, self).save()
 
 
 
@@ -674,10 +686,12 @@ class Param_EmissionLimit ( DM.Model ):
 		  analysis, period, emission, self.value )
 
 
-	def clean ( self ):
+	def save ( self ):
 		if self.emission.commodity_type.name != 'emission':
 			msg = 'EmissionLimit commodity must be of type "emission".'
 			raise ValidationError( msg )
+
+		super( Param_EmissionLimit, self).save()
 
 
 
@@ -712,7 +726,7 @@ class Param_Efficiency ( DM.Model ):
 		  analysis, inp, tech, vintage, out, self.value )
 
 
-	def clean ( self ):
+	def save ( self ):
 		epsilon = 1e-9   # something really small
 
 		if self.inp_commodity.commodity_type.name != 'physical':
@@ -739,40 +753,7 @@ class Param_Efficiency ( DM.Model ):
 			raise ValidationError( msg.format(
 			  inp_analysis, analysis, out_analysis ))
 
-
-	@classmethod
-	def new_with_data ( cls, *args, **kwargs ):
-		a   = kwargs['analysis']
-		inp = kwargs['inp_commodity']
-		p   = kwargs['process']
-		out = kwargs['out_commodity']
-		val = kwargs['value']
-
-		try:
-			inp = Set_commodity_physical.objects.get(
-			  analysis=a,
-			  commodity__name=inp )
-		except ObjectDoesNotExist as e:
-			msg = 'Specified input does not exist in analysis.'
-			raise ValidationError( msg )
-
-		try:
-			out = Set_commodity_output.objects.get(
-			  analysis=a,
-			  commodity__name=out )
-		except ObjectDoesNotExist as e:
-			msg = 'Specified output does not exist in analysis.'
-			raise ValidationError( msg )
-
-		obj = cls()
-		obj.inp_commodity = inp
-		obj.process       = p
-		obj.out_commodity = out
-		obj.value         = val
-		obj.clean()
-		obj.save()
-
-		return obj
+		super( Param_Efficiency, self).save()
 
 
 
@@ -830,48 +811,12 @@ class Param_EmissionActivity ( DM.Model ):
 			))
 
 
-	@classmethod
-	def new_with_data ( cls, *args, **kwargs ):
-		a   = kwargs['analysis']
-		p   = kwargs['process']
-		pol = kwargs['pollutant']
-		eff = kwargs['efficiency']
-		val = kwargs['value']
-
-		inp, out = eff.split(',')
-		inp = inp.strip()
-		out = out.strip()
-		try:
-			pol = Set_commodity_emission.objects.get(
-			  analysis=a,
-			  commodity__name=pol )
-		except ObjectDoesNotExist as e:
-			msg = 'Specified pollutant does not exist in analysis.'
-			raise ValidationError( msg )
-
-		try:
-			eff = Param_Efficiency.objects.get(
-			  inp_commodity__commodity__name=inp,
-			  process=p,
-			  out_commodity__commodity__name=out )
-		except ObjectDoesNotExist as e:
-			msg = 'No matching efficiency for this process.'
-			raise ValidationError( msg )
-
-		obj = cls()
-		obj.emission   = pol
-		obj.efficiency = eff
-		obj.value      = val
-		obj.clean()
-		obj.save()
-
-		return obj
-
-
-	def clean ( self ):
+	def save ( self ):
 		if self.emission.commodity_type.name != 'emission':
 			msg = 'EmissionActivity commodity must be of type "emission".'
 			raise ValidationError( msg )
+
+		super( Param_EmissionActivity, self).save()
 
 
 
