@@ -1,7 +1,8 @@
 __all__ = (
   'Analysis',
+  'AnalysisCommodity',
   'Commodity',
-  'CommoditySetMember',
+  'CommodityType',
   'LifetimeParameter',
   'MinMaxParameter',
   'Param_CapacityToActivity',
@@ -24,10 +25,6 @@ __all__ = (
   'Param_TechOutputSplit',
   'PeriodCostParameter',
   'Process',
-  'Set_commodity_demand',
-  'Set_commodity_emission',
-  'Set_commodity_output',
-  'Set_commodity_physical',
   'Set_tech_baseload',
   'Set_tech_storage',
   'Technology',
@@ -35,11 +32,12 @@ __all__ = (
   'Vintage'
 )
 
+import math
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models as DM   # Django Models
 from django.utils.translation import ugettext_lazy as _
-
 
 # One glaring deficiency with Django: lack of database level check constraints.
 # Django has the basics like, > 0, not null, and unique/unique_together, but it
@@ -308,55 +306,30 @@ class Param_LifetimeTechLoan ( LifetimeParameter ): pass
 
 
 
-class CommoditySetMember ( DM.Model ):
-	analysis  = DM.ForeignKey( Analysis )
-	commodity = DM.ForeignKey( Commodity )
-
-	class Meta:
-		abstract = True
-		ordering = ('analysis', 'commodity')
-		unique_together = ('analysis', 'commodity')
+class CommodityType ( DM.Model ):
+	name = DM.CharField( max_length=64, unique=True )
 
 	def __unicode__ ( self ):
-		return u'({}) {}'.format( self.analysis, self.commodity )
+		return u'{}'.format( self.name )
 
 
-class Set_commodity_emission ( CommoditySetMember ): pass
 
-class Set_commodity_demand ( CommoditySetMember ):
-	def save ( self, *args, **kwargs ):
-		# Currently, the assumption is that folks will call this in a transaction
-		super(Set_commodity_demand, self).save(*args, **kwargs)
-		obj, created = Set_commodity_output.objects.get_or_create(
-		  analysis  = self.analysis,
-		  commodity = self.commodity,
-		  demand    = self
-		)
-
-class Set_commodity_physical ( CommoditySetMember ):
-	def save ( self, *args, **kwargs ):
-		# Currently, the assumption is that folks will call this in a transaction
-		super(Set_commodity_physical, self).save(*args, **kwargs)
-		obj, created = Set_commodity_output.objects.get_or_create(
-		  analysis  = self.analysis,
-		  commodity = self.commodity,
-		  physical  = self
-		)
+class AnalysisCommodity ( DM.Model ):
+	analysis       = DM.ForeignKey( Analysis )
+	commodity_type = DM.ForeignKey( CommodityType )
+	commodity      = DM.ForeignKey( Commodity )
 
 
-class Set_commodity_output ( CommoditySetMember ):
-	demand    = DM.ForeignKey( Set_commodity_demand, null=True )
-	physical  = DM.ForeignKey( Set_commodity_physical, null=True )
+	class Meta:
+		ordering = ('analysis', 'commodity_type', 'commodity')
+		unique_together = ('analysis', 'commodity')
 
-	def clean ( self ):
-		if ( not (self.demand and self.physical)
-		     and (self.demand or  self.physical)
-		):
-			# the only acceptible entry for this table is one or the other
-			return
 
-		msg = 'Output commodity must be either Physical or Demand commodity'
-		raise ValidationError( msg )
+	def __unicode__ ( self ):
+		a = self.analysis if self.analysis_id else 'NoAnalysis'
+		t = self.commodity_type if self.commodity_type_id else 'NoType'
+		c = self.commodity if self.commodity_id else 'NoCommodity'
+		return u'({}) [{}] {}'.format( a, t, c )
 
 
 
@@ -399,7 +372,7 @@ class Param_DemandDefaultDistribution ( DM.Model ):
 
 class Param_DemandSpecificDistribution ( DM.Model ):
 	timeslice = DM.ForeignKey( Param_SegFrac )
-	demand    = DM.ForeignKey( Set_commodity_demand )
+	demand    = DM.ForeignKey( AnalysisCommodity )
 	fraction  = DM.FloatField()
 
 	class Meta:
@@ -415,12 +388,18 @@ class Param_DemandSpecificDistribution ( DM.Model ):
 		  analysis, season, time_of_day, self.demand, self.fraction )
 
 
+	def clean ( self ):
+		if self.demand.commodity_type.name != 'demand':
+			msg = 'Distribution commodity must be a type "demand".'
+			raise ValidationError( msg )
+
+
 
 class Param_Demand ( DM.Model ):
 	# The check that period is >= Period_0 and is a valid analysis vintage
 	# happens in valid()
 	period = DM.ForeignKey( Vintage )
-	demand = DM.ForeignKey( Set_commodity_demand )
+	demand = DM.ForeignKey( AnalysisCommodity )
 	value  = DM.FloatField()
 
 
@@ -436,12 +415,18 @@ class Param_Demand ( DM.Model ):
 		  analysis, commodity, self.period, self.value )
 
 
+	def clean ( self ):
+		if self.demand.commodity_type.name != 'demand':
+			msg = 'Demand value must be tied to a commodity of type "demand".'
+			raise ValidationError( msg )
+
+
 
 class Param_ResourceBound ( DM.Model ):
 	# The check that period is >= Period_0 and is a valid analysis vintage
 	# happens in valid()
 	period   = DM.ForeignKey( Vintage )
-	resource = DM.ForeignKey( Set_commodity_physical )
+	resource = DM.ForeignKey( AnalysisCommodity )
 	value    = DM.FloatField()
 
 
@@ -456,6 +441,12 @@ class Param_ResourceBound ( DM.Model ):
 
 		return u'({}) {}, {}: {}'.format(
 		  analysis, period, commodity, self.value )
+
+
+	def clean ( self ):
+		if self.resource.commodity_type != 'physical':
+			msg = 'Resource commodity must be of type "physical".'
+			raise ValidationError( msg )
 
 
 
@@ -546,7 +537,7 @@ class Param_CostVariable ( PeriodCostParameter ): pass
 
 class Param_TechInputSplit ( DM.Model ):
 	# The check that technology is valid for this analysis is in valid()
-	inp_commodity = DM.ForeignKey( Set_commodity_physical )
+	inp_commodity = DM.ForeignKey( AnalysisCommodity )
 	technology    = DM.ForeignKey( Technology )
 	fraction      = DM.FloatField()
 
@@ -564,6 +555,10 @@ class Param_TechInputSplit ( DM.Model ):
 
 
 	def clean ( self ):
+		if self.inp_commodity.commodity_type.name != 'physical':
+			msg = 'TechInputSplit commodity must be of type "physical".'
+			raise ValidationError( msg )
+
 		if not (0 < self.fraction and self.fraction < 1):
 			msg = ('Fraction must greater than 0 and less than 1, else it is a '
 			  'useless specification.')
@@ -582,7 +577,7 @@ class Param_TechInputSplit ( DM.Model ):
 class Param_TechOutputSplit ( DM.Model ):
 	# The check that technology is valid for this analysis is in valid()
 	technology    = DM.ForeignKey( Technology )
-	out_commodity = DM.ForeignKey( Set_commodity_output )
+	out_commodity = DM.ForeignKey( AnalysisCommodity )
 	fraction      = DM.FloatField()
 
 
@@ -599,6 +594,11 @@ class Param_TechOutputSplit ( DM.Model ):
 
 
 	def clean ( self ):
+		if self.out_commodity.commodity_type.name not in ('demand', 'physical'):
+			msg = ('TechOutputSplit commodity must be of type "demand" or '
+			  '"physical".')
+			raise ValidationError( msg )
+
 		if not (0 < self.fraction and self.fraction < 1):
 			msg = ('Fraction must greater than 0 and less than 1, else it is a '
 			  'useless specification.')
@@ -656,9 +656,9 @@ class Param_MaxCapacity ( MinMaxParameter ): pass
 class Param_EmissionLimit ( DM.Model ):
 	# The check that period is >= Period_0 and is a valid analysis vintage
 	# happens in valid()
-	period     = DM.ForeignKey( Vintage )
-	emission   = DM.ForeignKey( Set_commodity_emission )
-	value      = DM.FloatField()
+	period   = DM.ForeignKey( Vintage )
+	emission = DM.ForeignKey( AnalysisCommodity )
+	value    = DM.FloatField()
 
 
 	class Meta:
@@ -674,17 +674,28 @@ class Param_EmissionLimit ( DM.Model ):
 		  analysis, period, emission, self.value )
 
 
+	def clean ( self ):
+		if self.emission.commodity_type.name != 'emission':
+			msg = 'EmissionLimit commodity must be of type "emission".'
+			raise ValidationError( msg )
+
+
 
 class Param_Efficiency ( DM.Model ):
 	# check that Analysis ids match is in clean()
-	inp_commodity = DM.ForeignKey( Set_commodity_physical )
+	inp_commodity = DM.ForeignKey( AnalysisCommodity, related_name='EfficiencyInput' )
 	process       = DM.ForeignKey( Process )
-	out_commodity = DM.ForeignKey( Set_commodity_output )
+	out_commodity = DM.ForeignKey( AnalysisCommodity, related_name='EfficiencyOutput' )
 	value         = DM.FloatField()
 
 	class Meta:
 		unique_together = ('inp_commodity', 'process', 'out_commodity')
-		ordering = ('process', 'inp_commodity', 'out_commodity')
+		ordering = (
+		  'process__technology',
+		  'inp_commodity',
+		  'out_commodity',
+		  'process__vintage'
+		)
 
 
 	def __unicode__ ( self ):
@@ -702,7 +713,18 @@ class Param_Efficiency ( DM.Model ):
 
 
 	def clean ( self ):
-		if self.value == 0:
+		epsilon = 1e-9   # something really small
+
+		if self.inp_commodity.commodity_type.name != 'physical':
+			msg = 'Efficiency input commodity must be of type "physical".'
+			raise ValidationError( msg )
+
+		if self.out_commodity.commodity_type.name not in ('demand', 'physical'):
+			msg = ('Efficiency output commodity must be of type "demand" or '
+			  '"physical".')
+			raise ValidationError( msg )
+
+		if abs(self.value) < epsilon or math.isnan( self.value ):
 			msg = ('Process efficiency must not be 0, or it is a useless entry.  '
 			  'Consider removing the efficiency instead of marking it 0.'
 			  '\nAttempted value: {}')
@@ -753,8 +775,9 @@ class Param_Efficiency ( DM.Model ):
 		return obj
 
 
+
 class Param_EmissionActivity ( DM.Model ):
-	emission   = DM.ForeignKey( Set_commodity_emission )
+	emission   = DM.ForeignKey( AnalysisCommodity )
 	efficiency = DM.ForeignKey( Param_Efficiency )
 	value      = DM.FloatField()
 
@@ -764,15 +787,26 @@ class Param_EmissionActivity ( DM.Model ):
 
 
 	def __unicode__ ( self ):
-		analysis = self.efficiency.process.analysis
-		emission = self.emission.commodity
-		inp      = self.efficiency.inp_commodity.commodity
-		tech     = self.efficiency.process.technology
-		vintage  = self.efficiency.process.vintage
-		out      = self.efficiency.out_commodity
+		if self.efficiency_id:
+			analysis = self.efficiency.process.analysis
+			inp      = self.efficiency.inp_commodity.commodity
+			tech     = self.efficiency.process.technology
+			vint     = self.efficiency.process.vintage.vintage
+			out      = self.efficiency.out_commodity.commodity
+		else:
+			analysis = 'NoAnalysis'
+			inp  = 'NoInput'
+			tech = 'NoTechnology'
+			vint = 'NoVintage'
+			out  = 'NoOutput'
 
-		return u'({}) {} {} {} {}: {} {} '.format(
-		  analysis, inp, tech, vintage, out, emission, self.value )
+		if self.emission_id:
+			emission = self.emission.commodity
+		else:
+			emission = 'NoEmission'
+
+		return u'({}) {} {} {} {}: {} {}'.format(
+		  analysis, inp, tech, vint, out, emission, self.value )
 
 
 	def clean ( self ):
@@ -832,6 +866,12 @@ class Param_EmissionActivity ( DM.Model ):
 		obj.save()
 
 		return obj
+
+
+	def clean ( self ):
+		if self.emission.commodity_type.name != 'emission':
+			msg = 'EmissionActivity commodity must be of type "emission".'
+			raise ValidationError( msg )
 
 
 

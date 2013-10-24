@@ -16,9 +16,6 @@ from models import (
   Param_Efficiency,
   Param_LifetimeTech,
   Param_LifetimeTechLoan,
-  Set_commodity_emission,
-  Set_commodity_physical,
-  Set_commodity_output
 )
 
 from IPython import embed as II
@@ -205,21 +202,32 @@ class EfficiencyForm ( F.Form ):
 
 	@classmethod
 	def getInputChoices ( cls, analysis ):
-		choices = [ (cp.commodity.name, cp.commodity.name)
-		  for cp in Set_commodity_physical.objects.filter(analysis=analysis)
+		ctype = CommodityType.objects.filter( name='physical' )
+		return [ (c.commodity.name, c.commodity.name)
+		  for c in AnalysisCommodity.objects.filter(
+		    analysis=analysis, commodity_type__in=ctype )
 		]
 
-		return choices
 
 	@classmethod
 	def getOutputChoices ( cls, analysis ):
-		choices = [ (cp.commodity.name, cp.commodity.name)
-		  for cp in Set_commodity_output.objects.filter(analysis=analysis)
+		ctype = CommodityType.objects.filter( name__in=('physical', 'demand') )
+		return [ (c.commodity.name, c.commodity.name)
+		  for c in AnalysisCommodity.objects.filter(
+		    analysis=analysis, commodity_type__in=ctype )
 		]
 
-		return choices
 
+	def clean_value ( self ):
+		epsilon = 1e-9    # something really small
 
+		v = self.cleaned_data['value']  # guaranteed a float or None
+		if v is None or abs(v) < epsilon:
+			msg = ('Process efficiency must not be 0, or it is a useless entry.  '
+			  'Consider removing the efficiency instead of marking it 0.')
+			raise F.ValidationError( msg )
+
+		return v
 
 def getEfficiencyForm ( analysis, efficiency, *args, **kwargs ):
 	kwargs.update(
@@ -299,17 +307,17 @@ class EmissionActivityForm ( F.Form ):
 
 	@classmethod
 	def getPollutantChoices ( cls, analysis ):
-		choices = [ (cp.commodity.name, cp.commodity.name)
-		  for cp in Set_commodity_emission.objects.filter(analysis=analysis)
+		ctype = CommodityType.objects.get( name='emission' )
+		return [ (ce.commodity.name, ce.commodity.name)
+		  for ce in AnalysisCommodity.objects.filter(
+		    analysis=analysis, commodity_type=ctype )
 		]
-
-		return choices
 
 
 	@classmethod
 	def getEfficiencyChoices ( cls, process ):
 		choices = []
-		for eff in Param_Efficiency.objects.filter(process=process):
+		for eff in Param_Efficiency.objects.filter( process=process ):
 			inp = eff.inp_commodity.commodity.name
 			out = eff.out_commodity.commodity.name
 			choice = '{}, {}'.format( inp, out )
