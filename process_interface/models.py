@@ -237,6 +237,19 @@ class Process ( DM.Model ):
 			v = self.vintage.vintage
 		except ObjectDoesNotExist as e:
 			raise ValidationError('Process must have a vintage.')
+
+		# Is the vintage valid for this analysis?
+		vintages = Vintage.objects.filter( analysis=self.analysis )
+		if not vintages.filter( vintage=v ):
+			raise ValidationError('Vintage does not exist in this analysis')
+
+		# Is the vintage a vintage year as opposed the final year?
+		if v == max( i.vintage for i in vintages ):
+			msg = ('The final year in the analysis vintages is not actually a '
+			  'vintage.  It is a marker for calculation of the last period '
+			  'length, and is therefore not a valid vintage.')
+			raise ValidationError( msg )
+
 		e = self.existingcapacity
 		l = self.lifetime
 		try:
