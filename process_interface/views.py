@@ -20,7 +20,7 @@ from django.utils.datastructures import MultiValueDictKeyError
 from django.views.decorators.http import require_POST
 from django.views.generic.edit import CreateView, UpdateView
 
-from settings import JQUERYCD
+from settings import CD # content delivery
 
 from models import (
   Analysis,
@@ -110,9 +110,8 @@ def logout_view ( req ):
 def view ( req ):
 	template = 'process_interface/view.html'
 
-	c = {'JQUERYCD': JQUERYCD}
+	c = {'CD': CD, 'username': None}
 	c.update(csrf(req))
-	c.update( username=None )
 
 	if req.user.is_authenticated():
 		c.update( username=req.user.username )

@@ -105,9 +105,12 @@ DATABASES = {
 # these files locally.  To fallback to the regular content delivery network
 # (CDN), just don't set this setting.  To update the default, look to
 # global_settings.py
-JQUERYCD = {
-  'BASE'   : '/static/process_interface/js',
-  'UI'     : '/static/process_interface/js',
-  'COOKIE' : '/static/process_interface/js',
+CD = {
+  'JQUERYBASE'        : '/static/process_interface/js',
+  'JQUERYUI'          : '/static/process_interface/js',
+  'JQUERYCOOKIE'      : '/static/process_interface/js',
+  'JQUERYTABLESORTER' : '/static/process_interface/js',
+  'JQUERYHOTKEYS'     : '/static/process_interface/js',
+  'CANJS'             : '/static/process_interface/js',
 }
 
