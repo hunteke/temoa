@@ -363,19 +363,22 @@ class Set_commodity_output ( CommoditySetMember ):
 class Param_CapacityToActivity ( DM.Model ):
 	analysis   = DM.ForeignKey( Analysis )
 	technology = DM.ForeignKey( Technology )
-	value      = DM.FloatField( null=True )
+	value      = DM.FloatField()
 
 	class Meta:
 		unique_together = ('analysis', 'technology')
 
 
 	def __unicode__ ( self ):
-		if self.value:
-			return '({}) {}: {} (non-default value)'.format(
-			  self.analysis, self.technology, self.value )
+		a = self.analysis if self.analysis_id else 'NoAnalysis'
+		t = self.technology if self.technology_id else 'NoTechnology'
+		return '({}) {}: {}'.format( a, t, self.value )
 
-		return u'({}) {}: {}'.format(
-			  self.analysis, self.technology, self.value )
+
+	def clean ( self ):
+		if self.value <= 0:
+			msg = 'CapacityToActivity value must be a positive value'
+			raise ValidationError( msg )
 
 
 
