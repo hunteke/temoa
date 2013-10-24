@@ -481,6 +481,67 @@ function BeginTemoaDBApp ( ) {
 		crossDomain: false, //there should be no need to talk elsewhere
 		complete: function( jqXHR, textStatus ) {
 			processCookie( jqXHR );
+			var status = jqXHR.status;
+		},
+		beforeSend: function ( xhr, settings ) {
+			if ( ! csrfSafeMethod( settings.type )) {
+				xhr.setRequestHeader( 'X-CSRFToken', $.cookie('csrftoken') );
+			}
+		},
+		error: function ( jqXHR, textStatus, errorThrown ) {
+			var status = jqXHR.status
+			  , msg = null;
+			if ( status >= 500 ) {
+				if ( 501 === status ) {
+					msg = "<p>501 (not implemented) - This message implies that you are testing new TemoaDB functionality, and that we have not implemented it yet.  If this is functionality you believe would be extremely helpful to your workflow, please let us know on the <a href='https://groups.google.com/forum/#!forum/temoa-project' title='GoogleGroups forum'>Temoa Project forum</a>.</p>";
+				} else if ( 502 === status ) {
+					msg = "<p>502 (bad gateway) - Some computer on the network that is between TemoaDB and your browser is having trouble communicating with us.  Hopefully this is a transient error, but if not, you may try connecting to TemoaDB from a different place.  Try contacting your local IT support for help, or accessing TemoaDB from a (different) coffee shop.</p>";
+				} else if ( 503 === status ) {
+					msg = "<p>503 (service unavailable) - The TemoaDB server is either offline for maintenance, or is overwhelmed by users.  Given the number of folks who know about TemoaDB, the former is most likely the issue.  If TemoaDB does not come back after a business day, consider inquiring on the <a href='https://groups.google.com/forum/#!forum/temoa-project' title='GoogleGroups forum'>Temoa Project forum</a>.</p>";
+				} else if ( 504 === status ) {
+					msg = "<p>504 (gateway timeout) - Some computer between TemoaDB and your browser did not receive a response from TemoaDB in a timely fashion.  This most likely means a temporary spike in traffic occurred: try again in a couple of minutes.</p>";
+				} else if ( 505 === status ) {
+					msg = "<p>505 (HTTP protocol not supported) - This message is extremely unlikely, so you may be using a non-standard browser.  Alternatively, your browser may have an incorrect setting, preventing it from using either HTTP v1 or v1.1.  Consider switching to a more mainstream browser (e.g. Chromium, Firefox, or Safari), or ask your local IT support for help.</p>";
+				} else if ( 509 === status ) {
+					msg = "<p>509 (bandwidth exceeded) - It appears that TemoaDB has gotten popular enough that this server has exceeded a bandwidth cap for this billing period.  If this error is not transient, please make sure we know about this via the <a href='https://groups.google.com/forum/#!forum/temoa-project' title='GoogleGroups forum'>Temoa Project forum</a>.</p>";
+				} else if ( 511 === status ) {
+					msg = "<p>511 (network authentication required) - This error most likely indicates a 'Captive Portal' situation: you may need to open a new browser tab or window and log on to a local network (e.g., agree to terms of service, pay money) before it will let you communicate with TemoaDB.</p>";
+				} else if ( 522 === status ) {
+					msg = "<p>522 (connection timed out) - TemoaDB's connection with your browser timed out.  This most likely means a lost couple of packets.  Resolution: try the action again.</p>";
+				} else {
+					msg = '<p>' + status + " - The server encountered a (currently undiagnosed) error.  If you can <strong>consistently</strong> recreate this error from a fresh reload (e.g., close and reopen the browser), then the Temoa Project developers would appreciate a bug report with the specifics.  Please file the bug on our <a href='https://github.com/hunteke/temoa/issues'>GitHub Issues</a> page.<p><p>Message from server: " + errorThrown + '</p>';
+				}
+			} else if ( status >= 400 ) {
+				if ( 401 === status ) {
+					msg = "<p>401 (unauthorized) - You are not currently known to the server.  This likely means that your session 'timed out' by not communicating with the server in an appropriate amount of time, or logged out in another tab or window (making this tab/window 'stale').  You will need to login again.";
+				} else if ( 403 === status ) {
+					msg = "<p>403 (forbidden) - Though the server recognizes you by the username '" + getCookie().username + "', the server does not recognize your authority to perform this action.  If you believe the action you took should be allowed (and thereby believe this message to be in error), please consider informing the Temoa Project via a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless you can provide exact instructions to recreate the issue, we may not be able to fix it.</p>"
+				} else if ( 404 === status ) {
+					msg = "<p>404 (not found) - The requested item could not be found.  Perhaps you need to reload the view in question?  If not, and you have discovered a <strong>recreatable</strong> error, please consider informing the Temoa Project via a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless there is an exact mechanism to recreate the issue, we may not be able to fix it.</p>";
+				} else if ( 405 === status ) {
+					msg = "<p>405 (method not allowed) - Your browser requested an action or resource through an incorrect mechanism.  This most likely indicates inconsitent logic in the Temoa web interface: if you can <em>consistently</em> recreate this message, please consider providing the Temoa Project with a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless there is an exact mechanism to recreate the issue, we may not be able to fix it.</p>";
+				} else if ( 406 === status ) {
+					msg = "<p>406 (not acceptable) - Your browser has told the server that it will only accept certain kinds of responses, none of which the server can produce.  This most likely indicates an incorrect setting or other issue with your browser.  You may ask for help on the <a href='https://groups.google.com/forum/#!forum/temoa-project' title='GoogleGroups forum'>Temoa Project forum</a>, but we will likely not be able to help.  Your local IT support may be of greater help.</p>";
+				} else if ( 407 === status ) {
+					msg = "<p>407 (unauthenticated proxy) - You are apparently accessing TemoaDB from through a proxy server.  This proxy server requires you to authenticate.  Generally, this means you will have to open a new tab or window and open a special organization-specific URL.  Your local IT support will be able to help as this error is not related to Temoa.</p>";
+				} else if ( 408 === status ) {
+					msg = "<p>408 (timeout) - The server was waiting for further information from your browser, but did not receive it in an appropriate amount of time.  This most likely means some packets were lost in transit (i.e., a fluke).  If you retry the action in question, it should succeed.</p>";
+				} else if ( 410 === status ) {
+					msg = "<p>410 (gone) - You or your browser requested some information from the server that no longer exists.  This likely means that you have an out-of-date version of the analysis.  If you reload this page (e.g., by closing and reopening your browser or force-reloading the page), this message should no longer appear.</p>";
+				} else if ( 413 === status ) {
+					msg = "<p>413 (too large) - You or your browser attempted to send too much data to the server.  As TemoaDB only deals with extremely small requests to the server (i.e., &lt;&lt; 512KiB), this is likely either an error with your browser or a bug within Temoa's web interface.  If you believe it to be the latter, please provide the Temoa Project with a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless there is an exact mechanism to recreate the issue, we may not be able to fix it.</p>";
+				} else if ( 414 === status ) {
+					msg = "<p>414 (request too long) - The request &ndash; what you would usually recognize as the URL in the white bar at the top of the browser window &ndash; for the request action was too long.  This request is not one that would see, but likely occurred when you selected a large number of items from a list.  Select a smaller number of items at a time to avoid this message.</p>";
+				} else if ( 422 === status ) {
+					return; // for form to handle
+				} else if ( 429 === status ) {
+					msg = "<p>429 (too many requests) - The server believes that you or your browser is asking for way too much information, and is therefore rate limiting your access.  To achieve this message, you would have to ask for an inordinate amount of information, such as what an automated program might be able to do.  This means you have scripted your access to TemoaDB (well done, but consider playing nice with our server), your browser has a bug, or you have found a bug within the Temoa web interface.  If you believe the latter, please consider creating a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless there is an exact mechanism to recreate the issue, we may not be able to fix it.</p>";
+				} else {
+					msg = '<p>' + status + " - There was a (currently undiagnosed) error with your browser's request to the server.  Consequently, the server has rejected the request.  If you can <strong>consistently</strong> recreate this error message from a fresh reload (e.g., close and reopen the browser), then the Temoa Project developers would appreciate a bug report with the specifics.  Please file the bug on our <a href='https://github.com/hunteke/temoa/issues'>GitHub Issues</a> page.<p><p>Message from server: " + errorThrown + '</p>';
+				}
+			}
+			showStatus( null, null, msg );
+
 		}
 	});
 
