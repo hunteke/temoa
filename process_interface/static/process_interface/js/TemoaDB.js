@@ -46,17 +46,32 @@ function hideStatus ( nxt_func ) {
 }
 
 
-function showStatus ( msg, cssclass ) {
-	var $st = $('#status');
+function showStatus ( msg, cssclass, safe_msg ) {
+	var $st = $('<div>', {id: 'status'});
 	if ( ! cssclass ) { cssclass = 'error' }
 
-	msg = escapeHTML( msg );
+	if ( msg ) {
+		msg = escapeHTML( msg );
+	} else if ( safe_msg ) {
+		msg = safe_msg;
+	} else {
+		return;
+	}
+
+	// From uncited "prior knowledge", I believe the average number of
+	// characters per word in the English language is 5.1.  Similarly, I
+	// believe that the average adult reads about 250 words per minute.
+	// This suggests that the number of milliseconds before removing the status
+	// message should be:
+	//   numChars * (word/5.1 chars) * (min/250 words) * (60000ms/min)
+	//    = numChars * (47.06 ms/char).  I round that to 50.
+	var delayLength = 50 * msg.length;
 	$st.addClass( cssclass );
-	$st.removeClass( 'hidden' );
 	$st.html( msg );
+
 	var actions = {
 	  'error': function ( ) {
-	    $st.clearQueue().stop(true, true).show().fadeIn( 1 ).delay( 1000 );
+	    $st.clearQueue().stop(true, true).show().fadeIn( 1 ).delay(delayLength);
 	    // flash twice
 	    $st.fadeOut().fadeIn().delay( 1000 ).fadeOut().fadeIn();
 	    $st.delay( 1000 ).fadeOut( 4000 ).queue( hideStatus );
@@ -67,6 +82,7 @@ function showStatus ( msg, cssclass ) {
 	  }
 	};
 	actions[ cssclass ]();
+	$('#status').replaceWith( $st );
 }
 
 
