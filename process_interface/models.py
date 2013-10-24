@@ -103,14 +103,21 @@ class Param_SegFrac ( DM.Model ):
 
 
 class Technology ( DM.Model ):
-	name        = DM.CharField( max_length=32767, unique=True )
+	# There's no need for a limit on the name size, other than practical usage.
+	# I can't think of a context that would use more than 100 characters for
+	# name, so I think 1024 characters (2**10) is more than adequate storage --
+	# overkill, just in case.
+	user        = DM.ForeignKey( User )
+	name        = DM.CharField( max_length=1024 )
 	description = DM.TextField()
 
 	# may be overridden, but must be defined by something
 	capacity_to_activity = DM.FloatField( null=True )
 
 	class Meta:
+		unique_together = ('user', 'name')
 		ordering = ('name',)
+
 
 	def __unicode__ ( self ):
 		return unicode( self.name )
