@@ -1,3 +1,7 @@
+"use strict";  // ECMA v5 pragma, similar to Perl's functionality.
+  // FYI: http://ejohn.org/blog/ecmascript-5-strict-mode-json-and-more/
+
+(function () {
 var COOKIE = 'TemoaDB_UISettings';
 
 var hoverEl = null;
@@ -479,6 +483,11 @@ function BeginTemoaDBApp ( ) {
 	updateAnalysisList();
 }
 
-console.clear();
+$(document).ready( function () {
+	BeginTemoaDBApp();
+});
+
+})();
+
 console.log( 'TemoaLib loaded: ' + Date() );
 
