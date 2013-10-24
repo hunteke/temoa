@@ -473,9 +473,12 @@ function processCookie ( ) {
 	$.removeCookie( 'ServerState', { 'path' : '/' } );
 }
 
+
 function BeginTemoaDBApp ( ) {
-	// create clone after onChange registration of event
-	var $body = $('body');
+	// The below complete: function has neither been setup, nor had a chance to
+	// run at this point.  Given that some pieces of code rely on this cookie
+	// for UI state info, we manually process the cookie the first time.
+	processCookie();
 
 	$.ajaxSetup({
 		crossDomain: false, //there should be no need to talk elsewhere
