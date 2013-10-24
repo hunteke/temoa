@@ -123,6 +123,17 @@ class Technology ( DM.Model ):
 		return unicode( self.name )
 
 
+	def clean ( self ):
+		self.name = self.name.replace('\r', '').strip()
+		self.description = self.description.replace('\r', '').strip()
+
+		if not self.name:
+			raise ValidationError( 'Technologies must have a name.' )
+
+		if not self.description:
+			raise ValidationError( 'Technologies must have a description.' )
+
+
 
 class Commodity ( DM.Model ):
 	name        = DM.CharField( max_length=32767, unique=True )
