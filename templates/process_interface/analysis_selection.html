@@ -1,5 +1,0 @@
-<p><input type='text' id='analysis_filter' name='analysis_filter' size='15' placeholder='Analysis Filter'></p>
-<select id='analysis_selection'>{% for a in analyses %}
-	<option value='{{ a.pk }}'{% if a.pk == analysis_id %} selected{% endif %}>{{ a.name }}</option>{% endfor %}
-</select>
-

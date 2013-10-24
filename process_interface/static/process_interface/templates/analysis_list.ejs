@@ -1,0 +1,6 @@
+<select id='analysis_selection'>
+	<option value=''>----- Select Analysis -----</option>
+<% analyses.each( function ( a ) { %>
+	<option <%= ($el) -> $el.data('analysis', a) %>value='<%= a.attr('id') ? a.attr('id') : 'New' %>'><%= a.isNew() ? '' : '(' + a.attr( 'username' ) + ') ' %><%= a.isNew() ? 'Create Analysis ...' : a.attr('name') %></option>
+<% }); %>
+</select>

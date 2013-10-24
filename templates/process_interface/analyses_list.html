@@ -1,5 +1,0 @@
-{% load url from future %}
-	<option value='' disabled selected>Select Analysis</option>
-{% for a in analyses %}
-	<option value='{{ a.pk }}'>{{ a.name }}</option>
-{% endfor %}

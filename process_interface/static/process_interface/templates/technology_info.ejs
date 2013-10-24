@@ -1,0 +1,18 @@
+<% if ( username !== null && (technology.username === username) ) { %>
+<div class='technology' id='TechUpdateForm_<%= technology.attr('id') %>' <%= ($el) -> $el.data('technology', technology) %>>
+	<form onsubmit='return false;'>
+		<h3><%= technology.attr('name') %></h3>
+		<p><label for='TechC2A_<%= technology.attr('id') %>'>Capacity to Activity:</label> <input id='TechC2A_<%= technology.id %>' type='number' name='capacity_to_activity' <%= technology.attr('capacity_to_activity') ? "value='" + technology.attr('capacity_to_activity') + "'" : ''%>><span class='error'></span></p>
+		<p><label for='TechDescription_<%= technology.attr('id') %>'>Description:</label> <textarea id='TechDescription_<%= technology.attr('id') %>' name='description'><%= technology.attr('description') ? technology.description : '' %></textarea><span class='error'></span></p>
+		<button type='button' name='Update'>Update</button><button type='button' name='Cancel'>Cancel</button>
+		<p class='error'></p>
+	</form>
+</div>
+<% } else { %>
+<div class='technology'>
+	<h3>(<%= technology.attr('username') %>)<%= technology.attr('name') %></h3>
+	<p>Capacity to Activity: <%= technology.attr('capacity_to_activity') %></p>
+	<p>Description:</p>
+	<pre><%= technology.attr('description') ? technology.attr('description') : '' %></pre>
+</div>
+<% } %>

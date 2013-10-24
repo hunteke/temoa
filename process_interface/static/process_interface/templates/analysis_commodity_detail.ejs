@@ -1,0 +1,19 @@
+<% if ( username !== null && (analysis.username === username) ) { %>
+<div class='commodity' id='CommodityForm_<%= commodity.attr('id') %>' <%= ($el) -> $el.data('commodity', commodity) %>>
+	<form onsubmit='return false;'>
+		<h3><%= commodity.attr('name') ? commodity.attr('name') : 'New Commodity' %></h3>
+		<p><label for='Commodity_<%= commodity.attr('id') %>'>Name:</label> <input id='Commodity_<%= commodity.attr('id') %>' type='text' name='name' <%= commodity.isNew() ? "placeholder='commodity name'" : "value='" + commodity.attr('name') + "'" %>><span class='error'></span></p>
+		<% if ( commodity.isNew() ) { %>
+		<button type='button' name='CommoditiesCreate'>Create</button><button type='button' name='Cancel'>Cancel</button>
+		<% } else { %>
+		<button type='button' name='CommoditiesUpdate'>Update</button><button type='button' name='Cancel'>Cancel</button>
+		<% } %>
+		<p class='error'></p>
+	</form>
+</div>
+<% } else { %>
+<div class='commodity'>
+	<h3>(<%= analysis.attr('username') %>)<%= commodity.attr('name') %></h3>
+</div>
+<% } %>
+

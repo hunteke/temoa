@@ -1,0 +1,19 @@
+<% var cssclass = ['odd', 'even'], pcount; %>
+<datalist id='ValidNewProcessNames'>
+<% analysis.new_process_names.each( function ( name ) { %>
+	<option value='<%= name %>'>
+<% }); %>
+</datalist>
+<table>
+	<thead><tr>
+		<th colspan='2'>Process List<%== username && username === analysis.username ? " <button class='add' type='button' id='NewProcessButton' data-type='process_new'>Add</button>" : ''; %></th></tr></thead>
+	<tbody>
+	<% pcount = 0; processes.each( function ( p ) { %>
+		<tr class='<%== cssclass[ ++pcount %2 ] %>' <%= ($el) -> $el.data('process', p) %> data-id='<%= p.attr('id') %>'>
+			<td class='action'><button class='remove hidden' type='button' name='ProcessRemove'>Del</button></td>
+			<td><%= p.technology.attr('name') %></td>
+			<td><%= p.attr('vintage') %></td>
+		</tr>
+	<% }); %>
+	</tbody>
+</table>

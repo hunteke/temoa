@@ -1,0 +1,56 @@
+<% if ( username !== null && (analysis.isNew() || (analysis.username === username) )) { %>
+<div class='analysis' <%= ($el) -> $el.data('analysis', analysis) %>>
+	<form onsubmit='return false;' id='AnalysisInfoForm_<%= analysis.attr('id') %>'>
+	<table>
+		<tbody>
+			<tr>
+				<th><label for='AnalysisName_<%= analysis.attr('id') %>'>Name</label>:</th>
+				<td class='full_input textleftalign'><input id='AnalysisName_<%= analysis.attr('id') %>' type='text' name='name' autocomplete='off' form='AnalysisInfoForm_<%= analysis.attr('id') %>'  placeholder='Analysis Name' <%== analysis.attr('name') ? "value='" + apostrophe_escape(analysis.attr('name')) + "'" : '' %>><span class='error'></span></td>
+			</tr><tr>
+				<th><label for='AnalysisDescription_<%= analysis.attr('id') %>'>Description</label>:</th>
+				<td><textarea id='AnalysisDescription_<%= analysis.attr('id') %>' name='description' placeholder='General information about this analysis.  For which publication, motivation, methodology, pertinent details ...'><%= analysis.attr('description') ? analysis.attr('description') : '' %></textarea><span class='error'></span></td>
+			</tr><tr>
+				<th><label for='AnalysisGDR_<%= analysis.attr('id') %>'>Global Discount Rate (GDR)</label>:</th>
+				<td><input id='AnalysisGDR_<%= analysis.attr('id') %>' type='number' name='global_discount_rate' autocomplete='off' form='AnalysisInfoForm_<%= analysis.attr('id') %>' placeholder='decimal rate' <%= analysis.attr('global_discount_rate') ? "value='" + analysis.attr('global_discount_rate') + "'" : '' %>><span class='error'></span></td>
+			</tr><tr>
+				<th><label for='AnalysisVintages_<%= analysis.attr('id') %>'>Vintages</label>:</th>
+				<td class='full_input textleftalign'><input id='AnalysisVintages_<%= analysis.attr('id') %>' type='text' name='vintages' autocomplete='off' form='AnalysisInfoForm_<%= analysis.attr('id') %>' placeholder='comma separated list of period boundaries (years)' <%= analysis.attr('vintages') ? "value='" + analysis.attr('vintages') + "'" : '' %>><span class='error'></span></td>
+			</tr><tr>
+				<th><label for='AnalysisPeriod0_<%= analysis.attr('id') %>'>Period 0</label>:</th>
+				<td><input id='AnalysisPeriod0_<%= analysis.attr('id') %>' type='number' name='period_0' autocomplete='off' form='AnalysisInfoForm_<%= analysis.attr('id') %>' placeholder='start year' <%= analysis.attr('period_0') ? "value='" + analysis.attr('period_0') + "'" : '' %>><span class='error'></span></td>
+			</tr><tr>
+				<td></td>
+				<td>
+				<% if ( analysis.isNew() ) { %>
+					<button type='button' form='AnalysisInfoForm_<%= analysis.attr('id') %>' name='AnalysisCreate'>Create</button>
+				<% } else { %>
+					<button type='button' form='AnalysisInfoForm_<%= analysis.attr('id') %>' name='AnalysisUpdate'>Update</button>
+				<% } %>
+					<button type='button' form='AnalysisInfoForm_<%= analysis.attr('id') %>' name='AnalysisCancel'>Cancel</button>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<p class='error'></p>
+	</form>
+	<%== analysis.isNew() ? '' : "<button type='button' id='ShowHideCommodities'>Toggle Commodities</button>" %>
+	<%== analysis.isNew() ? '' : "<button type='button' id='ShowHideDemands'>Toggle Demands</button>" %>
+	<div id='AnalysisCommodities' class='hidden'></div>
+	<div id='AnalysisDemands' class='hidden'></div>
+</div>
+<% } else { %>
+<div class='analysis' id='AnalysisUpdateForm_<%= analysis.attr('id') %>'>
+	<table>
+		<tbody>
+			<tr><th>Name:</th><td class='full_input textleftalign'><%= analysis.attr('name') %></td></tr>
+			<tr><th>Description:</th><td><%= analysis.attr('description') ? analysis.attr('description') : '' %></td></tr>
+			<tr><th>Period 0:</th><td><%= analysis.attr('period_0') ? analysis.attr('period_0') : 'No start year specified' %></td></tr>
+			<tr><th>Global Discount Rate (GDR):</th><td><%= analysis.attr('global_discount_rate') ? analysis.attr('global_discount_rate') : 'No GDR specified' %></td></tr>
+			<tr><th>Vintages:</th><td class='full_input textleftalign'><%= analysis.attr('vintages') ? analysis.attr('vintages') : 'No vintages specified' %></td></tr>
+		</tbody>
+	</table>
+	<button type='button' id='ShowHideCommodities'>Toggle Commodities</button>
+	<div id='AnalysisCommodities' class='hidden'></div>
+</div>
+<% } %>
+

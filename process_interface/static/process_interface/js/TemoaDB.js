@@ -352,7 +352,7 @@ function clearAnalysisViews ( ) {
 
 can.Control('Analyses', {
 	defaults: {
-			view: '/static/process_interface/can/analysis_list.ejs'
+			view: '/static/process_interface/templates/analysis_list.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
@@ -422,7 +422,7 @@ can.Control('Analyses', {
 
 can.Control('AnalysisDetail', {
 	defaults: {
-			view: '/static/process_interface/can/analysis_info.ejs'
+			view: '/static/process_interface/templates/analysis_info.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
@@ -613,7 +613,7 @@ can.Control('AnalysisDetail', {
 
 can.Control('AnalysisCommodityLists', {
 	defaults: {
-			view: '/static/process_interface/can/analysis_commodities.ejs'
+			view: '/static/process_interface/templates/analysis_commodities.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
@@ -767,7 +767,7 @@ can.Control('AnalysisCommodityLists', {
 
 can.Control('CommodityDetail', {
 	defaults: {
-			view: '/static/process_interface/can/analysis_commodity_detail.ejs'
+			view: '/static/process_interface/templates/analysis_commodity_detail.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
@@ -974,7 +974,7 @@ can.Model('AnalysisTechnologyOutputSplit', {
 
 can.Control('TechnologyCreate', {
 	defaults: {
-			view: '/static/process_interface/can/technology_create.ejs'
+			view: '/static/process_interface/templates/technology_create.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
@@ -1044,7 +1044,7 @@ can.Control('TechnologyCreate', {
 
 can.Control('TechnologyList', {
 	defaults: {
-			view: '/static/process_interface/can/technology_list.ejs'
+			view: '/static/process_interface/templates/technology_list.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
@@ -1128,7 +1128,7 @@ can.Control('TechnologyList', {
 
 can.Control('TechnologyDetail', {
 	defaults: {
-			view: '/static/process_interface/can/technology_info.ejs'
+			view: '/static/process_interface/templates/technology_info.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
@@ -1337,7 +1337,7 @@ can.Model('ProcessEmissionActivity', {
 
 can.Control('ProcessList', {
 	defaults: {
-			view: '/static/process_interface/can/process_list.ejs'
+			view: '/static/process_interface/templates/process_list.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
@@ -1669,7 +1669,7 @@ can.Control('ProcessList', {
 
 can.Control('ProcessDetail', {
 	defaults: {
-			view: '/static/process_interface/can/process_detail.ejs',
+			view: '/static/process_interface/templates/process_detail.ejs',
 		}
 	},{
 	init: function ( $el, options ) {  // ProcessDetail
@@ -2136,7 +2136,7 @@ can.Control('ProcessDetail', {
 
 can.Control('AnalysisTechnologyDetail', {
 	defaults: {
-			view: '/static/process_interface/can/analysis_technology_detail.ejs',
+			view: '/static/process_interface/templates/analysis_technology_detail.ejs',
 		}
 	},{
 	init: function ( $el, options ) {  // AnalysisTechnologyDetail
