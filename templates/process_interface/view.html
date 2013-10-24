@@ -14,7 +14,19 @@
 			<p>It appears that either you have disabled Javascript, or your browser does not support it.  TemoaDB does not currently support a non-Javscript interaction.  There is no particular reason against supporting this interaction, other than developer time.  If this is of concern to you, the TemoaProject would welcome patches on this front.  Meanwhile, to use TemoaDB, you will need to turn on Javascript for at least this site.</p>
 		</noscript>
 		<div id='status' class='hidden'></div>
-		<div id='unauthorized'{{ username|yesno:", class='hidden'"|safe><strong>Guest</strong>: TemoaDB does not currently recognize you.  You may view and download any data in TemoaDB, but you will not be able to make changes.</div>
+		<div id='unauthorized'{{ user.is_authenticated|yesno:" class='hidden',"|safe }}>
+			<p><strong>Guest</strong>: TemoaDB does not currently recognize you.  You may view and download any data in TemoaDB, but you will not be able to make changes.  <em>Consider logging in via the upper right corner.</em></p>
+			<p>If you would like a username and password, please inquire on the <a href='https://groups.google.com/forum/#!forum/temoa-project'>Temoa Project Forum</a>.  (This is not to discriminate, but rather a necessary measure while we figure out how to appropriately share write-access to our server.)</p>
+		</div>
+		{% if user.is_authenticated %}
+			<a id='LogoutLink' href='{% url 'process_interface:logout' %}'>Logout</a>
+		{% else %}
+			<form id='LoginForm' method='post' action='{% url 'process_interface:login' %}'>
+				{% csrf_token %}
+				{{ password_form.username.label_tag }}{{ password_form.username }} {{ password_form.password.label_tag }}{{ password_form.password }}
+				<input type='submit' name='' value='Login' />
+			</form>
+		{% endif %}
 		<button id='ReloadLibs'>Reload Libs</button>
 		<h2>TemoaDB</h2>
 	</div>
