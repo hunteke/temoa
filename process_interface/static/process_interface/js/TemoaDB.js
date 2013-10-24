@@ -550,11 +550,15 @@ function BeginTemoaDBApp ( ) {
 		reloadLibs( false );
 	});
 
-	$(document).bind('keydown', 'shift', function () {
-		showRemoveButtons( true );
+	$(document).bind('keydown', 'shift', function ( e ) {
+		hideStatus();
+		showStatus('Showing remove buttons ...', 'info');
+		setTimeout( function ( ) { $('.remove').removeClass('hidden'); }, 1 );
 	});
-	$(document).bind('keyup', 'shift', function () {
-		showRemoveButtons( false );
+	$(document).bind('keyup', 'shift', function ( e ) {
+		hideStatus();
+		showStatus('Hiding remove buttons ...', 'info');
+		setTimeout( function ( ) { $('.remove').addClass('hidden'); }, 1 );
 	});
 
 	updateAnalysisList();
