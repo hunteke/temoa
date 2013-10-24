@@ -4,7 +4,7 @@ html { height: 100% ; background: #eee ; padding: 0; margin: 0; font-family: 'Ub
 
 body { height: 100% ; margin: 1em; }
 
-#wrapper { min-height: 100% ; width: 100% ; margin: 0; }
+#wrapper { min-height: 100% ; width: 100%; }
 
 #header { height: 4em; width: 100%; background-color: cyan; }
 
@@ -12,33 +12,93 @@ body { height: 100% ; margin: 1em; }
 #LoginForm { float: right; }
 #ReloadLibs { float: right; display: none; }
 
-#technology_list { position: fixed; top: 1px; left: 50%; cursor: pointer; background-color: #ddd; }
+.center_wrapper { margin: 0 auto; text-align:center; }
+#ShowHideAnalysis { margin: 0 auto; }
+#TechnologyOverlayButton { position: fixed; bottom: 1px; width: 100%; background: none; }
+
+.closeButton {
+	float: right;
+}
+
+#DBTechnologies {
+	position: fixed;
+	border: 1px solid red;
+	height: 99%;
+	width: 98%;
+	top: 1px;
+	background: #eee ;
+	overflow: auto;
+}
+
+#AnalysisCommodities {
+	position: fixed;
+	border: 1px solid red;
+	top: 1em;
+	bottom: 1em;
+	right: 1em;
+	left: 1em;
+	background: #eee;
+	overflow: auto;
+	opacity: 1;
+	z-index: 150;
+}
+
+#technology_list { background-color: transparent; clear: left; float: left; margin-left: 1em; }
+
+#technology_detail { float: left; width: auto; margin-left: 1em; }
+
+#technology_create h3 { margin: 0; padding: 0; background-color: #27f; }
+#technology_create { background-color: transparent; opacity: 0.8;  width: auto; border: 1px solid green; /* display: none; */}
+#technology_create input[name='Name'] { width: 98%; text-align: center; font-size: 100%; font-weight: bold; font-family: mono; background-color: transparent; color: #000; } */
+
+#technology_info { background-color: transparent; opacity: 0.8;  width: auto; }
+#technology_info .technology { border: 1px solid #000; padding: 0; margin-top: 2ex; }
+#technology_info .technology h3 { text-align: center; background-color: #27f; margin: 0; }
 
 #launchers { margin: 0  auto ; }
 #launchers ul { list-style: none outside none ; padding: 0 ; }
 #launchers ul li { float: left ; width: 15em ; border: 1px dotted blue ; margin: 0 2em ; }
 #launchers ul li a { overflow: hidden ; display: block ; height: 15em ; width: 15em ; }
 
-#processes {
-	background-color: gold;
+#ProcessList {
+	background-color: inherit;
 	clear: left;
 	float: left;
+	max-width: 30%;
 }
 
 #analysis { border: 1px solid #000; min-height: 10ex; width: 100%; clear: both; }
-#process_characteristics h2, #technology_characteristics h2 { text-align: center; }
 
-#process_characteristics { background-color: transparent; opacity: 0.8; float: left; width: auto;}
-#process_characteristics .items { padding: 1em; border-spacing: 0; }
-#process_characteristics .items table { border-collapse: collapse; border-width: 1pt 0.5pt; border-color: #000; border-style: solid; }
-#process_characteristics .items td { padding: 0.2ex 1em 0.2ex 1em;  }
-#process_characteristics .items .info { color: #777; font-weight: normal; font-style: italic; }
-#process_characteristics .items tbody { padding: 2em; }
-#process_characteristics .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
-#process_characteristics .items thead tr       { border-top: 1pt solid #000; border-bottom: 1pt dotted #000; background: #29f; font-size: 120%; }
-#process_characteristics .items thead tr.error { background: #f00; color: #fff; }
-#process_characteristics .items .process { width: 100%; }
-.items button {
+#AnalysisProcessDetails h2, #AnalysisTechnologyDetails h2 { text-align: center; }
+#AnalysisProcessDetails { background-color: transparent; opacity: 0.8; float: left; width: auto; max-width: 30%;}
+
+#AnalysisProcessDetails .noitems { position: relative; z-index: 10; width: 25em; }
+
+#AnalysisProcessDetails .items:empty { display: none; }
+#AnalysisProcessDetails .items { position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; z-index: 20; background: #CCC; border-spacing: 0; }
+#AnalysisProcessDetails .items table { border-collapse: collapse; border-width: 1pt 0.5pt; border-color: #000; border-style: solid; }
+#AnalysisProcessDetails .items tbody { padding: 2em; }
+#AnalysisProcessDetails .items td { padding: 0.2ex 1em 0.2ex 1em;  }
+#AnalysisProcessDetails .items thead tr       { border-top: 1pt solid #000; border-bottom: 1pt dotted #000; background: #29f; font-size: 120%; }
+#AnalysisProcessDetails .items thead tr.error { background: #f00; color: #fff; }
+#AnalysisProcessDetails .items .info { color: #777; font-weight: normal; font-style: italic; }
+#AnalysisProcessDetails .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
+#AnalysisProcessDetails .items .process { width: 100%; }
+
+
+.items .action { width: 45px; }
+#AnalysisCommodities > form { float: left; width: 15em; }
+#AnalysisCommodities > form > table { width: 100%; border-top: 2pt solid black; margin-top: 1ex; }
+#commodity_detail { float: left; width: 20em; border: 1px solid #000; }
+.commodity h3 { width: 100%; background: #f92; margin: 0 0 1ex 0;}
+.commodity input { width: 98%; }
+.commodity form { width: 100%; }
+
+.items button.add:hover,
+.items button.remove:hover,
+.items button.cancel:hover { color: #000; opacity: .8; font-weight: bold; };
+
+.items button.add {
 	background-color: transparent;
 	background-repeat: no-repeat;
 	background-origin: content-box;
@@ -52,64 +112,69 @@ body { height: 100% ; margin: 1em; }
 	height: 25px;
 }
 
-.items button:hover { color: #000; opacity: .8; font-weight: bold; };
-
-.items button.add {
-	background-image: url('/static/process_interface/icons/blue_list_add.svg');
-	background-size: 25px 25px;
-	height: 25px;
-}
-
 .items button.remove, .items button.cancel {
+	background-color: transparent;
+	background-repeat: no-repeat;
+	background-origin: content-box;
+	background-position: center;
+	width: 100%;
+	color: transparent;
+	border: none;
+	font-weight: bold;
 	background-image: url('/static/process_interface/icons/red_list_remove.svg');
 	background-size: 38px 12px;
 	height: auto;
 }
 
 .innertable .data { font-family: monospace; text-align: right; }
-#process_characteristics .items .innertable .data td { padding-right: 1em; }
-#process_characteristics .items tr th { text-align: left; }
-#process_characteristics .items thead tr th { text-align: center; }
-#process_characteristics .items .innertable { background: inherit; font-weight:normal; width: 100%; }
-#process_characteristics .items table.innertable { border: 0; }
-#process_characteristics .items table.innertable thead tr { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid #000; background: inherit; }
-#process_characteristics .items table.innertable tbody { background: inherit; }
-#process_characteristics .items table.innertable td { padding: 0; }
-#process_characteristics .items table.innertable img { padding: 1ex; }
-#process_characteristics .items table.innertable thead th img { padding: 0;}
-#process_characteristics .items table.innertable caption { font-size: 90%; font-weight: bold; }
-#process_characteristics .items form input[readonly] { background: transparent; color: #000; border: 0; text-align: center; }
+#AnalysisProcessDetails .items .innertable .data td { padding-right: 1em; }
+#AnalysisProcessDetails .items .innertable { background: inherit; font-weight:normal; width: 100%; }
+#AnalysisProcessDetails .items form input[readonly] { background: transparent; color: #000; border: 0; text-align: center; }
+#AnalysisProcessDetails .items table.innertable caption { font-size: 90%; font-weight: bold; }
+#AnalysisProcessDetails .items table.innertable img { padding: 1ex; }
+#AnalysisProcessDetails .items table.innertable tbody { background: inherit; }
+#AnalysisProcessDetails .items table.innertable td { padding: 0; }
+#AnalysisProcessDetails .items table.innertable thead th img { padding: 0;}
+#AnalysisProcessDetails .items table.innertable thead tr { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid #000; background: inherit; }
+#AnalysisProcessDetails .items table.innertable { border: 0; }
+#AnalysisProcessDetails .items thead tr th { text-align: center; }
+#AnalysisProcessDetails .items tr th { text-align: left; }
 
-#technology_characteristics { background-color: lightgreen; opacity: 0.8; float: right; }
-#technology_characteristics .items { padding: 1em; border-spacing: 0; }
-#technology_characteristics .items td { padding: 1ex 3ex 1ex 1ex;  }
-#technology_characteristics .items .info { color: #777; font-weight: normal; font-style: italic; }
-#technology_characteristics .items tbody { padding: 2em; background: gray; border-collapse: separate; }
-#technology_characteristics .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
-#technology_characteristics .items .innertable { background: inherit; font-weight:normal; width: 100%; }
-#technology_characteristics .items .innertable thead th { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid black; }
-#technology_characteristics .items .innertable tbody { background: inherit; }
-#technology_characteristics .items .innertable caption { font-size: 110%; font-weight: bold; border-bottom: 1px dotted #000; }
-#technology_characteristics .items th[colspan='2'] { border-top: 1pt solid black; border-bottom: 1pt dotted black; background: #29f; font-size: 120%; }
-
-#technology_characteristics.fixed { position: fixed; top: 0; right: 1em; }
+#AnalysisTechnologyDetails { background-color: lightgreen; opacity: 0.8; float: right; max-width: 30%; }
+#AnalysisTechnologyDetails .items { padding: 1em; border-spacing: 0; }
+#AnalysisTechnologyDetails .items td { padding: 1ex 3ex 1ex 1ex;  }
+#AnalysisTechnologyDetails .items .info { color: #777; font-weight: normal; font-style: italic; }
+#AnalysisTechnologyDetails .items tbody { padding: 2em; background: gray; border-collapse: separate; }
+#AnalysisTechnologyDetails .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
+#AnalysisTechnologyDetails .items .innertable { background: inherit; font-weight:normal; width: 100%; }
+#AnalysisTechnologyDetails .items .innertable thead th { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid black; }
+#AnalysisTechnologyDetails .items .innertable tbody { background: inherit; }
+#AnalysisTechnologyDetails .items .innertable caption { font-size: 110%; font-weight: bold; border-bottom: 1px dotted #000; }
+#AnalysisTechnologyDetails .items th[colspan='2'] { border-top: 1pt solid black; border-bottom: 1pt dotted black; background: #29f; font-size: 120%; }
 
 #status { padding: 1em; position: fixed; bottom: 0; left: 1em; background: #ccc; z-index: 1000; opacity: 1; }
-#unauthorized { padding: 1em 1ex; min-width: 15em; max-width: 30em; width: 50%; z-index: -1000; position: fixed; bottom: 1ex; right: 1em; opacity: 0.9; background: #aaa;}
+#unauthorized { padding: 1em 1ex; min-width: 15em; max-width: 30em; width: 50%; z-index: -1000; position: fixed; bottom: 1ex; right: 1em; opacity: 0.8; background: #aaa;}
 
-input[type='text'] { background: inherit; border: 1pt solid; width: 6em; text-align: right; }
+
+input[type='number'], input[type='password'] { background: inherit; border: 1pt solid; width: 6em; text-align: right; }
 textarea { background: inherit; border: 1pt solid; width: 99%; }
-input[type='submit'] { display: none; width: 1px; height: 1px; }
+input[type='submit'] { position: absolute; display: block; left: 0; top: -50px; width: 1px; height: 1px; }
 input.show[type='submit'] { display: inline; width: auto; height: auto; }
+
+.analysis input, .analysis textarea { font-size: 120%; }
+.full_input input { width: 99%; }
+.textleftalign input { text-align: left; }
+.textcenter input { text-align: center; }
 
 tr.even td, tr.odd td { background-size: auto 100%; background-repeat: no-repeat; background-origin: content-box; background-position: center; }
 
-.is_member     { background: url('/static/process_interface/icons/white_on_green_checkmark.svg'); }
-.is_not_member { background: url('/static/process_interface/icons/x_mark.svg'); }
+.is_member     { background-image: url('/static/process_interface/icons/white_on_green_checkmark.svg'); }
+.is_not_member { background-image: url('/static/process_interface/icons/x_mark.svg'); }
 
+.textcenter { text-align: center; }
 .clear { clear: both; }
 
-.hidden { visibility: hidden; }
+.hidden { display: none; }
 
 .odd  { background-color: #ddd; }
 .even { background-color: #fff; }
