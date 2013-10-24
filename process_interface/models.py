@@ -259,21 +259,26 @@ class Process ( DM.Model ):
 			  'period (Period 0)?')
 			raise ValidationError( msg )
 
-		if e:
-			if v >= p0:
+		if v >= p0:
+			if e is not None:
 				msg = ('Vintage is in optimization horizon: cannot specify '
 				  'existing capacity.')
 				raise ValidationError( msg )
 
-			if e <= 0:
-				msg = ('Must specify no existing (empty), or existing capacity '
-				  'greater than 0.')
+		else:
+			if e is not None and e <= 0:
+				msg = 'Existing capacity must be greater than 0.'
+				raise ValidationError( msg )
+
+			if self.costinvest is not None:
+				msg = ('Cannot specify investment cost: existing capacity is '
+				  'already installed and therefore has no investment cost.')
 				raise ValidationError( msg )
 
 		if l:
 			if l <= 0:
-				msg = ('Invalid lifetime: processes must have either no lifetime, '
-				  'or a lifetime greater than 0.')
+				msg = ('Invalid lifetime: either do not specify a lifetime, or '
+				  'specify one greater than 0.')
 				raise ValidationError( msg )
 
 			if v + l <= p0:
