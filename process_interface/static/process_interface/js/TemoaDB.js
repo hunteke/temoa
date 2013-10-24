@@ -280,7 +280,7 @@ function getProcessesInfo ( ) {
 	});
 	if ( process_ids.length > 0 ) {
 		process_ids.sort( function(lhs, rhs) { return lhs - rhs; });
-		ids = process_ids.join(',');
+		var ids = process_ids.join(',');
 		var analysis_id = getCookie().analysis_id;
 
 		$.get( '/analysis/' + analysis_id + '/process_info/' + ids )
