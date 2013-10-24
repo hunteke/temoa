@@ -545,9 +545,16 @@ function BeginTemoaDBApp ( ) {
 		}
 	});
 
-	$('#ReloadLibs').click( function () { reloadLibs( false ); } );
-	$(document).bind('keydown', 'ctrl+space', function () {
-		reloadLibs( false );
+	$('#QuickFunction').click( function () {
+		var url = '/static/process_interface/js/QuickFunction.js';
+		url += '?_=' + new Date().getTime();
+		$.getScript( url )
+		.fail( function ( ) {
+			showStatus('Error reading quick function.  Typo?');
+		});
+	});
+	$(document).bind('keyup', 'shift+space', function ( ) {
+		$('#QuickFunction').trigger('click');
 	});
 
 	$(document).bind('keydown', 'shift', function ( e ) {
