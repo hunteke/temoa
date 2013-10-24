@@ -1,24 +1,32 @@
 from collections import defaultdict
 from operator import itemgetter as iget
-import re
+import math, re
 
 from django import forms as F
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Max
 from django.forms.models import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
 
 from models import (
   Analysis,
-  Process,
-  Vintage,
+  AnalysisCommodity,
+  Commodity,
+  CommodityType,
+  Param_CapacityToActivity,
   Param_CostFixed,
   Param_CostVariable,
   Param_Efficiency,
+  Param_GrowthRate,
   Param_LifetimeTech,
   Param_LifetimeTechLoan,
+  Process,
+  Set_tech_baseload,
+  Set_tech_storage,
+  Technology,
+  Vintage,
 )
 
-from IPython import embed as II
 
 class CachedChoiceField ( F.ModelChoiceField ):
 	""" By default, Django assumes queryset, and utilizes queryset.all().  This
@@ -71,133 +79,291 @@ class AnalysisForm ( F.ModelForm ):
 
 
 
-class NewProcessForm ( F.ModelForm ):
-	class Meta:
-		model = Process
-		fields = ('technology', 'vintage')
+vintage_help = """ A comma separated list of integers, to be the vintages of this analysis.  Note that the last integer will serve as a sentinel year for the model to calculate the length of the periods.  See the <a href='http://temoaproject.org/docs/#sets' title='Explanation of Temoa&rsquo;s understanding of time'>Temoa Documentation</a> for more information."""
+class VintagesForm ( F.Form ):
+	vintages = F.CharField(
+	  label=_('Vintages'),
+	  help_text=vintage_help,
+	)
 
 	def __init__ ( self, *args, **kwargs ):
 		analysis = kwargs.pop( 'analysis' )
-		super( NewProcessForm, self ).__init__( *args, **kwargs )
+		super( VintagesForm, self ).__init__( *args, **kwargs )
 
-		flds = self.fields
-		query = Vintage.objects.filter( analysis=analysis ).order_by('vintage')
-		flds['vintage'] = VintageField( query, cache=list(query)[:-1] )
+		self.analysis = analysis
 
+		vintages = Vintage.objects.filter( analysis=analysis )
+		vintages = sorted( i.vintage for i in vintages )
+		vintages = ', '.join( str(v) for v in vintages )
+		self.fields['vintages'].initial = vintages
+
+
+	def clean_vintages ( self ):
+		data = self.cleaned_data['vintages']
+
+		data = data.strip().strip(',').split(',')
+		if not data:
+			raise F.ValidationError( 'There are no vintages.' )
+
+		new_data = []
+		try:
+			num = 'Not a Number'
+			for i in data:
+				if not i: continue
+				num = i
+				new_data.append( int( i ))
+		except ValueError:
+			msg = 'Unable to convert "{}" to an integer'
+			raise F.ValidationError( msg.format( num ))
+
+		return set( new_data )
+
+
+	def save ( self ):
+		a = self.analysis
+
+		vintages = Vintage.objects.filter( analysis=a )
+		vintages = set( v.vintage for v in vintages )
+
+		new_vintages = self.cleaned_data['vintages']
+
+		to_remove = vintages - new_vintages
+		for v in to_remove:
+			v = Vintage.objects.get(analysis=a, vintage=v)
+			v.delete()
+
+		to_add = new_vintages - vintages
+		for v in to_add:
+			v = Vintage( analysis=a, vintage=v )
+			v.clean()
+			v.save()
+
+
+
+class TechnologyForm ( F.ModelForm ):
+	class Meta:
+		model = Technology
+		fields = ('name', 'capacity_to_activity', 'description')
+
+
+class AnalysisCommodityForm ( F.Form ):
+	name = F.RegexField( label=_('Name'), regex=r'^[A-z_]\w*$' )
+
+	def __init__ ( self, *args, **kwargs ):
+		self.instance = kwargs.pop('instance')
+		super( AnalysisCommodityForm, self ).__init__( *args, **kwargs )
+
+
+	def save ( self ):
+		i = self.instance
+		com, created = Commodity.objects.get_or_create(
+		  name=self.cleaned_data['name'] )
+
+		i.commodity = com
+		i.save()
+
+
+class CommodityOutputForm ( F.Form ):
+	name = F.RegexField( label=_('Name'), regex=r'^[A-z_]\w*$')
+
+	def __init__ ( self, *args, **kwargs ):
+		self.instance = kwargs.pop('instance')
+		super( CommodityOutputForm, self ).__init__( *args, **kwargs )
+
+
+	def save ( self ):
+		i = self.instance
+		com, created = Commodity.objects.get_or_create(
+		  name=self.cleaned_data['name'] )
+
+		i.save( com )
 
 
 class ProcessForm ( F.Form ):
-	"""
-	Given a process, this form will automatically provide the appropriate
-	"""
+	name         = F.RegexField( required=True, label=_('name'), regex=r'^[A-z_]\w*, *-?\d+$')
 	discountrate = F.FloatField( required=False, label=_('Discount Rate') )
 	lifetime     = F.FloatField( required=False, label=_('Lifetime') )
 	loanlife     = F.FloatField( required=False, label=_('Loan Lifetime') )
+	costinvest   = F.FloatField( required=False, label=_('Investment Cost') )
+	existingcapacity = F.FloatField( required=False, label=_('Existing Capacity') )
 
-	def __init__ ( self, process, *args, **kwargs ):
-		super(ProcessForm, self).__init__(*args, **kwargs)
-		prefix = kwargs.get( 'prefix', '' )
+	def __init__ ( self, *args, **kwargs ):
+		p = self.process = kwargs.pop( 'instance' )
+		super( ProcessForm, self ).__init__( *args, **kwargs )
 
-		p = self.process = process
-		t = p.technology
-		a = p.analysis
-		flds = self.fields
+		if p.pk:
+			# process in DB, and name is not mutable here: remove the field
+			del self.fields['name']
+			if p.vintage.vintage < p.analysis.period_0:
+				del self.fields['costinvest']
+				del self.fields['loanlife']
+				del self.fields['discountrate']
+			else:
+				del self.fields['existingcapacity']
 
-		t_life = Param_LifetimeTech.objects.filter(analysis=a, technology=t)
-		l_life = Param_LifetimeTechLoan.objects.filter(analysis=a, technology=t)
-		t_life = t_life and t_life[0].value or None
-		l_life = l_life and l_life[0].value or None
 
-		def setUpField ( name, default=None, fmt='{}' ):
-			value = getattr(p, name, None)
-			if value:
-				flds[ name ].initial = value
-			if default:
-				flds[ name ].widget.attrs.update({
-				  'placeholder' : fmt.format( default ) })
+	def clean_name ( self ):
+		cd = self.cleaned_data
+		p  = self.process
 
-		setUpField( 'discountrate', a.global_discount_rate, '{} (GDR)' )
-		setUpField( 'lifetime', t_life, '{} (class)' )
-		setUpField( 'loanlife', l_life, '{} (class)' )
+		tname, vintage = cd['name'].split(',')
+		vintage = int( vintage )
 
-		if p.vintage.vintage < a.period_0:
-			flds['existingcapacity'] = F.FloatField(
-			  required=False,
-			  label=_('Existing Capacity')
-			)
-			setUpField('existingcapacity')
-		else:
-			flds['costinvest'] = F.FloatField(
-			  required=False,
-			  label=_('Investment Cost')
-			)
-			setUpField('costinvest')
+		vintages = Vintage.objects.filter( analysis=p.analysis )
+		if vintage not in (i.vintage for i in vintages):
+			msg = '{} is not a valid vintage in this analysis.'
+			raise F.ValidationError( msg.format( vintage ))
+		elif vintage == max( i.vintage for i in vintages ):
+			msg = 'The final year in "vintages" is not a valid vintage.'
+			raise F.ValidationError( msg )
+		vintage = [i for i in vintages if vintage == i.vintage][0]
+
+		tech = None
+		techs = Technology.objects.filter( name=tname )
+		if not techs:
+			msg = "'{}' is not a valid technology name.  Do you need to create it?"
+			raise F.ValidationError( msg.format( tname ))
+		elif len( techs ) > 1:
+			for t in techs:
+				if t.user == self.analysis.user:
+					tech = t
+					break
+			if not tech:
+				msg = ("'{}' is not a unique technology name in the database.  If "
+				  'you would like to use this name, you will need to create this '
+				  'technology under your account.')
+				raise F.ValidationError( msg.format( tname ))
+
+		if not tech:
+			tech = techs[0]
+
+		# store the work already done for save() method
+		cd['technology'] = tech
+		cd['vintage'] = vintage
+
+		return '{}, {}'.format( tname, vintage )
 
 
 	def clean_lifetime ( self ):
 		life = self.cleaned_data['lifetime']
-		p = self.process
-		a = p.analysis
-
-		if not life:
+		if life is None:
 			return life
+
+		p = self.process
 
 		# Ensure that value reaches to at least the first period from process
 		# vintage.  Note that this is _not_ done at the DB level because a model
 		# may be in flux (i.e. a modeler is changing the structure of the data).
 		# Meanwhile, this check *will* be performed when downloading the complete
 		# dat file.
-		if life + p.vintage.vintage <= a.period_0:
+		if life + p.vintage.vintage <= p.analysis.period_0:
 			msg = ('Process lifetime guarantees no use in model optimization.  '
-			  'Consider extending the lifetime, or changing the analysis start '
-			  'year.'
-			)
+			  'Either extend the lifetime, or change the analysis start year.')
+			raise F.ValidationError( msg )
+
+		if life <= 0:
+			msg = ('Either do not specify a lifetime, or specify one greater than '
+			  '0.')
 			raise F.ValidationError( msg )
 
 		return life
 
 
+	def clean_loanlife ( self ):
+		cd = self.cleaned_data
+
+		life = cd['loanlife']
+		if life is None:
+			return life
+
+		p = self.process
+		v = cd['vintage'].vintage if 'vintage' in cd else p.vintage.vintage
+
+		if v < p.analysis.period_0:
+			msg = ('Existing capacity cannot have a loan and therefore no loan '
+			  'life.')
+			raise F.ValidationError( msg )
+
+		if life <= 0:
+			msg = ('Either do not specify a loan lifetime, or specify one greater '
+			  'than 0.')
+			raise F.ValidationError( msg )
+
+		return life
+
+
+	def clean_existingcapacity ( self ):
+		cd = self.cleaned_data
+		ecap = cd['existingcapacity']
+		p = self.process
+
+		if ecap and not p.pk:
+			if cd['vintage'].vintage >= p.analysis.period_0:
+				msg = ('Cannot have existing capacity for a vintage in the '
+				  'optimization horizon (Period 0 or larger).')
+				raise F.ValidationError( msg )
+
+		if ecap is None:
+			return ecap
+
+		if ecap <= 0:
+			msg = ('Existing capacity must be greater than 0.')
+			raise F.ValidationError( msg )
+
+		return ecap
+
+
+	def clean_costinvest ( self ):
+		cd = self.cleaned_data
+		ci = cd['costinvest']
+		p = self.process
+
+		if ci and not p.pk:
+			if cd['vintage'].vintage < p.analysis.period_0:
+				msg = ('Cannot specify an investment cost for a vintage that '
+				  'exists prior to the optimization horizon (before Period 0).')
+				raise F.ValidationError( msg )
+
+		if ci is None:
+			return ci
+
+		return ci
+
+
+	def save ( self ):
+		p = self.process
+		cd = self.cleaned_data
+		for attr in ('technology', 'vintage', 'existingcapacity', 'costinvest',
+		             'lifetime', 'loanlife', 'discountrate'):
+			if attr in cd:
+				setattr( p, attr, cd[ attr ] )
+
+		p.save()
+
+
 
 class EfficiencyForm ( F.Form ):
-	inp    = F.ChoiceField( label=_('Input') )
-	out    = F.ChoiceField( label=_('Output') )
-	eff    = F.FloatField( required=False, label=_('Percent') )
+	inp = F.ChoiceField( label=_('Input') )
+	out = F.ChoiceField( label=_('Output') )
+	value = F.FloatField( required=False, label=_('Percent') )
 
 	def __init__( self, *args, **kwargs ):
-		analysis = kwargs.pop( 'analysis' )
-		pk  = kwargs.pop( 'pk',  None )
-		inp = kwargs.pop( 'inp', None )
-		out = kwargs.pop( 'out', None )
-		eff = kwargs.pop( 'eff', None )
-		inp_choices = kwargs.pop( 'inp_choices', None )
-		out_choices = kwargs.pop( 'out_choices', None )
-
-		if pk:
-			inp_choices = ((inp, inp),)
-			out_choices = ((out, out),)
-
-		if not inp_choices:
-			inp_choices = EfficiencyForm.getInputChoices( analysis )
-		if not out_choices:
-			out_choices = EfficiencyForm.getOutputChoices( analysis )
+		eff = kwargs.pop( 'instance' )
 
 		super( EfficiencyForm, self ).__init__( *args, **kwargs )
 
-		flds = self.fields
-		flds['inp'].initial = inp
-		flds['out'].initial = out
-		flds['eff'].initial = eff
+		self.efficiency = eff
+		if eff.pk:
+			# Remove possibility of changing input or output.  The workflow is
+			# to delete one efficiency and make a new one if needed to change.
+			del self.fields['inp'], self.fields['out']
+			self.fields['value'].initial = eff.value
+		else:
+			inp_choices = EfficiencyForm.getInputChoices( eff.process.analysis )
+			out_choices = EfficiencyForm.getOutputChoices( eff.process.analysis )
 
-		flds['inp'].choices = inp_choices
-		flds['out'].choices = out_choices
-
-		if pk:
-			flds['inp'].widget = F.TextInput()
-			flds['out'].widget = F.TextInput()
-			flds['inp'].widget.attrs.update( readonly=True )
-			flds['out'].widget.attrs.update( readonly=True )
-
-		self.pk = pk
+			self.fields['inp'].choices = inp_choices
+			self.fields['out'].choices = out_choices
 
 
 	@classmethod
@@ -229,80 +395,83 @@ class EfficiencyForm ( F.Form ):
 
 		return v
 
-def getEfficiencyForm ( analysis, efficiency, *args, **kwargs ):
-	kwargs.update(
-	  analysis=analysis,
-	  pk=efficiency.pk,
-	  inp=efficiency.inp_commodity.commodity,
-	  out=efficiency.out_commodity.commodity,
-	  eff=efficiency.value
-	)
 
-	return EfficiencyForm( *args, **kwargs )
+	def clean_inp ( self ):
+		# though this field is already limited by its choices, we use it here to
+		# simultaneously check that it's valid and populate cleaned_data with
+		# an AnalysisCommodity object rather than a string.
+		inp = self.cleaned_data['inp']
+		eff = self.efficiency
+
+		try:
+			inp = AnalysisCommodity.objects.get(
+			  analysis=eff.process.analysis,
+			  commodity_type__name__in=('physical',),
+			  commodity__name=inp
+			)
+		except ObjectDoesNotExist as e:
+			msg = ('Specified input does not exist in analysis, or is not a '
+			  'physical commodity.')
+			raise F.ValidationError( msg )
+
+		return inp  # note that it is no longer a string
 
 
-def getEfficiencyForms ( analysis, efficiencies, *args, **kwargs ):
-	forms = []
-	if not efficiencies:
-		return forms
+	def clean_out ( self ):
+		# though this field is already limited by its choices, we use it here to
+		# simultaneously check that it's valid and populate cleaned_data with
+		# an AnalysisCommodity object rather than a string.
+		out = self.cleaned_data['out']
+		eff = self.efficiency
 
-	inp_choices = EfficiencyForm.getInputChoices( analysis )
-	out_choices = EfficiencyForm.getOutputChoices( analysis )
+		try:
+			out = AnalysisCommodity.objects.get(
+			  analysis=eff.process.analysis,
+			  commodity_type__name__in=('physical', 'demand'),
+			  commodity__name=out
+			)
+		except ObjectDoesNotExist as e:
+			msg = 'Specified output does not exist in analysis.'
+			raise F.ValidationError( msg )
 
-	kwargs.update(
-	  analysis=analysis,
-	  inp_choices=inp_choices,
-	  out_choices=out_choices
-	)
-	for pk, (inp, out, eff) in sorted( efficiencies.iteritems(), key=iget(1) ):
-		kwargs.update( pk=pk, inp=inp, out=out, eff=eff )
-		forms.append( EfficiencyForm( *args, **kwargs ))
+		return out  # note that it is no longer a string
 
-	return forms
+
+	def save ( self ):
+		cd = self.cleaned_data
+		eff = self.efficiency
+
+		if 'inp' in cd:
+			eff.inp_commodity = cd[ 'inp' ]
+		if 'out' in cd:
+			eff.out_commodity = cd[ 'out' ]
+		if 'value' in cd:
+			eff.value = cd[ 'value' ]
+
+		eff.save()
+
 
 
 class EmissionActivityForm ( F.Form ):
 	pol = F.ChoiceField( label=_('Pollutant') )
-	eff = F.ChoiceField( label=_('Efficiency') )
-	val = F.FloatField( required=False, label=_('Percent') )
+	eff = F.RegexField( label=_('Efficiency'), regex=r'^[A-z_]\w*, *[A-z_]\w*$')
+	value = F.FloatField( label=_('Value') )
 
 	def __init__( self, *args, **kwargs ):
+		ema = kwargs.pop( 'instance' )
 		process = kwargs.pop( 'process' )
-		pk  = kwargs.pop( 'pk',  None )
-		pol = kwargs.pop( 'pol', None )
-		eff = kwargs.pop( 'eff', None )
-		val = kwargs.pop( 'val', None )
-		pol_choices = kwargs.pop( 'pol_choices', None )
-		eff_choices = kwargs.pop( 'eff_choices', None )
-
-		analysis = process.analysis
-
-		if pk:
-			pol_choices = ((pol, pol),)
-			eff_choices = ((eff, eff),)
-
-		if not eff_choices:
-			pol_choices = EmissionActivityForm.getPollutantChoices( analysis )
-		if not eff_choices:
-			eff_choices = EmissionActivityForm.getEfficiencyChoices( process )
 
 		super( EmissionActivityForm, self ).__init__( *args, **kwargs )
 
-		flds = self.fields
-		flds['pol'].initial = pol
-		flds['eff'].initial = eff
-		flds['val'].initial = val
-
-		flds['pol'].choices = pol_choices
-		flds['eff'].choices = eff_choices
-
-		if pk:
-			flds['pol'].widget = F.TextInput()
-			flds['eff'].widget = F.TextInput()
-			flds['pol'].widget.attrs.update( readonly=True )
-			flds['eff'].widget.attrs.update( readonly=True )
-
-		self.pk = pk
+		self.emissionactivity = ema
+		self.process = process
+		analysis = process.analysis
+		if ema.pk:
+			# already exists; only allow updating value
+			del self.fields['pol'], self.fields['eff']
+		else:
+			pol_choices = EmissionActivityForm.getPollutantChoices( analysis )
+			self.fields['pol'].choices = pol_choices
 
 
 	@classmethod
@@ -326,78 +495,97 @@ class EmissionActivityForm ( F.Form ):
 		return choices
 
 
-def getEmissionActivityForm ( emactivity, *args, **kwargs ):
-	inp = emactivity.efficiency.inp_commodity.commodity.name
-	out = emactivity.efficiency.out_commodity.commodity.name
-	eff = '{}, {}'.format( inp, out )
+	def clean_value ( self ):
+		epsilon = 1e-9    # something really small
 
-	kwargs.update(
-	  pk=emactivity.pk,
-	  pol=emactivity.emission.commodity.name,
-	  eff=eff,
-	  val=emactivity.value
-	)
+		v = self.cleaned_data['value']  # guaranteed a float or None
+		if v is None or abs(v) < epsilon:
+			msg = ('Process emission activity must not be 0, or it is a useless '
+			  'entry.  Consider removing the activity instead of marking it 0.')
+			raise F.ValidationError( msg )
 
-	return EmissionActivityForm( *args, **kwargs )
+		return v
 
 
-def getEmissionActivityForms ( emactivities, *args, **kwargs ):
-	forms = []
-	if not emactivities:
-		return forms
+	def clean_pol ( self ):
+		# though this field is already limited by its choices, we use it here to
+		# simultaneously check that it's valid and populate cleaned_data with
+		# an AnalysisCommodity object rather than a string.
+		pol = self.cleaned_data['pol']
 
-	process = kwargs['process']
-	analysis = process.analysis
-	pol_choices = EmissionActivityForm.getPollutantChoices( analysis )
-	eff_choices = EmissionActivityForm.getEfficiencyChoices( process )
+		try:
+			pol = AnalysisCommodity.objects.get(
+			  analysis=self.process.analysis,
+			  commodity_type__name='emission',
+			  commodity__name=pol
+			)
+		except ObjectDoesNotExist as e:
+			msg = 'Specified pollutant does not exist in analysis.'
+			raise F.ValidationError( msg )
 
-	kwargs.update(
-	  pol_choices=pol_choices,
-	  eff_choices=eff_choices
-	)
-	for pk, (pol, inp, out, val) in sorted( emactivities.iteritems(), key=iget(1) ):
-		eff = '{}, {}'.format( inp, out )
-		kwargs.update( pk=pk, pol=pol, eff=eff, val=val )
-		forms.append( EmissionActivityForm( *args, **kwargs ))
+		return pol  # note that it is no longer a string
 
-	return forms
+
+	def clean_eff ( self ):
+		# Because the UI is text-based rather than drop-down list, this field
+		# is a regex.  We /could/ limit by choices, but that would put undue
+		# burden on the user to correctly format the field.  Using the regex
+		# allows for a slightly more flexible input mechanism.
+
+		# Note also, that when this function is done, eff will not be a string
+		# but a Param_Efficiency object.
+		inp, out = self.cleaned_data['eff'].split(',')
+		out = out.strip()
+
+		try:
+			eff = Param_Efficiency.objects.get(
+			  inp_commodity__commodity__name = inp,
+			  process = self.process,
+			  out_commodity__commodity__name = out
+			)
+		except ObjectDoesNotExist as e:
+			msg = 'Specified efficiency does not exist in this analysis.'
+			raise F.ValidationError( msg )
+
+		return eff  # note that it is no longer a string
+
+
+	def save ( self ):
+		ema = self.emissionactivity
+		cd = self.cleaned_data
+
+		if 'pol' in cd:
+			ema.emission = cd[ 'pol' ]
+		if 'eff' in cd:
+			ema.efficiency = cd[ 'eff' ]
+		if 'value' in cd:
+			ema.value = cd[ 'value' ]
+
+		ema.save()
+
 
 
 class CostForm ( F.Form ):
-	per = F.ChoiceField( label=_('Period') )
-	val = F.FloatField( required=False, label=_('Percent') )
-
-	class Meta:
-		abstract = True
+	per   = F.ChoiceField( label=_('Period') )
+	value = F.FloatField( label=_('Cost') )
 
 	def __init__( self, *args, **kwargs ):
-		process = kwargs.pop( 'process' )
-		pk  = kwargs.pop( 'pk',  None )
-		per = kwargs.pop( 'per', None )
-		val = kwargs.pop( 'val', None )
-		per_choices = kwargs.pop( 'per_choices', None )
-
-		analysis = process.analysis
-
-		if pk:
-			per_choices = ((per, per),)
-
-		if not per_choices:
-			per_choices = CostForm.getPeriodChoices( process )
+		self.cost = cost = kwargs.pop('instance')
 
 		super( CostForm, self ).__init__( *args, **kwargs )
 
-		flds = self.fields
-		flds['per'].initial = per
-		flds['val'].initial = val
+		if cost.pk:
+			del self.fields['per']
 
-		flds['per'].choices = per_choices
+		else:
+			per_choices = CostForm.getPeriodChoices( cost.process )
+			self.fields['per'].choices = per_choices
 
-		if pk:
-			flds['per'].widget = F.TextInput()
-			flds['per'].widget.attrs.update( readonly=True )
+			msg = 'Invalid period (%(value)s).  Valid periods are: {}'
+			pers = ', '.join( unicode(i[0]) for i in per_choices )
+			em = self.fields['per'].error_messages
+			em['invalid_choice'] = _(msg.format( pers ))
 
-		self.pk = pk
 
 	@classmethod
 	def getPeriodChoices ( cls, process ):
@@ -415,73 +603,355 @@ class CostForm ( F.Form ):
 			else:
 				return (('Specify Lifetime','Specify Lifetime'),)
 
-		final_year = Vintage.objects.filter( analysis=a )
-		final_year = final_year.aggregate( Max('vintage') )['vintage__max']
+		periods = sorted( i.vintage for i in
+		  Vintage.objects.filter( analysis=a, vintage__gte=p_0 ))[:-1]
+		periods = set( per for per in periods  if per >= v  if per < v + life )
 
-		active_periods = Vintage.objects.filter(
-		  analysis=a,
-		  vintage__gte=max(v, p_0),
-		  vintage__lt=min(v + life, final_year)
-		).distinct()
-
-		choices = sorted( (v.vintage, v.vintage) for v in active_periods )
-		return choices
+		return sorted( (per, per) for per in periods )
 
 
+	def clean_per ( self ):
+		per = self.cleaned_data['per']
+		a = self.cost.process.analysis
 
-class CostFixedForm ( CostForm ): pass
-class CostVariableForm ( CostForm ): pass
+		try:
+			per = Vintage.objects.get( analysis=a, vintage=per )
+		except ObjectDoesNotExist as e:
+			msg = 'Specified period ({}) does not exist in this analysis.'
+			raise F.ValidationError( msg.format( per ) )
 
-
-
-def getCostFixedForm ( costfixed, *args, **kwargs ):
-	kwargs.update(
-	  pk=costfixed.pk,
-	  per=costfixed.period.vintage,
-	  val=costfixed.value
-	)
-
-	return CostFixedForm( *args, **kwargs )
+		return per  # note that it's now a Vintage object, not a string/num
 
 
-def getCostFixedForms ( costfixed, *args, **kwargs ):
-	forms = []
-	if not costfixed:
-		return forms
-
-	process = kwargs['process']
-	per_choices = CostForm.getPeriodChoices( process )
-
-	kwargs.update( per_choices=per_choices )
-	for pk, (per, val) in sorted( costfixed.iteritems(), key=iget(1) ):
-		kwargs.update( pk=pk, per=per, val=val )
-		forms.append( CostFixedForm( *args, **kwargs ))
-
-	return forms
+	def save ( self ):
+		cost = self.cost
+		cd = self.cleaned_data
 
 
-def getCostVariableForm ( costvariable, *args, **kwargs ):
-	kwargs.update(
-	  pk=costvariable.pk,
-	  per=costvariable.period.vintage,
-	  val=costvariable.value
-	)
+		if 'per' in cd:
+			cost.period = cd[ 'per' ]
+		if 'value' in cd:
+			cost.value = cd[ 'value' ]
 
-	return CostVariableForm( *args, **kwargs )
+		cost.save()
 
 
-def getCostVariableForms ( costvariable, *args, **kwargs ):
-	forms = []
-	if not costvariable:
-		return forms
 
-	process = kwargs['process']
-	per_choices = CostForm.getPeriodChoices( process )
+class AnalysisTechnologyForm ( F.Form ):
+	baseload = F.BooleanField( required=False, label=_('Baseload') )
+	storage  = F.BooleanField( required=False, label=_('Storage') )
+	lifetime = F.FloatField( required=False, label=_('Default Lifetime') )
+	loanlife = F.FloatField( required=False, label=_('Default Loan Lifetime') )
+	capacitytoactivity = F.FloatField( required=False, label=_('Capacity to Activity') )
+	growthratelimit = F.FloatField( required=False, label=_('Max Growth Rate') )
+	growthrateseed  = F.FloatField( required=False, label=_('Growth Seed') )
 
-	kwargs.update( per_choices=per_choices )
-	for pk, (per, val) in sorted( costvariable.iteritems(), key=iget(1) ):
-		kwargs.update( pk=pk, per=per, val=val )
-		forms.append( CostVariableForm( *args, **kwargs ))
+	def __init__ ( self, *args, **kwargs ):
+		self.analysis = kwargs.pop('analysis')
+		self.technology = kwargs.pop('technology')
+		super( AnalysisTechnologyForm, self ).__init__( *args, **kwargs )
 
-	return forms
+
+	def clean_growthratelimit ( self ):
+		if 'growthratelimit' in self.data or 'growthrateseed' in self.data:
+			if not ('growthratelimit' in self.data and 'growthrateseed' in self.data):
+				msg = ('Please specify or remove both Growth Rate fields.  They '
+				  'always go in unison.')
+				raise F.ValidationError( msg )
+
+		return self.cleaned_data['growthratelimit']
+
+
+	def clean_growthrateseed ( self ):
+		if 'growthratelimit' in self.data or 'growthrateseed' in self.data:
+			if not ('growthratelimit' in self.data and 'growthrateseed' in self.data):
+				msg = ('Please specify or remove both Growth Rate fields.  They '
+				  'always go in unison.')
+				raise F.ValidationError( msg )
+
+		return self.cleaned_data['growthrateseed']
+
+
+	def numerical_clean ( self, key, validation_msg ):
+		epsilon = 1e-9    # something really small
+
+		v = self.cleaned_data[ key ]  # guaranteed a float or None
+		if v is None:
+			pass
+		elif v < epsilon:
+			raise F.ValidationError( validation_msg )
+		elif math.isnan( v ):
+			v = None
+
+		return v
+
+
+	def clean_lifetime ( self ):
+		msg = ('Technology lifetime must either be a positive number or not '
+			  'exist.  To remove it, empty the field instead of marking it 0.')
+		return self.numerical_clean( 'lifetime', msg )
+
+
+	def clean_loanlife ( self ):
+		msg = ('Technology loan life must either be a positive number or not '
+		  'exist.  To remove it, empty the field instead of marking it 0.')
+		return self.numerical_clean( 'loanlife', msg )
+
+
+	def clean_capacitytoactivity ( self ):
+		msg = ('Technology CapacityToActivity parameter must either be a '
+		  'positive number or not exist.  To remove it, empty the field instead '
+		  'of marking it 0.')
+		return self.numerical_clean( 'capacitytoactivity', msg )
+
+
+	def save ( self ):
+		a  = self.analysis
+		t  = self.technology
+		cd = self.cleaned_data
+
+		if 'baseload' in self.data:
+			if cd['baseload']:
+				obj, created = Set_tech_baseload.objects.get_or_create(
+				  analysis=a, technology=t )
+			else:
+				Set_tech_baseload.objects.filter(
+				  analysis=a, technology=t ).delete()
+
+		if 'storage' in self.data:
+			if cd['storage']:
+				obj, created = Set_tech_storage.objects.get_or_create(
+				  analysis=a, technology=t )
+			else:
+				Set_tech_storage.objects.filter(
+				  analysis=a, technology=t ).delete()
+
+		if 'capacitytoactivity' in self.data:
+			c2a = cd['capacitytoactivity']
+			if c2a:
+				obj, created = Param_CapacityToActivity.objects.get_or_create(
+				  analysis=a, technology=t, defaults={'value': c2a} )
+				if not created:
+					obj.value = c2a
+					obj.save()
+			else:
+				Param_CapacityToActivity.objects.filter(
+				  analysis=a, technology=t ).delete()
+
+		if 'lifetime' in self.data:
+			lifetime = cd['lifetime']
+			if lifetime:
+				obj, created = Param_LifetimeTech.objects.get_or_create(
+				  analysis=a, technology=t, defaults={'value': lifetime} )
+				if not created:
+					obj.value = lifetime
+					obj.save()
+			else:
+				Param_LifetimeTech.objects.filter(
+				  analysis=a, technology=t ).delete()
+
+		if 'loanlife' in self.data:
+			loanlife = cd['loanlife']
+			if loanlife:
+				obj, created = Param_LifetimeTechLoan.objects.get_or_create(
+				  analysis=a, technology=t, defaults={'value': loanlife} )
+				if not created:
+					obj.value = loanlife
+					obj.save()
+			else:
+				Param_LifetimeTech.objects.filter(
+				  analysis=a, technology=t ).delete()
+
+		if 'growthratelimit' in self.data:
+			ratelimit = cd['growthratelimit']
+			seed      = cd['growthrateseed']
+			if ratelimit:
+				obj, created = Param_GrowthRate.objects.get_or_create(
+				  analysis=a,
+				  technology=t,
+				  defaults={'ratelimit': ratelimit, 'seed': seed}
+				)
+				if not created:
+					obj.ratelimit = ratelimit
+					obj.seed = seed
+					obj.save()
+			else:
+				Param_GrowthRate.objects.filter(
+				  analysis=a, technology=t ).delete()
+
+
+
+class TechInputSplitForm ( F.Form ):
+	inp   = F.ChoiceField( label=_('Input') )
+	value = F.FloatField( label=_('Percentage') )
+
+	def __init__( self, *args, **kwargs ):
+		self.techinputsplit = tis = kwargs.pop('instance')
+		self.analysis = analysis = kwargs.pop('analysis')
+
+		super( TechInputSplitForm, self ).__init__( *args, **kwargs )
+
+		if tis.pk:
+			del self.fields['inp']
+
+		else:
+			inp_choices = TechInputSplitForm.getInputChoices( analysis )
+			self.fields['inp'].choices = inp_choices
+
+			msg = 'Invalid input commodity (%(value)s).  Valid choices are: {}'
+			pers = ', '.join( unicode(i[0]) for i in inp_choices )
+			em = self.fields['inp'].error_messages
+			em['invalid_choice'] = _(msg.format( pers ))
+
+
+	@classmethod
+	def getInputChoices ( cls, analysis ):
+		inps = AnalysisCommodity.objects.filter(
+		  analysis=analysis, commodity_type__name='physical' )
+		return sorted(
+		  set(( ac.commodity.name, ac.commodity.name) for ac in inps )
+		)
+
+
+	def clean_inp ( self ):
+		inp = self.cleaned_data['inp']
+		a = self.analysis
+
+		try:
+			inp = AnalysisCommodity.objects.get(
+			  analysis=a, commodity_type__name='physical', commodity__name=inp )
+		except ObjectDoesNotExist as e:
+			msg = 'Specified input commodity ({}) does not exist in this analysis.'
+			raise F.ValidationError( msg.format( inp ) )
+
+		return inp  # note that it's now a Commodity _object_, not a string/num
+
+
+	def clean_value ( self ):
+		epsilon = 1e-9
+		v = self.cleaned_data['value']
+
+		if v is None:
+			msg = ('Please specify a percentage.  To remove this split, push the '
+			  '"Shift" key and click on the corresponding red button.')
+			raise F.ValidationError( msg )
+
+		elif math.isnan( v ):
+			msg = ('Received NaN ("Not A Number").  Please specify a decimal '
+			  'value between 0 and 1.')
+			raise F.ValidationError( msg )
+
+		elif v < epsilon:
+			msg = ('Zero is a useless entry.  Please either remove this row, or '
+			  'pick a value in the range (0, 1).')
+			raise F.ValidationError( msg )
+
+		elif v >= 1:
+			msg ('One (100%) is a useless entry.  Please either remove this row, '
+			  'or pick a value in the range (0, 1).')
+			raise F.ValidationError( msg )
+
+		return v
+
+
+	def save ( self ):
+		tis = self.techinputsplit
+		cd = self.cleaned_data
+
+		if 'inp' in cd:
+			tis.inp_commodity = cd[ 'inp' ]
+		if 'value' in cd:
+			tis.fraction = cd[ 'value' ]
+
+		tis.save()
+
+
+
+class TechOutputSplitForm ( F.Form ):
+	out   = F.ChoiceField( label=_('Output') )
+	value = F.FloatField( label=_('Percentage') )
+
+	def __init__( self, *args, **kwargs ):
+		self.techoutputsplit = ois = kwargs.pop('instance')
+		self.analysis = analysis = kwargs.pop('analysis')
+
+		super( TechOutputSplitForm, self ).__init__( *args, **kwargs )
+
+		if ois.pk:
+			del self.fields['out']
+
+		else:
+			out_choices = TechOutputSplitForm.getOutputChoices( analysis )
+			self.fields['out'].choices = out_choices
+
+			msg = 'Invalid output commodity (%(value)s).  Valid choices are: {}'
+			pers = ', '.join( unicode(i[0]) for i in out_choices )
+			em = self.fields['out'].error_messages
+			em['invalid_choice'] = _(msg.format( pers ))
+
+
+	@classmethod
+	def getOutputChoices ( cls, analysis ):
+		outs = AnalysisCommodity.objects.filter(
+		  analysis=analysis, commodity_type__name__in=('physical', 'demand') )
+		return sorted(
+		  set(( ac.commodity.name, ac.commodity.name) for ac in outs)
+		)
+
+
+	def clean_out ( self ):
+		out = self.cleaned_data['out']
+		a = self.analysis
+
+		try:
+			out = AnalysisCommodity.objects.get(
+			  analysis=a,
+			  commodity_type__name__in=('demand', 'physical'),
+			  commodity__name=out
+			)
+		except ObjectDoesNotExist as e:
+			msg = ('Specified output commodity ({}) does not exist in this '
+			  'analysis.')
+			raise F.ValidationError( msg.format( out ) )
+
+		return out  # note that it's now a Commodity _object_, not a string/num
+
+
+	def clean_value ( self ):
+		epsilon = 1e-9
+		v = self.cleaned_data['value']
+
+		if v is None:
+			msg = ('Please specify a percentage.  To remove this split, push the '
+			  '"Shift" key and click on the corresponding red button.')
+			raise F.ValidationError( msg )
+
+		elif math.isnan( v ):
+			msg = ('Received NaN ("Not A Number").  Please specify a decimal '
+			  'value between 0 and 1.')
+			raise F.ValidationError( msg )
+
+		elif v < epsilon:
+			msg = ('Zero is a useless entry.  Please either remove this row, or '
+			  'pick a value in the range (0, 1).')
+			raise F.ValidationError( msg )
+
+		elif v >= 1:
+			msg ('One (100%) is a useless entry.  Please either remove this row, '
+			  'or pick a value in the range (0, 1).')
+			raise F.ValidationError( msg )
+
+		return v
+
+
+	def save ( self ):
+		ois = self.techoutputsplit
+		cd = self.cleaned_data
+
+		if 'out' in cd:
+			ois.out_commodity = cd[ 'out' ]
+		if 'value' in cd:
+			ois.fraction = cd[ 'value' ]
+
+		ois.save()
 

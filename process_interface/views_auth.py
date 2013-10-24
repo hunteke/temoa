@@ -1,12 +1,13 @@
 from django.contrib.auth import authenticate, login, logout
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
+
+from http import HttpResponseSeeOther
 
 from forms import LoginForm
 from view_helpers import set_cookie
 
 def login_view ( req ):
-	res = HttpResponseRedirect(reverse('process_interface:view') )
+	res = HttpResponseSeeOther(reverse('process_interface:view') )
 
 	if req.POST:
 		form = LoginForm( req.POST )
@@ -24,7 +25,7 @@ def login_view ( req ):
 
 def logout_view ( req ):
 	logout( req )
-	res = HttpResponseRedirect(reverse('process_interface:view') )
+	res = HttpResponseSeeOther(reverse('process_interface:view') )
 	set_cookie( req, res )
 	return res
 

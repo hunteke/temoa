@@ -6,7 +6,7 @@
 
 	<link rel='stylesheet' type='text/css' href='{% static 'process_interface/css/temoadb.css' %}' />
 </head>
-<body data-csrftoken='{{ csrf_token }}' {% if username %}data-username='{{ username }}'{% endif %}>
+<body>
 <div id='wrapper'>
 	<div id='header'>
 		<noscript>
@@ -30,38 +30,47 @@
 		<button id='QuickFunction'>Dev Function</button>
 		<h2>TemoaDB</h2>
 	</div>
-	<div id='analysis'>
+	<div id='analysis'><div class='center_wrapper'><button id='ShowHideAnalysis'>Toggle Analysis Info</button></div>
 		<div id='analysis_info' class='hidden'>
 			<form method='post' action=''>
-				<p><input type='text' id='analysis_filter' name='analysis_filter' size='15' placeholder='Analysis Filter'></p>
+				<input type='text' id='analysis_filter' name='analysis_filter' size='15' placeholder='Analysis Filter'>
 				<select id='analysis_selection'>
-					<option value='' disabled selected>Loading analyses ...</option>
+					<option value=''>Loading analyses ...</option>
 				</select>
 			</form>
 		</div>
+		<div id='analysis_detail'></div>
 	</div>
 	<div class='clear'></div>
-	<div id='processes' class='hidden'>
+	<div id='ProcessList' class='hidden'>
 		<h2>Processes</h2>
 		<div class='filter'>
 			<input type='text' name='filter_process' size='10' placeholder='Process Filter'>
 			<label>Glob<input type='radio' name='filter_type_process' value='glob' checked></label>
 			<label>RE<input type='radio' name='filter_type_process' value='re'></label>
 		</div>
-		<table class='items'>
-			<thead><tr><th>Technology</th><th>Vintage</th></tr></thead>
-			<tbody></tbody>
-		</table>
+		<div class='items'></div>
 	</div>
-	<div id='technology_characteristics' class='hidden'>
-		<h2>Technology Characteristics</h2>
+	<div id='AnalysisProcessDetails' class='hidden'>
+		<h2>Process Details</h2>
+		<div class='filter'></div>
+		<div class='noitems'>No processes selected.  Select one or more processes from the list to the left, or click 'Add' if none currently exist.<div class='items'></div></div>
+	</div>
+	<div id='AnalysisTechnologyDetails' class='hidden'>
+		<h2>Technology Details</h2>
 		<div class='filter'></div>
 		<div class='items'></div>
 	</div>
-	<div id='process_characteristics' class='hidden'>
-		<h2>Process Characteristics</h2>
-		<div class='filter'></div>
-		<div class='items'></div>
+	<div id='DBTechnologies' class='hidden'>
+		<h2>All Technologies in Database</h2>
+		<div id='technology_list'></div>
+		<div id='technology_detail'>
+			<div id='technology_create'></div>
+			<div id='technology_info'></div>
+		</div>
+	</div>
+	<div id='TechnologyOverlayButton'>
+		<div class='center_wrapper'><button id='ShowHideTechs'>Toggle Database Technologies</button></div>
 	</div>
 </div>
 <script type='text/javascript' src='{{ CD.JQUERYBASE   }}/jquery.min.js'></script>

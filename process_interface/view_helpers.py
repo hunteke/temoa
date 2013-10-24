@@ -4,17 +4,6 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.utils import simplejson as json
 
-def get_messages ( req ):
-	msg_storage = messages.get_messages( req )
-	msgs = [ (m.tags, m.message) for m in msg_storage ]
-
-	msg_storage.used = True  # remove the messages
-
-	data = json.dumps( msgs )
-	res = HttpResponse( data, content_type='application/json' )
-	res['Content-Length'] = len( data )
-	return res
-
 
 def set_cookie ( req, res, **kwargs ):
 	cookie = {}

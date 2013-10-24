@@ -3,6 +3,7 @@ from django.core.context_processors import csrf
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, render_to_response
 from django.utils import simplejson as json
+from django.views.decorators.http import require_GET
 
 from settings import CD # content delivery
 
@@ -11,14 +12,16 @@ from forms import LoginForm
 from views_analysis import *
 from views_auth import *
 from views_process import *
+from views_technology import *
 
-from view_helpers import set_cookie, get_messages
+from view_helpers import set_cookie
 
-
+@require_GET
 def home ( req ):
 	return render_to_response('process_interface/home.html')
 
 
+@require_GET
 def view ( req ):
 	template = 'process_interface/view.html'
 
