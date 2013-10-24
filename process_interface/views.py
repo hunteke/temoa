@@ -30,8 +30,6 @@ from models import (
   Param_CostVariable,
   Param_Efficiency,
   Param_EmissionActivity,
-  Param_GrowthRateMax,
-  Param_GrowthRateSeed,
   Param_LifetimeTech,
   Param_LifetimeTechLoan,
   Param_TechInputSplit,

@@ -13,8 +13,7 @@ __all__ = (
   'Param_Efficiency',
   'Param_EmissionActivity',
   'Param_EmissionLimit',
-  'Param_GrowthRateMax',
-  'Param_GrowthRateSeed',
+  'Param_GrowthRate',
   'Param_LifetimeTech',
   'Param_LifetimeTechLoan',
   'Param_MaxCapacity',
@@ -795,30 +794,20 @@ class Param_EmissionActivity ( DM.Model ):
 
 
 
-class Param_GrowthRateMax ( DM.Model ):
+class Param_GrowthRate ( DM.Model ):
 	analysis   = DM.ForeignKey( Analysis )
 	technology = DM.ForeignKey( Technology )
-	value      = DM.FloatField()
+	ratelimit  = DM.FloatField()
+	seed       = DM.FloatField()
+
 
 	class Meta:
 		unique_together = ('analysis', 'technology')
+
 
 	def __unicode__ ( self ):
 		analysis = self.analysis
 		tech     = self.technology
 
 		return u'({}) {}: {}'.format( analysis, tech, self.value )
-
-
-
-class Param_GrowthRateSeed ( DM.Model ):
-	growth_max = DM.ForeignKey( Param_GrowthRateMax, unique=True )
-	value      = DM.FloatField()
-
-	def __unicode__ ( self ):
-		analysis = self.growth_max.process.analysis
-		tech     = self.growth_max.technology
-
-		return u'({}) {}: {}'.format( analysis, tech, vintage, self.value )
-
 
