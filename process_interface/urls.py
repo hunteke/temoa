@@ -8,6 +8,7 @@ from views import (
   user_analyses,
   view,
   test_view,
+  get_client_template,
 
   process_list,
   process_new,
@@ -66,6 +67,7 @@ urlpatterns = patterns('',
   url(r'^tutorial/$', tutorial,    name='tutorial'),
   url(r'^user/list$', user,        name='users'),
   url(r'^user/(?P<username>\w+)/analyses$', user_analyses, name='user_analyses'),
+  url(r'^client_template/(?P<template>\w+.ejs)$', get_client_template, name='get_client_template'),
 
   url(r'^analysis/(?P<analysis_id>\d+)/process/list/json$',   process_list, name='process_list'),
 

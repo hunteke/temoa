@@ -3,10 +3,10 @@ from django.core.context_processors import csrf
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, render_to_response
 from django.utils import simplejson as json
-from django.views.decorators.http import require_GET
+from django.views.decorators.cache import cache_control
 
-from settings import CD # content delivery
-
+from decorators.http import require_GET
+from settings import CD   # CD = content delivery
 from forms import LoginForm
 
 from views_analysis import *
@@ -37,6 +37,16 @@ def view ( req ):
 	set_cookie( req, res )
 
 	return res
+
+
+@require_GET
+@cache_control(public=True, max_age=300)
+def get_client_template ( req, template ):
+	# client templates are templates rendered by the client (e.g., ejs)
+	# due to caching, these are somewhat difficult to update.  So, in case
+	# a developer ever makes a change in the wild ...f
+
+	return render_to_response('process_interface/client/' + template )
 
 
 def test_view ( req ):
