@@ -29,10 +29,10 @@ function csrfSafeMethod ( method ) {
 function getCookie ( ) {
 	var $obj = $.cookie( COOKIE );
 	if ( $obj ) {
-		return JSON.parse( $obj );
+		return JSON.parse( atob( $obj ));
 	}
 
-	$obj = jQuery( new Object() );
+	$obj = new Object();
 	$obj.username    = null;
 	$obj.analysis_id = null;
 	$obj.process_ids = null;
@@ -41,7 +41,7 @@ function getCookie ( ) {
 }
 
 function setCookie ( obj ) {
-	$.cookie( COOKIE, JSON.stringify( obj ));
+	$.cookie( COOKIE, btoa( JSON.stringify( obj )));
 }
 
 
@@ -2441,7 +2441,7 @@ function processCookie ( ) {
 		if ( uname ) { $('#unauthorized').addClass('hidden'); }
 		else         { $('#unauthorized').removeClass('hidden'); }
 	}
-	$.cookie( COOKIE, JSON.stringify( $cookie ));
+	$.cookie( COOKIE, btoa( JSON.stringify( $cookie )));
 
 	// To "prove" the above point, remove the cookie sent by the server,
 	// although one cookie ($cookie) is as good as another ($ss).
