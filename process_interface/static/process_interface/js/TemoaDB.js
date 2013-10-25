@@ -633,6 +633,10 @@ can.Control('AnalysisCommodityLists', {
 			$('#ShowHideCommodities').click();
 		});
 
+		var username = getCookie().username;
+		if ( ! (username && username === analysis.username ) )
+			return;
+
 		function select_start () {
 			var $others = $(this).closest( 'form' ).find( 'tbody' ).not( this );
 			$others.find('.ui-selected').removeClass( 'ui-selected' );
