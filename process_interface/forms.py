@@ -28,33 +28,6 @@ from models import (
 )
 
 
-class CachedChoiceField ( F.ModelChoiceField ):
-	""" By default, Django assumes queryset, and utilizes queryset.all().  This
-	can be a problem if the field needs a dynamic set of choices that does not
-	easily fit within a SQL query.  This subclass allows the form to prepopulate
-	a field cache. """
-	def __init__ ( self, *args, **kwargs ):
-		# If choice_cache is already populuated, then utilize it.  Otherwise,
-		# fallback to the normal handling.
-		cache = kwargs.pop( 'cache', None )
-		super( CachedChoiceField, self ).__init__( *args, **kwargs )
-
-		if cache:
-			self.cache_choices = True
-			self.choice_cache = [ self.choice(c) for c in cache ]
-
-
-	def choice ( self, obj ):
-		return ( self.prepare_value(obj), self.label_from_instance(obj) )
-
-
-
-class VintageField ( CachedChoiceField ):
-	def label_from_instance ( self, obj ):
-		return u'{}'.format( obj.vintage )
-
-
-
 class LoginForm ( F.Form ):
 	username = F.CharField( label=_('Username'), max_length=254 )
 	password = F.CharField( label=_('Password'), widget=F.PasswordInput() )
