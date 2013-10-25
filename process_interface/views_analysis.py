@@ -6,6 +6,7 @@ from django.db.utils import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils import simplejson as json
+from django.views.decorators.cache import never_cache
 
 from decorators.http import require_POST, require_DELETE
 from decorators.auth import require_login
@@ -20,6 +21,7 @@ from models import (
 from forms import AnalysisForm, AnalysisCommodityForm, VintagesForm
 
 
+@never_cache
 def analysis_list ( req ):
 	analyses = [
 	  { 'id'                   : a.pk,
@@ -45,6 +47,7 @@ def analysis_list ( req ):
 	return res
 
 
+@never_cache
 def analysis_info ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
 
@@ -68,6 +71,7 @@ def analysis_info ( req, analysis_id ):
 	return res
 
 
+@never_cache
 def analysis_commodity_list ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
 
@@ -96,6 +100,7 @@ def analysis_commodity_list ( req, analysis_id ):
 
 @require_login
 @require_POST
+@never_cache
 def analysis_create ( req ):
 	status = 201   # 201 = Created
 	msgs = {}
@@ -136,6 +141,7 @@ def analysis_create ( req ):
 
 @require_login
 @require_POST
+@never_cache
 def analysis_update ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 
@@ -169,6 +175,7 @@ def analysis_update ( req, analysis_id ):
 
 @require_login
 @require_POST
+@never_cache
 def analysis_create_commodity ( req, analysis_id, ctype ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	commodity_type = get_object_or_404( CommodityType, name=ctype )
@@ -210,6 +217,7 @@ def analysis_create_commodity ( req, analysis_id, ctype ):
 
 @require_login
 @require_POST
+@never_cache
 def analysis_update_commodity ( req, analysis_id, commodity_id ):
 	analysis  = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	acom = get_object_or_404( AnalysisCommodity,
@@ -251,6 +259,7 @@ def analysis_update_commodity ( req, analysis_id, commodity_id ):
 
 @require_login
 @require_DELETE
+@never_cache
 def analysis_delete_commodity ( req, analysis_id, commodity_id ):
 	analysis  = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	acom = get_object_or_404( AnalysisCommodity,

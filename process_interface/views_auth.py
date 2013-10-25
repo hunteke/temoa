@@ -1,11 +1,13 @@
 from django.contrib.auth import authenticate, login, logout
 from django.core.urlresolvers import reverse
+from django.views.decorators.cache import never_cache
 
 from http import HttpResponseSeeOther
 
 from forms import LoginForm
 from view_helpers import set_cookie
 
+@never_cache
 def login_view ( req ):
 	res = HttpResponseSeeOther(reverse('process_interface:view') )
 
@@ -23,6 +25,7 @@ def login_view ( req ):
 	return res
 
 
+@never_cache
 def logout_view ( req ):
 	logout( req )
 	res = HttpResponseSeeOther(reverse('process_interface:view') )

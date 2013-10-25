@@ -6,6 +6,7 @@ from django.db.utils import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import simplejson as json
+from django.views.decorators.cache import never_cache
 
 from decorators.http import require_POST, require_DELETE
 from decorators.auth import require_login
@@ -137,6 +138,7 @@ def get_technology_info ( analysis, technologies ):
 	return data
 
 
+@never_cache
 def analysis_technology_list ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
 	techs = Technology.objects.filter( process__analysis=analysis ).distinct()
@@ -153,6 +155,7 @@ def analysis_technology_list ( req, analysis_id ):
 	return res
 
 
+@never_cache
 def analysis_technology_info ( req, analysis_id, technology_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
 	tech = get_object_or_404( Technology, pk=technology_id )
@@ -174,6 +177,7 @@ def analysis_technology_info ( req, analysis_id, technology_id ):
 
 @require_login
 @require_POST
+@never_cache
 def technology_create ( req ):
 	from forms import TechnologyForm
 
@@ -215,6 +219,7 @@ def technology_create ( req ):
 
 @require_login
 @require_POST
+@never_cache
 def technology_update ( req, technology_id ):
 	from forms import TechnologyForm
 	tech = get_object_or_404( Technology, pk=technology_id, user=req.user )
@@ -256,6 +261,7 @@ def technology_update ( req, technology_id ):
 
 @require_login
 @require_DELETE
+@never_cache
 def technology_remove ( req, technology_id ):
 	get_object_or_404( Technology, pk=technology_id, user=req.user ).delete()
 
@@ -270,6 +276,7 @@ def technology_remove ( req, technology_id ):
 
 @require_login
 @require_POST
+@never_cache
 def analysis_technology_update ( req, analysis_id, technology_id ):
 	# first, ensure user owns the specified analysis
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
@@ -310,6 +317,7 @@ def analysis_technology_update ( req, analysis_id, technology_id ):
 
 @require_login
 @require_POST
+@never_cache
 def analysis_technology_inputsplit_new ( req, analysis_id, technology_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	tech = get_object_or_404( Technology, pk=technology_id )
@@ -357,6 +365,7 @@ def analysis_technology_inputsplit_new ( req, analysis_id, technology_id ):
 
 @require_login
 @require_POST
+@never_cache
 def analysis_technology_inputsplit_update (
   req, analysis_id, technology_id, tis_id
 ):
@@ -395,6 +404,7 @@ def analysis_technology_inputsplit_update (
 
 @require_login
 @require_DELETE
+@never_cache
 def analysis_technology_inputsplit_remove (
   req, analysis_id, technology_id, tis_id
 ):
@@ -415,6 +425,7 @@ def analysis_technology_inputsplit_remove (
 
 @require_login
 @require_POST
+@never_cache
 def analysis_technology_outputsplit_new ( req, analysis_id, technology_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	tech = get_object_or_404( Technology, pk=technology_id )
@@ -462,6 +473,7 @@ def analysis_technology_outputsplit_new ( req, analysis_id, technology_id ):
 
 @require_login
 @require_POST
+@never_cache
 def analysis_technology_outputsplit_update (
   req, analysis_id, technology_id, tos_id
 ):
@@ -500,6 +512,7 @@ def analysis_technology_outputsplit_update (
 
 @require_login
 @require_DELETE
+@never_cache
 def analysis_technology_outputsplit_remove (
   req, analysis_id, technology_id, tos_id
 ):

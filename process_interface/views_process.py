@@ -6,6 +6,7 @@ from django.db.utils import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils import simplejson as json
+from django.views.decorators.cache import never_cache
 
 from decorators.http import require_POST, require_DELETE
 from decorators.auth import require_login
@@ -109,6 +110,7 @@ def get_process_info ( processes ):
 	return process_characteristics
 
 
+@never_cache
 def process_list ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
 	processes = Process.objects.filter( analysis=analysis )
@@ -132,6 +134,7 @@ def process_list ( req, analysis_id ):
 
 @require_login
 @require_POST
+@never_cache
 def process_new ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 
@@ -168,6 +171,7 @@ def process_new ( req, analysis_id ):
 
 @require_login
 @require_POST
+@never_cache
 def process_update ( req, analysis_id, process_id ):
 	# first, ensure user owns the specified analysis
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
@@ -203,6 +207,7 @@ def process_update ( req, analysis_id, process_id ):
 
 @require_login
 @require_DELETE
+@never_cache
 def process_remove ( req, analysis_id, process_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	process = get_object_or_404( Process, pk=process_id, analysis=analysis )
@@ -220,6 +225,7 @@ def process_remove ( req, analysis_id, process_id ):
 
 @require_login
 @require_POST
+@never_cache
 def process_costfixed_new ( req, analysis_id, process_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
@@ -267,6 +273,7 @@ def process_costfixed_new ( req, analysis_id, process_id ):
 
 @require_login
 @require_POST
+@never_cache
 def process_costfixed_update ( req, analysis_id, process_id, costfixed_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
@@ -309,6 +316,7 @@ def process_costfixed_update ( req, analysis_id, process_id, costfixed_id ):
 
 @require_login
 @require_DELETE
+@never_cache
 def process_costfixed_remove ( req, analysis_id, process_id, costfixed_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	process = get_object_or_404( Process, pk=process_id, analysis=analysis )
@@ -327,6 +335,7 @@ def process_costfixed_remove ( req, analysis_id, process_id, costfixed_id ):
 
 @require_login
 @require_POST
+@never_cache
 def process_costvariable_new ( req, analysis_id, process_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
@@ -374,6 +383,7 @@ def process_costvariable_new ( req, analysis_id, process_id ):
 
 @require_login
 @require_POST
+@never_cache
 def process_costvariable_update (
   req, analysis_id, process_id, costvariable_id
 ):
@@ -419,6 +429,7 @@ def process_costvariable_update (
 
 @require_login
 @require_DELETE
+@never_cache
 def process_costvariable_remove (
   req, analysis_id, process_id, costvariable_id
 ):
@@ -440,6 +451,7 @@ def process_costvariable_remove (
 
 @require_login
 @require_POST
+@never_cache
 def process_efficiency_new ( req, analysis_id, process_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
@@ -486,6 +498,7 @@ def process_efficiency_new ( req, analysis_id, process_id ):
 
 @require_login
 @require_POST
+@never_cache
 def process_efficiency_update ( req, analysis_id, process_id, efficiency_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
@@ -530,6 +543,7 @@ def process_efficiency_update ( req, analysis_id, process_id, efficiency_id ):
 
 @require_login
 @require_DELETE
+@never_cache
 def process_efficiency_remove ( req, analysis_id, process_id, efficiency_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
@@ -549,6 +563,7 @@ def process_efficiency_remove ( req, analysis_id, process_id, efficiency_id ):
 
 @require_login
 @require_POST
+@never_cache
 def process_emissionactivity_new ( req, analysis_id, process_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	process  = get_object_or_404( Process, pk=process_id, analysis=analysis )
@@ -596,6 +611,7 @@ def process_emissionactivity_new ( req, analysis_id, process_id ):
 
 @require_login
 @require_POST
+@never_cache
 def process_emissionactivity_update (
   req, analysis_id, efficiency_id, emissionactivity_id
 ):
@@ -646,6 +662,7 @@ def process_emissionactivity_update (
 
 @require_login
 @require_DELETE
+@never_cache
 def process_emissionactivity_remove (
   req, analysis_id, efficiency_id, emissionactivity_id
 ):
