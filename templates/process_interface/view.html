@@ -30,7 +30,7 @@
 		<button id='QuickFunction'>Dev Function</button>
 		<h2>TemoaDB</h2>
 	</div>
-	<div id='analysis'><div class='center_wrapper'><button id='ShowHideAnalysis'>Toggle Analysis Info</button></div>
+	<div id='analysis'><div class='center_wrapper'><button id='ShowHideTechs'>Toggle Database Technologies</button><button id='ShowHideAnalysis'>Toggle Analysis Info</button></div>
 		<div id='analysis_info' class='hidden'>
 			<form method='post' action=''>
 				<input type='text' id='analysis_filter' name='analysis_filter' size='15' placeholder='Analysis Filter'>
@@ -62,15 +62,13 @@
 		<div class='items'></div>
 	</div>
 	<div id='DBTechnologies' class='hidden'>
+		<button type='button' id='DBTechnologiesCloseButton' class='closeButton'>Close</button>
 		<h2>All Technologies in Database</h2>
 		<div id='technology_list'></div>
 		<div id='technology_detail'>
 			<div id='technology_create'></div>
 			<div id='technology_info'></div>
 		</div>
-	</div>
-	<div id='TechnologyOverlayButton'>
-		<div class='center_wrapper'><button id='ShowHideTechs'>Toggle Database Technologies</button></div>
 	</div>
 </div>
 <script type='text/javascript' src='{{ CD.JQUERYBASE   }}/jquery.min.js'></script>

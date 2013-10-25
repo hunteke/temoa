@@ -1060,14 +1060,17 @@ can.Control('TechnologyList', {
 			activeTechnologyList = technologies;
 			options['technologies'] = technologies;
 
-			$el.empty().fadeOut();
+			$el.empty()
 			var view_opts = {
 				username:  getCookie().username || null,
 				technologies: technologies
 			};
 
 			$el.append( can.view( view, view_opts ));
-			$el.fadeIn();
+
+			$('#DBTechnologiesCloseButton').click( function ( ) {
+				$('#ShowHideTechs').click();
+			});
 
 			var $tbody = $el.find('.items:first tbody');
 

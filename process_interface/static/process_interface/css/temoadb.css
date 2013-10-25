@@ -13,8 +13,7 @@ body { height: 100% ; margin: 1em; }
 #ReloadLibs { float: right; display: none; }
 
 .center_wrapper { margin: 0 auto; text-align:center; }
-#ShowHideAnalysis { margin: 0 auto; }
-#TechnologyOverlayButton { position: fixed; bottom: 1px; width: 100%; background: none; }
+#ShowHideTechs, #ShowHideAnalysis { margin: 0 auto; }
 
 .closeButton {
 	float: right;
