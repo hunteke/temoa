@@ -151,96 +151,105 @@ if ( username && process.isNew() ) { %>
 <% } else { %>
 
 <table class='process'>
-	<thead><tr><th colspan='2'><%= process.attr('Technology') %>, <%= process.attr('Vintage') %></th></tr></thead>
+	<thead><tr><th colspan='2'><%= process.technology.attr('name') %>, <%= process.attr('vintage') %></th></tr></thead>
 	<tbody>
-		<tr><th>Discount Rate</th><td><% if ( process.attr('DiscountRate') ) { %><%= process.attr('DiscountRate') %><% } else { %><span class='info'><%= analysis.attr('GlobalDiscountRate') %> (GDR)</span><% } %></td></tr>
-		<tr><th>Baseload</th><td class='<%= process.technology.attr('baseload') ? 'is_member' : 'is_not_member' %>'></td></tr>
-		<tr><th>Storage</th><td class='<%= process.technology.attr('storage') ? 'is_member' : 'is_not_member' %>'></td></tr>
-		<tr><th>Lifetime</th><td><% if ( process.attr('LifetimeProcess') ) { %><%= process.attr('LifetimeProcess') %><% } %></td></tr>
-		<tr><th>Loan Lifetime</th><td><%= process.attr('LifetimeProcessLoan') ? process.attr('LifetimeProcessLoan') : '' %></td></tr>
-	<% if ( process.attr('Vintage') < analysis.attr('Period_0') ) { %>
-		<tr><th>Existing Capacity</th><td><%= process.attr('ExistingCapacity') %></td></tr>
+	<% if ( process.attr('vintage') < analysis.attr('period_0') ) { %>
+		<tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<th>Existing Capacity:</th>
+			<td><%= process.attr('existingcapacity') ? process.attr('existingcapacity') : '' %></td>
+		</tr>
 	<% } else { %>
-		<tr><th>Investment Cost</th><td><%= process.attr('CostInvest') %></td></tr>
+		<tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<th>Discount Rate:</th>
+			<td><%= process.attr('discountrate') ? process.attr('discountrate') : analysis.attr('global_discount_rate') + ' (GDR)' %></td>
+		</tr><tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<th>Investment Cost:</th>
+			<td><%= process.attr('costinvest') ? process.attr('costinvest') : '' %></td>
+		</tr><tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<th>Loan Lifetime:</th>
+			<td><%= process.attr('loanlife') ? process.attr('loanlife') : process.technology.attr('loanlife') ? process.technology.attr('loanlife') : '' %></td>
+		</tr>
 	<% } %>
-
-	<% if ( process.attr('Efficiencies') ) { %>
-		<tr><td colspan='2'>
-			<table class='innertable'>
-				<caption>Efficiency</caption>
-				<thead><tr><th><!-- would be Add button --></th><th>Input</th><th>Output</th><th>Value</th></tr></thead>
-				<tbody>
-				<% process.attr('Efficiencies').each( function ( e ) { %>
-					<tr>
-						<td><!-- would be Del button --></td>
-						<td><%= e[0] %></td><td><%= e[1] %></td><td><%= e[2] %></td>
-					</tr>
-				<% }); %>
-				</tbody>
-			</table>
-		</td></tr>
-	<% } else { %>
-		<tr><th>Efficiency</th><td><%= process.attr('Efficiencies') %></td></tr>
-	<% } %>
-
-	<% if ( process.attr('EmissionActivity') ) { %>
-		<tr><td colspan='2'>
-			<table class='innertable'>
-				<caption>Emission Activity</caption>
-				<thead><tr><th><!-- would be Add button --></th><th>Input</th><th>Output</th><th>Value</th></tr></thead>
-				<tbody>
-				<% process.attr('EmissionActivity').each( function ( e ) { %>
-					<tr>
-						<td><!-- would be Del button --></td>
-						<td><%= e[0] %></td>
-						<td><%= e.slice(1,3).join(', ') %></td>
-						<td><%= e[3] %></td>
-					</tr>
-				<% }); %>
-				</tbody>
-			</table>
-		</td></tr>
-	<% } else { %>
-		<tr><th>Emission Activity</th><td><%= process.attr('EmissionActivity') %></td></tr>
-	<% } %>
-
-	<% if ( process.attr('CostFixed') ) { %>
-		<tr><td colspan='2'>
-			<table class='innertable'>
-				<caption>Fixed Cost</caption>
-				<thead><tr><th><!-- would be Add button --></th><th>Period</th><th>Cost</th></tr></thead>
-				<tbody>
-				<% process.attr('CostFixed').each( function ( e ) { %>
-					<tr>
-						<td><!-- would be Del button --></td>
-						<td><%= e[0] %></td><td><%= e[1] %></td>
-					</tr>
-				<% }); %>
-				</tbody>
-			</table>
-		</td></tr>
-	<% } else { %>
-		<tr><th>Fixed Cost</th><td><%= process.attr('CostFixed') %></td></tr>
-	<% } %>
-
-	<% if ( process.attr('CostVariable') ) { %>
-		<tr><td colspan='2'>
-			<table class='innertable'>
-				<caption>Variable Cost</caption>
-				<thead><tr><th><!-- would be Add button --></th><th>Period</th><th>Cost</th></tr></thead>
-				<tbody>
-				<% process.attr('CostVariable').each( function ( e ) { %>
-					<tr>
-						<td><!-- would be Del button --></td>
-						<td><%= e[0] %></td><td><%= e[1] %></td>
-					</tr>
-				<% }); %>
-				</tbody>
-			</table>
-		</td></tr>
-	<% } else { %>
-		<tr><th>Variable Cost</th><td><%= process.attr('CostVariable') %></td></tr>
-	<% } %>
+		<tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<th>Baseload:</th>
+			<td class='<%= process.technology.attr('baseload') ? 'is_member' : 'is_not_member' %>'>&nbsp;</td>
+		</tr><tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<th>Storage:</th>
+			<td class='<%= process.technology.attr('storage') ? 'is_member' : 'is_not_member' %>'>&nbsp;</td>
+		</tr><tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<th>Lifetime:</th>
+			<td><%= process.attr('lifetime') ? process.attr('lifetime') : process.technology.attr('lifetime') ? process.technology.attr('lifetime') + ' (class)' : '' %></td>
+		</tr>
+		<% if ( process.attr('efficiencies').length > 0 ) { %>
+		<tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<td colspan='2'>
+				<table class='innertable'>
+					<caption>Efficiency</caption>
+					<thead><tr><th>Input &rarr; Output</th><th>Value</th></tr></thead>
+					<tbody>
+					<% process.attr('efficiencies').each( function ( e ) { %>
+						<tr>
+							<td><%= e.attr('inp') %> &rarr; <%= e.attr('out') %></td>
+							<td><%= e.attr('value') %></td>
+						</tr>
+					<% }); %>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<% } if ( process.attr('emissionactivities').length > 0 ) { %>
+		<tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<td colspan='2'>
+				<table class='innertable'>
+					<caption>Emission Activity</caption>
+					<thead><tr><th>Emission</th><th>Efficiency</th><th>Value</th></tr></thead>
+					<tbody>
+					<% process.attr('emissionactivities').each( function ( ea ) { %>
+						<tr>
+							<td><%= ea.attr('pollutant') %></td>
+							<td><%= ea.attr('efficiency').attr('inp') %> &rarr; <%= ea.attr('efficiency').attr('out') %></td>
+							<td><%= ea.attr('value') %></td>
+						</tr>
+					<% }); %>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<% } if ( process.attr('costsfixed').length > 0 ) { %>
+		<tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<td colspan='2'>
+				<table class='innertable'>
+					<caption>Fixed Costs</caption>
+					<thead><tr><th>Period</th><th>Cost</th></tr></thead>
+					<tbody>
+					<% process.attr('costsfixed').each( function ( cf ) { %>
+						<tr>
+							<td><%= cf.attr('period') %></td>
+							<td><%= cf.attr('value') %></td>
+						</tr>
+					<% }); %>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<% } if ( process.attr('costsvariable').length > 0 ) { %>
+		<tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<td colspan='2'>
+				<table class='innertable'>
+					<caption>Variable Costs</caption>
+					<thead><tr><th>Period</th><th>Cost</th></tr></thead>
+					<tbody>
+					<% process.attr('costsvariable').each( function ( cv ) { %>
+						<tr>
+							<td><%= cv.attr('period') %></td>
+							<td><%= cv.attr('value') %></td>
+						</tr>
+					<% }); %>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+		<% } %>
 	</tbody>
 </table>
 <% } %>
