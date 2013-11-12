@@ -156,8 +156,8 @@ function displayErrors ( $el, errors ) {
 function save_to_server ( args ) {
 	// Will save a list of [model, data] tuples to the server, weeding out
 	// information that has not changed.  Thus, this sends only the minimal
-	// amount of data.  For example, if a user changes just one field, the only
-	// that field is sent.
+	// amount of data.  For example, if a user changes just one field, it is
+	// the only field sent.
 
 	// args is an object with three keys: to_save, inputs, display
 	// args.to_save: Array of arrays of (model, new_data)
