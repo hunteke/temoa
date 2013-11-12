@@ -132,16 +132,5 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/OutputSplit/update/(?P<tos_id>\d+)$', analysis_technology_outputsplit_update, name='analysis_technology_outputsplit_update'),
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/OutputSplit/remove/(?P<tos_id>\d+)$', analysis_technology_outputsplit_remove, name='analysis_technology_outputsplit_remove'),
 
-#  url(r'^analysis/(?P<analysis_id>\d+)/technology_info/(?P<process_ids>(?:\d+,?)+)$', technology_info, name='technology_info'),
-
-#  url(r'^analysis/(?P<analysis_id>\d+)/update/technology/(?P<technology_id>\d+)$', update_analysis_technology, name='update_analysis_technology'),
-#  url(r'^analysis/(?P<analysis_id>\d+)/update/technology/(?P<technology_id>\d+)/delete/(?P<parameter>\w+)$', remove_analysis_technology_datum, name='remove_analysis_technology_datum'),
-
-#  url(r'^analysis/(?P<analysis_id>\d+)/create/process/(?P<process_id>\d+)/EmissionActivity$', new_emissionactivity, name='new_emissionactivity'),
-#  url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)/(?P<emissionactivity_id>\d+)/EmissionActivity$', update_emissionactivity, name='update_emissionactivity'),
-
-#  url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)$', update_analysis_process, name='update_analysis_process'),
-#  url(r'^analysis/(?P<analysis_id>\d+)/update/process/(?P<process_id>\d+)/delete/(?P<parameter>\w+)$', remove_analysis_process_datum, name='remove_analysis_process_datum'),
-  url(r'^test$', test_view, name='test'),
 )
 
