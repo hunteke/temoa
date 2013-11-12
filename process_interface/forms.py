@@ -96,20 +96,17 @@ class VintagesForm ( F.Form ):
 		a = self.analysis
 
 		vintages = Vintage.objects.filter( analysis=a )
-		vintages = set( v.vintage for v in vintages )
-
+		old_vintages = set( v.vintage for v in vintages )
 		new_vintages = self.cleaned_data['vintages']
 
-		to_remove = vintages - new_vintages
-		for v in to_remove:
-			v = Vintage.objects.get(analysis=a, vintage=v)
-			v.delete()
+		# ensure any associated data with last_period is also dropped
+		last_period = max( new_vintages );
+		to_remove = old_vintages - new_vintages
+		to_remove.add( last_period )
+		Vintage.objects.filter(analysis=a, vintage__in=to_remove).delete()
 
-		to_add = new_vintages - vintages
-		for v in to_add:
-			v = Vintage( analysis=a, vintage=v )
-			v.clean()
-			v.save()
+		for v in (new_vintages - old_vintages):
+			Vintage( analysis=a, vintage=v ).save()
 
 
 
