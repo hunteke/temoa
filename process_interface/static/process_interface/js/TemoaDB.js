@@ -385,6 +385,18 @@ can.Control('Analyses', {
 			}
 
 			showStatus('Analyses loaded.', 'info');
+		}, function ( exception, data, status, xhr ) {
+			if ( 'success' === status ) {
+				console.log( exception );
+				var msg = 'Potential programming error.  If you can recreate this ';
+				msg += 'message after a page reload, please inform the ';
+				msg += 'TemoaProject exactly how.  Library message: "';
+				msg += exception.toString() + '"';
+				showStatus( msg );
+			} else {
+				console.log( exception, data, status, xhr );
+				showStatus( 'Unknown error retrieving analyses data.' );
+			}
 		});
 	},
 	'select change': function ( $el, event ) {
