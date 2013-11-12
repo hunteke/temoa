@@ -139,7 +139,10 @@ function displayErrors ( $el, errors ) {
 		delete errors['General Error'];
 	}
 	for ( var key in errors ) {
-		var $err = $el.find('[name="' + key + '"]').parent().find('.error');
+		var $input = $el.find('[name="' + key + '"]');
+		var $err = $input.parent().find('.error');
+
+		$input.focus(); // ideally only place at first input, but so what ...
 		if ( ! $err.length ) {
 			console.log( 'Warning: no errors displayed.  Element and Error ' +
 			  'object: ', $el, errors );
@@ -564,8 +567,8 @@ can.Control('AnalysisDetail', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			displayErrors( $form, errors );
 			enable( inputs );
+			displayErrors( $form, errors );
 			return;
 		}
 
@@ -712,8 +715,8 @@ can.Control('AnalysisCommodityLists', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			displayErrors( $form, errors );
 			enable( $inputs );
+			displayErrors( $form, errors );
 			return;
 		}
 
@@ -816,8 +819,8 @@ can.Control('CommodityDetail', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			displayErrors( $form, errors );
 			enable( inputs );
+			displayErrors( $form, errors );
 			return;
 		}
 
