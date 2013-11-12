@@ -1,7 +1,8 @@
+(function () {
+
 "use strict";  // ECMA v5 pragma, similar to Perl's functionality.
   // FYI: http://ejohn.org/blog/ecmascript-5-strict-mode-json-and-more/
 
-(function () {
 var COOKIE = 'TemoaDB_UISettings';
 
 var DEBUG = window.location.search.indexOf( 'debug=true' ) > -1;
