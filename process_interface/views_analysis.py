@@ -162,7 +162,7 @@ def analysis_update ( req, analysis_id ):
 		with transaction.commit_on_success():
 			vform.save()
 			aform.save()
-			return analysis_info( req, analysis.pk );
+		return analysis_info( req, analysis.pk );
 
 	data = json.dumps( msgs )
 	res = HttpResponse( data, content_type='application/json', status=status )
