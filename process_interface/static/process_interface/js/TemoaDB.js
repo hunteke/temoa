@@ -460,9 +460,15 @@ can.Control('AnalysisDetail', {
 
 		AnalysisCommodities.findAll( {aId: analysis.id},
 			function ( commodities ) {
-				function _add_to_observe ( observer, obj ) {
+				// Function declarations all at top to avoid confusion.  Hoisting
+				// shouldn't be an issue; let's not inadvertently make it one.
+				function delayed_add_to_map ( map, obj ) {
+					// Obj is not yet finished building.  Harumph.  Exploit single-
+					// threaded nature of browser, and use closure to update the map
+					// after this thread has completed execution and the object is
+					// finished building.
 					setTimeout( function ( ) {
-						observer.attr( obj.name, obj );
+						map.attr( obj.name, obj );
 					}, 1 ); // 1 = delay until after obj builds itself
 				}
 
@@ -491,7 +497,7 @@ can.Control('AnalysisDetail', {
 					} else if ( 'add' === how && typeof( newVal ) === "object" ) {
 						if ( newVal.length && newVal.length > 0 ) {
 							for ( var i = 0; i < newVal.length; ++i ) {
-								_add_to_observe( output, newVal[i] );
+								delayed_add_to_map( output_map, newVal[i] );
 							}
 						}
 					}
