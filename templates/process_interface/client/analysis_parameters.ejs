@@ -2,6 +2,7 @@
 <button type='button' id='AnalysisParametersCloseButton' class='closeButton'>Close</button>
 <% if ( username !== null && (analysis.username === username) ) { %>
 	<form onsubmit='return false;' id='AnalysisSegFracs_<%= analysis.attr('id') %>'></form>
+	<form onsubmit='return false;' id='AnalysisDemandDefaultDistribution_<%= analysis.attr('id') %>'></form>
 	<table class='items segfracs'>
 		<caption>Annual Time Slices (SegFrac), Default Distribution (DD)</caption>
 		<thead><tr><th><button type='button' class='add' id='AddTimeSlice' title='Add new annual slice'>Add</button></th>
@@ -23,6 +24,19 @@
 			</td>
 		<% }); %>
 			<td><%== analysis.segFracSum('html') %></td>
+		</tr><tr class='even'><th><abbr title='"Default Distribution": If specified, will provide a demand distribution different than the average for the timeslice'>DD</abbr></th>
+		<% analysis.segfracs.each( function( sf ) {
+			var ddd = analysis.demanddefaultdistribution.attr( sf.attr('name') );
+		%>
+			<td <%= ($el) -> $el.data('slicedefault', ddd)%>>
+			<% if ( ! sf.isNew() ) { %>
+				<%== ddd.isNew() ? '' : "<button class='remove' disabled='disabled' type='button' name='DDDRemove' title='Press Shift to enable buttons'>Del</button>" %><br />
+				<input form='AnalysisDemandDefaultDistribution_<%= analysis.attr('id') %>' name='DDD_<%= sf.attr('id') %>' type='number' autocomplete='off' value='<%= ddd.attr( 'value' ) || '' %>'>
+				<span class='error'></span>
+			<% } %>
+			</td>
+		<% }); %>
+			<td><%== analysis.dddFracSum('html') %></td>
 		</tr>
 		<tr><td></td><td colspan='<%= Object.keys( analysis.segfracs.attr() ).length %>'><p class='error'></p><button type='button' name='SegFracUpdate'>Update</button><button type='button' name='SegFracCancel'>Cancel</button></td></tr>
 		</tbody>

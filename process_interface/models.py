@@ -380,7 +380,7 @@ class Param_CapacityToActivity ( DM.Model ):
 
 class Param_DemandDefaultDistribution ( DM.Model ):
 	timeslice = DM.ForeignKey( Param_SegFrac, unique=True )
-	fraction  = DM.FloatField()
+	value     = DM.FloatField()
 
 
 	def __unicode__ ( self ):
@@ -389,7 +389,14 @@ class Param_DemandDefaultDistribution ( DM.Model ):
 		time_of_day = self.timeslice.time_of_day
 
 		return u'({}) {}, {}: {}'.format(
-		  analysis, season, time_of_day, self.fraction )
+		  analysis, season, time_of_day, self.value )
+
+
+	def save ( self, *args, **kwargs ):
+		if not ( 0 < self.value and self.value <= 1 ):
+			raise ValidationError( 'Distribution value must be in range (0, 1].' )
+
+		super( Param_DemandDefaultDistribution, self ).save( *args, **kwargs )
 
 
 

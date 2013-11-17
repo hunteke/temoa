@@ -16,12 +16,14 @@ from models import (
   Analysis,
   AnalysisCommodity,
   CommodityType,
+  Param_DemandDefaultDistribution,
   Param_SegFrac,
   Vintage,
 )
 from forms import (
-  AnalysisForm,
   AnalysisCommodityForm,
+  AnalysisForm,
+  DemandDefaultDistributionForm,
   SegFracForm,
   VintagesForm,
 )
@@ -60,6 +62,20 @@ def get_analysis_info ( analyses ):
 	for a in SegFracs:
 		SegFracs[ a ].sort( key=lambda x: (x['season'], x['time_of_day']) )
 
+	DDDistribution = defaultdict(dict)
+	for ddd in Param_DemandDefaultDistribution.objects.filter(
+	  timeslice__analysis__in=analyses ).select_related('timeslice__analysis'
+	):
+		sf  = ddd.timeslice
+		a   = sf.analysis
+		tslice = '{}, {}'.format(sf.season, sf.time_of_day)
+		DDDistribution[ a ][ tslice ] = {
+		  u'aId'   : a.pk,
+		  u'sfId'  : sf.pk,
+		  u'id'    : ddd.pk,
+		  u'value' : ddd.value
+		}
+
 	data = [{
 	    u'id'                   : a.pk,
 	    u'username'             : a.user.username,
@@ -69,6 +85,7 @@ def get_analysis_info ( analyses ):
 	    u'global_discount_rate' : a.global_discount_rate,
 	    u'vintages'             : Vintages[ a ],
 	    u'segfracs'             : SegFracs[ a ],
+	    u'demanddefaultdistribution' : DDDistribution[ a ],
 	  }
 
 	  for a in analyses
@@ -340,6 +357,121 @@ def analysis_delete_segfrac ( req, analysis_id, segfrac_id ):
 	sf = get_object_or_404( Param_SegFrac, pk=segfrac_id, analysis=analysis )
 
 	sf.delete()
+
+	status = 204  # "No Content"
+	res = HttpResponse( '', status=status )
+	set_cookie( req, res );
+
+	return res
+
+
+## DemandDefaultDistribution ##################################################
+
+@require_login
+@require_POST
+@never_cache
+def analysis_create_demanddefaultdistribution ( req, analysis_id, segfrac_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	sf = get_object_or_404( Param_SegFrac, pk=segfrac_id, analysis=analysis )
+
+	status = 201  # 201 = Created
+	msgs = {}
+
+	ddd = Param_DemandDefaultDistribution( timeslice=sf )
+	form = DemandDefaultDistributionForm( req.POST, instance=ddd )
+
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+
+		if 'value' in msgs:
+			msgs['DDD_' + segfrac_id ] = msgs.pop( 'value' )
+
+	else:
+		try:
+			with transaction.commit_on_success():
+				form.save()
+			tslice = '{}, {}'.format(sf.season, sf.time_of_day)
+			msgs.update(
+			  aId   = analysis.pk,
+			  sfId  = sf.pk,
+			  id    = ddd.pk,
+			  value = ddd.value
+			)
+
+		except IntegrityError as ie:
+			status = 422  # to let Javascript know there was an error
+			msg = 'Unable to create default distribution ({}):  It already exists!'
+			msg = msg.format( form.cleaned_data[ 'name' ] )
+			msgs.update({ 'General Error' : msg })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+
+@require_login
+@require_POST
+@never_cache
+def analysis_update_demanddefaultdistribution ( req, analysis_id, ddd_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	ddd = get_object_or_404( Param_DemandDefaultDistribution,
+		pk=ddd_id, timeslice__analysis=analysis )
+
+	status = 200
+	msgs = {}
+
+	form = DemandDefaultDistributionForm( req.POST, instance=ddd )
+
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+		keys = set( msgs.keys() )
+
+		if 'value' in keys:
+			msgs['DDD_{}'.format(ddd.timeslice.pk)] = msgs.pop( 'value' )
+
+	else:
+		try:
+			with transaction.commit_on_success():
+				form.save()
+			sf = ddd.timeslice
+			tslice = '{}, {}'.format(sf.season, sf.time_of_day)
+			msgs.update(
+			  aId   = analysis.pk,
+			  sfId  = sf.pk,
+			  id    = ddd.pk,
+			  value = ddd.value
+			)
+
+		except IntegrityError as ie:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to update default distribution ({}):  Another '
+				'distribution by that name already exists!')
+			msg = msg.format( form.cleaned_data[ 'name' ] )
+			msgs.update({ 'General Error' : msg })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+@require_login
+@require_DELETE
+@never_cache
+def analysis_delete_demanddefaultdistribution ( req, analysis_id, ddd_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	ddd = get_object_or_404( Param_DemandDefaultDistribution,
+		pk=ddd_id, timeslice__analysis=analysis )
+
+	ddd.delete()
 
 	status = 204  # "No Content"
 	res = HttpResponse( '', status=status )

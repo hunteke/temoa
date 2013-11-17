@@ -272,6 +272,35 @@ can.EJS.Helpers.prototype.quote_escape = function ( s ) {
 //                          End EJS helper functions                         //
 ///////////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////////
+//                               Event handlers                              //
+///////////////////////////////////////////////////////////////////////////////
+
+function update_timeslice ( mapping, oldKey ) {
+	// Because the key is a timeslice name, and it is hardcoded by
+	// the server, we need to update it if it changes.  Everything
+	// would right itself if the user reloaded the page, but that
+	// would get cumbersome.
+
+	// Note that this operation requires it's own function so that
+	// 'oldKey' is not bound via closure to an incorrect value.
+	var timeslice = mapping.attr( oldKey ).attr('timeslice');
+	timeslice.on('change',
+		function ( ev, attr, how, newVal, oldVal ) {
+		if ( 'set' !== how )
+			return;
+
+		var newName = timeslice.attr('name');
+		var obj = mapping.attr( oldKey );
+		mapping.attr( newName, obj );
+		mapping.removeAttr( oldKey );
+	});
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//                            End Event handlers                             //
+///////////////////////////////////////////////////////////////////////////////
+
 can.Model('AnalysisCommodity', {
 	findOne: 'GET ' + ROOT_URL + '/analysis/{aId}/commodity/{id}',
 	attributes: {
@@ -344,6 +373,25 @@ can.Model('AnalysisSegFrac', {
 	}
 });
 
+can.Model('AnalysisDemandDefaultDistribution', {
+	create:  'POST /analysis/{aId}/demanddefaultdistribution/create/segfrac/{sfId}',
+	update:  'POST /analysis/{aId}/demanddefaultdistribution/update/{id}',
+	destroy: 'DELETE /analysis/{aId}/demanddefaultdistribution/remove/{id}',
+	attributes: {
+		aId: 'int',
+		sfId: 'int',
+		id: 'int',
+		timeslice: 'AnalysisSegFrac.model',
+		value: 'number'
+	}
+}, {
+	partialUpdate: function ( id, attr ) {
+		var url = '/analysis/{aId}/demanddefaultdistribution/update/{id}';
+		url = replaceNamedArgs( url, this.attr() );
+		return $.post( url, attr );
+	}
+});
+
 can.Model('Analysis', {
 	findAll: 'GET ' + ROOT_URL + '/analysis/list',
 	findOne: 'GET ' + ROOT_URL + '/analysis/view/{aId}',
@@ -365,6 +413,12 @@ can.Model('Analysis', {
 		vintages: 'string',
 		period_0: 'int',
 		segfracs: 'AnalysisSegFrac.models',
+
+		// Comments left to show intended connection.  Problem: CanJS can't
+		// return a /dictionary/ of Models, so instead dynamically create as a
+		// Map of Maps, and convert each item to models during initialization.
+		// (For implementation, search for 'ddd' below.)
+//		demanddefaultdistribution: 'AnalysisDemandDefaultDistribution.models',
 		commodity_demand:   'AnalysisCommodityDemand.models',
 		commodity_emission: 'AnalysisCommidityEmission.models',
 		commodity_physical: 'AnalysisCommodityPhysical.models',
@@ -374,6 +428,22 @@ can.Model('Analysis', {
 		var sum = 0, epsilon = 1e-6;
 		this.segfracs.each( function ( sf ) {
 			sum += sf.attr('value') || 0;
+		});
+		sum = Number(sum.toFixed( 6 ));
+
+		if ( 'html' === style ) {
+			if ( Math.abs(1 - sum) > epsilon )
+				return "<span class='error'>" + sum + '</span>';
+			else
+				return sum
+		}
+
+		return sum;
+	}),
+	dddFracSum: can.compute( function ( style ) {
+		var sum = 0, ddd_list = this.demanddefaultdistribution, epsilon = 1e-6;
+		this.segfracs.each( function ( sf ) {
+			sum += ddd_list[ sf.name() ].attr('value') || 0;
 		});
 		sum = Number(sum.toFixed( 6 ));
 
@@ -576,6 +646,35 @@ can.Control('AnalysisDetail', {
 				// recursion.
 				analysis.on('vintages', update_future_periods );
 				update_future_periods();
+
+				var _segFracs = {};
+				var ddd_map = analysis.demanddefaultdistribution;
+
+				for ( var i = 0; i < segfracs.length; ++i ) {
+					var sf = segfracs[ i ];
+					_segFracs[ sf.attr('name') ] = sf;
+				}
+
+				for ( var sf_key in _segFracs ) {
+					var ddd = ddd_map[ sf_key ];
+					var sf = _segFracs[ sf_key ];
+					if ( ! ddd ) {
+						ddd = new AnalysisDemandDefaultDistribution({
+							aId: analysis.id,
+							sfId: sf.attr('id')
+						});
+					} else if ( ! ddd.isNew ) {
+						// Workaround a lacking feature in CanJS: there appears to
+						// be no way to return a /dictionary/ of models via the
+						// attributes plugin, only a can.List().  Unfortunately, we
+						// only want random access for DDD.  So, we convert each
+						// Map into a Model.
+						ddd = new AnalysisDemandDefaultDistribution( ddd.attr() );
+					}
+					ddd.attr('timeslice', sf);
+					ddd_map.attr( sf_key, ddd );
+					update_timeslice( ddd_map, sf_key );
+				}
 
 				new AnalysisCommodityLists( '#AnalysisCommodities', {
 					analysis: analysis });
@@ -1007,17 +1106,43 @@ can.Control('AnalysisParameters', {
 
 		segfracs.unshift( new AnalysisSegFrac({ aId: this.analysis.id }));
 	},
+	'#AddDemandDistribution click': function ( $el, ev ) {
+		var com_demands = this.analysis.commodity_demand;
+		var dsd_list = this.analysis.demandspecificdistribution;
+		var $rows = $el.closest('table').find( 'tbody tr.dsd');
+
+		if ( dsd_list !== null ) {
+			if ( dsd_list.length === com_demands.length ) {
+				var msg = 'All demands are already visible.';
+				if ( ! dsd_list[ 0 ].attr('name') )
+					msg = 'Please save new demand before adding another.';
+				showStatus( msg, 'info' );
+
+				return;
+			} else if ( ! dsd_list[ 0 ].attr('name') ) {
+				return; // only add one new DSD at a time.
+			}
+		} else {
+			dsd_list = new can.List();
+			this.analysis.demandspecificdistribution = dsd_list;
+		}
+
+		dsd_list.unshift( new can.Map());
+	},
 	saveSegFracs: function ( $el ) {  // AnalysisParameters
 		var aId = this.analysis.id;
 		var errors  = {};
 		var to_save = new Array();
 		var slice_name_id_re = /^SliceName_(\d*|New)$/;
 		var slice_name_val_re = /^([A-z_]\w*),\s*([A-z_]\w*)$/
+		var defaultdemand_id_re = /^DDD_(\d*)$/;
 
 		var $sfForm = $( 'form#AnalysisSegFracs_' + aId );
+		var $ddForm = $( 'form#AnalysisDemandDefaultDistribution_' + aId );
 		var $sfTable = $el.closest('.segfracs');
 		var $inputs = $sfTable.find(':input').not("[disabled='disabled']");
 		var sfData  = can.deparam( $sfForm.serialize() );
+		var ddData  = can.deparam( $ddForm.serialize() );
 
 		$sfTable.find('.error').empty(); // remove any previous attempt's errors
 		disable( $inputs );
@@ -1047,6 +1172,21 @@ can.Control('AnalysisParameters', {
 			}
 		}
 
+		for ( var name in ddData ) {
+			ddData[ name ] = $.trim( ddData[ name ]);
+			if ( name.match( defaultdemand_id_re ) ) {
+				if ( ddData[ name ] === '' )
+					continue;  // it /could/ be empty -- that's okay.
+				if ( isNaN(Number( ddData[ name ]) )
+					|| ! (0 < Number( ddData[ name ])
+					       && Number( ddData[ name ] ) <= 1)
+				) {
+					var msg = 'Must be blank, or a number in the range (0, 1].';
+					errors[ name ] = [msg];
+				}
+			}
+		}
+
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
@@ -1068,6 +1208,14 @@ can.Control('AnalysisParameters', {
 				  time_of_day: sf_tod,
 				  value:       sfData[ 'SliceValue_' + sfId ],
 				}]);
+			}
+		}
+
+		for ( var name in ddData ) {
+			var sel = '[name="' + name +'"]';
+			var ddd = $sfTable.find( sel ).closest('td').data('slicedefault');
+			if ( name.match( defaultdemand_id_re ) ) {
+				to_save.push( [ddd, {value: ddData[ name ]}] )
 			}
 		}
 
