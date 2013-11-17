@@ -1,8 +1,9 @@
+import json
+
 from django.contrib.auth.models import User
 from django.core.context_processors import csrf
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, render_to_response
-from django.utils import simplejson as json
 from django.views.decorators.cache import cache_control
 
 from decorators.http import require_GET

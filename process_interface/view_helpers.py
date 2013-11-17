@@ -1,8 +1,8 @@
 from base64 import b64encode
+import json
 
 from django.contrib import messages
 from django.http import HttpResponse
-from django.utils import simplejson as json
 
 
 def set_cookie ( req, res, **kwargs ):

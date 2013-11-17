@@ -1,11 +1,11 @@
 from collections import defaultdict
+import json
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django.utils import simplejson as json
 from django.views.decorators.cache import never_cache
 
 from decorators.http import require_POST, require_DELETE
