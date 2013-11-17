@@ -39,11 +39,11 @@ if ( username && username === analysis.username ) { %>
 					<% technology.attr('inputsplits').each( function ( is ) { %>
 						<tr <%= ($el) -> $el.data('inputsplit', is) %>>
 							<% if ( is.isNew() ) { %>
-								<td><button type='button' class='remove hidden' name='InputSplitRemove'>Cancel</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='InputSplitRemove'>Cancel</button></td>
 								<td><span class='error'></span><input form='FormTechnologyInputSplits_<%= technology.attr('id') %>' type='text'   class='techinputsplit_input' name='InputSplitNew_inp' autocomplete='off' list='CommodityPhysicalList'></td>
 								<td><span class='error'></span><input form='FormTechnologyInputSplits_<%= technology.attr('id') %>' type='number' class='techinputsplit_input' name='InputSplitNew_value'></td>
 							<% } else { %>
-								<td><button type='button' class='remove hidden' name='InputSplitRemove'>Del</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='InputSplitRemove'>Del</button></td>
 								<td><%= is.attr('inp') %></td>
 								<td><span class='error'></span><input form='FormTechnologyInputSplits_<%= technology.attr('id') %>' type='number' class='techinputsplit_input' name='InputSplit_<%= is.attr('id') %>' value='<%= is.attr('value') %>'></td>
 							<% } %>
@@ -61,11 +61,11 @@ if ( username && username === analysis.username ) { %>
 					<% technology.attr('outputsplits').each( function ( os ) { %>
 						<tr <%= ($el) -> $el.data('outputsplit', os) %>>
 							<% if ( os.isNew() ) { %>
-								<td><button type='button' class='remove hidden' name='OutputSplitRemove'>Cancel</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='OutputSplitRemove'>Cancel</button></td>
 								<td><span class='error'></span><input form='FormTechnologyOutputSplits_<%= technology.attr('id') %>' type='text'   class='techoutputsplit_output' name='OutputSplitNew_out' autocomplete='off' list='CommodityOutputList'></td>
 								<td><span class='error'></span><input form='FormTechnologyOutputSplits_<%= technology.attr('id') %>' type='number' class='techoutputsplit_output' name='OutputSplitNew_value'></td>
 							<% } else { %>
-								<td><button type='button' class='remove hidden' name='OutputSplitRemove'>Del</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='OutputSplitRemove'>Del</button></td>
 								<td><%= os.attr('out') %></td>
 								<td><span class='error'></span><input form='FormTechnologyOutputSplits_<%= technology.attr('id') %>' type='number' class='techoutputsplit_output' name='OutputSplit_<%= os.attr('id') %>' value='<%= os.attr('value') %>'></td>
 							<% } %>

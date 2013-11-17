@@ -56,12 +56,12 @@ if ( username && process.isNew() ) { %>
 					<% process.attr('efficiencies').each( function ( e ) { %>
 						<tr <%= ($el) -> $el.data('efficiency', e) %>>
 							<% if ( e.isNew() ) { %>
-								<td><button type='button' class='remove hidden' name='EfficiencyRemove'>Cancel</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='EfficiencyRemove'>Cancel</button></td>
 								<td><span class='error'></span><input form='ProcessEfficiencies_<%= process.attr('id') %>' type='text' class='efficiency_input' name='EfficiencyNew_inp' autocomplete='off' list='CommodityPhysicalList'></td>
 								<td><span class='error'></span><input form='ProcessEfficiencies_<%= process.attr('id') %>' type='text' class='efficiency_input' name='EfficiencyNew_out' autocomplete='off' list='CommodityOutputList'></td>
 								<td><span class='error'></span><input form='ProcessEfficiencies_<%= process.attr('id') %>' type='number' class='efficiency_input' name='EfficiencyNew_value'></td>
 							<% } else { %>
-								<td><button type='button' class='remove hidden' name='EfficiencyRemove'>Del</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='EfficiencyRemove'>Del</button></td>
 								<td><%= e.attr('inp') %></td>
 								<td><%= e.attr('out') %></td>
 								<td><span class='error'></span><input form='ProcessEfficiencies_<%= process.attr('id') %>' type='number' class='efficiency_input' name='Efficiency_<%= e.attr('id') %>' value='<%= e.attr('value') %>'></td>
@@ -80,12 +80,12 @@ if ( username && process.isNew() ) { %>
 					<% process.attr('emissionactivities').each( function ( ea ) { %>
 						<tr <%= ($el) -> $el.data('emissionactivity', ea) %>>
 							<% if ( ea.isNew() ) { %>
-								<td><button type='button' class='remove hidden' name='EmissionActivityRemove'>Cancel</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='EmissionActivityRemove'>Cancel</button></td>
 								<td><span class='error'></span><input form='ProcessEmissionActivities_<%= process.attr('id') %>' type='text' class='emissionactivity_input' name='EmissionActivityNew_pol' autocomplete='off' list='CommodityPhysicalList'></td>
 								<td><span class='error'></span><input form='ProcessEmissionActivities_<%= process.attr('id') %>' type='text' class='emissionactivity_input' name='EmissionActivityNew_eff' autocomplete='off' list='CommodityOutputList'></td>
 								<td><span class='error'></span><input form='ProcessEmissionActivities_<%= process.attr('id') %>' type='number' class='emissionactivity_input' name='EmissionActivityNew_value'></td>
 							<% } else { %>
-								<td><button type='button' class='remove hidden' name='EmissionActivityRemove'>Del</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='EmissionActivityRemove'>Del</button></td>
 								<td><%= ea.attr('pollutant') %></td>
 								<td><%= ea.attr('efficiency').attr('inp') %> &rarr; <%= ea.attr('efficiency').attr('out') %></td>
 								<td><span class='error'></span><input form='ProcessEmissionActivities_<%= process.attr('id') %>' type='number' class='emissionactivity_input' name='EmissionActivity_<%= ea.attr('id') %>' value='<%= ea.attr('value') %>'></td>
@@ -104,11 +104,11 @@ if ( username && process.isNew() ) { %>
 					<% process.attr('costsfixed').each( function ( cf ) { %>
 						<tr <%= ($el) -> $el.data('costfixed', cf) %>>
 							<% if ( cf.isNew() ) { %>
-								<td><button type='button' class='remove hidden' name='CostFixedRemove'>Cancel</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CostFixedRemove'>Cancel</button></td>
 								<td><span class='error'></span><input form='ProcessCostsFixed_<%= process.attr('id') %>' type='text'   class='costfixed_input' name='CostFixedNew_per' autocomplete='off' list='CommodityPhysicalList'></td>
 								<td><span class='error'></span><input form='ProcessCostsFixed_<%= process.attr('id') %>' type='number' class='costfixed_input' name='CostFixedNew_value'></td>
 							<% } else { %>
-								<td><button type='button' class='remove hidden' name='CostFixedRemove'>Del</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CostFixedRemove'>Del</button></td>
 								<td><%= cf.attr('period') %></td>
 								<td><span class='error'></span><input form='ProcessCostsFixed_<%= process.attr('id') %>' type='number' class='costfixed_input' name='CostFixed_<%= cf.attr('id') %>' value='<%= cf.attr('value') %>'></td>
 							<% } %>
@@ -126,11 +126,11 @@ if ( username && process.isNew() ) { %>
 					<% process.attr('costsvariable').each( function ( cv ) { %>
 						<tr <%= ($el) -> $el.data('costvariable', cv) %>>
 							<% if ( cv.isNew() ) { %>
-								<td><button type='button' class='remove hidden' name='CostVariableRemove'>Cancel</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CostVariableRemove'>Cancel</button></td>
 								<td><span class='error'></span><input form='ProcessCostsVariable_<%= process.attr('id') %>' type='text'   class='costvariable_input' name='CostVariableNew_per' autocomplete='off' list='CommodityPhysicalList'></td>
 								<td><span class='error'></span><input form='ProcessCostsVariable_<%= process.attr('id') %>' type='number' class='costvariable_input' name='CostVariableNew_value'></td>
 							<% } else { %>
-								<td><button type='button' class='remove hidden' name='CostVariableRemove'>Del</button></td>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CostVariableRemove'>Del</button></td>
 								<td><%= cv.attr('period') %></td>
 								<td><span class='error'></span><input form='ProcessCostsVariable_<%= process.attr('id') %>' type='number' class='costvariable_input' name='CostVariable_<%= cv.attr('id') %>' value='<%= cv.attr('value') %>'></td>
 							<% } %>
