@@ -972,10 +972,15 @@ can.Control('AnalysisDetail', {
 		showStatus('Alteration cancelled', 'info');
 	},
 	'input keyup': function ( $el, ev ) {
-		if ( $el.attr('form') && $el.attr('form').indexOf( 'Analysis' ) === 0 ) {
-			if ( 13 === ev.keyCode ) {
-				this.save( $el );
-			}
+		if ( 13 !== ev.keyCode )
+			return;
+
+		if ( ! $el.attr('form') )
+			return;
+
+		var $formAttr = $el.attr('form');
+		if ( $el.attr('form').indexOf( 'AnalysisInfoForm_' ) === 0 ) {
+			this.save( $el );
 		}
 	},
 });
