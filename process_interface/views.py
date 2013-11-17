@@ -11,6 +11,7 @@ from forms import LoginForm
 
 from views_analysis import *
 from views_auth import *
+from views_download import *
 from views_process import *
 from views_technology import *
 

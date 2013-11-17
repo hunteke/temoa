@@ -36,6 +36,8 @@
 	<% if ( ! analysis.isNew() ) { %>
 		<button type='button' id='ShowHideCommodities'>Analysis Commodities</button>
 		<button type='button' id='ShowHideAnalysisParameters'>Analysis Parameters</button>
+		<a href='/analysis/<%= analysis.id %>/download_as_dat'
+		   download='<%= analysis.download_name() %>'><button type='button' id='DownloadDataFile'>Download as DAT</button></a>
 	<% } %>
 	<div id='AnalysisCommodities'></div>
 	<div id='AnalysisParameters'></div>

@@ -19,6 +19,7 @@ from views import (
   analysis_info,
   analysis_update,
   analysis_create,
+  analysis_download_as_dat,
 
   analysis_commodity_list,
   analysis_create_commodity,
@@ -92,6 +93,7 @@ urlpatterns = patterns('',
   url(r'^analysis/create$', analysis_create, name='analysis_create'),
   url(r'^analysis/(?P<analysis_id>\d+)$', analysis_info, name='analysis_info'),
   url(r'^analysis/(?P<analysis_id>\d+)/update$', analysis_update, name='analysis_update'),
+  url(r'^analysis/(?P<analysis_id>\d+)/download_as_dat$', analysis_download_as_dat, name='analysis_download_as_dats'),
 
 # AnalysisSegFrac
   url(r'^analysis/(?P<analysis_id>\d+)/segfrac/create$', analysis_create_segfrac, name='analysis_create_segfrac' ),

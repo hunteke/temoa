@@ -477,6 +477,14 @@ can.Model('Analysis', {
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	},
+	download_name: function ( ) {
+		var name = this.name;
+		name = name.replace( / +/g, '_' );
+		name = name.replace( /\W/g, '' );
+		name = name.replace( /(\.[Dd][Aa][Tt])+$/, '' );
+		name = name + '.dat';
+		return name;
+	},
 	segFracSum: can.compute( function ( style ) {
 		var sum = 0, epsilon = 1e-6;
 		this.segfracs.each( function ( sf ) {
