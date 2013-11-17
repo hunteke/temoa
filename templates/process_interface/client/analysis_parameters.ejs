@@ -1,0 +1,31 @@
+<% var oddeven = ['odd', 'even'], count, sum, epsilon = 1e-7; %>
+<button type='button' id='AnalysisParametersCloseButton' class='closeButton'>Close</button>
+<% if ( username !== null && (analysis.username === username) ) { %>
+	<form onsubmit='return false;' id='AnalysisSegFracs_<%= analysis.attr('id') %>'></form>
+	<table class='items segfracs'>
+		<caption>Annual Time Slices (SegFrac), Default Distribution (DD)</caption>
+		<thead><tr><th><button type='button' class='add' id='AddTimeSlice' title='Add new annual slice'>Add</button></th>
+		<% analysis.segfracs.each( function( s ) { %>
+			<th <%= ($el) -> $el.data('segfrac', s ) %>>
+				<button class='remove' disabled='disabled' type='button' name='SegFracRemove' title='Press Shift to enable buttons'>Del</button><br />
+				<input form='AnalysisSegFracs_<%= analysis.attr('id') %>' name='<%= s.isNew() ? 'SliceName_New' : 'SliceName_' + s.attr('id') %>' type='text' autocomplete='off' placeholder='[season], [daily_seg]' value='<%= s.attr('name') || '' %>'>
+				<span class='error'></span>
+			</th>
+		<% }); %>
+		<th><em>Total</em></th>
+		</tr></thead>
+		<tbody>
+		<tr class='odd'><th>SegFrac</th>
+		<% analysis.segfracs.each( function( sf ) { %>
+			<td>
+				<input form='AnalysisSegFracs_<%= analysis.attr('id') %>' name='<%= sf.isNew() ? 'SliceValue_New' : 'SliceValue_' + sf.attr('id') %>' type='number' autocomplete='off' value='<%= sf.attr( 'value' ) || '' %>'>
+				<span class='error'></span>
+			</td>
+		<% }); %>
+			<td><%== analysis.segFracSum('html') %></td>
+		</tr>
+		<tr><td></td><td colspan='<%= Object.keys( analysis.segfracs.attr() ).length %>'><p class='error'></p><button type='button' name='SegFracUpdate'>Update</button><button type='button' name='SegFracCancel'>Cancel</button></td></tr>
+		</tbody>
+	</table>
+<% } else { %>
+<% } %>

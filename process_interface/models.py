@@ -32,7 +32,7 @@ __all__ = (
   'Vintage'
 )
 
-import math
+import math, re
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -97,6 +97,26 @@ class Param_SegFrac ( DM.Model ):
 	def __unicode__ ( self ):
 		return u'({}) {}, {}: {}'.format(
 		   self.analysis, self.season, self.time_of_day, self.value )
+
+
+	def save ( self, *args, **kwargs ):
+		name_re = re.compile( r'^[A-z_]\w*$' )
+		if not name_re.match( self.season ):
+			msg = ('Season name is not valid.  Use only alphanumeric (A-z, 0-9, '
+			  'and underscore [_]) characters and begin with a letter.')
+			raise ValidationError( msg )
+
+		if not name_re.match( self.time_of_day ):
+			msg = ('"Time of Day" name is not valid.  Use only alphanumeric '
+			  '(A-z, 0-9, and underscore [_]) characters and begin with a '
+			  'letter.')
+			raise ValidationError( msg )
+
+		if self.value and not (0 < self.value and self.value <= 1):
+			msg = 'Time slice must be a fractional value between 0 and 1.'
+			raise ValidationError( msg )
+
+		super( Param_SegFrac, self ).save( *args, **kwargs )
 
 
 

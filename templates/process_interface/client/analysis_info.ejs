@@ -33,6 +33,13 @@
 	</table>
 	<p class='error'></p>
 	</form>
+	<% if ( ! analysis.isNew() ) { %>
+		<button type='button' id='ShowHideCommodities'>Analysis Commodities</button>
+		<button type='button' id='ShowHideAnalysisParameters'>Analysis Parameters</button>
+	<% } %>
+	<div id='AnalysisCommodities'></div>
+	<div id='AnalysisParameters'></div>
+</div>
 <% } else { %>
 <div class='analysis' id='AnalysisUpdateForm_<%= analysis.attr('id') %>'>
 	<table>
@@ -44,10 +51,10 @@
 			<tr><th>Vintages:</th><td class='full_input textleftalign'><%= analysis.attr('vintages') ? analysis.attr('vintages') : 'No vintages specified' %></td></tr>
 		</tbody>
 	</table>
-<% } %>
-	<%== analysis.isNew() ? '' : "<button type='button' id='ShowHideCommodities'>Toggle Commodities</button>" %>
-	<%== analysis.isNew() ? '' : "<button type='button' id='ShowHideDemands'>Toggle Demands</button>" %>
+	<%== analysis.isNew() ? '' : "<button type='button' id='ShowHideCommodities'>Analysis Commodities</button>" %>
+	<%== analysis.isNew() ? '' : "<button type='button' id='ShowHideAnalysisParameters'>Analysis Parameters</button>" %>
 	<div id='AnalysisCommodities' class='hidden'></div>
-	<div id='AnalysisDemands' class='hidden'></div>
+	<div id='AnalysisParameters' class='hidden'></div>
 </div>
+<% } %>
 

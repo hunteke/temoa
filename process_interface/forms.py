@@ -116,6 +116,51 @@ class TechnologyForm ( F.ModelForm ):
 		fields = ('name', 'capacity_to_activity', 'description')
 
 
+
+class SegFracForm ( F.Form ):
+	# All fields on the model are required.  However, the UI may only send what
+	# has changed, so the Form fields are _not_ required.  The DB layer will
+	# throw an error if not all fields have been set.
+	season      = F.RegexField( required=False, label=_('Season'), regex=r'^[A-z_]\w*$' )
+	time_of_day = F.RegexField( required=False, label=_('Time of Day'), regex=r'^[A-z_]\w*$' )
+	value       = F.FloatField( required=False, label=_('Fraction') )
+
+	def __init__ ( self, *args, **kwargs ):
+		self.instance = kwargs.pop( 'instance' )
+		super( SegFracForm, self ).__init__( *args, **kwargs )
+
+
+	def clean_value ( self ):
+		cd = self.cleaned_data
+
+		if ( 'value' in cd and cd['value'] is not None ):
+			if not ( 0 < cd['value'] and cd['value'] <= 1 ):
+				msg = 'Please specify a value in the range (0, 1].'
+				raise F.ValidationError( msg )
+
+		else:
+			if not self.instance.value:
+				msg = 'Please specify a value in the range (0, 1].'
+				raise F.ValidationError( msg )
+
+		return 'value' in cd and cd['value'] or None
+
+
+	def save ( self ):
+		sf = self.instance
+		cd = self.cleaned_data
+
+		for field in ('season', 'time_of_day', 'value'):
+			if field in cd and cd[ field ]:
+				setattr( sf, field, cd[ field ] )
+
+		# convenience for UI, in case of error
+		cd['name'] = u'{}, {}'.format( sf.season, sf.time_of_day )
+
+		sf.save()
+
+
+
 class AnalysisCommodityForm ( F.Form ):
 	name = F.RegexField( label=_('Name'), regex=r'^[A-z_]\w*$' )
 

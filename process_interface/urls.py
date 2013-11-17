@@ -25,6 +25,10 @@ from views import (
   analysis_update_commodity,
   analysis_delete_commodity,
 
+  analysis_create_segfrac,
+  analysis_update_segfrac,
+  analysis_delete_segfrac,
+
   technology_list,
   technology_create,
   technology_update,
@@ -76,6 +80,11 @@ urlpatterns = patterns('',
   url(r'^analysis/create$', analysis_create, name='analysis_create'),
   url(r'^analysis/(?P<analysis_id>\d+)$', analysis_info, name='analysis_info'),
   url(r'^analysis/(?P<analysis_id>\d+)/update$', analysis_update, name='analysis_update'),
+
+# AnalysisSegFrac
+  url(r'^analysis/(?P<analysis_id>\d+)/segfrac/create$', analysis_create_segfrac, name='analysis_create_segfrac' ),
+  url(r'^analysis/(?P<analysis_id>\d+)/segfrac/update/(?P<segfrac_id>\d+)$', analysis_update_segfrac, name='analysis_update_segfrac' ),
+  url(r'^analysis/(?P<analysis_id>\d+)/segfrac/remove/(?P<segfrac_id>\d+)$', analysis_delete_segfrac, name='analysis_delete_segfrac' ),
 
 # Process
   url(r'^analysis/(?P<analysis_id>\d+)/process/list$', process_list, name='process_list'),

@@ -319,6 +319,30 @@ can.Model('AnalysisCommodities', {
 	}
 }, {});
 
+can.Model('AnalysisSegFrac', {
+	create:  'POST ' + ROOT_URL + '/analysis/{aId}/segfrac/create',
+	update:  'POST ' + ROOT_URL + '/analysis/{aId}/segfrac/update/{id}',
+	destroy: 'DELETE /analysis/{aId}/segfrac/remove/{id}',
+	attributes: {
+		aId: 'int',
+		id: 'int',
+		season: 'string',
+		time_of_day: 'string',
+		value: 'number'
+	}
+}, {
+	name: can.compute( function ( ) {
+		var s = this.attr('season'), tod = this.attr('time_of_day');
+		if ( s && tod )
+			return s + ', ' + tod;
+		return '';
+	}),
+	partialUpdate: function ( id, attr ) {
+		var url = ROOT_URL + '/analysis/{aId}/segfrac/update/{id}';
+		url = replaceNamedArgs( url, this.attr() );
+		return $.post( url, attr );
+	}
+});
 
 can.Model('Analysis', {
 	findAll: 'GET ' + ROOT_URL + '/analysis/list',
@@ -340,11 +364,29 @@ can.Model('Analysis', {
 		global_discount_rate: 'number',
 		vintages: 'string',
 		period_0: 'int',
+		segfracs: 'AnalysisSegFrac.models',
 		commodity_demand:   'AnalysisCommodityDemand.models',
 		commodity_emission: 'AnalysisCommidityEmission.models',
 		commodity_physical: 'AnalysisCommodityPhysical.models',
 	}
-}, {});
+}, {
+	segFracSum: can.compute( function ( style ) {
+		var sum = 0, epsilon = 1e-6;
+		this.segfracs.each( function ( sf ) {
+			sum += sf.attr('value') || 0;
+		});
+		sum = Number(sum.toFixed( 6 ));
+
+		if ( 'html' === style ) {
+			if ( Math.abs(1 - sum) > epsilon )
+				return "<span class='error'>" + sum + '</span>';
+			else
+				return sum
+		}
+
+		return sum;
+	}),
+});
 
 function clearAnalysisViews ( ) {
 	$('#ProcessList .items').replaceWith(
@@ -470,27 +512,27 @@ can.Control('AnalysisDetail', {
 						map.attr( obj.name, obj );
 					}, 1 ); // 1 = delay until after obj builds itself
 				}
+				function update_future_periods ( ev, attr, how, newVal, oldVal ) {
+					var new_fp_list = analysis.vintages.split(',');
+					var fp_list = analysis.future_periods;
+					for ( var i = 0; i < new_fp_list.length; ++i )
+						new_fp_list[ i ] = +new_fp_list[ i ];
+					new_fp_list.sort( numericSort );
 
-				// findAll returns a list, in this case of length 1
-				var coms = commodities[0];
-				var cp = coms.physical;
-				var cd = coms.demand;
-				analysis.attr( 'commodity_emission', coms.emission );
-				analysis.attr( 'commodity_demand', cd );
-				analysis.attr( 'commodity_physical', cp );
-
-				var output = new can.Observe();
-				analysis.attr('commodity_output', output);
-				for ( var i = 0; i < cp.length; ++i )
-					output.attr( cp[ i ].name, cp[ i ] );
-				for ( var i = 0; i < cd.length; ++i )
-					output.attr( cd[ i ].name, cd[ i ] );
-
-				function output_change ( ev, attr, how, newVal, oldVal ) {
+					fp_list.splice( 0 ); // remove all current elements
+					for ( var i = 0; i < new_fp_list.length -1; ++i ) {
+						// -1 == last year, which is _not_ a period
+						if ( +new_fp_list[ i ] < analysis.period_0 )
+							continue;
+						fp_list.push( new_fp_list[i] );
+					}
+				}
+				function update_outputs ( ev, attr, how, newVal, oldVal ) {
+					var output_map = analysis.commodity_output;
 					if ( 'remove' === how && typeof( oldVal ) === "object" ) {
 						if ( oldVal.length && oldVal.length > 0 ) {
 							for ( var i = 0; i < oldVal.length; ++i ) {
-								output.removeAttr( oldVal[i].name );
+								output_map.removeAttr( oldVal[i].name );
 							}
 						}
 					} else if ( 'add' === how && typeof( newVal ) === "object" ) {
@@ -501,10 +543,43 @@ can.Control('AnalysisDetail', {
 						}
 					}
 				}
-				cp.bind('change', output_change );
-				cd.bind('change', output_change );
+
+				// findAll returns a list, in this case of length 1
+				var cp = commodities[0].physical;
+				var cd = commodities[0].demand;
+				var ce = commodities[0].emission;
+				var c_output = new can.Map(); // to be union of cd & cp
+				var future_periods = new can.List();
+				var segfracs = analysis.segfracs || new can.List();
+
+				analysis.attr({
+					commodity_emission: ce,
+					commodity_demand:   cd,
+					commodity_physical: cp,
+					commodity_output:   c_output,  // to be union of cd & cp
+					future_periods:     future_periods,
+					segfracs:           segfracs,
+				});
+
+				// set up commodity_output as union of demand and physical
+				for ( var i = 0; i < cp.length; ++i )
+					c_output.attr( cp[ i ].name, cp[ i ] );
+				for ( var i = 0; i < cd.length; ++i )
+					c_output.attr( cd[ i ].name, cd[ i ] );
+
+				cp.on('change', update_outputs );
+				cd.on('change', update_outputs );
+
+				// important to bind to the specific attribute, rather than the
+				// 'change' event.  Otherwise, the .push() will cause a 'change'
+				// event that bubbles to the analysis model, initiating infinite
+				// recursion.
+				analysis.on('vintages', update_future_periods );
+				update_future_periods();
 
 				new AnalysisCommodityLists( '#AnalysisCommodities', {
+					analysis: analysis });
+				new AnalysisParameters( '#AnalysisParameters', {
 					analysis: analysis });
 			}
 		).fail( function ( error ) {
@@ -513,9 +588,10 @@ can.Control('AnalysisDetail', {
 		});
 
 		$el.find('#ShowHideCommodities').click( function ( ev ) {
-			$('#AnalysisCommodities').toggle( 'slide', {
-				direction: 'left'
-			});
+			$('#AnalysisCommodities').toggle( 'slide', { direction: 'left' });
+		});
+		$el.find('#ShowHideAnalysisParameters').click( function ( ev ) {
+			$('#AnalysisParameters').toggle( 'slide', { direction: 'left' });
 		});
 	},
 	save: function ( $el ) {
@@ -811,10 +887,10 @@ can.Control('CommodityDetail', {
 		$el.append( can.view( view, view_opts ));
 	},
 	save: function ( $el ) {
-		var errors  = {};
-		var $form   = $el.closest( 'form' );
+		var errors = {};
+		var $form  = $el.closest( 'form' );
 		var inputs = $form.find('input,textarea');
-		var data    = can.deparam( $form.serialize() );
+		var data   = can.deparam( $form.serialize() );
 
 		disable( inputs );
 		$form.find('.error').empty();  // remove any previous errors

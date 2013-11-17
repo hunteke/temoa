@@ -1,3 +1,4 @@
+from collections import defaultdict
 from itertools import imap
 
 from django.contrib.auth.decorators import login_required
@@ -16,30 +17,74 @@ from models import (
   Analysis,
   AnalysisCommodity,
   CommodityType,
+  Param_SegFrac,
   Vintage,
 )
-from forms import AnalysisForm, AnalysisCommodityForm, VintagesForm
+from forms import (
+  AnalysisForm,
+  AnalysisCommodityForm,
+  SegFracForm,
+  VintagesForm,
+)
+
+
+def get_analysis_info ( analyses ):
+	if not analyses:
+		return { 'data' : [] }
+
+	def nested_defaultdict ( cls ):
+		def wrapped ( ):
+			return defaultdict( cls )
+		return wrapped
+
+	Vintages = defaultdict(list)
+	for v in Vintage.objects.filter(
+	  analysis__in=analyses ).select_related('analysis'):
+		Vintages[ v.analysis ].append( v.vintage )
+	for a in Vintages:
+		Vintages[ a ] = ', '.join( imap( str, sorted( Vintages[ a ] )))
+
+	SegFracs = defaultdict(list)
+	for sf in Param_SegFrac.objects.filter(
+	  analysis__in=analyses ).select_related(
+	  'analysis'
+	):
+		s   = sf.season
+		tod = sf.time_of_day
+		SegFracs[ sf.analysis ].append({
+		  u'aId'         : sf.analysis.pk,
+		  u'id'          : sf.pk,
+		  u'season'      : sf.season,
+		  u'time_of_day' : sf.time_of_day,
+		  u'value'       : sf.value
+		})
+	for a in SegFracs:
+		SegFracs[ a ].sort( key=lambda x: (x['season'], x['time_of_day']) )
+
+	data = [{
+	    u'id'                   : a.pk,
+	    u'username'             : a.user.username,
+	    u'name'                 : a.name,
+	    u'description'          : a.description,
+	    u'period_0'             : a.period_0,
+	    u'global_discount_rate' : a.global_discount_rate,
+	    u'vintages'             : Vintages[ a ],
+	    u'segfracs'             : SegFracs[ a ],
+	  }
+
+	  for a in analyses
+	]
+
+	return data
 
 
 @never_cache
 def analysis_list ( req ):
-	analyses = [
-	  { 'id'                   : a.pk,
-	    'username'             : a.user.username,
-	    'name'                 : a.name,
-	    'description'          : a.description,
-	    'period_0'             : a.period_0,
-	    'global_discount_rate' : a.global_discount_rate,
-	  }
+	analyses = Analysis.objects.all().order_by( 'user__username', 'name' )
 
-	  for a in Analysis.objects.all().order_by( 'user__username', 'name' )
-	]
+	data = get_analysis_info( analyses )
 
-	for a in analyses:
-		a['vintages'] = ', '.join(imap(str, sorted( v.vintage for v in
-		  Vintage.objects.filter( analysis__pk=a['id'] ) )))
-
-	data = json.dumps( analyses )
+	data = json.dumps({ 'data' : data })
 	res = HttpResponse( data, content_type='application/json' )
 	res['Content-Length'] = len( data )
 	set_cookie( req, res )
@@ -172,6 +217,139 @@ def analysis_update ( req, analysis_id ):
 	return res
 
 
+## SegFrac ####################################################################
+
+@require_login
+@require_POST
+@never_cache
+def analysis_create_segfrac ( req, analysis_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+
+	status = 201  # 201 = Created
+	msgs = {}
+
+	sf = Param_SegFrac( analysis=analysis )
+	form = SegFracForm( req.POST, instance=sf )
+
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+		keys = set( msgs.keys() )
+
+		if '__all__' in keys:
+			msgs['General Error'] = msgs.pop('__all__')
+
+		if 'season' in keys:
+			msgs['SliceName_New'] = msgs.pop( 'season' )
+		elif 'time_of_day' in keys:
+			msgs['SliceName_New'] = msgs.pop( 'time_of_day' )
+
+		if 'value' in keys:
+			msgs['SliceValue_New'] = msgs.pop( 'value' )
+
+
+	else:
+		try:
+			with transaction.commit_on_success():
+				form.save()
+			tslice = '{}, {}'.format(sf.season, sf.time_of_day)
+			msgs.update(
+			  aId   = analysis.pk,
+			  id    = sf.pk,
+			  value = sf.value
+			)
+
+		except IntegrityError as ie:
+			status = 422  # to let Javascript know there was an error
+			msg = 'Unable to create time slice ({}):  It already exists!'
+			msg = msg.format( form.cleaned_data[ 'name' ] )
+			msgs.update({ 'General Error' : msg })
+		except ValidationError as ve:
+			status = 422  # to let Javascript know there was an error
+			msg = 'Unable to create time slice ({}).  Database said: {}'
+			msg = msg.format( form.cleaned_data[ 'name' ], ve.messages[0] )
+			msgs.update({ 'General Error' : msg })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+
+@require_login
+@require_POST
+@never_cache
+def analysis_update_segfrac ( req, analysis_id, segfrac_id ):
+	analysis  = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	sf = get_object_or_404( Param_SegFrac, pk=segfrac_id, analysis=analysis )
+
+	status = 200
+	msgs = {}
+
+	form = SegFracForm( req.POST, instance=sf )
+
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+		keys = set( msgs.keys() )
+
+		if '__all__' in keys:
+			msgs['General Error'] = msgs.pop('__all__')
+
+		if 'season' in keys:
+			msgs['SliceName_{}'.format(sf.pk)] = msgs.pop( 'season' )
+		elif 'time_of_day' in keys:
+			msgs['SliceName_{}'.format(sf.pk)] = msgs.pop( 'time_of_day' )
+
+		if 'value' in keys:
+			msgs['SliceValue_{}'.format(sf.pk)] = msgs.pop( 'value' )
+
+	else:
+		try:
+			with transaction.commit_on_success():
+				form.save()
+			tslice = '{}, {}'.format(sf.season, sf.time_of_day)
+			msgs.update(
+			  aId   = analysis.pk,
+			  id    = sf.pk,
+			  value = sf.value
+			)
+
+		except IntegrityError as ie:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to update time slice ({}):  Another time slice by that '
+			  'name already exists!')
+			msg = msg.format( form.cleaned_data[ 'name' ] )
+			msgs.update({ 'General Error' : msg })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+@require_login
+@require_DELETE
+@never_cache
+def analysis_delete_segfrac ( req, analysis_id, segfrac_id ):
+	analysis  = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	sf = get_object_or_404( Param_SegFrac, pk=segfrac_id, analysis=analysis )
+
+	sf.delete()
+
+	status = 204  # "No Content"
+	res = HttpResponse( '', status=status )
+	set_cookie( req, res );
+
+	return res
+
+
+## Commodity ##################################################################
 
 @require_login
 @require_POST
@@ -261,7 +439,7 @@ def analysis_update_commodity ( req, analysis_id, commodity_id ):
 @require_DELETE
 @never_cache
 def analysis_delete_commodity ( req, analysis_id, commodity_id ):
-	analysis  = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
 	acom = get_object_or_404( AnalysisCommodity,
 	  pk=commodity_id, analysis=analysis )
 
