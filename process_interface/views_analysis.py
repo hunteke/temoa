@@ -868,27 +868,3 @@ def analysis_delete_commodity ( req, analysis_id, commodity_id ):
 
 	return res
 
-
-#############################################################################
-def user_analyses ( req, username ):
-	if 'all' == username:
-		analyses = [ (a.id, unicode(a) )  for a in Analysis.objects.all() ]
-		analyses.sort( key=i_get(1) )
-	elif username:
-		user = get_object_or_404( User, username=username )
-		analyses = [
-		  (a.id, unicode(a) )  for a in Analysis.objects.filter( user=user )
-		]
-		analyses.sort( key=i_get(1) )
-
-	else:
-		raise Http404
-
-	data = json.dumps( analyses )
-	response = HttpResponse(
-	  data,
-	  content_type='application/json'
-	)
-	response['Content-Length'] = len( data )
-	return response
-

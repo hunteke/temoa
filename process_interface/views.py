@@ -51,12 +51,6 @@ def get_client_template ( req, template ):
 	return render_to_response('process_interface/client/' + template )
 
 
-def test_view ( req ):
-	from django.shortcuts import redirect
-	print req.POST
-	return redirect('http://localhost:8000/analysis/1/process_info/3,4?json')
-
-
 def tutorial ( req ):
 	raise Http404
 
