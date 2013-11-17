@@ -2595,6 +2595,7 @@ can.Control('ProcessDetail', {
 		var pId = process.attr('id');
 
 		if ( pId ) {
+			// i.e., process already exists in DB
 			$pForm   = $('#Process_' + pId);
 			$cfForm  = $('#ProcessCostsFixed_' + pId );
 			$cvForm  = $('#ProcessCostsVariable_' + pId );
