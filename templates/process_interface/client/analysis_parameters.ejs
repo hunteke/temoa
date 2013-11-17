@@ -127,4 +127,84 @@
 	<% } %>
 
 <% } else { %>
+
+	<table class='items segfracs'>
+		<caption>Annual Time Slices (SegFrac), Default Distribution (DD)</caption>
+		<thead><tr><th></th>
+		<% analysis.segfracs.each( function( s ) { %>
+			<th><%= s.attr('name') %></th>
+		<% }); %>
+		<th><em>Total</em></th>
+		</tr></thead>
+		<tbody>
+		<tr class='odd'><th>SegFrac</th>
+		<% sum = 0; analysis.segfracs.each( function( sf ) {
+			sum += sf.attr( 'value' ) || 0;
+		%>
+			<td><%= sf.attr( 'value' ) || '' %></td>
+		<% }); %>
+			<td><%== sum ? (Math.abs(1 - sum) > epsilon ? '<span class="error">' + sum + '</span>' : 1) : '' %></td>
+		</tr><tr class='even'><th>DD</th>
+		<% sum = 0; analysis.segfracs.each( function( sf ) {
+			var name = sf.attr('name');
+			ddd  = analysis.demanddefaultdistribution.attr( name );
+			if ( ddd && 'attr' in ddd )
+				sum += ddd.attr( 'value' ) || 0;
+		%>
+			<td><%= ddd && ddd.attr( 'value' ) || ' - ' %></td>
+		<% }); %>
+			<td><%== sum ? (Math.abs(1 - sum) > epsilon ? '<span class="error">' + sum + '</span>' : 1) : '' %></td>
+		</tr>
+		</tbody>
+	</table>
+	<br>
+<% if ( analysis.commodity_demand.length > 0 ) { %>
+	<table class='items demands'>
+		<caption>Period Demand Values</caption>
+		<thead><tr><th></th>
+		<% analysis.future_periods.each( function ( fp ) { %>
+			<th><%= fp || ' - ' %></th>
+		<% }); %>
+		</tr></thead>
+		<tbody>
+		<% count = 0; analysis.commodity_demand.each( function( c ) {%>
+			<tr class='<%== oddeven[++count % 2] %>'>
+				<th><%= c.attr('name') %></th>
+				<% analysis.future_periods.each( function ( fp ) {
+					var name = c.attr('name') + ', ' + fp;
+					var dem = analysis.future_demands.attr( name );
+				%>
+					<td><%= dem.attr('value') || ' - ' %></td>
+				<% }); %>
+			</tr>
+		<% }); %>
+		</tbody>
+	</table>
+	<br>
+	<table class='items demandspecificdistributions'>
+		<caption>Individual Demand Distributions</caption>
+		<thead><tr><th></th>
+		<% analysis.segfracs.each( function( sf ) { %>
+			<th><%= sf.attr('name') %></th>
+		<% }); %>
+		<th><em>Total</em></th>
+		</tr></thead>
+		<tbody>
+		<% count = 0; analysis.demandspecificdistribution.each( function ( dsd ) { %>
+			<tr class='<%== oddeven[++count % 2] %>'>
+				<th><%= dsd.attr('name'); %></th>
+				<% sum = 0; analysis.segfracs.each( function( sf ) {
+					var name = sf.attr('name');
+					sum += dsd.attr( name ) && dsd.attr( name ).attr('value') || 0;
+					%>
+					<td><%= dsd.attr( name ) && dsd.attr( name ).attr('value') || ' - ' %></td>
+				<% }); %>
+				<td><%== sum ? (Math.abs(1 - sum) > epsilon ? '<span class="error">' + sum + '</span>' : 1) : '' %></td>
+			</tr>
+		<% }); %>
+		</tbody>
+	</table>
+	<% } else { %>
+	<p>There are no end-use demand commodities defined.</p>
+	<% } %>
 <% } %>
