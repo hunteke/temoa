@@ -862,7 +862,7 @@ can.Control('AnalysisDetail', {
 	save: function ( $el ) {
 		var errors = {};
 		var $form = $el.closest('form');
-		var inputs = $form.find('input,textarea');
+		var inputs = $form.find(':input');
 		var data = can.deparam( $form.serialize() );
 
 		disable( inputs );
@@ -1064,7 +1064,7 @@ can.Control('AnalysisCommodityLists', {
 	create: function ( $el ) {
 		var errors = {};
 		var $form  = $el.closest('form');
-		var $inputs = $form.find('input,textarea');
+		var $inputs = $form.find(':input');
 		var data   = can.deparam( $form.serialize() );
 
 		disable( $inputs );
@@ -1154,7 +1154,7 @@ can.Control('CommodityDetail', {
 	save: function ( $el ) {
 		var errors = {};
 		var $form  = $el.closest( 'form' );
-		var inputs = $form.find('input,textarea');
+		var inputs = $form.find(':input');
 		var data   = can.deparam( $form.serialize() );
 
 		disable( inputs );
@@ -2577,7 +2577,7 @@ can.Control('ProcessDetail', {
 		  , check_for_save = new Array()
 		  , to_save = new Array();
 		var $pTable = $el.closest('.process');
-		var $inputs = $pTable.find('button,input,textarea');
+		var $inputs = $pTable.find(':input');
 		var process = $pTable.data('process');
 		var pId = process.attr('id');
 
@@ -3036,7 +3036,7 @@ can.Control('AnalysisTechnologyDetail', {
 		  , $osForm = null, osData = null
 		  , to_save = new Array();
 		var $tTable = $el.closest('.technology');
-		var $inputs = $tTable.find('button,input,textarea');
+		var $inputs = $tTable.find(':input');
 		var tech = $tTable.data('technology');
 		var tId = tech.attr('id');
 
