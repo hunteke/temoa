@@ -4,6 +4,7 @@
 	<form onsubmit='return false;' id='AnalysisSegFracs_<%= analysis.attr('id') %>'></form>
 	<form onsubmit='return false;' id='AnalysisDemands_<%= analysis.attr('id') %>'></form>
 	<form onsubmit='return false;' id='AnalysisDemandDefaultDistribution_<%= analysis.attr('id') %>'></form>
+	<form onsubmit='return false;' id='AnalysisDemandSpecificDistribution_<%= analysis.attr('id') %>'></form>
 	<table class='items segfracs'>
 		<caption>Annual Time Slices (SegFrac), Default Distribution (DD)</caption>
 		<thead><tr><th><button type='button' class='add' id='AddTimeSlice' title='Add new annual slice'>Add</button></th>
@@ -72,8 +73,59 @@
 		<tr><td></td><td colspan='<%= analysis.future_periods.attr('length') %>'><p class='error'></p><button type='button' name='DemandsUpdate'>Update</button><button type='button' name='DemandsCancel'>Cancel</button></td></tr>
 		</tbody>
 	</table>
+	<br>
+	<datalist id='ValidDemandSpecificDistributionList'>
+		<% analysis.commodity_demand.each( function ( dem ) {
+				var dsd_list = analysis.demandspecificdistribution;
+				for ( var i = 0; i < dsd_list.length; ++i )
+					if ( dsd_list[i]['name'] === dem['name'] )
+						// it's already in use!
+						return;
+		%>
+		<option value='<%= dem && dem.attr('name') %>'>
+		<% }); %>
+	</datalist>
+	<table class='items demandspecificdistributions'>
+		<caption>Individual Demand Distributions</caption>
+		<thead><tr><th><button type='button' class='add' id='AddDemandDistribution' title='Add new demand distribution'>Add</button></th>
+		<% analysis.segfracs.each( function( sf ) {
+			if ( sf.isNew() )
+				return; // don't let user update timeslice before it exists
+		%>
+			<th><%= sf.attr('name') %></th>
+		<% }); %>
+		<th><em>Total</em></th>
+		</tr></thead>
+		<tbody>
+		<% count = 0; analysis.demandspecificdistribution.each( function ( demand ) { %>
+			<tr class='dsd <%== oddeven[++count % 2] %>'>
+			<th><%== demand.attr('name') ? escapeHTML( demand.attr('name') ) : "<input form='AnalysisDemandSpecificDistribution_" + analysis.attr('id') + "' name='NewDSD_name' type='text' autocomplete='off' list='ValidDemandSpecificDistributionList' placeholder='[demand commodity]'>"; %><span class='error'></span></th>
+			<%
+				analysis.segfracs.each( function( sf ) {
+					if ( sf.isNew() )
+						return;
+					var dsd = demand.attr( sf.attr('name') );
+			%>
+				<td <%= ($el) -> $el.data('demanddistribution', dsd ) %>>
+				<% if ( demand.attr('name') ) { %>
+					<input
+						form='AnalysisDemandSpecificDistribution_<%= analysis.attr('id') %>'
+						name='DSD_value_<%= dsd.attr('dId') + ',' + dsd.attr('sfId') %>'
+						type='number' autocomplete='off'
+						value='<%= dsd.attr('value') || "" %>'>
+				<% } %>
+					<span class='error'></span>
+				</td>
+			<% }); %>
+				<td><!-- SUM THING HERE --></td>
+			</tr>
+		<% }); %>
+		<tr><td></td><td colspan='<%= Object.keys( analysis.demandspecificdistribution.attr() ).length %>'><p class='error'></p><button type='button' name='DemandSpecificDistributionsUpdate'>Update</button><button type='button' name='DemandSpecificDistributionCancel'>Cancel</button></td></tr>
+		</tbody>
+	</table>
 	<% } else { %>
 	<p>There are no end-use demand commodities defined.</p>
 	<% } %>
+
 <% } else { %>
 <% } %>

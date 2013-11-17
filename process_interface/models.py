@@ -418,12 +418,15 @@ class Param_DemandSpecificDistribution ( DM.Model ):
 		  analysis, season, time_of_day, self.demand, self.fraction )
 
 
-	def save ( self ):
+	def save ( self, *args, **kwargs ):
 		if self.demand.commodity_type.name != 'demand':
 			msg = 'Distribution commodity must be a type "demand".'
 			raise ValidationError( msg )
 
-		super( Param_DemandSpecificDistribution, self ).save()
+		if not ( 0 < self.value and self.value <= 1 ):
+			raise ValidationError( 'Distribution value must be in range (0, 1].' )
+
+		super( Param_DemandSpecificDistribution, self ).save( *args, **kwargs )
 
 
 

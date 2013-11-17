@@ -19,6 +19,7 @@ from models import (
   CommodityType,
   Param_Demand,
   Param_DemandDefaultDistribution,
+  Param_DemandSpecificDistribution,
   Param_SegFrac,
   Vintage,
 )
@@ -27,6 +28,7 @@ from forms import (
   AnalysisForm,
   DemandDefaultDistributionForm,
   DemandForm,
+  DemandSpecificDistributionForm,
   SegFracForm,
   VintagesForm,
 )
@@ -79,6 +81,33 @@ def get_analysis_info ( analyses ):
 		  u'value' : ddd.value
 		}
 
+	_DSDistribution = defaultdict( nested_defaultdict(dict) )
+	for dsd in Param_DemandSpecificDistribution.objects.filter(
+	  timeslice__analysis__in=analyses ).select_related(
+	  'timeslice__analysis',
+	  'demand__commodity'
+	):
+		sf  = dsd.timeslice
+		a   = sf.analysis
+		s   = sf.season
+		tod = sf.time_of_day
+		dem = dsd.demand.commodity.name
+		_DSDistribution[ a ][ dem ][ '{}, {}'.format(s, tod) ] = {
+		  u'aId'   : a.pk,
+		  u'dId'   : dsd.demand.pk,
+		  u'sfId'  : sf.pk,
+		  u'id'    : dsd.pk,
+		  u'value' : dsd.value
+		}
+
+	DSDistribution = defaultdict( list )
+	for a in _DSDistribution:
+		lst = []
+		for dem in _DSDistribution[ a ]:
+			_DSDistribution[ a ][ dem ][ 'name' ] = dem
+			lst.append( _DSDistribution[ a ][ dem ] )
+		DSDistribution[ a ] = lst
+
 	Demands = defaultdict(dict)
 	for dem in Param_Demand.objects.filter(
 	  period__analysis__in=analyses ).select_related('period__analysis'
@@ -106,6 +135,7 @@ def get_analysis_info ( analyses ):
 	    u'future_demands'       : Demands[ a ],
 	    u'segfracs'             : SegFracs[ a ],
 	    u'demanddefaultdistribution' : DDDistribution[ a ],
+	    u'demandspecificdistribution' : DSDistribution[ a ],
 	  }
 
 	  for a in analyses
@@ -608,6 +638,123 @@ def analysis_delete_demanddefaultdistribution ( req, analysis_id, ddd_id ):
 		pk=ddd_id, timeslice__analysis=analysis )
 
 	ddd.delete()
+
+	status = 204  # "No Content"
+	res = HttpResponse( '', status=status )
+	set_cookie( req, res );
+
+	return res
+
+
+## DemandSpecificDistribution #################################################
+
+@require_login
+@require_POST
+@never_cache
+def analysis_create_demandspecificdistribution (
+  req, analysis_id, segfrac_id, demand_commodity_id
+):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	sf = get_object_or_404( Param_SegFrac, pk=segfrac_id, analysis=analysis )
+	endusedemand = get_object_or_404( AnalysisCommodity,
+	  pk=demand_commodity_id,
+	  commodity_type__name='demand',
+	  analysis=analysis
+	)
+	status = 201  # 201 = Created
+	msgs = {}
+
+	dsd = Param_DemandSpecificDistribution( timeslice=sf, demand=endusedemand )
+	form = DemandSpecificDistributionForm( req.POST, instance=dsd )
+
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+
+		if 'value' in msgs:
+			new_key = 'DSD_value_{},{}'.format(endusedemand.pk, sf.pk)
+			msgs[ new_key ] = msgs.pop( 'value' )
+
+	else:
+		try:
+			with transaction.commit_on_success():
+				form.save()
+			tslice = '{}, {}'.format(sf.season, sf.time_of_day)
+			msgs.update(
+			  aId   = analysis.pk,
+			  dId   = dsd.demand.pk,
+			  sfId  = sf.pk,
+			  id    = dsd.pk,
+			  value = dsd.value
+			)
+
+		except IntegrityError as ie:
+			status = 422  # to let Javascript know there was an error
+			msg = 'Unable to create demand distribution ({}):  It already exists!'
+			msg = msg.format( form.cleaned_data[ 'name' ] )
+			msgs.update({ 'General Error' : msg })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+
+@require_login
+@require_POST
+@never_cache
+def analysis_update_demandspecificdistribution ( req, analysis_id, dsd_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	dsd = get_object_or_404( Param_DemandSpecificDistribution,
+		pk=dsd_id, timeslice__analysis=analysis )
+
+	status = 200
+	msgs = {}
+
+	form = DemandSpecificDistributionForm( req.POST, instance=dsd )
+
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+		keys = set( msgs.keys() )
+
+		if 'value' in keys:
+			new_key = 'DSD_values_{},{}'.format(dsd.demand.pk, dsd.timeslice.pk)
+			msgs[ new_key ] = msgs.pop( 'value' )
+
+	else:
+		try:
+			with transaction.commit_on_success():
+				form.save()
+			msgs.update( value=dsd.value )
+
+		except IntegrityError as ie:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to update demand distribution ({}):  Another '
+				'distribution by that name already exists!')
+			msg = msg.format( form.cleaned_data[ 'name' ] )
+			msgs.update({ 'General Error' : msg })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+@require_login
+@require_DELETE
+@never_cache
+def analysis_delete_demandspecificdistribution ( req, analysis_id, dsd_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	dsd = get_object_or_404( Param_DemandSpecificDistribution,
+		pk=dsd_id, timeslice__analysis=analysis )
+
+	dsd.delete()
 
 	status = 204  # "No Content"
 	res = HttpResponse( '', status=status )

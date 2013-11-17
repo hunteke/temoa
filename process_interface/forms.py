@@ -198,6 +198,43 @@ class DemandDefaultDistributionForm ( F.Form ):
 
 
 
+class DemandSpecificDistributionForm ( F.Form ):
+	value = F.FloatField( label=_('Value') )
+
+	def __init__ ( self, *args, **kwargs ):
+		self.instance = kwargs.pop( 'instance' )
+		super( DemandSpecificDistributionForm, self ).__init__( *args, **kwargs )
+
+
+	def clean_value ( self ):
+		cd = self.cleaned_data
+
+		if not self.instance.value and (
+		   'value' not in cd or math.isnan( cd['value'] )
+		):
+			raise F.ValidationError('Please specify a value in the range (0, 1].')
+
+		elif 'value' in cd and not ( 0 < cd['value'] and cd['value'] <= 1 ):
+			raise F.ValidationError('Please specify a value in the range (0, 1].')
+
+		return 'value' in cd and cd['value'] or float('nan')
+
+
+	def save ( self ):
+		dsd = self.instance
+		cd = self.cleaned_data
+
+		if 'value' in cd and cd[ 'value' ]:
+			dsd.value = cd[ 'value' ]
+
+		# convenience for UI, in case of error
+		cd['name'] = u'{}, {}'.format(
+		  dsd.timeslice.season, dsd.timeslice.time_of_day )
+
+		dsd.save()
+
+
+
 class DemandForm ( F.Form ):
 	value = F.FloatField( label=_('Value') )
 

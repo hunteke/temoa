@@ -33,6 +33,10 @@ from views import (
   analysis_update_demanddefaultdistribution,
   analysis_delete_demanddefaultdistribution,
 
+  analysis_create_demandspecificdistribution,
+  analysis_update_demandspecificdistribution,
+  analysis_delete_demandspecificdistribution,
+
   analysis_create_demand,
   analysis_update_demand,
   analysis_delete_demand,
@@ -98,6 +102,11 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/demanddefaultdistribution/create/segfrac/(?P<segfrac_id>\d+)$', analysis_create_demanddefaultdistribution, name='analysis_create_demanddefaultdistribution' ),
   url(r'^analysis/(?P<analysis_id>\d+)/demanddefaultdistribution/update/(?P<ddd_id>\d+)$', analysis_update_demanddefaultdistribution, name='analysis_update_demanddefaultdistribution' ),
   url(r'^analysis/(?P<analysis_id>\d+)/demanddefaultdistribution/remove/(?P<ddd_id>\d+)$', analysis_delete_demanddefaultdistribution, name='analysis_delete_demanddefaultdistribution' ),
+
+# Analysis DemandSpecificDistribution
+  url(r'^analysis/(?P<analysis_id>\d+)/demandspecificdistribution/create/segfrac/(?P<segfrac_id>\d+)/demand/(?P<demand_commodity_id>\d+)$', analysis_create_demandspecificdistribution, name='analysis_create_demandspecificdistribution' ),
+  url(r'^analysis/(?P<analysis_id>\d+)/demandspecificdistribution/update/(?P<dsd_id>\d+)$', analysis_update_demandspecificdistribution, name='analysis_update_demandspecificdistribution' ),
+  url(r'^analysis/(?P<analysis_id>\d+)/demandspecificdistribution/remove/(?P<dsd_id>\d+)$', analysis_delete_demandspecificdistribution, name='analysis_delete_demandspecificdistribution' ),
 
 # Analysis Demands
   url(r'^analysis/(?P<analysis_id>\d+)/demand/create/commodity/(?P<demand_commodity_id>\d+)/period/(?P<period>\d+)$', analysis_create_demand, name='analysis_create_demand' ),

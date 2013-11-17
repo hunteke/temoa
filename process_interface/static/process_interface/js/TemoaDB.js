@@ -392,6 +392,26 @@ can.Model('AnalysisDemandDefaultDistribution', {
 	}
 });
 
+can.Model('AnalysisDemandSpecificDistribution', {
+	create:  'POST /analysis/{aId}/demandspecificdistribution/create/segfrac/{sfId}/demand/{dId}',
+	update:  'POST /analysis/{aId}/demandspecificdistribution/update/{id}',
+	destroy: 'DELETE /analysis/{aId}/demandspecificdistribution/remove/{id}',
+	attributes: {
+		aId: 'int',
+		dId: 'int',
+		sfId: 'int',
+		id: 'int',
+		timeslice: 'AnalysisSegFrac.model',
+		value: 'number'
+	}
+}, {
+	partialUpdate: function ( id, attr ) {
+		var url = '/analysis/{aId}/demandspecificdistribution/update/{id}';
+		url = replaceNamedArgs( url, this.attr() );
+		return $.post( url, attr );
+	}
+});
+
 can.Model('AnalysisDemand', {
 	create:  'POST /analysis/{aId}/demand/create/commodity/{cId}/period/{period}',
 	update:  'POST /analysis/{aId}/demand/update/{id}',
@@ -445,6 +465,7 @@ can.Model('Analysis', {
 		// Map of Maps, and convert each item to models during initialization.
 		// (For implementation, search for 'ddd' below.)
 //		demanddefaultdistribution: 'AnalysisDemandDefaultDistribution.models',
+//		demandspecificdistribution: 'AnalysisDemandSpecificDistribution.models',
 //		future_demands: 'AnalysisDemand.models',
 		commodity_demand:   'AnalysisCommodityDemand.models',
 		commodity_emission: 'AnalysisCommidityEmission.models',
@@ -714,6 +735,7 @@ can.Control('AnalysisDetail', {
 
 				var _segFracs = {};
 				var ddd_map = analysis.demanddefaultdistribution;
+				var dsd_map = analysis.demandspecificdistribution;
 				var dem_map = analysis.future_demands;
 
 				for ( var i = 0; i < segfracs.length; ++i ) {
@@ -763,6 +785,35 @@ can.Control('AnalysisDetail', {
 					ddd.attr('timeslice', sf);
 					ddd_map.attr( sf_key, ddd );
 					update_timeslice( ddd_map, sf_key );
+				}
+
+				for ( var key in dsd_map.attr() ) {
+					var dsd = dsd_map[ key ];
+					var com_name = dsd[ 'name' ]
+					var com = null;
+					for ( var i = 0; i < analysis.commodity_demand.length; ++i ) {
+						com = analysis.commodity_demand[ i ];
+						if ( com[ 'name' ] === com_name ) {
+							break;
+						}
+					}
+					for ( var sf_key in _segFracs ) {
+						var dist = dsd[ sf_key ];
+						var sf = _segFracs[ sf_key ];
+						if ( ! dist ) {
+							dist = new AnalysisDemandSpecificDistribution({
+								aId: analysis.id,
+								dId: com['id'],
+								sfId: sf['id'],
+							});
+						} else if ( ! dist.isNew ) {
+							dist = new AnalysisDemandSpecificDistribution(
+							  dist.attr() );
+						}
+						dist.attr( 'timeslice', sf );
+						dsd.attr( sf_key, dist );
+						update_timeslice( dsd, sf_key );
+					}
 				}
 
 				new AnalysisCommodityLists( '#AnalysisCommodities', {
@@ -1400,6 +1451,135 @@ can.Control('AnalysisParameters', {
 
 		save_to_server({ to_save: to_save, inputs: $inputs, display: $demTable });
 	},
+	saveDemandSpecificDistributions: function ( $el ) {  // AnalysisParameters
+		var aId = this.analysis.id;
+		var errors  = {};
+		var to_save = new Array();
+		var to_remove = new Array();
+		var dsd_name_re = /^DSD_value_(\d+),(\d+)$/;
+
+		var $form = $( 'form#AnalysisDemandSpecificDistribution_' + aId );
+		var $dsdTable = $el.closest('.demandspecificdistributions');
+		var $inputs = $dsdTable.find(':input').not("[disabled='disabled']");
+		var data = can.deparam( $form.serialize() );
+
+		console.log( 'DSD Data: ', data );
+
+		$dsdTable.find('.error').empty(); // remove any previous attempt's errors
+		disable( $inputs );
+
+		if ( 'NewDSD_name' in data ) {
+			var name = data.NewDSD_name;
+			var dsd_list = analysis.demandspecificdistribution;
+			var dem_list = analysis.commodity_demand;
+			var valid_names = {};
+
+			for ( var i = 0; i < dem_list.length; ++i )
+				valid_names[ dem_list[i].name ] = true;
+			if ( ! ( name in valid_names ))
+				errors.NewDSD_name = ['Invalid demand commodity name.'];
+			for ( var i = 0; i < dsd_list.length; ++i )
+				if ( dsd_list[i]['name'] === name )
+					errors.NewDSD_name = ['Already specified.'];
+		}
+
+		for ( var name in data ) {
+			data[ name ] = $.trim( data[ name ]);
+			if ( name.match( dsd_name_re ) ) {
+				if ( ! data[ name ] )
+					continue;
+
+				if ( isNaN(Number(data[ name ])) || 0 === Number(data[ name ])) {
+					var msg = 'Must be empty, or a number in the range (0, 1].';
+					errors[ name ] = [msg];
+				}
+			}
+		}
+
+		if ( Object.keys( errors ).length > 0 ) {
+			// client-side checking for user convenience.  The server will check
+			// for itself, of course.
+			enable( $inputs );
+			displayErrors( $dsdTable, errors );
+			return;
+		}
+
+		if ( 'NewDSD_name' in data ) {
+			var dem_list = this.analysis.commodity_demand;
+			var dsd_list = this.analysis.demandspecificdistribution;
+			var dem_dists = dsd_list.shift();
+			var dem = null;
+			for ( var i = 0; i < dem_list.length; ++i ) {
+				if ( dem_list[ i ].name === data.NewDSD_name ) {
+					dem = dem_list[ i ];
+					break;
+				}
+			}
+
+			for ( var i = 0; i < analysis.segfracs.length; ++i ) {
+				var sf = analysis.segfracs[ i ];
+				var new_d = new AnalysisDemandSpecificDistribution({
+					aId:  this.analysis.id,
+					dId:  dem.id,
+					sfId: sf.id,
+					timeslice: sf,
+				});
+				dem_dists.attr( sf.attr('name'), new_d );
+			}
+			dem_dists.attr('name', dem.attr('name'));
+			dsd_list.unshift( dem_dists );
+		}
+
+		for ( var name in data ) {
+			if ( ! name.match( dsd_name_re ) )
+				continue;
+
+			var sel = '[name="' + name + '"]';
+			var $el = $dsdTable.find( sel ).closest('td');
+			var dsd = $el.data('demanddistribution');
+
+			if ( ! data[ name ] && ! dsd.isNew() ) {
+				// if no value, and dsd is not new, delete on server, and
+				// replace locally.  This is in lieu of a button.
+				to_remove.push( [$el, dsd] );
+				continue;
+			}
+
+			to_save.push( [dsd, { value: data[ name ]}]);
+		}
+
+		for ( var i = 0; i < to_remove.length; ++i ) {
+			var $el  = to_remove[i][0];
+			var dsd  = to_remove[i][1];
+
+			dsd._el = $el;
+			dsd.destroy( function ( destroyed_model ) {
+				// Succeeded.  Now kill id and value locally.  Note that there is
+				// no need to create a new dsd object.
+				this.attr({id: null, value: null});
+				this._el.animate({backgroundColor: '#dd0'
+				      }).animate({backgroundColor: 'transparent'});
+				this._el = null;
+				delete this._el;
+			},
+			function ( jqXHR, text_status, description ) {
+				this._el.animate({backgroundColor: '#f00'
+				      }).animate({backgroundColor: 'transparent'});
+				this._el = null;
+				delete this._el;
+
+				if ( jqXHR && jqXHR.responseJSON ) {
+					displayErrors( $dsdTable, jqXHR.responseJSON );
+				} else {
+					console.log( 'Error received, but no JSON response: ', jqXHR );
+					showStatus( 'Unknown error while removing distribution: '
+					  + description );
+				}
+			});
+		}
+
+		save_to_server({ to_save: to_save, inputs: $inputs, display: $dsdTable });
+	},
 	'[name="SegFracUpdate"] click': function ( $el, ev ) {
 		this.saveSegFracs( $el );
 	},
@@ -1407,6 +1587,9 @@ can.Control('AnalysisParameters', {
 		ev.preventBubble = true;
 		this.saveDemands( $el );
 		return false;
+	},
+	'[name="DemandSpecificDistributionsUpdate"] click': function ( $el, ev ) {
+		this.saveDemandSpecificDistributions( $el );
 	},
 	'[name="SegFracRemove"] click': function ( $el, ev ) {
 		$el.closest('th').data('segfrac').destroy();
@@ -1450,22 +1633,81 @@ can.Control('AnalysisParameters', {
 		$item.find('.error').empty();
 		showStatus('Alteration cancelled', 'info');
 	},
+	'[name="DemandsCancel"] click': function ( $el, ev ) {
+		var $item = $el.closest('.demands');
+		var demands = this.analysis.commodity_demand;
+		var future_demands = this.analysis.future_demands;
+
+		for ( var key in future_demands.attr() ) {
+			var val = future_demands.attr( key ).attr('value') || '';
+			$item.find('[name="' + key + '"]').val( val );
+		}
+
+		$item.find('.error').empty();
+		showStatus('Alteration cancelled', 'info');
+	},
+	'[name="DemandSpecificDistributionCancel"] click': function ( $el, ev ) {
+		var $item = $el.closest('.demandspecificdistributions');
+		var dsd_list = this.analysis.demandspecificdistribution;
+		var segfrac_keys = {};
+
+		if ( dsd_list )
+			if ( ! dsd_list[0].attr('name') )
+				// abort the adding of a new demand distribution set
+				dsd_list.shift();
+
+		for ( var i in dsd_list.attr() ) {
+			var dem_dists = dsd_list.attr( i );
+			for ( var j in dem_dists.attr() ) {
+				var dsd = dem_dists[ j ];
+				var name = 'DSD_value_' + dsd.dId + ',' + dsd.sfId;
+				var val = dsd.value || '';
+
+				$item.find('[name="' + name + '"]').val( val );
+			}
+		}
+
+		$item.find('.error').empty();
+		showStatus('Alteration cancelled', 'info');
+	},
 	'input keyup': function ( $el, ev ) {
 		if ( ! $el.attr('form') )
 			return;
 
 		if ( 13 === ev.keyCode ) { // enter
 			var formAttr = $el.attr('form');
-			if ( 0 === formAttr.indexOf( 'AnalysisSegFracs_' )) {
+			if ( 0 === formAttr.indexOf( 'AnalysisSegFracs_' )
+			  || 0 === formAttr.indexOf( 'AnalysisDemandDefaultDistribution_' ))
+			{
 				this.saveSegFracs( $el );
+			} else if ( 0 === formAttr.indexOf( 'AnalysisDemands_' )) {
+				$('[name="DemandsUpdate"]').click();
+			} else if ( 0 === formAttr.indexOf( 'AnalysisDemandSpecificDistribution_' )) {
+				this.saveDemandSpecificDistributions( $el );
 			}
 		} else if ( 27 === ev.keyCode ) {  // escape
 			var formAttr = $el.attr('form');
 
-			if ( 0 === formAttr.indexOf( 'AnalysisSegFracs_' )) {
+			if ( 0 === formAttr.indexOf( 'AnalysisSegFracs_' )
+			  || 0 === formAttr.indexOf( 'AnalysisDemandDefaultDistribution_' ))
+			{
 				$el.closest('.segfracs').find('[name="SegFracCancel"]').click();
 			}
+			if ( 0 === formAttr.indexOf( 'AnalysisDemands_' )) {
+				$el.closest('.demands').find('[name="DemandsCancel"]').click();
+			}
+			if ( 0 === formAttr.indexOf( 'AnalysisDemandSpecificDistribution_' )) {
+				$el.closest('.demandspecificdistributions').find('[name="DemandSpecificDistributionCancel"]').click();
+			}
 		}
+	},
+	'{AnalysisSegFrac} created': function ( list, ev, segfrac ) {
+		var slice_name = segfrac.name();
+		var ddd = new AnalysisDemandDefaultDistribution({
+			aId: this.analysis.id,
+			sfId: segfrac.id,
+		});
+		this.analysis.demanddefaultdistribution.attr( slice_name, ddd );
 	},
 });
 
