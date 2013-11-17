@@ -1,58 +1,50 @@
-/* @import url(http://fonts.googleapis.com/css?family=Ubuntu:400,500,700|Ubuntu+Mono:400,700); */
+/* @import url(http://fonts.googleapis.com/css?family=Ubuntu:400,500,700|Ubuntu+Mono:400,700) ; */
 
-html { height: 100% ; background: #eee ; padding: 0; margin: 0; font-family: 'Ubuntu', sans-serif; font-size: 12pt; }
+html { height: 100% ; background: #eee ; padding: 0 ; margin: 0 ; font-family: 'Ubuntu', sans-serif ; font-size: 12pt ; }
 
-body { height: 100% ; margin: 1em; }
+body { height: 100% ; margin: 1em ; }
 
-#wrapper { min-height: 100% ; width: 100%; }
+#wrapper { min-height: 100% ; width: 100% ; }
 
-#header { height: 4em; width: 100%; background-color: cyan; }
+#header { height: 4em ; width: 100% ; background-color: cyan ; }
 
-#LogoutLink { float: right; }
-#LoginForm { float: right; }
-#ReloadLibs { float: right; display: none; }
+#LogoutLink { float: right ; }
+#LoginForm { float: right ; }
+#ReloadLibs { float: right ; display: none ; }
 
-.center_wrapper { margin: 0 auto; text-align:center; }
-#ShowHideTechs, #ShowHideAnalysis { margin: 0 auto; }
+.center_wrapper { margin: 0 auto ; text-align:center ; }
+#ShowHideTechs, #ShowHideAnalysis { margin: 0 auto ; }
 
 .closeButton {
-	float: right;
+	float: right ;
 }
 
 #DBTechnologies {
-	position: fixed;
-	border: 1px solid red;
-	height: 99%;
-	width: 98%;
-	top: 1px;
+	position: fixed ;
+	border: 1px solid red ;
+	height: 99% ;
+	width: 98% ;
+	top: 1px ;
 	background: #eee ;
-	overflow: auto;
+	overflow: auto ;
 }
 
-#AnalysisCommodities {
-	position: fixed;
-	border: 1px solid red;
-	top: 1em;
-	bottom: 1em;
-	right: 1em;
-	left: 1em;
-	background: #eee;
-	overflow: auto;
-	opacity: 1;
-	z-index: 150;
-}
+#AnalysisCommodities, #AnalysisParameters { position: fixed ; border: 1px solid red ; top: 1em ; bottom: 1em ; right: 1em ; left: 1em ; background: #eee ; overflow: auto ; opacity: 1 ; z-index: 150 ; display: none; }
+#AnalysisCommodities > form { float: left ; width: 15em ; }
+#AnalysisCommodities > form > table { width: 100% ; border-top: 2pt solid black ; margin-top: 1ex ; }
 
-#technology_list { background-color: transparent; clear: left; float: left; margin-left: 1em; }
 
-#technology_detail { float: left; width: auto; margin-left: 1em; }
+#technology_list { background-color: transparent ; clear: left ; float: left ; margin-left: 1em ; }
 
-#technology_create h3 { margin: 0; padding: 0; background-color: #27f; }
-#technology_create { background-color: transparent; opacity: 0.8;  width: auto; border: 1px solid green; /* display: none; */}
-#technology_create input[name='Name'] { width: 98%; text-align: center; font-size: 100%; font-weight: bold; font-family: mono; background-color: transparent; color: #000; } */
+#technology_detail { float: left ; width: auto ; margin-left: 1em ; }
 
-#technology_info { background-color: transparent; opacity: 0.8;  width: auto; }
-#technology_info .technology { border: 1px solid #000; padding: 0; margin-top: 2ex; }
-#technology_info .technology h3 { text-align: center; background-color: #27f; margin: 0; }
+#technology_create h3 { margin: 0 ; padding: 0 ; background-color: #27f ; }
+#technology_create { background-color: transparent ; opacity: 0.8 ;  width: auto ; border: 1px solid green ; /* display: none ; */}
+#technology_create input[name='Name'] { width: 98% ; text-align: center ; font-size: 100% ; font-weight: bold ; font-family: mono ; background-color: transparent ; color: #000 ; } */
+
+#technology_info { background-color: transparent ; opacity: 0.8 ;  width: auto ; }
+#technology_info .technology { border: 1px solid #000 ; padding: 0 ; margin-top: 2ex ; }
+#technology_info .technology h3 { text-align: center ; background-color: #27f ; margin: 0 ; }
 
 #launchers { margin: 0  auto ; }
 #launchers ul { list-style: none outside none ; padding: 0 ; }
@@ -60,244 +52,242 @@ body { height: 100% ; margin: 1em; }
 #launchers ul li a { overflow: hidden ; display: block ; height: 15em ; width: 15em ; }
 
 #ProcessList {
-	background-color: inherit;
-	clear: left;
-	float: left;
-	max-width: 30%;
+	background-color: inherit ;
+	clear: left ;
+	float: left ;
+	max-width: 30% ;
 }
 
-#analysis { border: 1px solid #000; min-height: 10ex; width: 100%; clear: both; }
+#analysis { border: 1px solid #000 ; min-height: 10ex ; width: 100% ; clear: both ; }
 
-#AnalysisProcessDetails h2, #AnalysisTechnologyDetails h2 { text-align: center; }
-#AnalysisProcessDetails { background-color: transparent; opacity: 0.8; float: left; width: auto; max-width: 30%;}
+#AnalysisProcessDetails h2, #AnalysisTechnologyDetails h2 { text-align: center ; }
+#AnalysisProcessDetails { background-color: transparent ; opacity: 0.8 ; float: left ; width: auto ; max-width: 30% ;}
 
-#AnalysisProcessDetails .noitems { position: relative; z-index: 10; width: 25em; }
+#AnalysisProcessDetails .noitems { position: relative ; z-index: 10 ; width: 25em ; }
 
-#AnalysisProcessDetails .items:empty { display: none; }
-#AnalysisProcessDetails .items { position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; z-index: 20; background: #CCC; border-spacing: 0; }
-#AnalysisProcessDetails .items table { border-collapse: collapse; border-width: 1pt 0.5pt; border-color: #000; border-style: solid; }
-#AnalysisProcessDetails .items tbody { padding: 2em; }
-#AnalysisProcessDetails .items td { padding: 0.2ex 1em 0.2ex 1em;  }
-#AnalysisProcessDetails .items thead tr       { border-top: 1pt solid #000; border-bottom: 1pt dotted #000; background: #29f; font-size: 120%; }
-#AnalysisProcessDetails .items thead tr.error { background: #f00; color: #fff; }
-#AnalysisProcessDetails .items .info { color: #777; font-weight: normal; font-style: italic; }
-#AnalysisProcessDetails .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
-#AnalysisProcessDetails .items .process { width: 100%; }
+#AnalysisProcessDetails .items:empty { display: none ; }
+#AnalysisProcessDetails .items { position: absolute ; top: 0px ; left: 0px ; width: 100% ; height: 100% ; z-index: 20 ; background: #CCC ; border-spacing: 0 ; }
+#AnalysisProcessDetails .items table { border-collapse: collapse ; border-width: 1pt 0.5pt ; border-color: #000 ; border-style: solid ; }
+#AnalysisProcessDetails .items tbody { padding: 2em ; }
+#AnalysisProcessDetails .items td { padding: 0.2ex 1em 0.2ex 1em ;  }
+#AnalysisProcessDetails .items thead tr       { border-top: 1pt solid #000 ; border-bottom: 1pt dotted #000 ; background: #29f ; font-size: 120% ; }
+#AnalysisProcessDetails .items thead tr.error { background: #f00 ; color: #fff ; }
+#AnalysisProcessDetails .items .info { color: #777 ; font-weight: normal ; font-style: italic ; }
+#AnalysisProcessDetails .items .multiple_values { text-align: center ; font-size: 90% ; font-weight: bold ; }
+#AnalysisProcessDetails .items .process { width: 100% ; }
 
 
-.items .action { width: 45px; }
-#AnalysisCommodities > form { float: left; width: 15em; }
-#AnalysisCommodities > form > table { width: 100%; border-top: 2pt solid black; margin-top: 1ex; }
-#commodity_detail { float: left; width: 20em; border: 1px solid #000; }
-.commodity h3 { width: 100%; background: #f92; margin: 0 0 1ex 0;}
-.commodity input { width: 98%; }
-.commodity form { width: 100%; }
+.items .action { width: 45px ; }
+#commodity_detail { float: left ; width: 20em ; border: 1px solid #000 ; }
+.commodity h3 { width: 100% ; background: #f92 ; margin: 0 0 1ex 0 ;}
+.commodity input { width: 98% ; }
+.commodity form { width: 100% ; }
 
 .items button.add:hover,
 .items button.remove:hover,
-.items button.cancel:hover { color: #000; opacity: .8; font-weight: bold; };
+.items button.cancel:hover { color: #000 ; opacity: .8 ; font-weight: bold ; } ;
 
 .items button.add {
-	background-color: transparent;
-	background-repeat: no-repeat;
-	background-origin: content-box;
-	background-position: center;
-	width: 100%;
-	color: transparent;
-	border: none;
-	font-weight: bold;
-	background-image: url('/static/process_interface/icons/blue_list_add.svg');
-	background-size: 25px 25px;
-	height: 25px;
+	background-color: transparent ;
+	background-repeat: no-repeat ;
+	background-origin: content-box ;
+	background-position: center ;
+	width: 100% ;
+	color: transparent ;
+	border: none ;
+	font-weight: bold ;
+	background-image: url('/static/process_interface/icons/blue_list_add.svg') ;
+	background-size: 25px 25px ;
+	height: 25px ;
 }
 
 .items button.remove, .items button.cancel {
-	background-color: transparent;
-	background-repeat: no-repeat;
-	background-origin: content-box;
-	background-position: center;
-	width: 100%;
-	color: transparent;
-	border: none;
-	font-weight: bold;
-	background-image: url('/static/process_interface/icons/red_list_remove.svg');
-	background-size: 38px 12px;
-	height: auto;
+	background-color: transparent ;
+	background-repeat: no-repeat ;
+	background-origin: content-box ;
+	background-position: center ;
+	width: 100% ;
+	color: transparent ;
+	border: none ;
+	font-weight: bold ;
+	background-image: url('/static/process_interface/icons/red_list_remove.svg') ;
+	background-size: 38px 12px ;
+	height: auto ;
 }
 
-.innertable .data { font-family: monospace; text-align: right; }
-#AnalysisProcessDetails .items .innertable .data td { padding-right: 1em; }
-#AnalysisProcessDetails .items .innertable { background: inherit; font-weight:normal; width: 100%; }
-#AnalysisProcessDetails .items form input[readonly] { background: transparent; color: #000; border: 0; text-align: center; }
-#AnalysisProcessDetails .items table.innertable caption { font-size: 90%; font-weight: bold; }
-#AnalysisProcessDetails .items table.innertable img { padding: 1ex; }
-#AnalysisProcessDetails .items table.innertable tbody { background: inherit; }
-#AnalysisProcessDetails .items table.innertable td { padding: 0; }
-#AnalysisProcessDetails .items table.innertable thead th img { padding: 0;}
-#AnalysisProcessDetails .items table.innertable thead tr { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid #000; background: inherit; }
-#AnalysisProcessDetails .items table.innertable { border: 0; }
-#AnalysisProcessDetails .items thead tr th { text-align: center; }
-#AnalysisProcessDetails .items tr th { text-align: left; }
+.innertable .data { font-family: monospace ; text-align: right ; }
+#AnalysisProcessDetails .items .innertable .data td { padding-right: 1em ; }
+#AnalysisProcessDetails .items .innertable { background: inherit ; font-weight:normal ; width: 100% ; }
+#AnalysisProcessDetails .items form input[readonly] { background: transparent ; color: #000 ; border: 0 ; text-align: center ; }
+#AnalysisProcessDetails .items table.innertable caption { font-size: 90% ; font-weight: bold ; }
+#AnalysisProcessDetails .items table.innertable img { padding: 1ex ; }
+#AnalysisProcessDetails .items table.innertable tbody { background: inherit ; }
+#AnalysisProcessDetails .items table.innertable td { padding: 0 ; }
+#AnalysisProcessDetails .items table.innertable thead th img { padding: 0 ;}
+#AnalysisProcessDetails .items table.innertable thead tr { font-size: 100% ; font-weight: normal ; font-style: italic ; border-bottom: 1pt solid #000 ; background: inherit ; }
+#AnalysisProcessDetails .items table.innertable { border: 0 ; }
+#AnalysisProcessDetails .items thead tr th { text-align: center ; }
+#AnalysisProcessDetails .items tr th { text-align: left ; }
 
-#AnalysisTechnologyDetails { background-color: lightgreen; opacity: 0.8; float: right; max-width: 30%; }
-#AnalysisTechnologyDetails .items { padding: 1em; border-spacing: 0; }
-#AnalysisTechnologyDetails .items td { padding: 1ex 3ex 1ex 1ex;  }
-#AnalysisTechnologyDetails .items .info { color: #777; font-weight: normal; font-style: italic; }
-#AnalysisTechnologyDetails .items tbody { padding: 2em; background: gray; border-collapse: separate; }
-#AnalysisTechnologyDetails .items .multiple_values { text-align: center; font-size: 90%; font-weight: bold; }
-#AnalysisTechnologyDetails .items .innertable { background: inherit; font-weight:normal; width: 100%; }
-#AnalysisTechnologyDetails .items .innertable thead th { font-size: 100%; font-weight: normal; font-style: italic; border-bottom: 1pt solid black; }
-#AnalysisTechnologyDetails .items .innertable tbody { background: inherit; }
-#AnalysisTechnologyDetails .items .innertable caption { font-size: 110%; font-weight: bold; border-bottom: 1px dotted #000; }
-#AnalysisTechnologyDetails .items th[colspan='2'] { border-top: 1pt solid black; border-bottom: 1pt dotted black; background: #29f; font-size: 120%; }
+#AnalysisTechnologyDetails { background-color: lightgreen ; opacity: 0.8 ; float: right ; max-width: 30% ; }
+#AnalysisTechnologyDetails .items { padding: 1em ; border-spacing: 0 ; }
+#AnalysisTechnologyDetails .items td { padding: 1ex 3ex 1ex 1ex ;  }
+#AnalysisTechnologyDetails .items .info { color: #777 ; font-weight: normal ; font-style: italic ; }
+#AnalysisTechnologyDetails .items tbody { padding: 2em ; background: gray ; border-collapse: separate ; }
+#AnalysisTechnologyDetails .items .multiple_values { text-align: center ; font-size: 90% ; font-weight: bold ; }
+#AnalysisTechnologyDetails .items .innertable { background: inherit ; font-weight:normal ; width: 100% ; }
+#AnalysisTechnologyDetails .items .innertable thead th { font-size: 100% ; font-weight: normal ; font-style: italic ; border-bottom: 1pt solid black ; }
+#AnalysisTechnologyDetails .items .innertable tbody { background: inherit ; }
+#AnalysisTechnologyDetails .items .innertable caption { font-size: 110% ; font-weight: bold ; border-bottom: 1px dotted #000 ; }
+#AnalysisTechnologyDetails .items th[colspan='2'] { border-top: 1pt solid black ; border-bottom: 1pt dotted black ; background: #29f ; font-size: 120% ; }
 
-#status { padding: 1em; position: fixed; bottom: 0; left: 1em; background: #ccc; z-index: 1000; opacity: 1; }
-#unauthorized { padding: 1em 1ex; min-width: 15em; max-width: 30em; width: 50%; z-index: -1000; position: fixed; bottom: 1ex; right: 1em; opacity: 0.8; background: #aaa;}
+#status { padding: 1em ; position: fixed ; bottom: 0 ; left: 1em ; background: #ccc ; z-index: 1000 ; opacity: 1 ; }
+#unauthorized { padding: 1em 1ex ; min-width: 15em ; max-width: 30em ; width: 50% ; z-index: -1000 ; position: fixed ; bottom: 1ex ; right: 1em ; opacity: 0.8 ; background: #aaa ;}
 
 
-input[type='number'], input[type='password'] { background: inherit; border: 1pt solid; width: 6em; text-align: right; }
-textarea { background: inherit; border: 1pt solid; width: 99%; }
-input[type='submit'] { position: absolute; display: block; left: 0; top: -50px; width: 1px; height: 1px; }
-input.show[type='submit'] { display: inline; width: auto; height: auto; }
+input[type='number'], input[type='password'] { background: inherit ; border: 1pt solid ; width: 6em ; text-align: right ; }
+textarea { background: inherit ; border: 1pt solid ; width: 99% ; }
+input[type='submit'] { position: absolute ; display: block ; left: 0 ; top: -50px ; width: 1px ; height: 1px ; }
+input.show[type='submit'] { display: inline ; width: auto ; height: auto ; }
 
-.analysis input, .analysis textarea { font-size: 120%; }
-.full_input input { width: 99%; }
-.textleftalign input { text-align: left; }
-.textcenter input { text-align: center; }
+.analysis input, .analysis textarea { font-size: 120% ; }
+.full_input input { width: 99% ; }
+.textleftalign input { text-align: left ; }
+.textcenter input { text-align: center ; }
 
-tr.even td, tr.odd td { background-size: auto 100%; background-repeat: no-repeat; background-origin: content-box; background-position: center; }
+tr.even td, tr.odd td { background-size: auto 100% ; background-repeat: no-repeat ; background-origin: content-box ; background-position: center ; }
 
-.is_member     { background-image: url('/static/process_interface/icons/white_on_green_checkmark.svg'); }
-.is_not_member { background-image: url('/static/process_interface/icons/x_mark.svg'); }
+.is_member     { background-image: url('/static/process_interface/icons/white_on_green_checkmark.svg') ; }
+.is_not_member { background-image: url('/static/process_interface/icons/x_mark.svg') ; }
 
-.textcenter { text-align: center; }
-.clear { clear: both; }
+.textcenter { text-align: center ; }
+.clear { clear: both ; }
 
-.hidden { display: none; }
+.hidden { display: none ; }
 
-.odd  { background-color: #ddd; }
-.even { background-color: #fff; }
+.odd  { background-color: #ddd ; }
+.even { background-color: #fff ; }
 
-.fixed { position: fixed; }
+.fixed { position: fixed ; }
 
-.error { color: #f00; font-weight: bold; }
+.error { color: #f00 ; font-weight: bold ; }
 
-.clickable { cursor: pointer; }
+.clickable { cursor: pointer ; }
 
 /* To be used with elements that can be edited, like input elements, or
    click/editable elements */
-.modifiable { font-family: 'Ubuntu Mono', mono; }
+.modifiable { font-family: 'Ubuntu Mono', mono ; }
 
 /* jQuery selectable class */
 .ui-selectable-helper {
-	position: absolute;
-	z-index: 100;
-	border: 1px dotted black;
+	position: absolute ;
+	z-index: 100 ;
+	border: 1px dotted black ;
 }
 
-.ui-selecting { background: #ade; }
-.ui-selected  { background: #29f; }
+.ui-selecting { background: #ade ; }
+.ui-selected  { background: #29f ; }
 
 /* hbox and vbox classes */
 
 .hbox {
-	display: -webkit-box;
-	-webkit-box-orient: horizontal;
-	-webkit-box-align: stretch;
+	display: -webkit-box ;
+	-webkit-box-orient: horizontal ;
+	-webkit-box-align: stretch ;
 
-	display: -moz-box;
-	-moz-box-orient: horizontal;
-	-moz-box-align: stretch;
+	display: -moz-box ;
+	-moz-box-orient: horizontal ;
+	-moz-box-align: stretch ;
 
-	display: box;
-	box-orient: horizontal;
-	box-align: stretch;
+	display: box ;
+	box-orient: horizontal ;
+	box-align: stretch ;
 }
 
 .hbox > * {
-	-webkit-box-flex: 0;
-	-moz-box-flex: 0;
-	box-flex: 0;
-	display: block;
+	-webkit-box-flex: 0 ;
+	-moz-box-flex: 0 ;
+	box-flex: 0 ;
+	display: block ;
 }
 
 .vbox {
-	display: -webkit-box;
-	-webkit-box-orient: vertical;
-	-webkit-box-align: stretch;
+	display: -webkit-box ;
+	-webkit-box-orient: vertical ;
+	-webkit-box-align: stretch ;
 
-	display: -moz-box;
-	-moz-box-orient: vertical;
-	-moz-box-align: stretch;
+	display: -moz-box ;
+	-moz-box-orient: vertical ;
+	-moz-box-align: stretch ;
 
-	display: box;
-	box-orient: vertical;
-	box-align: stretch;
+	display: box ;
+	box-orient: vertical ;
+	box-align: stretch ;
 }
 
 .vbox > * {
-	-webkit-box-flex: 0;
-	-moz-box-flex: 0;
-	box-flex: 0;
-	display: block;
+	-webkit-box-flex: 0 ;
+	-moz-box-flex: 0 ;
+	box-flex: 0 ;
+	display: block ;
 }
 
 .spacer {
-	-webkit-box-flex: 1;
-	-moz-box-flex: 1;
-	box-flex: 1;
+	-webkit-box-flex: 1 ;
+	-moz-box-flex: 1 ;
+	box-flex: 1 ;
 }
 
 .reverse {
-	-webkit-box-direction: reverse;
-	-moz-box-direction: reverse;
-	box-direction: reverse;
+	-webkit-box-direction: reverse ;
+	-moz-box-direction: reverse ;
+	box-direction: reverse ;
 }
 
 .boxFlex0 {
-	-webkit-box-flex: 0;
-	-moz-box-flex: 0;
-	box-flex: 0;
+	-webkit-box-flex: 0 ;
+	-moz-box-flex: 0 ;
+	box-flex: 0 ;
 }
 
 .boxFlex1, .boxFlex {
-	-webkit-box-flex: 1;
-	-moz-box-flex: 1;
-	box-flex: 1;
+	-webkit-box-flex: 1 ;
+	-moz-box-flex: 1 ;
+	box-flex: 1 ;
 }
 
 .boxFlex2 {
-	-webkit-box-flex: 2;
-	-moz-box-flex: 2;
-	box-flex: 2;
+	-webkit-box-flex: 2 ;
+	-moz-box-flex: 2 ;
+	box-flex: 2 ;
 }
 
 .boxGroup1 {
-	-webkit-box-flex-group: 1;
-	-moz-box-flex-group: 1;
-	box-flex-group: 1;
+	-webkit-box-flex-group: 1 ;
+	-moz-box-flex-group: 1 ;
+	box-flex-group: 1 ;
 }
 
 .boxGroup2 {
-	-webkit-box-flex-group: 2;
-	-moz-box-flex-group: 2;
-	box-flex-group: 2;
+	-webkit-box-flex-group: 2 ;
+	-moz-box-flex-group: 2 ;
+	box-flex-group: 2 ;
 }
 
 .start {
-	-webkit-box-pack: start;
-	-moz-box-pack: start;
-	box-pack: start;
+	-webkit-box-pack: start ;
+	-moz-box-pack: start ;
+	box-pack: start ;
 }
 
 .end {
-	-webkit-box-pack: end;
-	-moz-box-pack: end;
-	box-pack: end;
+	-webkit-box-pack: end ;
+	-moz-box-pack: end ;
+	box-pack: end ;
 }
 
 .center {
-	-webkit-box-pack: center;
-	-moz-box-pack: center;
-	box-pack: center;
+	-webkit-box-pack: center ;
+	-moz-box-pack: center ;
+	box-pack: center ;
 }
