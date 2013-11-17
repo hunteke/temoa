@@ -15,6 +15,8 @@ body { height: 100% ; margin: 1em ; }
 .center_wrapper { margin: 0 auto ; text-align:center ; }
 #ShowHideTechs, #ShowHideAnalysis { margin: 0 auto ; }
 
+#DownloadDataFile { margin: 0 auto; float: right; }
+
 .closeButton {
 	float: right ;
 }
