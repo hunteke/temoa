@@ -823,8 +823,7 @@ can.Control('AnalysisDetail', {
 
 				new AnalysisCommodityLists( '#AnalysisCommodities', {
 					analysis: analysis });
-				new AnalysisParameters( '#AnalysisParameters', {
-					analysis: analysis });
+
 			}
 		).fail( function ( error ) {
 			console.log( error );
@@ -835,7 +834,29 @@ can.Control('AnalysisDetail', {
 			$('#AnalysisCommodities').toggle( 'slide', { direction: 'left' });
 		});
 		$el.find('#ShowHideAnalysisParameters').click( function ( ev ) {
-			$('#AnalysisParameters').toggle( 'slide', { direction: 'left' });
+			// due to the order of events when adding and removing various models
+			// (e.g., commodity_demand items), it turns out to be necessary to
+			// build this view afresh each time it is opened.  Or, more correctly,
+			// to destroy it when it's closed.  Hence, the replaceWith call after
+			// it's closed.
+			var $div = $('#AnalysisParameters');
+
+			if ( $div.is(':hidden') )
+				// if it's currently hidden, the user has requested it be opened,
+				// so, create it.
+				new AnalysisParameters( '#AnalysisParameters', {
+					analysis: analysis });
+
+			$div.toggle( 'slide', { direction: 'left' }, function ( ) {
+				// once closed, remove so control removes itself
+				var $div = $(this);
+				if ( $div.is(':hidden') )
+					// this function is /after/ the effect has finished, so if it is
+					// hidden now, then it's time to remove the control.  Replacing
+					// the div with an empty new div also clears out things like
+					// .data(), and event listeners, etc.
+					$div.replaceWith($('<div>', {id: 'AnalysisParameters'}));
+			});
 		});
 	},
 	save: function ( $el ) {
