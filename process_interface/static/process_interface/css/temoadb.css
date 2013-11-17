@@ -103,6 +103,20 @@ body { height: 100% ; margin: 1em ; }
 	height: 25px ;
 }
 
+.items button.remove[disabled='disabled'],
+.items button.cancel[disabled='disabled'] {
+	background-color: transparent ;
+	background-repeat: no-repeat ;
+	background-origin: content-box ;
+	background-position: center ;
+	width: 100% ;
+	color: gray ;
+	border: none ;
+	font-weight: bold ;
+	background-size: 38px 12px ;
+	background-image: url('/static/process_interface/icons/gray_list_remove.svg') ;
+	height: auto;
+}
 .items button.remove, .items button.cancel {
 	background-color: transparent ;
 	background-repeat: no-repeat ;

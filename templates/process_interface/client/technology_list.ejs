@@ -11,7 +11,7 @@ if ( username ) { %>
 		<tbody>
 		<% tcount = 0; technologies.each( function ( t ) { %>
 			<tr class='<%== oddeven[++tcount % 2] %>' data-id='<%= t.attr('id') %>' <%= ($el) -> $el.data('technology', t) %>>
-				<td><%== username === t.attr('username') ? "<button class='remove hidden' type='button' name='RemoveTechnology'>Del</button>" : '' %></td>
+				<td><%== username === t.attr('username') ? "<button class='remove' disabled='disabled' title='Press Shift to enable buttons' type='button' name='RemoveTechnology'>Del</button>" : '' %></td>
 				<td><%= t.attr('name') %></td>
 			</tr>
 		<% }); %>

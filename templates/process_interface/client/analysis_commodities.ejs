@@ -22,7 +22,7 @@
 		<tbody>
 		<% dcount = 0; analysis.commodity_demand.each( function( c ) { %>
 			<tr class='<%== oddeven[++dcount % 2] %>' data-id='<%= c.attr('id') %>' <%= ($el) -> $el.data('commodity', c) %>>
-				<td class='action'><button class='remove hidden' type='button' name='CommodityDemandRemove'>Del</button></td>
+				<td class='action'><button class='remove' disabled='disabled' title='Press Shift to enable buttons' type='button' name='CommodityDemandRemove'>Del</button></td>
 				<td><%= c.attr('name') %></td>
 			</tr>
 		<% }); %>
@@ -34,7 +34,7 @@
 		<tbody>
 		<% pcount = 0; analysis.commodity_physical.each( function( c ) { %>
 			<tr class='<%== oddeven[++pcount % 2] %>' data-id='<%= c.attr('id') %>' <%= ($el) -> $el.data('commodity', c) %>>
-				<td class='action'><button class='remove hidden' type='button' name='CommodityPhysicalRemove'>Del</button></td>
+				<td class='action'><button class='remove' disabled='disabled' title='Press Shift to enable buttons' type='button' name='CommodityPhysicalRemove'>Del</button></td>
 				<td><%= c.attr('name') %></td>
 			</tr>
 		<% }); %>
@@ -46,7 +46,7 @@
 		<tbody>
 		<% ecount = 0; analysis.commodity_emission.each( function( c ) { %>
 			<tr class='<%== oddeven[++ecount % 2] %>' data-id='<%= c.attr('id') %>' <%= ($el) -> $el.data('commodity', c) %>>
-				<td class='action'><button class='remove hidden' type='button' name='CommodityPhysicalRemove'>Del</button></td>
+				<td class='action'><button class='remove' disabled='disabled' title='Press Shift to enable buttons' type='button' name='CommodityPhysicalRemove'>Del</button></td>
 				<td><%= c.attr('name') %></td>
 			</tr>
 		<% }); %>

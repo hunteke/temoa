@@ -10,7 +10,7 @@
 	<tbody>
 	<% pcount = 0; processes.each( function ( p ) { %>
 		<tr class='<%== cssclass[ ++pcount %2 ] %>' <%= ($el) -> $el.data('process', p) %> data-id='<%= p.attr('id') %>'>
-			<td class='action'><button class='remove hidden' type='button' name='ProcessRemove'>Del</button></td>
+			<td class='action'><button class='remove' disabled='disabled' title='Press Shift to enable buttons' type='button' name='ProcessRemove'>Del</button></td>
 			<td><%= p.technology.attr('name') %></td>
 			<td><%= p.attr('vintage') %></td>
 		</tr>

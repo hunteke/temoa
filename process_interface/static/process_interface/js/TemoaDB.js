@@ -3426,13 +3426,13 @@ function BeginTemoaDBApp ( ) {
 
 	$(document).bind('keydown', 'shift', function ( e ) {
 		hideStatus();
-		showStatus('Showing remove buttons ...', 'info');
-		setTimeout( function ( ) { $('.remove').removeClass('hidden'); }, 1 );
+		showStatus('Enabling remove buttons ...', 'info');
+		setTimeout( function ( ) { $('.remove').removeAttr('disabled'); }, 1 );
 	});
 	$(document).bind('keyup', 'shift', function ( e ) {
 		hideStatus();
-		showStatus('Hiding remove buttons ...', 'info');
-		setTimeout( function ( ) { $('.remove').addClass('hidden'); }, 1 );
+		showStatus('Disabling remove buttons ...', 'info');
+		setTimeout( function ( ) { $('.remove').attr('disabled', true); }, 1 );
 	});
 }
 
