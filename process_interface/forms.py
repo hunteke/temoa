@@ -198,6 +198,28 @@ class DemandDefaultDistributionForm ( F.Form ):
 
 
 
+class DemandForm ( F.Form ):
+	value = F.FloatField( label=_('Value') )
+
+	def __init__ ( self, *args, **kwargs ):
+		self.instance = kwargs.pop( 'instance' )
+		super( DemandForm, self ).__init__( *args, **kwargs )
+
+
+	def save ( self ):
+		dem = self.instance
+		cd = self.cleaned_data
+
+		dem.value = cd['value']
+
+		# convenience
+		cd['name'] = '{}, {}'.format(
+		  dem.demand.commodity.name, dem.period.vintage )
+
+		dem.save()
+
+
+
 class AnalysisCommodityForm ( F.Form ):
 	name = F.RegexField( label=_('Name'), regex=r'^[A-z_]\w*$' )
 

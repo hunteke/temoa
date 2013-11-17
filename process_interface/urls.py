@@ -33,6 +33,10 @@ from views import (
   analysis_update_demanddefaultdistribution,
   analysis_delete_demanddefaultdistribution,
 
+  analysis_create_demand,
+  analysis_update_demand,
+  analysis_delete_demand,
+
   technology_list,
   technology_create,
   technology_update,
@@ -94,6 +98,11 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/demanddefaultdistribution/create/segfrac/(?P<segfrac_id>\d+)$', analysis_create_demanddefaultdistribution, name='analysis_create_demanddefaultdistribution' ),
   url(r'^analysis/(?P<analysis_id>\d+)/demanddefaultdistribution/update/(?P<ddd_id>\d+)$', analysis_update_demanddefaultdistribution, name='analysis_update_demanddefaultdistribution' ),
   url(r'^analysis/(?P<analysis_id>\d+)/demanddefaultdistribution/remove/(?P<ddd_id>\d+)$', analysis_delete_demanddefaultdistribution, name='analysis_delete_demanddefaultdistribution' ),
+
+# Analysis Demands
+  url(r'^analysis/(?P<analysis_id>\d+)/demand/create/commodity/(?P<demand_commodity_id>\d+)/period/(?P<period>\d+)$', analysis_create_demand, name='analysis_create_demand' ),
+  url(r'^analysis/(?P<analysis_id>\d+)/demand/update/(?P<demand_id>\d+)$', analysis_update_demand, name='analysis_update_demand' ),
+  url(r'^analysis/(?P<analysis_id>\d+)/demand/remove/(?P<demand_id>\d+)$', analysis_delete_demand, name='analysis_delete_demand' ),
 
 # Process
   url(r'^analysis/(?P<analysis_id>\d+)/process/list$', process_list, name='process_list'),

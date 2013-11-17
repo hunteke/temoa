@@ -2,6 +2,7 @@
 <button type='button' id='AnalysisParametersCloseButton' class='closeButton'>Close</button>
 <% if ( username !== null && (analysis.username === username) ) { %>
 	<form onsubmit='return false;' id='AnalysisSegFracs_<%= analysis.attr('id') %>'></form>
+	<form onsubmit='return false;' id='AnalysisDemands_<%= analysis.attr('id') %>'></form>
 	<form onsubmit='return false;' id='AnalysisDemandDefaultDistribution_<%= analysis.attr('id') %>'></form>
 	<table class='items segfracs'>
 		<caption>Annual Time Slices (SegFrac), Default Distribution (DD)</caption>
@@ -41,5 +42,38 @@
 		<tr><td></td><td colspan='<%= Object.keys( analysis.segfracs.attr() ).length %>'><p class='error'></p><button type='button' name='SegFracUpdate'>Update</button><button type='button' name='SegFracCancel'>Cancel</button></td></tr>
 		</tbody>
 	</table>
+	<br>
+<% if ( analysis.commodity_demand.length > 0 ) { %>
+	<table class='items demands'>
+		<caption>Period Demand Values</caption>
+		<thead><tr><th></th>
+		<% analysis.future_periods.each( function ( fp ) { %>
+			<th><%= fp %></th>
+		<% }); %>
+		</tr></thead>
+		<tbody>
+		<% count = 0; analysis.commodity_demand.each( function( c ) { %>
+			<tr class='<%== oddeven[++count % 2] %>'>
+				<th><%= c.attr('name') %></th>
+				<% analysis.future_periods.each( function ( fp ) {
+					var name = c.attr('name') + ', ' + fp;
+					var dem = analysis.future_demands.attr( name );
+					console.log( 'Name, dem: ', name, dem.attr('value'), dem );
+				%>
+					<td <%= ($el) -> $el.data('demand', dem) %>><input
+					  form='AnalysisDemands_<%= analysis.attr('id') %>'
+					  name='<%= dem.attr('name') %>'
+					  type='number'
+					  autocomplete='off'
+					  value='<%= dem.attr('value') || '' %>'></td>
+				<% }); %>
+			</tr>
+		<% }); %>
+		<tr><td></td><td colspan='<%= analysis.future_periods.attr('length') %>'><p class='error'></p><button type='button' name='DemandsUpdate'>Update</button><button type='button' name='DemandsCancel'>Cancel</button></td></tr>
+		</tbody>
+	</table>
+	<% } else { %>
+	<p>There are no end-use demand commodities defined.</p>
+	<% } %>
 <% } else { %>
 <% } %>

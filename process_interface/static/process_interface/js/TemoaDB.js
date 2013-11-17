@@ -392,6 +392,32 @@ can.Model('AnalysisDemandDefaultDistribution', {
 	}
 });
 
+can.Model('AnalysisDemand', {
+	create:  'POST /analysis/{aId}/demand/create/commodity/{cId}/period/{period}',
+	update:  'POST /analysis/{aId}/demand/update/{id}',
+	destroy: 'DELETE /analysis/{aId}/demand/remove/{id}',
+	attributes: {
+		aId: 'int',
+		cId: 'int',
+		id: 'int',
+		commodity_name: 'string',
+		period: 'int',
+		value: 'number'
+	}
+}, {
+	name: can.compute( function ( ) {
+		var d = this.attr('commodity_name'), p = this.attr('period');
+		if ( d && p )
+			return d + ', ' + p;
+		return '';
+	}),
+	partialUpdate: function ( id, attr ) {
+		var url = '/analysis/{aId}/demand/update/{id}';
+		url = replaceNamedArgs( url, this.attr() );
+		return $.post( url, attr );
+	}
+});
+
 can.Model('Analysis', {
 	findAll: 'GET ' + ROOT_URL + '/analysis/list',
 	findOne: 'GET ' + ROOT_URL + '/analysis/view/{aId}',
@@ -419,6 +445,7 @@ can.Model('Analysis', {
 		// Map of Maps, and convert each item to models during initialization.
 		// (For implementation, search for 'ddd' below.)
 //		demanddefaultdistribution: 'AnalysisDemandDefaultDistribution.models',
+//		future_demands: 'AnalysisDemand.models',
 		commodity_demand:   'AnalysisCommodityDemand.models',
 		commodity_emission: 'AnalysisCommidityEmission.models',
 		commodity_physical: 'AnalysisCommodityPhysical.models',
@@ -597,6 +624,39 @@ can.Control('AnalysisDetail', {
 						fp_list.push( new_fp_list[i] );
 					}
 				}
+				function update_future_demands ( ev, attr, how, newVal, oldVal ) {
+					var fd_map   = analysis.future_demands;
+					var fp_list  = analysis.future_periods.attr();
+					var dem_list = analysis.commodity_demand.attr();
+					var old_fd_map = fd_map.attr();
+
+					for ( var i in fp_list ) {
+						for ( var j in dem_list ) {
+							var dem = dem_list[ j ];
+							var key = dem.name + ', ' + fp_list[ i ];
+							var fd = fd_map.attr( key );
+
+							if ( ! fd ) {
+								fd = new AnalysisDemand({
+									aId:    analysis.id,
+									cId:    dem.id,
+									period: fp_list[ i ],
+									commodity_name: dem.name
+								});
+							} else if ( ! fd.isNew ) {
+								// CanJS doesn't convert non-List returned models, so we
+								// need to explicitly make it a can.Model
+								fd = new AnalysisDemand( fd.attr() );
+							}
+							fd_map.attr( key, fd );
+
+							delete old_fd_map[ key ];
+						}
+					}
+
+					for ( var key in old_fd_map )
+						fd_map.removeAttr( key ); // clean up stale future demands
+				}
 				function update_outputs ( ev, attr, how, newVal, oldVal ) {
 					var output_map = analysis.commodity_output;
 					if ( 'remove' === how && typeof( oldVal ) === "object" ) {
@@ -620,6 +680,7 @@ can.Control('AnalysisDetail', {
 				var ce = commodities[0].emission;
 				var c_output = new can.Map(); // to be union of cd & cp
 				var future_periods = new can.List();
+				var future_demands = analysis.future_demands || new can.Map();
 				var segfracs = analysis.segfracs || new can.List();
 
 				analysis.attr({
@@ -627,6 +688,7 @@ can.Control('AnalysisDetail', {
 					commodity_demand:   cd,
 					commodity_physical: cp,
 					commodity_output:   c_output,  // to be union of cd & cp
+					future_demands:     future_demands,
 					future_periods:     future_periods,
 					segfracs:           segfracs,
 				});
@@ -645,14 +707,41 @@ can.Control('AnalysisDetail', {
 				// event that bubbles to the analysis model, initiating infinite
 				// recursion.
 				analysis.on('vintages', update_future_periods );
+				analysis.on('vintages', update_future_demands );
+				cd.on('change', update_future_demands );
 				update_future_periods();
+				update_future_demands();
 
 				var _segFracs = {};
 				var ddd_map = analysis.demanddefaultdistribution;
+				var dem_map = analysis.future_demands;
 
 				for ( var i = 0; i < segfracs.length; ++i ) {
 					var sf = segfracs[ i ];
 					_segFracs[ sf.attr('name') ] = sf;
+				}
+
+				var dem_coms = analysis.commodity_demand;
+				for ( var i = 0; i < analysis.commodity_demand.length; ++i ) {
+					for ( var j = 0; j < future_periods.length; ++j ) {
+						var cname = dem_coms[ i ]['name'];
+						var dem_name = cname + ', ' + future_periods[ j ];
+						var dem = future_demands.attr( dem_name )
+
+						if ( ! dem ) {
+							dem = new AnalysisDemand({
+								aId: analysis.id,
+								cId: dem_coms[ i ]['id'],
+								period: future_periods[ i ],
+								commodity_name: cname
+							});
+						} else if ( ! dem.isNew ) {
+							// CanJS doesn't convert non-List returned models, so we
+							// need to explicitly make it a can.Model
+							dem = new AnalysisDemand( dem.attr() );
+						}
+						dem_map.attr( dem_name, dem );
+					}
 				}
 
 				for ( var sf_key in _segFracs ) {
@@ -1221,24 +1310,141 @@ can.Control('AnalysisParameters', {
 
 		save_to_server({ to_save: to_save, inputs: $inputs, display: $sfTable });
 	},
+	saveDemands: function ( $el ) {  // AnalysisParameters
+		console.log( 'Saving demands.');
+		var aId = this.analysis.id;
+		var errors  = {};
+		var to_save = new Array();
+		var to_remove = new Array();
+		var demand_name_re = /^([A-z_]\w*), (\d+)$/;  // not flexible on space.
+
+		var $form = $( 'form#AnalysisDemands_' + aId );
+		var $demTable = $el.closest('.demands');
+		var $inputs = $demTable.find(':input').not("[disabled='disabled']");
+		var data = can.deparam( $form.serialize() );
+
+		$demTable.find('.error').empty(); // remove any previous attempt's errors
+		disable( $inputs );
+
+		for ( var name in data ) {
+			data[ name ] = $.trim( data[ name ]);
+			if ( name.match( demand_name_re ) ) {
+				if ( ! data[ name ] )
+					continue;
+
+				if ( isNaN(Number(data[ name ])) || 0 == Number(data[ name ]) ) {
+					var msg = 'Must be empty, or a number in the range (0, 1].';
+					errors[ name ] = [msg];
+				}
+			}
+		}
+
+		if ( Object.keys( errors ).length > 0 ) {
+			// client-side checking for user convenience.  The server will check
+			// for itself, of course.
+			enable( $inputs );
+			displayErrors( $demTable, errors );
+			return;
+		}
+
+		for ( var name in data ) {
+			console.log( 'data[' + name + '] = ', data[ name ] );
+
+			if ( ! name.match( demand_name_re ) )
+				continue;
+
+			var sel = '[name="' + name + '"]';
+			var $el = $demTable.find( sel ).closest('td');
+			var dem = $el.data('demand');
+
+			if ( ! data[ name ] && ! dem.isNew() ) {
+				// if no value, and dem is not new, delete on server, and
+				// replace locally.  This is in lieu of a button.
+				to_remove.push( [dem, sel] );
+				continue;
+			}
+
+			to_save.push( [dem, { value: data[ name ]}]);
+		}
+
+		for ( var i = 0; i < to_remove.length; ++i ) {
+			var dem = to_remove[i][0];
+			dem._sel = to_remove[i][1];
+			console.log( 'REMOVE: ', to_remove[i]);
+
+			dem.destroy( function ( destroyed_model ) {
+				// Succeeded.  Now kill id and value locally.  Accordingly, there
+				// is no need to create a new dem object.
+				this.attr({id: null, value: null});
+
+				var $el = $('.demands ' + this.sel);
+				console.log( 'Animate? ', sel, $el );
+				//this._el.animate({backgroundColor: '#dd0'
+				//      }).animate({backgroundColor: 'transparent'});
+				delete this.sel;
+			}, function ( jqXHR, text_status, description ) {
+				this._el.animate({backgroundColor: '#f00'
+				      }).animate({backgroundColor: 'transparent'});
+				this._el = null;
+				delete this._el;
+
+				if ( jqXHR && jqXHR.responseJSON ) {
+					displayErrors( $dsdTable, jqXHR.responseJSON );
+				} else {
+					console.log( 'Error received, but no JSON response: ', jqXHR );
+					showStatus( 'Unknown error while removing demand: '
+					  + description );
+				}
+			});
+		}
+
+		save_to_server({ to_save: to_save, inputs: $inputs, display: $demTable });
+	},
 	'[name="SegFracUpdate"] click': function ( $el, ev ) {
 		this.saveSegFracs( $el );
+	},
+	'[name="DemandsUpdate"] click': function ( $el, ev ) {
+		ev.preventBubble = true;
+		this.saveDemands( $el );
+		return false;
 	},
 	'[name="SegFracRemove"] click': function ( $el, ev ) {
 		$el.closest('th').data('segfrac').destroy();
 	},
+	'[name="DDDRemove"] click': function ( $el, ev ) {
+		var ddd = $el.closest('td').data('slicedefault');
+		var slice = ddd.timeslice;
+		var slice_name = slice.name();
+		ddd.destroy();
+
+		ddd = new AnalysisDemandDefaultDistribution({
+			aId: this.analysis.id,
+			sfId: slice.id,
+			timeslice: slice
+		});
+		this.analysis.demanddefaultdistribution.attr( slice_name, ddd );
+
+		// Since the template keys off of segfracs, replacing the ddd is not
+		// good enough.  Also, segfracs does not have a "setDirty" setter,
+		// so we make it dirty with an effective non-op kludge:
+		this.analysis.segfracs.unshift( this.analysis.segfracs.shift() );
+	},
 	'[name="SegFracCancel"] click': function ( $el, ev ) {
 		var $item = $el.closest('.segfracs');
 		var segfracs = this.analysis.segfracs;
+		var demanddefaultdistribution = this.analysis.demanddefaultdistribution;
 
 		if ( segfracs && segfracs.length > 0 && segfracs[0].isNew() )
 			segfracs.shift();
 
 		for ( var i = 0; i < segfracs.length; ++i ) {
 			var sf = segfracs[ i ];
+			var ddd = demanddefaultdistribution.attr( sf.attr('name') );
+			ddd = ddd ? ddd.attr('value') : '';
 
 			$item.find('[name="SliceName_' + sf.id + '"]').val( sf.attr('name') );
 			$item.find('[name="SliceValue_' + sf.id + '"]').val( sf.value );
+			$item.find('[name="DDD_' + sf.id + '"]').val( ddd );
 		}
 
 		$item.find('.error').empty();

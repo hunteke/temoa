@@ -17,6 +17,7 @@ from models import (
   Analysis,
   AnalysisCommodity,
   CommodityType,
+  Param_Demand,
   Param_DemandDefaultDistribution,
   Param_SegFrac,
   Vintage,
@@ -25,6 +26,7 @@ from forms import (
   AnalysisCommodityForm,
   AnalysisForm,
   DemandDefaultDistributionForm,
+  DemandForm,
   SegFracForm,
   VintagesForm,
 )
@@ -77,6 +79,22 @@ def get_analysis_info ( analyses ):
 		  u'value' : ddd.value
 		}
 
+	Demands = defaultdict(dict)
+	for dem in Param_Demand.objects.filter(
+	  period__analysis__in=analyses ).select_related('period__analysis'
+	):
+		cname    = dem.demand.commodity.name
+		period   = dem.period.vintage
+		analysis = dem.period.analysis
+		Demands[ analysis ][ '{}, {}'.format(cname, period) ] = {
+		  u'aId'    : analysis.pk,
+		  u'cId'    : dem.demand.pk,
+		  u'id'     : dem.pk,
+		  u'commodity_name' : cname,
+		  u'period' : period,
+		  u'value'  : dem.value
+		}
+
 	data = [{
 	    u'id'                   : a.pk,
 	    u'username'             : a.user.username,
@@ -85,6 +103,7 @@ def get_analysis_info ( analyses ):
 	    u'period_0'             : a.period_0,
 	    u'global_discount_rate' : a.global_discount_rate,
 	    u'vintages'             : Vintages[ a ],
+	    u'future_demands'       : Demands[ a ],
 	    u'segfracs'             : SegFracs[ a ],
 	    u'demanddefaultdistribution' : DDDistribution[ a ],
 	  }
@@ -358,6 +377,122 @@ def analysis_delete_segfrac ( req, analysis_id, segfrac_id ):
 	sf = get_object_or_404( Param_SegFrac, pk=segfrac_id, analysis=analysis )
 
 	sf.delete()
+
+	status = 204  # "No Content"
+	res = HttpResponse( '', status=status )
+	set_cookie( req, res );
+
+	return res
+
+
+## Demand #####################################################################
+
+@require_login
+@require_POST
+@never_cache
+def analysis_create_demand ( req, analysis_id, demand_commodity_id, period ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	period = get_object_or_404( Vintage, vintage=period, analysis=analysis )
+	endusedemand = get_object_or_404( AnalysisCommodity,
+	  pk=demand_commodity_id,
+	  commodity_type__name='demand',
+	  analysis=analysis
+	)
+
+	status = 201  # 201 = Created
+	msgs = {}
+
+	dem = Param_Demand( period=period, demand=endusedemand )
+	form = DemandForm( req.POST, instance=dem )
+
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+
+		if 'value' in msgs:
+			cname = endusedemand.commodity.name
+			msgs[u'{}, {}'.format(cname, period.vintage)] = msgs.pop( 'value' )
+
+	else:
+		try:
+			with transaction.commit_on_success():
+				form.save()
+			msgs.update(
+			  aId    = analysis.pk,
+			  cId    = dem.demand.pk,
+			  id     = dem.pk,
+			  commodity_name = endusedemand.commodity.name,
+			  period = period.vintage,
+			  value  = dem.value
+			)
+
+		except IntegrityError as ie:
+			status = 422  # to let Javascript know there was an error
+			msg = 'Unable to create future demand ({}):  It already exists!'
+			msg = msg.format( form.cleaned_data[ 'name' ] )
+			msgs.update({ 'General Error' : msg })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+
+@require_login
+@require_POST
+@never_cache
+def analysis_update_demand ( req, analysis_id, demand_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	dem = get_object_or_404( Param_Demand,
+	  pk=demand_id, period__analysis=analysis )
+
+	status = 200
+	msgs = {}
+
+	form = DemandForm( req.POST, instance=dem )
+
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+		keys = set( msgs.keys() )
+
+		if 'value' in keys:
+			cname = dem.demand.commodity.name
+			period = dem.period.vintage
+			msgs[u'{}, {}'.format(cname, period)] = msgs.pop( 'value' )
+
+	else:
+		try:
+			with transaction.commit_on_success():
+				form.save()
+			msgs.update( value=dem.value )
+
+		except IntegrityError as ie:
+			status = 422  # to let Javascript know there was an error
+			msg = 'Unable to update end use demand ({}).  Database said: {}'
+			msg = msg.format( form.cleaned_data[ 'name' ], ie.messages[0] )
+			msgs.update({ 'General Error' : msg })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+@require_login
+@require_DELETE
+@never_cache
+def analysis_delete_demand ( req, analysis_id, demand_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	dem = get_object_or_404( Param_Demand,
+		pk=demand_id, period__analysis=analysis )
+
+	dem.delete()
 
 	status = 204  # "No Content"
 	res = HttpResponse( '', status=status )
