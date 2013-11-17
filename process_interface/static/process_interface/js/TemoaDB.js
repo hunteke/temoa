@@ -472,6 +472,11 @@ can.Model('Analysis', {
 		commodity_physical: 'AnalysisCommodityPhysical.models',
 	}
 }, {
+	partialUpdate: function ( id, attr ) {
+		var url = ROOT_URL + '/analysis/{aId}/update';
+		url = replaceNamedArgs( url, this.attr() );
+		return $.post( url, attr );
+	},
 	segFracSum: can.compute( function ( style ) {
 		var sum = 0, epsilon = 1e-6;
 		this.segfracs.each( function ( sf ) {
