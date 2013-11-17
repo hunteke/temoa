@@ -46,7 +46,12 @@ def get_process_info ( processes ):
 		return None
 
 	Efficiencies = defaultdict( list )
-	for e in Param_Efficiency.objects.filter( process__in=processes ):
+	for e in Param_Efficiency.objects.filter(
+	  process__in=processes ).select_related(
+	  'inp_commodity__commodity',
+	  'out_commodity__commodity',
+	  'process'
+	):
 		Efficiencies[ e.process ].append({
 		  'aId'   : analysis.pk,
 		  'pId'   : e.process.pk,
@@ -58,7 +63,10 @@ def get_process_info ( processes ):
 
 	EmissionActivities = defaultdict( list )
 	for ea in Param_EmissionActivity.objects.filter(
-	  efficiency__process__in=processes ):
+	  efficiency__process__in=processes ).select_related(
+	  'efficiency__process',
+	  'emission__commodity'
+	):
 		EmissionActivities[ ea.efficiency.process ].append({
 		  'aId'       : analysis.pk,
 		  'pId'       : ea.efficiency.process.pk,
@@ -69,7 +77,11 @@ def get_process_info ( processes ):
 		})
 
 	CostFixed = defaultdict( list )
-	for cf in Param_CostFixed.objects.filter( process__in=processes ):
+	for cf in Param_CostFixed.objects.filter(
+	  process__in=processes ).select_related(
+	  'process',
+	  'period'
+	):
 		CostFixed[ cf.process ].append({
 		  'aId'    : analysis.pk,
 		  'pId'    : cf.process.pk,
@@ -79,7 +91,11 @@ def get_process_info ( processes ):
 		})
 
 	CostVariable = defaultdict( list )
-	for cv in Param_CostVariable.objects.filter( process__in=processes ):
+	for cv in Param_CostVariable.objects.filter(
+	  process__in=processes ).select_related(
+	  'process',
+	  'period'
+	):
 		CostVariable[ cv.process ].append({
 		  'aId'    : analysis.pk,
 		  'pId'    : cv.process.pk,
