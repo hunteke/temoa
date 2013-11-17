@@ -3403,7 +3403,10 @@ function BeginTemoaDBApp ( ) {
 		var url = ROOT_URL + '/static/process_interface/js/QuickFunction.js';
 		url += '?_=' + new Date().getTime();
 		$.getScript( url )
-		.fail( function ( ) {
+		.fail( function ( jqXHR, status, error ) {
+			console.log(  'Error jqXHR: ', jqXHR );
+			console.log(  'Error status message: ', status );
+			console.log(  'Error information: ', error );
 			showStatus('Error reading quick function.  Typo?');
 		});
 	});
