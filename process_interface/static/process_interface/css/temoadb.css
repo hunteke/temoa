@@ -161,7 +161,7 @@ body { height: 100% ; margin: 1em ; }
 #unauthorized { padding: 1em 1ex ; min-width: 15em ; max-width: 30em ; width: 50% ; z-index: -1000 ; position: fixed ; bottom: 1ex ; right: 1em ; opacity: 0.8 ; background: #aaa ;}
 
 
-input[type='number'], input[type='password'] { background: inherit ; border: 1pt solid ; width: 6em ; text-align: right ; }
+input[type='number'], input[type='password'], input[type='text'] { background: inherit ; border: 1pt solid ; width: 6em ; text-align: right ; }
 textarea { background: inherit ; border: 1pt solid ; width: 99% ; }
 input[type='submit'] { position: absolute ; display: block ; left: 0 ; top: -50px ; width: 1px ; height: 1px ; }
 input.show[type='submit'] { display: inline ; width: auto ; height: auto ; }
