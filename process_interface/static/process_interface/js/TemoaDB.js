@@ -2875,9 +2875,9 @@ can.Control('ProcessDetail', {
 			var data  = check_for_save[ i ][ 1 ];
 
 			for ( var name in data ) {
-				if ( ('' === data[ name ] && null === model[ name ])
-					  || (data[ name ] == model[ name ] )
-				) { // intentional double equals; compares "1" and 1 equal
+				if ( ('' === data[ name ] && null == model[ name ])
+				    || (data[ name ] == model[ name ] ) )
+				{ // intentionally only one triple equals; compare "1" and 1 equal
 					delete data[ name ];
 				}
 			}
