@@ -1592,7 +1592,7 @@ can.Control('ProcessList', {
 		  AnalysisTechnology.findAll({aId: analysis.id})
 		).then( function(processes, technologies) {
 			control.processes = processes;
-			control.technologies = new can.Observe();
+			control.technologies = new can.Map();
 			for ( var i = 0; i < technologies.length; ++i ) {
 				control.technologies.attr( technologies[i].id, technologies[i] );
 			}
@@ -1631,7 +1631,7 @@ can.Control('ProcessList', {
 			};
 
 			// set up the autocomplete name options for new Process()es
-			var new_process_names = new can.Observe();
+			var new_process_names = new can.Map();
 			var cur_process_names = {};
 			for ( var i = 0; i < processes.length; ++i ) {
 				var p = processes[ i ];
