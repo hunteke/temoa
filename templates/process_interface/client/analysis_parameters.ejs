@@ -59,7 +59,6 @@
 				<% analysis.future_periods.each( function ( fp ) {
 					var name = c.attr('name') + ', ' + fp;
 					var dem = analysis.future_demands.attr( name );
-					console.log( 'Name, dem: ', name, dem.attr('value'), dem );
 				%>
 					<td <%= ($el) -> $el.data('demand', dem) %>><input
 					  form='AnalysisDemands_<%= analysis.attr('id') %>'
