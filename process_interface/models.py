@@ -403,7 +403,7 @@ class Param_DemandDefaultDistribution ( DM.Model ):
 class Param_DemandSpecificDistribution ( DM.Model ):
 	timeslice = DM.ForeignKey( Param_SegFrac )
 	demand    = DM.ForeignKey( AnalysisCommodity )
-	fraction  = DM.FloatField()
+	value     = DM.FloatField()
 
 	class Meta:
 		unique_together = ('timeslice', 'demand')
