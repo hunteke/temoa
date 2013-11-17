@@ -129,7 +129,10 @@ def get_process_info ( processes ):
 @never_cache
 def process_list ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
-	processes = Process.objects.filter( analysis=analysis )
+	processes = Process.objects.filter( analysis=analysis ).select_related(
+	  'technology',
+	  'vintage'
+	)
 
 	data = None
 	if len( processes ):
