@@ -3435,6 +3435,9 @@ function BeginTemoaDBApp ( ) {
 }
 
 $(document).ready( function () {
+	if ( DEBUG )
+		$.getScript( ROOT_URL + '/static/process_interface/js/ejs_fulljslint.js' );
+
 	BeginTemoaDBApp();
 });
 
