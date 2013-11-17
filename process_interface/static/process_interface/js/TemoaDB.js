@@ -210,9 +210,9 @@ function save_to_server ( args ) {
 		var data  = check_for_save[ i ][ 1 ];
 
 		for ( var name in data ) {
-			if ( ('' === data[ name ] && null === model[ name ])
+			if ( ('' === data[ name ] && null == model[ name ])
 				  || (data[ name ] == model[ name ] )
-			) { // intentional double equals; compares "1" and 1 equal
+			) { // intentionally one triple equals; compares "1" and 1 equal
 				delete data[ name ];
 			}
 		}
