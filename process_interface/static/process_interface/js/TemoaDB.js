@@ -6,7 +6,7 @@
 var COOKIE = 'TemoaDB_UISettings';
 
 var DEBUG = window.location.search.indexOf( 'debug=true' ) > -1;
-var ROOT_URL = document.URL.replace( '/interact/', '' );
+var ROOT_URL = window.location.pathname.replace( '/interact/', '' );
 
 var activeAnalysisList   = null
   , activeTechnologyList = null
