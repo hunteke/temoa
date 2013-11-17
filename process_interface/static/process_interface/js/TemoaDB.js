@@ -3411,9 +3411,11 @@ function BeginTemoaDBApp ( ) {
 		$('#QuickFunction').trigger('click');
 	});
 
-	$('#ReloadLibs').click( function () { reloadLibs( false ); } );
 	$(document).bind('keyup', 'ctrl+space', function () {
-		reloadLibs();
+		var queryString = '?_=' + new Date().getTime();
+		$('link[rel="stylesheet"]').each( function ( ) {
+			this.href = this.href.replace(/\?.*|$/, queryString);
+		});
 	});
 	$('#ShowHideAnalysis').click( function () {
 		$('#analysis_detail').toggle( 'slide', {direction: 'up'} );
