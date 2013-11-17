@@ -9,7 +9,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.cache import never_cache
 
-from decorators.http import require_POST, require_DELETE
+from decorators.http import require_POST, require_DELETE, require_GET
 from decorators.auth import require_login
 
 from view_helpers import set_cookie
@@ -144,6 +144,7 @@ def get_analysis_info ( analyses ):
 	return data
 
 
+@require_GET
 @never_cache
 def analysis_list ( req ):
 	analyses = Analysis.objects.all().order_by( 'user__username', 'name' )
@@ -158,6 +159,7 @@ def analysis_list ( req ):
 	return res
 
 
+@require_GET
 @never_cache
 def analysis_info ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
@@ -182,6 +184,7 @@ def analysis_info ( req, analysis_id ):
 	return res
 
 
+@require_GET
 @never_cache
 def analysis_commodity_list ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
