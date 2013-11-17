@@ -1,7 +1,6 @@
 from collections import defaultdict
 from itertools import imap
 
-from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.http import HttpResponse
