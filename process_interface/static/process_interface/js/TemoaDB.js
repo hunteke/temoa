@@ -312,7 +312,8 @@ can.Model('AnalysisCommodity', {
 
 AnalysisCommodity.extend('AnalysisCommodityDemand', {
 	destroy: function ( id ) {
-		var url = ROOT_URL + '/analysis/{aId}/delete/commodity/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/delete/commodity/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
@@ -322,7 +323,8 @@ AnalysisCommodity.extend('AnalysisCommodityDemand', {
 });
 AnalysisCommodity.extend('AnalysisCommodityEmission', {
 	destroy: function ( id ) {
-		var url = ROOT_URL + '/analysis/{aId}/delete/commodity/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/delete/commodity/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
@@ -331,7 +333,8 @@ AnalysisCommodity.extend('AnalysisCommodityEmission', {
 }, {});
 AnalysisCommodity.extend('AnalysisCommodityPhysical', {
 	destroy: function ( id ) {
-		var url = ROOT_URL + '/analysis/{aId}/delete/commodity/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/delete/commodity/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
@@ -349,9 +352,9 @@ can.Model('AnalysisCommodities', {
 }, {});
 
 can.Model('AnalysisSegFrac', {
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/segfrac/create',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/segfrac/update/{id}',
-	destroy: 'DELETE /analysis/{aId}/segfrac/remove/{id}',
+	create:  'POST '   + ROOT_URL + '/analysis/{aId}/segfrac/create',
+	update:  'POST '   + ROOT_URL + '/analysis/{aId}/segfrac/update/{id}',
+	destroy: 'DELETE ' + ROOT_URL + '/analysis/{aId}/segfrac/remove/{id}',
 	attributes: {
 		aId: 'int',
 		id: 'int',
@@ -367,16 +370,17 @@ can.Model('AnalysisSegFrac', {
 		return '';
 	}),
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL + '/analysis/{aId}/segfrac/update/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/segfrac/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
 });
 
 can.Model('AnalysisDemandDefaultDistribution', {
-	create:  'POST /analysis/{aId}/demanddefaultdistribution/create/segfrac/{sfId}',
-	update:  'POST /analysis/{aId}/demanddefaultdistribution/update/{id}',
-	destroy: 'DELETE /analysis/{aId}/demanddefaultdistribution/remove/{id}',
+	create:  'POST '   + ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/create/segfrac/{sfId}',
+	update:  'POST '   + ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/update/{id}',
+	destroy: 'DELETE ' + ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/remove/{id}',
 	attributes: {
 		aId: 'int',
 		sfId: 'int',
@@ -386,16 +390,17 @@ can.Model('AnalysisDemandDefaultDistribution', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = '/analysis/{aId}/demanddefaultdistribution/update/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/demanddefaultdistribution/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
 });
 
 can.Model('AnalysisDemandSpecificDistribution', {
-	create:  'POST /analysis/{aId}/demandspecificdistribution/create/segfrac/{sfId}/demand/{dId}',
-	update:  'POST /analysis/{aId}/demandspecificdistribution/update/{id}',
-	destroy: 'DELETE /analysis/{aId}/demandspecificdistribution/remove/{id}',
+	create:  'POST '   + ROOT_URL + '/analysis/{aId}/demandspecificdistribution/create/segfrac/{sfId}/demand/{dId}',
+	update:  'POST '   + ROOT_URL + '/analysis/{aId}/demandspecificdistribution/update/{id}',
+	destroy: 'DELETE ' + ROOT_URL + '/analysis/{aId}/demandspecificdistribution/remove/{id}',
 	attributes: {
 		aId: 'int',
 		dId: 'int',
@@ -406,16 +411,17 @@ can.Model('AnalysisDemandSpecificDistribution', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = '/analysis/{aId}/demandspecificdistribution/update/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/demandspecificdistribution/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
 });
 
 can.Model('AnalysisDemand', {
-	create:  'POST /analysis/{aId}/demand/create/commodity/{cId}/period/{period}',
-	update:  'POST /analysis/{aId}/demand/update/{id}',
-	destroy: 'DELETE /analysis/{aId}/demand/remove/{id}',
+	create:  'POST '   + ROOT_URL + '/analysis/{aId}/demand/create/commodity/{cId}/period/{period}',
+	update:  'POST '   + ROOT_URL + '/analysis/{aId}/demand/update/{id}',
+	destroy: 'DELETE ' + ROOT_URL + '/analysis/{aId}/demand/remove/{id}',
 	attributes: {
 		aId: 'int',
 		cId: 'int',
@@ -432,7 +438,8 @@ can.Model('AnalysisDemand', {
 		return '';
 	}),
 	partialUpdate: function ( id, attr ) {
-		var url = '/analysis/{aId}/demand/update/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/demand/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
@@ -442,14 +449,17 @@ can.Model('Analysis', {
 	findAll: 'GET ' + ROOT_URL + '/analysis/list',
 	findOne: 'GET ' + ROOT_URL + '/analysis/view/{aId}',
 	create:  function ( attrs ) {
-		return $.post( '/analysis/create', attrs, 'json' );
+		var url = ROOT_URL;
+		url += '/analysis/create';
+		return $.post( url, attrs, 'json' );
 	},
 	update:  function ( id, attrs ) {
-		var url = ROOT_URL + '/analysis/{aId}/update';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/update';
 		url = url.replace( /{aId}/, attrs.id );
 		return $.post( url, attrs, 'json' );
 	},
-	destroy: 'DELETE /analysis/remove/{aId}',
+	destroy: 'DELETE ' + ROOT_URL + '/analysis/remove/{aId}',
 	attributes: {
 		id: 'int',
 		username: 'string',
@@ -473,7 +483,8 @@ can.Model('Analysis', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL + '/analysis/{aId}/update';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/update';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	},
@@ -1752,11 +1763,11 @@ can.Control('AnalysisParameters', {
 
 // ================== Technology MVC ==================
 can.Model('Technology', {
-	findAll: 'GET ' + ROOT_URL + '/technology/list',
-	findOne: 'GET ' + ROOT_URL + '/technology/info/{tId}',
-	create:  'POST ' + ROOT_URL + '/technology/create',
-	update:  'POST ' + ROOT_URL + '/technology/update/{id}',
-	destroy: 'DELETE /technology/remove/{id}',
+	findAll: 'GET '    + ROOT_URL + '/technology/list',
+	findOne: 'GET '    + ROOT_URL + '/technology/info/{tId}',
+	create:  'POST '   + ROOT_URL + '/technology/create',
+	update:  'POST '   + ROOT_URL + '/technology/update/{id}',
+	destroy: 'DELETE ' + ROOT_URL + '/technology/remove/{id}',
 	attributes: {
 		id:   'int',
 		username: 'string',
@@ -1767,8 +1778,8 @@ can.Model('Technology', {
 }, {});
 
 can.Model('AnalysisTechnology', {
-	findAll: 'GET ' + ROOT_URL + '/analysis/{aId}/technology/list',
-	findOne: 'GET ' + ROOT_URL + '/analysis/{aId}/technology/info/{id}',
+	findAll: 'GET '  + ROOT_URL + '/analysis/{aId}/technology/list',
+	findOne: 'GET '  + ROOT_URL + '/analysis/{aId}/technology/info/{id}',
 	update:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/update/{id}',
 	attributes: {
 		id:       'int',
@@ -1787,7 +1798,8 @@ can.Model('AnalysisTechnology', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL + '/analysis/{aId}/technology/update/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/technology/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
@@ -1797,7 +1809,8 @@ can.Model('AnalysisTechnologyInputSplit', {
 	create:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/InputSplit/create',
 	update:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/InputSplit/update/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL + '/analysis/{aId}/technology/{tId}/InputSplit/remove/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/technology/{tId}/InputSplit/remove/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
@@ -1810,7 +1823,8 @@ can.Model('AnalysisTechnologyInputSplit', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL + '/analysis/{aId}/technology/{tId}/InputSplit/update/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/technology/{tId}/InputSplit/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
@@ -1822,7 +1836,8 @@ can.Model('AnalysisTechnologyOutputSplit', {
 	create:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/create',
 	update:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/update/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/remove/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/technology/{tId}/OutputSplit/remove/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
@@ -1835,7 +1850,8 @@ can.Model('AnalysisTechnologyOutputSplit', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/update/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/technology/{tId}/OutputSplit/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
@@ -2090,7 +2106,8 @@ can.Model('Process', {
 	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/create',
 	update:  'POST ' + ROOT_URL + '/analysis/{aId}/process/update/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL + '/analysis/{aId}/process/remove/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/process/remove/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
@@ -2105,7 +2122,8 @@ can.Model('Process', {
 	},
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL + '/analysis/{aId}/process/update/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/process/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
@@ -2115,7 +2133,8 @@ can.Model('ProcessCostFixed', {
 	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/create/CostFixed',
 	update:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/update/CostFixed/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL + '/analysis/{aId}/process/{pId}/remove/CostFixed/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/process/{pId}/remove/CostFixed/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
@@ -2128,7 +2147,8 @@ can.Model('ProcessCostFixed', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL + '/analysis/{aId}/process/{pId}/update/CostFixed/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/process/{pId}/update/CostFixed/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
@@ -2138,7 +2158,8 @@ can.Model('ProcessCostVariable', {
 	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/create/CostVariable',
 	update:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/update/CostVariable/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL + '/analysis/{aId}/process/{pId}/remove/CostVariable/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/process/{pId}/remove/CostVariable/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
@@ -2151,7 +2172,8 @@ can.Model('ProcessCostVariable', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL + '/analysis/{aId}/process/{pId}/update/CostVariable/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/process/{pId}/update/CostVariable/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
@@ -2161,7 +2183,8 @@ can.Model('ProcessEfficiency', {
 	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/create/Efficiency',
 	update:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/update/Efficiency/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL + '/analysis/{aId}/process/{pId}/remove/Efficiency/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/process/{pId}/remove/Efficiency/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
@@ -2175,7 +2198,8 @@ can.Model('ProcessEfficiency', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL + '/analysis/{aId}/process/{pId}/update/Efficiency/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/process/{pId}/update/Efficiency/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
@@ -2185,7 +2209,8 @@ can.Model('ProcessEmissionActivity', {
 	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/create/EmissionActivity',
 	update:  'POST ' + ROOT_URL + '/analysis/{aId}/Efficiency/{eId}/update/EmissionActivity/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL + '/analysis/{aId}/Efficiency/{eId}/remove/EmissionActivity/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/Efficiency/{eId}/remove/EmissionActivity/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
@@ -2200,7 +2225,8 @@ can.Model('ProcessEmissionActivity', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL + '/analysis/{aId}/Efficiency/{eId}/update/EmissionActivity/{id}';
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/Efficiency/{eId}/update/EmissionActivity/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
