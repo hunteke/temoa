@@ -1398,7 +1398,7 @@ For copy and paste or BibTex use:
 
 
 def parse_args ( ):
-	import argparse, platform
+	import argparse, platform, sys
 
 	from coopr.opt import SolverFactory as SF
 	from pyutilib.component.core import PluginGlobals
@@ -1440,9 +1440,10 @@ def parse_args ( ):
 	parser = argparse.ArgumentParser()
 	parser.prog = path.basename( argv[0].strip('/') )
 
-	graphviz   = parser.add_argument_group('Graphviz Options')
-	solver     = parser.add_argument_group('Solver Options')
-	stochastic = parser.add_argument_group('Stochastic Options')
+	graphviz    = parser.add_argument_group('Graphviz Options')
+	solver      = parser.add_argument_group('Solver Options')
+	stochastic  = parser.add_argument_group('Stochastic Options')
+	postprocess = parser.add_argument_group('Postprocessing Options')
 
 	parser.add_argument('dot_dat',
 	  type=str,
@@ -1542,13 +1543,25 @@ def parse_args ( ):
 	       'ignoring the uncertainty of a stochastic tree.  Specify the path '
 	       'to the stochastic scenario directory.  (i.e., where to find '
 	       'ScenarioStructure.dat)',
-	  action='store',
 	  metavar='STOCHASTIC_DIRECTORY',
 	  dest='eciu',
 	  default=None)
 
+
+	help_calc_report = ('Use the supplied data to calculate so-called '
+	  '"reporting" variables generally useful to energy modelers.  Note that '
+	  'this option expects pre-calculated data.  Generally, use this in a '
+	  'pipeline like: "{0} [...] | {0} --calculate_report_variables -" or "'
+	  '{0} --calculate_report_variables ./path/to/data".').format( sys.argv[0] )
+	postprocess.add_argument('--calculate_report_variables',
+	  help=help_calc_report,
+	  type=argparse.FileType('rb'),
+	  default=None
+	)
+
 	options = parser.parse_args()
 
+	# First, the options that exit or do not perform any "real" computation
 	if options.version:
 		version()
 		# this function exits
@@ -1556,6 +1569,14 @@ def parse_args ( ):
 	if options.how_to_cite:
 		bibliographicalInformation()
 		# this function exits.
+
+	if options.calculate_report_variables:
+		# options.calculate_report_variables is an open file by argparse
+		from temoa_calculate import calculate_reporting_variables
+		data = calculate_reporting_variables( options.calculate_report_variables )
+		sys.stdout.write( data )
+		sys.stdout.flush()
+		raise SystemExit
 
 	# It would be nice if this implemented with add_mutually_exclusive_group
 	# but I /also/ want them in separate groups for display.  Bummer.

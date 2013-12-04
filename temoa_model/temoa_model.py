@@ -242,8 +242,6 @@ CapacityFactor(tech_all, vintage_all)
 	  domain=NonNegativeReals
 	)
 
-	AddReportingVariables( M )
-
 	M.BaseloadDiurnalConstraint_psdtv = Set(
 	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
 	M.CommodityBalanceConstraint_psdc = Set(
