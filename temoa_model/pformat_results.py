@@ -19,11 +19,41 @@ an archive may not have received this license file.  If not, see
 <http://www.gnu.org/licenses/>.
 """
 
-__all__ = ('pformat_results',)
+__all__ = ('pformat_results', 'stringify_data')
 
 from collections import defaultdict
 from cStringIO import StringIO
-from sys import stderr as SE
+from sys import stderr as SE, stdout as SO
+
+
+def get_int_padding ( obj ):
+	val = obj[ 1 ]         # obj is 2-tuple, with type(item[ 1 ]) == number
+	return len(str(int(val)))
+def get_dec_padding ( obj ):
+	val = abs(obj[ 1 ])    # obj is 2-tuple, with type(item[ 1 ]) == number
+	return len(str(val - int(val)))
+
+
+def stringify_data ( data, ostream=SO, format='plain' ):
+	# data is a list of tuples of ('var_name[index]', value)
+	# this function iterates over the list multiple times, so it must at least
+	# be reiterable
+	# format is currently unused, but will be utilized to implement things like
+	# csv
+
+	# This padding code is what makes the display of the output values
+	# line up on the decimal point.
+	int_padding = max(map( get_int_padding, data ))
+	dec_padding = max(map( get_dec_padding, data ))
+	format = "  %%%ds%%-%ds  %%s\n" % (int_padding, dec_padding)
+		# Works out to something like "%8d%-11s  %s"
+
+	for key, val in data:
+		int_part = int(abs(val))
+		dec_part = str(abs(val) - int_part)[1:]  # remove (negative and) 0
+		if val < 0: int_part = "-%d" % int_part
+		ostream.write( format % (int_part, dec_part, key) )
+
 
 def pformat_results ( pyomo_instance, pyomo_result ):
 	from coopr.pyomo import Objective, Var, Constraint
@@ -85,13 +115,6 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	collect_result_data( Vars, var_info, epsilon=1e-9 )
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
 
-	def get_int_padding ( obj ):
-		val = obj[ 1 ]         # obj is 2-tuple, defined within var_info
-		return len(str(int(val)))
-	def get_dec_padding ( obj ):
-		val = abs(obj[ 1 ])    # obj is 2-tuple defined within con_info
-		return len(str(val - int(val)))
-
 	run_output = StringIO()
 
 	msg = ( 'Model name: %s\n'
@@ -101,40 +124,17 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	run_output.write( msg % (instance.name, obj_name, obj_value) )
 
 	if len( var_info ) > 0:
-		# This padding code is what makes the display of the output values
-		# line up on the decimal point.
-		int_padding = max(map( get_int_padding, var_info ))
-		dec_padding = max(map( get_dec_padding, var_info ))
-		format = "  %%%ds%%-%ds  %%s\n" % (int_padding, dec_padding)
-			# Works out to something like "%8d%-11s  %s"
-
-		for key, val in var_info:
-			int_part = int(abs(val))
-			dec_part = str(abs(val) - int_part)[1:]  # remove (negative and) 0
-			if val < 0: int_part = "-%d" % int_part
-			run_output.write( format % (int_part, dec_part, key) )
-
+		stringify_data( var_info, run_output )
 	else:
 		run_output.write( '\nAll variables have a zero (0) value.\n' )
 
-	if 0 == len( con_info ):
+	if len( con_info ) > 0:
+		run_output.write( '\nBinding constraint values:\n' )
+		stringify_data( con_info, run_output )
+	else:
 		# Since not all Coopr solvers give constraint results, must check
 		msg = '\nSelected Coopr solver plugin does not give constraint data.\n'
 		run_output.write( msg )
-	else:
-		msg = '\nBinding constraint values:\n'
-		run_output.write( msg )
-
-		int_padding = max(map( get_int_padding, con_info ))
-		dec_padding = max(map( get_dec_padding, con_info ))
-		format = "  %%%ds%%-%ds  %%s\n" % (int_padding, dec_padding)
-			# Works out to something like "%8s%-11s  %s"
-
-		for key, val in con_info:
-			int_part = int(abs(val))
-			dec_part = str(abs(val) - int_part)[1:]
-			if val < 0: int_part = "-%d" % int_part
-			run_output.write( format % (int_part, dec_part, key) )
 
 	run_output.write( '\n\nIf you use these results for a published article, '
 	  "please run Temoa with the '--how_to_cite' command line argument for "
