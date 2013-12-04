@@ -1548,17 +1548,6 @@ def parse_args ( ):
 	  default=None)
 
 
-	help_calc_report = ('Use the supplied data to calculate so-called '
-	  '"reporting" variables generally useful to energy modelers.  Note that '
-	  'this option expects pre-calculated data.  Generally, use this in a '
-	  'pipeline like: "{0} [...] | {0} --calculate_report_variables -" or "'
-	  '{0} --calculate_report_variables ./path/to/data".').format( sys.argv[0] )
-	postprocess.add_argument('--calculate_report_variables',
-	  help=help_calc_report,
-	  type=argparse.FileType('rb'),
-	  default=None
-	)
-
 	options = parser.parse_args()
 
 	# First, the options that exit or do not perform any "real" computation
@@ -1569,14 +1558,6 @@ def parse_args ( ):
 	if options.how_to_cite:
 		bibliographicalInformation()
 		# this function exits.
-
-	if options.calculate_report_variables:
-		# options.calculate_report_variables is an open file by argparse
-		from temoa_calculate import calculate_reporting_variables
-		data = calculate_reporting_variables( options.calculate_report_variables )
-		sys.stdout.write( data )
-		sys.stdout.flush()
-		raise SystemExit
 
 	# It would be nice if this implemented with add_mutually_exclusive_group
 	# but I /also/ want them in separate groups for display.  Bummer.
@@ -1687,9 +1668,10 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	SE.write( '[        ] Formatting results.' ); SE.flush()
 	# ... print the easier-to-read/parse format
 	updated_results = instance.update_results( result )
+	instance.load( result )
 	formatted_results = pformat_results( instance, updated_results )
 	SE.write( '\r[%8.2f\n' % duration() )
-	sys.stdout.write( formatted_results )
+	sys.stdout.write( formatted_results.getvalue() )
 
 	# we can't simply call SO.close() here, because we use multiprocess.Process
 	# in _graphviz, which also calls close() -- an operation that may only be

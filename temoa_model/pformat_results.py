@@ -25,7 +25,6 @@ from collections import defaultdict
 from cStringIO import StringIO
 from sys import stderr as SE, stdout as SO
 
-
 def get_int_padding ( obj ):
 	val = obj[ 1 ]         # obj is 2-tuple, with type(item[ 1 ]) == number
 	return len(str(int(val)))
@@ -55,8 +54,79 @@ def stringify_data ( data, ostream=SO, format='plain' ):
 		ostream.write( format % (int_part, dec_part, key) )
 
 
+def calculate_reporting_variables ( instance, ostream=SO ):
+	variables = defaultdict( lambda: defaultdict( float ))
+	epsilon = 1e-9   # threshold for "so small it's zero"
+
+	m = instance   # lazy typist ...
+
+	emission_keys = { (i, t, v, o) : e for e, i, t, v, o in m.EmissionActivity }
+
+	for p, s, d, i, t, v, o in m.V_FlowOut:
+		oval = m.V_FlowOut[p, s, d, i, t, v, o].value
+		if abs(oval) < epsilon: continue
+
+		variables['V_ActivityByInputAndTech'          ][i, t]       += oval
+		variables['V_ActivityByPeriodAndTech'         ][p, t]       += oval
+		variables['V_ActivityByTechAndOutput'         ][t, o]       += oval
+		variables['V_ActivityByProcess'               ][t, v]       += oval
+		variables['V_ActivityByPeriodInputAndTech'    ][p, i, t]    += oval
+		variables['V_ActivityByPeriodTechAndOutput'   ][p, t, o]    += oval
+		variables['V_ActivityByPeriodAndProcess'      ][p, t, v]    += oval
+		variables['V_ActivityByPeriodInputAndProcess' ][p, i, t, v] += oval
+		variables['V_ActivityByPeriodProcessAndOutput'][p, t, v, o] += oval
+
+		if (i, t, v, o) not in emission_keys: continue
+
+		e = emission_keys[i, t, v, o]
+		evalue = oval * m.EmissionActivity[e, i, t, v, o]
+
+		variables[ 'V_EmissionActivityByPeriod'         ][ p ]  += evalue
+		variables[ 'V_EmissionActivityByTech'           ][ t ]  += evalue
+		variables[ 'V_EmissionActivityByPeriodAndTech'  ][p, t] += evalue
+		variables[ 'V_EmissionActivityByTechAndVintage' ][t, v] += evalue
+
+
+	for p, s, d, i, t, v, o in m.V_FlowIn:
+		ival = m.V_FlowIn[p, s, d, i, t, v, o].value
+		if abs(ival) < epsilon: continue
+
+		variables['V_EnergyConsumptionByTech'               ][ t ]     += ival
+		variables['V_EnergyConsumptionByPeriodAndTech'      ][p, t]    += ival
+		variables['V_EnergyConsumptionByTechAndOutput'      ][t, o]    += ival
+		variables['V_EnergyConsumptionByPeriodAndProcess'   ][p, t, v] += ival
+		variables['V_EnergyConsumptionByPeriodInputAndTech' ][p, i, t] += ival
+		variables['V_EnergyConsumptionByPeriodTechAndOutput'][p, t, o] += ival
+
+		ci_keys = set( m.CostInvest.keys() )
+		P_0 = min( m.time_optimize )
+		for t, v in m.V_Capacity:
+			if v < P_0: continue
+			if (t, v) not in ci_keys: continue  # guarantees not 0
+
+			val = m.V_Capacity[t, v].value
+			if abs(val) < epsilon: continue
+			val *= m.CostInvest[t, v]
+
+			variables[ 'V_InvestmentByPeriod'  ][ v ]  += val
+			variables[ 'V_InvestmentByTech'    ][ t ]  += val
+			variables[ 'V_InvestmentByProcess' ][t, v] += val
+
+	var_list = []
+	for vgroup, values in sorted( variables.iteritems() ):
+		for vindex, val in sorted( values.iteritems() ):
+			if isinstance( vindex, tuple ):
+				vindex = ','.join( str(i) for i in vindex )
+			var_list.append(( '{}[{}]'.format(vgroup, vindex), val ))
+
+	ostream.write('\n"Reporting Variables" (calculated after solve)\n')
+	stringify_data( var_list, ostream )
+
+
 def pformat_results ( pyomo_instance, pyomo_result ):
 	from coopr.pyomo import Objective, Var, Constraint
+
+	output = StringIO()
 
 	instance = pyomo_instance
 	result = pyomo_result
@@ -69,7 +139,7 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	  'feasible', 'globallyOptimal', 'locallyOptimal', 'optimal'
 	)
 	if str(soln.Status) not in optimal_solutions:
-		return "No solution found."
+		output.write( 'No solution found.' )
 
 	objs = instance.active_components( Objective )
 	if len( objs ) > 1:
@@ -115,30 +185,31 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	collect_result_data( Vars, var_info, epsilon=1e-9 )
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
 
-	run_output = StringIO()
-
 	msg = ( 'Model name: %s\n'
 	   'Objective function value (%s): %s\n'
 	   'Non-zero variable values:\n'
 	)
-	run_output.write( msg % (instance.name, obj_name, obj_value) )
+	output.write( msg % (instance.name, obj_name, obj_value) )
 
 	if len( var_info ) > 0:
-		stringify_data( var_info, run_output )
+		stringify_data( var_info, output )
+		del var_info
+		calculate_reporting_variables( instance, output )
 	else:
-		run_output.write( '\nAll variables have a zero (0) value.\n' )
+		output.write( '\nAll variables have a zero (0) value.\n' )
 
 	if len( con_info ) > 0:
-		run_output.write( '\nBinding constraint values:\n' )
-		stringify_data( con_info, run_output )
+		output.write( '\nBinding constraint values:\n' )
+		stringify_data( con_info, output )
+		del con_info
 	else:
 		# Since not all Coopr solvers give constraint results, must check
 		msg = '\nSelected Coopr solver plugin does not give constraint data.\n'
-		run_output.write( msg )
+		output.write( msg )
 
-	run_output.write( '\n\nIf you use these results for a published article, '
+	output.write( '\n\nIf you use these results for a published article, '
 	  "please run Temoa with the '--how_to_cite' command line argument for "
 	  'citation information.\n')
 
-	return run_output.getvalue()
+	return output
 
