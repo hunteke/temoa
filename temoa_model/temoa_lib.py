@@ -2186,8 +2186,8 @@ def temoa_solve ( model ):
 	elif options.solver != 'NONE':
 		SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
 			.format( options.solver ))
-		SE.write( "Please press enter to continue or Ctrl+C to quit." )
 		if SE.isatty():
+			SE.write( "Please press enter to continue or Ctrl+C to quit." )
 			raw_input()
 		else:
 			SE.write(
