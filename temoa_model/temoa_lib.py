@@ -1410,10 +1410,11 @@ def parse_args ( ):
 		cyan_bold = '\x1b[1;36m'
 		reset     = '\x1b[0m'
 
-
 	logger = PluginGlobals.env().log
 	logger.disabled = True  # no need for warnings: it's what we're testing!
 	available_solvers = set( solver   # name of solver; a string
+
+	  # initial underscore ('_'): Coopr's method to mark non-public plugins
 	  for solver in filter( lambda x: '_' != x[0], SF.services() )
 	  if SF( solver ).available( False )
 	)
@@ -2161,7 +2162,6 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	writer = csv.writer( csvdata ); writer.writerows( data )
 	print csvdata.getvalue()
 	chdir( pwd )
-
 
 
 def temoa_solve ( model ):
