@@ -1665,7 +1665,8 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		SE.write( '\r---------- Not solving: no available solver\n' )
 		return
 
-	SE.write( '[        ] Formatting results.' ); SE.flush()
+	msg = '[        ] Calculating reporting variables and formatting results.'
+	SE.write( msg ); SE.flush()
 	# ... print the easier-to-read/parse format
 	updated_results = instance.update_results( result )
 	instance.load( result )
