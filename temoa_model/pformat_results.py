@@ -98,19 +98,19 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables['V_EnergyConsumptionByPeriodInputAndTech' ][p, i, t] += ival
 		variables['V_EnergyConsumptionByPeriodTechAndOutput'][p, t, o] += ival
 
-		ci_keys = set( m.CostInvest.keys() )
-		P_0 = min( m.time_optimize )
-		for t, v in m.V_Capacity:
-			if v < P_0: continue
-			if (t, v) not in ci_keys: continue  # guarantees not 0
+	ci_keys = set( m.CostInvest.keys() )
+	P_0 = min( m.time_optimize )
+	for t, v in m.V_Capacity:
+		if v < P_0: continue
+		if (t, v) not in ci_keys: continue  # guarantees CostInvest not 0
 
-			val = m.V_Capacity[t, v].value
-			if abs(val) < epsilon: continue
-			val *= m.CostInvest[t, v]
+		val = m.V_Capacity[t, v].value
+		if abs(val) < epsilon: continue
+		val *= m.CostInvest[t, v]
 
-			variables[ 'V_InvestmentByPeriod'  ][ v ]  += val
-			variables[ 'V_InvestmentByTech'    ][ t ]  += val
-			variables[ 'V_InvestmentByProcess' ][t, v] += val
+		variables[ 'V_UndiscountedInvestmentByPeriod'  ][ v ]  += val
+		variables[ 'V_UndiscountedInvestmentByTech'    ][ t ]  += val
+		variables[ 'V_UndiscountedInvestmentByProcess' ][t, v] += val
 
 	var_list = []
 	for vgroup, values in sorted( variables.iteritems() ):
