@@ -25,6 +25,8 @@ from collections import defaultdict
 from cStringIO import StringIO
 from sys import stderr as SE, stdout as SO
 
+from coopr.pyomo import value
+
 def get_int_padding ( obj ):
 	val = obj[ 1 ]         # obj is 2-tuple, with type(item[ 1 ]) == number
 	return len(str(int(val)))
@@ -63,7 +65,7 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 	emission_keys = { (i, t, v, o) : e for e, i, t, v, o in m.EmissionActivity }
 
 	for p, s, d, i, t, v, o in m.V_FlowOut:
-		oval = m.V_FlowOut[p, s, d, i, t, v, o].value
+		oval = value( m.V_FlowOut[p, s, d, i, t, v, o] )
 		if abs(oval) < epsilon: continue
 
 		variables['V_ActivityByInputAndTech'          ][i, t]       += oval
@@ -86,9 +88,8 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables[ 'V_EmissionActivityByPeriodAndTech'  ][p, t] += evalue
 		variables[ 'V_EmissionActivityByTechAndVintage' ][t, v] += evalue
 
-
 	for p, s, d, i, t, v, o in m.V_FlowIn:
-		ival = m.V_FlowIn[p, s, d, i, t, v, o].value
+		ival = value( m.V_FlowIn[p, s, d, i, t, v, o] )
 		if abs(ival) < epsilon: continue
 
 		variables['V_EnergyConsumptionByTech'               ][ t ]     += ival
@@ -98,19 +99,64 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables['V_EnergyConsumptionByPeriodInputAndTech' ][p, i, t] += ival
 		variables['V_EnergyConsumptionByPeriodTechAndOutput'][p, t, o] += ival
 
-	ci_keys = set( m.CostInvest.keys() )
 	P_0 = min( m.time_optimize )
-	for t, v in m.V_Capacity:
-		if v < P_0: continue
-		if (t, v) not in ci_keys: continue  # guarantees CostInvest not 0
+	GDR = value( m.GlobalDiscountRate )
+	for t, v in m.CostInvest.sparse_iterkeys():
+		# CostInvest guaranteed not 0
 
-		val = m.V_Capacity[t, v].value
-		if abs(val) < epsilon: continue
-		val *= m.CostInvest[t, v]
+		icost = value( m.V_Capacity[t, v] )
+		if abs(icost) < epsilon: continue
 
-		variables[ 'V_UndiscountedInvestmentByPeriod'  ][ v ]  += val
-		variables[ 'V_UndiscountedInvestmentByTech'    ][ t ]  += val
-		variables[ 'V_UndiscountedInvestmentByProcess' ][t, v] += val
+		icost *= value( m.CostInvest[t, v] )
+		variables[ 'V_UndiscountedInvestmentByPeriod'  ][ v ]  += icost
+		variables[ 'V_UndiscountedInvestmentByTech'    ][ t ]  += icost
+		variables[ 'V_UndiscountedInvestmentByProcess' ][t, v] += icost
+
+		icost *= value( m.LoanAnnualize[t, v] )
+		icost *= sum(
+		  (1 + GDR) ** -y
+		  for y in range( v - P_0,
+		                  v - P_0 + value( m.ModelLoanLife[t, v] ))
+		)
+		variables[ 'V_DiscountedInvestmentByPeriod'  ][ v ]  += icost
+		variables[ 'V_DiscountedInvestmentByTech'    ][ t ]  += icost
+		variables[ 'V_DiscountedInvestmentByProcess' ][t, v] += icost
+
+	for p, t, v in m.CostFixed.sparse_iterkeys():
+		fcost = value( m.V_Capacity[t, v] )
+		if abs(fcost) < epsilon: continue
+
+		fcost *= value( m.CostFixed[p, t, v] )
+		variables[ 'V_UndiscountedFixedCostsByPeriod'  ][ p ]  += fcost
+		variables[ 'V_UndiscountedFixedCostsByTech'    ][ t ]  += fcost
+		variables[ 'V_UndiscountedFixedCostsByVintage' ][ v ]  += fcost
+		variables[ 'V_UndiscountedFixedCostsByProcess' ][t, v] += fcost
+
+		fcost *= sum(
+		  (1 + GDR) ** -y
+		  for y in range( p - P_0,
+		                  p - P_0 + value( m.ModelTechLife[p, t, v] ))
+		)
+		variables[ 'V_DiscountedFixedCostsByPeriod'  ][ p ]  += fcost
+		variables[ 'V_DiscountedFixedCostsByTech'    ][ t ]  += fcost
+		variables[ 'V_DiscountedFixedCostsByVintage' ][ v ]  += fcost
+		variables[ 'V_DiscountedFixedCostsByProcess' ][t, v] += fcost
+
+	for p, t, v in m.CostVariable.sparse_iterkeys():
+		vcost = value( m.V_ActivityByPeriodTechAndVintage[p, t, v] )
+		if abs(vcost) < epsilon: continue
+
+		vcost *= value( m.CostVariable[p, t, v] )
+		variables[ 'V_UndiscountedVariableCostsByPeriod'  ][ p ]  += vcost
+		variables[ 'V_UndiscountedVariableCostsByTech'    ][ t ]  += vcost
+		variables[ 'V_UndiscountedVariableCostsByVintage' ][ v ]  += vcost
+		variables[ 'V_UndiscountedVariableCostsByProcess' ][t, v] += vcost
+
+		vcost *= value( m.PeriodRate[ p ])
+		variables[ 'V_DiscountedVariableCostsByPeriod'  ][ p ]  += vcost
+		variables[ 'V_DiscountedVariableCostsByTech'    ][ t ]  += vcost
+		variables[ 'V_DiscountedVariableCostsByVintage' ][ v ]  += vcost
+		variables[ 'V_DiscountedVariableCostsByProcess' ][t, v] += vcost
 
 	var_list = []
 	for vgroup, values in sorted( variables.iteritems() ):
