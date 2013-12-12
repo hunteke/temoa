@@ -131,6 +131,7 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables[ 'V_UndiscountedFixedCostsByTech'    ][ t ]  += fcost
 		variables[ 'V_UndiscountedFixedCostsByVintage' ][ v ]  += fcost
 		variables[ 'V_UndiscountedFixedCostsByProcess' ][t, v] += fcost
+		variables[ 'V_UndiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
 
 		fcost *= sum(
 		  (1 + GDR) ** -y
@@ -141,6 +142,7 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables[ 'V_DiscountedFixedCostsByTech'    ][ t ]  += fcost
 		variables[ 'V_DiscountedFixedCostsByVintage' ][ v ]  += fcost
 		variables[ 'V_DiscountedFixedCostsByProcess' ][t, v] += fcost
+		variables[ 'V_DiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
 
 	for p, t, v in m.CostVariable.sparse_iterkeys():
 		vcost = value( m.V_ActivityByPeriodTechAndVintage[p, t, v] )
@@ -151,6 +153,7 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables[ 'V_UndiscountedVariableCostsByTech'    ][ t ]  += vcost
 		variables[ 'V_UndiscountedVariableCostsByVintage' ][ v ]  += vcost
 		variables[ 'V_UndiscountedVariableCostsByProcess' ][t, v] += vcost
+		variables[ 'V_UndiscountedVariableCostsByPeriodAndProcess' ][p, t, v] = vcost
 
 		vcost *= value( m.PeriodRate[ p ])
 		variables[ 'V_DiscountedVariableCostsByPeriod'  ][ p ]  += vcost
