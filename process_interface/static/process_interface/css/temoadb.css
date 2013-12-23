@@ -42,7 +42,7 @@ body { height: 100% ; margin: 1em ; }
 
 #technology_create h3 { margin: 0 ; padding: 0 ; background-color: #27f ; }
 #technology_create { background-color: transparent ; opacity: 0.8 ;  width: auto ; border: 1px solid green ; /* display: none ; */}
-#technology_create input[name='Name'] { width: 98% ; text-align: center ; font-size: 100% ; font-weight: bold ; font-family: mono ; background-color: transparent ; color: #000 ; } */
+#technology_create input[name='Name'] { width: 98% ; text-align: center ; font-size: 100% ; font-weight: bold ; font-family: mono ; background-color: transparent ; color: #000 ; }
 
 #technology_info { background-color: transparent ; opacity: 0.8 ;  width: auto ; }
 #technology_info .technology { border: 1px solid #000 ; padding: 0 ; margin-top: 2ex ; }
@@ -87,7 +87,7 @@ body { height: 100% ; margin: 1em ; }
 
 .items button.add:hover,
 .items button.remove:hover,
-.items button.cancel:hover { color: #000 ; opacity: .8 ; font-weight: bold ; } ;
+.items button.cancel:hover { color: #000 ; opacity: .8 ; font-weight: bold ; }
 
 .items button.add {
 	background-color: transparent ;
