@@ -36,8 +36,8 @@
 	<% if ( ! analysis.isNew() ) { %>
 		<button type='button' id='ShowHideCommodities'>Analysis Commodities</button>
 		<button type='button' id='ShowHideAnalysisParameters'>Analysis Parameters</button>
-		<a href='/analysis/<%= analysis.id %>/download_as_dat'
-		   download='<%= analysis.download_name() %>'><button type='button' id='DownloadDataFile'>Download as DAT</button></a>
+		<a href='<%= analysis.download_url() %>' title='Download a server-generated dat file.  This may take a minute.'
+		  download='<%= analysis.download_name() %>'><button type='button' id='DownloadDataFile'>Download as DAT</button></a>
 	<% } %>
 	<div id='AnalysisCommodities'></div>
 	<div id='AnalysisParameters'></div>
@@ -53,10 +53,14 @@
 			<tr><th>Vintages:</th><td class='full_input textleftalign'><%= analysis.attr('vintages') ? analysis.attr('vintages') : 'No vintages specified' %></td></tr>
 		</tbody>
 	</table>
-	<%== analysis.isNew() ? '' : "<button type='button' id='ShowHideCommodities'>Analysis Commodities</button>" %>
-	<%== analysis.isNew() ? '' : "<button type='button' id='ShowHideAnalysisParameters'>Analysis Parameters</button>" %>
-	<div id='AnalysisCommodities' class='hidden'></div>
-	<div id='AnalysisParameters' class='hidden'></div>
+	<% if ( ! analysis.isNew() ) { %>
+		<button type='button' id='ShowHideCommodities'>Analysis Commodities</button>
+		<button type='button' id='ShowHideAnalysisParameters'>Analysis Parameters</button>
+		<a href='<%= analysis.download_url() %>' title='Download a server-generated dat file.  This may take a minute.'
+		  download='<%= analysis.download_name() %>'><button type='button' id='DownloadDataFile'>Download as DAT</button></a>
+	<% } %>
+	<div id='AnalysisCommodities'></div>
+	<div id='AnalysisParameters'></div>
 </div>
 <% } %>
 

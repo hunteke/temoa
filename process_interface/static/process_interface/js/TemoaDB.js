@@ -496,6 +496,13 @@ can.Model('Analysis', {
 		name = name + '.dat';
 		return name;
 	},
+	download_url: function ( ) {
+		var url = ROOT_URL;
+		url += '/analysis/{id}/download_as_dat';
+		url = replaceNamedArgs( url, this.attr() );
+		console.log( 'Download URI: ', url );
+		return url;
+	},
 	segFracSum: can.compute( function ( style ) {
 		var sum = 0, epsilon = 1e-6;
 		this.segfracs.each( function ( sf ) {
