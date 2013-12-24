@@ -3,8 +3,6 @@ __all__ = (
   'AnalysisCommodity',
   'Commodity',
   'CommodityType',
-  'LifetimeParameter',
-  'MinMaxParameter',
   'Param_CapacityToActivity',
   'Param_CostFixed',
   'Param_CostVariable',
