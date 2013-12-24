@@ -42,12 +42,13 @@ def view ( req ):
 
 
 @require_GET
-@cache_control(public=True, max_age=300)
+@cache_control(public=True, max_age=300)  # in seconds
 def get_client_template ( req, template ):
-	# client templates are templates rendered by the client (e.g., ejs)
-	# due to caching, these are somewhat difficult to update.  So, in case
-	# a developer ever makes a change in the wild ...f
-
+	# Client templates are templates rendered by the client (e.g., ejs).
+	# Due to caching, these are somewhat difficult to update.  So, for the case
+	# of a rollout, ensure that these templates have a reasonably small cache
+	# life.  Reasonably small is probably 5 minutes, allowing a rollout during
+	# the workday.
 	return render_to_response('process_interface/client/' + template )
 
 
