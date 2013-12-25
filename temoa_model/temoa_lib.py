@@ -794,204 +794,15 @@ def ActivityVariableIndices ( M ):
 	return activity_indices
 
 
-def CapacityByOutputVariableIndices ( M ):
-	indices = set(
-	  (t, v, o)
-
-	  for p in M.time_optimize
-	  for t in M.tech_all
-	  for v in ProcessVintages( p, t )
-	  for o in ProcessOutputs( p, t, v )
-	)
-
-	return indices
-
-
-### Reporting variables
-
-
 def ActivityByPeriodTechAndVintageVarIndices ( M ):
 	return g_activeActivity_ptv
 
-
-def ActivityByPeriodTechAndOutputVariableIndices ( M ):
-	indices = set(
-	  (l_per, l_tech, l_out)
-
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
-	 )
-
-	return indices
-
-
-def ActivityByPeriodTechVintageAndOutputVariableIndices ( M ):
-	indices = set(
-	  (l_per, l_tech, l_vin, l_out)
-
-	  for l_per in M.time_optimize
-	  for l_tech in M.tech_all
-	  for l_vin in ProcessVintages( l_per, l_tech )
-	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
-	)
-
-	return indices
-
-
-def ActivityByTechAndOutputVariableIndices ( M ):
-	indices = set(
-	  (l_tech, l_out)
-
-	  for l_per, l_tech, l_vin in g_activeActivity_ptv
-	  for l_out in ProcessOutputs( l_per, l_tech, l_vin )
-	)
-
-	return indices
-
-
-def ActivityByInputAndTechVariableIndices ( M ):
-	indices = set(
-	  (l_inp, l_tech)
-
-	  for l_per, l_tech, l_vin in g_activeActivity_ptv
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
-	)
-
-	return indices
-
-
-def ActivityByPeriodInputAndTechVariableIndices ( M ):
-	indices = set(
-	  (l_per, l_inp, l_tech)
-
-	  for l_per, l_tech, l_vin in g_activeActivity_ptv
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
-	)
-
-	return indices
-
-
-def ActivityByPeriodInputTechAndVintageVariableIndices ( M ):
-	indices = set(
-	  (l_per, l_inp, l_tech, l_vin)
-
-	  for l_per, l_tech, l_vin in g_activeActivity_ptv
-	  for l_inp in ProcessInputs( l_per, l_tech, l_vin )
-	)
-
-	return indices
-
-
-def EmissionActivityByTechVariableIndices ( M ):
-	indices = set(
-	  (l_emission, l_tech)
-
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.sparse_iterkeys()
-	)
-
-	return indices
-
-def EmissionActivityByPeriodAndTechVariableIndices ( M ):
-	indices = set(
-	  (l_emission, l_per, l_tech)
-
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.sparse_iterkeys()
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
-	)
-
-	return indices
-
-
-def EmissionActivityByTechAndVintageVariableIndices ( M ):
-	indices = set(
-	  (l_emission, l_tech, l_vin)
-
-	  for l_emission, l_inp, l_tech, l_vin, l_out in M.EmissionActivity.sparse_iterkeys()
-	)
-
-	return indices
-
-
-def EnergyConsumptionByTechAndOutputVariableIndices ( M ):
-	indices = set(
-	  (l_tech, l_out)
-
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
-	)
-
-	return indices
-
-
-def EnergyConsumptionByPeriodAndTechVariableIndices ( M ):
-	indices = set(
-	  (l_per, l_tech)
-
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
-	)
-
-	return indices
-
-
-def EnergyConsumptionByPeriodInputAndTechVariableIndices ( M ):
-	indices = set(
-	  (l_per, l_inp, l_tech)
-
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
-	)
-
-	return indices
-
-
-def EnergyConsumptionByPeriodTechAndOutputVariableIndices ( M ):
-	indices = set(
-	  (l_per, l_tech, l_out)
-
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
-	)
-
-	return indices
-
-
-def EnergyConsumptionByPeriodTechAndVintageVariableIndices ( M ):
-	indices = set(
-	  (l_per, l_tech, l_vin)
-
-	  for l_inp, l_tech, l_vin, l_out in M.Efficiency.sparse_iterkeys()
-	  for l_per in M.time_optimize
-	  if ValidActivity( l_per, l_tech, l_vin )
-	)
-
-	return indices
 
 # End variables
 ##############################################################################
 
 ##############################################################################
 # Constraints
-
-
-def CapacityByOutputConstraintIndices ( M ):
-	indices = set(
-	  (p, s, d, t, v, o)
-
-	  for p in M.time_optimize
-	  for t in M.tech_all
-	  for v in ProcessVintages( p, t )
-	  for o in ProcessOutputs( p, t, v )
-	  for s in M.time_season
-	  for d in M.time_of_day
-	)
-
-	return indices
 
 
 def DemandActivityConstraintIndices ( M ):
@@ -1049,19 +860,6 @@ def BaseloadDiurnalConstraintIndices ( M ):
 	  for p in M.time_optimize
 	  for t in M.tech_baseload
 	  for v in ProcessVintages( p, t )
-	  for s in M.time_season
-	  for d in M.time_of_day
-	)
-
-	return indices
-
-
-def FractionalLifeActivityLimitConstraintIndices ( M ):
-	indices = set(
-	  (p, s, d, t, v, o)
-
-	  for p, t, v in M.TechLifeFrac.sparse_iterkeys()
-	  for o in ProcessOutputs( p, t, v )
 	  for s in M.time_season
 	  for d in M.time_of_day
 	)
@@ -1292,13 +1090,6 @@ output carrier.
 
 	return False
 
-
-def loanIsActive ( p, t, v ):
-	"""\
-Return a boolean (True or False) whether a loan is still active in a period.
-This is the implementation of imat in the rest of the documentation.
-"""
-	return (p, t, v) in g_processLoans
 
 
 # End helper functions
