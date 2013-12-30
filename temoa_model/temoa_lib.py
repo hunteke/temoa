@@ -34,6 +34,8 @@ from sys import argv, stderr as SE
 # 1000 = 19.  But 1000 is nice and round.)
 os_nice( 1000 )
 
+import coopr.environ
+
 TEMOA_GIT_VERSION  = 'HEAD'
 TEMOA_RELEASE_DATE = 'Today'
 
@@ -1192,7 +1194,7 @@ def parse_args ( ):
 	import argparse, platform, sys
 
 	from coopr.opt import SolverFactory as SF
-	from pyutilib.component.core import PluginGlobals
+	from logging import getLogger
 
 	# used for some error messages below.
 	red_bold = cyan_bold = reset = ''
@@ -1201,15 +1203,23 @@ def parse_args ( ):
 		cyan_bold = '\x1b[1;36m'
 		reset     = '\x1b[0m'
 
-	logger = PluginGlobals.env().log
+	logger = getLogger('coopr.solvers')
+	logger_status = logger.disabled
 	logger.disabled = True  # no need for warnings: it's what we're testing!
-	available_solvers = set( solver   # name of solver; a string
 
-	  # initial underscore ('_'): Coopr's method to mark non-public plugins
-	  for solver in filter( lambda x: '_' != x[0], SF.services() )
-	  if SF( solver ).available( False )
-	)
-	logger.disabled = False
+	available_solvers = set()
+	for sname in SF.services():   # list of solver interface names
+		# initial underscore ('_'): Coopr's method to mark non-public plugins
+		if '_' == sname[0]: continue
+
+		solver = SF( sname )
+		if not solver: continue
+
+		if 'os' == sname: continue     # Workaround current bug in Coopr
+		if not solver.available( exception_flag=False ): continue
+		available_solvers.add( sname )
+
+	logger.disabled = logger_status  # put back the way it was.
 
 	if available_solvers:
 		if 'cplex' in available_solvers:
