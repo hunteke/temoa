@@ -2,7 +2,7 @@
 Temoa - Tools for Energy Model Optimization and Analysis
   linear optimization; least cost; dynamic system visualization
 
-Copyright (C) 2011-2013  Kevin Hunter, Joseph DeCarolis
+Copyright (C) 2011-2014  Kevin Hunter, Joseph DeCarolis
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License as published by the Free
@@ -1135,7 +1135,7 @@ branch/commit that created '{}'.
 		args = (bname, TEMOA_RELEASE_DATE, TEMOA_GIT_VERSION, bname)
 
 	msg += """
-Copyright (C) 2012, 2013 Kevin Hunter, Joseph F. DeCarolis
+Copyright (C) 2011-2014 Kevin Hunter, Joseph F. DeCarolis
 
 We provide Temoa -- the model and associated scripts -- "as-is" with no express
 or implied warranty for accuracy or accessibility.  Temoa is a research tool,

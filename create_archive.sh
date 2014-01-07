@@ -4,7 +4,7 @@
 Temoa - Tools for Energy Model Optimization and Analysis
   linear optimization; least cost; dynamic system visualization
 
-Copyright (C) 2011-2013  Kevin Hunter, Joseph DeCarolis
+Copyright (C) 2011-2014  Kevin Hunter, Joseph DeCarolis
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License as published by the Free
