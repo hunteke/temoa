@@ -9,7 +9,8 @@ from pprint import pformat
 from shutil import copy as copyfile, rmtree
 from textwrap import TextWrapper
 
-from coopr.pyomo.base.sets import _SetProduct, _SetContainer
+import coopr.environ
+from coopr.pyomo.base.sets import _SetProduct, SimpleSet
 
 SE = sys.stderr
 instance = None
@@ -57,7 +58,7 @@ class Param ( object ):
 			r = lambda x: tuple(x[0:pidx] + x[pidx+1:])
 			    # reduce keys to remove stochastic parameter
 
-		elif isinstance( pindex, _SetContainer):
+		elif isinstance( pindex, SimpleSet ):
 			# this is under sparse keys
 			indices = (param._index.name,)
 			skeys = lambda: (' '.join(str(i) for i in self.model_keys) )
@@ -512,15 +513,21 @@ options/README.txt
 
 def main ( ):
 	from os import getcwd
+	from os.path import abspath, basename, dirname
 	from time import clock
 
 	if len(sys.argv) < 2:
 		usage()
 	module_name = sys.argv[1][:-3].replace('/', '.')  # remove the '.py'
 
+	mbase = basename( module_name )[:-3]
+	mdir  = abspath( dirname( module_name ))
+	sys.path.insert(0, mdir)
+
 	try:
 		__import__(module_name)
 		opts = sys.modules[ module_name ]
+		sys.path.pop(0)
 
 	except ImportError:
 		msg = ('Unable to import {}.\n\nRun this script with no arguments for '
@@ -547,8 +554,8 @@ def main ( ):
 
 	inform( '[      ] Import model definition (%s)' % opts.modelpath )
 	mp = opts.modelpath
-	modelbase = os.path.basename(mp)[:-3]
-	modeldir  = os.path.abspath( os.path.dirname( mp ))
+	modelbase = basename(mp)[:-3]
+	modeldir  = abspath( dirname( mp ))
 
 	sys.path.insert(0, modeldir)
 	_temp = __import__(modelbase, globals(), locals(), ('model',))
