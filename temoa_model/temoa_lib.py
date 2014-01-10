@@ -21,7 +21,7 @@ an archive may not have received this license file.  If not, see
 
 
 from cStringIO import StringIO
-from itertools import product as cross_product
+from itertools import product as cross_product, islice, izip
 from operator import itemgetter as iget
 from os import path, close as os_close, nice as os_nice
 from sys import argv, stderr as SE
@@ -99,8 +99,6 @@ class TemoaInfeasibleError ( TemoaError ): pass
 
 def get_str_padding ( obj ):
 	return len(str( obj ))
-
-from itertools import islice, izip
 
 def iter_in_chunks ( iterable, chunk_size ):
 	"""
@@ -1842,8 +1840,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 			self.beg += 1
 			return self.beg
 
-	from itertools import cycle, islice
-	from operator import itemgetter
+	from itertools import cycle
 
 	def roundrobin( *iterables ):
 		"roundrobin('ABC', 'D', 'EF') --> A D E B F C"
@@ -1873,7 +1870,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		# I have not yet figured that logic out.
 		indices = list(xrange( stage ))
 		indices.reverse()
-		iget = itemgetter( *indices )
+		indexgetter = iget( *indices )
 
 		assumptions_to_nodes = defaultdict(set)
 		for n in nodes:
@@ -1881,7 +1878,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 				assumptions_to_nodes[ a ].add( n )
 		to_solve_assumptions = assumptions_to_nodes.keys()
 		to_solve_assumptions = [i.split(',') for i in to_solve_assumptions]
-		to_solve_assumptions.sort( key=iget )
+		to_solve_assumptions.sort( key=indexgetter )
 		to_solve_assumptions = [','.join(i) for i in to_solve_assumptions]
 
 		to_solve_pairs = [
