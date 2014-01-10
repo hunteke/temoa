@@ -24,7 +24,8 @@ from cStringIO import StringIO
 from itertools import product as cross_product, islice, izip
 from operator import itemgetter as iget
 from os import path, close as os_close, nice as os_nice
-from sys import argv, stderr as SE
+from sys import argv, stderr as SE, stdout as SO
+from signal import signal, SIGINT, default_int_handler
 
 import errno
 
@@ -37,6 +38,8 @@ import errno
 os_nice( 1000 )
 
 import coopr.environ
+  # workaround for Coopr's brain dead signal handler
+signal(SIGINT, default_int_handler)
 
 TEMOA_GIT_VERSION  = 'HEAD'
 TEMOA_RELEASE_DATE = 'Today'
@@ -1462,6 +1465,10 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	if opt:
 		result = opt.solve( instance )
 		SE.write( '\r[%8.2f\n' % duration() )
+
+		# return signal handlers to defaults, again
+		signal(SIGINT, default_int_handler)
+
 	else:
 		SE.write( '\r---------- Not solving: no available solver\n' )
 		return
@@ -1473,18 +1480,19 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	instance.load( result )
 	formatted_results = pformat_results( instance, updated_results )
 	SE.write( '\r[%8.2f\n' % duration() )
-	sys.stdout.write( formatted_results.getvalue() )
-
-	# we can't simply call SO.close() here, because we use multiprocess.Process
-	# in _graphviz, which also calls close() -- an operation that may only be
-	# called once on a file object.  We also can't simply close stdout, because
-	# Python treats it specially with a guarantee that std* objects are /never/
-	# closed.  XXX: And still, for now, this doesn't appear to work at all
-	sys.stdout.flush()
-	os.close( sys.stdout.fileno() )
-	sys.stdout = open( '/dev/null', 'w' )
+	SO.write( formatted_results.getvalue() )
 
 	if options.graph_format:
+		# we can't simply call SO.close() here, because we use multiprocess.Process
+		# in _graphviz, which also calls close() -- an operation that may only be
+		# called once on a file object.  We also can't simply close stdout, because
+		# Python treats it specially with a guarantee that std* objects are /never/
+		# closed.  XXX: And still, for now, this doesn't appear to work at all
+		SO.flush()
+		os.close( SO.fileno() )
+		import sys
+		sys.stdout = open( '/dev/null', 'w' )
+
 		SE.write( '[        ] Creating Temoa model diagrams.' ); SE.flush()
 		instance.load( result )
 		CreateModelDiagrams( instance, options )
@@ -2001,7 +2009,6 @@ def temoa_solve ( model ):
 			  '\n  message currently.  The user script is responsible for'
 			  '\n  handling this situation appropriately.\n\n')
 
-
 	try:
 		if options.dot_dat:
 			solve_perfect_foresight( model, opt, options )
@@ -2013,6 +2020,12 @@ def temoa_solve ( model ):
 			# There is no error on our part, so just quit gracefully
 			return
 		raise
+	except KeyboardInterrupt as e:
+		SE.write( '\n\nUser requested quit.  Exiting Temoa ...\n' )
+		SE.flush()
+	except SystemExit as e:
+		SE.write( '\n\nTemoa exit requested.  Exiting ...\n' )
+		SE.flush()
 
 
 # End direct invocation methods
