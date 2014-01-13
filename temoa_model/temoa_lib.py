@@ -511,7 +511,7 @@ def validate_TechOutputSplit ( M ):
 		  if (i, t, o) in split_indices
 		)
 
-		raise TemoaValidationError( msg.format(items, l_total) )
+		raise TemoaValidationError( msg.format(items, total) )
 
 	return set()
 
