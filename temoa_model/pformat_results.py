@@ -111,6 +111,8 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables[ 'V_UndiscountedInvestmentByPeriod'  ][ v ]  += icost
 		variables[ 'V_UndiscountedInvestmentByTech'    ][ t ]  += icost
 		variables[ 'V_UndiscountedInvestmentByProcess' ][t, v] += icost
+		variables[ 'V_UndiscountedPeriodCost'          ][ v ]  += icost
+
 
 		icost *= value( m.LoanAnnualize[t, v] )
 		icost *= sum(
@@ -121,6 +123,7 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables[ 'V_DiscountedInvestmentByPeriod'  ][ v ]  += icost
 		variables[ 'V_DiscountedInvestmentByTech'    ][ t ]  += icost
 		variables[ 'V_DiscountedInvestmentByProcess' ][t, v] += icost
+		variables[ 'V_DiscountedPeriodCost'          ][ v ]  += icost
 
 	for p, t, v in m.CostFixed.sparse_iterkeys():
 		fcost = value( m.V_Capacity[t, v] )
@@ -132,6 +135,7 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables[ 'V_UndiscountedFixedCostsByVintage' ][ v ]  += fcost
 		variables[ 'V_UndiscountedFixedCostsByProcess' ][t, v] += fcost
 		variables[ 'V_UndiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
+		variables[ 'V_UndiscountedPeriodCost'          ][ p ]  += fcost
 
 		fcost *= sum(
 		  (1 + GDR) ** -y
@@ -143,6 +147,7 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables[ 'V_DiscountedFixedCostsByVintage' ][ v ]  += fcost
 		variables[ 'V_DiscountedFixedCostsByProcess' ][t, v] += fcost
 		variables[ 'V_DiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
+		variables[ 'V_DiscountedPeriodCost'          ][ p ]  += fcost
 
 	for p, t, v in m.CostVariable.sparse_iterkeys():
 		vcost = value( m.V_ActivityByPeriodTechAndVintage[p, t, v] )
@@ -154,12 +159,15 @@ def calculate_reporting_variables ( instance, ostream=SO ):
 		variables[ 'V_UndiscountedVariableCostsByVintage' ][ v ]  += vcost
 		variables[ 'V_UndiscountedVariableCostsByProcess' ][t, v] += vcost
 		variables[ 'V_UndiscountedVariableCostsByPeriodAndProcess' ][p, t, v] = vcost
+		variables[ 'V_UndiscountedPeriodCost'             ][ p ]  += vcost
 
 		vcost *= value( m.PeriodRate[ p ])
 		variables[ 'V_DiscountedVariableCostsByPeriod'  ][ p ]  += vcost
 		variables[ 'V_DiscountedVariableCostsByTech'    ][ t ]  += vcost
 		variables[ 'V_DiscountedVariableCostsByVintage' ][ v ]  += vcost
 		variables[ 'V_DiscountedVariableCostsByProcess' ][t, v] += vcost
+		variables[ 'V_DiscountedPeriodCost'             ][ p ]  += vcost
+
 
 	var_list = []
 	for vgroup, values in sorted( variables.iteritems() ):
