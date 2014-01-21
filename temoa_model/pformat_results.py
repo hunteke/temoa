@@ -220,7 +220,6 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 			SE.write( msg )
 			raise
 
-	Vars = soln.Variable
 	Cons = soln.Constraint
 
 	def collect_result_data( cgroup, clist, epsilon):
@@ -236,10 +235,47 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 			results[ group ].append( (name.replace("'", ''), data['Value']) )
 		clist.extend( t for i in sorted( results ) for t in sorted(results[i]))
 
-	var_info = list()
+	variables = defaultdict( lambda: defaultdict( float ))
 	con_info = list()
 
-	collect_result_data( Vars, var_info, epsilon=1e-9 )
+	epsilon = 1e-9   # threshold for "so small it's zero"
+
+	for p, s, d, t, v in m.V_Activity:
+		val = value( m.V_Activity[p, s, d, t, v] )
+		if abs(val) < epsilon: continue
+
+		variables['V_Activity'][p, s, d, t, v] = val
+
+	for p, t, v in m.V_ActivityByPeriodTechAndVintage:
+		val = value( m.V_ActivityByPeriodTechAndVintage[p, t, v] )
+		if abs(val) < epsilon: continue
+
+		variables['V_ActivityByPeriodTechAndVintage'][p, t, v] = val
+
+	for t, v in m.V_Capacity:
+		val = value( m.V_Capacity[t, v] )
+		if abs(val) < epsilon: continue
+
+		variables['V_Capacity'][t, v] = val
+
+	for p, t in m.V_CapacityAvailableByPeriodAndTech:
+		val = value( m.V_CapacityAvailableByPeriodAndTech[p, t] )
+		if abs(val) < epsilon: continue
+
+		variables['V_CapacityAvailableByPeriodAndTech'][p, t] = val
+
+	for p, s, d, i, t, v, o in m.V_FlowIn:
+		val = value( m.V_FlowIn[p, s, d, i, t, v, o] )
+		if abs(val) < epsilon: continue
+
+		variables['V_FlowIn'][p, s, d, i, t, v, o] = val
+
+	for p, s, d, i, t, v, o in m.V_FlowOut:
+		val = value( m.V_FlowOut[p, s, d, i, t, v, o] )
+		if abs(val) < epsilon: continue
+
+		variables['V_FlowOut'][p, s, d, i, t, v, o] = val
+
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
 
 	msg = ( 'Model name: %s\n'
@@ -248,9 +284,16 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	)
 	output.write( msg % (m.name, obj_name, obj_value) )
 
-	if len( var_info ) > 0:
-		stringify_data( var_info, output )
-		del var_info
+	if variables:
+		var_list = []
+		for vgroup, values in sorted( variables.iteritems() ):
+			for vindex, val in sorted( values.iteritems() ):
+				if isinstance( vindex, tuple ):
+					vindex = ','.join( str(i) for i in vindex )
+				var_list.append(( '{}[{}]'.format(vgroup, vindex), val ))
+
+		stringify_data( var_list, output )
+		del var_list
 		calculate_reporting_variables( m, output )
 	else:
 		output.write( '\nAll variables have a zero (0) value.\n' )
