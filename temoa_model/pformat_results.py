@@ -185,7 +185,7 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 
 	output = StringIO()
 
-	instance = pyomo_instance
+	m = pyomo_instance            # lazy typist
 	result = pyomo_result
 
 	soln = result['Solution']
@@ -198,7 +198,7 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	if str(soln.Status) not in optimal_solutions:
 		output.write( 'No solution found.' )
 
-	objs = instance.active_components( Objective )
+	objs = m.active_components( Objective )
 	if len( objs ) > 1:
 		msg = '\nWarning: More than one objective.  Using first objective.\n'
 		SE.write( msg )
@@ -246,12 +246,12 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	   'Objective function value (%s): %s\n'
 	   'Non-zero variable values:\n'
 	)
-	output.write( msg % (instance.name, obj_name, obj_value) )
+	output.write( msg % (m.name, obj_name, obj_value) )
 
 	if len( var_info ) > 0:
 		stringify_data( var_info, output )
 		del var_info
-		calculate_reporting_variables( instance, output )
+		calculate_reporting_variables( m, output )
 	else:
 		output.write( '\nAll variables have a zero (0) value.\n' )
 
