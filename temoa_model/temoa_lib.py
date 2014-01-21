@@ -97,6 +97,8 @@ explicitly use the Coopr path:
 
 class TemoaError ( Exception ): pass
 class TemoaCommandLineArgumentError ( TemoaError ): pass
+class TemoaKeyError ( TemoaError ): pass
+class TemoaObjectNotFoundError ( TemoaError ): pass
 class TemoaFlowError ( TemoaError ): pass
 class TemoaValidationError ( TemoaError ): pass
 class TemoaNoExecutableError ( TemoaError ): pass
@@ -1257,6 +1259,13 @@ def parse_args ( ):
 	)
 
 
+	parser.add_argument( '--fix_variables',
+	  help='Path to file containing variables to fix.  The file format is the '
+	    'same as the default Temoa output.',
+	  action='store',
+	  dest='fix_variables',
+	  default=None)
+
 	parser.add_argument( '--how_to_cite',
 	  help='Bibliographical information for citation, in the case that Temoa '
 	    'contributes to a project that leads to a scientific publication.',
@@ -1460,6 +1469,74 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	# Now do the solve and ...
 	instance = model.create( mdata )
 	SE.write( '\r[%8.2f\n' % duration() )
+
+	if options.fix_variables:
+		SE.write( '[        ] Fixing supplied variables.'); SE.flush()
+		import re
+
+		var_data_re = re.compile( r'^(\d\S+)\s+(V_\S+$)' )
+		int_re = re.compile( r'^\d+$' )
+
+		with open( options.fix_variables, 'rb' ) as f:
+			for lineno, line in enumerate( f ):
+				line = line.strip()
+				match = var_data_re.match( line )
+				if match:
+					try:
+						value, var = match.groups()
+						value = float( value )
+
+						# Assumption: All variables are indexed
+						vgroup, vindex = var.split('[')
+						vindex = vindex[:-1].split(',')  # remove final ']'
+						for i, index in enumerate( vindex ):
+							# if index is an integer, convert it so it matches indices
+							# Problem: if modeler has used integer values for indices
+							# other than period or vintage.
+							if int_re.match( index ):
+								vindex[ i ] = int( index )
+
+						try:
+							m_var = getattr( instance, vgroup )[ tuple(vindex) ]
+							m_var.fixed = True
+							m_var.set_value( value )
+
+						except AttributeError as ae:
+							lineno += 1
+							if "'AbstractModel' object has no attribute " in str(ae):
+								# This could be so much cleaner if Coopr had
+								# Coopr-specific error classes.  Sigh.
+
+								msg = ('Model does not have a variable named "{}".  '
+								  '(Line {:d})')
+								msg = msg.format( vgroup, lineno )
+								raise TemoaObjectNotFoundError( msg )
+
+							raise
+
+						except KeyError as ke:
+							lineno += 1
+							if 'Error accessing indexed component' in str(ke):
+								# This could be so much cleaner if Coopr had
+								# Coopr-specific error classes.  Sigh.
+
+								msg = 'Variable "{}" has no index "{}".  (Line {:d})'
+								vindex = str( tuple(vindex) )
+								msg = msg.format( vgroup, vindex, lineno )
+								raise TemoaKeyError( msg )
+
+							raise
+
+					except ValueError as ve:
+						lineno += 1  # enumerate is 0-based, but humans not so much
+
+						msg = '\nUnable to parse value for "{}" (Line {:d})\n'
+						raise TemoaValidationError( msg.format( var, lineno ))
+
+		SE.write( '\r[%8.2f\n' % duration() )
+		SE.write( '[        ] Preprocessing fixed variables.'); SE.flush()
+		instance.preprocess()
+		SE.write( '\r[%8.2f\n' % duration() )
 
 	SE.write( '[        ] Solving.'); SE.flush()
 	if opt:
