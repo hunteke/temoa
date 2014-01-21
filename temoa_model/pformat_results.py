@@ -197,6 +197,7 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	)
 	if str(soln.Status) not in optimal_solutions:
 		output.write( 'No solution found.' )
+		return output
 
 	objs = m.active_components( Objective )
 	if len( objs ) > 1:
