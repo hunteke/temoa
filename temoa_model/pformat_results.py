@@ -248,30 +248,23 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	)
 	output.write( msg % (m.name, obj_name, obj_value) )
 
-	if svars:
+	def make_var_list ( variables ):
 		var_list = []
-		for vgroup, values in sorted( svars.iteritems() ):
+		for vgroup, values in sorted( variables.iteritems() ):
 			for vindex, val in sorted( values.iteritems() ):
 				if isinstance( vindex, tuple ):
 					vindex = ','.join( str(i) for i in vindex )
 				var_list.append(( '{}[{}]'.format(vgroup, vindex), val ))
+		return var_list
 
-		stringify_data( var_list, output )
+	if svars:
+		stringify_data( make_var_list(svars), output )
 	else:
 		output.write( '\nAll variables have a zero (0) value.\n' )
 
 	if psvars:
 		output.write('\n"Reporting Variables" (calculated after solve)\n')
-
-		var_list = []
-		for vgroup, values in sorted( psvars.iteritems() ):
-			for vindex, val in sorted( values.iteritems() ):
-				if isinstance( vindex, tuple ):
-					vindex = ','.join( str(i) for i in vindex )
-				var_list.append(( '{}[{}]'.format(vgroup, vindex), val ))
-
-		stringify_data( var_list, output )
-		del var_list
+		stringify_data( make_var_list(psvars), output )
 
 	if len( con_info ) > 0:
 		output.write( '\nBinding constraint values:\n' )
