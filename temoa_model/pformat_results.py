@@ -56,129 +56,6 @@ def stringify_data ( data, ostream=SO, format='plain' ):
 		ostream.write( format % (int_part, dec_part, key) )
 
 
-def calculate_reporting_variables ( instance, ostream=SO ):
-	variables = defaultdict( lambda: defaultdict( float ))
-	epsilon = 1e-9   # threshold for "so small it's zero"
-
-	m = instance   # lazy typist ...
-
-	emission_keys = { (i, t, v, o) : e for e, i, t, v, o in m.EmissionActivity }
-
-	for p, s, d, i, t, v, o in m.V_FlowOut:
-		oval = value( m.V_FlowOut[p, s, d, i, t, v, o] )
-		if abs(oval) < epsilon: continue
-
-		variables['V_ActivityByInputAndTech'          ][i, t]       += oval
-		variables['V_ActivityByPeriodAndTech'         ][p, t]       += oval
-		variables['V_ActivityByTechAndOutput'         ][t, o]       += oval
-		variables['V_ActivityByProcess'               ][t, v]       += oval
-		variables['V_ActivityByPeriodInputAndTech'    ][p, i, t]    += oval
-		variables['V_ActivityByPeriodTechAndOutput'   ][p, t, o]    += oval
-		variables['V_ActivityByPeriodAndProcess'      ][p, t, v]    += oval
-		variables['V_ActivityByPeriodInputAndProcess' ][p, i, t, v] += oval
-		variables['V_ActivityByPeriodProcessAndOutput'][p, t, v, o] += oval
-
-		if (i, t, v, o) not in emission_keys: continue
-
-		e = emission_keys[i, t, v, o]
-		evalue = oval * m.EmissionActivity[e, i, t, v, o]
-
-		variables[ 'V_EmissionActivityByPeriod'         ][ p ]  += evalue
-		variables[ 'V_EmissionActivityByTech'           ][ t ]  += evalue
-		variables[ 'V_EmissionActivityByPeriodAndTech'  ][p, t] += evalue
-		variables[ 'V_EmissionActivityByTechAndVintage' ][t, v] += evalue
-
-	for p, s, d, i, t, v, o in m.V_FlowIn:
-		ival = value( m.V_FlowIn[p, s, d, i, t, v, o] )
-		if abs(ival) < epsilon: continue
-
-		variables['V_EnergyConsumptionByTech'               ][ t ]     += ival
-		variables['V_EnergyConsumptionByPeriodAndTech'      ][p, t]    += ival
-		variables['V_EnergyConsumptionByTechAndOutput'      ][t, o]    += ival
-		variables['V_EnergyConsumptionByPeriodAndProcess'   ][p, t, v] += ival
-		variables['V_EnergyConsumptionByPeriodInputAndTech' ][p, i, t] += ival
-		variables['V_EnergyConsumptionByPeriodTechAndOutput'][p, t, o] += ival
-
-	P_0 = min( m.time_optimize )
-	GDR = value( m.GlobalDiscountRate )
-	for t, v in m.CostInvest.sparse_iterkeys():
-		# CostInvest guaranteed not 0
-
-		icost = value( m.V_Capacity[t, v] )
-		if abs(icost) < epsilon: continue
-
-		icost *= value( m.CostInvest[t, v] )
-		variables[ 'V_UndiscountedInvestmentByPeriod'  ][ v ]  += icost
-		variables[ 'V_UndiscountedInvestmentByTech'    ][ t ]  += icost
-		variables[ 'V_UndiscountedInvestmentByProcess' ][t, v] += icost
-		variables[ 'V_UndiscountedPeriodCost'          ][ v ]  += icost
-
-
-		icost *= value( m.LoanAnnualize[t, v] )
-		icost *= sum(
-		  (1 + GDR) ** -y
-		  for y in range( v - P_0,
-		                  v - P_0 + value( m.ModelLoanLife[t, v] ))
-		)
-		variables[ 'V_DiscountedInvestmentByPeriod'  ][ v ]  += icost
-		variables[ 'V_DiscountedInvestmentByTech'    ][ t ]  += icost
-		variables[ 'V_DiscountedInvestmentByProcess' ][t, v] += icost
-		variables[ 'V_DiscountedPeriodCost'          ][ v ]  += icost
-
-	for p, t, v in m.CostFixed.sparse_iterkeys():
-		fcost = value( m.V_Capacity[t, v] )
-		if abs(fcost) < epsilon: continue
-
-		fcost *= value( m.CostFixed[p, t, v] )
-		variables[ 'V_UndiscountedFixedCostsByPeriod'  ][ p ]  += fcost
-		variables[ 'V_UndiscountedFixedCostsByTech'    ][ t ]  += fcost
-		variables[ 'V_UndiscountedFixedCostsByVintage' ][ v ]  += fcost
-		variables[ 'V_UndiscountedFixedCostsByProcess' ][t, v] += fcost
-		variables[ 'V_UndiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
-		variables[ 'V_UndiscountedPeriodCost'          ][ p ]  += fcost
-
-		fcost *= sum(
-		  (1 + GDR) ** -y
-		  for y in range( p - P_0,
-		                  p - P_0 + value( m.ModelTechLife[p, t, v] ))
-		)
-		variables[ 'V_DiscountedFixedCostsByPeriod'  ][ p ]  += fcost
-		variables[ 'V_DiscountedFixedCostsByTech'    ][ t ]  += fcost
-		variables[ 'V_DiscountedFixedCostsByVintage' ][ v ]  += fcost
-		variables[ 'V_DiscountedFixedCostsByProcess' ][t, v] += fcost
-		variables[ 'V_DiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
-		variables[ 'V_DiscountedPeriodCost'          ][ p ]  += fcost
-
-	for p, t, v in m.CostVariable.sparse_iterkeys():
-		vcost = value( m.V_ActivityByPeriodTechAndVintage[p, t, v] )
-		if abs(vcost) < epsilon: continue
-
-		vcost *= value( m.CostVariable[p, t, v] )
-		variables[ 'V_UndiscountedVariableCostsByPeriod'  ][ p ]  += vcost
-		variables[ 'V_UndiscountedVariableCostsByTech'    ][ t ]  += vcost
-		variables[ 'V_UndiscountedVariableCostsByVintage' ][ v ]  += vcost
-		variables[ 'V_UndiscountedVariableCostsByProcess' ][t, v] += vcost
-		variables[ 'V_UndiscountedVariableCostsByPeriodAndProcess' ][p, t, v] = vcost
-		variables[ 'V_UndiscountedPeriodCost'             ][ p ]  += vcost
-
-		vcost *= value( m.PeriodRate[ p ])
-		variables[ 'V_DiscountedVariableCostsByPeriod'  ][ p ]  += vcost
-		variables[ 'V_DiscountedVariableCostsByTech'    ][ t ]  += vcost
-		variables[ 'V_DiscountedVariableCostsByVintage' ][ v ]  += vcost
-		variables[ 'V_DiscountedVariableCostsByProcess' ][t, v] += vcost
-		variables[ 'V_DiscountedPeriodCost'             ][ p ]  += vcost
-
-
-	var_list = []
-	for vgroup, values in sorted( variables.iteritems() ):
-		for vindex, val in sorted( values.iteritems() ):
-			if isinstance( vindex, tuple ):
-				vindex = ','.join( str(i) for i in vindex )
-			var_list.append(( '{}[{}]'.format(vgroup, vindex), val ))
-
-	ostream.write('\n"Reporting Variables" (calculated after solve)\n')
-	stringify_data( var_list, ostream )
-
 
 def pformat_results ( pyomo_instance, pyomo_result ):
 	from coopr.pyomo import Objective, Var, Constraint
@@ -224,46 +101,144 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 			results[ group ].append( (name.replace("'", ''), data['Value']) )
 		clist.extend( t for i in sorted( results ) for t in sorted(results[i]))
 
-	variables = defaultdict( lambda: defaultdict( float ))
+	svars = defaultdict( lambda: defaultdict( float ))    # "solved" vars
+	psvars = defaultdict( lambda: defaultdict( float ))   # "post-solve" vars
 	con_info = list()
 
 	epsilon = 1e-9   # threshold for "so small it's zero"
+
+	emission_keys = { (i, t, v, o) : e for e, i, t, v, o in m.EmissionActivity }
+	P_0 = min( m.time_optimize )
+	GDR = value( m.GlobalDiscountRate )
 
 	for p, s, d, t, v in m.V_Activity:
 		val = value( m.V_Activity[p, s, d, t, v] )
 		if abs(val) < epsilon: continue
 
-		variables['V_Activity'][p, s, d, t, v] = val
+		svars['V_Activity'][p, s, d, t, v] = val
 
 	for p, t, v in m.V_ActivityByPeriodTechAndVintage:
 		val = value( m.V_ActivityByPeriodTechAndVintage[p, t, v] )
 		if abs(val) < epsilon: continue
 
-		variables['V_ActivityByPeriodTechAndVintage'][p, t, v] = val
+		svars['V_ActivityByPeriodTechAndVintage'][p, t, v] = val
 
 	for t, v in m.V_Capacity:
 		val = value( m.V_Capacity[t, v] )
 		if abs(val) < epsilon: continue
 
-		variables['V_Capacity'][t, v] = val
+		svars['V_Capacity'][t, v] = val
 
 	for p, t in m.V_CapacityAvailableByPeriodAndTech:
 		val = value( m.V_CapacityAvailableByPeriodAndTech[p, t] )
 		if abs(val) < epsilon: continue
 
-		variables['V_CapacityAvailableByPeriodAndTech'][p, t] = val
+		svars['V_CapacityAvailableByPeriodAndTech'][p, t] = val
 
 	for p, s, d, i, t, v, o in m.V_FlowIn:
 		val = value( m.V_FlowIn[p, s, d, i, t, v, o] )
 		if abs(val) < epsilon: continue
 
-		variables['V_FlowIn'][p, s, d, i, t, v, o] = val
+		svars['V_FlowIn'][p, s, d, i, t, v, o] = val
+
+		psvars['V_EnergyConsumptionByTech'               ][ t ]     += val
+		psvars['V_EnergyConsumptionByPeriodAndTech'      ][p, t]    += val
+		psvars['V_EnergyConsumptionByTechAndOutput'      ][t, o]    += val
+		psvars['V_EnergyConsumptionByPeriodAndProcess'   ][p, t, v] += val
+		psvars['V_EnergyConsumptionByPeriodInputAndTech' ][p, i, t] += val
+		psvars['V_EnergyConsumptionByPeriodTechAndOutput'][p, t, o] += val
 
 	for p, s, d, i, t, v, o in m.V_FlowOut:
 		val = value( m.V_FlowOut[p, s, d, i, t, v, o] )
 		if abs(val) < epsilon: continue
 
-		variables['V_FlowOut'][p, s, d, i, t, v, o] = val
+		svars['V_FlowOut'][p, s, d, i, t, v, o] = val
+		psvars['V_ActivityByInputAndTech'          ][i, t]       += val
+		psvars['V_ActivityByPeriodAndTech'         ][p, t]       += val
+		psvars['V_ActivityByTechAndOutput'         ][t, o]       += val
+		psvars['V_ActivityByProcess'               ][t, v]       += val
+		psvars['V_ActivityByPeriodInputAndTech'    ][p, i, t]    += val
+		psvars['V_ActivityByPeriodTechAndOutput'   ][p, t, o]    += val
+		psvars['V_ActivityByPeriodAndProcess'      ][p, t, v]    += val
+		psvars['V_ActivityByPeriodInputAndProcess' ][p, i, t, v] += val
+		psvars['V_ActivityByPeriodProcessAndOutput'][p, t, v, o] += val
+
+		if (i, t, v, o) not in emission_keys: continue
+
+		e = emission_keys[i, t, v, o]
+		evalue = val * m.EmissionActivity[e, i, t, v, o]
+
+		psvars[ 'V_EmissionActivityByPeriod'         ][ p ]  += evalue
+		psvars[ 'V_EmissionActivityByTech'           ][ t ]  += evalue
+		psvars[ 'V_EmissionActivityByPeriodAndTech'  ][p, t] += evalue
+		psvars[ 'V_EmissionActivityByTechAndVintage' ][t, v] += evalue
+
+	for t, v in m.CostInvest.sparse_iterkeys():
+		# CostInvest guaranteed not 0
+
+		icost = value( m.V_Capacity[t, v] )
+		if abs(icost) < epsilon: continue
+
+		icost *= value( m.CostInvest[t, v] )
+		psvars[ 'V_UndiscountedInvestmentByPeriod'  ][ v ]  += icost
+		psvars[ 'V_UndiscountedInvestmentByTech'    ][ t ]  += icost
+		psvars[ 'V_UndiscountedInvestmentByProcess' ][t, v] += icost
+		psvars[ 'V_UndiscountedPeriodCost'          ][ v ]  += icost
+
+
+		icost *= value( m.LoanAnnualize[t, v] )
+		icost *= sum(
+		  (1 + GDR) ** -y
+		  for y in range( v - P_0,
+		                  v - P_0 + value( m.ModelLoanLife[t, v] ))
+		)
+		psvars[ 'V_DiscountedInvestmentByPeriod'  ][ v ]  += icost
+		psvars[ 'V_DiscountedInvestmentByTech'    ][ t ]  += icost
+		psvars[ 'V_DiscountedInvestmentByProcess' ][t, v] += icost
+		psvars[ 'V_DiscountedPeriodCost'          ][ v ]  += icost
+
+	for p, t, v in m.CostFixed.sparse_iterkeys():
+		fcost = value( m.V_Capacity[t, v] )
+		if abs(fcost) < epsilon: continue
+
+		fcost *= value( m.CostFixed[p, t, v] )
+		psvars[ 'V_UndiscountedFixedCostsByPeriod'  ][ p ]  += fcost
+		psvars[ 'V_UndiscountedFixedCostsByTech'    ][ t ]  += fcost
+		psvars[ 'V_UndiscountedFixedCostsByVintage' ][ v ]  += fcost
+		psvars[ 'V_UndiscountedFixedCostsByProcess' ][t, v] += fcost
+		psvars[ 'V_UndiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
+		psvars[ 'V_UndiscountedPeriodCost'          ][ p ]  += fcost
+
+		fcost *= sum(
+		  (1 + GDR) ** -y
+		  for y in range( p - P_0,
+		                  p - P_0 + value( m.ModelTechLife[p, t, v] ))
+		)
+		psvars[ 'V_DiscountedFixedCostsByPeriod'  ][ p ]  += fcost
+		psvars[ 'V_DiscountedFixedCostsByTech'    ][ t ]  += fcost
+		psvars[ 'V_DiscountedFixedCostsByVintage' ][ v ]  += fcost
+		psvars[ 'V_DiscountedFixedCostsByProcess' ][t, v] += fcost
+		psvars[ 'V_DiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
+		psvars[ 'V_DiscountedPeriodCost'          ][ p ]  += fcost
+
+	for p, t, v in m.CostVariable.sparse_iterkeys():
+		vcost = value( m.V_ActivityByPeriodTechAndVintage[p, t, v] )
+		if abs(vcost) < epsilon: continue
+
+		vcost *= value( m.CostVariable[p, t, v] )
+		psvars[ 'V_UndiscountedVariableCostsByPeriod'  ][ p ]  += vcost
+		psvars[ 'V_UndiscountedVariableCostsByTech'    ][ t ]  += vcost
+		psvars[ 'V_UndiscountedVariableCostsByVintage' ][ v ]  += vcost
+		psvars[ 'V_UndiscountedVariableCostsByProcess' ][t, v] += vcost
+		psvars[ 'V_UndiscountedVariableCostsByPeriodAndProcess' ][p, t, v] = vcost
+		psvars[ 'V_UndiscountedPeriodCost'             ][ p ]  += vcost
+
+		vcost *= value( m.PeriodRate[ p ])
+		psvars[ 'V_DiscountedVariableCostsByPeriod'  ][ p ]  += vcost
+		psvars[ 'V_DiscountedVariableCostsByTech'    ][ t ]  += vcost
+		psvars[ 'V_DiscountedVariableCostsByVintage' ][ v ]  += vcost
+		psvars[ 'V_DiscountedVariableCostsByProcess' ][t, v] += vcost
+		psvars[ 'V_DiscountedPeriodCost'             ][ p ]  += vcost
 
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
 
@@ -273,9 +248,23 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	)
 	output.write( msg % (m.name, obj_name, obj_value) )
 
-	if variables:
+	if svars:
 		var_list = []
-		for vgroup, values in sorted( variables.iteritems() ):
+		for vgroup, values in sorted( svars.iteritems() ):
+			for vindex, val in sorted( values.iteritems() ):
+				if isinstance( vindex, tuple ):
+					vindex = ','.join( str(i) for i in vindex )
+				var_list.append(( '{}[{}]'.format(vgroup, vindex), val ))
+
+		stringify_data( var_list, output )
+	else:
+		output.write( '\nAll variables have a zero (0) value.\n' )
+
+	if psvars:
+		output.write('\n"Reporting Variables" (calculated after solve)\n')
+
+		var_list = []
+		for vgroup, values in sorted( psvars.iteritems() ):
 			for vindex, val in sorted( values.iteritems() ):
 				if isinstance( vindex, tuple ):
 					vindex = ','.join( str(i) for i in vindex )
@@ -283,9 +272,6 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 
 		stringify_data( var_list, output )
 		del var_list
-		calculate_reporting_variables( m, output )
-	else:
-		output.write( '\nAll variables have a zero (0) value.\n' )
 
 	if len( con_info ) > 0:
 		output.write( '\nBinding constraint values:\n' )
