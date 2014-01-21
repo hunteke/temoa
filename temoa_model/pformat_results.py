@@ -206,20 +206,8 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 
 	# This awkward workaround so as to be generic.  Unfortunately, I don't
 	# know how else to automatically discover the objective name
-	obj_name = objs.keys()[0]
-	try:
-		obj_value = getattr(soln.Objective, obj_name).Value
-	except AttributeError, e:
-		try:
-			obj_value = soln.Objective['__default_objective__'].Value
-		except:
-			msg = ('Unknown error collecting objective function value.  A '
-			   'solution exists, but Temoa is currently unable to parse it.  '
-			   'If you are inclined, please send the dat file that creates the '
-			   'error to the Temoa developers.  Meanwhile, pyomo will still be '
-			   'able to extract the solution.\n')
-			SE.write( msg )
-			raise
+	objs = objs.items()[0]
+	obj_name, obj_value = objs[0], value( objs[1]() )
 
 	Cons = soln.Constraint
 
