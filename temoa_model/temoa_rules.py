@@ -132,14 +132,14 @@ def PeriodCost_rule ( M, p ):
 
 
 def ParamModelLoanLife_rule ( M, t, v ):
-	loan_length = value( M.LifetimeLoan[t, v] )
+	loan_length = value( M.LifetimeLoanProcess[t, v] )
 	mll = min( loan_length, max(M.time_future) - v )
 
 	return mll
 
 
 def ParamModelTechLife_rule ( M, p, t, v ):
-	life_length = value( M.LifetimeTech[t, v] )
+	life_length = value( M.LifetimeProcess[t, v] )
 	tpl = min( v + life_length - p, value(M.PeriodLength[ p ]) )
 
 	return tpl
@@ -186,7 +186,7 @@ that will cease operation (rust out, be decommissioned, etc.) between periods,
 calculate the fraction of the period that the technology is able to
 create useful output.
 """
-	eol_year = v + value( M.LifetimeTech[t, v] )
+	eol_year = v + value( M.LifetimeProcess[t, v] )
 	frac  = eol_year - p
 	period_length = value( M.PeriodLength[ p ] )
 	if frac >= period_length:
@@ -201,7 +201,7 @@ create useful output.
 
 def ParamLoanAnnualize_rule ( M, t, v ):
 	dr = value( M.DiscountRate[t, v] )
-	lln = value( M.LifetimeLoan[t, v] )
+	lln = value( M.LifetimeLoanProcess[t, v] )
 	if not dr:
 		return 1 / lln
 	annualized_rate = ( dr / (1 - (1 + dr)**(-lln) ))

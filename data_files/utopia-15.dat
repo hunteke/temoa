@@ -191,7 +191,7 @@ param  MaxCapacity  :=   # roughly NRAT_RTY2
 	;
 
 
-param  LifetimeTechDefault  :=
+param  LifetimeTech  :=
  E01   40
  E21   40
  E31  100
@@ -217,7 +217,7 @@ param  LifetimeTechDefault  :=
 	;
 
 
-param  LifetimeTech  :=        # PARAMETER TCH_LIFE
+param  LifetimeProcess  :=        # PARAMETER TCH_LIFE
 # Temoa tech name   # vintage    # value
  RL1                 1980         20        # for existing cap.
 
@@ -229,9 +229,7 @@ param  LifetimeTech  :=        # PARAMETER TCH_LIFE
 	;
 
 
-param  LifetimeLoanDefault  :=
-   # This is basically a copy of LifetimeTech, but for loan amortization.
-   # This is what allows the tech and loan life to be separate entities.
+param  LifetimeLoanTech  :=
 # Temoa tech name, value
  E01               40
  E21               40

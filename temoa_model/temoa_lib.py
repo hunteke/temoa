@@ -158,7 +158,7 @@ def CommodityBalanceConstraintErrorCheck ( vflow_out, vflow_in, p, s, d, c ):
 		  " - Is there a missing tech in set 'tech_production'?\n"
 		  " - Is there a missing commodity in set 'commodity_physical'?\n"
 		  ' - Are there missing entries in the Efficiency parameter?\n'
-		  ' - Does a tech need a longer LifetimeTech parameter setting?')
+		  ' - Does a process need a longer LifetimeProcess parameter setting?')
 		raise TemoaFlowError( msg.format(
 		  c, s, d, p, flow_in_expr.getvalue()
 		))
@@ -169,8 +169,8 @@ def DemandConstraintErrorCheck ( supply, p, s, d, dem ):
 		msg = ("Error: Demand '{}' for ({}, {}, {}) unable to be met by any "
 		  'technology.\n\tPossible reasons:\n'
 		  ' - Is the Efficiency parameter missing an entry for this demand?\n'
-		  ' - Does a tech that satisfies this demand need a longer LifetimeTech?'
-		  '\n')
+		  ' - Does a tech that satisfies this demand need a longer '
+		  'LifetimeProcess?\n')
 		raise TemoaFlowError( msg.format(dem, p, s, d) )
 
 # End Temoa rule "partials"
@@ -288,21 +288,22 @@ def CreateCapacityFactors ( M ):
 def CreateLifetimes ( M ):
 	# Steps
 	#  1. Collect all possible processes
-	#  2. Find the ones _not_ specified in LifetimeTech and LifetimeLoan
-	#  3. Set them, based on Lifetime*Default.
+	#  2. Find the ones _not_ specified in LifetimeProcess and
+	#     LifetimeLoanProcess
+	#  3. Set them, based on Lifetime*Tech.
 
 	# Shorter names, for us lazy programmer types
-	LLN = M.LifetimeLoan
-	LTC = M.LifetimeTech
+	LLN = M.LifetimeLoanProcess
+	LPR = M.LifetimeProcess
 
 	# Step 1
-	lprocesses = set( (t, v) for t, v in M.LifetimeLoan_tv )
-	processes  = set( (t, v) for t, v in M.LifetimeTech_tv )
+	lprocesses = set( (t, v) for t, v in M.LifetimeLoanProcess_tv )
+	processes  = set( (t, v) for t, v in M.LifetimeProcess_tv )
 
 
 	# Step 2
 	unspecified_loan_lives = lprocesses.difference( LLN.sparse_iterkeys() )
-	unspecified_tech_lives = processes.difference( LTC.sparse_iterkeys() )
+	unspecified_tech_lives = processes.difference( LPR.sparse_iterkeys() )
 
 	# Step 3
 
@@ -314,14 +315,14 @@ def CreateLifetimes ( M ):
 	if unspecified_loan_lives:
 		LLN._constructed = False
 		for t, v in unspecified_loan_lives:
-			LLN[t, v] = M.LifetimeLoanDefault[ t ]
+			LLN[t, v] = M.LifetimeLoanTech[ t ]
 		LLN._constructed = True
 
 	if unspecified_tech_lives:
-		LTC._constructed = False
+		LPR._constructed = False
 		for t, v in unspecified_tech_lives:
-			LTC[t, v] = M.LifetimeTechDefault[ t ]
-		LTC._constructed = True
+			LPR[t, v] = M.LifetimeTech[ t ]
+		LPR._constructed = True
 
 
 def CreateDemands ( M ):
@@ -562,7 +563,7 @@ def InitializeProcessParameters ( M ):
 
 	for i, t, v, o in M.Efficiency.sparse_iterkeys():
 		l_process = (t, v)
-		l_lifetime = value(M.LifetimeTech[ l_process ])
+		l_lifetime = value(M.LifetimeProcess[ l_process ])
 
 		if v in M.vintage_exist:
 			if l_process not in l_exist_indices:
@@ -578,8 +579,8 @@ def InitializeProcessParameters ( M ):
 				continue
 			if v + l_lifetime <= l_first_period:
 				msg = ('\nWarning: %s specified as ExistingCapacity, but its '
-				  'LifetimeTech parameter does not extend past the beginning of '
-				  'time_future.  (i.e. useless parameter)'
+				  'LifetimeProcess parameter does not extend past the beginning '
+				  'of time_future.  (i.e. useless parameter)'
 				  '\n\tLifetime:     %s'
 				  '\n\tFirst period: %s\n')
 				SE.write( msg % (l_process, l_lifetime, l_first_period) )
@@ -602,7 +603,7 @@ def InitializeProcessParameters ( M ):
 			pindex = (p, t, v)
 
 			if v in M.time_optimize:
-				l_loan_life = value(M.LifetimeLoan[ l_process ])
+				l_loan_life = value(M.LifetimeLoanProcess[ l_process ])
 				if v + l_loan_life >= p:
 					g_processLoans[ pindex ] = True
 
@@ -723,8 +724,8 @@ process is active.
 	l_max_year = max( M.time_future )
 
 	indices = set()
-	for t, v in M.LifetimeLoan.sparse_iterkeys():
-		l_death_year = v + value(M.LifetimeLoan[t, v])
+	for t, v in M.LifetimeLoanProcess.sparse_iterkeys():
+		l_death_year = v + value(M.LifetimeLoanProcess[t, v])
 		if l_death_year < l_max_year and l_death_year not in l_periods:
 			p = max( yy for yy in M.time_optimize if yy < l_death_year )
 			indices.add( (p, t, v) )
@@ -741,10 +742,10 @@ returns indices only for processes that EOL mid-period.
 	return g_activeActivity_ptv
 
 
-def LifetimeTechIndices ( M ):
+def LifetimeProcessIndices ( M ):
 	"""\
 Based on the Efficiency parameter's indices, this function returns the set of
-process indices that may be specified in the LifetimeTech parameter.
+process indices that may be specified in the LifetimeProcess parameter.
 """
 	indices = set(
 	  (t, v)
@@ -755,7 +756,7 @@ process indices that may be specified in the LifetimeTech parameter.
 	return indices
 
 
-def LifetimeLoanIndices ( M ):
+def LifetimeLoanProcessIndices ( M ):
 	"""\
 Based on the Efficiency parameter's indices and time_future parameter, this
 function returns the set of process indices that may be specified in the

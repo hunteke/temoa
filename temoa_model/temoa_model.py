@@ -144,12 +144,12 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 	M.initialize_CapacityFactorProcess = Set( rule=CreateCapacityFactors )
 
-	M.LifetimeTechDefault = Param( M.tech_all, default=30 )
-	M.LifetimeLoanDefault = Param( M.tech_all, default=10 )
-	M.LifetimeTech_tv = Set( dimen=2, rule=LifetimeTechIndices )
-	M.LifetimeLoan_tv = Set( dimen=2, rule=LifetimeLoanIndices )
-	M.LifetimeTech = Param( M.LifetimeTech_tv )  # in years
-	M.LifetimeLoan = Param( M.LifetimeLoan_tv )  # in years
+	M.LifetimeProcess_tv     = Set( dimen=2, rule=LifetimeProcessIndices )
+	M.LifetimeLoanProcess_tv = Set( dimen=2, rule=LifetimeLoanProcessIndices )
+	M.LifetimeTech           = Param( M.tech_all, default=30 )    # in years
+	M.LifetimeLoanTech       = Param( M.tech_all, default=10 )    # in years
+	M.LifetimeProcess        = Param( M.LifetimeProcess_tv )      # in years
+	M.LifetimeLoanProcess    = Param( M.LifetimeLoanProcess_tv )  # in years
 
 	M.initialize_Lifetimes = BuildAction( rule=CreateLifetimes )
 
