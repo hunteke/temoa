@@ -297,8 +297,8 @@ def CreateLifetimes ( M ):
 	LPR = M.LifetimeProcess
 
 	# Step 1
-	lprocesses = set( (t, v) for t, v in M.LifetimeLoanProcess_tv )
-	processes  = set( (t, v) for t, v in M.LifetimeProcess_tv )
+	lprocesses = set( M.LifetimeLoanProcess_tv )
+	processes  = set( M.LifetimeProcess_tv )
 
 
 	# Step 2
@@ -453,8 +453,8 @@ def CreateCosts ( M ):
 	CV = M.CostVariable
 
 	# Step 1
-	fixed_indices = set( (p, t, v) for p, t, v in M.CostFixed_ptv )
-	var_indices   = set( (p, t, v) for p, t, v in M.CostVariable_ptv )
+	fixed_indices = set( M.CostFixed_ptv )
+	var_indices   = set( M.CostVariable_ptv )
 
 	# Step 2
 	unspecified_fixed_prices = fixed_indices.difference( CF.sparse_iterkeys() )
