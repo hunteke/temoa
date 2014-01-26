@@ -547,7 +547,7 @@ slice ``<s``,\ ``d>``.
    :label: Capacity
 
        \left (
-               \text{CF}_{t, v}
+               \text{CFP}_{t, v}
          \cdot \text{C2A}_{t}
          \cdot \text{SEG}_{s, d}
          \cdot \text{TLF}_{p, t, v}
@@ -560,7 +560,7 @@ slice ``<s``,\ ``d>``.
    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 """
 	produceable = (
-	  (   value( M.CapacityFactor[s, d, t, v] )
+	  (   value( M.CapacityFactorProcess[s, d, t, v] )
 	    * value( M.CapacityToActivity[ t ] )
 	    * value( M.SegFrac[s, d]) )
 	    * value( M.TechLifeFrac[p, t, v] )

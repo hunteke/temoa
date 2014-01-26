@@ -88,9 +88,9 @@ CommodityProductionCost(time_optimize, tech_all, vintage_all)
    per unit to operate a technology.  The modeler may, for example, choose to
    change the price to operate a vintage of a technology between optimization
    periods.
-CapacityFactor(tech_all, vintage_all)
-   [default: 0] CapacityFactor enables the modeler to set the capacity factor
-   for any vintage of technology.
+CapacityFactorProcess(tech_all, vintage_all)
+   [default: 0] CapacityFactorProcess enables the modeler to set the capacity
+   factor for each process.
 	"""
 	M = AbstractModel( name )
 
@@ -138,11 +138,11 @@ CapacityFactor(tech_all, vintage_all)
 	M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
 	M.Efficiency   = Param( M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier )
 
-	M.CapacityFactorDefault = Param( M.time_season, M.time_of_day, M.tech_all, default=1 )
+	M.CapacityFactorTech    = Param( M.time_season, M.time_of_day, M.tech_all, default=1 )
 	M.CapacityFactor_sdtv   = Set( dimen=4, rule=CapacityFactorIndices )
-	M.CapacityFactor        = Param( M.CapacityFactor_sdtv )
+	M.CapacityFactorProcess = Param( M.CapacityFactor_sdtv )
 
-	M.initialize_CapacityFactor = Set( rule=CreateCapacityFactors )
+	M.initialize_CapacityFactorProcess = Set( rule=CreateCapacityFactors )
 
 	M.LifetimeTechDefault = Param( M.tech_all, default=30 )
 	M.LifetimeLoanDefault = Param( M.tech_all, default=10 )

@@ -247,11 +247,11 @@ def validate_SegFrac ( M ):
 def CreateCapacityFactors ( M ):
 	# Steps
 	#  1. Collect all possible processes
-	#  2. Find the ones _not_ specified in CapacityFactor
-	#  3. Set them, based on CapacityFactorDefault.
+	#  2. Find the ones _not_ specified in CapacityFactorProcess
+	#  3. Set them, based on CapacityFactorTech.
 
 	# Shorter names, for us lazy programmer types
-	CF = M.CapacityFactor
+	CFP = M.CapacityFactorProcess
 
 	# Step 1
 	processes  = set( (t, v) for i, t, v, o in M.Efficiency.sparse_iterkeys() )
@@ -267,7 +267,7 @@ def CreateCapacityFactors ( M ):
 	)
 
 	# Step 2
-	unspecified_cfs = all_cfs.difference( CF.sparse_iterkeys() )
+	unspecified_cfs = all_cfs.difference( CFP.sparse_iterkeys() )
 
 	# Step 3
 
@@ -277,10 +277,10 @@ def CreateCapacityFactors ( M ):
 	# constructed, that we know are valid, and that we will need.
 
 	if unspecified_cfs:
-		CF._constructed = False
+		CFP._constructed = False
 		for s, d, t, v in unspecified_cfs:
-			CF[s, d, t, v] = M.CapacityFactorDefault[s, d, t]
-		CF._constructed = True
+			CFP[s, d, t, v] = M.CapacityFactorTech[s, d, t]
+		CFP._constructed = True
 
 	return tuple()
 

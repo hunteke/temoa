@@ -248,7 +248,7 @@ param  LifetimeLoanDefault  :=
 	;
 
 
-param CapacityFactor :=
+param  CapacityFactorProcess  :=
 # season # day # tech       # vintage    # value
  inter  day     E01          1960         0.8
  inter  night   E01          1960         0.8
