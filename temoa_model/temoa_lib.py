@@ -1036,22 +1036,6 @@ conceptually a vintage of a technology.
 	return processes
 
 
-def ProcessesByPeriodAndInput ( p, i ):
-	"""\
-Returns the set of processes that operate in 'period' and take 'input'.  Note
-that a process is conceptually a vintage of a technology.
-"""
-	processes = set(
-	  (t, v)
-
-	  for p, t, v in g_processInputs
-	  if p == p
-	  if i in g_processInputs[p, t, v]
-	)
-
-	return processes
-
-
 def ProcessesByPeriodAndOutput ( p, o ):
 	"""\
 Returns the set of processes that operate in 'period' and take 'output'.  Note
