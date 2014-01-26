@@ -113,7 +113,7 @@ def PeriodCost_rule ( M, p ):
 	)
 
 	variable_costs = sum(
-	    M.V_ActivityByPeriodTechAndVintage[p, S_t, S_v]
+	    M.V_ActivityByPeriodAndProcess[p, S_t, S_v]
 	  * (
 	      value( M.CostVariable[p, S_t, S_v] )
 	    * value( M.PeriodRate[ p ] )
@@ -823,7 +823,7 @@ def GrowthRateConstraint_rule ( M, p, t ):
 # Additional and derived (informational) variable constraints
 
 
-def ActivityByPeriodTechAndVintage_Constraint ( M, p, t, v ):
+def ActivityByPeriodAndProcess_Constraint ( M, p, t, v ):
 	if p < v or v not in ProcessVintages( p, t ):
 		return Constraint.Skip
 
@@ -837,7 +837,7 @@ def ActivityByPeriodTechAndVintage_Constraint ( M, p, t, v ):
 	if int is type( activity ):
 		return Constraint.Skip
 
-	expr = (M.V_ActivityByPeriodTechAndVintage[p, t, v] == activity)
+	expr = (M.V_ActivityByPeriodAndProcess[p, t, v] == activity)
 	return expr
 
 

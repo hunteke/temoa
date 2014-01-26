@@ -863,7 +863,7 @@ strict digraph model {
 		enodes, vnodes, iedges, oedges = set(), set(), set(), set()
 
 		for l_vin in ProcessVintages( per, tech ):
-			if not M.V_ActivityByPeriodTechAndVintage[per, tech, l_vin]:
+			if not M.V_ActivityByPeriodAndProcess[per, tech, l_vin]:
 				continue
 
 			cap = M.V_Capacity[tech, l_vin]
@@ -996,7 +996,7 @@ strict digraph model {
 		total_cap = value( M.V_CapacityAvailableByPeriodAndTech[p, t] )
 
 		for v in ProcessVintages( p, t ):
-			if not M.V_ActivityByPeriodTechAndVintage[p, t, v]:
+			if not M.V_ActivityByPeriodAndProcess[p, t, v]:
 				continue
 
 			cap = M.V_Capacity[t, v]

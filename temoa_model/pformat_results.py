@@ -117,11 +117,11 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 
 		svars['V_Activity'][p, s, d, t, v] = val
 
-	for p, t, v in m.V_ActivityByPeriodTechAndVintage:
-		val = value( m.V_ActivityByPeriodTechAndVintage[p, t, v] )
+	for p, t, v in m.V_ActivityByPeriodAndProcess:
+		val = value( m.V_ActivityByPeriodAndProcess[p, t, v] )
 		if abs(val) < epsilon: continue
 
-		svars['V_ActivityByPeriodTechAndVintage'][p, t, v] = val
+		svars['V_ActivityByPeriodAndProcess'][p, t, v] = val
 
 	for t, v in m.V_Capacity:
 		val = value( m.V_Capacity[t, v] )
@@ -168,10 +168,10 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 		e = emission_keys[i, t, v, o]
 		evalue = val * m.EmissionActivity[e, i, t, v, o]
 
-		psvars[ 'V_EmissionActivityByPeriod'         ][ p ]  += evalue
-		psvars[ 'V_EmissionActivityByTech'           ][ t ]  += evalue
-		psvars[ 'V_EmissionActivityByPeriodAndTech'  ][p, t] += evalue
-		psvars[ 'V_EmissionActivityByTechAndVintage' ][t, v] += evalue
+		psvars[ 'V_EmissionActivityByPeriod'        ][ p ]  += evalue
+		psvars[ 'V_EmissionActivityByTech'          ][ t ]  += evalue
+		psvars[ 'V_EmissionActivityByPeriodAndTech' ][p, t] += evalue
+		psvars[ 'V_EmissionActivityByProcess'       ][t, v] += evalue
 
 	for t, v in m.CostInvest.sparse_iterkeys():
 		# CostInvest guaranteed not 0
@@ -222,7 +222,7 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 		psvars[ 'V_DiscountedPeriodCost'          ][ p ]  += fcost
 
 	for p, t, v in m.CostVariable.sparse_iterkeys():
-		vcost = value( m.V_ActivityByPeriodTechAndVintage[p, t, v] )
+		vcost = value( m.V_ActivityByPeriodAndProcess[p, t, v] )
 		if abs(vcost) < epsilon: continue
 
 		vcost *= value( m.CostVariable[p, t, v] )

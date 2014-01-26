@@ -213,8 +213,8 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.EmissionActivity = Param( M.EmissionActivity_eitvo )
 
 	M.ActivityVar_psdtv = Set( dimen=5, rule=ActivityVariableIndices )
-	M.ActivityByPeriodTechAndVintageVar_ptv = Set(
-	  dimen=3, rule=ActivityByPeriodTechAndVintageVarIndices )
+	M.ActivityByPeriodAndProcessVar_ptv = Set(
+	  dimen=3, rule=ActivityByPeriodAndProcessVarIndices )
 
 	M.CapacityVar_tv = Set( dimen=2, rule=CapacityVariableIndices )
 	M.CapacityAvailableVar_pt = Set(
@@ -231,8 +231,8 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.V_Activity = Var( M.ActivityVar_psdtv, domain=NonNegativeReals )
 	M.V_Capacity = Var( M.CapacityVar_tv,    domain=NonNegativeReals )
 
-	M.V_ActivityByPeriodTechAndVintage = Var(
-	  M.ActivityByPeriodTechAndVintageVar_ptv,
+	M.V_ActivityByPeriodAndProcess = Var(
+	  M.ActivityByPeriodAndProcessVar_ptv,
 	  domain=NonNegativeReals
 	)
 
@@ -278,7 +278,7 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 	#   "Bookkeeping" constraints
 	M.ActivityConstraint = Constraint( M.ActivityVar_psdtv, rule=Activity_Constraint )
-	M.ActivityByPeriodTechAndVintageConstraint = Constraint( M.ActivityByPeriodTechAndVintageVar_ptv, rule=ActivityByPeriodTechAndVintage_Constraint )
+	M.ActivityByPeriodAndProcessConstraint = Constraint( M.ActivityByPeriodAndProcessVar_ptv, rule=ActivityByPeriodAndProcess_Constraint )
 
 	M.CapacityConstraint = Constraint( M.ActivityVar_psdtv, rule=Capacity_Constraint )
 

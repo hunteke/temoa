@@ -799,7 +799,7 @@ def ActivityVariableIndices ( M ):
 	return activity_indices
 
 
-def ActivityByPeriodTechAndVintageVarIndices ( M ):
+def ActivityByPeriodAndProcessVarIndices ( M ):
 	return g_activeActivity_ptv
 
 
