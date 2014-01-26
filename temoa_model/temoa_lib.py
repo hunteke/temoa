@@ -516,8 +516,6 @@ def validate_TechOutputSplit ( M ):
 
 		raise TemoaValidationError( msg.format(items, l_total) )
 
-	return set()
-
 
 def init_set_time_optimize ( M ):
 	return sorted( M.time_future )[:-1]
@@ -660,7 +658,6 @@ def InitializeProcessParameters ( M ):
 	  if ProcessVintages( p, t )
 	)
 
-	return set()
 
 ##############################################################################
 # Sparse index creation functions

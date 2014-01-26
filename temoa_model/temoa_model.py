@@ -156,16 +156,15 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.GrowthRateMax = Param( M.tech_all )
 	M.GrowthRateSeed = Param( M.tech_all )
 
-	# always empty set, like the validation hacks above.  Temoa uses a couple
-	# of global variables to precalculate some oft-used results in constraint
-	# generation.  This is therefore intentially placed after all Set and Param
-	# definitions and initializations, but before the Var, Objectives, and
-	# Constraints.
-	M.IntializeProcessParameters = Set( rule=InitializeProcessParameters )
+	# Temoa uses a couple of global variables to precalculate some oft-used
+	# results in constraint generation.  This is therefore intentially placed
+	# after all Set and Param definitions and initializations, but before the
+	# Var, Objectives, and Constraints.
+	M.initialize_ProcessParameters = BuildAction( rule=InitializeProcessParameters )
 
 	M.DemandDefaultDistribution  = Param( M.time_season, M.time_of_day )
 	M.DemandSpecificDistribution = Param( M.time_season, M.time_of_day, M.commodity_demand )
-	M.Demand        = Param( M.time_optimize,  M.commodity_demand )
+	M.Demand = Param( M.time_optimize, M.commodity_demand )
 
 	M.initialize_Demands = BuildAction( rule=CreateDemands )
 
@@ -203,8 +202,8 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 	M.TechInputSplit  = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
 	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
-	# always-empty Set; hack to perform inter-Set or inter-Param validation
-	M.validate_TechOutputSplit = Set( initialize=validate_TechOutputSplit )
+
+	M.validate_TechOutputSplit = BuildAction( rule=validate_TechOutputSplit )
 
 	M.MinCapacity = Param( M.time_optimize, M.tech_all )
 	M.MaxCapacity = Param( M.time_optimize, M.tech_all )
