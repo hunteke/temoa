@@ -12,6 +12,9 @@ from IPython import embed as II
 
 from models import (
   Analysis,
+  Param_CapacityToActivity,
+  Param_CostFixed,
+  Param_CostVariable,
   Param_Demand,
   Param_DemandDefaultDistribution,
   Param_DemandSpecificDistribution,
@@ -93,13 +96,16 @@ param  GlobalDiscountRate  :=  {gdr} ;
 
 {existingcapacity}
 
-param  CapacityToActivity  := ... ;
+{capacitytoactivity}
+
 param  CapacityFactorTech  := ... ;
 param  CapacityFactorProcess  := ... ;
 
-param  CostInvest  := ... ;
-param  CostFixed  := ... ;
-param  CostVariable  := ... ;
+{costinvest}
+
+{costfixed}
+
+{costvariable}
 
 param  LifetimeTech  := ... ;
 param  LifetimeProcess  := ... ;
@@ -163,6 +169,8 @@ param  MaxCapacity  := ... ;
 	techs_prod = sorted(set( e.process.technology.name
 	  for e in efficiencies
 	))
+	processes = set( eff.process for eff in efficiencies )
+	process_ids = set( p.pk for p in processes )
 
 	tech_production = '# set tech_production := ... ;   # No flows (efficiencies) in DB'
 	tech_baseload   = '# set tech_baseload := ... ;   # No baseload technologies in DB'
@@ -337,8 +345,8 @@ param  MaxCapacity  := ... ;
 		ems = 'param  EmissionActivity  :=\n {}\n\t;'.format( ems )
 
 	existingcap = Process.objects.filter(
-	  analysis=analysis,
-	  vintage__lt=analysis.period_0,
+	  id__in=process_ids,
+	  vintage__vintage__lt=analysis.period_0,
 	  existingcapacity__gt=0
 	)
 
@@ -364,6 +372,118 @@ param  MaxCapacity  := ... ;
 		ecap = '\n '.join( lines )
 		ecap = 'param  ExistingCapacity  :=\n {}\n\t;'.format( ecap )
 
+	cap2act = Param_CapacityToActivity.objects.filter(
+	  analysis=analysis,
+	  technology__name__in=techs_prod  # to make tech is actually used
+	)
+
+	c2a = '# param CapacityToActivity := ... ;   # None specified in DB'
+	if cap2act:
+		lines = sorted( [
+		    cta.technology.name,
+		    str(int( cta.value )),
+		    str(cta.value - int(cta.value))[1:]
+		  ]
+		  for cta in cap2act
+		)
+
+		maxlen_t   = max(map(len, (i[0] for i in lines) ))
+		maxlen_int = max(map(len, (i[1] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_t, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		c2a = '\n '.join( lines )
+		c2a = 'param  CapacityToActivity  :=\n {}\n\t;'.format( c2a )
+
+	costinvest = Process.objects.filter(
+	  id__in=process_ids,
+	  vintage__vintage__gte=analysis.period_0,
+	  costinvest__gt=0,
+	)
+
+	ci = '# param CostInvest := ... ;   # None specified in DB'
+	if costinvest:
+		lines = sorted( [
+		    i.technology.name,
+		    str(i.vintage.vintage),
+		    str(int(i.costinvest)),
+		    str(i.costinvest - int(i.costinvest))[1:],
+		  ]
+		  for i in costinvest
+		)
+
+		maxlen_t   = max(map(len, (i[0] for i in lines) ))
+		maxlen_v   = max(map(len, (i[1] for i in lines) ))
+		maxlen_int = max(map(len, (i[2] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_t, maxlen_v, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		ci = '\n '.join( lines )
+		ci = 'param  CostInvest  :=\n {}\n\t;'.format( ci )
+
+	costfixed = Param_CostFixed.objects.filter(
+	  period__vintage__gt=analysis.period_0,
+	  process_id__in=process_ids,
+	  value__gt=0
+	)
+
+	cf = '# param CostFixed := ... ;   # None specified in DB'
+	if costfixed:
+		lines = sorted( [
+		    str(i.period.vintage),
+		    i.process.technology.name,
+		    str(i.process.vintage.vintage),
+		    str(int(i.value)),
+		    str(i.value - int(i.value))[1:],
+		  ]
+		  for i in costfixed
+		)
+
+		maxlen_p   = max(map(len, (i[0] for i in lines) ))
+		maxlen_t   = max(map(len, (i[1] for i in lines) ))
+		maxlen_v   = max(map(len, (i[2] for i in lines) ))
+		maxlen_int = max(map(len, (i[3] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_p, maxlen_t, maxlen_v, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		cf = '\n '.join( lines )
+		cf = 'param  CostFixed  :=\n {}\n\t;'.format( cf )
+
+	costvariable = Param_CostVariable.objects.filter(
+	  period__vintage__gt=analysis.period_0,
+	  process_id__in=process_ids,
+	  value__gt=0
+	)
+
+	cv = '# param CostVariable := ... ;   # None specified in DB'
+	if costvariable:
+		lines = sorted( [
+		    str(i.period.vintage),
+		    i.process.technology.name,
+		    str(i.process.vintage.vintage),
+		    str(int(i.value)),
+		    str(i.value - int(i.value))[1:],
+		  ]
+		  for i in costvariable
+		)
+
+		maxlen_p   = max(map(len, (i[0] for i in lines) ))
+		maxlen_t   = max(map(len, (i[1] for i in lines) ))
+		maxlen_v   = max(map(len, (i[2] for i in lines) ))
+		maxlen_int = max(map(len, (i[3] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_p, maxlen_t, maxlen_v, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		cv = '\n '.join( lines )
+		cv = 'param  CostVariable  :=\n {}\n\t;'.format( cv )
 
 	data = dat_format.format(
 		url         = req.build_absolute_uri(),
@@ -386,6 +506,10 @@ param  MaxCapacity  := ... ;
 		efficiency  = eff,
 		emissionactivity = ems,
 		existingcapacity = ecap,
+		capacitytoactivity = c2a,
+		costinvest   = ci,
+		costfixed    = cf,
+		costvariable = cv,
 		gdr         = analysis.global_discount_rate,
 	)
 	res = HttpResponse( data, content_type='text/plain' )
