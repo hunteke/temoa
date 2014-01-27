@@ -408,12 +408,12 @@ class Param_DemandSpecificDistribution ( DM.Model ):
 
 
 	def __unicode__ ( self ):
-		analysis    = self.timeslice.analysis
-		season      = self.timeslice.season
-		time_of_day = self.timeslice.time_of_day
+		a = self.timeslice.analysis    if self.timeslice_id else 'NoTimeslice'
+		s = self.timeslice.season      if self.timeslice_id else 'NoTimeslice'
+		d = self.timeslice.time_of_day if self.timeslice_id else 'NoTimeslice'
+		dem = self.demand if self.demand_id else 'NoDemand'
 
-		return u'({}) {}, {}, {}: {}'.format(
-		  analysis, season, time_of_day, self.demand, self.fraction )
+		return u'({}) {}, {}, {}: {}'.format( a, s, d, dem, self.value )
 
 
 	def save ( self, *args, **kwargs ):
