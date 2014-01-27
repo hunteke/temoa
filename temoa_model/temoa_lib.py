@@ -730,7 +730,7 @@ process is active.
 	return indices
 
 
-def ModelTechLifeIndices ( M ):
+def ModelProcessLifeIndices ( M ):
 	"""\
 Returns the set of sensical (period, tech, vintage) tuples.  The tuple indicates
 the periods in which a process is active, distinct from TechLifeFracIndices that

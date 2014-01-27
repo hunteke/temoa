@@ -188,16 +188,16 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 	M.Loan_tv           = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
 	M.ModelLoanLife_tv  = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
-	M.ModelTechLife_ptv = Set( dimen=3, rule=ModelTechLifeIndices )
-	M.ModelLoanLife = Param( M.ModelLoanLife_tv,  initialize=ParamModelLoanLife_rule )
-	M.ModelTechLife = Param( M.ModelTechLife_ptv, initialize=ParamModelTechLife_rule )
+	M.ModelProcessLife_ptv = Set( dimen=3, rule=ModelProcessLifeIndices )
+	M.ModelLoanLife     = Param( M.ModelLoanLife_tv,  initialize=ParamModelLoanLife_rule )
+	M.ModelProcessLife  = Param( M.ModelProcessLife_ptv, initialize=ParamModelProcessLife_rule )
 
 	M.DiscountRate_tv = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
 	M.LoanLifeFrac_ptv = Set( dimen=3, rule=LoanLifeFracIndices )
-	M.TechLifeFrac_ptv = Set( dimen=3, rule=ModelTechLifeIndices )
+	M.ProcessLifeFrac_ptv = Set( dimen=3, rule=ModelProcessLifeIndices )
 
 	M.DiscountRate  = Param( M.DiscountRate_tv, default=0.05 )
-	M.TechLifeFrac  = Param( M.TechLifeFrac_ptv, initialize=ParamTechLifeFraction_rule )
+	M.ProcessLifeFrac  = Param( M.ProcessLifeFrac_ptv, initialize=ParamProcessLifeFraction_rule )
 	M.LoanAnnualize = Param( M.Loan_tv, initialize=ParamLoanAnnualize_rule )
 
 	M.TechInputSplit  = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )

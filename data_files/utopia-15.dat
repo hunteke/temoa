@@ -246,172 +246,60 @@ param  LifetimeLoanTech  :=
 	;
 
 
+param  CapacityFactorTech  :=
+# season # day   # tech  # value
+ inter    day     E01     0.8
+ inter    night   E01     0.8
+ winter   day     E01     0.8
+ winter   night   E01     0.8
+ summer   day     E01     0.8
+ summer   night   E01     0.8
+
+ inter    day     E21     0.8
+ inter    night   E21     0.8
+ winter   day     E21     0.8
+ winter   night   E21     0.8
+ summer   day     E21     0.8
+ summer   night   E21     0.8
+
+ inter    day     E31     0.275
+ inter    night   E31     0.275
+ winter   day     E31     0.275
+ winter   night   E31     0.275
+ summer   day     E31     0.275
+ summer   night   E31     0.275
+
+ inter    day     E51     0.17
+ inter    night   E51     0.17
+ winter   day     E51     0.17
+ winter   night   E51     0.17
+ summer   day     E51     0.17
+ summer   night   E51     0.17
+
+ inter    day     E70     0.8
+ inter    night   E70     0.8
+ winter   day     E70     0.8
+ winter   night   E70     0.8
+ summer   day     E70     0.8
+ summer   night   E70     0.8
+	;
+
+
 param  CapacityFactorProcess  :=
-# season # day # tech       # vintage    # value
- inter  day     E01          1960         0.8
- inter  night   E01          1960         0.8
- winter day     E01          1960         0.8
- winter night   E01          1960         0.8
- summer day     E01          1960         0.8
- summer night   E01          1960         0.8
+# season # day   # tech  # vintage  # value
+ inter    day     E31     2000       0.2753
+ inter    night   E31     2000       0.2753
+ winter   day     E31     2000       0.2753
+ winter   night   E31     2000       0.2753
+ summer   day     E31     2000       0.2753
+ summer   night   E31     2000       0.2753
 
- inter  day     E01          1970         0.8
- inter  night   E01          1970         0.8
- winter day     E01          1970         0.8
- winter night   E01          1970         0.8
- summer day     E01          1970         0.8
- summer night   E01          1970         0.8
-
- inter  day     E01          1980         0.8
- inter  night   E01          1980         0.8
- winter day     E01          1980         0.8
- winter night   E01          1980         0.8
- summer day     E01          1980         0.8
- summer night   E01          1980         0.8
-
- inter  day     E01          1990         0.8
- inter  night   E01          1990         0.8
- winter day     E01          1990         0.8
- winter night   E01          1990         0.8
- summer day     E01          1990         0.8
- summer night   E01          1990         0.8
-
- inter  day     E01          2000         0.8
- inter  night   E01          2000         0.8
- winter day     E01          2000         0.8
- winter night   E01          2000         0.8
- summer day     E01          2000         0.8
- summer night   E01          2000         0.8
-
- inter  day     E01          2010         0.8
- inter  night   E01          2010         0.8
- winter day     E01          2010         0.8
- winter night   E01          2010         0.8
- summer day     E01          2010         0.8
- summer night   E01          2010         0.8
-
-
- inter  day     E21          1990         0.8
- inter  night   E21          1990         0.8
- winter day     E21          1990         0.8
- winter night   E21          1990         0.8
- summer day     E21          1990         0.8
- summer night   E21          1990         0.8
-
- inter  day     E21          2000         0.8
- inter  night   E21          2000         0.8
- winter day     E21          2000         0.8
- winter night   E21          2000         0.8
- summer day     E21          2000         0.8
- summer night   E21          2000         0.8
-
- inter  day     E21          2010         0.8
- inter  night   E21          2010         0.8
- winter day     E21          2010         0.8
- winter night   E21          2010         0.8
- summer day     E21          2010         0.8
- summer night   E21          2010         0.8
-
-
- inter  day     E31          1980         0.275
- inter  night   E31          1980         0.275
- winter day     E31          1980         0.275
- winter night   E31          1980         0.275
- summer day     E31          1980         0.275
- summer night   E31          1980         0.275
-
- inter  day     E31          1990         0.275
- inter  night   E31          1990         0.275
- winter day     E31          1990         0.275
- winter night   E31          1990         0.275
- summer day     E31          1990         0.275
- summer night   E31          1990         0.275
-
- inter  day     E31          2000         0.2753
- inter  night   E31          2000         0.2753
- winter day     E31          2000         0.2753
- winter night   E31          2000         0.2753
- summer day     E31          2000         0.2753
- summer night   E31          2000         0.2753
-
- inter  day     E31          2010         0.2756
- inter  night   E31          2010         0.2756
- winter day     E31          2010         0.2756
- winter night   E31          2010         0.2756
- summer day     E31          2010         0.2756
- summer night   E31          2010         0.2756
-
-
- inter  day     E51          1980         0.17
- inter  night   E51          1980         0.17
- winter day     E51          1980         0.17
- winter night   E51          1980         0.17
- summer day     E51          1980         0.17
- summer night   E51          1980         0.17
-
- inter  day     E51          1990         0.17
- inter  night   E51          1990         0.17
- winter day     E51          1990         0.17
- winter night   E51          1990         0.17
- summer day     E51          1990         0.17
- summer night   E51          1990         0.17
-
- inter  day     E51          2000         0.17
- inter  night   E51          2000         0.17
- winter day     E51          2000         0.17
- winter night   E51          2000         0.17
- summer day     E51          2000         0.17
- summer night   E51          2000         0.17
-
- inter  day     E51          2010         0.17
- inter  night   E51          2010         0.17
- winter day     E51          2010         0.17
- winter night   E51          2010         0.17
- summer day     E51          2010         0.17
- summer night   E51          2010         0.17
-
-
- inter  day     E70          1960         0.8
- inter  night   E70          1960         0.8
- winter day     E70          1960         0.8
- winter night   E70          1960         0.8
- summer day     E70          1960         0.8
- summer night   E70          1960         0.8
-
- inter  day     E70          1970         0.8
- inter  night   E70          1970         0.8
- winter day     E70          1970         0.8
- winter night   E70          1970         0.8
- summer day     E70          1970         0.8
- summer night   E70          1970         0.8
-
- inter  day     E70          1980         0.8
- inter  night   E70          1980         0.8
- winter day     E70          1980         0.8
- winter night   E70          1980         0.8
- summer day     E70          1980         0.8
- summer night   E70          1980         0.8
-
- inter  day     E70          1990         0.8
- inter  night   E70          1990         0.8
- winter day     E70          1990         0.8
- winter night   E70          1990         0.8
- summer day     E70          1990         0.8
- summer night   E70          1990         0.8
-
- inter  day     E70          2000         0.8
- inter  night   E70          2000         0.8
- winter day     E70          2000         0.8
- winter night   E70          2000         0.8
- summer day     E70          2000         0.8
- summer night   E70          2000         0.8
-
- inter  day     E70          2010         0.8
- inter  night   E70          2010         0.8
- winter day     E70          2010         0.8
- winter night   E70          2010         0.8
- summer day     E70          2010         0.8
- summer night   E70          2010         0.8
+ inter    day     E31     2010       0.2756
+ inter    night   E31     2010       0.2756
+ winter   day     E31     2010       0.2756
+ winter   night   E31     2010       0.2756
+ summer   day     E31     2010       0.2756
+ summer   night   E31     2010       0.2756
 	;
 
 

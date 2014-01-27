@@ -104,7 +104,7 @@ def PeriodCost_rule ( M, p ):
 	      value( M.CostFixed[p, S_t, S_v] )
 	    * sum( (1 + GDR) ** -y
 	        for y in range( p - P_0,
-	                        p - P_0 + value( M.ModelTechLife[p, S_t, S_v] ))
+	                        p - P_0 + value( M.ModelProcessLife[p, S_t, S_v] ))
 	      )
 	    )
 
@@ -138,7 +138,7 @@ def ParamModelLoanLife_rule ( M, t, v ):
 	return mll
 
 
-def ParamModelTechLife_rule ( M, p, t, v ):
+def ParamModelProcessLife_rule ( M, p, t, v ):
 	life_length = value( M.LifetimeProcess[t, v] )
 	tpl = min( v + life_length - p, value(M.PeriodLength[ p ]) )
 
@@ -176,7 +176,7 @@ GlobalDiscountRate and the length of each period.  One may refer to this
 	return value(rate_multiplier)
 
 
-def ParamTechLifeFraction_rule ( M, p, t, v ):
+def ParamProcessLifeFraction_rule ( M, p, t, v ):
 	"""\
 
 Calculate the fraction of period p that process <t, v> operates.
@@ -563,7 +563,7 @@ slice ``<s``,\ ``d>``.
 	  (   value( M.CapacityFactorProcess[s, d, t, v] )
 	    * value( M.CapacityToActivity[ t ] )
 	    * value( M.SegFrac[s, d]) )
-	    * value( M.TechLifeFrac[p, t, v] )
+	    * value( M.ProcessLifeFrac[p, t, v] )
 	  * M.V_Capacity[t, v]
 	)
 
@@ -863,7 +863,7 @@ available for use throughout the period.
    \forall p \in \text{P}^o, t \in T
 """
 	cap_avail = sum(
-	    value( M.TechLifeFrac[p, t, S_v] )
+	    value( M.ProcessLifeFrac[p, t, S_v] )
 	  * M.V_Capacity[t, S_v]
 
 	  for S_v in ProcessVintages( p, t )

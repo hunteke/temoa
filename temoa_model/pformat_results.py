@@ -212,7 +212,7 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 		fcost *= sum(
 		  (1 + GDR) ** -y
 		  for y in range( p - P_0,
-		                  p - P_0 + value( m.ModelTechLife[p, t, v] ))
+		                  p - P_0 + value( m.ModelProcessLife[p, t, v] ))
 		)
 		psvars[ 'V_DiscountedFixedCostsByPeriod'  ][ p ]  += fcost
 		psvars[ 'V_DiscountedFixedCostsByTech'    ][ t ]  += fcost
