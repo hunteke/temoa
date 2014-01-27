@@ -231,7 +231,7 @@ def analysis_create ( req ):
 		msgs.update( vform.errors )
 
 	if 201 == status:
-		with transaction.commit_on_success():
+		with transaction.atomic():
 			try:
 				aform.save()
 			except IntegrityError as ie:
@@ -273,7 +273,7 @@ def analysis_update ( req, analysis_id ):
 		msgs.update( vform.errors )
 
 	if 200 == status:
-		with transaction.commit_on_success():
+		with transaction.atomic():
 			vform.save()
 			aform.save()
 		return analysis_info( req, analysis.pk );
@@ -319,7 +319,7 @@ def analysis_create_segfrac ( req, analysis_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			tslice = '{}, {}'.format(sf.season, sf.time_of_day)
 			msgs.update(
@@ -378,7 +378,7 @@ def analysis_update_segfrac ( req, analysis_id, segfrac_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			tslice = '{}, {}'.format(sf.season, sf.time_of_day)
 			msgs.update(
@@ -448,7 +448,7 @@ def analysis_create_demand ( req, analysis_id, demand_commodity_id, period ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			msgs.update(
 			  aId    = analysis.pk,
@@ -499,7 +499,7 @@ def analysis_update_demand ( req, analysis_id, demand_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			msgs.update( value=dem.value )
 
@@ -558,7 +558,7 @@ def analysis_create_demanddefaultdistribution ( req, analysis_id, segfrac_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			tslice = '{}, {}'.format(sf.season, sf.time_of_day)
 			msgs.update(
@@ -606,7 +606,7 @@ def analysis_update_demanddefaultdistribution ( req, analysis_id, ddd_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			sf = ddd.timeslice
 			tslice = '{}, {}'.format(sf.season, sf.time_of_day)
@@ -680,7 +680,7 @@ def analysis_create_demandspecificdistribution (
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			tslice = '{}, {}'.format(sf.season, sf.time_of_day)
 			msgs.update(
@@ -730,7 +730,7 @@ def analysis_update_demandspecificdistribution ( req, analysis_id, dsd_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			msgs.update( value=dsd.value )
 
@@ -787,7 +787,7 @@ def analysis_create_commodity ( req, analysis_id, ctype ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			msgs.update(
 			  aId  = analysis.pk,
@@ -829,7 +829,7 @@ def analysis_update_commodity ( req, analysis_id, commodity_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			msgs.update(
 			  aId  = analysis.pk,

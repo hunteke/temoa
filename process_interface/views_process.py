@@ -207,7 +207,7 @@ def process_update ( req, analysis_id, process_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			msgs = get_process_info( [process] )[0]
 
@@ -262,7 +262,7 @@ def process_costfixed_new ( req, analysis_id, process_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(
@@ -310,7 +310,7 @@ def process_costfixed_update ( req, analysis_id, process_id, costfixed_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(
@@ -372,7 +372,7 @@ def process_costvariable_new ( req, analysis_id, process_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(
@@ -423,7 +423,7 @@ def process_costvariable_update (
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(
@@ -488,7 +488,7 @@ def process_efficiency_new ( req, analysis_id, process_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(
@@ -536,7 +536,7 @@ def process_efficiency_update ( req, analysis_id, process_id, efficiency_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(
@@ -600,7 +600,7 @@ def process_emissionactivity_new ( req, analysis_id, process_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(
@@ -652,7 +652,7 @@ def process_emissionactivity_update (
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(

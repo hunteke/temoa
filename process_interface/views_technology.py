@@ -192,7 +192,7 @@ def technology_create ( req ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(
@@ -240,7 +240,7 @@ def technology_update ( req, technology_id ):
 		msgs.update( form.errors )
 
 	else:
-		with transaction.commit_on_success():
+		with transaction.atomic():
 			form.save()
 
 		msgs.update(
@@ -294,7 +294,7 @@ def analysis_technology_update ( req, analysis_id, technology_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 			info = get_technology_info( analysis, [tech] )[0]
 			for k in form.data:
@@ -335,7 +335,7 @@ def analysis_technology_inputsplit_new ( req, analysis_id, technology_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(
@@ -385,7 +385,7 @@ def analysis_technology_inputsplit_update (
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update( value=tis.fraction )
@@ -443,7 +443,7 @@ def analysis_technology_outputsplit_new ( req, analysis_id, technology_id ):
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update(
@@ -493,7 +493,7 @@ def analysis_technology_outputsplit_update (
 
 	else:
 		try:
-			with transaction.commit_on_success():
+			with transaction.atomic():
 				form.save()
 
 			msgs.update( value=tos.fraction )
