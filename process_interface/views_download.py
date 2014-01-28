@@ -20,11 +20,13 @@ from models import (
   Param_DemandSpecificDistribution,
   Param_Efficiency,
   Param_EmissionActivity,
-  Param_TechInputSplit,
-  Param_TechOutputSplit,
   Param_LifetimeTech,
   Param_LifetimeTechLoan,
+  Param_MaxCapacity,
+  Param_MinCapacity,
   Param_SegFrac,
+  Param_TechInputSplit,
+  Param_TechOutputSplit,
   Process,
   Set_tech_baseload,
   Set_tech_storage,
@@ -123,9 +125,9 @@ param  CapacityFactorProcess  := ... ;
 
 {techoutputsplit}
 
-param  MinCapacity  := ... ;
-param  MaxCapacity  := ... ;
+{maxcapacity}
 
+{mincapacity}
 """
 
 	twrapper = TextWrapper(
@@ -654,6 +656,65 @@ param  MaxCapacity  := ... ;
 		tos = '\n '.join( lines )
 		tos = 'param  TechOutputSplit  :=\n {}\n\t;'.format( tos )
 
+	maxcap = '# param MaxCapacity := ... ;   # None specified in DB'
+	mincap = '# param MinCapacity := ... ;   # None specified in DB'
+
+	max_caps = Param_MaxCapacity.objects.filter(
+	  period__analysis=analysis,
+	  period__vintage__gte=analysis.period_0,
+	  technology__name__in=techs_prod
+	)
+	min_caps = Param_MinCapacity.objects.filter(
+	  period__analysis=analysis,
+	  period__vintage__gte=analysis.period_0,
+	  technology__name__in=techs_prod
+	)
+
+	if max_caps:
+		lines = [ [
+		    str(mc.period.vintage),
+		    mc.technology.name,
+		    str(int(mc.value)),
+		    str(mc.value - int(mc.value))[1:]
+		  ]
+		  for mc in max_caps
+		]
+		lines.sort( key=itemgetter(1, 0) )
+
+		maxlen_p   = max(map(len, (i[0] for i in lines) ))
+		maxlen_t   = max(map(len, (i[1] for i in lines) ))
+		maxlen_int = max(map(len, (i[2] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_p, maxlen_t, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		maxcap = '\n '.join( lines )
+		maxcap = 'param  MaxCapacity  :=\n {}\n\t;'.format( maxcap )
+
+	if min_caps:
+		lines = [ [
+		    str(mc.period.vintage),
+		    mc.technology.name,
+		    str(int(mc.value)),
+		    str(mc.value - int(mc.value))[1:]
+		  ]
+		  for mc in min_caps
+		]
+		lines.sort( key=itemgetter(1, 0) )
+
+		maxlen_p   = max(map(len, (i[0] for i in lines) ))
+		maxlen_t   = max(map(len, (i[1] for i in lines) ))
+		maxlen_int = max(map(len, (i[2] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_p, maxlen_t, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		mincap = '\n '.join( lines )
+		mincap = 'param  MinCapacity  :=\n {}\n\t;'.format( mincap )
+
+
 	data = dat_format.format(
 		url         = req.build_absolute_uri(),
 		user        = req.user.username,
@@ -685,6 +746,8 @@ param  MaxCapacity  := ... ;
 		processloanlife  = pllife,
 		techinputsplit  = tis,
 		techoutputsplit = tos,
+		maxcapacity = maxcap,
+		mincapacity = mincap,
 		gdr         = analysis.global_discount_rate,
 	)
 	res = HttpResponse( data, content_type='text/plain' )
