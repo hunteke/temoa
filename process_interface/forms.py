@@ -958,8 +958,8 @@ class TechInputSplitForm ( F.Form ):
 			raise F.ValidationError( msg )
 
 		elif v >= 1:
-			msg ('One (100%) is a useless entry.  Please either remove this row, '
-			  'or pick a value in the range (0, 1).')
+			msg = ('One (100%) is a useless entry.  Please either remove this '
+			  'row, or pick a value in the range (0, 1).')
 			raise F.ValidationError( msg )
 
 		return v
