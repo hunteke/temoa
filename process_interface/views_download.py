@@ -20,6 +20,8 @@ from models import (
   Param_DemandSpecificDistribution,
   Param_Efficiency,
   Param_EmissionActivity,
+  Param_TechInputSplit,
+  Param_TechOutputSplit,
   Param_LifetimeTech,
   Param_LifetimeTechLoan,
   Param_SegFrac,
@@ -117,8 +119,9 @@ param  CapacityFactorProcess  := ... ;
 
 {processloanlife}
 
-param  TechInputSplit := ... ;
-param  TechOutputSplit := ... ;
+{techinputsplit}
+
+{techoutputsplit}
 
 param  MinCapacity  := ... ;
 param  MaxCapacity  := ... ;
@@ -595,6 +598,61 @@ param  MaxCapacity  := ... ;
 		pllife = '\n '.join( lines )
 		pllife = 'param  LifetimeLoanProcess  :=\n {}\n\t;'.format( pllife )
 
+	tis = '# param TechInputSplit := ... ;   # None specified in DB'
+	tos = '# param TechOutputSplit := ... ;   # None specified in DB'
+
+	tech_is = Param_TechInputSplit.objects.filter(
+	  inp_commodity__analysis=analysis,
+	  technology__name__in=techs_prod,
+	  fraction__gt=0
+	)
+	tech_os = Param_TechOutputSplit.objects.filter(
+	  out_commodity__analysis=analysis,
+	  technology__name__in=techs_prod,
+	  fraction__gt=0
+	)
+
+	if tech_is:
+		lines = sorted( [
+		    inps.inp_commodity.commodity.name,
+		    inps.technology.name,
+		    str(int(inps.fraction)),
+		    str(inps.fraction - int(inps.fraction))[1:]
+		  ]
+		  for inps in tech_is
+		)
+
+		maxlen_c   = max(map(len, (i[0] for i in lines) ))
+		maxlen_t   = max(map(len, (i[1] for i in lines) ))
+		maxlen_int = max(map(len, (i[2] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_c, maxlen_t, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		tis = '\n '.join( lines )
+		tis = 'param  TechInputSplit  :=\n {}\n\t;'.format( tis )
+
+	if tech_os:
+		lines = sorted( [
+		    outs.technology.name,
+		    outs.out_commodity.commodity.name,
+		    str(int(outs.fraction)),
+		    str(outs.fraction - int(outs.fraction))[1:]
+		  ]
+		  for outs in tech_os
+		)
+
+		maxlen_t   = max(map(len, (i[0] for i in lines) ))
+		maxlen_c   = max(map(len, (i[1] for i in lines) ))
+		maxlen_int = max(map(len, (i[2] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_t, maxlen_c, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		tos = '\n '.join( lines )
+		tos = 'param  TechOutputSplit  :=\n {}\n\t;'.format( tos )
 
 	data = dat_format.format(
 		url         = req.build_absolute_uri(),
@@ -625,6 +683,8 @@ param  MaxCapacity  := ... ;
 		processlife  = plife,
 		lifetimeloantech = tllife,
 		processloanlife  = pllife,
+		techinputsplit  = tis,
+		techoutputsplit = tos,
 		gdr         = analysis.global_discount_rate,
 	)
 	res = HttpResponse( data, content_type='text/plain' )
