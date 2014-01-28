@@ -20,6 +20,7 @@ from models import (
   Param_DemandSpecificDistribution,
   Param_Efficiency,
   Param_EmissionActivity,
+  Param_GrowthRate,
   Param_LifetimeTech,
   Param_LifetimeTechLoan,
   Param_MaxCapacity,
@@ -128,6 +129,10 @@ param  CapacityFactorProcess  := ... ;
 {maxcapacity}
 
 {mincapacity}
+
+{growthratemax}
+
+{growthrateseed}
 """
 
 	twrapper = TextWrapper(
@@ -714,6 +719,50 @@ param  CapacityFactorProcess  := ... ;
 		mincap = '\n '.join( lines )
 		mincap = 'param  MinCapacity  :=\n {}\n\t;'.format( mincap )
 
+	growthrate = Param_GrowthRate.objects.filter(
+	  analysis=analysis,
+	  technology__name__in=techs_prod,
+	  ratelimit__gt=0
+	)
+
+	grm = '# param GrowthRateMax := ... ;   # None specified in DB'
+	grs = '# param GrowthRateSeed := ... ;   # None specified in DB'
+	if growthrate:
+		lines = sorted( [
+		    gr.technology.name,
+		    str(int(gr.ratelimit)),
+		    str(gr.ratelimit - int(gr.ratelimit))[1:]
+		  ]
+		  for gr in growthrate
+		)
+
+		maxlen_t   = max(map(len, (i[0] for i in lines) ))
+		maxlen_int = max(map(len, (i[1] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_t, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		grm = '\n '.join( lines )
+		grm = 'param  GrowthRateMax  :=\n {}\n\t;'.format( grm )
+
+		lines = sorted( [
+		    gr.technology.name,
+		    str(int(gr.seed)),
+		    str(gr.seed - int(gr.seed))[1:]
+		  ]
+		  for gr in growthrate
+		)
+
+		maxlen_t   = max(map(len, (i[0] for i in lines) ))
+		maxlen_int = max(map(len, (i[1] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_t, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		grs = '\n '.join( lines )
+		grs = 'param  GrowthRateSeed  :=\n {}\n\t;'.format( grs )
 
 	data = dat_format.format(
 		url         = req.build_absolute_uri(),
@@ -748,6 +797,8 @@ param  CapacityFactorProcess  := ... ;
 		techoutputsplit = tos,
 		maxcapacity = maxcap,
 		mincapacity = mincap,
+		growthratemax  = grm,
+		growthrateseed = grs,
 		gdr         = analysis.global_discount_rate,
 	)
 	res = HttpResponse( data, content_type='text/plain' )
