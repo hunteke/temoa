@@ -188,7 +188,7 @@ param  MaxCapacity  := ... ;
 	techs_base = Set_tech_baseload.objects.filter(
 	  analysis=analysis,
 	  technology__name__in=techs_prod
-	).distinct()
+	)
 	if techs_base:
 		techs_base = sorted(set( t.technology.name for t in techs_base ))
 		tech_baseload = '\n '.join( techs_base )
@@ -197,7 +197,7 @@ param  MaxCapacity  := ... ;
 	techs_store = Set_tech_storage.objects.filter(
 	  analysis=analysis,
 	  technology__name__in=techs_prod
-	).distinct()
+	)
 	if techs_store:
 		techs_store = sorted(set( t.technology.name for t in techs_store ))
 		tech_storage = '\n '.join( techs_store )
@@ -229,9 +229,9 @@ param  MaxCapacity  := ... ;
 		c_physical = '\nset  commodity_physical  :=\n {}\n\t;'.format( c_physical )
 
 	ddds = Param_DemandDefaultDistribution.objects.filter(
-	  timeslice__analysis=analysis ).distinct()
+	  timeslice__analysis=analysis )
 	dsds = Param_DemandSpecificDistribution.objects.filter(
-	  timeslice__analysis=analysis ).distinct()
+	  timeslice__analysis=analysis )
 
 	ddd = '# param DemandDefaultDistribution := ... ;   # None specified in DB: SegFrac is the default distribution.'
 	dsd = '# param DemandSpecificDistribution := ... ;   # None specified in DB: Demands will be apportioned per DemandDefaultDistribution.'
