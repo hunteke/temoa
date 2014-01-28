@@ -162,9 +162,9 @@ param  Demand  :=        # TABLE DM_DEM
 
 
 param TechOutputSplit :=
-# input carrier   # tech_all    # output carrier     # fractional output
- OIL               SRE           DSL                  0.7
- OIL               SRE           GSL                  0.3
+# tech_all  # output carrier  # fractional output
+ SRE         DSL               0.7
+ SRE         GSL               0.3
 	;
 
 

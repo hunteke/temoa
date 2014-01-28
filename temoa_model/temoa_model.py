@@ -200,10 +200,10 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.ProcessLifeFrac  = Param( M.ProcessLifeFrac_ptv, initialize=ParamProcessLifeFraction_rule )
 	M.LoanAnnualize = Param( M.Loan_tv, initialize=ParamLoanAnnualize_rule )
 
-	M.TechInputSplit  = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
-	M.TechOutputSplit = Param( M.commodity_physical, M.tech_all, M.commodity_carrier )
+	M.TechInputSplit  = Param( M.commodity_physical, M.tech_all )
+	M.TechOutputSplit = Param( M.tech_all, M.commodity_carrier )
 
-	M.validate_TechOutputSplit = BuildAction( rule=validate_TechOutputSplit )
+	M.validate_TechFlowSplits = BuildAction( rule=validate_TechFlowSplits )
 
 	M.MinCapacity = Param( M.time_optimize, M.tech_all )
 	M.MaxCapacity = Param( M.time_optimize, M.tech_all )
@@ -258,10 +258,10 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.ResourceConstraint_pr = Set(
 	  dimen=2, rule=lambda M: M.ResourceBound.sparse_iterkeys() )
 	M.StorageConstraint_psitvo = Set( dimen=6, rule=StorageConstraintIndices )
-	M.TechInputSplitConstraint_psditvo = Set(
-	  dimen=7, rule=TechInputSplitConstraintIndices )
-	M.TechOutputSplitConstraint_psditvo = Set(
-	  dimen=7, rule=TechOutputSplitConstraintIndices )
+	M.TechInputSplitConstraint_psditv = Set(
+	  dimen=6, rule=TechInputSplitConstraintIndices )
+	M.TechOutputSplitConstraint_psdtvo = Set(
+	  dimen=6, rule=TechOutputSplitConstraintIndices )
 
 	M.EmissionLimitConstraint_pe = Set(
 	  dimen=2, rule=lambda M: M.EmissionLimit.sparse_iterkeys() )
@@ -301,8 +301,8 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 	M.StorageConstraint = Constraint( M.StorageConstraint_psitvo, rule=Storage_Constraint )
 
-	M.TechInputSplitConstraint  = Constraint( M.TechInputSplitConstraint_psditvo,  rule=TechInputSplit_Constraint )
-	M.TechOutputSplitConstraint = Constraint( M.TechOutputSplitConstraint_psditvo, rule=TechOutputSplit_Constraint )
+	M.TechInputSplitConstraint  = Constraint( M.TechInputSplitConstraint_psditv,  rule=TechInputSplit_Constraint )
+	M.TechOutputSplitConstraint = Constraint( M.TechOutputSplitConstraint_psdtvo, rule=TechOutputSplit_Constraint )
 
 	M.CapacityAvailableByPeriodAndTechConstraint = Constraint( M.CapacityAvailableVar_pt, rule=CapacityAvailableByPeriodAndTech_Constraint )
 

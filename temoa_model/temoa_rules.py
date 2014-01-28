@@ -391,41 +391,26 @@ the model. Currently, each slice is completely independent of other slices.
 	return expr
 
 
-def TechInputSplit_Constraint ( M, p, s, d, i, t, v, o ):
+def TechInputSplit_Constraint ( M, p, s, d, i, t, v ):
 	r"""
 
-Some processes take a single output and make multiple inputs.  A subset of these
-processes have a constant ratio of outputs relative to their input.  See
-TechOutputSplit_Constraint for the analogous math reasoning.
+Some processes make a single output from multiple inputs.  A subset of these
+processes have a constant ratio of inputs.  See TechOutputSplit_Constraint for
+the analogous math reasoning.
 """
-	split_indices = M.TechInputSplit.sparse_keys()
+	inp = sum( M.V_FlowIn[p, s, d, i, t, v, S_o]
+	  for S_o in ProcessOutputsByInput( p, t, v, i ) )
 
-	inputs = sorted(
-	  inp
-
-	  for inp in M.commodity_physical
-	  if (inp, t, o) in split_indices
+	total_inp = sum( M.V_FlowIn[p, s, d, S_i, t, v, S_o]
+	  for S_i in ProcessInputs( p, t, v )
+	  for S_o in ProcessOutputsByInput( p, t, v, i )
 	)
 
-	index = inputs.index( i )
-	if 0 == index:
-		return Constraint.Skip
-
-	prev = inputs[ index -1 ]
-	prev_split = M.TechInputSplit[prev, t, o]
-	split = M.TechInputSplit[i, t, o]
-
-	expr = (
-	    M.V_FlowIn[p, s, d, i, t, v, o]
-	  * split
-	  ==
-	    M.V_FlowIn[p, s, d, prev, t, v, o]
-	  * prev_split
-	)
+	expr = ( inp == M.TechInputSplit[i, t] * total_inp )
 	return expr
 
 
-def TechOutputSplit_Constraint ( M, p, s, d, i, t, v, o ):
+def TechOutputSplit_Constraint ( M, p, s, d, t, v, o ):
 	r"""
 
 Some processes take a single input and make multiple outputs.  A subset of
@@ -448,55 +433,21 @@ output then are:
    g = \tfrac{3}{9} \cdot \text{total output}, \qquad
    k = \tfrac{2}{9} \cdot \text{total output}
 
-Using the total output as the commonality, these can then be compared to each
-other:
-
-.. math::
-   \tfrac{9}{4} \cdot d = \tfrac{9}{3} \cdot g = \tfrac{9}{2} \cdot k
-   = \text{total}
-
-Finally, in constraint form:
-
-.. math::
-   \tfrac{9}{3} d &= \tfrac{9}{4} g \\
-   \tfrac{9}{2} d &= \tfrac{9}{4} k
-
-Generalized, the constraint in set notation is:
+In constraint in set notation is:
 
 .. math::
    :label: TechOutputSplit
 
-
-     SPL_{i, t, o} \cdot \textbf{FO}_{p, s, d, i, t, v, o_0}
+     \sum_{I} \textbf{FO}_{p, s, d, i, t, v, o}
    =
-     SPL_{i, t, o_0} \cdot \textbf{FO}_{p, s, d, i, t ,v, o}
+     SPL_{t, o} \cdot \textbf{ACT}_{p, s, d, t, v}
 
-   \forall \{p, s, d, i, t, v, o\} \in \Theta_{\text{split output}}
+   \forall \{p, s, d, t, v, o\} \in \Theta_{\text{split output}}
 """
-	split_indices = M.TechOutputSplit.sparse_keys()
+	out = sum( M.V_FlowOut[p, s, d, S_i, t, v, o]
+	  for S_i in ProcessInputsByOutput( p, t, v, o ) )
 
-	outputs = sorted(
-	  output
-
-	  for output in M.commodity_carrier
-	  if (i, t, output) in split_indices
-	)
-
-	index = outputs.index( o )
-	if 0 == index:
-		return Constraint.Skip
-
-	prev = outputs[ index -1 ]
-	prev_split = M.TechOutputSplit[i, t, prev]
-	split = M.TechOutputSplit[i, t, o]
-
-	expr = (
-	    M.V_FlowOut[p, s, d, i, t, v, o]
-	  * split
-	  ==
-	    M.V_FlowOut[p, s, d, i, t, v, prev]
-	  * prev_split
-	)
+	expr = ( out == M.TechOutputSplit[t, o] * M.V_Activity[p, s, d, t, v] )
 	return expr
 
 

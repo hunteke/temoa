@@ -482,39 +482,39 @@ def CreateCosts ( M ):
 		CV._constructed = True
 
 
-def validate_TechOutputSplit ( M ):
-	msg = ('A set of output fractional values specified in TechOutputSplit do '
-	  'not sum to 1.  Each item specified in TechOutputSplit represents a '
-	  'fraction of the input carrier converted to the output carrier, so '
-	  'they must total to 1.  Current values:\n   {}\n\tsum = {}')
+def validate_TechFlowSplits ( M ):
+	from collections import defaultdict
 
-	split_indices = M.TechOutputSplit.sparse_keys()
+	ispl = M.TechInputSplit
+	ospl = M.TechOutputSplit
 
-	tmp = set((i, t) for i, t, o in split_indices)
-	left_side = dict({(i, t) : list() for i, t in tmp})
-	for i, t, o in split_indices:
-		left_side[i, t].append( o )
+	isummed = defaultdict( float )
+	osummed = defaultdict( float )
+	for i, t in ispl:
+		isummed[t] += value(ispl[i, t])
+	for t, o in ospl:
+		osummed[t] += value(ospl[t, o])
 
-	for i, t in left_side:
-		total = sum(
-		  value( M.TechOutputSplit[i, t, o] )
-		  for o in left_side[i, t]
-		)
-
+	epsilon = 1e-15
+	for t, val in isummed.iteritems():
 		# small enough; likely a rounding error
-		if abs(total -1) < 1e-15: continue
+		if abs(val - 1) < epsilon: continue
 
-		items = '\n   '.join(
-		  "{}: {}".format(
-		    str((i, t, o)),
-		    value(M.TechOutputSplit[i, t, o])
-		  )
+		msg = ('TechInputSplit not fully specified for technology "{}".  The '
+		  'sum over all inputs for each technology must sum to 1.\n\n    '
+		  'Current sum: {}')
 
-		  for o in M.commodity_carrier
-		  if (i, t, o) in split_indices
-		)
+		raise TemoaValidationError( msg.format(t, val) )
 
-		raise TemoaValidationError( msg.format(items, l_total) )
+	for t, val in osummed.iteritems():
+		# small enough; likely a rounding error
+		if abs(val - 1) < epsilon: continue
+
+		msg = ('TechOutputSplit not fully specified for technology "{}".  The '
+		  'sum over all outputs for each technology must sum to 1.\n\n    '
+		  'Current sum: {}')
+
+		raise TemoaValidationError( msg.format(t, val) )
 
 
 def init_set_time_optimize ( M ):
@@ -922,9 +922,9 @@ def StorageConstraintIndices ( M ):
 
 def TechInputSplitConstraintIndices ( M ):
 	indices = set(
-	  (p, s, d, i, t, v, o)
+	  (p, s, d, i, t, v)
 
-	  for i, t, o in M.TechInputSplit.sparse_iterkeys()
+	  for i, t in M.TechInputSplit.sparse_iterkeys()
 	  for p in M.time_optimize
 	  for v in ProcessVintages( p, t )
 	  for s in M.time_season
@@ -936,9 +936,9 @@ def TechInputSplitConstraintIndices ( M ):
 
 def TechOutputSplitConstraintIndices ( M ):
 	indices = set(
-	  (p, s, d, i, t, v, o)
+	  (p, s, d, t, v, o)
 
-	  for i, t, o in M.TechOutputSplit.sparse_iterkeys()
+	  for t, o in M.TechOutputSplit.sparse_iterkeys()
 	  for p in M.time_optimize
 	  for v in ProcessVintages( p, t )
 	  for s in M.time_season
