@@ -683,7 +683,7 @@ class MinMaxParameter ( DM.Model ):
 			msg = 'Specified capacity not in optimization horizon'
 			raise ValidationError( msg )
 
-		if t not in Technology.objects.filter( analysis=a ):
+		if t not in Technology.objects.filter( process__analysis=a ):
 			msg = 'Specified technology not in period analysis'
 			raise ValidationError( msg )
 
@@ -860,8 +860,8 @@ class Param_GrowthRate ( DM.Model ):
 
 
 	def __unicode__ ( self ):
-		analysis = self.analysis
-		tech     = self.technology
+		analysis = self.analysis_id and self.analysis or 'NoAnalysis'
+		tech     = self.technology_id and self.technology or 'NoTechnology'
 
-		return u'({}) {}: {}'.format( analysis, tech, self.value )
+		return u'({}) {}: {}'.format( analysis, tech, self.ratelimit, self.seed )
 
