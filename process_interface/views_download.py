@@ -20,6 +20,8 @@ from models import (
   Param_DemandSpecificDistribution,
   Param_Efficiency,
   Param_EmissionActivity,
+  Param_LifetimeTech,
+  Param_LifetimeTechLoan,
   Param_SegFrac,
   Process,
   Set_tech_baseload,
@@ -107,10 +109,13 @@ param  CapacityFactorProcess  := ... ;
 
 {costvariable}
 
-param  LifetimeTech  := ... ;
-param  LifetimeProcess  := ... ;
-param  LifetimeLoanTech  := ... ;
-param  LifetimeLoanProcess  := ... ;
+{lifetimetech}
+
+{processlife}
+
+{lifetimeloantech}
+
+{processloanlife}
 
 param  TechInputSplit := ... ;
 param  TechOutputSplit := ... ;
@@ -456,8 +461,8 @@ param  MaxCapacity  := ... ;
 		cf = 'param  CostFixed  :=\n {}\n\t;'.format( cf )
 
 	costvariable = Param_CostVariable.objects.filter(
-	  period__vintage__gt=analysis.period_0,
 	  process_id__in=process_ids,
+	  period__vintage__gt=analysis.period_0,
 	  value__gt=0
 	)
 
@@ -485,6 +490,112 @@ param  MaxCapacity  := ... ;
 		cv = '\n '.join( lines )
 		cv = 'param  CostVariable  :=\n {}\n\t;'.format( cv )
 
+	tech_life = Param_LifetimeTech.objects.filter(
+	  analysis=analysis,
+	  technology__name__in=techs_prod
+	)
+
+	tlife = '# param LifetimeTech := ... ;   # None specified in DB'
+	if tech_life:
+		lines = sorted( [
+		    tl.technology.name,
+		    str(int(tl.value)),
+		    str(tl.value - int(tl.value))[1:],
+		  ]
+		  for tl in tech_life
+		)
+
+		maxlen_t   = max(map(len, (i[0] for i in lines) ))
+		maxlen_int = max(map(len, (i[1] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_t, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		tlife = '\n '.join( lines )
+		tlife = 'param  LifetimeTech  :=\n {}\n\t;'.format( tlife )
+
+	process_life = Process.objects.filter(
+	  id__in=process_ids,
+	  lifetime__gt=0
+	)
+
+	plife = '# param LifetimeProcess := ... ;   # None specified in DB'
+	if process_life:
+		lines = sorted( [
+		    pl.technology.name,
+		    str(pl.vintage.vintage),
+		    str(int(pl.lifetime)),
+		    str(pl.lifetime - int(pl.lifetime))[1:],
+		  ]
+		  for pl in process_life
+		)
+
+		maxlen_t   = max(map(len, (i[0] for i in lines) ))
+		maxlen_v   = max(map(len, (i[1] for i in lines) ))
+		maxlen_int = max(map(len, (i[2] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_t, maxlen_v, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		plife = '\n '.join( lines )
+		plife = 'param  LifetimeProcess  :=\n {}\n\t;'.format( plife )
+
+	tech_loanlife = Param_LifetimeTechLoan.objects.filter(
+	  analysis=analysis,
+	  technology__name__in=techs_prod,
+	  value__gt=0
+	)
+
+	tllife = '# param LifetimeLoanTech := ... ;   # None specified in DB'
+	if tech_loanlife:
+		lines = sorted( [
+		    tll.technology.name,
+		    str(int(tll.value)),
+		    str(tll.value - int(tll.value))[1:],
+		  ]
+		  for tll in tech_life
+		)
+
+		maxlen_t   = max(map(len, (i[0] for i in lines) ))
+		maxlen_int = max(map(len, (i[1] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_t, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		tllife = '\n '.join( lines )
+		tllife = 'param  LifetimeLoanTech  :=\n {}\n\t;'.format( tllife )
+
+	process_loanlife = Process.objects.filter(
+	  id__in=process_ids,
+	  loanlife__gt=0
+	)
+
+	pllife = '# param LifetimeLoanProcess := ... ;   # None specified in DB'
+	if process_loanlife:
+		lines = sorted( [
+		    pl.technology.name,
+		    str(pl.vintage.vintage),
+		    str(int(pl.loanlife)),
+		    str(pl.loanlife - int(pl.loanlife))[1:],
+		  ]
+		  for pl in process_loanlife
+		)
+
+		maxlen_t   = max(map(len, (i[0] for i in lines) ))
+		maxlen_v   = max(map(len, (i[1] for i in lines) ))
+		maxlen_int = max(map(len, (i[2] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_t, maxlen_v, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		pllife = '\n '.join( lines )
+		pllife = 'param  LifetimeLoanProcess  :=\n {}\n\t;'.format( pllife )
+
+
 	data = dat_format.format(
 		url         = req.build_absolute_uri(),
 		user        = req.user.username,
@@ -510,6 +621,10 @@ param  MaxCapacity  := ... ;
 		costinvest   = ci,
 		costfixed    = cf,
 		costvariable = cv,
+		lifetimetech = tlife,
+		processlife  = plife,
+		lifetimeloantech = tllife,
+		processloanlife  = pllife,
 		gdr         = analysis.global_discount_rate,
 	)
 	res = HttpResponse( data, content_type='text/plain' )
