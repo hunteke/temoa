@@ -282,8 +282,6 @@ def CreateCapacityFactors ( M ):
 			CFP[s, d, t, v] = M.CapacityFactorTech[s, d, t]
 		CFP._constructed = True
 
-	return tuple()
-
 
 def CreateLifetimes ( M ):
 	# Steps

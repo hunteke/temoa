@@ -142,7 +142,7 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.CapacityFactor_sdtv   = Set( dimen=4, rule=CapacityFactorIndices )
 	M.CapacityFactorProcess = Param( M.CapacityFactor_sdtv )
 
-	M.initialize_CapacityFactorProcess = Set( rule=CreateCapacityFactors )
+	M.initialize_CapacityFactorProcess = BuildAction( rule=CreateCapacityFactors )
 
 	M.LifetimeProcess_tv     = Set( dimen=2, rule=LifetimeProcessIndices )
 	M.LifetimeLoanProcess_tv = Set( dimen=2, rule=LifetimeLoanProcessIndices )
