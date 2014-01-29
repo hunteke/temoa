@@ -49,7 +49,7 @@ from temoa_graphviz import CreateModelDiagrams
 try:
 	from coopr.pyomo import (
 	  AbstractModel, BuildAction, Constraint, NonNegativeReals, Objective, Param,
-	  Reals, Set, Var, minimize, value
+	  Set, Var, minimize, value
 	)
 
 except:
