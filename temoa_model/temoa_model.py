@@ -139,13 +139,13 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.Efficiency   = Param( M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier )
 
 	M.CapacityFactorTech    = Param( M.time_season, M.time_of_day, M.tech_all, default=1 )
-	M.CapacityFactor_sdtv   = Set( dimen=4, rule=CapacityFactorIndices )
+	M.CapacityFactor_sdtv   = Set( dimen=4, initialize=CapacityFactorIndices )
 	M.CapacityFactorProcess = Param( M.CapacityFactor_sdtv )
 
 	M.initialize_CapacityFactorProcess = BuildAction( rule=CreateCapacityFactors )
 
-	M.LifetimeProcess_tv     = Set( dimen=2, rule=LifetimeProcessIndices )
-	M.LifetimeLoanProcess_tv = Set( dimen=2, rule=LifetimeLoanProcessIndices )
+	M.LifetimeProcess_tv     = Set( dimen=2, initialize=LifetimeProcessIndices )
+	M.LifetimeLoanProcess_tv = Set( dimen=2, initialize=LifetimeLoanProcessIndices )
 	M.LifetimeTech           = Param( M.tech_all, default=30 )    # in years
 	M.LifetimeLoanTech       = Param( M.tech_all, default=10 )    # in years
 	M.LifetimeProcess        = Param( M.LifetimeProcess_tv )      # in years
@@ -170,13 +170,13 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 	M.ResourceBound = Param( M.time_optimize,  M.commodity_physical )
 
-	M.CostFixed_ptv    = Set( dimen=3, rule=CostFixedIndices )
-	M.CostVariable_ptv = Set( dimen=3, rule=CostVariableIndices )
-	M.CostInvest_tv    = Set( dimen=2, rule=CostInvestIndices )
+	M.CostFixed_ptv    = Set( dimen=3, initialize=CostFixedIndices )
+	M.CostVariable_ptv = Set( dimen=3, initialize=CostVariableIndices )
+	M.CostInvest_tv    = Set( dimen=2, initialize=CostInvestIndices )
 	M.CostFixedVintageDefault_tv = Set( dimen=2,
-	   rule=lambda M: set((t, v) for p, t, v in M.CostFixed_ptv ) )
+	   initialize=lambda M: set((t, v) for p, t, v in M.CostFixed_ptv ) )
 	M.CostVariableVintageDefault_tv = Set( dimen=2,
-	   rule=lambda M: set((t, v) for p, t, v in M.CostVariable_ptv ) )
+	   initialize=lambda M: set((t, v) for p, t, v in M.CostVariable_ptv ) )
 
 	M.CostFixedVintageDefault    = Param( M.CostFixedVintageDefault_tv )
 	M.CostVariableVintageDefault = Param( M.CostVariableVintageDefault_tv )
@@ -186,15 +186,15 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 	M.initialize_Costs = BuildAction( rule=CreateCosts )
 
-	M.Loan_tv           = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
-	M.ModelLoanLife_tv  = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
-	M.ModelProcessLife_ptv = Set( dimen=3, rule=ModelProcessLifeIndices )
+	M.Loan_tv           = Set( dimen=2, initialize=lambda M: M.CostInvest.keys() )
+	M.ModelLoanLife_tv  = Set( dimen=2, initialize=lambda M: M.CostInvest.keys() )
+	M.ModelProcessLife_ptv = Set( dimen=3, initialize=ModelProcessLifeIndices )
 	M.ModelLoanLife     = Param( M.ModelLoanLife_tv,  initialize=ParamModelLoanLife_rule )
 	M.ModelProcessLife  = Param( M.ModelProcessLife_ptv, initialize=ParamModelProcessLife_rule )
 
-	M.DiscountRate_tv = Set( dimen=2, rule=lambda M: M.CostInvest.keys() )
-	M.LoanLifeFrac_ptv = Set( dimen=3, rule=LoanLifeFracIndices )
-	M.ProcessLifeFrac_ptv = Set( dimen=3, rule=ModelProcessLifeIndices )
+	M.DiscountRate_tv = Set( dimen=2, initialize=lambda M: M.CostInvest.keys() )
+	M.LoanLifeFrac_ptv = Set( dimen=3, initialize=LoanLifeFracIndices )
+	M.ProcessLifeFrac_ptv = Set( dimen=3, initialize=ModelProcessLifeIndices )
 
 	M.DiscountRate  = Param( M.DiscountRate_tv, default=0.05 )
 	M.ProcessLifeFrac  = Param( M.ProcessLifeFrac_ptv, initialize=ParamProcessLifeFraction_rule )
@@ -209,18 +209,18 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.MaxCapacity = Param( M.time_optimize, M.tech_all )
 
 	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions )
-	M.EmissionActivity_eitvo = Set( dimen=5, rule=EmissionActivityIndices )
+	M.EmissionActivity_eitvo = Set( dimen=5, initialize=EmissionActivityIndices )
 	M.EmissionActivity = Param( M.EmissionActivity_eitvo )
 
-	M.ActivityVar_psdtv = Set( dimen=5, rule=ActivityVariableIndices )
+	M.ActivityVar_psdtv = Set( dimen=5, initialize=ActivityVariableIndices )
 	M.ActivityByPeriodAndProcessVar_ptv = Set(
-	  dimen=3, rule=ActivityByPeriodAndProcessVarIndices )
+	  dimen=3, initialize=ActivityByPeriodAndProcessVarIndices )
 
-	M.CapacityVar_tv = Set( dimen=2, rule=CapacityVariableIndices )
+	M.CapacityVar_tv = Set( dimen=2, initialize=CapacityVariableIndices )
 	M.CapacityAvailableVar_pt = Set(
-	  dimen=2, rule=CapacityAvailableVariableIndices )
+	  dimen=2, initialize=CapacityAvailableVariableIndices )
 
-	M.FlowVar_psditvo = Set( dimen=7, rule=FlowVariableIndices )
+	M.FlowVar_psditvo = Set( dimen=7, initialize=FlowVariableIndices )
 
 	# Variables
 	#   Base decision variables
@@ -242,33 +242,33 @@ CapacityFactorProcess(tech_all, vintage_all)
 	)
 
 	M.BaseloadDiurnalConstraint_psdtv = Set(
-	  dimen=5, rule=BaseloadDiurnalConstraintIndices )
+	  dimen=5, initialize=BaseloadDiurnalConstraintIndices )
 	M.CommodityBalanceConstraint_psdc = Set(
-	  dimen=4, rule=CommodityBalanceConstraintIndices )
-	M.DemandConstraint_psdc = Set( dimen=4, rule=DemandConstraintIndices )
-	M.DemandActivityConstraint_psdtv_dem_s0d0 = Set( dimen=8, rule=DemandActivityConstraintIndices )
+	  dimen=4, initialize=CommodityBalanceConstraintIndices )
+	M.DemandConstraint_psdc = Set( dimen=4, initialize=DemandConstraintIndices )
+	M.DemandActivityConstraint_psdtv_dem_s0d0 = Set( dimen=8, initialize=DemandActivityConstraintIndices )
 	M.ExistingCapacityConstraint_tv = Set(
-	  dimen=2, rule=lambda M: M.ExistingCapacity.sparse_iterkeys() )
+	  dimen=2, initialize=lambda M: M.ExistingCapacity.sparse_iterkeys() )
 	M.MaxCapacityConstraint_pt = Set(
-	  dimen=2, rule=lambda M: M.MaxCapacity.sparse_iterkeys() )
+	  dimen=2, initialize=lambda M: M.MaxCapacity.sparse_iterkeys() )
 	M.MinCapacityConstraint_pt = Set(
-	  dimen=2, rule=lambda M: M.MinCapacity.sparse_iterkeys() )
+	  dimen=2, initialize=lambda M: M.MinCapacity.sparse_iterkeys() )
 	M.ProcessBalanceConstraint_psditvo = Set(
-	  dimen=7, rule=ProcessBalanceConstraintIndices )
+	  dimen=7, initialize=ProcessBalanceConstraintIndices )
 	M.ResourceConstraint_pr = Set(
-	  dimen=2, rule=lambda M: M.ResourceBound.sparse_iterkeys() )
-	M.StorageConstraint_psitvo = Set( dimen=6, rule=StorageConstraintIndices )
+	  dimen=2, initialize=lambda M: M.ResourceBound.sparse_iterkeys() )
+	M.StorageConstraint_psitvo = Set( dimen=6, initialize=StorageConstraintIndices )
 	M.TechInputSplitConstraint_psditv = Set(
-	  dimen=6, rule=TechInputSplitConstraintIndices )
+	  dimen=6, initialize=TechInputSplitConstraintIndices )
 	M.TechOutputSplitConstraint_psdtvo = Set(
-	  dimen=6, rule=TechOutputSplitConstraintIndices )
+	  dimen=6, initialize=TechOutputSplitConstraintIndices )
 
 	M.EmissionLimitConstraint_pe = Set(
-	  dimen=2, rule=lambda M: M.EmissionLimit.sparse_iterkeys() )
+	  dimen=2, initialize=lambda M: M.EmissionLimit.sparse_iterkeys() )
 
 	from itertools import product
 	M.GrowthRateMaxConstraint_tv = Set(
-	  dimen=2, rule=lambda M: set(product( M.time_optimize, M.GrowthRateMax.sparse_iterkeys() )) )
+	  dimen=2, initialize=lambda M: set(product( M.time_optimize, M.GrowthRateMax.sparse_iterkeys() )) )
 
 
 	# Objective
