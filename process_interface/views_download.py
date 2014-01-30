@@ -12,6 +12,7 @@ from IPython import embed as II
 
 from models import (
   Analysis,
+  Param_CapacityFactorTech,
   Param_CapacityToActivity,
   Param_CostFixed,
   Param_CostVariable,
@@ -105,8 +106,9 @@ param  GlobalDiscountRate  :=  {gdr} ;
 
 {capacitytoactivity}
 
-param  CapacityFactorTech  := ... ;
-param  CapacityFactorProcess  := ... ;
+{capacityfactortech}
+
+param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
 
 {costinvest}
 
@@ -411,6 +413,36 @@ param  CapacityFactorProcess  := ... ;
 
 		c2a = '\n '.join( lines )
 		c2a = 'param  CapacityToActivity  :=\n {}\n\t;'.format( c2a )
+
+	capfactech = Param_CapacityFactorTech.objects.filter(
+	  timeslice__analysis=analysis,
+	  technology__name__in=techs_prod  # make sure tech is actually used
+	)
+
+	cftech = '# param CapacityFactorTech := ... ;   # None specified in DB'
+	if capfactech:
+		lines = [ [
+		    cft.timeslice.season,
+		    cft.timeslice.time_of_day,
+		    cft.technology.name,
+		    str(int( cft.value )),
+		    str(cft.value - int(cft.value))[1:]
+		  ]
+		  for cft in capfactech
+		]
+		lines.sort( key=itemgetter(2, 0, 1) )
+
+		maxlen_s   = max(map(len, (i[0] for i in lines) ))
+		maxlen_d   = max(map(len, (i[1] for i in lines) ))
+		maxlen_t   = max(map(len, (i[2] for i in lines) ))
+		maxlen_int = max(map(len, (i[3] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_s, maxlen_d, maxlen_t, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		cftech = '\n '.join( lines )
+		cftech = 'param  CapacityToActivity  :=\n {}\n\t;'.format( cftech )
 
 	costinvest = Process.objects.filter(
 	  id__in=process_ids,
@@ -786,6 +818,7 @@ param  CapacityFactorProcess  := ... ;
 		emissionactivity = ems,
 		existingcapacity = ecap,
 		capacitytoactivity = c2a,
+		capacityfactortech = cftech,
 		costinvest   = ci,
 		costfixed    = cf,
 		costvariable = cv,
