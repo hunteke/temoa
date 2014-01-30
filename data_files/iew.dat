@@ -189,7 +189,7 @@ param  Demand  :=
 	;
 
 
-param  LifetimeTech  :=
+param  LifetimeProcess  :=
 # tech_all        vintage_all    # value (years)
  imp_coal         2010              1000
  imp_natgas       2010              1000
@@ -275,7 +275,7 @@ param  LifetimeTech  :=
  tl_gascar        2035               15
 	;
 
-param  LifetimeLoan  :=
+param  LifetimeLoanProcess  :=
 # tech_all        # vintage_all    # value (years)
  e_coal           2010               45
  e_coal           2015               45
