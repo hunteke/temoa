@@ -500,7 +500,6 @@ can.Model('Analysis', {
 		var url = ROOT_URL;
 		url += '/analysis/{id}/download_as_dat';
 		url = replaceNamedArgs( url, this.attr() );
-		console.log( 'Download URI: ', url );
 		return url;
 	},
 	segFracSum: can.compute( function ( style ) {
