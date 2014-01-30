@@ -2899,7 +2899,6 @@ can.Control('ProcessDetail', {
 					}]);
 				}
 			} else if ( name.match(/^CostFixed_\d+$/) ) {
-				var sel = '[name="' + name + '"]';
 				var cf = $pTable.find( sel ).closest('tr').data('costfixed');
 				check_for_save.push( [cf, {value: cfData[ name ]}] );
 			}
@@ -2916,7 +2915,6 @@ can.Control('ProcessDetail', {
 					}]);
 				}
 			} else if ( name.match(/^CostVariable_\d+$/) ) {
-				var sel = '[name="' + name + '"]';
 				var cv = $pTable.find( sel ).closest('tr').data('costvariable');
 				check_for_save.push( [cv, {value: cvData[ name ]}] );
 			}
@@ -2934,7 +2932,6 @@ can.Control('ProcessDetail', {
 					}]);
 				}
 			} else if ( name.match(/^Efficiency_\d+$/) ) {
-				var sel = '[name="' + name + '"]';
 				var eff = $pTable.find( sel ).closest('tr').data('efficiency');
 				check_for_save.push( [eff, {value: effData[ name ]}] );
 			}
@@ -2952,7 +2949,6 @@ can.Control('ProcessDetail', {
 					}]);
 				}
 			} else if ( name.match(/^EmissionActivity_\d+$/) ) {
-				var sel = '[name="' + name + '"]';
 				var ema = $pTable.find( sel ).closest('tr').data('emissionactivity');
 				check_for_save.push( [ema, {value: emData[ name ]}] );
 			}
@@ -3333,7 +3329,6 @@ can.Control('AnalysisTechnologyDetail', {
 					}]);
 				}
 			} else if ( name.match(/^InputSplit_\d+$/) ) {
-				var sel = '[name="' + name + '"]';
 				var is = $tTable.find( sel ).closest('tr').data('inputsplit');
 				to_save.push( [is, {value: isData[ name ]}] );
 			}
@@ -3350,7 +3345,6 @@ can.Control('AnalysisTechnologyDetail', {
 					}]);
 				}
 			} else if ( name.match(/^OutputSplit_\d+$/) ) {
-				var sel = '[name="' + name + '"]';
 				var os = $tTable.find( sel ).closest('tr').data('outputsplit');
 				to_save.push( [os, {value: osData[ name ]}] );
 			}
