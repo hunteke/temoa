@@ -1,4 +1,10 @@
 <% if ( username !== null && (analysis.isNew() || (analysis.username === username) )) { %>
+<datalist id='EmissionList'>
+<% analysis.attr('commodity_emission').each( function ( em ) { %>
+	<option value='<%= em.attr('name') %>'>
+<% }); %>
+</datalist>
+
 <div class='analysis' <%= ($el) -> $el.data('analysis', analysis) %>>
 	<form onsubmit='return false;' id='AnalysisInfoForm_<%= analysis.attr('id') %>'>
 	<table>

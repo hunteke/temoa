@@ -13,6 +13,12 @@ if ( username && process.isNew() ) { %>
 	</tbody>
 </table>
 <% } else if ( username && username === analysis.username ) { %>
+<datalist id='EfficiencyList_<%= process.attr('id') %>'>
+<% process.attr('efficiencies').each( function ( e ) { %>
+	<option value='<%= e.attr('inp') %>, <%= e.attr('out') %>'>
+<% }); %>
+</datalist>
+
 <form onsubmit='return false;' id='Process_<%= process.attr('id') %>'></form>
 <form onsubmit='return false;' id='ProcessCostsFixed_<%= process.attr('id') %>'></form>
 <form onsubmit='return false;' id='ProcessCostsVariable_<%= process.attr('id') %>'></form>
@@ -81,8 +87,8 @@ if ( username && process.isNew() ) { %>
 						<tr <%= ($el) -> $el.data('emissionactivity', ea) %>>
 							<% if ( ea.isNew() ) { %>
 								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='EmissionActivityRemove'>Cancel</button></td>
-								<td><span class='error'></span><input form='ProcessEmissionActivities_<%= process.attr('id') %>' type='text' class='emissionactivity_input' name='EmissionActivityNew_pol' autocomplete='off' list='CommodityPhysicalList'></td>
-								<td><span class='error'></span><input form='ProcessEmissionActivities_<%= process.attr('id') %>' type='text' class='emissionactivity_input' name='EmissionActivityNew_eff' autocomplete='off' list='CommodityOutputList'></td>
+								<td><span class='error'></span><input form='ProcessEmissionActivities_<%= process.attr('id') %>' type='text' class='emissionactivity_input' name='EmissionActivityNew_pol' autocomplete='off' list='EmissionList'></td>
+								<td><span class='error'></span><input form='ProcessEmissionActivities_<%= process.attr('id') %>' type='text' class='emissionactivity_input' name='EmissionActivityNew_eff' autocomplete='off' list='EfficiencyList_<%= process.attr('id') %>'></td>
 								<td><span class='error'></span><input form='ProcessEmissionActivities_<%= process.attr('id') %>' type='number' class='emissionactivity_input' name='EmissionActivityNew_value'></td>
 							<% } else { %>
 								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='EmissionActivityRemove'>Del</button></td>

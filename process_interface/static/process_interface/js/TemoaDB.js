@@ -478,7 +478,7 @@ can.Model('Analysis', {
 //		demandspecificdistribution: 'AnalysisDemandSpecificDistribution.models',
 //		future_demands: 'AnalysisDemand.models',
 		commodity_demand:   'AnalysisCommodityDemand.models',
-		commodity_emission: 'AnalysisCommidityEmission.models',
+		commodity_emission: 'AnalysisCommodityEmission.models',
 		commodity_physical: 'AnalysisCommodityPhysical.models',
 	}
 }, {
@@ -636,6 +636,17 @@ can.Control('AnalysisDetail', {
 			view += '?_=' + new Date().getTime();
 
 		var analysis = options.analysis;
+
+		if ( ! analysis.commodity_emission )
+			analysis.attr('commodity_emission',
+			  new AnalysisCommodityEmission.List() );
+		if ( ! analysis.commodity_demand )
+			analysis.attr('commodity_demand',
+			  new AnalysisCommodityDemand.List() );
+		if ( ! analysis.commodity_physical )
+			analysis.attr('commodity_physical',
+			  new AnalysisCommodityPhysical.List() );
+
 		var view_opts = {
 			username: getCookie().username || null,
 			analysis: analysis,
