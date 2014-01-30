@@ -343,7 +343,6 @@ def analysis_technology_capacityfactor_new ( req, analysis_id, technology_id ):
 	status = 201  # Created
 	msgs = {}
 
-	print req.POST
 	cf = Param_CapacityFactorTech( technology=tech )
 	form = CapacityFactorTechForm( req.POST, instance=cf, analysis=analysis )
 	if not form.is_valid():
