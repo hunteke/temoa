@@ -138,11 +138,12 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
 	M.Efficiency   = Param( M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier )
 
-	M.CapacityFactorTech    = Param( M.time_season, M.time_of_day, M.tech_all, default=1 )
-	M.CapacityFactor_sdtv   = Set( dimen=4, initialize=CapacityFactorIndices )
+	M.CapacityFactor_sdtv = Set( dimen=4, initialize=CapacityFactorProcessIndices )
+	M.CapacityFactor_sdt  = Set( dimen=3, initialize=CapacityFactorTechIndices )
 	M.CapacityFactorProcess = Param( M.CapacityFactor_sdtv )
+	M.CapacityFactorTech    = Param( M.CapacityFactor_sdt, default=1 )
 
-	M.initialize_CapacityFactorProcess = BuildAction( rule=CreateCapacityFactors )
+	M.initialize_CapacityFactors = BuildAction( rule=CreateCapacityFactors )
 
 	M.LifetimeProcess_tv     = Set( dimen=2, initialize=LifetimeProcessIndices )
 	M.LifetimeLoanProcess_tv = Set( dimen=2, initialize=LifetimeLoanProcessIndices )

@@ -668,13 +668,23 @@ def InitializeProcessParameters ( M ):
 ##############################################################################
 # Parameters
 
-def CapacityFactorIndices ( M ):
+def CapacityFactorProcessIndices ( M ):
 	indices = set(
 	  (s, d, t, v)
 
 	  for i, t, v, o in M.Efficiency.sparse_iterkeys()
 	  for s in M.time_season
 	  for d in M.time_of_day
+	)
+
+	return indices
+
+
+def CapacityFactorTechIndices ( M ):
+	indices = set(
+	  (s, d, t)
+
+	  for s, d, t, v in M.CapacityFactor_sdtv
 	)
 
 	return indices
