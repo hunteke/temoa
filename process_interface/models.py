@@ -3,6 +3,8 @@ __all__ = (
   'AnalysisCommodity',
   'Commodity',
   'CommodityType',
+  'Param_CapacityFactorProcess',
+  'Param_CapacityFactorTech',
   'Param_CapacityToActivity',
   'Param_CostFixed',
   'Param_CostVariable',
@@ -845,6 +847,113 @@ class Param_EmissionActivity ( DM.Model ):
 			raise ValidationError( msg )
 
 		super( Param_EmissionActivity, self).save()
+
+
+
+class Param_CapacityFactorTech ( DM.Model ):
+	timeslice  = DM.ForeignKey( Param_SegFrac )
+	technology = DM.ForeignKey( Technology )
+	value      = DM.FloatField()
+
+	class Meta:
+		unique_together = ('timeslice', 'technology')
+		ordering = (
+		  'technology__name',
+		  'timeslice__season',
+		  'timeslice__time_of_day'
+		 )
+
+
+	def __unicode__ ( self ):
+		a = self.timeslice.analysis if self.timeslice_id else 'NoAnalysis'
+		t = self.technology.name if self.technology_id else 'NoTechnology'
+		s = self.timeslice.season if self.timeslice_id else 'NoSegFrac'
+		d = self.timeslice.time_of_day if self.timeslice_id else 'NoSegFrac'
+
+		return u'({}) {} - {}, {}: {}'.format( a, t, s, d, self.value )
+
+
+	def save ( self ):
+		epsilon = 1e-9   # something really small
+
+		a = self.timeslice.analysis
+		t = self.technology
+
+		# Check that the linked analysis utilizes this technology.
+		if not t.pk:
+			msg = ('CapacityFactorTech must reference an existing technology.  '
+			  'Do you need to create a technology?')
+			raise ValidationError( msg )
+
+		if t not in Technology.objects.filter( name=t.name, process__analysis=a ):
+			msg = 'Technology does not exist in this analysis.'
+			raise ValidationError( msg )
+
+		if abs(self.value) < epsilon or math.isnan( self.value ):
+			msg = ('Process efficiency must be greater than 0, or it is a '
+			  'useless entry.  Consider removing the efficiency instead of '
+			  'marking it 0.'
+			  '\nAttempted value: {}')
+			raise ValidationError( msg.format( self.value ))
+
+		super( Param_CapacityFactorTech, self).save()
+
+
+
+class Param_CapacityFactorProcess ( DM.Model ):
+	# check that Analysis ids match is in save()
+	timeslice = DM.ForeignKey( Param_SegFrac )
+	process   = DM.ForeignKey( Process )
+	value     = DM.FloatField()
+
+	class Meta:
+		unique_together = ('timeslice', 'process')
+		ordering = (
+		  'process__technology',
+		  'process__vintage',
+		  'timeslice__season',
+		  'timeslice__time_of_day',
+		)
+
+
+	def __unicode__ ( self ):
+		a = self.process_id and self.process.analysis or 'NoAnalysis'
+		s = self.timeslice.season if self.timeslice_id else 'NoSegFrac'
+		d = self.timeslice.time_if_day if self.timeslice_id else 'NoSegFrac'
+		t = self.process_id and self.process.technology or 'NoProcess'
+		v = self.process_id and self.process.vintage.vintage or 'NoProcess'
+
+		return u'({}) {}, {} - {}, {}: {}'.format( a, t, v, s, d, self.value )
+
+
+	def save ( self ):
+		epsilon = 1e-9   # something really small
+
+		if self.inp_commodity.commodity_type.name != 'physical':
+			msg = 'CapacityFactorProcess input commodity must be of type "physical".'
+			raise ValidationError( msg )
+
+		if self.out_commodity.commodity_type.name not in ('demand', 'physical'):
+			msg = ('CapacityFactor output commodity must be of type "demand" or '
+			  '"physical".')
+			raise ValidationError( msg )
+
+		if abs(self.value) < epsilon or math.isnan( self.value ):
+			msg = ('Process efficiency must not be 0, or it is a useless entry.  '
+			  'Consider removing the efficiency instead of marking it 0.'
+			  '\nAttempted value: {}')
+			raise ValidationError( msg.format( self.value ))
+
+		inp_analysis = self.inp_commodity.analysis
+		analysis = self.process.analysis
+		out_analysis = self.out_commodity.analysis
+		if inp_analysis != analysis or analysis != out_analysis:
+			msg = ('Inconsistent analyses!  (input, process, output) analyses '
+			  'passed: {}, {}, {}')
+			raise ValidationError( msg.format(
+			  inp_analysis, analysis, out_analysis ))
+
+		super( Param_CapacityFactorProcess, self).save()
 
 
 

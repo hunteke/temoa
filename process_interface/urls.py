@@ -65,6 +65,10 @@ from views import (
   analysis_technology_info,
   analysis_technology_update,
 
+  analysis_technology_capacityfactor_new,
+  analysis_technology_capacityfactor_update,
+  analysis_technology_capacityfactor_remove,
+
   analysis_technology_inputsplit_new,
   analysis_technology_inputsplit_update,
   analysis_technology_inputsplit_remove,
@@ -156,6 +160,11 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/create/commodity/(?P<ctype>demand|emission|physical)$', analysis_create_commodity, name='analysis_create_commodity' ),
   url(r'^analysis/(?P<analysis_id>\d+)/update/commodity/(?P<commodity_id>\d+)$', analysis_update_commodity, name='analysis_update_commodity' ),
   url(r'^analysis/(?P<analysis_id>\d+)/delete/commodity/(?P<commodity_id>\d+)$', analysis_delete_commodity, name='analysis_delete_commodity' ),
+
+# CapacityFactorTech
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/create$', analysis_technology_capacityfactor_new, name='analysis_technology_inputsplit_new'),
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/update/(?P<cf_id>\d+)$', analysis_technology_capacityfactor_update, name='analysis_technology_inputsplit_update'),
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/remove/(?P<cf_id>\d+)$', analysis_technology_capacityfactor_remove, name='analysis_technology_inputsplit_remove'),
 
 # TechInputSplit
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/InputSplit/create$', analysis_technology_inputsplit_new, name='analysis_technology_inputsplit_new'),

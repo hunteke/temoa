@@ -154,6 +154,7 @@ function displayErrors ( $el, errors ) {
 	}
 }
 
+
 function save_to_server ( args ) {
 	// Will save a list of [model, data] tuples to the server, weeding out
 	// information that has not changed.  Thus, this sends only the minimal
@@ -646,6 +647,8 @@ can.Control('AnalysisDetail', {
 		if ( ! analysis.commodity_physical )
 			analysis.attr('commodity_physical',
 			  new AnalysisCommodityPhysical.List() );
+		if ( ! analysis.segfracs )
+			analysis.attr('segfracs', new AnalysisSegFrac.List() );
 
 		var view_opts = {
 			username: getCookie().username || null,
@@ -1810,6 +1813,7 @@ can.Model('AnalysisTechnology', {
 		capacitytoactivity: 'number',
 		growthratelimit: 'number',
 		growthrateseed: 'number',
+		capacityfactors: 'AnalysisTechnologyCapacityFactor.models',
 		inputsplits: 'AnalysisTechnologyInputSplit.models',
 		outputsplits: 'AnalysisTechnologyOutputSplit.models',
 	}
@@ -1817,6 +1821,32 @@ can.Model('AnalysisTechnology', {
 	partialUpdate: function ( id, attr ) {
 		var url = ROOT_URL;
 		url += '/analysis/{aId}/technology/update/{id}';
+		url = replaceNamedArgs( url, this.attr() );
+		return $.post( url, attr );
+	}
+});
+
+can.Model('AnalysisTechnologyCapacityFactor', {
+	create:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/CapacityFactor/create',
+	update:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/CapacityFactor/update/{id}',
+	destroy: function ( id ) {
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/technology/{tId}/CapacityFactor/remove/{id}';
+		url = replaceNamedArgs( url, this.store[ id ].attr() );
+		return $.ajax({ type: 'DELETE', url: url });
+	},
+	attributes: {
+		aId:     'int',
+		tId:     'int',
+		id:      'int',
+		sfId:    'int',
+		segfrac: 'AnalysisSegFrac.model',
+		value:   'number',
+	}
+}, {
+	partialUpdate: function ( id, attr ) {
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/technology/{tId}/CapacityFactor/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
@@ -2302,6 +2332,21 @@ can.Control('ProcessList', {
 					}
 				}
 			}
+
+			var _segFracs = {};  // use as map
+			for ( var i = 0; i < analysis.segfracs.length; ++i ) {
+				var sf = analysis.segfracs[ i ];
+				_segFracs[ sf.id ] = sf;
+			}
+
+			for ( var i = 0; i < technologies.length; ++i ) {
+				var t = technologies[ i ];
+				for ( var cfi = 0; cfi < t.capacityfactors.length; ++cfi ) {
+					var cf = t.capacityfactors[ cfi ];
+					cf.attr( 'segfrac', _segFracs[ cf.sfId ] );
+				}
+			}
+
 			var view_opts = {
 				username:  getCookie().username || null,
 				analysis:  analysis,
@@ -3063,6 +3108,8 @@ can.Control('AnalysisTechnologyDetail', {
 
 		var t = options.technology;
 
+		if ( ! t.capacityfactors )
+			t.attr('capacityfactors', new AnalysisTechnologyCapacityFactor.List());
 		if ( ! t.inputsplits )
 			t.attr('inputsplits', new AnalysisTechnologyInputSplit.List());
 		if ( ! t.outputsplits )
@@ -3077,8 +3124,11 @@ can.Control('AnalysisTechnologyDetail', {
 		$el.append( can.view( view, view_opts ));
 	},
 	destroy: function ( ) {  // AnalysisTechnologyDetail
+		var capfac_list = this.options.technology.capacityfactors;
 		var is_list = this.options.technology.inputsplits;
 		var os_list = this.options.technology.outputsplits;
+		if ( capfac_list && capfac_list.length && capfac_list[0].isNew() )
+			capfac_list[0].destroy();
 		if ( is_list && is_list.length && is_list[0].isNew() )
 			is_list[0].destroy();
 		if ( os_list && os_list.length && os_list[0].isNew() )
@@ -3089,6 +3139,7 @@ can.Control('AnalysisTechnologyDetail', {
 	save: function ( $el ) {  // AnalysisTechnologyDetail
 		var errors = {}
 		  , $tForm  = null, tData  = null
+		  , $cfForm = null, cfData = null
 		  , $isForm = null, isData = null
 		  , $osForm = null, osData = null
 		  , to_save = new Array();
@@ -3099,6 +3150,7 @@ can.Control('AnalysisTechnologyDetail', {
 
 		if ( tId ) {
 			$tForm  = $('#FormTechnology_' + tId);
+			$cfForm = $('#FormTechnologyCapacityFactors_' + tId);
 			$isForm = $('#FormTechnologyInputSplits_' + tId);
 			$osForm = $('#FormTechnologyOutputSplits_' + tId);
 		} else {
@@ -3110,6 +3162,8 @@ can.Control('AnalysisTechnologyDetail', {
 		// 1. Collect the data
 		if ( $tForm )
 			tData = can.deparam( $tForm.serialize() );
+		if ( $cfForm )
+			cfData = can.deparam( $cfForm.serialize() );
 		if ( $isForm )
 			isData = can.deparam( $isForm.serialize() );
 		if ( $osForm )
@@ -3163,6 +3217,31 @@ can.Control('AnalysisTechnologyDetail', {
 			) {
 				var msg = 'Please specify a number or leave blank.';
 				errors['capacitytoactivity'] = [msg];
+			}
+
+			// Capacity Factor
+			var cfNewTS  = $.trim(cfData.CapacityFactorTechNew_timeslice)
+			  , cfNewVal = $.trim(cfData.CapacityFactorTechNew_value);
+			if ( cfNewTS.length || cfNewVal.length ) {
+				if ( ! (cfNewTS.length && cfNewVal.length) ) {
+					var msg = 'If you specify either field of a Capacity Factor, ';
+					msg += 'you need to fill out both fields.  If you would rather ';
+					msg += 'cancel, click anywhere outside of a field (so no ';
+					msg += 'fields have focus), and push Shift to display the red ';
+					msg += '"Cancel" button.';
+					errors['General Error'] = [msg];
+				}
+				if ( isNaN(Number(cfNewVal)) ) {
+					var msg = 'Please specify a number.';
+					errors['CapacityFactorTechNew_value'] = [msg];
+				}
+				if ( ! cfNewTS.match( /^[A-z_]\w*, *[A-z_]\w*$/ ) ) {
+					var msg = 'Invalid timeslice name.  If you are unsure of what ';
+					msg += 'to put here, press the up or down arrow keys while ';
+					msg += 'this field has focus (has the blinking cursor), and a ';
+					msg += 'list of options should appear.';
+					errors['CapacityFactorTechNew_timeslice'] = [msg];
+				}
 			}
 
 			// Input Split
@@ -3226,6 +3305,22 @@ can.Control('AnalysisTechnologyDetail', {
 
 		// client side error checking complete.
 		to_save.push( [tech, tData] );
+
+		for ( var name in cfData ) {
+			var sel = '[name="' + name + '"]';
+			if ( name.match(/^CapacityFactorTechNew/) ) {
+				if ( name.match( /_timeslice$/ ) ) {
+					var cf = $tTable.find( sel ).closest('tr').data('capacityfactor');
+					to_save.push( [cf, {
+					  timeslice: cfData.CapacityFactorTechNew_timeslice,
+					  value:     cfData.CapacityFactorTechNew_value,
+					}]);
+				}
+			} else if ( name.match(/^CapacityFactorTech_\d+$/) ) {
+				var cf = $tTable.find( sel ).closest('tr').data('capacityfactor');
+				to_save.push( [cf, {value: cfData[ name ]}] );
+			}
+		}
 
 		for ( var name in isData ) {
 			var sel = '[name="' + name + '"]';
@@ -3297,6 +3392,20 @@ can.Control('AnalysisTechnologyDetail', {
 			this.save( $(ev.target) );
 		}
 	},
+	'[name="AddCapacityFactorTech"] click': function ( $el, ev ) {  // AnalysisTechnologyDetail
+		var capfac_list = this.options.technology.capacityfactors;
+		if ( capfac_list && capfac_list.length && capfac_list[0].isNew() ) {
+			// only one new CF at a time.
+			return;
+		}
+
+		var tOpts = this.options;
+		var opts = { aId: tOpts.analysis.id, tId: tOpts.technology.id };
+
+		// Create the client-side version, then display it.
+		var newCF = new AnalysisTechnologyCapacityFactor( opts );
+		capfac_list.unshift( newCF );
+	},
 	'[name="AddInputSplit"] click': function ( $el, ev ) {  // AnalysisTechnologyDetail
 		var is_list = this.options.technology.inputsplits;
 		if ( is_list && is_list.length && is_list[0].isNew() ) {
@@ -3321,12 +3430,22 @@ can.Control('AnalysisTechnologyDetail', {
 		var newOS = new AnalysisTechnologyOutputSplit( opts );
 		os_list.unshift( newOS );
 	},
+	'[name="CapacityFactorTechRemove"] click': function ( $el, ev ) { // AnalysisTechnologyDetail
+		$el.closest( 'tr' ).data('capacityfactor').destroy();
+	},
 	'[name="InputSplitRemove"] click': function ( $el, ev ) { // AnalysisTechnologyDetail
 		$el.closest( 'tr' ).data('inputsplit').destroy();
 	},
 	'[name="OutputSplitRemove"] click': function ( $el, ev ) { // AnalysisTechnologyDetail
 		$el.closest( 'tr' ).data('outputsplit').destroy();
 	},
+	'{AnalysisTechnologyCapacityFactor} created' : function ( list, ev, obj ) {
+		var segfracs = this.options.analysis.segfracs;
+		for ( var i = 0; i < segfracs.length; ++i ) {
+			if ( segfracs[ i ].id === obj.sfId )
+				obj.attr('segfrac', segfracs[ i ] );
+		}
+	}
 });
 
 

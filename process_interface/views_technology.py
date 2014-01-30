@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from django.views.decorators.cache import never_cache
 
 from decorators.http import require_POST, require_DELETE
@@ -13,18 +13,21 @@ from decorators.auth import require_login
 
 from models import (
   Analysis,
+  Param_CapacityFactorTech,
   Param_CapacityToActivity,
   Param_GrowthRate,
   Param_LifetimeTech,
   Param_LifetimeTechLoan,
   Param_TechInputSplit,
   Param_TechOutputSplit,
+  Process,
   Set_tech_baseload,
   Set_tech_storage,
   Technology,
 )
 from forms import (
   AnalysisTechnologyForm,
+  CapacityFactorTechForm,
   TechInputSplitForm,
   TechOutputSplitForm,
 )
@@ -93,6 +96,17 @@ def get_technology_info ( analysis, technologies ):
 	    analysis=analysis, technology__in=technologies )
 	})
 
+	CapacityFactors = defaultdict( list )
+	for capfac in Param_CapacityFactorTech.objects.filter(
+	  timeslice__analysis=analysis, technology__in=technologies ):
+		CapacityFactors[ capfac.technology ].append({
+			'aId'   : analysis.pk,
+			'tId'   : capfac.technology.pk,
+			'sfId'  : capfac.timeslice.pk,
+			'id'    : capfac.pk,
+			'value' : capfac.value
+		})
+
 	TechInputSplit = defaultdict( list )
 	for isplit in Param_TechInputSplit.objects.filter(
 	  inp_commodity__analysis=analysis, technology__in=technologies ):
@@ -121,6 +135,7 @@ def get_technology_info ( analysis, technologies ):
 	    'aId'                : analysis.pk,
 	    'baseload'           : t in BaseloadTechs,
 	    'capacitytoactivity' : CapacityToActivity[ t ],
+	    'capacityfactors'    : CapacityFactors[ t ],
 	    'description'        : unicode( t.description ),
 	    'growthratelimit'    : GrowthRate[ t, 'ratelimit' ],
 	    'growthrateseed'     : GrowthRate[ t, 'seed' ],
@@ -310,6 +325,120 @@ def analysis_technology_update ( req, analysis_id, technology_id ):
 	res['Content-Length'] = len( data )
 
 	set_cookie( req, res )
+	return res
+
+
+## CapacityFactor #############################################################
+
+@require_login
+@require_POST
+@never_cache
+def analysis_technology_capacityfactor_new ( req, analysis_id, technology_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	tech = get_object_or_404( Technology, pk=technology_id )
+
+	# ensure technology exists in this analysis
+	process = get_list_or_404( Process, analysis=analysis, technology=tech )
+
+	status = 201  # Created
+	msgs = {}
+
+	print req.POST
+	cf = Param_CapacityFactorTech( technology=tech )
+	form = CapacityFactorTechForm( req.POST, instance=cf, analysis=analysis )
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+		for key in msgs.keys():  # .keys() -> complete list prior to iteration
+			msgs['CapacityFactorTechNew_' + key] = msgs.pop( key )
+
+	else:
+		try:
+			with transaction.atomic():
+				form.save()
+
+			msgs.update(
+			  aId   = analysis.pk,
+			  tId   = tech.pk,
+			  sfId  = cf.timeslice.pk,
+			  id    = cf.pk,
+			  value = cf.value,
+			)
+
+		except IntegrityError as e:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to create capacity factor.  It already exists!')
+			msgs.update({ 'General Error' : msg })
+		except ValidationError as e:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to create capacity factor.  Database said: {}')
+			msgs.update({ 'General Error' : msg.format( e ) })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+@require_login
+@require_POST
+@never_cache
+def analysis_technology_capacityfactor_update (
+  req, analysis_id, technology_id, cf_id
+):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	tech = get_object_or_404( Technology, pk=technology_id )
+	process = get_list_or_404( process, analysis=analysis, technology=tech )
+	cf = get_object_or_404( Param_CapacityFactorTech, technology=tech, pk=cf_id )
+
+	status = 200
+	msgs = {}
+
+	form = CapacityFactorTechForm( req.POST, instance=cf, analysis=analysis )
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+		if 'value' in msgs.keys():
+			msgs['CapacityFactorTech_{}'.format(cf.pk)] = msgs.pop( 'value' )
+
+	else:
+		try:
+			with transaction.atomic():
+				form.save()
+
+			msgs.update( value=cf.value )
+		except (IntegrityError, ValidationError) as e:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to complete update.  Database said: {}')
+			msgs.update({ 'General Error' : msg.format( e ) })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res, analysis_id=analysis_id )
+	return res
+
+
+@require_login
+@require_DELETE
+@never_cache
+def analysis_technology_capacityfactor_remove (
+  req, analysis_id, technology_id, cf_id
+):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	tech = get_object_or_404( Technology, pk=technology_id )
+	process = get_list_or_404( Process, analysis=analysis, technology=tech )
+	cf = get_object_or_404( Param_CapacityFactorTech, technology=tech, pk=cf_id )
+
+	cf.delete()
+
+	status = 204  # "No Content"
+	res = HttpResponse( '', status=status )
+
+	set_cookie( req, res );
 	return res
 
 

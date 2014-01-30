@@ -3,6 +3,8 @@ to_administrate = (
   'AnalysisCommodity',
   'Commodity',
   'CommodityType',
+  'Param_CapacityFactorProcess',
+  'Param_CapacityFactorTech',
   'Param_CapacityToActivity',
   'Param_CostFixed',
   'Param_CostVariable',

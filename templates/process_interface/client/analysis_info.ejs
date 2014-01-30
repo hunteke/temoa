@@ -4,6 +4,11 @@
 	<option value='<%= em.attr('name') %>'>
 <% }); %>
 </datalist>
+<datalist id='TimesliceList'>
+<% analysis.attr('segfracs').each( function ( sf ) { %>
+	<option value='<%= sf.attr('name') %>'>
+<% }); %>
+</datalist>
 
 <div class='analysis' <%= ($el) -> $el.data('analysis', analysis) %>>
 	<form onsubmit='return false;' id='AnalysisInfoForm_<%= analysis.attr('id') %>'>

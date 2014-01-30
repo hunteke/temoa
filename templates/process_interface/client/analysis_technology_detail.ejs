@@ -1,6 +1,7 @@
 <% var cssclass=['odd', 'even'], rcount; rcount = 0; // assignment outside of var statement
 if ( username && username === analysis.username ) { %>
 <form onsubmit='return false;' id='FormTechnology_<%= technology.attr('id') %>'></form>
+<form onsubmit='return false;' id='FormTechnologyCapacityFactors_<%= technology.attr('id') %>'></form>
 <form onsubmit='return false;' id='FormTechnologyInputSplits_<%= technology.attr('id') %>'></form>
 <form onsubmit='return false;' id='FormTechnologyOutputSplits_<%= technology.attr('id') %>'></form>
 <table class='technology' <%= ($el) -> $el.data('technology', technology) %>>
@@ -30,6 +31,28 @@ if ( username && username === analysis.username ) { %>
 		</tr><tr class='<%== cssclass[ ++rcount % 2 ] %>'>
 			<th><label for='TechnologyGrowthRateSeed_<%= technology.attr('id') %>'>Growth Rate Seed:</label></th>
 			<td><input form='FormTechnology_<%= technology.attr('id') %>' id='TechnologyGrowthRateSeed_<%= technology.attr('id') %>' type='number' name='growthrateseed' placeholder='min allowed' value='<%= technology.attr('growthrateseed') ? technology.attr('growthrateseed') : '' %>'><span class='error'></span></td>
+		</tr><tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<td colspan='2'>
+				<table class='innertable'>
+					<caption>Capacity Factor</caption>
+					<thead><tr><th><button type='button' class='add' name='AddCapacityFactorTech'>Add</button></th><th>Time Slice</th><th>Value</th></tr></thead>
+					<tbody>
+					<% technology.attr('capacityfactors').each( function ( capfac ) { %>
+						<tr <%= ($el) -> $el.data('capacityfactor', capfac) %>>
+							<% if ( capfac.isNew() ) { %>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CapacityFactorTechRemove'>Cancel</button></td>
+								<td><span class='error'></span><input form='FormTechnologyCapacityFactors_<%= technology.attr('id') %>' type='text'   class='techcapacityfactor_input' name='CapacityFactorTechNew_timeslice' autocomplete='off' list='TimesliceList'></td>
+								<td><span class='error'></span><input form='FormTechnologyCapacityFactors_<%= technology.attr('id') %>' type='number' class='techcapacityfactor_input' name='CapacityFactorTechNew_value'></td>
+							<% } else { %>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CapacityFactorTechRemove'>Del</button></td>
+								<td><%= capfac.attr('segfrac').name() %></td>
+								<td><span class='error'></span><input form='FormTechnologyCapacityFactors_<%= technology.attr('id') %>' type='number' class='techcapacityfactor_input' name='CapacityFactorTech_<%= capfac.attr('id') %>' value='<%= capfac.attr('value') %>'></td>
+							<% } %>
+						</tr>
+					<% }); %>
+					</tbody>
+				</table>
+			</td>
 		</tr><tr class='<%== cssclass[ ++rcount % 2 ] %>'>
 			<td colspan='2'>
 				<table class='innertable'>
