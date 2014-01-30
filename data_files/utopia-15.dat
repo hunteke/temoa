@@ -56,7 +56,6 @@ set  tech_storage  :=        # SET STG
 
 set  commodity_physical  :=        # SET ENT
  ethos   # "dummy commodity" to supply inputs (makes graph easier to read)
- CSV     # "conservation"
  DSL     # diesel
  ELC     # electricity
  FEQ     # "fossil equivalent"

@@ -136,7 +136,9 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.CapacityToActivity = Param( M.tech_all,  default=1 )
 
 	M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
-	M.Efficiency   = Param( M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier )
+	M.Efficiency = Param( M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier )
+
+	M.validate_UsedEfficiencyIndices = BuildAction( rule=CheckEfficiencyIndices )
 
 	M.CapacityFactor_sdtv = Set( dimen=4, initialize=CapacityFactorProcessIndices )
 	M.CapacityFactor_sdt  = Set( dimen=3, initialize=CapacityFactorTechIndices )

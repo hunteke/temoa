@@ -244,6 +244,38 @@ def validate_SegFrac ( M ):
 		raise TemoaValidationError( msg.format(items, total ))
 
 
+def CheckEfficiencyIndices ( M ):
+	"Ensure that there are no unused items in any of the Efficiency index sets."
+
+	c_physical = set( i for i, t, v, o in M.Efficiency.sparse_iterkeys() )
+	techs      = set( t for i, t, v, o in M.Efficiency.sparse_iterkeys() )
+	c_outputs  = set( o for i, t, v, o in M.Efficiency.sparse_iterkeys() )
+
+	symdiff = c_physical.symmetric_difference( M.commodity_physical )
+	if symdiff:
+		msg = ('Unused or unspecified physical carriers.  Either add or remove '
+		  'the following elements to the Set commodity_physical.'
+		  '\n\n    Element(s): {}')
+		symdiff = (str(i) for i in symdiff)
+		raise TemoaValidationError( msg.format( ', '.join(symdiff) ))
+
+	symdiff = techs.symmetric_difference( M.tech_all )
+	if symdiff:
+		msg = ('Unused or unspecified technologies.  Either add or remove '
+		  'the following technology(ies) to the tech_resource or '
+		  'tech_production Sets.\n\n    Technology(ies): {}')
+		symdiff = (str(i) for i in symdiff)
+		raise TemoaValidationError( msg.format( ', '.join(symdiff) ))
+
+	diff = M.commodity_demand - c_outputs
+	if diff:
+		msg = ('Unused or unspecified outputs.  Either add or remove the '
+		  'following elements to the commodity_demand Set.'
+		  '\n\n    Element(s): {}')
+		diff = (str(i) for i in diff)
+		raise TemoaValidationError( msg.format( ', '.join(diff) ))
+
+
 def CreateCapacityFactors ( M ):
 	# Steps
 	#  1. Collect all possible processes
