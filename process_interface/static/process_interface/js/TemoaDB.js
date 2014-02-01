@@ -3650,7 +3650,7 @@ function BeginTemoaDBApp ( ) {
 	new TechnologyList('#technology_list');
 	activeAnalysisList = new Analyses('#analysis_info');
 
-	$('#QuickFunction').click( function () {
+	$(document).bind('keyup', 'shift+space', function () {
 		var url = ROOT_URL + '/static/process_interface/js/QuickFunction.js';
 		url += '?_=' + new Date().getTime();
 		$.getScript( url )
@@ -3660,9 +3660,6 @@ function BeginTemoaDBApp ( ) {
 			console.log(  'Error information: ', error );
 			showStatus('Error reading quick function.  Typo?');
 		});
-	});
-	$(document).bind('keyup', 'shift+space', function ( ) {
-		$('#QuickFunction').trigger('click');
 	});
 
 	$(document).bind('keyup', 'ctrl+space', function () {
