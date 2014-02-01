@@ -473,7 +473,7 @@ param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
 		ci = 'param  CostInvest  :=\n {}\n\t;'.format( ci )
 
 	costfixed = Param_CostFixed.objects.filter(
-	  period__vintage__gt=analysis.period_0,
+	  period__vintage__gte=analysis.period_0,
 	  process_id__in=process_ids,
 	  value__gt=0
 	)
