@@ -890,9 +890,7 @@ class Param_CapacityFactorTech ( DM.Model ):
 			raise ValidationError( msg )
 
 		if abs(self.value) < epsilon or math.isnan( self.value ):
-			msg = ('Process efficiency must be greater than 0, or it is a '
-			  'useless entry.  Consider removing the efficiency instead of '
-			  'marking it 0.'
+			msg = ('CapacityFactorTech must be between 0 and 1.'
 			  '\nAttempted value: {}')
 			raise ValidationError( msg.format( self.value ))
 

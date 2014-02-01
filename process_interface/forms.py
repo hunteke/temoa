@@ -899,7 +899,7 @@ class CapacityFactorTechForm ( F.Form ):
 
 	def __init__( self, *args, **kwargs ):
 		self.capacityfactor = cf = kwargs.pop('instance')
-		self.analysis = analysis = kwargs.pop('analysis')
+		self.analysis = kwargs.pop('analysis')
 
 		super( CapacityFactorTechForm, self ).__init__( *args, **kwargs )
 
