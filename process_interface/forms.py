@@ -992,6 +992,105 @@ class CapacityFactorTechForm ( F.Form ):
 
 
 
+class CapacityFactorProcessForm ( F.Form ):
+	timeslice = F.RegexField( label=_('Timeslice'), regex=r'^[A-z_]\w*, *[A-z_]\w*$')
+	value   = F.FloatField( label=_('Factor') )
+
+	def __init__( self, *args, **kwargs ):
+		self.capacityfactor = cf = kwargs.pop('instance')
+		self.analysis = kwargs.pop('analysis')
+
+		super( CapacityFactorProcessForm, self ).__init__( *args, **kwargs )
+
+		if cf.pk:
+			# already exists; only allow updating value
+			del self.fields['timeslice']
+
+		else:
+			tslice_choices = self.getTimeslices()
+			self.fields['timeslice'].choices = tslice_choices
+
+			msg = 'Invalid timeslice (%(value)s).  Valid choices are: {}'
+			msg_choices = ', '.join( unicode(i[0]) for i in tslice_choices )
+			em = self.fields['timeslice'].error_messages
+			em['invalid_choice'] = _(msg.format( msg_choices ))
+
+
+	def getTimeslices ( self ):
+		tslices = Param_SegFrac.objects.filter( analysis=self.analysis )
+		tslices = ('{}, {}'.format( i.season, i.time_of_day ) for i in tslices )
+
+		# return a sorted set of (s, d) tuples for this analysis
+		return sorted(set( (ts, ts) for ts in tslices ))
+
+
+	def clean_timeslice ( self ):
+		# Because the UI is text-based rather than drop-down list, this field
+		# is a regex.  We /could/ limit by choices, but that would put undue
+		# burden on the user to correctly format the field.  Using the regex
+		# allows for a slightly more flexible input mechanism.
+
+		# Note also, that when this function is done, timeslice will not be a
+		# string but a Param_SegFrac object.
+		s, d = self.cleaned_data['timeslice'].split(',')
+		d = d.strip()
+
+		try:
+			tslice = Param_SegFrac.objects.get(
+			  analysis=self.analysis,
+			  season=s,
+			  time_of_day=d )
+		except ObjectDoesNotExist as e:
+			msg = 'Specified timeslice ({}, {}) does not exist in this analysis.'
+			raise F.ValidationError( msg.format( s, d ))
+
+		# note that it's now a Param_SegFrac _object_, not a string/num
+		return tslice
+
+
+	def clean_value ( self ):
+		epsilon = 1e-9
+		v = self.cleaned_data['value']
+
+		if v is None:
+			msg = ('Please specify a percentage.  To remove this capacity '
+			  'factor, push the "Shift" key and click on the corresponding red '
+			  'button.')
+			raise F.ValidationError( msg )
+
+		elif math.isnan( v ):
+			msg = ('Received NaN ("Not a Number").  Please specify a decimal '
+			  'value between 0 and 1.')
+			raise F.ValidationError( msg )
+
+		elif v < epsilon:
+			msg = ('Any number equal to or less than 0 (0%) is a useless or '
+			  'nonsensical entry.  Please either remove this row, or pick a '
+			  'value in the range (0, 1).')
+			raise F.ValidationError( msg )
+
+		elif v >= 1:
+			msg = ('Any number equal to or greater than 1 (100%) is a useless or '
+			  ' nonsensical entry.  Please either remove this row, or pick a '
+			  'value in the range (0, 1).')
+			raise F.ValidationError( msg )
+
+		return v
+
+
+	def save ( self ):
+		cf = self.capacityfactor
+		cd = self.cleaned_data
+
+		if 'timeslice' in cd:
+			cf.timeslice = cd[ 'timeslice' ]
+		if 'value' in cd:
+			cf.value = cd[ 'value' ]
+
+		cf.save()
+
+
+
 class TechInputSplitForm ( F.Form ):
 	inp   = F.ChoiceField( label=_('Input') )
 	value = F.FloatField( label=_('Percentage') )

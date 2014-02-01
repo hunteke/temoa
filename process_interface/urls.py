@@ -8,11 +8,6 @@ from views import (
   view,
   get_client_template,
 
-  process_list,
-  process_new,
-  process_update,
-  process_remove,
-
   analysis_list,
   analysis_info,
   analysis_update,
@@ -44,6 +39,15 @@ from views import (
   technology_create,
   technology_update,
   technology_remove,
+
+  process_list,
+  process_new,
+  process_update,
+  process_remove,
+
+  process_capacityfactor_new,
+  process_capacityfactor_update,
+  process_capacityfactor_remove,
 
   process_costfixed_new,
   process_costfixed_update,
@@ -123,6 +127,11 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/process/remove/(?P<process_id>(?:\d+,?)+)$', process_remove, name='process_remove' ),
   url(r'^analysis/(?P<analysis_id>\d+)/process/update/(?P<process_id>\d+)$', process_update, name='process_update'),
 
+# CapacityFactorProcess
+  url(r'^analysis/(?P<analysis_id>\d+)/process/(?P<process_id>\d+)/CapacityFactor/create$', process_capacityfactor_new ),
+  url(r'^analysis/(?P<analysis_id>\d+)/process/(?P<process_id>\d+)/CapacityFactor/update/(?P<cf_id>\d+)$', process_capacityfactor_update ),
+  url(r'^analysis/(?P<analysis_id>\d+)/process/(?P<process_id>\d+)/CapacityFactor/remove/(?P<cf_id>\d+)$', process_capacityfactor_remove ),
+
 # ProcessCostFixed
   url(r'^analysis/(?P<analysis_id>\d+)/process/(?P<process_id>\d+)/create/CostFixed$', process_costfixed_new, name='process_costfixed_new'),
   url(r'^analysis/(?P<analysis_id>\d+)/process/(?P<process_id>\d+)/update/CostFixed/(?P<costfixed_id>\d+)$', process_costfixed_update, name='process_costfixed_update'),
@@ -162,9 +171,9 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/delete/commodity/(?P<commodity_id>\d+)$', analysis_delete_commodity, name='analysis_delete_commodity' ),
 
 # CapacityFactorTech
-  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/create$', analysis_technology_capacityfactor_new, name='analysis_technology_inputsplit_new'),
-  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/update/(?P<cf_id>\d+)$', analysis_technology_capacityfactor_update, name='analysis_technology_inputsplit_update'),
-  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/remove/(?P<cf_id>\d+)$', analysis_technology_capacityfactor_remove, name='analysis_technology_inputsplit_remove'),
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/create$', analysis_technology_capacityfactor_new ),
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/update/(?P<cf_id>\d+)$', analysis_technology_capacityfactor_update ),
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/remove/(?P<cf_id>\d+)$', analysis_technology_capacityfactor_remove ),
 
 # TechInputSplit
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/InputSplit/create$', analysis_technology_inputsplit_new, name='analysis_technology_inputsplit_new'),

@@ -2162,6 +2162,7 @@ can.Model('Process', {
 		id: 'int',
 		aId: 'int',  // for updating, deleting (the urls)
 		technology:         'AnalysisTechnology.model',
+		capacityfactors:    'ProcessCapacityFactor.models',
 		costsfixed:         'ProcessCostFixed.models',
 		costsvariable:      'ProcessCostVariable.models',
 		efficiencies:       'ProcessEfficiency.models',
@@ -2171,6 +2172,32 @@ can.Model('Process', {
 	partialUpdate: function ( id, attr ) {
 		var url = ROOT_URL;
 		url += '/analysis/{aId}/process/update/{id}';
+		url = replaceNamedArgs( url, this.attr() );
+		return $.post( url, attr );
+	}
+});
+
+can.Model('ProcessCapacityFactor', {
+	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/CapacityFactor/create',
+	update:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/CapacityFactor/update/{id}',
+	destroy: function ( id ) {
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/process/{pId}/CapacityFactor/remove/{id}';
+		url = replaceNamedArgs( url, this.store[ id ].attr() );
+		return $.ajax({ type: 'DELETE', url: url });
+	},
+	attributes: {
+		aId:     'int',
+		pId:     'int',
+		id:      'int',
+		sfId:    'int',
+		segfrac: 'AnalysisSegFrac.model',
+		value:   'number',
+	}
+}, {
+	partialUpdate: function ( id, attr ) {
+		var url = ROOT_URL;
+		url += '/analysis/{aId}/process/{pId}/CapacityFactor/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
@@ -2305,6 +2332,12 @@ can.Control('ProcessList', {
 				control.technologies.attr( technologies[i].id, technologies[i] );
 			}
 
+			var _segFracs = {};  // use as map
+			for ( var i = 0; i < analysis.segfracs.length; ++i ) {
+				var sf = analysis.segfracs[ i ];
+				_segFracs[ sf.id ] = sf;
+			}
+
 			// Unfortunately, CanJS is not smart enough to automatically link up
 			// the various parts of the Temoa model.  Therefore we must do it
 			// manually.  This is a benefit because it means there is only one
@@ -2331,12 +2364,10 @@ can.Control('ProcessList', {
 						}
 					}
 				}
-			}
-
-			var _segFracs = {};  // use as map
-			for ( var i = 0; i < analysis.segfracs.length; ++i ) {
-				var sf = analysis.segfracs[ i ];
-				_segFracs[ sf.id ] = sf;
+				for ( var cfi = 0; cfi < p.capacityfactors.length; ++cfi ) {
+					var cf = p.capacityfactors[ cfi ];
+					cf.attr( 'segfrac', _segFracs[ cf.sfId ] );
+				}
 			}
 
 			for ( var i = 0; i < technologies.length; ++i ) {
@@ -2510,6 +2541,8 @@ can.Control('ProcessList', {
 		var technologies = this.technologies;
 		var tech = technologies.attr( obj.tId );
 
+		if ( ! new_process.capacityfactors )
+			new_process.attr('capacityfactors', new ProcessCapacityFactor.List() );
 		if ( ! new_process.costsfixed )
 			new_process.attr('costsfixed', new ProcessCostFixed.List() );
 		if ( ! new_process.costsvariable )
@@ -2575,6 +2608,13 @@ can.Control('ProcessList', {
 			$( sel ).replaceWith( $div );
 		}, 20 );
 	},
+	'{ProcessCapacityFactor} created': function ( list, ev, obj ) {
+		var segfracs = this.options.analysis.segfracs;
+		for ( var i = 0; i < segfracs.length; ++i ) {
+			if ( segfracs[ i ].id === obj.sfId )
+				obj.attr('segfrac', segfracs[ i ] );
+		}
+	},
 	'{ProcessCostFixed} created': function ( list, ev, obj ) {
 		var control = this;
 		var new_cf  = obj.real_model;
@@ -2584,7 +2624,7 @@ can.Control('ProcessList', {
 		// attached to the DOM.  Wrapper code like '<% if ... %>' does not appear
 		// to get reprocessed automatically.  So, replace the div in question.
 		setTimeout( function ( ) {
-			// necessary to do this work after a minor wait so that the new_ea
+			// necessary to do this work after a minor wait so that the new_cf
 			// has a chance to update itself.  e.g., the pId would otherwise be
 			// null.
 			var pId  = new_cf.pId;
@@ -2609,7 +2649,7 @@ can.Control('ProcessList', {
 		// attached to the DOM.  Wrapper code like '<% if ... %>' does not appear
 		// to get reprocessed automatically.  So, replace the div in question.
 		setTimeout( function ( ) {
-			// necessary to do this work after a minor wait so that the new_ea
+			// necessary to do this work after a minor wait so that the new_cv
 			// has a chance to update itself.  e.g., the pId would otherwise be
 			// null.
 			var pId  = new_cv.pId;
@@ -2640,6 +2680,8 @@ can.Control('ProcessDetail', {
 
 		var p = options.process;
 
+		if ( ! p.capacityfactors )
+			p.attr('capacityfactors', new ProcessCapacityFactor.List());
 		if ( ! p.costsfixed )
 			p.attr('costsfixed', new ProcessCostFixed.List());
 		if ( ! p.costsvariable )
@@ -2671,6 +2713,7 @@ can.Control('ProcessDetail', {
 	save: function ( $el ) {  // ProcessDetail
 		var errors = {}
 		  , $pForm   = null, pData   = null
+		  , $cfpForm = null, cfpData = null    // cfp = Capacity Factor Process
 		  , $cfForm  = null, cfData  = null
 		  , $cvForm  = null, cvData  = null
 		  , $effForm = null, effData = null
@@ -2685,6 +2728,7 @@ can.Control('ProcessDetail', {
 		if ( pId ) {
 			// i.e., process already exists in DB
 			$pForm   = $('#Process_' + pId);
+			$cfpForm = $('#ProcessCapacityFactors_' + pId);
 			$cfForm  = $('#ProcessCostsFixed_' + pId );
 			$cvForm  = $('#ProcessCostsVariable_' + pId );
 			$effForm = $('#ProcessEfficiencies_' + pId );
@@ -2698,6 +2742,8 @@ can.Control('ProcessDetail', {
 		// 1. Collect the data
 		if ( $pForm )
 			pData = can.deparam( $pForm.serialize() );
+		if ( $cfpForm )
+			cfpData = can.deparam( $cfpForm.serialize() );
 		if ( $cfForm )
 			cfData = can.deparam( $cfForm.serialize() );
 		if ( $cvForm )
@@ -2830,6 +2876,31 @@ can.Control('ProcessDetail', {
 				}
 			}
 
+			// Capacity Factor
+			var cfpNewTS  = $.trim(cfpData.CapacityFactorProcessNew_timeslice)
+			  , cfpNewVal = $.trim(cfpData.CapacityFactorProcessNew_value);
+			if ( cfpNewTS.length || cfpNewVal.length ) {
+				if ( ! (cfpNewTS.length && cfpNewVal.length) ) {
+					var msg = 'If you specify either field of a Capacity Factor, ';
+					msg += 'you need to fill out both fields.  If you would rather ';
+					msg += 'cancel, click anywhere outside of a field (so no ';
+					msg += 'fields have focus), and push Shift to display the red ';
+					msg += '"Cancel" button.';
+					errors['General Error'] = [msg];
+				}
+				if ( isNaN(Number(cfpNewVal)) ) {
+					var msg = 'Please specify a number.';
+					errors['CapacityFactorTechNew_value'] = [msg];
+				}
+				if ( ! cfpNewTS.match( /^[A-z_]\w*, *[A-z_]\w*$/ ) ) {
+					var msg = 'Invalid timeslice name.  If you are unsure of what ';
+					msg += 'to put here, press the up or down arrow keys while ';
+					msg += 'this field has focus (has the blinking cursor), and a ';
+					msg += 'list of options should appear.';
+					errors['CapacityFactorProcessNew_timeslice'] = [msg];
+				}
+			}
+
 			// CostFixed
 			var cfNewPer = $.trim(cfData.CostFixedNew_per)
 			  , cfNewVal = $.trim(cfData.CostFixedNew_value);
@@ -2887,6 +2958,22 @@ can.Control('ProcessDetail', {
 
 		// client side error checking complete.
 		check_for_save.push( [process, pData] );
+
+		for ( var name in cfpData ) {
+			var sel = '[name="' + name + '"]';
+			if ( name.match(/^CapacityFactorProcessNew/) ) {
+				if ( name.match( /_timeslice$/ ) ) {
+					var cf = $pTable.find( sel ).closest('tr').data('capacityfactor');
+					to_save.push( [cf, {
+					  timeslice: cfpData.CapacityFactorProcessNew_timeslice,
+					  value:     cfpData.CapacityFactorProcessNew_value,
+					}]);
+				}
+			} else if ( name.match(/^CapacityFactorProcess_\d+$/) ) {
+				var cf = $pTable.find( sel ).closest('tr').data('capacityfactor');
+				to_save.push( [cf, {value: cfpData[ name ]}] );
+			}
+		}
 
 		for ( var name in cfData ) {
 			var sel = '[name="' + name + '"]';
@@ -2998,10 +3085,12 @@ can.Control('ProcessDetail', {
 		$block.find('[name="existingcapacity"]').val( p.attr('existingcapacity') || '' );
 		$block.find('[name="costinvest"]').val( p.attr('costinvest') || '' );
 
+		var capfac = this.options.process.capacityfactors;
 		var cf = this.options.process.costsfixed;
 		var cv = this.options.process.costsvariable;
 		var e = this.options.process.efficiencies;
 		var ea = this.options.process.emissionactivities;
+		if ( capfac && capffac.length && capfac[0].isNew() ) capfac[0].destroy();
 		if ( cf && cf.length && cf[0].isNew() ) cf[0].destroy();
 		if ( cv && cv.length && cv[0].isNew() ) cv[0].destroy();
 		if ( e && e.length && e[0].isNew() ) e[0].destroy();
@@ -3017,6 +3106,18 @@ can.Control('ProcessDetail', {
 		if ( 13 === ev.keyCode ) { // 13 == enter
 			this.save( $(ev.target) );
 		}
+	},
+	'[name="AddCapacityFactorProcess"] click': function ( $el, ev ) {  // ProcessDetail
+		var cf_list = this.options.process.capacityfactors;
+		if ( cf_list && cf_list.length && cf_list[0].isNew() ) {
+			// only one new process at a time.
+			return;
+		}
+
+		var tOpts = this.options;
+		var opts = { aId: tOpts.analysis.id, pId: tOpts.process.id };
+		var newCapacityFactor = new ProcessCapacityFactor( opts );
+		cf_list.unshift( newCapacityFactor );
 	},
 	'[name="AddCostFixed"] click': function ( $el, ev ) {  // ProcessDetail
 		var cf_list = this.options.process.costsfixed;
@@ -3065,6 +3166,9 @@ can.Control('ProcessDetail', {
 		var opts = { aId: tOpts.analysis.id, pId: tOpts.process.id };
 		var newEma = new ProcessEmissionActivity( opts );
 		ea_list.unshift( newEma );
+	},
+	'[name="CapacityFactorProcessRemove"] click': function ( $el, ev ) { // ProcessDetail
+		$el.closest( 'tr' ).data('capacityfactor').destroy();
 	},
 	'[name="CostFixedRemove"] click': function ( $el, ev ) { // ProcessDetail
 		$el.closest( 'tr' ).data('costfixed').destroy();
@@ -3439,7 +3543,7 @@ can.Control('AnalysisTechnologyDetail', {
 			if ( segfracs[ i ].id === obj.sfId )
 				obj.attr('segfrac', segfracs[ i ] );
 		}
-	}
+	},
 });
 
 

@@ -13,6 +13,7 @@ from decorators.auth import require_login
 
 from models import (
   Analysis,
+  Param_CapacityFactorProcess,
   Param_CostFixed,
   Param_CostVariable,
   Param_Efficiency,
@@ -25,10 +26,11 @@ from models import (
 )
 
 from forms import (
-	ProcessForm,
-	CostForm, # handles both CostFixed and CostVariable
-	EfficiencyForm,
-	EmissionActivityForm,
+  ProcessForm,
+  CapacityFactorProcessForm,
+  CostForm, # handles both CostFixed and CostVariable
+  EfficiencyForm,
+  EmissionActivityForm,
 )
 from view_helpers import set_cookie
 from views_technology import get_technology_info
@@ -76,6 +78,17 @@ def get_process_info ( processes ):
 		  'value'     : ea.value
 		})
 
+	CapacityFactors = defaultdict( list )
+	for capfac in Param_CapacityFactorProcess.objects.filter(
+	  timeslice__analysis=analysis, process__in=processes ):
+		CapacityFactors[ capfac.process ].append({
+			'aId'   : analysis.pk,
+			'pId'   : capfac.process.pk,
+			'sfId'  : capfac.timeslice.pk,
+			'id'    : capfac.pk,
+			'value' : capfac.value
+		})
+
 	CostFixed = defaultdict( list )
 	for cf in Param_CostFixed.objects.filter(
 	  process__in=processes ).select_related(
@@ -108,6 +121,7 @@ def get_process_info ( processes ):
 	    'aId'                : analysis.pk, # needed for URL construction
 	    'id'                 : p.pk,
 	    'costinvest'         : p.costinvest,
+	    'capacityfactors'    : CapacityFactors[ p ],
 	    'costsfixed'         : CostFixed[ p ],
 	    'costsvariable'      : CostVariable[ p ],
 	    'discountrate'       : p.discountrate,
@@ -237,6 +251,112 @@ def process_remove ( req, analysis_id, process_id ):
 	res = HttpResponse( '', status=status )
 	set_cookie( req, res );
 
+	return res
+
+
+## CapacityFactor #############################################################
+
+@require_login
+@require_POST
+@never_cache
+def process_capacityfactor_new ( req, analysis_id, process_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	process = get_object_or_404( Process, pk=process_id, analysis=analysis )
+
+	status = 201  # Created
+	msgs = {}
+
+	cf = Param_CapacityFactorProcess( process=process )
+	form = CapacityFactorProcessForm( req.POST, instance=cf, analysis=analysis )
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+		for key in msgs.keys():  # .keys() -> complete list prior to iteration
+			msgs['CapacityFactorProcessNew_' + key] = msgs.pop( key )
+
+	else:
+		try:
+			with transaction.atomic():
+				form.save()
+
+			msgs.update(
+			  aId   = analysis.pk,
+			  pId   = process.pk,
+			  sfId  = cf.timeslice.pk,
+			  id    = cf.pk,
+			  value = cf.value,
+			)
+
+		except IntegrityError as e:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to create capacity factor.  It already exists!')
+			msgs.update({ 'General Error' : msg })
+		except ValidationError as e:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to create capacity factor.  Database said: {}')
+			msgs.update({ 'General Error' : msg.format( e ) })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+@require_login
+@require_POST
+@never_cache
+def process_capacityfactor_update ( req, analysis_id, process_id, cf_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	process = get_object_or_404( Process, pk=process_id, analysis=analysis )
+	cf = get_object_or_404( Param_CapacityFactorProcess,
+	  process=process, pk=cf_id )
+
+	status = 200
+	msgs = {}
+
+	form = CapacityFactorProcessForm( req.POST, instance=cf, analysis=analysis )
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+		if 'value' in msgs.keys():
+			msgs['CapacityFactorProcess_{}'.format(cf.pk)] = msgs.pop( 'value' )
+
+	else:
+		try:
+			with transaction.atomic():
+				form.save()
+
+			msgs.update( value=cf.value )
+		except (IntegrityError, ValidationError) as e:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to complete update.  Database said: {}')
+			msgs.update({ 'General Error' : msg.format( e ) })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res, analysis_id=analysis_id )
+	return res
+
+
+@require_login
+@require_DELETE
+@never_cache
+def process_capacityfactor_remove ( req, analysis_id, process_id, cf_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	process = get_object_or_404( Process, pk=process_id, analysis=analysis )
+	cf = get_object_or_404( Param_CapacityFactorProcess,
+	  process=process, pk=cf_id )
+
+	cf.delete()
+
+	status = 204  # "No Content"
+	res = HttpResponse( '', status=status )
+
+	set_cookie( req, res );
 	return res
 
 

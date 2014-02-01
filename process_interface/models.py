@@ -927,29 +927,15 @@ class Param_CapacityFactorProcess ( DM.Model ):
 	def save ( self ):
 		epsilon = 1e-9   # something really small
 
-		if self.inp_commodity.commodity_type.name != 'physical':
-			msg = 'CapacityFactorProcess input commodity must be of type "physical".'
+		if self.timeslice.analysis != self.process.analysis:
+			msg = ('Inconsistent analyses!  CapacityFactorProcess timeslice and '
+			  'process reference different analyses.')
 			raise ValidationError( msg )
 
-		if self.out_commodity.commodity_type.name not in ('demand', 'physical'):
-			msg = ('CapacityFactor output commodity must be of type "demand" or '
-			  '"physical".')
-			raise ValidationError( msg )
-
-		if abs(self.value) < epsilon or math.isnan( self.value ):
-			msg = ('Process efficiency must not be 0, or it is a useless entry.  '
-			  'Consider removing the efficiency instead of marking it 0.'
+		if math.isnan( self.value ) or not ( 0 < self.value and self.value <= 1):
+			msg = ('CapacityFactorProcess must be between 0 and 1.'
 			  '\nAttempted value: {}')
 			raise ValidationError( msg.format( self.value ))
-
-		inp_analysis = self.inp_commodity.analysis
-		analysis = self.process.analysis
-		out_analysis = self.out_commodity.analysis
-		if inp_analysis != analysis or analysis != out_analysis:
-			msg = ('Inconsistent analyses!  (input, process, output) analyses '
-			  'passed: {}, {}, {}')
-			raise ValidationError( msg.format(
-			  inp_analysis, analysis, out_analysis ))
 
 		super( Param_CapacityFactorProcess, self).save()
 

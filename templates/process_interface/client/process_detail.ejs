@@ -20,6 +20,7 @@ if ( username && process.isNew() ) { %>
 </datalist>
 
 <form onsubmit='return false;' id='Process_<%= process.attr('id') %>'></form>
+<form onsubmit='return false;' id='ProcessCapacityFactors_<%= process.attr('id') %>'></form>
 <form onsubmit='return false;' id='ProcessCostsFixed_<%= process.attr('id') %>'></form>
 <form onsubmit='return false;' id='ProcessCostsVariable_<%= process.attr('id') %>'></form>
 <form onsubmit='return false;' id='ProcessEfficiencies_<%= process.attr('id') %>'></form>
@@ -95,6 +96,28 @@ if ( username && process.isNew() ) { %>
 								<td><%= ea.attr('pollutant') %></td>
 								<td><%= ea.attr('efficiency').attr('inp') %> &rarr; <%= ea.attr('efficiency').attr('out') %></td>
 								<td><span class='error'></span><input form='ProcessEmissionActivities_<%= process.attr('id') %>' type='number' class='emissionactivity_input' name='EmissionActivity_<%= ea.attr('id') %>' value='<%= ea.attr('value') %>'></td>
+							<% } %>
+						</tr>
+					<% }); %>
+					</tbody>
+				</table>
+			</td>
+		</tr><tr class='<%== cssclass[ ++rcount % 2 ] %>'>
+			<td colspan='2'>
+				<table class='innertable'>
+					<caption>Capacity Factor</caption>
+					<thead><tr><th><button type='button' class='add' name='AddCapacityFactorProcess'>Add</button></th><th>Time Slice</th><th>Value</th></tr></thead>
+					<tbody>
+					<% process.attr('capacityfactors').each( function ( capfac ) { %>
+						<tr <%= ($el) -> $el.data('capacityfactor', capfac) %>>
+							<% if ( capfac.isNew() ) { %>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CapacityFactorProcessRemove'>Cancel</button></td>
+								<td><span class='error'></span><input form='ProcessCapacityFactors_<%= process.attr('id') %>' type='text'   class='processcapacityfactor_input' name='CapacityFactorProcessNew_timeslice' autocomplete='off' list='TimesliceList'></td>
+								<td><span class='error'></span><input form='ProcessCapacityFactors_<%= process.attr('id') %>' type='number' class='processcapacityfactor_input' name='CapacityFactorProcessNew_value'></td>
+							<% } else { %>
+								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CapacityFactorProcessRemove'>Del</button></td>
+								<td><%= capfac.attr('segfrac').name() %></td>
+								<td><span class='error'></span><input form='ProcessCapacityFactors_<%= process.attr('id') %>' type='number' class='processcapacityfactor_input' name='CapacityFactorProcess_<%= capfac.attr('id') %>' value='<%= capfac.attr('value') %>'></td>
 							<% } %>
 						</tr>
 					<% }); %>
