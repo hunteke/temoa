@@ -2712,7 +2712,10 @@ can.Control('ProcessDetail', {
 		  , check_for_save = new Array()
 		  , to_save = new Array();
 		var $pTable = $el.closest('.process');
-		var $inputs = $pTable.find(':input');
+
+		// don't collect any inputs that might be disabled for other reasons
+		// (like the delete buttons)
+		var $inputs = $pTable.find(':input').not('[disabled="disabled"]');
 		var process = $pTable.data('process');
 		var pId = process.attr('id');
 
@@ -3235,7 +3238,10 @@ can.Control('AnalysisTechnologyDetail', {
 		  , $osForm = null, osData = null
 		  , to_save = new Array();
 		var $tTable = $el.closest('.technology');
-		var $inputs = $tTable.find(':input');
+
+		// don't collect any inputs that might be disabled for other reasons
+		// (like the delete buttons)
+		var $inputs = $tTable.find(':input').not('[disabled="disabled"]');
 		var tech = $tTable.data('technology');
 		var tId = tech.attr('id');
 
