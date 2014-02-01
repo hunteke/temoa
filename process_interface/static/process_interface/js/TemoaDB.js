@@ -1432,7 +1432,6 @@ can.Control('AnalysisParameters', {
 		save_to_server({ to_save: to_save, inputs: $inputs, display: $sfTable });
 	},
 	saveDemands: function ( $el ) {  // AnalysisParameters
-		console.log( 'Saving demands.');
 		var aId = this.analysis.id;
 		var errors  = {};
 		var to_save = new Array();
@@ -1469,8 +1468,6 @@ can.Control('AnalysisParameters', {
 		}
 
 		for ( var name in data ) {
-			console.log( 'data[' + name + '] = ', data[ name ] );
-
 			if ( ! name.match( demand_name_re ) )
 				continue;
 
@@ -1491,7 +1488,6 @@ can.Control('AnalysisParameters', {
 		for ( var i = 0; i < to_remove.length; ++i ) {
 			var dem = to_remove[i][0];
 			dem._sel = to_remove[i][1];
-			console.log( 'REMOVE: ', to_remove[i]);
 
 			dem.destroy( function ( destroyed_model ) {
 				// Succeeded.  Now kill id and value locally.  Accordingly, there
@@ -1499,9 +1495,6 @@ can.Control('AnalysisParameters', {
 				this.attr({id: null, value: null});
 
 				var $el = $('.demands ' + this.sel);
-				console.log( 'Animate? ', sel, $el );
-				//this._el.animate({backgroundColor: '#dd0'
-				//      }).animate({backgroundColor: 'transparent'});
 				delete this.sel;
 			}, function ( jqXHR, text_status, description ) {
 				this._el.animate({backgroundColor: '#f00'
@@ -1532,8 +1525,6 @@ can.Control('AnalysisParameters', {
 		var $dsdTable = $el.closest('.demandspecificdistributions');
 		var $inputs = $dsdTable.find(':input').not("[disabled='disabled']");
 		var data = can.deparam( $form.serialize() );
-
-		console.log( 'DSD Data: ', data );
 
 		$dsdTable.find('.error').empty(); // remove any previous attempt's errors
 		disable( $inputs );
