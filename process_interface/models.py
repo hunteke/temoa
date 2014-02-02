@@ -499,6 +499,7 @@ class PeriodCostParameter ( DM.Model ):
 	class Meta:
 		abstract = True
 		unique_together = ('period', 'process')
+		ordering = ('process__technology', 'process__vintage', 'period')
 
 
 	def __unicode__ ( self ):
@@ -519,7 +520,8 @@ class PeriodCostParameter ( DM.Model ):
 		p   = self.process
 		val = self.value
 
-		if val == 0:
+		epsilon = 1e-9
+		if abs(val) < epsilon and -abs(val) > -epsilon:
 			msg = ('Cost must not be 0, or it is a useless entry.  Consider '
 			  'removing the row instead of marking it 0.')
 			raise ValidationError( msg )
@@ -917,7 +919,7 @@ class Param_CapacityFactorProcess ( DM.Model ):
 	def __unicode__ ( self ):
 		a = self.process_id and self.process.analysis or 'NoAnalysis'
 		s = self.timeslice.season if self.timeslice_id else 'NoSegFrac'
-		d = self.timeslice.time_if_day if self.timeslice_id else 'NoSegFrac'
+		d = self.timeslice.time_of_day if self.timeslice_id else 'NoSegFrac'
 		t = self.process_id and self.process.technology or 'NoProcess'
 		v = self.process_id and self.process.vintage.vintage or 'NoProcess'
 
