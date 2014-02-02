@@ -13,6 +13,7 @@ from IPython import embed as II
 from models import (
   Analysis,
   Param_CapacityFactorTech,
+  Param_CapacityFactorProcess,
   Param_CapacityToActivity,
   Param_CostFixed,
   Param_CostVariable,
@@ -108,7 +109,7 @@ param  GlobalDiscountRate  :=  {gdr} ;
 
 {capacityfactortech}
 
-param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
+{capacityfactorprocess}
 
 {costinvest}
 
@@ -135,6 +136,7 @@ param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
 {growthratemax}
 
 {growthrateseed}
+
 """
 
 	twrapper = TextWrapper(
@@ -442,7 +444,39 @@ param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
 			lines[ i ] = fmt.format( *s )
 
 		cftech = '\n '.join( lines )
-		cftech = 'param  CapacityToActivity  :=\n {}\n\t;'.format( cftech )
+		cftech = 'param  CapacityFactorTech  :=\n {}\n\t;'.format( cftech )
+
+	capfacprocess = Param_CapacityFactorProcess.objects.filter(
+	  timeslice__analysis=analysis,
+	  process__in=processes  # make sure process is actually used
+	)
+
+	cfprocess = '# param CapacityFactorProcess := ... ;   # None specified in DB'
+	if capfacprocess:
+		lines = [ [
+		    cfp.timeslice.season,
+		    cfp.timeslice.time_of_day,
+		    cfp.process.technology.name,
+		    str(cfp.process.vintage.vintage),
+		    str(int( cfp.value )),
+		    str(cfp.value - int(cfp.value))[1:]
+		  ]
+		  for cfp in capfacprocess
+		]
+		lines.sort( key=itemgetter(2, 3, 0, 1) )
+
+		maxlen_s   = max(map(len, (i[0] for i in lines) ))
+		maxlen_d   = max(map(len, (i[1] for i in lines) ))
+		maxlen_t   = max(map(len, (i[2] for i in lines) ))
+		maxlen_v   = max(map(len, (i[3] for i in lines) ))
+		maxlen_int = max(map(len, (i[4] for i in lines) ))
+		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
+		fmt = fmt.format( maxlen_s, maxlen_d, maxlen_t, maxlen_v, maxlen_int )
+		for i, s in enumerate( lines ):
+			lines[ i ] = fmt.format( *s )
+
+		cfprocess = '\n '.join( lines )
+		cfprocess = 'param  CapacityFactorProcess  :=\n {}\n\t;'.format( cfprocess )
 
 	costinvest = Process.objects.filter(
 	  id__in=process_ids,
@@ -480,7 +514,7 @@ param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
 
 	cf = '# param CostFixed := ... ;   # None specified in DB'
 	if costfixed:
-		lines = sorted( [
+		lines = [ [
 		    str(i.period.vintage),
 		    i.process.technology.name,
 		    str(i.process.vintage.vintage),
@@ -488,7 +522,8 @@ param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
 		    str(i.value - int(i.value))[1:],
 		  ]
 		  for i in costfixed
-		)
+		]
+		lines.sort( key=itemgetter(1, 2, 0) )
 
 		maxlen_p   = max(map(len, (i[0] for i in lines) ))
 		maxlen_t   = max(map(len, (i[1] for i in lines) ))
@@ -503,14 +538,14 @@ param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
 		cf = 'param  CostFixed  :=\n {}\n\t;'.format( cf )
 
 	costvariable = Param_CostVariable.objects.filter(
+	  period__vintage__gte=analysis.period_0,
 	  process_id__in=process_ids,
-	  period__vintage__gt=analysis.period_0,
 	  value__gt=0
 	)
 
 	cv = '# param CostVariable := ... ;   # None specified in DB'
 	if costvariable:
-		lines = sorted( [
+		lines = [ [
 		    str(i.period.vintage),
 		    i.process.technology.name,
 		    str(i.process.vintage.vintage),
@@ -518,7 +553,8 @@ param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
 		    str(i.value - int(i.value))[1:],
 		  ]
 		  for i in costvariable
-		)
+		]
+		lines.sort( key=itemgetter(1, 2, 0) )
 
 		maxlen_p   = max(map(len, (i[0] for i in lines) ))
 		maxlen_t   = max(map(len, (i[1] for i in lines) ))
@@ -597,7 +633,7 @@ param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
 		    str(int(tll.value)),
 		    str(tll.value - int(tll.value))[1:],
 		  ]
-		  for tll in tech_life
+		  for tll in tech_loanlife
 		)
 
 		maxlen_t   = max(map(len, (i[0] for i in lines) ))
@@ -818,7 +854,8 @@ param  CapacityFactorProcess  := ... ;   NOT YET IMPLEMENTED IN DB FRONTEND
 		emissionactivity = ems,
 		existingcapacity = ecap,
 		capacitytoactivity = c2a,
-		capacityfactortech = cftech,
+		capacityfactortech    = cftech,
+		capacityfactorprocess = cfprocess,
 		costinvest   = ci,
 		costfixed    = cf,
 		costvariable = cv,
