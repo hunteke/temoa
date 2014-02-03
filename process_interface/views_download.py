@@ -8,8 +8,6 @@ from django.views.decorators.cache import never_cache
 
 from decorators.http import require_GET
 
-from IPython import embed as II
-
 from models import (
   Analysis,
   Param_CapacityFactorTech,
