@@ -42,8 +42,7 @@ annual discount factor to calculate the discounted cost in year
      \left [
              IC_{t, v}
        \cdot LA_{t, v}
-       \cdot {\sum_{y = v - P_0}^{v - P_0 + MLL_{t, v}}
-                 \left ( \frac{1}{(1 + GDR)^y} \right ) }
+       \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-{MLL}_{t, v}})}{GDR}
      \right ]
      \cdot \textbf{CAP}_{t, v}
      \right )
@@ -52,8 +51,7 @@ annual discount factor to calculate the discounted cost in year
    C_{fixed} & = \sum_{p, t, v \in \Theta_{FC}} \left (
      \left [
              FC_{p, t, v}
-       \cdot {\sum_{y = v - P_0}^{v - P_0 + TPL_{t, v}}
-                 \left ( \frac{1}{(1 + GDR)^y} \right ) }
+       \cdot \frac{(1 + GDR)^{P_0 - p +1} \cdot (1 - (1 + GDR)^{-{MLL}_{t, v}})}{GDR}
      \right ]
      \cdot \textbf{CAP}_{t, v}
      \right )
@@ -82,16 +80,16 @@ Temoa optimizes only a single characteristic year within each period.
 def PeriodCost_rule ( M, p ):
 	P_0 = min( M.time_optimize )
 	GDR = value( M.GlobalDiscountRate )
+	MLL = M.ModelLoanLife
+	MPL = M.ModelProcessLife
+	x   = 1 + GDR    # convenience variable, nothing more.
 
 	loan_costs = sum(
 	    M.V_Capacity[S_t, S_v]
 	  * (
 	      value( M.CostInvest[S_t, S_v] )
 	    * value( M.LoanAnnualize[S_t, S_v] )
-	    * sum( (1 + GDR) ** -y
-	        for y in range( S_v - P_0,
-	                        S_v - P_0 + value( M.ModelLoanLife[S_t, S_v] ))
-	      )
+	    * (x **(P_0 - S_v + 1) * (1 - x **(-value( MLL[S_t, S_v] ))) / GDR)
 	  )
 
 	  for S_t, S_v in M.CostInvest.sparse_iterkeys()
@@ -102,10 +100,7 @@ def PeriodCost_rule ( M, p ):
 	    M.V_Capacity[S_t, S_v]
 	  * (
 	      value( M.CostFixed[p, S_t, S_v] )
-	    * sum( (1 + GDR) ** -y
-	        for y in range( p - P_0,
-	                        p - P_0 + value( M.ModelProcessLife[p, S_t, S_v] ))
-	      )
+	    * (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, S_t, S_v] ))) / GDR)
 	    )
 
 	  for S_p, S_t, S_v in M.CostFixed.sparse_iterkeys()
