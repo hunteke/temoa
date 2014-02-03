@@ -313,6 +313,11 @@ class ProcessForm ( F.Form ):
 			else:
 				del self.fields['existingcapacity']
 
+		# ensure that we don't remove fields user did not change.
+		for fname in self.fields:
+			if fname not in self.data and fname in self.fields:
+				del self.fields[ fname ]
+
 
 	def clean_name ( self ):
 		cd = self.cleaned_data
