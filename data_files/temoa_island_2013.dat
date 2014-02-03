@@ -8,7 +8,6 @@ set  time_season  :=  winter  summer  intermediate ;
 set  time_of_day  :=  day  night ;
 
 set  tech_resource  :=
- imp_biomass
  imp_coal
  imp_ethanol
  imp_geo
@@ -96,7 +95,6 @@ set  commodity_physical  :=
  geo
  solar
 
- biofuel
  gasoline
  natgas
  oil
@@ -324,7 +322,6 @@ param  Demand  :=
 
 param  LifetimeTech  :=
 # tech_all,         value (years)
- imp_biomass         5
  imp_coal            5
  imp_ethanol         5
  imp_geo             5
@@ -907,16 +904,6 @@ param  CostFixedVintageDefault  :=
 param  CostVariableVintageDefault  :=
 # tech_all,        vintage_all,       cost
 
- imp_biomass                        2010                3.4     # M $/PJ
- imp_biomass                        2015                3.4     # M $/PJ
- imp_biomass                        2020                3.4     # M $/PJ
- imp_biomass                        2025                3.4     # M $/PJ
- imp_biomass                        2030                3.4     # M $/PJ
- imp_biomass                        2035                3.4     # M $/PJ
- imp_biomass                        2040                3.4     # M $/PJ
- imp_biomass                        2045                3.4     # M $/PJ
- imp_biomass                        2050                3.4     # M $/PJ
-
  imp_coal                           2010                3.1     # M $/PJ
  imp_coal                           2015                3.1     # M $/PJ
  imp_coal                           2020                3.1     # M $/PJ
@@ -1366,16 +1353,6 @@ param  Efficiency  :=
  resource         dom_wind        2040           wind               1
  resource         dom_wind        2045           wind               1
  resource         dom_wind        2050           wind               1
-
- resource         imp_biomass     2010           biofuel            1
- resource         imp_biomass     2015           biofuel            1
- resource         imp_biomass     2020           biofuel            1
- resource         imp_biomass     2025           biofuel            1
- resource         imp_biomass     2030           biofuel            1
- resource         imp_biomass     2035           biofuel            1
- resource         imp_biomass     2040           biofuel            1
- resource         imp_biomass     2045           biofuel            1
- resource         imp_biomass     2050           biofuel            1
 
  resource         imp_coal        2010           coal               1
  resource         imp_coal        2015           coal               1
