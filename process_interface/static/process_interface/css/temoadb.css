@@ -1,4 +1,4 @@
-/* @import url(http://fonts.googleapis.com/css?family=Ubuntu:400,500,700|Ubuntu+Mono:400,700) ; */
+@import url(http://fonts.googleapis.com/css?family=Ubuntu:400,500,700|Ubuntu+Mono:400,700) ;
 
 html { height: 100% ; background: #eee ; padding: 0 ; margin: 0 ; font-family: 'Ubuntu', sans-serif ; font-size: 12pt ; }
 
@@ -98,7 +98,7 @@ body { height: 100% ; margin: 1em ; }
 	color: transparent ;
 	border: none ;
 	font-weight: bold ;
-	background-image: url('/static/process_interface/icons/blue_list_add.svg') ;
+	background-image: url('../icons/blue_list_add.svg') ;
 	background-size: 25px 25px ;
 	height: 25px ;
 }
@@ -114,7 +114,7 @@ body { height: 100% ; margin: 1em ; }
 	border: none ;
 	font-weight: bold ;
 	background-size: 38px 12px ;
-	background-image: url('/static/process_interface/icons/gray_list_remove.svg') ;
+	background-image: url('../icons/gray_list_remove.svg') ;
 	height: auto;
 }
 .items button.remove, .items button.cancel {
@@ -126,7 +126,7 @@ body { height: 100% ; margin: 1em ; }
 	color: transparent ;
 	border: none ;
 	font-weight: bold ;
-	background-image: url('/static/process_interface/icons/red_list_remove.svg') ;
+	background-image: url('../icons/red_list_remove.svg') ;
 	background-size: 38px 12px ;
 	height: auto ;
 }
@@ -173,8 +173,8 @@ input.show[type='submit'] { display: inline ; width: auto ; height: auto ; }
 
 tr.even td, tr.odd td { background-size: auto 100% ; background-repeat: no-repeat ; background-origin: content-box ; background-position: center ; }
 
-.is_member     { background-image: url('/static/process_interface/icons/white_on_green_checkmark.svg') ; }
-.is_not_member { background-image: url('/static/process_interface/icons/x_mark.svg') ; }
+.is_member     { background-image: url('../icons/white_on_green_checkmark.svg') ; }
+.is_not_member { background-image: url('../icons/x_mark.svg') ; }
 
 .textcenter { text-align: center ; }
 .clear { clear: both ; }
