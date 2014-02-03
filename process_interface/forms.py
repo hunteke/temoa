@@ -582,34 +582,21 @@ class EmissionActivityForm ( F.Form ):
 
 		self.emissionactivity = ema
 		self.process = process
-		analysis = process.analysis
 		if ema.pk:
 			# already exists; only allow updating value
 			del self.fields['pol'], self.fields['eff']
 		else:
-			pol_choices = EmissionActivityForm.getPollutantChoices( analysis )
+			pol_choices = self.getPollutantChoices()
 			self.fields['pol'].choices = pol_choices
 
 
-	@classmethod
-	def getPollutantChoices ( cls, analysis ):
+	def getPollutantChoices ( self ):
+		analysis = self.process.analysis
 		ctype = CommodityType.objects.get( name='emission' )
-		return [ (ce.commodity.name, ce.commodity.name)
+		return list(set( (ce.commodity.name, ce.commodity.name)
 		  for ce in AnalysisCommodity.objects.filter(
 		    analysis=analysis, commodity_type=ctype )
-		]
-
-
-	@classmethod
-	def getEfficiencyChoices ( cls, process ):
-		choices = []
-		for eff in Param_Efficiency.objects.filter( process=process ):
-			inp = eff.inp_commodity.commodity.name
-			out = eff.out_commodity.commodity.name
-			choice = '{}, {}'.format( inp, out )
-			choices.append( (choice, choice) )
-
-		return choices
+		))
 
 
 	def clean_value ( self ):
@@ -695,7 +682,7 @@ class CostForm ( F.Form ):
 			del self.fields['per']
 
 		else:
-			per_choices = CostForm.getPeriodChoices( cost.process )
+			per_choices = self.getPeriodChoices()
 			self.fields['per'].choices = per_choices
 
 			msg = 'Invalid period (%(value)s).  Valid periods are: {}'
@@ -704,9 +691,8 @@ class CostForm ( F.Form ):
 			em['invalid_choice'] = _(msg.format( pers ))
 
 
-	@classmethod
-	def getPeriodChoices ( cls, process ):
-		p    = process
+	def getPeriodChoices ( self ):
+		p    = self.cost.process
 		v    = p.vintage.vintage    # cannot be null
 		a    = p.analysis           # cannot be null
 		life = p.lifetime           # /could/ be null,
@@ -743,7 +729,6 @@ class CostForm ( F.Form ):
 	def save ( self ):
 		cost = self.cost
 		cd = self.cleaned_data
-
 
 		if 'per' in cd:
 			cost.period = cd[ 'per' ]
@@ -1110,7 +1095,7 @@ class TechInputSplitForm ( F.Form ):
 			del self.fields['inp']
 
 		else:
-			inp_choices = TechInputSplitForm.getInputChoices( analysis )
+			inp_choices = self.getInputChoices()
 			self.fields['inp'].choices = inp_choices
 
 			msg = 'Invalid input commodity (%(value)s).  Valid choices are: {}'
@@ -1119,10 +1104,10 @@ class TechInputSplitForm ( F.Form ):
 			em['invalid_choice'] = _(msg.format( pers ))
 
 
-	@classmethod
-	def getInputChoices ( cls, analysis ):
+	def getInputChoices ( self ):
 		inps = AnalysisCommodity.objects.filter(
-		  analysis=analysis, commodity_type__name='physical' )
+		  analysis=self.analysis,
+		  commodity_type__name='physical' )
 		return sorted(
 		  set(( ac.commodity.name, ac.commodity.name) for ac in inps )
 		)
@@ -1189,16 +1174,16 @@ class TechOutputSplitForm ( F.Form ):
 	value = F.FloatField( label=_('Percentage') )
 
 	def __init__( self, *args, **kwargs ):
-		self.techoutputsplit = ois = kwargs.pop('instance')
+		self.techoutputsplit = tos = kwargs.pop('instance')
 		self.analysis = analysis = kwargs.pop('analysis')
 
 		super( TechOutputSplitForm, self ).__init__( *args, **kwargs )
 
-		if ois.pk:
+		if tos.pk:
 			del self.fields['out']
 
 		else:
-			out_choices = TechOutputSplitForm.getOutputChoices( analysis )
+			out_choices = self.getOutputChoices()
 			self.fields['out'].choices = out_choices
 
 			msg = 'Invalid output commodity (%(value)s).  Valid choices are: {}'
@@ -1207,10 +1192,10 @@ class TechOutputSplitForm ( F.Form ):
 			em['invalid_choice'] = _(msg.format( pers ))
 
 
-	@classmethod
-	def getOutputChoices ( cls, analysis ):
+	def getOutputChoices ( self ):
 		outs = AnalysisCommodity.objects.filter(
-		  analysis=analysis, commodity_type__name__in=('physical', 'demand') )
+		  analysis=self.analysis,
+		  commodity_type__name__in=('physical', 'demand') )
 		return sorted(
 		  set(( ac.commodity.name, ac.commodity.name) for ac in outs)
 		)
@@ -1264,13 +1249,13 @@ class TechOutputSplitForm ( F.Form ):
 
 
 	def save ( self ):
-		ois = self.techoutputsplit
+		tos = self.techoutputsplit
 		cd = self.cleaned_data
 
 		if 'out' in cd:
-			ois.out_commodity = cd[ 'out' ]
+			tos.out_commodity = cd[ 'out' ]
 		if 'value' in cd:
-			ois.fraction = cd[ 'value' ]
+			tos.fraction = cd[ 'value' ]
 
-		ois.save()
+		tos.save()
 
