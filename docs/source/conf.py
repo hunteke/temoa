@@ -36,7 +36,7 @@ extensions = [
   'sphinx.ext.viewcode',
   'sphinx.ext.graphviz',
   'sphinxcontrib.bibtex',
-  'sphinxcontrib.spelling',
+  #'sphinxcontrib.spelling',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
