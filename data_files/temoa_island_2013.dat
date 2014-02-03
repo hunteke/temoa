@@ -103,8 +103,6 @@ set  commodity_physical  :=
  water
  wind
  uranium
-
- swheater_elc
 	;
 
 set  commodity_emissions  :=
@@ -324,7 +322,7 @@ param  Demand  :=
 	;
 
 
-param  LifetimeTechDefault  :=
+param  LifetimeTech  :=
 # tech_all,         value (years)
  imp_biomass         5
  imp_coal            5
@@ -377,7 +375,7 @@ param  LifetimeTechDefault  :=
 	;
 
 
-param  LifetimeTech  :=
+param  LifetimeProcess  :=
 
  r_ac                 1995    20
  r_ac                 2000    20
@@ -409,7 +407,7 @@ param  LifetimeTech  :=
 	;
 
 
-param  LifetimeLoanDefault  :=
+param  LifetimeLoanTech  :=
 # tech_all       # value (years)
  e_coal           45
  e_nuclear        45
@@ -1122,7 +1120,7 @@ param  CostVariableVintageDefault  :=
 	;
 
 
-param  CapacityFactorDefault  :=
+param  CapacityFactorTech  :=
 # season,      diurnal, tech_all,    capacity factor value
 
  intermediate  day      e_coal         0.85
@@ -1240,27 +1238,27 @@ param  CapacityFactorDefault  :=
 
 	;
 
-#param  CapacityFactor  :=
+#param  CapacityFactorProcess  :=
 # season      # diurnal # tech_all  # vintage_all  # capacity factor value
 
 #	;
 
 param TechInputSplit :=
-# input carrier  # tech_all,          output carrier,  fractional output
- gasoline         tl_phev_gsl_10_s    tl_distance      0.922
- electricity      tl_phev_gsl_10_s    tl_distance      0.078
+# input carrier  # tech_all         # fractional output
+ gasoline         tl_phev_gsl_10_s   0.922
+ electricity      tl_phev_gsl_10_s   0.078
 
- gasoline         tl_phev_gsl_40_s    tl_distance      0.794
- electricity      tl_phev_gsl_40_s    tl_distance      0.206
+ gasoline         tl_phev_gsl_40_s   0.794
+ electricity      tl_phev_gsl_40_s   0.206
 
- electricity      r_swheater          r_wheating       0.5
- solar            r_swheater          r_wheating       0.5
+ electricity      r_swheater         0.5
+ solar            r_swheater         0.5
 	;
 
 param TechOutputSplit :=
-# input carrier  # tech_all    # output carrier    # fractional output
- electricity      r_geoth       r_cooling           0.5
- electricity      r_geoth       r_heating           0.5
+# tech_all    # output carrier    # fractional output
+ r_geoth       r_cooling           0.5
+ r_geoth       r_heating           0.5
 	;
 
 param MaxCapacity :=
