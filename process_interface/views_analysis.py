@@ -276,7 +276,18 @@ def analysis_update ( req, analysis_id ):
 		with transaction.atomic():
 			vform.save()
 			aform.save()
-		return analysis_info( req, analysis.pk );
+
+		data = {
+		  'id'                   : analysis.pk,
+		  'username'             : analysis.user.username,
+		  'name'                 : analysis.name,
+		  'description'          : analysis.description,
+		  'period_0'             : analysis.period_0,
+		  'global_discount_rate' : analysis.global_discount_rate,
+		}
+
+		data['vintages'] = ', '.join(imap(str, sorted( v.vintage for v in
+		  Vintage.objects.filter( analysis=analysis ) )))
 
 	data = json.dumps( msgs )
 	res = HttpResponse( data, content_type='application/json', status=status )
