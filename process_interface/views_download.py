@@ -832,7 +832,7 @@ param  GlobalDiscountRate  :=  {gdr} ;
 
 	data = dat_format.format(
 		url         = req.build_absolute_uri(),
-		user        = req.user.username,
+		user        = analysis.user.username,
 		analysis_name = analysis.name,
 		analysis_description = twrapper.fill( analysis.description ),
 		set_periods = set_periods,
