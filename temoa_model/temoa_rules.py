@@ -103,7 +103,7 @@ def PeriodCost_rule ( M, p ):
 	  * (
 	      value( M.CostFixed[p, S_t, S_v] )
 	    * ( value( MPL[p, S_t, S_v] ) if not GDR else
-	        (x **(P_0 - p + 1) * (1 - x **(-c)) / GDR)
+	        (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, S_t, S_v] ))) / GDR)
 	      )
 	    )
 
