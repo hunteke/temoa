@@ -89,7 +89,9 @@ def PeriodCost_rule ( M, p ):
 	  * (
 	      value( M.CostInvest[S_t, S_v] )
 	    * value( M.LoanAnnualize[S_t, S_v] )
-	    * (x **(P_0 - S_v + 1) * (1 - x **(-value( MLL[S_t, S_v] ))) / GDR)
+	    * ( value( MLL[S_t, S_v] ) if not GDR else
+	        (x **(P_0 - S_v + 1) * (1 - x **(-value( MLL[S_t, S_v] ))) / GDR)
+	      )
 	  )
 
 	  for S_t, S_v in M.CostInvest.sparse_iterkeys()
@@ -100,7 +102,9 @@ def PeriodCost_rule ( M, p ):
 	    M.V_Capacity[S_t, S_v]
 	  * (
 	      value( M.CostFixed[p, S_t, S_v] )
-	    * (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, S_t, S_v] ))) / GDR)
+	    * ( value( MPL[p, S_t, S_v] ) if not GDR else
+	        (x **(P_0 - p + 1) * (1 - x **(-c)) / GDR)
+	      )
 	    )
 
 	  for S_p, S_t, S_v in M.CostFixed.sparse_iterkeys()
