@@ -1,12 +1,8 @@
-"""
-Run this file with "python manage.py test"
-"""
-
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.test import TestCase
 
-from models import Analysis, Vintage
+from process_interface.models import Analysis, Vintage
 
 class ModelAnalysisTest ( TestCase ):
 
