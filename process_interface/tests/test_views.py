@@ -1,5 +1,6 @@
 from base64 import decodestring as b64decodestring
 
+from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import Client
 
@@ -42,7 +43,9 @@ class ViewLoginLogout ( TestCase ):
 				# this is tested below, and should /not/ fail.
 				continue
 
-			res = c.post('/login/', {'username': u, 'password': p})
+			login_url    = reverse('process_interface:login')
+			interact_url = reverse('process_interface:view')
+			res = c.post(login_url, {'username': u, 'password': p})
 
 			cookie = b64decodestring( res.cookies['ServerState'].coded_value )
 
@@ -51,7 +54,7 @@ class ViewLoginLogout ( TestCase ):
 			self.assertEqual( res.reason_phrase, u'SEE OTHER' )
 			self.assertEqual( res.content, '' )
 			self.assertTrue( res.has_header('Location'), True )
-			self.assertTrue( res.get('Location').endswith('/interact/') )
+			self.assertTrue( res.get('Location').endswith( interact_url ))
 
 			# Did server appropriately leave us as unauthenticated?
 			self.assertEqual( cookie, '{"username": null}' )
@@ -72,7 +75,8 @@ class ViewLoginLogout ( TestCase ):
 		c = Client()
 		u, p = 'test_user', 'SomethingSecure'
 
-		res = c.post('/login/', {'username': u, 'password': p})
+		login_url = reverse('process_interface:login')
+		res = c.post(login_url, {'username': u, 'password': p})
 
 		cookie = b64decodestring( res.cookies['ServerState'].coded_value )
 
