@@ -105,10 +105,12 @@ class ViewAnalysisTest ( TestCase ):
 	def setUpClass ( cls ):
 		from django.contrib.auth.models import User
 
-		u = User( username='test_user', password='SomethingSecure',
-		          email='some@email')
-		u.save()
-		cls.user = u
+		User.objects.create_user(
+		  username='test_user',
+		  password='SomethingSecure',
+		  email='some@email'
+		)
+		cls.user = User.objects.get(email='some@email')
 
 
 	@classmethod
