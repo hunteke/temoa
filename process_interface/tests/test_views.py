@@ -177,7 +177,12 @@ class ViewAnalysisTest ( TestCase ):
 
 		# First become an anonymous user
 		res = c.get( reverse('process_interface:logout') )
-		url = reverse('process_interface:analysis_create')
+
+		cookie = b64decodestring( res.cookies['ServerState'].coded_value )
+
+		# First, ensure we're properly anonymous
+		self.assertEqual( len(c.session.items()), 0 )
+		self.assertEqual( cookie, '{"username": null}' )
 
 		analysis_create_url = reverse('process_interface:analysis_create')
 		post_data = {}
@@ -187,12 +192,14 @@ class ViewAnalysisTest ( TestCase ):
 			post_data.update(
 			  name        = urandom( randint(1, 32769) ), # bounds on field length
 			  description = urandom( randint(1, 32769) ), # just some large number
-			  period_0    = urandom( randint(1, 32769) ), # just some large number
-			  global_discount_rate = urandom( randint(1, 32769) ),
-			  vintages    = urandom( randint(1, 32769) ), # just some large number
+			  period_0    = urandom( randint(1, 32769) ), #  just " " "
+			  global_discount_rate = urandom( randint(1, 32769) ), #  just " " "
+			  vintages    = urandom( randint(1, 32769) ), # just " " "
 			)
 			res = c.post( analysis_create_url, post_data )
+
 			self.assertEqual( res.reason_phrase, 'UNAUTHORIZED')
+			self.assertEqual( len(c.session.items()), 0 )
 
 
 	def test_create_analysis ( self ):
