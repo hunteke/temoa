@@ -48,7 +48,10 @@ class ViewLoginLogout ( TestCase ):
 
 			cookie = b64decodestring( res.cookies['ServerState'].coded_value )
 
-			# First, do we get the expected SEE OTHER interaction?
+			# Ensure test-runner does not think we're logged in
+			self.assertEqual( len(c.session.items()), 0 )
+
+			# Do we get the expected SEE OTHER interaction?
 			self.assertEqual( res.status_code, 303 )
 			self.assertEqual( res.reason_phrase, u'SEE OTHER' )
 			self.assertEqual( res.content, '' )
@@ -63,6 +66,7 @@ class ViewLoginLogout ( TestCase ):
 
 			cookie = b64decodestring( res.cookies['ServerState'].coded_value )
 
+			self.assertEqual( len(c.session.items()), 0 )
 			self.assertEqual( res.status_code, 200 )
 			self.assertEqual( res.reason_phrase, u'OK' )
 			self.assertEqual( cookie, '{"username": null}' )
@@ -78,6 +82,9 @@ class ViewLoginLogout ( TestCase ):
 		res = c.post(login_url, {'username': u, 'password': p})
 
 		cookie = b64decodestring( res.cookies['ServerState'].coded_value )
+
+		# Ensure test-runner thinks we're authenticated
+		self.assertNotEqual( len(c.session.items()), 0 )
 
 		# First, do we get the expected SEE OTHER interaction?
 		self.assertEqual( res.status_code, 303 )
@@ -99,6 +106,29 @@ class ViewLoginLogout ( TestCase ):
 		self.assertEqual( cookie, '{"username": "test_user"}' )
 		self.assertIn( " id='LogoutLink' ", res.content )
 		self.assertNotIn( " id='LoginForm' ", res.content )
+
+
+	def test_logout ( self ):
+		c = Client()
+		u, p = 'test_user', 'SomethingSecure'
+
+		login_url = reverse('process_interface:login')
+		res = c.post(login_url, {'username': u, 'password': p})
+
+		cookie = b64decodestring( res.cookies['ServerState'].coded_value )
+
+		# First, ensure we've logged in properly
+		self.assertNotEqual( len(c.session.items()), 0 )
+		self.assertEqual( cookie, '{"username": "test_user"}' )
+
+		logout_url = reverse('process_interface:logout')
+		res = c.get( logout_url )
+
+		cookie = b64decodestring( res.cookies['ServerState'].coded_value )
+
+		self.assertEqual( len(c.session.items()), 0 )
+		self.assertEqual( cookie, '{"username": null}' )
+
 
 
 
