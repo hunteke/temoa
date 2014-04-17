@@ -1,4 +1,6 @@
 from base64 import decodestring as b64decodestring
+from os import urandom
+from random import randint
 
 from django.core.urlresolvers import reverse
 from django.test import TestCase
@@ -26,9 +28,6 @@ class ViewLoginLogout ( TestCase ):
 
 
 	def test_bad_logins_fail ( self ):
-		from random import randint
-		from os import urandom
-
 		c = Client()
 
 		# some fuzz testing
@@ -67,8 +66,8 @@ class ViewLoginLogout ( TestCase ):
 			self.assertEqual( res.status_code, 200 )
 			self.assertEqual( res.reason_phrase, u'OK' )
 			self.assertEqual( cookie, '{"username": null}' )
-			self.assertNotIn( res.content, " id='LogoutLink' " )
-			self.assertIn( res.content, " id='LoginForm' " )
+			self.assertNotIn( " id='LogoutLink' ", res.content )
+			self.assertIn( " id='LoginForm' ", res.content )
 
 
 	def test_successful_login_returns_username_in_cookie ( self ):
@@ -122,9 +121,49 @@ class ViewAnalysisTest ( TestCase ):
 		cls.user.delete()
 
 
-	def test_create_update_delete_analysis ( self ):
+	def setUp ( self ):
+		self.client = Client()
+		up = {'username': 'test_user', 'password': 'SomethingSecure'}
+		res = self.client.post(reverse('process_interface:login'), up)
+
+		cookie = b64decodestring( res.cookies['ServerState'].coded_value )
+
+		self.assertEqual( res.status_code, 303 )
+		self.assertEqual( res.reason_phrase, u'SEE OTHER' )
+		self.assertEqual( cookie, '{"username": "test_user"}' )
+
+
+	def tearDown ( self ):
+		self.client.get('/logout/')
+		del self.client
+
+
+	def test_anonymous_user_cannot_create_analyses ( self ):
+		c = self.client
+
+		# First become an anonymous user
+		res = c.get( reverse('process_interface:logout') )
+		url = reverse('process_interface:analysis_create')
+
+		analysis_create_url = reverse('process_interface:analysis_create')
+		post_data = {}
+
+		# Fuzz testing: should *always* get 401 (UNAUTHORIZED) in return
+		for i in range(10):
+			post_data.update(
+			  name        = urandom( randint(1, 32769) ), # bounds on field length
+			  description = urandom( randint(1, 32769) ), # just some large number
+			  period_0    = urandom( randint(1, 32769) ), # just some large number
+			  global_discount_rate = urandom( randint(1, 32769) ),
+			  vintages    = urandom( randint(1, 32769) ), # just some large number
+			)
+			res = c.post( analysis_create_url, post_data )
+			self.assertEqual( res.reason_phrase, 'UNAUTHORIZED')
+
+
+	def test_create_analysis ( self ):
 		"""
-		Tests that analyses can be created.
+		Tests that user can create analyses.
 		"""
 
 		a = Analysis.objects.create(
