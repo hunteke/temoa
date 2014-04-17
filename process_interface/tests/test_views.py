@@ -109,6 +109,10 @@ class ViewLoginLogout ( TestCase ):
 
 
 	def test_logout ( self ):
+		"""
+		Ensure that the test client knows of logout status, and that server
+		returns a null value for the username.
+		"""
 		c = Client()
 		u, p = 'test_user', 'SomethingSecure'
 
