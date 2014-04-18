@@ -34,7 +34,7 @@ from forms import (
 )
 
 
-def get_analysis_info ( analyses ):
+def get_analyses_data ( analyses ):
 	if not analyses:
 		return { 'data' : [] }
 
@@ -149,7 +149,7 @@ def get_analysis_info ( analyses ):
 def analysis_list ( req ):
 	analyses = Analysis.objects.all().order_by( 'user__username', 'name' )
 
-	data = get_analysis_info( analyses )
+	data = get_analyses_data( analyses )
 
 	data = json.dumps({ 'data' : data })
 	res = HttpResponse( data, content_type='application/json' )
@@ -159,11 +159,7 @@ def analysis_list ( req ):
 	return res
 
 
-@require_GET
-@never_cache
-def analysis_info ( req, analysis_id ):
-	analysis = get_object_or_404( Analysis, pk=analysis_id )
-
+def collect_analysis_info ( analysis ):
 	data = {
 	  'id'                   : analysis.pk,
 	  'username'             : analysis.user.username,
@@ -176,6 +172,15 @@ def analysis_info ( req, analysis_id ):
 	data['vintages'] = ', '.join(imap(str, sorted( v.vintage for v in
 		  Vintage.objects.filter( analysis=analysis ) )))
 
+	return data
+
+
+@require_GET
+@never_cache
+def analysis_info ( req, analysis_id ):
+	analysis = get_object_or_404( Analysis, pk=analysis_id )
+
+	data = collect_analysis_info( analysis )
 	data = json.dumps( data )
 	res = HttpResponse( data, content_type='application/json' )
 	res['Content-Length'] = len( data )
@@ -240,9 +245,13 @@ def analysis_create ( req ):
 
 			if 201 == status:
 				vform.save()
-				res = analysis_info( req, analysis.pk )
-				res['Reason-Phrase'] = 'CREATED'
-				res.status_code = status
+				data = collect_analysis_info( analysis )
+				data = json.dumps( data )
+				res = HttpResponse(
+				  data,
+				  content_type='application/json',
+				  status=status
+				)
 				return res
 
 	data = json.dumps( msgs )
