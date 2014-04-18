@@ -241,7 +241,7 @@ def analysis_create ( req ):
 			if 201 == status:
 				vform.save()
 				res = analysis_info( req, analysis.pk )
-				res['Reason-Phrase'] = 'Created'
+				res['Reason-Phrase'] = 'CREATED'
 				res.status_code = status
 				return res
 
