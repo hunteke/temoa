@@ -286,7 +286,7 @@ def analysis_update ( req, analysis_id ):
 			vform.save()
 			aform.save()
 
-		data = {
+		msgs = {
 		  'id'                   : analysis.pk,
 		  'username'             : analysis.user.username,
 		  'name'                 : analysis.name,
@@ -295,7 +295,7 @@ def analysis_update ( req, analysis_id ):
 		  'global_discount_rate' : analysis.global_discount_rate,
 		}
 
-		data['vintages'] = ', '.join(imap(str, sorted( v.vintage for v in
+		msgs['vintages'] = ', '.join(imap(str, sorted( v.vintage for v in
 		  Vintage.objects.filter( analysis=analysis ) )))
 
 	data = json.dumps( msgs )
