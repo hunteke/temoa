@@ -282,21 +282,32 @@ def analysis_update ( req, analysis_id ):
 		msgs.update( vform.errors )
 
 	if 200 == status:
-		with transaction.atomic():
-			vform.save()
-			aform.save()
+		try:
+			with transaction.atomic():
+				vform.save()
+				aform.save()
 
-		msgs = {
-		  'id'                   : analysis.pk,
-		  'username'             : analysis.user.username,
-		  'name'                 : analysis.name,
-		  'description'          : analysis.description,
-		  'period_0'             : analysis.period_0,
-		  'global_discount_rate' : analysis.global_discount_rate,
-		}
+			msgs = {
+			  'id'                   : analysis.pk,
+			  'username'             : analysis.user.username,
+			  'name'                 : analysis.name,
+			  'description'          : analysis.description,
+			  'period_0'             : analysis.period_0,
+			  'global_discount_rate' : analysis.global_discount_rate,
+			}
 
-		msgs['vintages'] = ', '.join(imap(str, sorted( v.vintage for v in
-		  Vintage.objects.filter( analysis=analysis ) )))
+			msgs['vintages'] = ', '.join(imap(str, sorted( v.vintage for v in
+			  Vintage.objects.filter( analysis=analysis ) )))
+
+		except IntegrityError as ie:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unknown error occurred; please inform the TemoaDB developers '
+			  'how to recreate this message.')
+			if 'name' in str(ie):
+				msg = ("Unable to change name to '{}':  {} has another analysis "
+				  'by that name.')
+				msg = msg.format( aform.cleaned_data[ 'name' ], req.user.username )
+			msgs.update({ 'General Error' : msg })
 
 	data = json.dumps( msgs )
 	res = HttpResponse( data, content_type='application/json', status=status )
