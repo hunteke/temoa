@@ -79,18 +79,21 @@ class VintagesForm ( F.Form ):
 		if not data:
 			raise F.ValidationError( 'There are no vintages.' )
 
-		new_data = []
+		new_data = set()
 		try:
 			num = 'Not a Number'
 			for i in data:
 				if not i: continue
 				num = i
-				new_data.append( int( i ))
+				new_data.add( int( i ))
 		except ValueError:
 			msg = 'Unable to convert "{}" to an integer'
 			raise F.ValidationError( msg.format( num ))
 
-		return set( new_data )
+		if self.analysis.period_0 not in new_data:
+			raise F.ValidationError( 'Vintages does not contain Period 0.' )
+
+		return new_data
 
 
 	def save ( self ):
