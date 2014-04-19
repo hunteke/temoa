@@ -5,7 +5,8 @@ import json
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.utils import IntegrityError
-from django.http import HttpResponse
+from django.http import (HttpResponse, HttpResponseNotFound,
+  HttpResponseForbidden)
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.cache import never_cache
 
@@ -266,7 +267,20 @@ def analysis_create ( req ):
 @require_POST
 @never_cache
 def analysis_update ( req, analysis_id ):
-	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	# First, does the user have access to the analysis?
+	analysis = Analysis.objects.filter( pk=analysis_id )
+
+	if not len(analysis):
+		msg = 'Update failed: requested analysis (id = {}) not found in DB.'
+		return HttpResponseNotFound( json.dumps(msg.format(analysis_id)) )
+
+	analysis = analysis[0]
+
+	if req.user != analysis.user:
+		msg = "Update failed: '{}' does not own analysis (id = {}, {})."
+		return HttpResponseForbidden(
+		  json.dumps( msg.format( req.user, analysis_id, analysis.name )))
+
 
 	status = 200   # 200 = General OK
 	msgs = {}
@@ -304,7 +318,7 @@ def analysis_update ( req, analysis_id ):
 			msg = ('Unknown error occurred; please inform the TemoaDB developers '
 			  'how to recreate this message.')
 			if 'name' in str(ie):
-				msg = ("Unable to change name to '{}':  {} has another analysis "
+				msg = ("Unable to change name to '{}':  '{}' has another analysis "
 				  'by that name.')
 				msg = msg.format( aform.cleaned_data[ 'name' ], req.user.username )
 			msgs.update({ 'General Error' : msg })
