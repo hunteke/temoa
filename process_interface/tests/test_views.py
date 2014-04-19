@@ -135,7 +135,6 @@ class ViewLoginLogout ( TestCase ):
 
 
 
-
 class ViewAnalysisTest ( TestCase ):
 
 	@classmethod
@@ -166,14 +165,38 @@ class ViewAnalysisTest ( TestCase ):
 		self.assertEqual( res.reason_phrase, u'SEE OTHER' )
 		self.assertEqual( cookie, '{"username": "test_user"}' )
 
+		self.analysis_a_id = Analysis.objects.create(
+		  user=self.user,
+		  name='A',
+		  description='desc',
+		  period_0=1,
+		  global_discount_rate=0.05
+		).pk
+
+		self.analysis_b_id = Analysis.objects.create(
+		  user=self.user,
+		  name='B',
+		  description='desc',
+		  period_0=1,
+		  global_discount_rate=0.05
+		).pk
+
 
 	def tearDown ( self ):
-		self.client.get('/logout/')
+		logout_url = reverse('process_interface:logout')
+		self.client.get( logout_url )
 		del self.client
+
+		ids = (self.analysis_a_id, self.analysis_b_id)
+		del self.analysis_a_id, self.analysis_b_id
+
+		analyses = Analysis.objects.filter( id__in=ids )
+		for a in analyses:
+			a.delete()
 
 
 	def test_anonymous_user_cannot_create_analyses ( self ):
-		c = self.client
+		c = self.client   # already authenticated per setUp
 
 		# First become an anonymous user
 		res = c.get( reverse('process_interface:logout') )
@@ -216,7 +239,7 @@ class ViewAnalysisTest ( TestCase ):
 		"""
 		import json
 
-		c = self.client
+		c = self.client   # already authenticated per setUp
 
 		analysis_create_url = reverse('process_interface:analysis_create')
 		analysis_list_url   = reverse('process_interface:analysis_list')
@@ -230,7 +253,7 @@ class ViewAnalysisTest ( TestCase ):
 		analysis_2 = {
 		  'name'        : 'Test Analysis 2',
 		  'description' : 'Some other description',
-		  'period_0'    : '0',
+		  'period_0'    : '2010',
 		  'global_discount_rate' : '0',
 		  'vintages'    : '2010, 2013, 2011'
 		}
@@ -401,4 +424,197 @@ class ViewAnalysisTest ( TestCase ):
 		self.assertNotIn( u'\0', ret_data['description'] )
 		self.assertFalse( ret_data['description'].startswith(' ') )
 		self.assertFalse( ret_data['description'].endswith(' ') )
+
+
+	def test_analysis_update ( self ):
+		"""
+		Ensure that:
+		 1. user can change own analysis information (name, description, etc.)
+		 2. updated model characteristics returned as JSON in response
+		 3. user cannot change analysis name to match another of user's analyses
+		 4. period_0 only accepts integers, with appropriate error message
+		 5. period_0 is always a member of vintages[:-1]
+		 6. only POST protocol is accepted (e.g. GET, PUT, HEAD return NOT ALLOWED
+		 7. user cannot change another users analysis
+		 8. anonymous requests are forbidden
+		"""
+		import json
+
+		c = self.client   # already authenticated per setUp
+
+		analysis = Analysis.objects.get( pk=self.analysis_a_id )
+
+		analysis_list_url   = reverse('process_interface:analysis_list')
+		analysis_update_url = reverse('process_interface:analysis_update',
+		  kwargs={'analysis_id': analysis.pk})
+
+		analysis_1_new_data = {
+		  'name'        : 'More accurate name',
+		  'description' : 'An updated description',
+		  'period_0'    : '-2',
+		  'global_discount_rate' : '0.15',
+		  'vintages'    : '-5, -4,-3,-2,5,3,2,1,0'
+		}
+		period_0_not_in_vintages_data = {
+		  'name'        : 'AnalysisName',
+		  'description' : 'AnalysisDescription',
+		  'global_discount_rate' : '0.05'
+		}
+
+		# Part 1 and 2: Ensure user can successfully update and that server
+		#     returns the updated data through JSON
+		res = c.post( analysis_update_url, analysis_1_new_data )
+
+		try:
+			ret_data = json.loads( res.content )
+		except ValueError as e:
+			msg = ('HttpResponse (updated analysis) object content is not valid '
+			  'JSON: {}')
+			self.fail( msg.format( res.content ))
+		self.assertEqual( res.status_code, 200 )
+		self.assertEqual( res.reason_phrase, u'OK' )
+		self.assertGreater( len(ret_data), 0 )
+
+		analysis = Analysis.objects.get( pk=analysis.pk )
+		vintages = Vintage.objects.filter( analysis=analysis )
+		vintages = sorted( v.vintage for v in vintages )
+		vintages = u', '.join( unicode(i) for i in vintages )
+
+		self.assertEqual( analysis.name, ret_data['name'] )
+		self.assertEqual( analysis.description, ret_data['description'] )
+		self.assertEqual( analysis.period_0, ret_data['period_0'] )
+		self.assertAlmostEqual( analysis.global_discount_rate, ret_data['global_discount_rate'] )
+		self.assertEqual( vintages, ret_data['vintages'] )
+
+		# Part 3: Ensure user cannot choose a name already chosen
+		analysis_1_new_data['name'] = 'B'
+
+		res = c.post( analysis_update_url, analysis_1_new_data )
+
+		self.assertEqual( res.status_code, 422 )
+		self.assertEqual( res.reason_phrase, u'UNPROCESSABLE ENTITY' )
+		self.assertGreater( len(res.content), 0 )
+
+		try:
+			ret_data = json.loads( res.content )
+		except ValueError as e:
+			msg = ('HttpResponse (analysis update error) content is not valid '
+			  'JSON: {}')
+			self.fail( msg.format( res.content ))
+		self.assertIn( 'Unable to change name ', res.content )
+		self.assertTrue( isinstance( ret_data, dict ))
+		self.assertIn( 'General Error', ret_data )
+
+		# Part 4: Ensure period_0 only accepts integers, with appropriate error
+		#   message
+		analysis_1_new_data['name'] = 'SomethingUnique'
+		_old_p0 = analysis_1_new_data['period_0']
+
+		# Fuzz testing: should always return 422 if bad period_0 sent
+		for i in range(10):
+			length = randint(1, 257)
+
+			# get random bytes, removing any whitespace
+			p0 = urandom( length ).strip()
+			length = len( p0 )  # size of p0 after removing whitespace
+			count = 0   # count of characters that are ASCII digits
+			for char in p0:
+				if 48 <= char < 58: # i.e. is '0' through '9'
+					count += 1
+			if count == length:
+				# this is trivially an integer as all bytes are digits; skip
+				# this test
+				continue
+			analysis_1_new_data['period_0'] = p0
+			res = c.post( analysis_update_url, analysis_1_new_data )
+
+			self.assertEqual( res.status_code, 422 )
+			self.assertEqual( res.reason_phrase, u'UNPROCESSABLE ENTITY' )
+			self.assertGreater( len(res.content), 0 )
+
+			try:
+				ret_data = json.loads( res.content )
+			except ValueError as e:
+				msg = ('HttpResponse (analysis update error) content is not valid '
+				  'JSON: {}')
+				self.fail( msg.format( res.content ))
+			self.assertIn( 'Enter a whole number', res.content )
+			self.assertTrue( isinstance( ret_data, dict ))
+			self.assertIn( 'period_0', ret_data )
+
+		analysis_1_new_data['period_0'] = _old_p0
+		del _old_p0
+
+		# Part 5: Ensure period_0 is always a member of vintages[:-1]
+		#   Fuzz testing: should always get a 422 response
+		vintages = sorted( randint(-1e9, 1e9) for i in range(10) )
+		vintages_str = u', '.join(map(str, vintages))
+		period_0_not_in_vintages_data['vintages'] = vintages_str
+		for i in range(10):
+			period_0 = randint(-1e9, 1e9)
+			if period_0 in vintages: continue
+			period_0_not_in_vintages_data['period_0'] = period_0
+
+			res = c.post( analysis_update_url, period_0_not_in_vintages_data )
+
+			self.assertEqual( res.status_code, 422 )
+			self.assertEqual( res.reason_phrase, u'UNPROCESSABLE ENTITY' )
+			self.assertGreater( len(res.content), 0 )
+			self.assertIn( 'Vintages does not contain Period 0', res.content )
+			try:
+				ret_data = json.loads( res.content )
+			except ValueError as e:
+				msg = ('HttpResponse (analysis update error) content is not valid '
+				  'JSON: {}')
+				self.fail( msg.format( res.content ))
+			self.assertTrue( isinstance( ret_data, dict ))
+			self.assertIn( 'vintages', ret_data )
+
+		# Part 6: Other protocols are forbidden (e.g. GET, PATCH, PUT, HEAD)
+		for func in (c.delete, c.get, c.patch, c.put, c.head):
+			res = func( analysis_update_url, analysis_1_new_data )
+
+			self.assertEqual( res.status_code, 405 )
+			self.assertEqual( res.reason_phrase, u'METHOD NOT ALLOWED' )
+			self.assertEqual( len(res.content), 0 )
+
+		# Part 7: Ensure one user cannot change another's analysis data
+		analysis = Analysis.objects.exclude( user=self.user )[0]
+		analysis_update_url = reverse('process_interface:analysis_update',
+		  kwargs={'analysis_id': analysis.pk})
+
+		res = c.post( analysis_update_url, analysis_1_new_data )
+
+		self.assertEqual( res.status_code, 403 )
+		self.assertEqual( res.reason_phrase, u'FORBIDDEN' )
+		self.assertGreater( len(res.content), 0 )
+
+		try:
+			ret_data = json.loads( res.content )
+		except ValueError as e:
+			msg = ('HttpResponse (analysis update error) content is not valid '
+			  'JSON: {}')
+			self.fail( msg.format( res.content ))
+		self.assertIn( ' does not own analysis ', ret_data )
+
+		# Part 8: Anonymous requests are forbidden
+		logout_url = reverse('process_interface:logout')
+
+		res = c.get( logout_url )
+
+		self.assertEqual( res.status_code, 303 )
+		self.assertEqual( res.reason_phrase, u'SEE OTHER' )
+
+		analysis_before = Analysis.objects.get( pk=analysis.pk )
+		res = c.post( analysis_update_url, analysis_1_new_data )
+		analysis_after  = Analysis.objects.get( pk=analysis.pk )
+
+		self.assertEqual( res.status_code, 401 )
+		self.assertEqual( res.reason_phrase, u'UNAUTHORIZED' )
+
+		for attr in ('name', 'description', 'period_0', 'global_discount_rate'):
+			self.assertEqual(
+			  getattr(analysis_before, attr),
+			  getattr(analysis_after, attr)
+			)
 
