@@ -366,3 +366,10 @@ class ModelParam_SegFracTest ( TestCase ):
 		expected = u'(NoAnalysis) NoSeason, NoTimeOfDay: {}'.format( sf.value )
 		self.assertEqual( unicode(sf), expected )
 
+
+	def test_unicode ( self ):
+		sf = Param_SegFracFactory.create()
+		expected = u'({}) {}, {}: {}'.format(
+		  sf.analysis, sf.season, sf.time_of_day, sf.value )
+		self.assertEqual( unicode(sf), expected )
+
