@@ -286,61 +286,62 @@ class Process ( DM.Model ):
 		self.save()
 
 
-	def save ( self ):
+	def clean_valid_vintage ( self ):
+		vintages = Vintage.objects.filter( analysis=self.analysis
+		  ).order_by( '-vintage' )
+
 		try:
-			v = self.vintage.vintage
+			if self.vintage not in vintages:
+				raise ValidationError('Vintage does not exist in this analysis.')
 		except ObjectDoesNotExist as e:
 			raise ValidationError('Process must have a vintage.')
-
 		# Is the vintage valid for this analysis?
-		vintages = Vintage.objects.filter( analysis=self.analysis )
-		if not vintages.filter( vintage=v ):
-			raise ValidationError('Vintage does not exist in this analysis')
 
 		# Is the vintage a vintage year as opposed the final year?
-		if v == max( i.vintage for i in vintages ):
+		if self.vintage == vintages.first():
 			msg = ('The final year in the analysis vintages is not actually a '
 			  'vintage.  It is a marker for calculation of the last period '
 			  'length, and is therefore not a valid vintage.')
 			raise ValidationError( msg )
 
-		e = self.existingcapacity
-		l = self.lifetime
-		try:
-			p0 = self.analysis.period_0
-		except ObjectDoesNotExist as e:
-			msg = ('Unexpected database error.  Does the analysis need a start '
-			  'period (Period 0)?')
+
+	def clean_valid_lifetime ( self ):
+		"""
+		All we know for sure at this stage is that lifetime can only be None or
+		positive.  Given that data sets are expected to be constantly in flux, so
+		save the larger validation for the UI, and dat download.
+		"""
+		if self.lifetime is None:
+			return
+
+		if self.lifetime <= 0:
+			msg = ('Either specify a positive integer or nothing at all.')
 			raise ValidationError( msg )
 
-		if v >= p0:
-			if e is not None:
-				msg = ('Vintage is in optimization horizon: cannot specify '
-				  'existing capacity.')
-				raise ValidationError( msg )
 
-		else:
-			if e is not None and e <= 0:
-				msg = 'Existing capacity must be greater than 0.'
-				raise ValidationError( msg )
+	def clean_valid_existingcapacity ( self ):
+		"""
+		All we know for sure at this stage is that existingcapacity can only be
+		None or positive.  Given that data sets are expected to be constantly in
+		flux, so save the larger validation for the UI, and dat download.
+		"""
+		if self.existingcapacity is None:
+			return
 
-			if self.costinvest is not None:
-				msg = ('Cannot specify investment cost: existing capacity is '
-				  'already installed and therefore has no investment cost.')
-				raise ValidationError( msg )
+		if self.existingcapacity <= 0:
+			msg = ('Either specify a positive integer or nothing at all.')
+			raise ValidationError( msg )
 
-		if l:
-			if l <= 0:
-				msg = ('Invalid lifetime: either do not specify a lifetime, or '
-				  'specify one greater than 0.')
-				raise ValidationError( msg )
 
-			if v + l <= p0:
-				msg = ('Invalid lifetime: vintage would not be used in analysis: '
-				  '{} + {} <= {}')
-				raise ValidationError( msg.format( v, l, p0 ))
+	def clean ( self ):
+		self.clean_valid_vintage()
+		self.clean_valid_lifetime()
+		self.clean_valid_existingcapacity()
 
-		super( Process, self ).save()
+
+	def save ( self, *args, **kwargs ):
+		self.clean()
+		super( Process, self ).save( *args, **kwargs )
 
 
 
