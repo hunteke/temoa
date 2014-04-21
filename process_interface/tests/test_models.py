@@ -197,8 +197,7 @@ class ModelVintageTest ( TestCase ):
 
 
 	def test_vintage_is_integer ( self ):
-		a = VintageFactory.build()
-		a.vintage = 5.85
+		a = VintageFactory.build( vintage=5.85 )
 		a.clean()
 
 		self.assertEqual( a.vintage, 5 )
