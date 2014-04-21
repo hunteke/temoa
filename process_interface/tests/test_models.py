@@ -14,6 +14,7 @@ from process_interface.models import (
   Analysis,
   Commodity,
   Param_SegFrac,
+  Process,
   Technology,
   Vintage,
   Set_tech_baseload,
@@ -95,6 +96,20 @@ class Set_tech_storageFactory ( factory.django.DjangoModelFactory ):
 
 	analysis = factory.SubFactory( AnalysisFactory )
 	technology = factory.SubFactory( TechnologyFactory )
+
+
+
+class ExistingProcessFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Process
+
+	analysis         = factory.SubFactory( AnalysisFactory )
+	technology       = factory.SubFactory( TechnologyFactory )
+	vintage          = factory.SubFactory( VintageFactory )
+	lifetime         = 10
+	loanlife         = None
+	costinvest       = None
+	discountrate     = None
+	existingcapacity = 31
 
 
 
@@ -455,4 +470,34 @@ class ModelsTechnologySetMemberTest ( TestCase ):
 		bl = Set_tech_storageFactory.build( technology=t )
 		expected = u'(NoAnalysis) {}'.format( bl.technology )
 		self.assertEqual( unicode(bl), expected )
+
+
+
+class ModelExistingProcessTest ( TestCase ):
+
+	def test_unicode_empty ( self ):
+		p = Process()
+		expected = u'(NoAnalysis) NoTechnology, NoVintage'
+		self.assertEqual( unicode(p), expected )
+
+
+	def test_unicode_only_analysis ( self ):
+		a = AnalysisFactory.create()
+		p = ExistingProcessFactory.build( analysis=a )
+		expected = u'({}) NoTechnology, NoVintage'.format( p.analysis )
+		self.assertEqual( unicode(p), expected )
+
+
+	def test_unicode_only_technology ( self ):
+		t = TechnologyFactory.create()
+		p = ExistingProcessFactory.build( technology=t )
+		expected = u'(NoAnalysis) {}, NoVintage'.format( p.technology )
+		self.assertEqual( unicode(p), expected )
+
+
+	def test_unicode_only_vintage ( self ):
+		v = VintageFactory.create()
+		p = ExistingProcessFactory.build( vintage=v )
+		expected = u'(NoAnalysis) NoTechnology, {}'.format( p.vintage.vintage )
+		self.assertEqual( unicode(p), expected )
 
