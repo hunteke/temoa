@@ -366,6 +366,20 @@ class LifetimeParameter ( DM.Model ):
 		return u'({}) {}: {}'.format( a, t, v )
 
 
+	def clean ( self ):
+		try:
+			self.value = float(self.value)
+		except ValueError as ve:
+			raise ValidationError( 'Life value must be a valid float.' )
+
+		if self.value <= 0:
+			raise ValidationError( 'Life value must be greater than 0.' )
+
+	def save ( self, *args, **kwargs ):
+		self.clean()
+		super( LifetimeParameter, self ).save( *args, **kwargs )
+
+
 class Param_LifetimeTech     ( LifetimeParameter ): pass
 class Param_LifetimeTechLoan ( LifetimeParameter ): pass
 
