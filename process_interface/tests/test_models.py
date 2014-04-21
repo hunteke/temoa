@@ -118,16 +118,6 @@ class ModelAnalysisTest ( TestCase ):
 		self.assertEqual( b.global_discount_rate, new_gdr )
 
 
-	def test_analysis_delete ( self ):
-		a = AnalysisFactory.create()
-		pk = a.pk
-		a.delete()
-		self.assertIsNone( a.pk )
-
-		with self.assertRaises( ObjectDoesNotExist ):
-			Analysis.objects.get( pk=pk )
-
-
 	def test_analysis_period_0_is_integer ( self ):
 		a = AnalysisFactory.build( period_0=5.85 )
 		a.clean()
