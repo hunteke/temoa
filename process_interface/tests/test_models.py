@@ -14,6 +14,7 @@ from process_interface.models import (
   Analysis,
   Commodity,
   Param_SegFrac,
+  Param_LifetimeTech,
   Process,
   Technology,
   Vintage,
@@ -534,4 +535,63 @@ class ModelExistingProcessTest ( TestCase ):
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_existingcapacity()
 		self.assertIn( u' positive integer or ', unicode(ve.exception) )
+
+
+
+class ModelParam_LifetimeTechProcessTest ( TestCase ):
+
+	def test_unicode_empty ( self ):
+		tl = Param_LifetimeTech()
+		expected = u'(NoAnalysis) NoTechnology: NoValue'
+		self.assertEqual( unicode(tl), expected )
+
+
+	def test_unicode_only_analysis ( self ):
+		a = AnalysisFactory.create()
+		tl = Param_LifetimeTech( analysis=a )
+		expected = u'({}) NoTechnology: NoValue'.format( tl.analysis )
+		self.assertEqual( unicode(tl), expected )
+
+
+	def test_unicode_only_technology ( self ):
+		t = TechnologyFactory.create()
+		tl = Param_LifetimeTech( technology=t )
+		expected = u'(NoAnalysis) {}: NoValue'.format( tl.technology )
+		self.assertEqual( unicode(tl), expected )
+
+
+	def test_unicode_only_value ( self ):
+		tl = Param_LifetimeTech( value='15.2' )
+		expected = u'(NoAnalysis) NoTechnology: {}'.format( tl.value )
+		self.assertEqual( unicode(tl), expected )
+
+
+	def test_value_is_valid_number ( self ):
+		for i in range(10):
+			length = randint(1, 256)
+			value = urandom( length )
+			try:
+				value = float(value)
+				continue
+			except ValueError:
+				pass
+
+			with self.assertRaises( ValidationError ) as ve:
+				Param_LifetimeTech( value=value ).clean()
+			self.assertIn( u' be a valid float', unicode(ve.exception) )
+
+
+	def test_value_is_positive_number ( self ):
+		with self.assertRaises( ValidationError ) as ve:
+			Param_LifetimeTech( value=0 ).clean()
+		self.assertIn( u'greater than 0', unicode(ve.exception) )
+
+		with self.assertRaises( ValidationError ) as ve:
+			Param_LifetimeTech( value=-randint(1, 1e9)*random() ).clean()
+		self.assertIn( u'greater than 0', unicode(ve.exception) )
+
+		try:
+			Param_LifetimeTech( value=randint(1, 1e9)*random() ).clean()
+		except:
+			self.fail( 'Positive lifetime values should be valid.' )
 
