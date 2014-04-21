@@ -395,6 +395,28 @@ class ModelParam_SegFracTest ( TestCase ):
 
 class ModelsTechnologySetMemberTest ( TestCase ):
 
+	def test_tech_baseload_uniqueness_creation ( self ):
+		a = AnalysisFactory.create()
+		t = TechnologyFactory.create(user=a.user)
+		with self.assertRaises( IntegrityError ) as ie:
+			Set_tech_baseloadFactory.create( analysis=a, technology=t )
+			Set_tech_baseloadFactory.create( analysis=a, technology=t )
+
+		self.assertIn( u' analysis_id, technology_id are not unique',
+		  unicode(ie.exception) )
+
+
+	def test_tech_storage_uniqueness_creation ( self ):
+		a = AnalysisFactory.create()
+		t = TechnologyFactory.create(user=a.user)
+		with self.assertRaises( IntegrityError ) as ie:
+			Set_tech_storageFactory.create( analysis=a, technology=t )
+			Set_tech_storageFactory.create( analysis=a, technology=t )
+
+		self.assertIn( u' analysis_id, technology_id are not unique',
+		  unicode(ie.exception) )
+
+
 	def test_tech_baseload_unicode_empty ( self ):
 		bl = Set_tech_baseload()
 		expected = u'(NoAnalysis) NoTechnology'
