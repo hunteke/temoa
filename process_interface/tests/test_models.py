@@ -8,8 +8,10 @@ from django.test import TestCase
 
 from process_interface.models import (
   Analysis,
+  Commodity,
   Technology,
   Vintage,
+  Param_SegFrac,
 )
 
 
@@ -61,6 +63,16 @@ class CommodityFactory ( factory.django.DjangoModelFactory ):
 
 	name = 'Unit Test Commodity'
 	description = 'Commodity automatically created during unit testing.'
+
+
+
+class Param_SegFracFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Param_SegFrac
+
+	analysis = factory.SubFactory( AnalysisFactory )
+	season = 'Unit_Test_Season'
+	time_of_day = 'Unit_Test_Day'
+	value = 1
 
 
 
@@ -252,5 +264,51 @@ class ModelCommodityTest ( TestCase ):
 	def test_unicode_name ( self ):
 		t = CommodityFactory.build()
 		expected = u'{}'.format( t.name )
+		self.assertEqual( unicode(t), expected )
+
+
+
+class ModelParam_SegFracTest ( TestCase ):
+
+	def test_uniqueness ( self ):
+		with self.assertRaises( IntegrityError ) as ie:
+			a = Param_SegFracFactory.create()
+			b = Param_SegFracFactory.create( analysis=a.analysis )
+
+		self.assertIn( u'season, time_of_day are not unique',
+		  unicode(ie.exception) )
+
+
+	def test_unicode_empty ( self ):
+		t = Param_SegFrac()
+		expected = u'(NoAnalysis) NoSeason, NoTimeOfDay: NoValue'
+		self.assertEqual( unicode(t), expected )
+
+
+	def test_unicode_only_analysis ( self ):
+		t = Param_SegFracFactory.create()
+		t.season = t.time_of_day = t.value = None
+		expected = u'({}) NoSeason, NoTimeOfDay: NoValue'.format( t.analysis )
+		self.assertEqual( unicode(t), expected )
+
+
+	def test_unicode_only_season ( self ):
+		t = Param_SegFracFactory.build()
+		t.time_of_day = t.value = None
+		expected = u'(NoAnalysis) {}, NoTimeOfDay: NoValue'.format( t.season )
+		self.assertEqual( unicode(t), expected )
+
+
+	def test_unicode_only_time_of_day ( self ):
+		t = Param_SegFracFactory.build()
+		t.season = t.value = None
+		expected = u'(NoAnalysis) NoSeason, {}: NoValue'.format( t.time_of_day )
+		self.assertEqual( unicode(t), expected )
+
+
+	def test_unicode_only_value ( self ):
+		t = Param_SegFracFactory.build()
+		t.season = t.time_of_day = None
+		expected = u'(NoAnalysis) NoSeason, NoTimeOfDay: {}'.format( t.value )
 		self.assertEqual( unicode(t), expected )
 
