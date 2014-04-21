@@ -103,11 +103,14 @@ class Vintage ( DM.Model ):
 		return '({}) {}'.format( a, v )
 
 
-	def save ( self, *args, **kwargs ):
+	def clean ( self ):
 		# minor data correction to save a hapless coder from themselves
 		if self.vintage != 0:   # only an issue if period_0 is not /exactly/ 0
 			self.vintage = int(self.vintage)
 
+
+	def save ( self, *args, **kwargs ):
+		self.clean()
 		super( Vintage, self ).save( *args, **kwargs )
 
 

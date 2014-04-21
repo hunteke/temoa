@@ -200,13 +200,11 @@ class ModelVintageTest ( TestCase ):
 
 
 	def test_vintage_is_integer ( self ):
-		a = VintageFactory.create()
+		a = VintageFactory.build()
 		a.vintage = 5.85
-		a.save()
-		b = Vintage.objects.get( pk=a.pk )
+		a.clean()
 
 		self.assertEqual( a.vintage, 5 )
-		self.assertEqual( b.vintage, 5 )
 
 
 	def test_unicode_empty ( self ):
