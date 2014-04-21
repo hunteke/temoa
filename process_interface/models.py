@@ -230,7 +230,12 @@ class TechnologySetMember ( DM.Model ):
 		unique_together = ('analysis', 'technology',)
 
 	def __unicode__ ( self ):
-		return u'({}) {}'.format( self.analysis, self.technology )
+		a, t = 'NoAnalysis', 'NoTechnology'
+		if self.analysis_id:
+			a = self.analysis
+		if self.technology_id:
+			t = self.technology
+		return u'({}) {}'.format( a, t )
 
 
 
