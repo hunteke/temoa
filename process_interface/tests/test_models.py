@@ -1,3 +1,7 @@
+from os import urandom
+from random import randint, random
+import re
+
 import factory
 
 from django.contrib.auth.models import User as DjangoUser
@@ -284,6 +288,49 @@ class ModelParam_SegFracTest ( TestCase ):
 
 		self.assertIn( u'season, time_of_day are not unique',
 		  unicode(ie.exception) )
+
+
+	def test_clean_bad_season ( self ):
+		sf = Param_SegFracFactory.build()
+		name_re = re.compile( r'^[A-z_]\w*$' )
+		sf.clean() # ensure it is valid to begin with
+
+		# Fuzz test
+		for i in range(10):
+			length = randint(1, 1025)
+			while name_re.match( sf.season ):
+				sf.season = urandom( length )
+			with self.assertRaises( ValidationError ):
+				sf.clean()
+
+
+	def test_clean_bad_timeofday ( self ):
+		sf = Param_SegFracFactory.build()
+		name_re = re.compile( r'^[A-z_]\w*$' )
+		sf.clean() # ensure it is valid to begin with
+
+		# Fuzz test
+		for i in range(10):
+			length = randint(1, 1025)
+			while name_re.match( sf.time_of_day ):
+				sf.time_of_day = urandom( length )
+			with self.assertRaises( ValidationError ):
+				sf.clean()
+
+
+	def test_clean_value ( self ):
+		sf = Param_SegFracFactory.build()
+		sf.clean() # ensure it is valid to begin with
+
+		# Fuzz test
+		for i in range(10):
+			multiplier = randint(-1e9, 1e9)
+			value = 0.5
+			while 0 < value <= 1:
+				value = random() * multiplier
+			sf.value = value
+			with self.assertRaises( ValidationError ):
+				sf.clean()
 
 
 	def test_unicode_empty ( self ):
