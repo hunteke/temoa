@@ -109,13 +109,10 @@ class ModelAnalysisTest ( TestCase ):
 
 
 	def test_analysis_period_0_is_integer ( self ):
-		a = AnalysisFactory.create()
-		a.period_0 = 5.85
-		a.save()
-		b = Analysis.objects.get( pk=a.pk )
+		a = AnalysisFactory.build( period_0=5.85 )
+		a.clean()
 
 		self.assertEqual( a.period_0, 5 )
-		self.assertEqual( b.period_0, 5 )
 
 
 	def test_analysis_uniqueness ( self ):
