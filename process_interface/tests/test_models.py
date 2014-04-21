@@ -56,6 +56,14 @@ class TechnologyFactory ( factory.django.DjangoModelFactory ):
 
 
 
+class CommodityFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Commodity
+
+	name = 'Unit Test Commodity'
+	description = 'Commodity automatically created during unit testing.'
+
+
+
 class ModelAnalysisTest ( TestCase ):
 
 	def test_analysis_build ( self ):
@@ -216,4 +224,33 @@ class ModelVintageTest ( TestCase ):
 		expected = u'({}) NoVintage'.format(a)
 		self.assertEqual( unicode(Vintage(analysis=a)), expected)
 
+
+
+class ModelCommodityTest ( TestCase ):
+
+	def test_uniqueness_creation ( self ):
+		with self.assertRaises( IntegrityError ):
+			CommodityFactory.create()
+			CommodityFactory.create()
+
+
+	def test_uniqueness_update ( self ):
+		a = CommodityFactory.create()
+		b = CommodityFactory.create( name=u'OtherCommodity' )
+
+		with self.assertRaises( IntegrityError ):
+			b.name = a.name
+			b.save()
+
+
+	def test_unicode_empty ( self ):
+		t = Commodity()
+		expected = u'NoName'
+		self.assertEqual( unicode(t), expected )
+
+
+	def test_unicode_name ( self ):
+		t = CommodityFactory.build()
+		expected = u'{}'.format( t.name )
+		self.assertEqual( unicode(t), expected )
 
