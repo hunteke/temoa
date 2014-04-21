@@ -392,6 +392,18 @@ class CommodityType ( DM.Model ):
 		return u'{}'.format( self.name )
 
 
+	def clean ( self ):
+		self.name = re.sub(ur'[\n\r\v\t\0]', '', self.name).strip()
+
+		if not self.name:
+			raise ValidationError( 'No name specified for CommodityType.' )
+
+
+	def save ( self, *args, **kwargs ):
+		self.clean()
+		super( CommodityType, self ).save( *args, **kwargs )
+
+
 
 class AnalysisCommodity ( DM.Model ):
 	analysis       = DM.ForeignKey( Analysis )
