@@ -139,7 +139,7 @@ class Param_SegFrac ( DM.Model ):
 		return u'({}) {}, {}: {}'.format( a, s, d, v )
 
 
-	def save ( self, *args, **kwargs ):
+	def clean ( self ):
 		name_re = re.compile( r'^[A-z_]\w*$' )
 		if not name_re.match( self.season ):
 			msg = ('Season name is not valid.  Use only alphanumeric (A-z, 0-9, '
@@ -156,6 +156,9 @@ class Param_SegFrac ( DM.Model ):
 			msg = 'Time slice must be a fractional value between 0 and 1.'
 			raise ValidationError( msg )
 
+
+	def save ( self, *args, **kwargs ):
+		self.clean()
 		super( Param_SegFrac, self ).save( *args, **kwargs )
 
 
