@@ -13,9 +13,11 @@ from django.test import TestCase
 from process_interface.models import (
   Analysis,
   Commodity,
+  Param_SegFrac,
   Technology,
   Vintage,
-  Param_SegFrac,
+  Set_tech_baseload,
+  Set_tech_storage,
 )
 
 
@@ -77,6 +79,22 @@ class Param_SegFracFactory ( factory.django.DjangoModelFactory ):
 	season = 'Unit_Test_Season'
 	time_of_day = 'Unit_Test_Day'
 	value = 1
+
+
+
+class Set_tech_baseloadFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Set_tech_baseload
+
+	analysis = factory.SubFactory( AnalysisFactory )
+	technology = factory.SubFactory( TechnologyFactory )
+
+
+
+class Set_tech_storageFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Set_tech_storage
+
+	analysis = factory.SubFactory( AnalysisFactory )
+	technology = factory.SubFactory( TechnologyFactory )
 
 
 
@@ -372,4 +390,47 @@ class ModelParam_SegFracTest ( TestCase ):
 		expected = u'({}) {}, {}: {}'.format(
 		  sf.analysis, sf.season, sf.time_of_day, sf.value )
 		self.assertEqual( unicode(sf), expected )
+
+
+
+class ModelsTechnologySetMemberTest ( TestCase ):
+
+	def test_tech_baseload_unicode_empty ( self ):
+		bl = Set_tech_baseload()
+		expected = u'(NoAnalysis) NoTechnology'
+		self.assertEqual( unicode(bl), expected )
+
+
+	def test_tech_baseload_only_analysis ( self ):
+		a = AnalysisFactory.create()
+		bl = Set_tech_baseloadFactory.build( analysis=a )
+		expected = u'({}) NoTechnology'.format( bl.analysis )
+		self.assertEqual( unicode(bl), expected )
+
+
+	def test_tech_baseload_only_technology ( self ):
+		t = TechnologyFactory.create()
+		bl = Set_tech_baseloadFactory.build( technology=t )
+		expected = u'(NoAnalysis) {}'.format( bl.technology )
+		self.assertEqual( unicode(bl), expected )
+
+
+	def test_tech_storage_unicode_empty ( self ):
+		bl = Set_tech_storage()
+		expected = u'(NoAnalysis) NoTechnology'
+		self.assertEqual( unicode(bl), expected )
+
+
+	def test_tech_storage_only_analysis ( self ):
+		a = AnalysisFactory.create()
+		bl = Set_tech_storageFactory.build( analysis=a )
+		expected = u'({}) NoTechnology'.format( bl.analysis )
+		self.assertEqual( unicode(bl), expected )
+
+
+	def test_tech_storage_only_technology ( self ):
+		t = TechnologyFactory.create()
+		bl = Set_tech_storageFactory.build( technology=t )
+		expected = u'(NoAnalysis) {}'.format( bl.technology )
+		self.assertEqual( unicode(bl), expected )
 
