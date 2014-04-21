@@ -127,8 +127,16 @@ class Param_SegFrac ( DM.Model ):
 		unique_together = ('analysis', 'season', 'time_of_day')
 
 	def __unicode__ ( self ):
-		return u'({}) {}, {}: {}'.format(
-		   self.analysis, self.season, self.time_of_day, self.value )
+		a, s, d, v = 'NoAnalysis', 'NoSeason', 'NoTimeOfDay', 'NoValue'
+		if self.analysis_id:
+			a = self.analysis
+		if self.season:
+			s = self.season
+		if self.time_of_day:
+			d = self.time_of_day
+		if self.value is not None:
+			v = self.value
+		return u'({}) {}, {}: {}'.format( a, s, d, v )
 
 
 	def save ( self, *args, **kwargs ):
