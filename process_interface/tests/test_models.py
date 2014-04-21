@@ -501,3 +501,77 @@ class ModelExistingProcessTest ( TestCase ):
 		expected = u'(NoAnalysis) NoTechnology, {}'.format( p.vintage.vintage )
 		self.assertEqual( unicode(p), expected )
 
+
+	def test_ensure_vintage ( self ):
+		a = AnalysisFactory.create()
+		p = Process(analysis=a)
+
+		with self.assertRaises( ValidationError ) as ve:
+			p.clean_valid_vintage()
+
+		self.assertIn( u'Process must have a vintage.', unicode(ve.exception) )
+
+	def test_ensure_vintage_in_analysis ( self ):
+		a1 = AnalysisFactory.create(name='A Different Unit Test Analysis' )
+		a2 = AnalysisFactory.create(user=a1.user)
+
+		# intentional misuse of a2 and a1
+		v = VintageFactory( analysis=a2, vintage=a1.period_0 -10 )
+		p = Process( analysis=a1, vintage=v )
+		with self.assertRaises( ValidationError ) as ve:
+			p.clean_valid_vintage()
+
+		self.assertIn( u'Vintage does not exist in this analysis.',
+		  unicode(ve.exception) )
+
+
+	def test_ensure_vintage_is_not_final_year ( self ):
+		a = AnalysisFactory.create()
+
+		# the first and only vintage in analysis
+		v = VintageFactory.create( analysis=a )
+
+		p = Process(analysis=a, vintage=v)
+		with self.assertRaises( ValidationError ) as ve:
+			p.clean_valid_vintage()
+
+		self.assertIn( u'The final year in ', unicode(ve.exception) )
+
+
+	def test_ensure_none_or_positive_lifetime ( self ):
+		p = Process()
+		try:
+			p.clean_valid_lifetime()
+		except:
+			self.fail('Unspecified process lifetime should be valid.')
+			raise  # so as not to hide the actual exception
+
+		p.lifetime = 0
+		with self.assertRaises( ValidationError ) as ve:
+			p.clean_valid_lifetime()
+		self.assertIn( u' positive integer or ', unicode(ve.exception) )
+
+		p.lifetime = -10
+		with self.assertRaises( ValidationError ) as ve:
+			p.clean_valid_lifetime()
+		self.assertIn( u' positive integer or ', unicode(ve.exception) )
+
+
+	def test_ensure_valid_existingcapacity ( self ):
+		p = Process()
+		try:
+			p.clean_valid_existingcapacity()
+		except:
+			self.fail('Unspecified process existingcapacity should be valid.')
+			raise  # so as not to hide the actual exception
+
+		p.existingcapacity = 0
+		with self.assertRaises( ValidationError ) as ve:
+			p.clean_valid_existingcapacity()
+		self.assertIn( u' positive integer or ', unicode(ve.exception) )
+
+		p.existingcapacity = -10
+		with self.assertRaises( ValidationError ) as ve:
+			p.clean_valid_existingcapacity()
+		self.assertIn( u' positive integer or ', unicode(ve.exception) )
+
