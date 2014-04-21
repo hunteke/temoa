@@ -201,7 +201,11 @@ class Commodity ( DM.Model ):
 	description = DM.TextField('Backround information')
 
 	def __unicode__ ( self ):
-		return unicode( self.name )
+		n = 'NoName'
+		if self.name:
+			n = self.name
+
+		return unicode( n )
 
 
 
