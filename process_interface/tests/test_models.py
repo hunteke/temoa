@@ -611,3 +611,11 @@ class ModelCommodityTypeTest ( TestCase ):
 		ct.clean()
 		self.assertEqual( ct.name, u'Awesome Name' )
 
+
+	def test_uniqueness ( self ):
+		with self.assertRaises( IntegrityError ) as ie:
+			CommodityType(name='Unit Test CommodityType').save()
+			CommodityType(name='Unit Test CommodityType').save()
+
+		self.assertIn( u'name is not unique', unicode(ie.exception) )
+
