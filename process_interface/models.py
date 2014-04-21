@@ -67,7 +67,23 @@ class Analysis ( DM.Model ):
 
 
 	def __unicode__ ( self ):
-		return u'{} - {}'.format( self.user.username, self.name )
+		u, n = 'NoUser', 'NoName'
+		if self.user_id:
+			u = self.user.username
+		if self.name:
+			n = self.name
+
+		return u'{} - {}'.format( u, n )
+
+
+	def save ( self, *args, **kwargs ):
+		# minor data correction to save a hapless coder from themselves
+		if self.period_0 != 0:   # only an issue if period_0 is not /exactly/ 0
+			self.period_0 = int(self.period_0)
+
+		super( Analysis, self ).save( *args, **kwargs )
+
+
 
 
 
