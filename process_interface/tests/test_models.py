@@ -13,6 +13,7 @@ from django.test import TestCase
 from process_interface.models import (
   Analysis,
   Commodity,
+  CommodityType,
   Param_SegFrac,
   Param_LifetimeTech,
   Process,
@@ -594,4 +595,19 @@ class ModelParam_LifetimeTechProcessTest ( TestCase ):
 			Param_LifetimeTech( value=randint(1, 1e9)*random() ).clean()
 		except:
 			self.fail( 'Positive lifetime values should be valid.' )
+
+
+
+class ModelCommodityTypeTest ( TestCase ):
+
+	def test_empty_name_not_valid ( self ):
+		with self.assertRaises( ValidationError ) as ve:
+			CommodityType().clean()
+		self.assertIn( 'No name specified ', unicode(ve.exception) )
+
+
+	def test_cleaned_name_removes_whitespace_chars ( self ):
+		ct = CommodityType( name=u'\nAw\res\tom\ve\0 Name\0\n\t\v\r' )
+		ct.clean()
+		self.assertEqual( ct.name, u'Awesome Name' )
 
