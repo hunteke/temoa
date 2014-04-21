@@ -134,51 +134,42 @@ class ModelAnalysisTest ( TestCase ):
 
 class ModelVintageTest ( TestCase ):
 
-	@classmethod
-	def setUpClass ( cls ):
-		from django.contrib.auth.models import User
-
-		u = User( username='test_user', password='SomethingSecure',
-		          email='some@email')
-		u.save()
-		cls.user = u
+	def test_uniqueness_creation ( self ):
+		with self.assertRaises( IntegrityError ):
+			VintageFactory.create()
+			VintageFactory.create()
 
 
-	@classmethod
-	def tearDownClass ( cls ):
-		cls.user.delete()
-
-
-	def setUp ( self ):
-		self.analysis = Analysis.objects.create(
-		  user        = self.user,
-		  name        = 'Some Analysis Name',
-		  description = 'Some analysis description',
-		  period_0    = 1,
-		  global_discount_rate = 0.01,
-		)
-
-
-	def tearDown ( self ):
-		self.analysis.delete()
-
-
-	def test_create_vintages ( self ):
-		a = self.analysis
-
-		for i in xrange( 1, 11 ):
-			v = Vintage.objects.create( analysis=a, vintage=i )
-			self.assertEqual( unicode(v), '(test_user - Some Analysis Name) {}'.format(i) )
-
-		self.assertEqual( Vintage.objects.filter( analysis=a ).count(), 10 )
+	def test_uniqueness_update ( self ):
+		a = VintageFactory.create()
+		b = VintageFactory.create( vintage=a.vintage+10, analysis=a.analysis )
 
 		with self.assertRaises( IntegrityError ):
-			with transaction.atomic():
-				Vintage.objects.create( analysis=a, vintage=2 )
+			b.vintage = a.vintage
+			b.save()
 
-		with self.assertRaises( IntegrityError ):
-			with transaction.atomic():
-				v = Vintage( analysis=a, vintage=3 )
-				v.save()
+
+	def test_vintage_is_integer ( self ):
+		a = VintageFactory.create()
+		a.vintage = 5.85
+		a.save()
+		b = Vintage.objects.get( pk=a.pk )
+
+		self.assertEqual( a.vintage, 5 )
+		self.assertEqual( b.vintage, 5 )
+
+
+	def test_unicode_empty ( self ):
+		self.assertEqual( unicode(Vintage()), u'(NoAnalysis) NoVintage' )
+
+
+	def test_unicode_only_vintage ( self ):
+		self.assertEqual( unicode(Vintage(vintage=10)), u'(NoAnalysis) 10')
+
+
+	def test_unicode_only_analysis ( self ):
+		a = AnalysisFactory.create()
+		expected = u'({}) NoVintage'.format(a)
+		self.assertEqual( unicode(Vintage(analysis=a)), expected)
 
 

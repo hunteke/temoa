@@ -85,8 +85,6 @@ class Analysis ( DM.Model ):
 
 
 
-
-
 class Vintage ( DM.Model ):
 	analysis = DM.ForeignKey( Analysis )
 	vintage  = DM.IntegerField()
@@ -97,7 +95,20 @@ class Vintage ( DM.Model ):
 
 
 	def __unicode__ ( self ):
-		return '({}) {}'.format( self.analysis, self.vintage )
+		a, v = 'NoAnalysis', 'NoVintage'
+		if self.analysis_id:
+			a = self.analysis
+		if self.vintage is not None:
+			v = self.vintage
+		return '({}) {}'.format( a, v )
+
+
+	def save ( self, *args, **kwargs ):
+		# minor data correction to save a hapless coder from themselves
+		if self.vintage != 0:   # only an issue if period_0 is not /exactly/ 0
+			self.vintage = int(self.vintage)
+
+		super( Vintage, self ).save( *args, **kwargs )
 
 
 
