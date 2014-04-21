@@ -287,35 +287,35 @@ class ModelParam_SegFracTest ( TestCase ):
 
 
 	def test_unicode_empty ( self ):
-		t = Param_SegFrac()
+		sf = Param_SegFrac()
 		expected = u'(NoAnalysis) NoSeason, NoTimeOfDay: NoValue'
-		self.assertEqual( unicode(t), expected )
+		self.assertEqual( unicode(sf), expected )
 
 
 	def test_unicode_only_analysis ( self ):
-		t = Param_SegFracFactory.create()
-		t.season = t.time_of_day = t.value = None
-		expected = u'({}) NoSeason, NoTimeOfDay: NoValue'.format( t.analysis )
-		self.assertEqual( unicode(t), expected )
+		sf = Param_SegFracFactory.create()
+		sf.season = sf.time_of_day = sf.value = None
+		expected = u'({}) NoSeason, NoTimeOfDay: NoValue'.format( sf.analysis )
+		self.assertEqual( unicode(sf), expected )
 
 
 	def test_unicode_only_season ( self ):
-		t = Param_SegFracFactory.build()
-		t.time_of_day = t.value = None
-		expected = u'(NoAnalysis) {}, NoTimeOfDay: NoValue'.format( t.season )
-		self.assertEqual( unicode(t), expected )
+		sf = Param_SegFracFactory.build()
+		sf.time_of_day = sf.value = None
+		expected = u'(NoAnalysis) {}, NoTimeOfDay: NoValue'.format( sf.season )
+		self.assertEqual( unicode(sf), expected )
 
 
 	def test_unicode_only_time_of_day ( self ):
-		t = Param_SegFracFactory.build()
-		t.season = t.value = None
-		expected = u'(NoAnalysis) NoSeason, {}: NoValue'.format( t.time_of_day )
-		self.assertEqual( unicode(t), expected )
+		sf = Param_SegFracFactory.build()
+		sf.season = sf.value = None
+		expected = u'(NoAnalysis) NoSeason, {}: NoValue'.format( sf.time_of_day )
+		self.assertEqual( unicode(sf), expected )
 
 
 	def test_unicode_only_value ( self ):
-		t = Param_SegFracFactory.build()
-		t.season = t.time_of_day = None
-		expected = u'(NoAnalysis) NoSeason, NoTimeOfDay: {}'.format( t.value )
-		self.assertEqual( unicode(t), expected )
+		sf = Param_SegFracFactory.build()
+		sf.season = sf.time_of_day = None
+		expected = u'(NoAnalysis) NoSeason, NoTimeOfDay: {}'.format( sf.value )
+		self.assertEqual( unicode(sf), expected )
 
