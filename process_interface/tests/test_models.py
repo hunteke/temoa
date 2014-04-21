@@ -181,7 +181,7 @@ class ModelTechnologyTest ( TestCase ):
 
 
 	def test_unicode_name ( self ):
-		t = Technology(name='Unit Test of Technology')
+		t = TechnologyFactory.build()
 		expected = u'{}'.format( t.name )
 		self.assertEqual( unicode(t), expected )
 
