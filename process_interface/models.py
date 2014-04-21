@@ -356,8 +356,14 @@ class LifetimeParameter ( DM.Model ):
 		unique_together = ('analysis', 'technology')
 
 	def __unicode__ ( self ):
-		return u'({}) {}: {}'.format(
-		  self.analysis, self.technology.name, self.value )
+		a, t, v = u'NoAnalysis', u'NoTechnology', u'NoValue'
+		if self.analysis_id:
+			a = self.analysis
+		if self.technology_id:
+			t = self.technology
+		if self.value is not None:
+			v = self.value
+		return u'({}) {}: {}'.format( a, t, v )
 
 
 class Param_LifetimeTech     ( LifetimeParameter ): pass
