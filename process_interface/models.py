@@ -76,11 +76,13 @@ class Analysis ( DM.Model ):
 		return u'{} - {}'.format( u, n )
 
 
-	def save ( self, *args, **kwargs ):
+	def clean ( self ):
 		# minor data correction to save a hapless coder from themselves
 		if self.period_0 != 0:   # only an issue if period_0 is not /exactly/ 0
 			self.period_0 = int(self.period_0)
 
+
+	def save ( self, *args, **kwargs ):
 		super( Analysis, self ).save( *args, **kwargs )
 
 
