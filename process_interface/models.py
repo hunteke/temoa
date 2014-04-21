@@ -259,9 +259,13 @@ class Process ( DM.Model ):
 		unique_together = ('analysis', 'technology', 'vintage')
 
 	def __unicode__ ( self ):
-		a = self.analysis if self.analysis_id else 'NoAnalysis'
-		t = self.technology if self.technology_id else 'NoTechnology'
-		v = self.vintage.vintage if self.vintage_id else 'NoVintage'
+		a, t, v = 'NoAnalysis', 'NoTechnology', 'NoVintage'
+		if self.analysis_id:
+			a = self.analysis
+		if self.technology_id:
+			t = self.technology
+		if self.vintage_id:
+			v = self.vintage.vintage
 		return u'({}) {}, {}'.format( a, t, v )
 
 
