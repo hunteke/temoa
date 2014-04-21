@@ -1,7 +1,7 @@
 import factory
 
 from django.contrib.auth.models import User as DjangoUser
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -43,6 +43,16 @@ class VintageFactory ( factory.django.DjangoModelFactory ):
 
 	analysis = factory.SubFactory( AnalysisFactory )
 	vintage  = 0
+
+
+
+class TechnologyFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Technology
+
+	user = factory.SubFactory( UserFactory )
+	name = 'Unit Test Technology'
+	description = 'Technology automatically created during unit testing.'
+	capacity_to_activity = None
 
 
 
@@ -129,6 +139,46 @@ class ModelAnalysisTest ( TestCase ):
 		a = Analysis( name='Unit Test Analysis' )
 		expected = u'NoUser - {}'.format( a.name )
 		self.assertEqual( unicode(a), expected )
+
+
+
+class ModelTechnologyTest ( TestCase ):
+
+	def test_name_with_bad_characters ( self ):
+		t = TechnologyFactory.build()
+		t.name = u'Name with \r\n\0\t\v bad characters'
+		t.clean()
+		self.assertNotIn( '\r', t.name )
+		self.assertNotIn( '\n', t.name )
+		self.assertNotIn( '\0', t.name )
+		self.assertNotIn( '\t', t.name )
+		self.assertNotIn( '\v', t.name )
+
+
+	def test_no_name_raises_validation_error ( self ):
+		t = TechnologyFactory.build()
+		t.name = ''
+		with self.assertRaisesRegexp( ValidationError, r'\bname\b' ):
+			t.clean()
+
+
+	def test_no_description_raises_validation_error ( self ):
+		t = TechnologyFactory.build()
+		t.description = None
+		with self.assertRaisesRegexp( ValidationError, r'\bdescription\b' ):
+			t.clean()
+
+
+	def test_unicode_empty ( self ):
+		t = Technology()
+		expected = u'NoName'
+		self.assertEqual( unicode(t), expected )
+
+
+	def test_unicode_name ( self ):
+		t = Technology(name='Unit Test of Technology')
+		expected = u'{}'.format( t.name )
+		self.assertEqual( unicode(t), expected )
 
 
 

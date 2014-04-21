@@ -165,18 +165,29 @@ class Technology ( DM.Model ):
 
 
 	def __unicode__ ( self ):
-		return unicode( self.name )
+		n = 'NoName'
+		if self.name:
+			n = self.name
+
+		return unicode( n )
 
 
 	def clean ( self ):
-		self.name = self.name.replace('\r', '').strip()
-		self.description = self.description.replace('\r', '').strip()
+		if self.name:
+			self.name = re.sub(r'[\r\n\t\v\0]', '', self.name).strip()
+		if self.description:
+			self.description = re.sub(r'[\r\v\0]', '', self.description).strip()
 
 		if not self.name:
 			raise ValidationError( 'Technologies must have a name.' )
 
 		if not self.description:
 			raise ValidationError( 'Technologies must have a description.' )
+
+
+	def save ( self, *args, **kwargs ):
+		self.clean()
+		super( Technology, self ).save( *args, **kwargs )
 
 
 
