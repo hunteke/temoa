@@ -136,9 +136,12 @@ class ModelAnalysisTest ( TestCase ):
 
 
 	def test_analysis_uniqueness ( self ):
-		with self.assertRaises( IntegrityError ):
-			AnalysisFactory.create()
-			AnalysisFactory.create()
+		with self.assertRaises( IntegrityError ) as ie:
+			a = AnalysisFactory.create()
+			b = AnalysisFactory.create(user=a.user)
+
+		self.assertIn( u'user_id, name are not unique', unicode(ie.exception) )
+
 
 
 	def test_analysis_unicode_empty ( self ):
@@ -175,15 +178,19 @@ class ModelTechnologyTest ( TestCase ):
 	def test_no_name_raises_validation_error ( self ):
 		t = TechnologyFactory.build()
 		t.name = ''
-		with self.assertRaisesRegexp( ValidationError, r'\bname\b' ):
+		with self.assertRaises( ValidationError ) as ve:
 			t.clean()
+
+		self.assertIn( u'must have a name', unicode(ve.exception) )
 
 
 	def test_no_description_raises_validation_error ( self ):
 		t = TechnologyFactory.build()
 		t.description = None
-		with self.assertRaisesRegexp( ValidationError, r'\bdescription\b' ):
+		with self.assertRaises( ValidationError ) as ve:
 			t.clean()
+
+		self.assertIn( u'must have a description', unicode(ve.exception) )
 
 
 	def test_unicode_empty ( self ):
@@ -202,18 +209,24 @@ class ModelTechnologyTest ( TestCase ):
 class ModelVintageTest ( TestCase ):
 
 	def test_uniqueness_creation ( self ):
-		with self.assertRaises( IntegrityError ):
-			VintageFactory.create()
-			VintageFactory.create()
+		with self.assertRaises( IntegrityError ) as ie:
+			a = VintageFactory.create()
+			b = VintageFactory.create(analysis=a.analysis)
+
+		self.assertIn( u'analysis_id, vintage are not unique',
+		  unicode(ie.exception) )
 
 
 	def test_uniqueness_update ( self ):
 		a = VintageFactory.create()
 		b = VintageFactory.create( vintage=a.vintage+10, analysis=a.analysis )
 
-		with self.assertRaises( IntegrityError ):
+		with self.assertRaises( IntegrityError ) as ie:
 			b.vintage = a.vintage
 			b.save()
+
+		self.assertIn( u'analysis_id, vintage are not unique',
+		  unicode(ie.exception) )
 
 
 	def test_vintage_is_integer ( self ):
@@ -241,18 +254,22 @@ class ModelVintageTest ( TestCase ):
 class ModelCommodityTest ( TestCase ):
 
 	def test_uniqueness_creation ( self ):
-		with self.assertRaises( IntegrityError ):
+		with self.assertRaises( IntegrityError ) as ie:
 			CommodityFactory.create()
 			CommodityFactory.create()
+
+		self.assertIn( u'name is not unique', unicode(ie.exception) )
 
 
 	def test_uniqueness_update ( self ):
 		a = CommodityFactory.create()
 		b = CommodityFactory.create( name=u'OtherCommodity' )
 
-		with self.assertRaises( IntegrityError ):
+		with self.assertRaises( IntegrityError ) as ie:
 			b.name = a.name
 			b.save()
+
+		self.assertIn( u'name is not unique', unicode(ie.exception) )
 
 
 	def test_unicode_empty ( self ):
