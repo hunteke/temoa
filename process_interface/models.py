@@ -85,6 +85,7 @@ class Analysis ( DM.Model ):
 
 
 	def save ( self, *args, **kwargs ):
+		self.clean()
 		super( Analysis, self ).save( *args, **kwargs )
 
 
