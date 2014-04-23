@@ -45,3 +45,21 @@ class TestLoginForm ( TestCase ):
 
 		self.assertTrue( form.is_valid() )
 
+
+	def test_common_control_characters_invalid_in_username ( self ):
+		form = LoginForm({ b'username': b'a\n', b'password': b'a' })
+
+		self.assertFalse( form.is_valid() )
+		self.assertIn( 'username', form.errors )
+		self.assertIn( 'characters on the keyboard',
+		  str(form.errors['username']) )
+
+
+	def test_nullbyte_is_invalid_in_password ( self ):
+		form = LoginForm({ b'username': b'a', b'password': b'a\0a' })
+
+		self.assertFalse( form.is_valid() )
+		self.assertIn( 'password', form.errors )
+		self.assertIn( 'characters on the keyboard',
+		  str(form.errors['password']) )
+

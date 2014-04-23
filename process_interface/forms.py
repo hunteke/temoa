@@ -34,6 +34,25 @@ class LoginForm ( F.Form ):
 	password = F.CharField( label=_('Password'), widget=F.PasswordInput() )
 
 
+	def clean_username ( self ):
+		data = self.cleaned_data['username']
+		if re.search(r'[\0\n\r\t\v]', data):
+			msg = 'Invalid username:  Please stick to characters on the keyboard.'
+			raise F.ValidationError( msg )
+
+		return data
+
+
+	def clean_password ( self ):
+		data = self.cleaned_data['password']
+		if re.search(r'\0', data):
+			msg = 'Invalid password:  Please stick to characters on the keyboard.'
+			raise F.ValidationError( msg )
+
+		return data
+
+
+
 class AnalysisForm ( F.ModelForm ):
 	class Meta:
 		model = Analysis
