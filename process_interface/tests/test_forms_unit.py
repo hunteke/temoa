@@ -3,6 +3,7 @@ import factory
 from django.test import TestCase
 
 from process_interface.forms import (
+  AnalysisForm,
   LoginForm,
 )
 
@@ -66,4 +67,117 @@ class TestLoginForm ( TestCase ):
 		self.assertIn( 'password', f.errors )
 		self.assertIn( 'characters on the keyboard',
 		  str(f.errors['password']) )
+
+
+
+class TestAnalysisForm ( TestCase ):
+
+	def test_name_is_required ( self ):
+		data = {
+		  b'name': b'',
+		  b'description': b'Some description',
+		  b'period_0': b'0',
+		  b'global_discount_rate': b'0.05',
+		}
+
+		f = AnalysisForm( data )
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'name', f.errors )
+		self.assertIn( 'required', str(f.errors['name']) )
+
+
+	def test_description_is_required ( self ):
+		data = {
+		  b'name': b'Some Name',
+		  b'description': b'',
+		  b'period_0': b'0',
+		  b'global_discount_rate': b'0.05',
+		}
+
+		f = AnalysisForm( data )
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'description', f.errors )
+		self.assertIn( 'required', str(f.errors['description']) )
+
+
+	def test_period_0_is_required ( self ):
+		data = {
+		  b'name': b'Some Name',
+		  b'description': b'Some description',
+		  b'period_0': b'',
+		  b'global_discount_rate': b'0.05',
+		}
+
+		f = AnalysisForm( data )
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'period_0', f.errors )
+		self.assertIn( 'required', str(f.errors['period_0']) )
+
+
+	def test_gdr_is_required ( self ):
+		data = {
+		  b'name': b'Some Name',
+		  b'description': b'Some description',
+		  b'period_0': b'0',
+		  b'global_discount_rate': b'',
+		}
+
+		f = AnalysisForm( data )
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'global_discount_rate', f.errors )
+		self.assertIn( 'required', str(f.errors['global_discount_rate']) )
+
+
+	def test_period_0_requires_integer ( self ):
+		data = {
+		  b'name': b'Some Name',
+		  b'description': b'Some description',
+		  b'period_0': b'0.5',
+		  b'global_discount_rate': b'0.05',
+		}
+
+		f = AnalysisForm( data )
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'period_0', f.errors )
+		self.assertIn( 'whole number', str(f.errors['period_0']) )
+
+
+	def test_gdr_requires_number ( self ):
+		data = {
+		  b'name': b'Some Name',
+		  b'description': b'Some description',
+		  b'period_0': b'0',
+		  b'global_discount_rate': b'df',
+		}
+
+		f = AnalysisForm( data )
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'global_discount_rate', f.errors )
+		self.assertIn( 'Enter a number', str(f.errors['global_discount_rate']) )
+
+
+	def test_name_removes_control_characters ( self ):
+		data = {
+		  b'name': b'Some \r\n\0\t\vName',
+		  b'description': b'Some description',
+		  b'period_0': b'0',
+		  b'global_discount_rate': b'0.05',
+		}
+
+		f = AnalysisForm( data )
+		self.assertTrue( f.is_valid() )
+		self.assertEqual( f.cleaned_data['name'], b'Some Name' )
+
+
+	def test_description_removes_control_characters ( self ):
+		data = {
+		  b'name': b'Some Name',
+		  b'description': b'Some \r\n\0\t\vdescription',
+		  b'period_0': b'0',
+		  b'global_discount_rate': b'0.05',
+		}
+
+		f = AnalysisForm( data )
+		self.assertTrue( f.is_valid() )
+		self.assertEqual( f.cleaned_data['description'], b'Some \n\t\vdescription' )
 
