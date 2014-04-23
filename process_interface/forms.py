@@ -94,7 +94,8 @@ class VintagesForm ( F.Form ):
 	def clean_vintages ( self ):
 		data = self.cleaned_data['vintages']
 
-		data = data.strip().strip(',').split(',')
+		data = filter(None, data.strip().strip(',').split(',') )
+
 		if not data:
 			raise F.ValidationError( 'There are no vintages.' )
 
