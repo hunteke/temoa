@@ -1,11 +1,39 @@
 import factory
 
+from django.contrib.auth.models import User as DjangoUser
 from django.test import TestCase
 
 from process_interface.forms import (
   AnalysisForm,
   LoginForm,
+  VintagesForm,
 )
+
+from process_interface.models import Analysis
+
+class UserFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = DjangoUser
+
+	is_active = True
+	is_staff = False
+	is_superuser = False
+	first_name = 'Jiminy'
+	last_name = 'Cricket'
+	username = 'jimbob'
+	email = 'mrjim@example.net'
+
+
+
+class AnalysisFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Analysis
+
+	user = factory.SubFactory( UserFactory )
+	name = 'Unit Test Analysis'
+	description = 'Analysis automatically created during unit testing.'
+	period_0 = 0
+	global_discount_rate = 0.05
+
+
 
 class TestLoginForm ( TestCase ):
 
@@ -180,4 +208,47 @@ class TestAnalysisForm ( TestCase ):
 		f = AnalysisForm( data )
 		self.assertTrue( f.is_valid() )
 		self.assertEqual( f.cleaned_data['description'], b'Some \n\t\vdescription' )
+
+
+
+class TestVintagesForm ( TestCase ):
+
+	def setUp ( self ):
+		self.analysis = AnalysisFactory.create()
+
+
+	def tearDown ( self ):
+		del self.analysis
+
+
+	def test_vintages_required ( self ):
+		f = VintagesForm( {}, analysis=self.analysis )
+
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'vintages', f.errors )
+		self.assertIn( 'required', str(f.errors['vintages']) )
+
+
+	def test_no_vintages_raises_error ( self ):
+		f = VintagesForm( {'vintages': ','}, analysis=self.analysis )
+
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'vintages', f.errors )
+		self.assertIn( 'no vintages', str(f.errors['vintages']) )
+
+
+	def test_invalid_integer_vintage ( self ):
+		f = VintagesForm( {'vintages': 'adf'}, analysis=self.analysis )
+
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'vintages', f.errors )
+		self.assertIn( 'Unable to convert ', str(f.errors['vintages']) )
+
+
+	def test_no_period0_raises ( self ):
+		f = VintagesForm( {'vintages': '1,2,3'}, analysis=self.analysis )
+
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'vintages', f.errors )
+		self.assertIn( 'not contain Period 0', str(f.errors['vintages']) )
 
