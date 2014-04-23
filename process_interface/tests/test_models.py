@@ -172,24 +172,24 @@ class ModelAnalysisTest ( TestCase ):
 			a = AnalysisFactory.create()
 			b = AnalysisFactory.create(user=a.user)
 
-		self.assertIn( u'user_id, name are not unique', unicode(ie.exception) )
+		self.assertIn( u'user_id, name are not unique', str(ie.exception) )
 
 
 	def test_analysis_unicode_empty ( self ):
 		a = Analysis()
-		self.assertEqual( unicode(a), 'NoUser - NoName')
+		self.assertEqual( str(a), 'NoUser - NoName')
 
 
 	def test_analysis_unicode_only_user ( self ):
 		a = Analysis( user=UserFactory.create() )
 		expected = u'{} - NoName'.format( a.user.username )
-		self.assertEqual( unicode(a), expected )
+		self.assertEqual( str(a), expected )
 
 
 	def test_analysis_unicode_only_name ( self ):
 		a = Analysis( name='Unit Test Analysis' )
 		expected = u'NoUser - {}'.format( a.name )
-		self.assertEqual( unicode(a), expected )
+		self.assertEqual( str(a), expected )
 
 
 
@@ -212,7 +212,7 @@ class ModelTechnologyTest ( TestCase ):
 		with self.assertRaises( ValidationError ) as ve:
 			t.clean()
 
-		self.assertIn( u'must have a name', unicode(ve.exception) )
+		self.assertIn( u'must have a name', str(ve.exception) )
 
 
 	def test_no_description_raises_validation_error ( self ):
@@ -221,19 +221,19 @@ class ModelTechnologyTest ( TestCase ):
 		with self.assertRaises( ValidationError ) as ve:
 			t.clean()
 
-		self.assertIn( u'must have a description', unicode(ve.exception) )
+		self.assertIn( u'must have a description', str(ve.exception) )
 
 
 	def test_unicode_empty ( self ):
 		t = Technology()
 		expected = u'NoName'
-		self.assertEqual( unicode(t), expected )
+		self.assertEqual( str(t), expected )
 
 
 	def test_unicode_name ( self ):
 		t = TechnologyFactory.build()
 		expected = u'{}'.format( t.name )
-		self.assertEqual( unicode(t), expected )
+		self.assertEqual( str(t), expected )
 
 
 
@@ -245,7 +245,7 @@ class ModelVintageTest ( TestCase ):
 			b = VintageFactory.create(analysis=a.analysis)
 
 		self.assertIn( u'analysis_id, vintage are not unique',
-		  unicode(ie.exception) )
+		  str(ie.exception) )
 
 
 	def test_uniqueness_update ( self ):
@@ -257,7 +257,7 @@ class ModelVintageTest ( TestCase ):
 			b.save()
 
 		self.assertIn( u'analysis_id, vintage are not unique',
-		  unicode(ie.exception) )
+		  str(ie.exception) )
 
 
 	def test_vintage_is_integer ( self ):
@@ -281,17 +281,17 @@ class ModelVintageTest ( TestCase ):
 
 
 	def test_unicode_empty ( self ):
-		self.assertEqual( unicode(Vintage()), u'(NoAnalysis) NoVintage' )
+		self.assertEqual( str(Vintage()), u'(NoAnalysis) NoVintage' )
 
 
 	def test_unicode_only_vintage ( self ):
-		self.assertEqual( unicode(Vintage(vintage=10)), u'(NoAnalysis) 10')
+		self.assertEqual( str(Vintage(vintage=10)), u'(NoAnalysis) 10')
 
 
 	def test_unicode_only_analysis ( self ):
 		a = AnalysisFactory.create()
 		expected = u'({}) NoVintage'.format(a)
-		self.assertEqual( unicode(Vintage(analysis=a)), expected )
+		self.assertEqual( str(Vintage(analysis=a)), expected )
 
 
 
@@ -302,7 +302,7 @@ class ModelCommodityTest ( TestCase ):
 			CommodityFactory.create()
 			CommodityFactory.create()
 
-		self.assertIn( u'name is not unique', unicode(ie.exception) )
+		self.assertIn( u'name is not unique', str(ie.exception) )
 
 
 	def test_uniqueness_update ( self ):
@@ -313,19 +313,19 @@ class ModelCommodityTest ( TestCase ):
 			b.name = a.name
 			b.save()
 
-		self.assertIn( u'name is not unique', unicode(ie.exception) )
+		self.assertIn( u'name is not unique', str(ie.exception) )
 
 
 	def test_unicode_empty ( self ):
 		t = Commodity()
 		expected = u'NoName'
-		self.assertEqual( unicode(t), expected )
+		self.assertEqual( str(t), expected )
 
 
 	def test_unicode_name ( self ):
 		t = CommodityFactory.build()
 		expected = u'{}'.format( t.name )
-		self.assertEqual( unicode(t), expected )
+		self.assertEqual( str(t), expected )
 
 
 
@@ -337,7 +337,7 @@ class ModelParam_SegFracTest ( TestCase ):
 			b = Param_SegFracFactory.create( analysis=a.analysis )
 
 		self.assertIn( u'season, time_of_day are not unique',
-		  unicode(ie.exception) )
+		  str(ie.exception) )
 
 
 	def test_clean_bad_season ( self ):
@@ -386,42 +386,42 @@ class ModelParam_SegFracTest ( TestCase ):
 	def test_unicode_empty ( self ):
 		sf = Param_SegFrac()
 		expected = u'(NoAnalysis) NoSeason, NoTimeOfDay: NoValue'
-		self.assertEqual( unicode(sf), expected )
+		self.assertEqual( str(sf), expected )
 
 
 	def test_unicode_only_analysis ( self ):
 		sf = Param_SegFracFactory.create()
 		sf.season = sf.time_of_day = sf.value = None
 		expected = u'({}) NoSeason, NoTimeOfDay: NoValue'.format( sf.analysis )
-		self.assertEqual( unicode(sf), expected )
+		self.assertEqual( str(sf), expected )
 
 
 	def test_unicode_only_season ( self ):
 		sf = Param_SegFracFactory.build()
 		sf.time_of_day = sf.value = None
 		expected = u'(NoAnalysis) {}, NoTimeOfDay: NoValue'.format( sf.season )
-		self.assertEqual( unicode(sf), expected )
+		self.assertEqual( str(sf), expected )
 
 
 	def test_unicode_only_time_of_day ( self ):
 		sf = Param_SegFracFactory.build()
 		sf.season = sf.value = None
 		expected = u'(NoAnalysis) NoSeason, {}: NoValue'.format( sf.time_of_day )
-		self.assertEqual( unicode(sf), expected )
+		self.assertEqual( str(sf), expected )
 
 
 	def test_unicode_only_value ( self ):
 		sf = Param_SegFracFactory.build()
 		sf.season = sf.time_of_day = None
 		expected = u'(NoAnalysis) NoSeason, NoTimeOfDay: {}'.format( sf.value )
-		self.assertEqual( unicode(sf), expected )
+		self.assertEqual( str(sf), expected )
 
 
 	def test_unicode ( self ):
 		sf = Param_SegFracFactory.create()
 		expected = u'({}) {}, {}: {}'.format(
 		  sf.analysis, sf.season, sf.time_of_day, sf.value )
-		self.assertEqual( unicode(sf), expected )
+		self.assertEqual( str(sf), expected )
 
 
 
@@ -435,27 +435,27 @@ class ModelsTechnologySetMemberTest ( TestCase ):
 			Set_tech_baseloadFactory.create( analysis=a, technology=t )
 
 		self.assertIn( u' analysis_id, technology_id are not unique',
-		  unicode(ie.exception) )
+		  str(ie.exception) )
 
 
 	def test_tech_baseload_unicode_empty ( self ):
 		bl = Set_tech_baseload()
 		expected = u'(NoAnalysis) NoTechnology'
-		self.assertEqual( unicode(bl), expected )
+		self.assertEqual( str(bl), expected )
 
 
 	def test_tech_baseload_only_analysis ( self ):
 		a = AnalysisFactory.create()
 		bl = Set_tech_baseloadFactory.build( analysis=a )
 		expected = u'({}) NoTechnology'.format( bl.analysis )
-		self.assertEqual( unicode(bl), expected )
+		self.assertEqual( str(bl), expected )
 
 
 	def test_tech_baseload_only_technology ( self ):
 		t = TechnologyFactory.create()
 		bl = Set_tech_baseloadFactory.build( technology=t )
 		expected = u'(NoAnalysis) {}'.format( bl.technology )
-		self.assertEqual( unicode(bl), expected )
+		self.assertEqual( str(bl), expected )
 
 
 
@@ -464,28 +464,28 @@ class ModelExistingProcessTest ( TestCase ):
 	def test_unicode_empty ( self ):
 		p = Process()
 		expected = u'(NoAnalysis) NoTechnology, NoVintage'
-		self.assertEqual( unicode(p), expected )
+		self.assertEqual( str(p), expected )
 
 
 	def test_unicode_only_analysis ( self ):
 		a = AnalysisFactory.create()
 		p = ExistingProcessFactory.build( analysis=a )
 		expected = u'({}) NoTechnology, NoVintage'.format( p.analysis )
-		self.assertEqual( unicode(p), expected )
+		self.assertEqual( str(p), expected )
 
 
 	def test_unicode_only_technology ( self ):
 		t = TechnologyFactory.create()
 		p = ExistingProcessFactory.build( technology=t )
 		expected = u'(NoAnalysis) {}, NoVintage'.format( p.technology )
-		self.assertEqual( unicode(p), expected )
+		self.assertEqual( str(p), expected )
 
 
 	def test_unicode_only_vintage ( self ):
 		v = VintageFactory.create()
 		p = ExistingProcessFactory.build( vintage=v )
 		expected = u'(NoAnalysis) NoTechnology, {}'.format( p.vintage.vintage )
-		self.assertEqual( unicode(p), expected )
+		self.assertEqual( str(p), expected )
 
 
 	def test_ensure_vintage ( self ):
@@ -495,7 +495,7 @@ class ModelExistingProcessTest ( TestCase ):
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_vintage()
 
-		self.assertIn( u'Process must have a vintage.', unicode(ve.exception) )
+		self.assertIn( u'Process must have a vintage.', str(ve.exception) )
 
 	def test_ensure_vintage_in_analysis ( self ):
 		a1 = AnalysisFactory.create(name='A Different Unit Test Analysis' )
@@ -508,7 +508,7 @@ class ModelExistingProcessTest ( TestCase ):
 			p.clean_valid_vintage()
 
 		self.assertIn( u'Vintage does not exist in this analysis.',
-		  unicode(ve.exception) )
+		  str(ve.exception) )
 
 
 	def test_ensure_vintage_is_not_final_year ( self ):
@@ -521,7 +521,7 @@ class ModelExistingProcessTest ( TestCase ):
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_vintage()
 
-		self.assertIn( u'The final year in ', unicode(ve.exception) )
+		self.assertIn( u'The final year in ', str(ve.exception) )
 
 
 	def test_ensure_none_or_positive_lifetime ( self ):
@@ -535,12 +535,12 @@ class ModelExistingProcessTest ( TestCase ):
 		p.lifetime = 0
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_lifetime()
-		self.assertIn( u' positive integer or ', unicode(ve.exception) )
+		self.assertIn( u' positive integer or ', str(ve.exception) )
 
 		p.lifetime = -10
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_lifetime()
-		self.assertIn( u' positive integer or ', unicode(ve.exception) )
+		self.assertIn( u' positive integer or ', str(ve.exception) )
 
 
 	def test_ensure_valid_existingcapacity ( self ):
@@ -554,12 +554,12 @@ class ModelExistingProcessTest ( TestCase ):
 		p.existingcapacity = 0
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_existingcapacity()
-		self.assertIn( u' positive integer or ', unicode(ve.exception) )
+		self.assertIn( u' positive integer or ', str(ve.exception) )
 
 		p.existingcapacity = -10
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_existingcapacity()
-		self.assertIn( u' positive integer or ', unicode(ve.exception) )
+		self.assertIn( u' positive integer or ', str(ve.exception) )
 
 
 
@@ -568,27 +568,27 @@ class ModelParam_LifetimeTechProcessTest ( TestCase ):
 	def test_unicode_empty ( self ):
 		tl = Param_LifetimeTech()
 		expected = u'(NoAnalysis) NoTechnology: NoValue'
-		self.assertEqual( unicode(tl), expected )
+		self.assertEqual( str(tl), expected )
 
 
 	def test_unicode_only_analysis ( self ):
 		a = AnalysisFactory.create()
 		tl = Param_LifetimeTech( analysis=a )
 		expected = u'({}) NoTechnology: NoValue'.format( tl.analysis )
-		self.assertEqual( unicode(tl), expected )
+		self.assertEqual( str(tl), expected )
 
 
 	def test_unicode_only_technology ( self ):
 		t = TechnologyFactory.create()
 		tl = Param_LifetimeTech( technology=t )
 		expected = u'(NoAnalysis) {}: NoValue'.format( tl.technology )
-		self.assertEqual( unicode(tl), expected )
+		self.assertEqual( str(tl), expected )
 
 
 	def test_unicode_only_value ( self ):
 		tl = Param_LifetimeTech( value='15.2' )
 		expected = u'(NoAnalysis) NoTechnology: {}'.format( tl.value )
-		self.assertEqual( unicode(tl), expected )
+		self.assertEqual( str(tl), expected )
 
 
 	def test_value_is_valid_number ( self ):
@@ -603,17 +603,17 @@ class ModelParam_LifetimeTechProcessTest ( TestCase ):
 
 			with self.assertRaises( ValidationError ) as ve:
 				Param_LifetimeTech( value=value ).clean()
-			self.assertIn( u' be a valid float', unicode(ve.exception) )
+			self.assertIn( u' be a valid float', str(ve.exception) )
 
 
 	def test_value_is_positive_number ( self ):
 		with self.assertRaises( ValidationError ) as ve:
 			Param_LifetimeTech( value=0 ).clean()
-		self.assertIn( u'greater than 0', unicode(ve.exception) )
+		self.assertIn( u'greater than 0', str(ve.exception) )
 
 		with self.assertRaises( ValidationError ) as ve:
 			Param_LifetimeTech( value=-randint(1, 1e9)*random() ).clean()
-		self.assertIn( u'greater than 0', unicode(ve.exception) )
+		self.assertIn( u'greater than 0', str(ve.exception) )
 
 		try:
 			Param_LifetimeTech( value=randint(1, 1e9)*random() ).clean()
@@ -627,7 +627,7 @@ class ModelCommodityTypeTest ( TestCase ):
 	def test_empty_name_not_valid ( self ):
 		with self.assertRaises( ValidationError ) as ve:
 			CommodityType().clean()
-		self.assertIn( 'No name specified ', unicode(ve.exception) )
+		self.assertIn( 'No name specified ', str(ve.exception) )
 
 
 	def test_cleaned_name_removes_whitespace_chars ( self ):
@@ -641,5 +641,5 @@ class ModelCommodityTypeTest ( TestCase ):
 			CommodityType(name='Unit Test CommodityType').save()
 			CommodityType(name='Unit Test CommodityType').save()
 
-		self.assertIn( u'name is not unique', unicode(ie.exception) )
+		self.assertIn( u'name is not unique', str(ie.exception) )
 
