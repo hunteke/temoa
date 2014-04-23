@@ -61,7 +61,7 @@ class AnalysisForm ( F.ModelForm ):
 
 	def clean_name ( self ):
 		data = self.cleaned_data['name']
-		data = re.sub(r'[\t\r\n\0]', '', data).strip()
+		data = re.sub(r'[\t\r\n\0\v]', '', data).strip()
 		return data
 
 
