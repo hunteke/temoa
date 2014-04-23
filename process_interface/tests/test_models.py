@@ -152,7 +152,7 @@ class ModelAnalysisTest ( TestCase ):
 		a = AnalysisFactory.build( period_0=5.85 )
 		a.clean()
 
-		self.assertEqual( a.period_0, 6 )
+		self.assertEqual( a.period_0, 5 )
 
 
 	def test_analysis_uniqueness ( self ):
@@ -252,7 +252,7 @@ class ModelVintageTest ( TestCase ):
 		a = VintageFactory.build( vintage=5.85 )
 		a.clean()
 
-		self.assertEqual( a.vintage, 6 )
+		self.assertEqual( a.vintage, 5 )
 
 
 	def test_unicode_empty ( self ):
