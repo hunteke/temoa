@@ -76,16 +76,8 @@ class Analysis ( DM.Model ):
 		return u'{} - {}'.format( u, n )
 
 
-	def clean ( self ):
-		# the DB will balk if it's None, so only worry about if it's not None.
-		if self.period_0 is not None:
-			# minor data correction: just /in case/ a coder uses a string value
-			# instead, convert to a float.  Similarly, make sure it's an integer.
-			self.period_0 = int(float( self.period_0 ))
-
-
 	def save ( self, *args, **kwargs ):
-		self.clean()
+		self.clean_fields()
 		super( Analysis, self ).save( *args, **kwargs )
 
 
@@ -108,16 +100,8 @@ class Vintage ( DM.Model ):
 		return '({}) {}'.format( a, v )
 
 
-	def clean ( self ):
-		# the DB will balk if it's None, so only worry about if it's not None.
-		if self.vintage is not None:
-			# minor data correction: just /in case/ a coder uses a string value
-			# instead, convert to a float.  Similarly, make sure it's an integer.
-			self.vintage = int(float( self.vintage ))
-
-
 	def save ( self, *args, **kwargs ):
-		self.clean()
+		self.clean_fields()
 		super( Vintage, self ).save( *args, **kwargs )
 
 

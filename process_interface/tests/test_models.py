@@ -149,10 +149,22 @@ class ModelAnalysisTest ( TestCase ):
 
 
 	def test_analysis_period_0_is_integer ( self ):
-		a = AnalysisFactory.build( period_0=5.85 )
-		a.clean()
+		u = UserFactory.create()
+		a = AnalysisFactory.build( user=u, period_0=5.85 )
+		a.clean_fields()
 
 		self.assertEqual( a.period_0, 5 )
+
+
+	def test_save_cleans_fields ( self ):
+		u = UserFactory.create()
+		a = AnalysisFactory.build( user=u, period_0='asdf' )
+		with self.assertRaises( ValidationError ) as ve:
+			a.save()
+
+		self.assertIn( 'period_0', ve.exception.message_dict )
+		self.assertIn( ' must be an integer',
+		  str(ve.exception.message_dict['period_0']) )
 
 
 	def test_analysis_uniqueness ( self ):
@@ -249,10 +261,23 @@ class ModelVintageTest ( TestCase ):
 
 
 	def test_vintage_is_integer ( self ):
-		a = VintageFactory.build( vintage=5.85 )
-		a.clean()
+		a = AnalysisFactory.create()
+		v = VintageFactory.build( analysis=a, vintage=5.85 )
+		v.clean_fields()
 
-		self.assertEqual( a.vintage, 5 )
+		self.assertEqual( v.vintage, 5 )
+
+
+	def test_save_cleans_fields ( self ):
+		a = AnalysisFactory.create()
+		v = VintageFactory.build( analysis=a, vintage='asdf' )
+		with self.assertRaises( ValidationError ) as ve:
+			v.save()
+
+		self.assertIn( 'vintage', ve.exception.message_dict )
+		self.assertIn( ' must be an integer',
+		  str(ve.exception.message_dict['vintage']) )
+
 
 
 	def test_unicode_empty ( self ):
@@ -266,7 +291,7 @@ class ModelVintageTest ( TestCase ):
 	def test_unicode_only_analysis ( self ):
 		a = AnalysisFactory.create()
 		expected = u'({}) NoVintage'.format(a)
-		self.assertEqual( unicode(Vintage(analysis=a)), expected)
+		self.assertEqual( unicode(Vintage(analysis=a)), expected )
 
 
 
