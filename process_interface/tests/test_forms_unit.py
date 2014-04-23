@@ -7,9 +7,15 @@ from process_interface.forms import (
   AnalysisForm,
   LoginForm,
   VintagesForm,
+  ProcessForm,
 )
 
-from process_interface.models import Analysis
+from process_interface.models import (
+  Analysis,
+  Process,
+  Technology,
+  Vintage,
+)
 
 class UserFactory ( factory.django.DjangoModelFactory ):
 	FACTORY_FOR = DjangoUser
@@ -32,6 +38,37 @@ class AnalysisFactory ( factory.django.DjangoModelFactory ):
 	description = 'Analysis automatically created during unit testing.'
 	period_0 = 0
 	global_discount_rate = 0.05
+
+
+
+class VintageFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Vintage
+
+	analysis = factory.SubFactory( AnalysisFactory )
+	vintage  = 0
+
+
+
+class TechnologyFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Technology
+
+	user = factory.SubFactory( UserFactory )
+	name = 'Unit Test Technology'
+	description = 'Technology automatically created during unit testing.'
+	capacity_to_activity = None
+
+
+class NewProcessFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Process
+
+	analysis         = factory.SubFactory( AnalysisFactory )
+	technology       = factory.SubFactory( TechnologyFactory )
+	vintage          = factory.SubFactory( VintageFactory )
+	lifetime         = 10
+	loanlife         = 10
+	costinvest       = 1000
+	discountrate     = 0.15
+	existingcapacity = None
 
 
 
@@ -251,4 +288,43 @@ class TestVintagesForm ( TestCase ):
 		self.assertFalse( f.is_valid() )
 		self.assertIn( 'vintages', f.errors )
 		self.assertIn( 'not contain Period 0', str(f.errors['vintages']) )
+
+
+
+class TestNewProcessForm ( TestCase ):
+
+	def setUp ( self ):
+		#self.process = ProcessFactory.build()
+		pass
+
+
+	def tearDown ( self ):
+		#del self.process
+		pass
+
+
+	def test_no_fields_are_there ( self ):
+		p = NewProcessFactory.build()
+		f = ProcessForm( instance=p )
+
+		self.assertFalse( f.is_valid() )
+		self.assertEqual( len(f.fields), 0 )
+
+
+	def test_only_change_passed_field ( self ):
+		a = AnalysisFactory.create()
+		t = TechnologyFactory.create( user=a.user )
+		v = VintageFactory.create( analysis=a, vintage=10 )
+		v = VintageFactory.create( analysis=a, vintage=0 )
+		p = NewProcessFactory.create(analysis=a, technology=t, vintage=v)
+
+		for attr, val in (
+		  ('costinvest', '2000'), ('discountrate', '0.05'), ('lifetime', '20'),
+		  ('loanlife', '20')
+		):
+			data = { attr : val }
+			f = ProcessForm( data, instance=p )
+			self.assertTrue( f.is_valid() )
+			self.assertEqual( len(f.fields), 1 )
+			self.assertIn( attr, f.fields )
 

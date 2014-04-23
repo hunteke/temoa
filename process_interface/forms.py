@@ -350,7 +350,7 @@ class ProcessForm ( F.Form ):
 				del self.fields['existingcapacity']
 
 		# ensure that we don't remove fields user did not change.
-		for fname in self.fields:
+		for fname in list( self.fields ):
 			if fname not in self.data and fname in self.fields:
 				del self.fields[ fname ]
 
