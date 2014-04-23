@@ -136,7 +136,7 @@ def get_technology_info ( analysis, technologies ):
 	    'baseload'           : t in BaseloadTechs,
 	    'capacitytoactivity' : CapacityToActivity[ t ],
 	    'capacityfactors'    : CapacityFactors[ t ],
-	    'description'        : unicode( t.description ),
+	    'description'        : str( t.description ),
 	    'growthratelimit'    : GrowthRate[ t, 'ratelimit' ],
 	    'growthrateseed'     : GrowthRate[ t, 'seed' ],
 	    'storage'            : t in StorageTechs,

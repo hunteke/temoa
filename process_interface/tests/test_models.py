@@ -175,18 +175,18 @@ class ModelAnalysisTest ( TestCase ):
 		self.assertIn( u'user_id, name are not unique', str(ie.exception) )
 
 
-	def test_analysis_unicode_empty ( self ):
+	def test_analysis_str_empty ( self ):
 		a = Analysis()
 		self.assertEqual( str(a), 'NoUser - NoName')
 
 
-	def test_analysis_unicode_only_user ( self ):
+	def test_analysis_str_only_user ( self ):
 		a = Analysis( user=UserFactory.create() )
 		expected = u'{} - NoName'.format( a.user.username )
 		self.assertEqual( str(a), expected )
 
 
-	def test_analysis_unicode_only_name ( self ):
+	def test_analysis_str_only_name ( self ):
 		a = Analysis( name='Unit Test Analysis' )
 		expected = u'NoUser - {}'.format( a.name )
 		self.assertEqual( str(a), expected )
@@ -224,13 +224,13 @@ class ModelTechnologyTest ( TestCase ):
 		self.assertIn( u'must have a description', str(ve.exception) )
 
 
-	def test_unicode_empty ( self ):
+	def test_str_empty ( self ):
 		t = Technology()
 		expected = u'NoName'
 		self.assertEqual( str(t), expected )
 
 
-	def test_unicode_name ( self ):
+	def test_str_name ( self ):
 		t = TechnologyFactory.build()
 		expected = u'{}'.format( t.name )
 		self.assertEqual( str(t), expected )
@@ -280,15 +280,15 @@ class ModelVintageTest ( TestCase ):
 
 
 
-	def test_unicode_empty ( self ):
+	def test_str_empty ( self ):
 		self.assertEqual( str(Vintage()), u'(NoAnalysis) NoVintage' )
 
 
-	def test_unicode_only_vintage ( self ):
+	def test_str_only_vintage ( self ):
 		self.assertEqual( str(Vintage(vintage=10)), u'(NoAnalysis) 10')
 
 
-	def test_unicode_only_analysis ( self ):
+	def test_str_only_analysis ( self ):
 		a = AnalysisFactory.create()
 		expected = u'({}) NoVintage'.format(a)
 		self.assertEqual( str(Vintage(analysis=a)), expected )
@@ -316,13 +316,13 @@ class ModelCommodityTest ( TestCase ):
 		self.assertIn( u'name is not unique', str(ie.exception) )
 
 
-	def test_unicode_empty ( self ):
+	def test_str_empty ( self ):
 		t = Commodity()
 		expected = u'NoName'
 		self.assertEqual( str(t), expected )
 
 
-	def test_unicode_name ( self ):
+	def test_str_name ( self ):
 		t = CommodityFactory.build()
 		expected = u'{}'.format( t.name )
 		self.assertEqual( str(t), expected )
@@ -383,41 +383,41 @@ class ModelParam_SegFracTest ( TestCase ):
 				sf.clean()
 
 
-	def test_unicode_empty ( self ):
+	def test_str_empty ( self ):
 		sf = Param_SegFrac()
 		expected = u'(NoAnalysis) NoSeason, NoTimeOfDay: NoValue'
 		self.assertEqual( str(sf), expected )
 
 
-	def test_unicode_only_analysis ( self ):
+	def test_str_only_analysis ( self ):
 		sf = Param_SegFracFactory.create()
 		sf.season = sf.time_of_day = sf.value = None
 		expected = u'({}) NoSeason, NoTimeOfDay: NoValue'.format( sf.analysis )
 		self.assertEqual( str(sf), expected )
 
 
-	def test_unicode_only_season ( self ):
+	def test_str_only_season ( self ):
 		sf = Param_SegFracFactory.build()
 		sf.time_of_day = sf.value = None
 		expected = u'(NoAnalysis) {}, NoTimeOfDay: NoValue'.format( sf.season )
 		self.assertEqual( str(sf), expected )
 
 
-	def test_unicode_only_time_of_day ( self ):
+	def test_str_only_time_of_day ( self ):
 		sf = Param_SegFracFactory.build()
 		sf.season = sf.value = None
 		expected = u'(NoAnalysis) NoSeason, {}: NoValue'.format( sf.time_of_day )
 		self.assertEqual( str(sf), expected )
 
 
-	def test_unicode_only_value ( self ):
+	def test_str_only_value ( self ):
 		sf = Param_SegFracFactory.build()
 		sf.season = sf.time_of_day = None
 		expected = u'(NoAnalysis) NoSeason, NoTimeOfDay: {}'.format( sf.value )
 		self.assertEqual( str(sf), expected )
 
 
-	def test_unicode ( self ):
+	def test_str ( self ):
 		sf = Param_SegFracFactory.create()
 		expected = u'({}) {}, {}: {}'.format(
 		  sf.analysis, sf.season, sf.time_of_day, sf.value )
@@ -438,7 +438,7 @@ class ModelsTechnologySetMemberTest ( TestCase ):
 		  str(ie.exception) )
 
 
-	def test_tech_baseload_unicode_empty ( self ):
+	def test_tech_baseload_str_empty ( self ):
 		bl = Set_tech_baseload()
 		expected = u'(NoAnalysis) NoTechnology'
 		self.assertEqual( str(bl), expected )
@@ -461,27 +461,27 @@ class ModelsTechnologySetMemberTest ( TestCase ):
 
 class ModelExistingProcessTest ( TestCase ):
 
-	def test_unicode_empty ( self ):
+	def test_str_empty ( self ):
 		p = Process()
 		expected = u'(NoAnalysis) NoTechnology, NoVintage'
 		self.assertEqual( str(p), expected )
 
 
-	def test_unicode_only_analysis ( self ):
+	def test_str_only_analysis ( self ):
 		a = AnalysisFactory.create()
 		p = ExistingProcessFactory.build( analysis=a )
 		expected = u'({}) NoTechnology, NoVintage'.format( p.analysis )
 		self.assertEqual( str(p), expected )
 
 
-	def test_unicode_only_technology ( self ):
+	def test_str_only_technology ( self ):
 		t = TechnologyFactory.create()
 		p = ExistingProcessFactory.build( technology=t )
 		expected = u'(NoAnalysis) {}, NoVintage'.format( p.technology )
 		self.assertEqual( str(p), expected )
 
 
-	def test_unicode_only_vintage ( self ):
+	def test_str_only_vintage ( self ):
 		v = VintageFactory.create()
 		p = ExistingProcessFactory.build( vintage=v )
 		expected = u'(NoAnalysis) NoTechnology, {}'.format( p.vintage.vintage )
@@ -565,27 +565,27 @@ class ModelExistingProcessTest ( TestCase ):
 
 class ModelParam_LifetimeTechProcessTest ( TestCase ):
 
-	def test_unicode_empty ( self ):
+	def test_str_empty ( self ):
 		tl = Param_LifetimeTech()
 		expected = u'(NoAnalysis) NoTechnology: NoValue'
 		self.assertEqual( str(tl), expected )
 
 
-	def test_unicode_only_analysis ( self ):
+	def test_str_only_analysis ( self ):
 		a = AnalysisFactory.create()
 		tl = Param_LifetimeTech( analysis=a )
 		expected = u'({}) NoTechnology: NoValue'.format( tl.analysis )
 		self.assertEqual( str(tl), expected )
 
 
-	def test_unicode_only_technology ( self ):
+	def test_str_only_technology ( self ):
 		t = TechnologyFactory.create()
 		tl = Param_LifetimeTech( technology=t )
 		expected = u'(NoAnalysis) {}: NoValue'.format( tl.technology )
 		self.assertEqual( str(tl), expected )
 
 
-	def test_unicode_only_value ( self ):
+	def test_str_only_value ( self ):
 		tl = Param_LifetimeTech( value='15.2' )
 		expected = u'(NoAnalysis) NoTechnology: {}'.format( tl.value )
 		self.assertEqual( str(tl), expected )

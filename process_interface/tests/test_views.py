@@ -307,7 +307,7 @@ class ViewAnalysisTest ( TestCase ):
 
 		vintages = Vintage.objects.filter( analysis=analysis )
 		vintages = sorted( v.vintage for v in vintages )
-		vintages = u', '.join( unicode(i) for i in vintages)
+		vintages = u', '.join( str(i) for i in vintages)
 		self.assertEqual( ret_data['vintages'], vintages )
 
 		# Part 3: ensure TemoaDB has stored new analysis for others to view
@@ -372,7 +372,7 @@ class ViewAnalysisTest ( TestCase ):
 
 		vintages = Vintage.objects.filter( analysis=analysis )
 		vintages = sorted( v.vintage for v in vintages )
-		vintages = u', '.join( unicode(i) for i in vintages)
+		vintages = u', '.join( str(i) for i in vintages)
 		self.assertEqual( ret_data['vintages'], vintages )
 
 		# Part 6: Ensure that having some vintages is enforced
@@ -478,7 +478,7 @@ class ViewAnalysisTest ( TestCase ):
 		analysis = Analysis.objects.get( pk=analysis.pk )
 		vintages = Vintage.objects.filter( analysis=analysis )
 		vintages = sorted( v.vintage for v in vintages )
-		vintages = u', '.join( unicode(i) for i in vintages )
+		vintages = u', '.join( str(i) for i in vintages )
 
 		self.assertEqual( analysis.name, ret_data['name'] )
 		self.assertEqual( analysis.description, ret_data['description'] )

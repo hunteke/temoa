@@ -722,7 +722,7 @@ class CostForm ( F.Form ):
 			self.fields['per'].choices = per_choices
 
 			msg = 'Invalid period (%(value)s).  Valid periods are: {}'
-			pers = ', '.join( unicode(i[0]) for i in per_choices )
+			pers = ', '.join( str(i[0]) for i in per_choices )
 			em = self.fields['per'].error_messages
 			em['invalid_choice'] = _(msg.format( pers ))
 
@@ -938,7 +938,7 @@ class CapacityFactorTechForm ( F.Form ):
 			self.fields['timeslice'].choices = tslice_choices
 
 			msg = 'Invalid timeslice (%(value)s).  Valid choices are: {}'
-			msg_choices = ', '.join( unicode(i[0]) for i in tslice_choices )
+			msg_choices = ', '.join( str(i[0]) for i in tslice_choices )
 			em = self.fields['timeslice'].error_messages
 			em['invalid_choice'] = _(msg.format( msg_choices ))
 
@@ -1037,7 +1037,7 @@ class CapacityFactorProcessForm ( F.Form ):
 			self.fields['timeslice'].choices = tslice_choices
 
 			msg = 'Invalid timeslice (%(value)s).  Valid choices are: {}'
-			msg_choices = ', '.join( unicode(i[0]) for i in tslice_choices )
+			msg_choices = ', '.join( str(i[0]) for i in tslice_choices )
 			em = self.fields['timeslice'].error_messages
 			em['invalid_choice'] = _(msg.format( msg_choices ))
 
@@ -1135,7 +1135,7 @@ class TechInputSplitForm ( F.Form ):
 			self.fields['inp'].choices = inp_choices
 
 			msg = 'Invalid input commodity (%(value)s).  Valid choices are: {}'
-			pers = ', '.join( unicode(i[0]) for i in inp_choices )
+			pers = ', '.join( str(i[0]) for i in inp_choices )
 			em = self.fields['inp'].error_messages
 			em['invalid_choice'] = _(msg.format( pers ))
 
@@ -1223,7 +1223,7 @@ class TechOutputSplitForm ( F.Form ):
 			self.fields['out'].choices = out_choices
 
 			msg = 'Invalid output commodity (%(value)s).  Valid choices are: {}'
-			pers = ', '.join( unicode(i[0]) for i in out_choices )
+			pers = ', '.join( str(i[0]) for i in out_choices )
 			em = self.fields['out'].error_messages
 			em['invalid_choice'] = _(msg.format( pers ))
 

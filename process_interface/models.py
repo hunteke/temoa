@@ -66,7 +66,7 @@ class Analysis ( DM.Model ):
 		unique_together = ('user', 'name')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		u, n = 'NoUser', 'NoName'
 		if self.user_id:
 			u = self.user.username
@@ -91,7 +91,7 @@ class Vintage ( DM.Model ):
 		ordering = ('analysis', 'vintage')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		a, v = 'NoAnalysis', 'NoVintage'
 		if self.analysis_id:
 			a = self.analysis
@@ -115,7 +115,7 @@ class Param_SegFrac ( DM.Model ):
 	class Meta:
 		unique_together = ('analysis', 'season', 'time_of_day')
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		a, s, d, v = 'NoAnalysis', 'NoSeason', 'NoTimeOfDay', 'NoValue'
 		if self.analysis_id:
 			a = self.analysis
@@ -169,12 +169,12 @@ class Technology ( DM.Model ):
 		ordering = ('name',)
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		n = 'NoName'
 		if self.name:
 			n = self.name
 
-		return unicode( n )
+		return str( n )
 
 
 	def clean ( self ):
@@ -200,12 +200,12 @@ class Commodity ( DM.Model ):
 	name        = DM.CharField( max_length=32767, unique=True )
 	description = DM.TextField('Backround information')
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		n = 'NoName'
 		if self.name:
 			n = self.name
 
-		return unicode( n )
+		return str( n )
 
 
 
@@ -218,7 +218,7 @@ class TechnologySetMember ( DM.Model ):
 		ordering = ('analysis', 'technology')
 		unique_together = ('analysis', 'technology',)
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		a, t = 'NoAnalysis', 'NoTechnology'
 		if self.analysis_id:
 			a = self.analysis
@@ -247,7 +247,7 @@ class Process ( DM.Model ):
 		ordering = ('analysis', 'technology', 'vintage')
 		unique_together = ('analysis', 'technology', 'vintage')
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		a, t, v = 'NoAnalysis', 'NoTechnology', 'NoVintage'
 		if self.analysis_id:
 			a = self.analysis
@@ -344,7 +344,7 @@ class LifetimeParameter ( DM.Model ):
 		ordering = ('analysis', 'technology')
 		unique_together = ('analysis', 'technology')
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		a, t, v = u'NoAnalysis', u'NoTechnology', u'NoValue'
 		if self.analysis_id:
 			a = self.analysis
@@ -377,7 +377,7 @@ class Param_LifetimeTechLoan ( LifetimeParameter ): pass
 class CommodityType ( DM.Model ):
 	name = DM.CharField( max_length=64, unique=True )
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		return u'{}'.format( self.name )
 
 
@@ -405,7 +405,7 @@ class AnalysisCommodity ( DM.Model ):
 		unique_together = ('analysis', 'commodity')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		a = self.analysis if self.analysis_id else 'NoAnalysis'
 		t = self.commodity_type if self.commodity_type_id else 'NoType'
 		c = self.commodity if self.commodity_id else 'NoCommodity'
@@ -422,7 +422,7 @@ class Param_CapacityToActivity ( DM.Model ):
 		unique_together = ('analysis', 'technology')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		a = self.analysis if self.analysis_id else 'NoAnalysis'
 		t = self.technology if self.technology_id else 'NoTechnology'
 		return '({}) {}: {}'.format( a, t, self.value )
@@ -442,7 +442,7 @@ class Param_DemandDefaultDistribution ( DM.Model ):
 	value     = DM.FloatField()
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		analysis    = self.timeslice.analysis
 		season      = self.timeslice.season
 		time_of_day = self.timeslice.time_of_day
@@ -468,7 +468,7 @@ class Param_DemandSpecificDistribution ( DM.Model ):
 		unique_together = ('timeslice', 'demand')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		a = self.timeslice.analysis    if self.timeslice_id else 'NoTimeslice'
 		s = self.timeslice.season      if self.timeslice_id else 'NoTimeslice'
 		d = self.timeslice.time_of_day if self.timeslice_id else 'NoTimeslice'
@@ -501,7 +501,7 @@ class Param_Demand ( DM.Model ):
 		unique_together = ('period', 'demand')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		analysis  = self.demand.analysis
 		commodity = self.demand.commodity
 
@@ -530,7 +530,7 @@ class Param_ResourceBound ( DM.Model ):
 		unique_together = ('period', 'resource')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		analysis  = self.resource.analysis
 		period    = self.period.vintage
 		commodity = self.resource.commodity
@@ -561,7 +561,7 @@ class PeriodCostParameter ( DM.Model ):
 		ordering = ('process__technology', 'process__vintage', 'period')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		try:
 			analysis = self.process.analysis
 			period   = self.period.vintage
@@ -646,7 +646,7 @@ class Param_TechInputSplit ( DM.Model ):
 		unique_together = ('inp_commodity', 'technology')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		analysis = self.inp_commodity.analysis
 		inp      = self.inp_commodity.commodity
 		tech     = self.technology
@@ -686,7 +686,7 @@ class Param_TechOutputSplit ( DM.Model ):
 		unique_together = ('technology', 'out_commodity',)
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		analysis = self.out_commodity.analysis
 		out      = self.out_commodity.commodity
 		tech     = self.technology
@@ -728,7 +728,7 @@ class MinMaxParameter ( DM.Model ):
 		abstract = True
 		unique_together = ('period', 'technology')
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		analysis = self.period.analysis
 		period   = self.period.vintage
 		tech     = self.technology
@@ -768,7 +768,7 @@ class Param_EmissionLimit ( DM.Model ):
 		unique_together = ('period', 'emission')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		analysis = self.period.analysis
 		period   = self.period.vintage
 		emission = self.emission.commodity
@@ -803,7 +803,7 @@ class Param_Efficiency ( DM.Model ):
 		)
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		try:
 			analysis = self.process.analysis
 			inp      = self.inp_commodity.commodity
@@ -858,7 +858,7 @@ class Param_EmissionActivity ( DM.Model ):
 		unique_together = ( 'emission', 'efficiency' )
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		if self.efficiency_id:
 			analysis = self.efficiency.process.analysis
 			inp      = self.efficiency.inp_commodity.commodity
@@ -925,7 +925,7 @@ class Param_CapacityFactorTech ( DM.Model ):
 		 )
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		a = self.timeslice.analysis if self.timeslice_id else 'NoAnalysis'
 		t = self.technology.name if self.technology_id else 'NoTechnology'
 		s = self.timeslice.season if self.timeslice_id else 'NoSegFrac'
@@ -975,7 +975,7 @@ class Param_CapacityFactorProcess ( DM.Model ):
 		)
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		a = self.process_id and self.process.analysis or 'NoAnalysis'
 		s = self.timeslice.season if self.timeslice_id else 'NoSegFrac'
 		d = self.timeslice.time_of_day if self.timeslice_id else 'NoSegFrac'
@@ -1013,7 +1013,7 @@ class Param_GrowthRate ( DM.Model ):
 		unique_together = ('analysis', 'technology')
 
 
-	def __unicode__ ( self ):
+	def __str__ ( self ):
 		analysis = self.analysis_id and self.analysis or 'NoAnalysis'
 		tech     = self.technology_id and self.technology or 'NoTechnology'
 
