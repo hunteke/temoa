@@ -20,7 +20,7 @@ if not isfile( pjoin( curdir, fname + '.py' )):
 	raise IOError( msg.format( missing, curdir ))
 
 
-exec('from {} import *'.format( fname ) )
+exec('from .{} import *'.format( fname ) )
 
 # Step 2: Import the non-Git settings (e.g., secret, etc.)
   # First, since local_settings is necessarily not kept in the RCS, play nice
