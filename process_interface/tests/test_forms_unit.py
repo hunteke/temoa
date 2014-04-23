@@ -47,12 +47,16 @@ class TestLoginForm ( TestCase ):
 
 
 	def test_common_control_characters_invalid_in_username ( self ):
-		f = LoginForm({ b'username': b'a\n', b'password': b'a' })
+		data = { b'password': b'a' }
 
-		self.assertFalse( f.is_valid() )
-		self.assertIn( 'username', f.errors )
-		self.assertIn( 'characters on the keyboard',
-		  str(f.errors['username']) )
+		for badChar in b'\0\n\r\t\v':
+			data[ b'username' ] = b'a' + badChar
+			f = LoginForm( data )
+
+			self.assertFalse( f.is_valid() )
+			self.assertIn( 'username', f.errors )
+			self.assertIn( 'characters on the keyboard',
+			  str(f.errors['username']) )
 
 
 	def test_nullbyte_is_invalid_in_password ( self ):
