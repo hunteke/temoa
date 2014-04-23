@@ -77,9 +77,13 @@ class Analysis ( DM.Model ):
 
 
 	def clean ( self ):
-		# minor data correction to save a hapless coder from themselves
-		if self.period_0 != 0:   # only an issue if period_0 is not /exactly/ 0
-			self.period_0 = int(self.period_0)
+		# the DB will balk if it's None, so only worry about if it's not None.
+		if self.period_0 is not None:
+
+			# minor data correction: just /in case/ a coder uses a string value
+			# instead, convert to a float.  In the case that the float ends up as
+			# an almost-integer (e.g. 1.99999998), round.
+			self.period_0 = int(float(self.period_0) + 0.5)
 
 
 	def save ( self, *args, **kwargs ):
@@ -106,9 +110,13 @@ class Vintage ( DM.Model ):
 
 
 	def clean ( self ):
-		# minor data correction to save a hapless coder from themselves
-		if self.vintage != 0:   # only an issue if period_0 is not /exactly/ 0
-			self.vintage = int(self.vintage)
+		# the DB will balk if it's None, so only worry about if it's not None.
+		if self.vintage is not None:
+
+			# minor data correction: just /in case/ a coder uses a string value
+			# instead, convert to a float.  In the case that the float ends up as
+			# an almost-integer (e.g. 1.99999998), round.
+			self.vintage = int(float(self.vintage) + 0.5)
 
 
 	def save ( self, *args, **kwargs ):
