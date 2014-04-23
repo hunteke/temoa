@@ -152,7 +152,7 @@ class ModelAnalysisTest ( TestCase ):
 		a = AnalysisFactory.build( period_0=5.85 )
 		a.clean()
 
-		self.assertEqual( a.period_0, 5 )
+		self.assertEqual( a.period_0, 6 )
 
 
 	def test_analysis_uniqueness ( self ):
@@ -161,7 +161,6 @@ class ModelAnalysisTest ( TestCase ):
 			b = AnalysisFactory.create(user=a.user)
 
 		self.assertIn( u'user_id, name are not unique', unicode(ie.exception) )
-
 
 
 	def test_analysis_unicode_empty ( self ):
@@ -253,7 +252,7 @@ class ModelVintageTest ( TestCase ):
 		a = VintageFactory.build( vintage=5.85 )
 		a.clean()
 
-		self.assertEqual( a.vintage, 5 )
+		self.assertEqual( a.vintage, 6 )
 
 
 	def test_unicode_empty ( self ):
