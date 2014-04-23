@@ -315,6 +315,19 @@ class CommodityOutputForm ( F.Form ):
 
 
 class ProcessForm ( F.Form ):
+	"""
+	ProcessForm does not expect to present the form, only to properly deal
+	with passed data.  It does this by removing any field that is not
+	referenced by the passed in data.  This tactic has two consequences:
+
+	* ProcessForm cannot present an empty form (as the empty form would have no
+	  fields!), and thus it relies on an outside utility to handle user
+	  interaction.  This class /only/ deals with input.
+
+	* The UI should only pass data for fields it wants to update in the DB.  If
+	  a field has not changed, the UI need not send it.
+	"""
+
 	name         = F.RegexField( required=True, label=_('name'), regex=r'^[A-z_]\w*, *-?\d+$')
 	discountrate = F.FloatField( required=False, label=_('Discount Rate') )
 	lifetime     = F.FloatField( required=False, label=_('Lifetime') )
