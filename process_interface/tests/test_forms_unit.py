@@ -293,16 +293,6 @@ class TestVintagesForm ( TestCase ):
 
 class TestNewProcessForm ( TestCase ):
 
-	def setUp ( self ):
-		#self.process = ProcessFactory.build()
-		pass
-
-
-	def tearDown ( self ):
-		#del self.process
-		pass
-
-
 	def test_no_fields_are_there ( self ):
 		p = NewProcessFactory.build()
 		f = ProcessForm( instance=p )
@@ -312,6 +302,10 @@ class TestNewProcessForm ( TestCase ):
 
 
 	def test_only_change_passed_field ( self ):
+		"""
+		Motivated by GitHub Issue #34 "submitting a single field change to a
+		process clears other fields"
+		"""
 		a = AnalysisFactory.create()
 		t = TechnologyFactory.create( user=a.user )
 		v = VintageFactory.create( analysis=a, vintage=10 )
