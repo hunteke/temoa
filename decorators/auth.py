@@ -3,8 +3,9 @@
 
 from functools import wraps
 
-from django.http import HttpResponse
 from django.utils.decorators import available_attrs
+
+from http_responses import HttpResponseUnauthorized
 
 def require_login ( view_func ):
 	@wraps(view_func, assigned=available_attrs(view_func))
@@ -13,7 +14,7 @@ def require_login ( view_func ):
 			return view_func( req, *args, **kwargs )
 
 		msg = 'Only authenticated users may perform this action.'
-		res = HttpResponse(msg, status=401) # 401 = unauthorized
+		res = HttpResponseUnauthorized( msg )
 		res['Content-Length'] = len( msg )
 		return res
 	return inner
