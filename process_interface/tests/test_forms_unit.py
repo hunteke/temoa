@@ -325,3 +325,44 @@ class TestNewProcessForm ( TestCase ):
 			self.assertEqual( len(f.fields), 1 )
 			self.assertIn( attr, f.fields )
 
+
+	def test_new_process_invalid_vintage ( self ):
+		a = AnalysisFactory.create()
+		t = TechnologyFactory.create( user=a.user )
+		v = VintageFactory.create( analysis=a, vintage=0 )
+		v = VintageFactory.create( analysis=a, vintage=10 )
+		p = NewProcessFactory.build( analysis=a )
+
+		data = {'name': '{}, 5'.format( t.name, v.vintage ) }
+		f = ProcessForm( data, instance=p )
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'name', f.errors )
+		self.assertIn( 'not a valid vintage ', str(f.errors) )
+
+
+	def test_new_process_final_year_not_vintage ( self ):
+		a = AnalysisFactory.create()
+		t = TechnologyFactory.create( user=a.user )
+		v = VintageFactory.create( analysis=a, vintage=0 )
+		v = VintageFactory.create( analysis=a, vintage=10 )
+		p = NewProcessFactory.build( analysis=a )
+
+		data = {'name': '{}, {}'.format( t.name, v.vintage ) }
+		f = ProcessForm( data, instance=p )
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'name', f.errors )
+		self.assertIn( 'final year in', str(f.errors) )
+
+
+	def test_new_process_technology_dne ( self ):
+		a = AnalysisFactory.create()
+		v = VintageFactory.create( analysis=a, vintage=0 )
+		v = VintageFactory.create( analysis=a, vintage=10 )
+		p = NewProcessFactory.build( analysis=a )
+
+		data = {'name': 'TechDNE, 0' }
+		f = ProcessForm( data, instance=p )
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'name', f.errors )
+		self.assertIn( 'not a valid technology ', str(f.errors) )
+
