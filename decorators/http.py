@@ -1,3 +1,6 @@
+# vim:sw=3:ts=3:fileencoding=utf-8:list:listchars=tab\:»·,trail\:·:noexpandtab:
+# :encoding=utf-8:indentSize=3:tabSize=3:noTabs=false:
+
 from django.views.decorators.http import require_http_methods
 
 # Django does not define some of these decorators, so if we want them (we do),
