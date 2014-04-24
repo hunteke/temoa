@@ -381,7 +381,7 @@ class ProcessForm ( F.Form ):
 			raise F.ValidationError( msg.format( tname ))
 		elif len( techs ) > 1:
 			for t in techs:
-				if t.user == self.analysis.user:
+				if t.user == p.analysis.user:
 					tech = t
 					break
 			if not tech:

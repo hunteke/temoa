@@ -366,3 +366,27 @@ class TestNewProcessForm ( TestCase ):
 		self.assertIn( 'name', f.errors )
 		self.assertIn( 'not a valid technology ', str(f.errors) )
 
+
+	def test_new_process_tech_not_unique ( self ):
+		"""
+		If there is only a single technology in the DB, then it's clear what the
+		modeler wants.  If there is more than one, then we assume they want the
+		technology they created.  If, however, the modeler has not created a
+		technology by this name, then it is ambiguous what they want.  The field
+		should fail.
+		"""
+		u1 = UserFactory.create(username='other1', email='a1@b.com')
+		u2 = UserFactory.create(username='other2', email='a2@b.com')
+		a = AnalysisFactory.create()
+		TechnologyFactory.create( user=u1 )
+		t = TechnologyFactory.create( user=u2 )
+		v = VintageFactory.create( analysis=a, vintage=0 )
+		v = VintageFactory.create( analysis=a, vintage=10 )
+		p = NewProcessFactory.build( analysis=a )
+
+		data = {'name': '{}, {}'.format( t.name, 0 ) }
+		f = ProcessForm( data, instance=p )
+		self.assertFalse( f.is_valid() )
+		self.assertIn( 'name', f.errors )
+		self.assertIn( 'not a unique tech', str(f.errors) )
+
