@@ -202,11 +202,12 @@ class ModelTechnologyTest ( TestCase ):
 		t = TechnologyFactory.build()
 		t.name = u'Name with \r\n\0\t\v bad characters'
 		t.clean()
-		self.assertNotIn( '\r', t.name )
-		self.assertNotIn( '\n', t.name )
 		self.assertNotIn( '\0', t.name )
+		self.assertNotIn( '\n', t.name )
+		self.assertNotIn( '\r', t.name )
 		self.assertNotIn( '\t', t.name )
 		self.assertNotIn( '\v', t.name )
+		self.assertNotIn( ' ', t.name )
 
 
 	def test_no_name_raises_validation_error ( self ):

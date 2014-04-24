@@ -182,7 +182,7 @@ class Technology ( DM.Model ):
 
 	def clean ( self ):
 		if self.name:
-			self.name = re.sub(r'[\r\n\t\v\0]', '', self.name).strip()
+			self.name = re.sub(r'[\s\r\n\v\0]', '', self.name).strip()
 		if self.description:
 			self.description = re.sub(r'[\r\v\0]', '', self.description).strip()
 
