@@ -30,24 +30,43 @@
 
 set -e
 
-CLEANUP=true
+TMP_DIR=$(mktemp -d --suffix='.TemoaArchive')
+
+cleanup() {
+	# Called unless --debug passed as first argument to script
+
+	\rm -rf "$TMP_DIR"
+}
+
+if [[ "$1" != "--debug" ]]; then
+	trap cleanup KILL TERM EXIT
+fi
 
 PKG_NAME=temoa.py
 PKG_PATH=./temoa_model
+CWD=$(pwd)
 
-if [[ "$1" = "--save" ]]; then
-	CLEANUP=false
-fi
+git diff --quiet || (echo "Uncommitted changes in branch.  Exiting ..." && exit 1)
+git diff --cached --quiet || (echo "Uncommitted changes in index.  Exiting ..." && exit 1)
 
-(
-	cd "$PKG_PATH"
-	find . -name "*.py" -print | zip "../$PKG_PATH.zip" -q@ --symlinks
+VERSION=$(git log --format="%H" -1)
+TODAY="$(date -u +"%F")"
+( cd "$PKG_PATH"
+  find . -name "*.py" -print0 | xargs -0 -I FILES cp FILES "$TMP_DIR"
 )
 
-echo "#!/usr/bin/env coopr_python" > "$PKG_NAME"
-cat temoa_model.zip >> "$PKG_NAME"
-chmod 755 "$PKG_NAME"
+( cd "$TMP_DIR"
+  find . -name "*.py" -print0 | xargs -0 \
+    sed -i "{
+     s|\\(TEMOA_GIT_VERSION \\+= \\)'HEAD'|\\1'$VERSION'|;
+     s|\\(TEMOA_RELEASE_DATE \\+= \\)'Today'|\\1'$TODAY'|;
+    }"
 
-if [[ "true" = "$CLEANUP" ]]; then
-	\rm -f "$PKG_PATH.zip"
-fi
+  find . -name "*.py" -print0 | xargs -0 zip "$PKG_NAME".zip -q9@ --symlinks
+
+  echo "#!/usr/bin/env coopr_python" > "$PKG_NAME"
+  cat "$PKG_NAME".zip >> "$PKG_NAME"
+  chmod 755 "$PKG_NAME"
+  mv "$PKG_NAME" "$CWD"
+)
+
