@@ -214,7 +214,7 @@ param  Demand  :=
 	;
 
 
-param  LifetimeTechDefault  :=
+param  LifetimeTech  :=
 # tech_all       # value (years)
  e_coal           45
  e_nuclear        45
@@ -234,7 +234,7 @@ param  LifetimeTechDefault  :=
  tl_gascar        15
 	;
 
-param  LifetimeTech  :=
+param  LifetimeProcess  :=
 # tech_all       # vintage_all    # value (years)
  imp_coal         2010          1000
  imp_ethanol      2010          1000
@@ -245,7 +245,7 @@ param  LifetimeTech  :=
  dom_water        2010          1000
 	;
 
-param  LifetimeLoanDefault  :=
+param  LifetimeLoanTech  :=
 # tech_all       # value (years)
  e_coal           45
  e_nuclear        45
@@ -551,307 +551,55 @@ param  CostVariableVintageDefault  :=
  e_nuclear          2045                0.6
 	;
 
- param  CapacityFactor  :=
-# season      # diurnal # tech_all  # vintage_all  # capacity factor value
- winter        day       e_coal       2010          0.85
- winter        night     e_coal       2010          0.85
- summer        day       e_coal       2010          0.85
- summer        night     e_coal       2010          0.85
- intermediate  day       e_coal       2010          0.85
- intermediate  night     e_coal       2010          0.85
- winter        day       e_coal       2015          0.85
- winter        night     e_coal       2015          0.85
- summer        day       e_coal       2015          0.85
- summer        night     e_coal       2015          0.85
- intermediate  day       e_coal       2015          0.85
- intermediate  night     e_coal       2015          0.85
- winter        day       e_coal       2020          0.85
- winter        night     e_coal       2020          0.85
- summer        day       e_coal       2020          0.85
- summer        night     e_coal       2020          0.85
- intermediate  day       e_coal       2020          0.85
- intermediate  night     e_coal       2020          0.85
- winter        day       e_coal       2025          0.85
- winter        night     e_coal       2025          0.85
- summer        day       e_coal       2025          0.85
- summer        night     e_coal       2025          0.85
- intermediate  day       e_coal       2025          0.85
- intermediate  night     e_coal       2025          0.85
- winter        day       e_coal       2030          0.85
- winter        night     e_coal       2030          0.85
- summer        day       e_coal       2030          0.85
- summer        night     e_coal       2030          0.85
- intermediate  day       e_coal       2030          0.85
- intermediate  night     e_coal       2030          0.85
- winter        day       e_coal       2035          0.85
- winter        night     e_coal       2035          0.85
- summer        day       e_coal       2035          0.85
- summer        night     e_coal       2035          0.85
- intermediate  day       e_coal       2035          0.85
- intermediate  night     e_coal       2035          0.85
- winter        day       e_coal       2040          0.85
- winter        night     e_coal       2040          0.85
- summer        day       e_coal       2040          0.85
- summer        night     e_coal       2040          0.85
- intermediate  day       e_coal       2040          0.85
- intermediate  night     e_coal       2040          0.85
- winter        day       e_coal       2045          0.85
- winter        night     e_coal       2045          0.85
- summer        day       e_coal       2045          0.85
- summer        night     e_coal       2045          0.85
- intermediate  day       e_coal       2045          0.85
- intermediate  night     e_coal       2045          0.85
+ param  CapacityFactorTech  :=
+# season      # diurnal # tech_all  # capacity factor value
+ intermediate  day       e_coal      0.85
+ intermediate  night     e_coal      0.85
+ summer        day       e_coal      0.85
+ summer        night     e_coal      0.85
+ winter        day       e_coal      0.85
+ winter        night     e_coal      0.85
 
- winter        day       e_hydro      2010          0.5
- winter        night     e_hydro      2010          0.5
- summer        day       e_hydro      2010          0.5
- summer        night     e_hydro      2010          0.5
- intermediate  day       e_hydro      2010          0.5
- intermediate  night     e_hydro      2010          0.5
- winter        day       e_hydro      2015          0.5
- winter        night     e_hydro      2015          0.5
- summer        day       e_hydro      2015          0.5
- summer        night     e_hydro      2015          0.5
- intermediate  day       e_hydro      2015          0.5
- intermediate  night     e_hydro      2015          0.5
- winter        day       e_hydro      2020          0.5
- winter        night     e_hydro      2020          0.5
- summer        day       e_hydro      2020          0.5
- summer        night     e_hydro      2020          0.5
- intermediate  day       e_hydro      2020          0.5
- intermediate  night     e_hydro      2020          0.5
- winter        day       e_hydro      2025          0.5
- winter        night     e_hydro      2025          0.5
- summer        day       e_hydro      2025          0.5
- summer        night     e_hydro      2025          0.5
- intermediate  day       e_hydro      2025          0.5
- intermediate  night     e_hydro      2025          0.5
- winter        day       e_hydro      2030          0.5
- winter        night     e_hydro      2030          0.5
- summer        day       e_hydro      2030          0.5
- summer        night     e_hydro      2030          0.5
- intermediate  day       e_hydro      2030          0.5
- intermediate  night     e_hydro      2030          0.5
- winter        day       e_hydro      2035          0.5
- winter        night     e_hydro      2035          0.5
- summer        day       e_hydro      2035          0.5
- summer        night     e_hydro      2035          0.5
- intermediate  day       e_hydro      2035          0.5
- intermediate  night     e_hydro      2035          0.5
- winter        day       e_hydro      2040          0.5
- winter        night     e_hydro      2040          0.5
- summer        day       e_hydro      2040          0.5
- summer        night     e_hydro      2040          0.5
- intermediate  day       e_hydro      2040          0.5
- intermediate  night     e_hydro      2040          0.5
- winter        day       e_hydro      2045          0.5
- winter        night     e_hydro      2045          0.5
- summer        day       e_hydro      2045          0.5
- summer        night     e_hydro      2045          0.5
- intermediate  day       e_hydro      2045          0.5
- intermediate  night     e_hydro      2045          0.5
+ intermediate  day       e_hydro     0.5
+ intermediate  night     e_hydro     0.5
+ summer        day       e_hydro     0.5
+ summer        night     e_hydro     0.5
+ winter        day       e_hydro     0.5
+ winter        night     e_hydro     0.5
 
- winter        day       e_wind       2010          0.30
- winter        night     e_wind       2010          0.30
- summer        day       e_wind       2010          0.30
- summer        night     e_wind       2010          0.30
- intermediate  day       e_wind       2010          0.30
- intermediate  night     e_wind       2010          0.30
- winter        day       e_wind       2015          0.30
- winter        night     e_wind       2015          0.30
- summer        day       e_wind       2015          0.30
- summer        night     e_wind       2015          0.30
- intermediate  day       e_wind       2015          0.30
- intermediate  night     e_wind       2015          0.30
- winter        day       e_wind       2020          0.30
- winter        night     e_wind       2020          0.30
- summer        day       e_wind       2020          0.30
- summer        night     e_wind       2020          0.30
- intermediate  day       e_wind       2020          0.30
- intermediate  night     e_wind       2020          0.30
- winter        day       e_wind       2025          0.30
- winter        night     e_wind       2025          0.30
- summer        day       e_wind       2025          0.30
- summer        night     e_wind       2025          0.30
- intermediate  day       e_wind       2025          0.30
- intermediate  night     e_wind       2025          0.30
- winter        day       e_wind       2030          0.30
- winter        night     e_wind       2030          0.30
- summer        day       e_wind       2030          0.30
- summer        night     e_wind       2030          0.30
- intermediate  day       e_wind       2030          0.30
- intermediate  night     e_wind       2030          0.30
- winter        day       e_wind       2035          0.30
- winter        night     e_wind       2035          0.30
- summer        day       e_wind       2035          0.30
- summer        night     e_wind       2035          0.30
- intermediate  day       e_wind       2035          0.30
- intermediate  night     e_wind       2035          0.30
- winter        day       e_wind       2040          0.30
- winter        night     e_wind       2040          0.30
- summer        day       e_wind       2040          0.30
- summer        night     e_wind       2040          0.30
- intermediate  day       e_wind       2040          0.30
- intermediate  night     e_wind       2040          0.30
- winter        day       e_wind       2045          0.30
- winter        night     e_wind       2045          0.30
- summer        day       e_wind       2045          0.30
- summer        night     e_wind       2045          0.30
- intermediate  day       e_wind       2045          0.30
- intermediate  night     e_wind       2045          0.30
+ intermediate  day       e_wind      0.30
+ intermediate  night     e_wind      0.30
+ summer        day       e_wind      0.30
+ summer        night     e_wind      0.30
+ winter        day       e_wind      0.30
+ winter        night     e_wind      0.30
 
- winter        day       e_ngcc       2010          0.95
- winter        night     e_ngcc       2010          0.95
- summer        day       e_ngcc       2010          0.95
- summer        night     e_ngcc       2010          0.95
- intermediate  day       e_ngcc       2010          0.95
- intermediate  night     e_ngcc       2010          0.95
- winter        day       e_ngcc       2015          0.95
- winter        night     e_ngcc       2015          0.95
- summer        day       e_ngcc       2015          0.95
- summer        night     e_ngcc       2015          0.95
- intermediate  day       e_ngcc       2015          0.95
- intermediate  night     e_ngcc       2015          0.95
- winter        day       e_ngcc       2020          0.95
- winter        night     e_ngcc       2020          0.95
- summer        day       e_ngcc       2020          0.95
- summer        night     e_ngcc       2020          0.95
- intermediate  day       e_ngcc       2020          0.95
- intermediate  night     e_ngcc       2020          0.95
- winter        day       e_ngcc       2025          0.95
- winter        night     e_ngcc       2025          0.95
- summer        day       e_ngcc       2025          0.95
- summer        night     e_ngcc       2025          0.95
- intermediate  day       e_ngcc       2025          0.95
- intermediate  night     e_ngcc       2025          0.95
- winter        day       e_ngcc       2030          0.95
- winter        night     e_ngcc       2030          0.95
- summer        day       e_ngcc       2030          0.95
- summer        night     e_ngcc       2030          0.95
- intermediate  day       e_ngcc       2030          0.95
- intermediate  night     e_ngcc       2030          0.95
- winter        day       e_ngcc       2035          0.95
- winter        night     e_ngcc       2035          0.95
- summer        day       e_ngcc       2035          0.95
- summer        night     e_ngcc       2035          0.95
- intermediate  day       e_ngcc       2035          0.95
- intermediate  night     e_ngcc       2035          0.95
- winter        day       e_ngcc       2040          0.95
- winter        night     e_ngcc       2040          0.95
- summer        day       e_ngcc       2040          0.95
- summer        night     e_ngcc       2040          0.95
- intermediate  day       e_ngcc       2040          0.95
- intermediate  night     e_ngcc       2040          0.95
- winter        day       e_ngcc       2045          0.95
- winter        night     e_ngcc       2045          0.95
- summer        day       e_ngcc       2045          0.95
- summer        night     e_ngcc       2045          0.95
- intermediate  day       e_ngcc       2045          0.95
- intermediate  night     e_ngcc       2045          0.95
+ intermediate  day       e_ngcc      0.95
+ intermediate  night     e_ngcc      0.95
+ summer        day       e_ngcc      0.95
+ summer        night     e_ngcc      0.95
+ winter        day       e_ngcc      0.95
+ winter        night     e_ngcc      0.95
 
- winter        day       e_ngsc       2010          0.92
- winter        night     e_ngsc       2010          0.92
- summer        day       e_ngsc       2010          0.92
- summer        night     e_ngsc       2010          0.92
- intermediate  day       e_ngsc       2010          0.92
- intermediate  night     e_ngsc       2010          0.92
- winter        day       e_ngsc       2015          0.92
- winter        night     e_ngsc       2015          0.92
- summer        day       e_ngsc       2015          0.92
- summer        night     e_ngsc       2015          0.92
- intermediate  day       e_ngsc       2015          0.92
- intermediate  night     e_ngsc       2015          0.92
- winter        day       e_ngsc       2020          0.92
- winter        night     e_ngsc       2020          0.92
- summer        day       e_ngsc       2020          0.92
- summer        night     e_ngsc       2020          0.92
- intermediate  day       e_ngsc       2020          0.92
- intermediate  night     e_ngsc       2020          0.92
- winter        day       e_ngsc       2025          0.92
- winter        night     e_ngsc       2025          0.92
- summer        day       e_ngsc       2025          0.92
- summer        night     e_ngsc       2025          0.92
- intermediate  day       e_ngsc       2025          0.92
- intermediate  night     e_ngsc       2025          0.92
- winter        day       e_ngsc       2030          0.92
- winter        night     e_ngsc       2030          0.92
- summer        day       e_ngsc       2030          0.92
- summer        night     e_ngsc       2030          0.92
- intermediate  day       e_ngsc       2030          0.92
- intermediate  night     e_ngsc       2030          0.92
- winter        day       e_ngsc       2035          0.92
- winter        night     e_ngsc       2035          0.92
- summer        day       e_ngsc       2035          0.92
- summer        night     e_ngsc       2035          0.92
- intermediate  day       e_ngsc       2035          0.92
- intermediate  night     e_ngsc       2035          0.92
- winter        day       e_ngsc       2040          0.92
- winter        night     e_ngsc       2040          0.92
- summer        day       e_ngsc       2040          0.92
- summer        night     e_ngsc       2040          0.92
- intermediate  day       e_ngsc       2040          0.92
- intermediate  night     e_ngsc       2040          0.92
- winter        day       e_ngsc       2045          0.92
- winter        night     e_ngsc       2045          0.92
- summer        day       e_ngsc       2045          0.92
- summer        night     e_ngsc       2045          0.92
- intermediate  day       e_ngsc       2045          0.92
- intermediate  night     e_ngsc       2045          0.92
+ intermediate  day       e_ngsc      0.92
+ intermediate  night     e_ngsc      0.92
+ summer        day       e_ngsc      0.92
+ summer        night     e_ngsc      0.92
+ winter        day       e_ngsc      0.92
+ winter        night     e_ngsc      0.92
 
- winter        day       e_nuclear    2010          0.90
- winter        night     e_nuclear    2010          0.90
- summer        day       e_nuclear    2010          0.90
- summer        night     e_nuclear    2010          0.90
- intermediate  day       e_nuclear    2010          0.90
- intermediate  night     e_nuclear    2010          0.90
- winter        day       e_nuclear    2015          0.90
- winter        night     e_nuclear    2015          0.90
- summer        day       e_nuclear    2015          0.90
- summer        night     e_nuclear    2015          0.90
- intermediate  day       e_nuclear    2015          0.90
- intermediate  night     e_nuclear    2015          0.90
- winter        day       e_nuclear    2020          0.90
- winter        night     e_nuclear    2020          0.90
- summer        day       e_nuclear    2020          0.90
- summer        night     e_nuclear    2020          0.90
- intermediate  day       e_nuclear    2020          0.90
- intermediate  night     e_nuclear    2020          0.90
- winter        day       e_nuclear    2025          0.90
- winter        night     e_nuclear    2025          0.90
- summer        day       e_nuclear    2025          0.90
- summer        night     e_nuclear    2025          0.90
- intermediate  day       e_nuclear    2025          0.90
- intermediate  night     e_nuclear    2025          0.90
- winter        day       e_nuclear    2030          0.90
- winter        night     e_nuclear    2030          0.90
- summer        day       e_nuclear    2030          0.90
- summer        night     e_nuclear    2030          0.90
- intermediate  day       e_nuclear    2030          0.90
- intermediate  night     e_nuclear    2030          0.90
- winter        day       e_nuclear    2035          0.90
- winter        night     e_nuclear    2035          0.90
- summer        day       e_nuclear    2035          0.90
- summer        night     e_nuclear    2035          0.90
- intermediate  day       e_nuclear    2035          0.90
- intermediate  night     e_nuclear    2035          0.90
- winter        day       e_ngsc       2040          0.92
- winter        night     e_ngsc       2040          0.92
- summer        day       e_ngsc       2040          0.92
- summer        night     e_ngsc       2040          0.92
- intermediate  day       e_ngsc       2040          0.92
- intermediate  night     e_ngsc       2040          0.92
- winter        day       e_ngsc       2045          0.92
- winter        night     e_ngsc       2045          0.92
- summer        day       e_ngsc       2045          0.92
- summer        night     e_ngsc       2045          0.92
- intermediate  day       e_ngsc       2045          0.92
- intermediate  night     e_ngsc       2045          0.92
+ intermediate  day       e_nuclear   0.90
+ intermediate  night     e_nuclear   0.90
+ summer        day       e_nuclear   0.90
+ summer        night     e_nuclear   0.90
+ winter        day       e_nuclear   0.90
+ winter        night     e_nuclear   0.90
 	;
 
 param TechOutputSplit :=
-# input carrier  # tech_all    # output carrier    # fractional output
- electricity      r_geoth       r_cooling           0.5
- electricity      r_geoth       r_heating           0.5
+# tech_all    # output carrier    # fractional output
+ r_geoth       r_cooling           0.5
+ r_geoth       r_heating           0.5
 	;
 
 param MaxCapacity :=
