@@ -135,12 +135,12 @@ param  Demand  :=
 
 
 param  TechOutputSplit  :=    # roughly TABLE PRC_OUT
-# input carrier   # tech            # output carrier    # fractional value
- crude_oil         t_oil_refinery    diesel              0.7
- crude_oil         t_oil_refinery    gasoline            0.3
+# tech            # output carrier    # fractional value
+ t_oil_refinery    diesel              0.7
+ t_oil_refinery    gasoline            0.3
 	;
 
-param  LifetimeTechDefault  :=
+param  LifetimeTech  :=
  imp_coal   30
  imp_oil    30
  imp_dsl    30
