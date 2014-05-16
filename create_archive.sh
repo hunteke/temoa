@@ -49,7 +49,7 @@ CWD=$(pwd)
 git diff --quiet || (echo "Uncommitted changes in branch.  Exiting ..." && exit 1)
 git diff --cached --quiet || (echo "Uncommitted changes in index.  Exiting ..." && exit 1)
 
-VERSION=$(git log --format="%H" -1)
+VERSION=$(git rev-parse HEAD)
 TODAY="$(date -u +"%F")"
 ( cd "$PKG_PATH"
   find . -name "*.py" -print0 | xargs -0 -I FILES cp FILES "$TMP_DIR"
