@@ -29,6 +29,25 @@ fi
 git diff --quiet || (echo "Uncommitted changes in branch. Exiting ..." && exit 1)
 git diff --cached --quiet || (echo "Uncommitted changes in index. Exiting ..." && exit 1)
 
+TMP_DIR=$(mktemp -d --suffix='.DeployTemoaWebsite')
+
+function cleanup () {
+	# Called unless --debug passed as first argument to script
+
+	\rm -rf "$TMP_DIR"
+	\rm -rf /tmp/TemoaDocumentationBuild/
+	\rm -rf ./docs/
+	\rm -f ./download/temoa.py
+	\rm -f ./download/TemoaDocumentation.pdf
+	\rm -f ./download/example_data_sets.zip
+}
+
+if [[ "$1" != "--debug" ]]; then
+	trap cleanup KILL TERM EXIT
+else
+	set -x
+fi
+
 echo "Testing ssh connection to $REMOTE_SERVER"
 ssh -n $REMOTE_SERVER
 ssh_error="$?"
@@ -45,14 +64,13 @@ echo "Making temoa.py"
 
 git checkout energysystem
 ./create_archive.sh
-mv ./temoa.py /tmp/
-git checkout -- temoa_model/temoa_lib.py
+mv ./temoa.py "$TMP_DIR/"
 
 echo "Creating example_data_sets.zip"
 
-cp -ra ./data_files/ /tmp/example_data_sets/
-( cd /tmp
-  zip -r -9 example_data_sets.zip example_data_sets/
+cp -ra ./data_files/ "$TMP_DIR/example_data_sets/"
+( cd "$TMP_DIR/"
+  zip -qr9 example_data_sets.zip example_data_sets/
   rm -rf ./example_data_sets/
 )
 
@@ -76,12 +94,10 @@ git checkout temoaproject.org
 mkdir -p ./docs/
 mv /tmp/TemoaDocumentationBuild/singlehtml/* ./docs/
 mv /tmp/TemoaDocumentationBuild/latex/TemoaProject.pdf ./download/TemoaDocumentation.pdf
-mv /tmp/{temoa.py,example_data_sets.zip} ./download/
+mv "$TMP_DIR/"{temoa.py,example_data_sets.zip} ./download/
 
 chmod 755 ./download/temoa.py
 chmod 644 ./download/{example_data_sets.zip,TemoaDocumentation.pdf}
-
-rm -rf /tmp/TemoaDocumentationBuild/
 
 echo "Uploading to website"
 BYTES=$(tar --totals -cf - * .htaccess 2>&1 1> /dev/null | awk {'print $4'})
@@ -90,5 +106,3 @@ tar -cf - * .htaccess | pv -s "$BYTES" | bzip2 --best | ssh "$REMOTE_SERVER" "ca
   ssh "$REMOTE_SERVER" "rm -rf '$UPDDIR' && mkdir '$UPDDIR' && (cd '$UPDDIR'; tar -xf ../'$UPDPKG') && \
    mv '$WEBDIR' '$DELDIR' && mv '$UPDDIR' '$WEBDIR' && rm -rf '$DELDIR' '$UPDPKG'"
 
-rm -rf ./docs/
-rm -f ./download/{temoa.py,TemoaDocumentation.pdf,example_data_sets.zip}
