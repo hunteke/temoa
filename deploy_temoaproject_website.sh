@@ -26,14 +26,8 @@ if [[ -z "$(which pv)" ]]; then
 	exit 1
 fi
 
-if [[ -n "$(git diff)" ]]; then
-	echo
-	echo "There are unstaged changes.  Appropriately deal with them before running"
-	echo "this script."
-	echo
-
-	exit 1
-fi
+git diff --quiet || (echo "Uncommitted changes in branch. Exiting ..." && exit 1)
+git diff --cached --quiet || (echo "Uncommitted changes in index. Exiting ..." && exit 1)
 
 echo "Testing ssh connection to $REMOTE_SERVER"
 ssh -n $REMOTE_SERVER
