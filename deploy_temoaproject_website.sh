@@ -101,6 +101,7 @@ function cleanup () {
 	\rm -f ./download/temoa.py
 	\rm -f ./download/TemoaDocumentation.pdf
 	\rm -f ./download/example_data_sets.zip
+	git checkout --quiet temoaproject.org
 }
 
 if [[ "$1" != "--debug" ]]; then
@@ -124,7 +125,7 @@ fi
 
 echo "Making temoa.py"
 
-git checkout energysystem
+git checkout --quiet energysystem
 ./create_archive.sh
 mv ./temoa.py "$TMP_DIR/"
 
@@ -151,7 +152,7 @@ echo "Making documentation"
 
 find . -name "*.pyc" -delete
 
-git checkout temoaproject.org
+git checkout --quiet temoaproject.org
 
 mkdir -p ./docs/
 mv /tmp/TemoaDocumentationBuild/singlehtml/* ./docs/
