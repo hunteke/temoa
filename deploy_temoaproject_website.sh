@@ -164,6 +164,12 @@ chmod 644 ./download/{example_data_sets.zip,TemoaDocumentation.pdf}
 echo "Uploading to website"
 BYTES=$(tar --totals -cf - * .htaccess 2>&1 1> /dev/null | awk {'print $4'})
 
+# We use this convoluted 'tar' pipeline to update the website, rather than a
+# a more appropriate method (e.g., rsync), so that we can approach atomicity.
+# That is, since our group may update the Temoa website from our respective
+# homes, let's try to ensure that the update happens ... or it doesn't.  What we
+# don't want, is half an update, and then our internet connection dies (for
+# whatever reason).
 tar -cf - * .htaccess | pv -s "$BYTES" | bzip2 --best | ssh "$REMOTE_SERVER" "cat > '$UPDPKG'" && \
   ssh "$REMOTE_SERVER" "rm -rf '$UPDDIR' && mkdir '$UPDDIR' && (cd '$UPDDIR'; tar -xf ../'$UPDPKG') && \
    mv '$WEBDIR' '$DELDIR' && mv '$UPDDIR' '$WEBDIR' && rm -rf '$DELDIR' '$UPDPKG'"
