@@ -9,19 +9,19 @@ DELDIR='.temoaproject.org-deleting'
 WEBDIR='temoaproject.org'
 
 if [[ -e "./docs/" ]]; then
-	echo
-	echo "Please remove the directory './docs/'.  This script will destroy anything"
-	echo "in that directory, so save any work you have in it and remove it."
-	echo
+	cat <<EOF
+Please remove the directory './docs/'.  This script will destroy anything in
+that directory, so save any work you have in it and remove it.
+EOF
 
 	exit 1
 fi
 
 if [[ -z "$(which pv)" ]]; then
-	echo
-	echo "Unable to find the 'pv' (Pipe Viewer) program.  Please install it before"
-	echo "rerunning this script."
-	echo
+	cat <<EOF
+Unable to find the 'pv' (Pipe Viewer) program.  Please install it before
+rerunning this script.
+EOF
 
 	exit 1
 fi
@@ -113,11 +113,11 @@ fi
 echo "Testing ssh connection to $REMOTE_SERVER"
 ssh -n $REMOTE_SERVER
 ssh_error="$?"
-if [[ "0" != "$?" ]]; then
-	echo
-	echo "Unable to connect to '$REMOTE_SERVER' via ssh.  You will need to correct"
-	echo "this problem before continuing."
-	echo
+if [[ "0" != "$ssh_error" ]]; then
+	cat <<EOF
+Unable to connect to '$REMOTE_SERVER' via ssh.  You will need to correct this
+problem before continuing.
+EOF
 
 	exit $ssh_error
 fi
