@@ -29,6 +29,40 @@ fi
 git diff --quiet || (echo "Uncommitted changes in branch. Exiting ..." && exit 1)
 git diff --cached --quiet || (echo "Uncommitted changes in index. Exiting ..." && exit 1)
 
+if [[ ! -e "TemoaBox.ova.torrent" ]]; then
+	cat <<EOF
+No torrent file (TemoaBox.ova.torrent).
+
+Since the Temoa Project supports Windows via a VirtualBox appliance, and the
+resulting OVA file is generally large, we offer it as a download via the
+bittorrent protocol.  Necessary steps to complete prior to executing this
+script:
+
+  * create an OVA file through your favorite means (e.g., build a functioning
+    system in VirtualBox and export it as an appliance)
+
+  * create a torrent file of the OVA file (e.g., use transmission-create,
+    transmission-gtk, Deluge, uTorrent ...)
+
+  * start seeding the torrent somewhere (CRITICAL; NOT YET SCRIPT IMPLEMENTED)
+
+  * place a copy of TemoaBox.ova.torrent in this directory
+
+(And yes, there is no reason for this script to need the .torrent file, other
+than as a reminder to you to have created and started it.  :-) )
+EOF
+
+	exit 1
+else
+
+	echo -e "\nHave you started seeding the new OVA torrent?"
+	read -p "Type 'yes' to confirm that you've started the seed: " SEED_STARTED
+
+	[[ "$SEED_STARTED" != "yes" ]] &&
+	  echo -e "\n  Please start seeding the torrent." &&
+	  exit 1
+fi
+
 TMP_DIR=$(mktemp -d --suffix='.DeployTemoaWebsite')
 
 function cleanup () {
@@ -47,6 +81,7 @@ if [[ "$1" != "--debug" ]]; then
 else
 	set -x
 fi
+
 
 echo "Testing ssh connection to $REMOTE_SERVER"
 ssh -n $REMOTE_SERVER
