@@ -26,6 +26,33 @@ if [[ -z "$(which pv)" ]]; then
 	exit 1
 fi
 
+if [[ -z "$(which coopr_python)" ]]; then
+	cat <<EOF
+Unable to find Coopr (coopr_python).  Please install it, or appropriately modify
+your path before continuing.
+EOF
+
+	exit 1
+fi
+
+if [[ -z "$(which sphinx-build)" ]]; then
+	cat <<EOF
+Unable to find sphinx-build utility.  Building the documentation requires
+Sphinx.  Please install it before continuing.
+
+Note that Sphinx is installable via pip.  If you install to your system
+directories, use sudo.  If you wish to install within Coopr, use Coopr's pip:
+
+      # install to system directories
+    $ sudo pip install sphinx
+
+      # install within Coopr's directories
+    $ $(dirname $(which coopr_python))/pip install sphinx
+EOF
+
+	exit 1
+fi
+
 git diff --quiet || (echo "Uncommitted changes in branch. Exiting ..." && exit 1)
 git diff --cached --quiet || (echo "Uncommitted changes in index. Exiting ..." && exit 1)
 
