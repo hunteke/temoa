@@ -1,3 +1,37 @@
+.. spelling::
+
+   Affero
+   Fourer
+   Github
+   Graphviz
+   Kallrath
+   Kernighan
+   LoanAnnualize
+   Makhorin
+   PeriodLength
+   PeriodRate
+   Pythonic
+   Sarat
+   Sreepathi
+   TechLifeFrac
+   builtin
+   clickable
+   codebase
+   cogeneration
+   extendable
+   hyperlinks
+   infeasibility
+   inline
+   interoperate
+   matplotlib
+   monospace
+   plugins
+   presolve
+   ruleset
+   toolsets
+   wastebin
+
+
 =======
 Preface
 =======
@@ -785,11 +819,11 @@ GlobalDiscountRate
 
 :math:`{GDR}`
 
-In financial circles, the value of money is dependendent on when it was
-measured.  There is no method to measure the absolute value of a currency, but
-there are `generally accepted relative rates`_ for forecasting and historical
-purposes.  Temoa uses the same general concept, that the future value (FV) of a
-sum of currency is related to the net present value (NPV) via the formula:
+In financial circles, the value of money is dependent on when it was measured.
+There is no method to measure the absolute value of a currency, but there are
+`generally accepted relative rates`_ for forecasting and historical purposes.
+Temoa uses the same general concept, that the future value (FV) of a sum of
+currency is related to the net present value (NPV) via the formula:
 
 .. math::
 
@@ -850,7 +884,7 @@ ResourceBound
 
 This parameter allows the modeler to specify resources to constrain per period.
 Note that a constraint in one period does not relate to any other periods.  For
-instance, if the modeler specifieds a limit in period 1 and does not specify a
+instance, if the modeler specifies a limit in period 1 and does not specify a
 limit in period 2, then the model may use as much of that resource as it would
 like in period 2.
 
@@ -863,7 +897,7 @@ SegFrac
 :math:`{SEG}_{s \in S,d \in D}`
 
 The :code:`SegFrac` parameter specifies the fraction of the year represented by
-each combination of season and time of day.  The sum of all combinations wthin
+each combination of season and time of day.  The sum of all combinations within
 :code:`SegFrac` must be 1, representing 100% of a year.
 
 
@@ -1006,7 +1040,7 @@ activity indices for the process.  Namely, :math:`p \in \setof{2010, 2012}` as
 
 In combination with the :code:`PeriodRate` parameter, this parameter is used to
 implement the "single characteristic year" simplification.  Specifically,
-instead of trying to account for partial period decomissioning, Temoa assumes
+instead of trying to account for partial period decommissioning, Temoa assumes
 that processes can only produce :code:`TechLifeFrac` of their installed
 capacity.
 
@@ -1065,7 +1099,7 @@ a given time slice.  They are related through the ProcessBalance constraint
 :eq:`ProcessBalance`, which in essence, guarantees the conservation of energy
 for each process.
 
-The Activity variable is defined as the sum over all inputs and outpus of a
+The Activity variable is defined as the sum over all inputs and outputs of a
 process in a given time slice (see equation :eq:`Activity`).  At this time, one
 potential "gotcha" is that for a process with multiple inputs or outputs, there
 is no attempt to reconcile energy units: Temoa assumes all inputs are
@@ -1102,8 +1136,8 @@ In combination, those three constraints ensure the flow of energy through the
 system.  The final calculation, the objective function, is what puts a monetary
 cost to the actions dictated by the model.
 
-The rest of this section defines each model constraint, with a rational for
-existance.  We use the implementation-specific names for the constraint names as
+The rest of this section defines each model constraint, with a rationale for
+existence.  We use the implementation-specific names for the constraints as
 both an artifact of our documentation generation process, and to highlight the
 organization of the functions within the actual code.  They are listed roughly
 in order of importance.
@@ -1568,10 +1602,10 @@ reasons:
 
  * Python has a vibrant community.  Whereas mathematical optimization has a
    small community, its open-source segment even smaller, and the EEO segment
-   significantly smaller than that, the Python community is huge, and ecompasses
-   many disciplines.  This means that where a developer may struggle to find an
-   answer, implementation, or workaround to a problem with a more standard AML,
-   Python will likely enable a community-suggested solution.
+   significantly smaller than that, the Python community is huge, and
+   encompasses many disciplines.  This means that where a developer may struggle
+   to find an answer, implementation, or workaround to a problem with a more
+   standard AML, Python will likely enable a community-suggested solution.
 
  * Powerful documentation tools.  One of the available toolsets in the Python
    world is documentation generators that *dynamically* introspect Python code.
@@ -1580,13 +1614,13 @@ reasons:
    more powerful.  Temoa uses this capability to embed user-oriented
    documentation literally in the code, and almost every constraint has a block
    comment.  Having both the documentation and implementation in one place helps
-   reduce the mental friction and discrepencies often involved in maintaining
+   reduce the mental friction and discrepancies often involved in maintaining
    multiple sources of model authority.
 
  * AMLs are not as concise as thought.
 
 This last point is somewhat esoteric, but consider the MathProg implementation
-of the Demand constraint in constrast with the last line of the Pyomo verson::
+of the Demand constraint in contrast with the last line of the Pyomo version::
 
    expr = (supply >= M.Demand[p, s, d, dem])
 
@@ -1606,7 +1640,7 @@ processes," a directed network graph is a natural visualization.  Temoa utilizes
 a graphic package called Graphviz to create a series of data-specific and
 interactive energy-system maps.  The graphs are available in any format Graphviz
 provides, including scalable vector graphics (SVG), portable network graphics
-(PNG), portable document format (PDF), and (ecapsulated) postscript (E/PS).
+(PNG), portable document format (PDF), and (encapsulated) postscript (E/PS).
 Currently, the output graphs consist of a pre-results (possible) energy map, and
 results per model period, including breakdowns of individual technology
 activity.
@@ -2029,7 +2063,7 @@ reasons:
 
 Note, however, that this is a style `guide`, not a strict ruleset.  There will
 also be corner cases to which a style guide does not apply, and in these cases,
-the judgement of what to do is left to the implementers and maintainers of the
+the judgment of what to do is left to the implementers and maintainers of the
 code base.  To this end, the Python project has a well-written treatise in `PEP
 8`_\ :
 
@@ -2037,7 +2071,7 @@ code base.  To this end, the Python project has a well-written treatise in `PEP
 
    One of Guido's key insights is that code is read much more often than it is
    written.  The guidelines provided here are intended to improve the
-   readability of code and make it consitent across the wide spectrum of Python
+   readability of code and make it consistent across the wide spectrum of Python
    code.  As PEP 20 says, "Readability counts".
 
    A style guide is about consistency.  Consistency with this style guide is
@@ -2278,7 +2312,7 @@ be:
    if ( 5 < a and a < 10 ):
       doSomething()
 
-This reads closer to the more familar mathematical notation of ``5 < a < 10``
+This reads closer to the more familiar mathematical notation of ``5 < a < 10``
 and translates to English as "If a is between 5 and 10, do something."  The
 semantic meaning that ``a`` should be *between* 5 and 10 is more readily
 apparent from just the visual placement between 5 and 10, and is easier for the
@@ -2338,10 +2372,10 @@ The same argument can be made for the related operators:
    64
 
 
-Miscellanous Style Coventions
------------------------------
+Miscellaneous Style Conventions
+-------------------------------
 
- * (Same as `PEP 8`_\ ) Do not use spaces around the assignment operater (``=``)
+ * (Same as `PEP 8`_\ ) Do not use spaces around the assignment operator (``=``)
    when used to indicate a default argument or keyword parameter:
 
    .. code-block:: python
@@ -2440,7 +2474,7 @@ should meet a basic standard of quality:
    Executing licensing in this manner -- rather than requesting IP assignment --
    ensures that no one group of code contributers may unilaterally change the
    license of Temoa, unless **all** contributers agree in writing in a
-   publically archived forum (such as the `Temoa Forum`_).
+   publicly archived forum (such as the `Temoa Forum`_).
 
  * When you are ready to submit your (set of) patch(es) to the Temoa Project,
    we will utilize GitHub's `Pull Request`_ mechanism.
@@ -2466,12 +2500,12 @@ of an analysis.
 .. rubric:: Footnotes
 
 .. [#open_source_realities] The two main goals behind Temoa are transparency and
-   recreatability, hence the AGPL license.  Unfortunately, there are some harsh
+   repeatability, hence the AGPL license.  Unfortunately, there are some harsh
    realities in the current climate of EEO modeling, so this license is not a
    guarantee of openness.  This documentation touches on the issues involved in
    the final section, :ref:`OpenSourceNote`.
 
-.. [#efficiency_table] The efficiency parameter is often refered to as the
+.. [#efficiency_table] The efficiency parameter is often referred to as the
    efficiency table, due to how it looks after even only a few entries in the
    Pyomo input "dot dat" file.
 

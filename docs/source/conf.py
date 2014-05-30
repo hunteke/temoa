@@ -257,3 +257,15 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+# -- Options for Spelling extension --------------------------------------------
+
+# String specifying a file containing a list of words known to be spelled
+# correctly but that do not appear in the language dictionary selected by
+# spelling_lang.  The file should contain one word per line.
+#spelling_word_list_filename = 'spelling_wordlist.txt'
+
+# Boolean controlling whether suggestions for misspelled words are printed.
+# Defaults to False.
+spelling_show_suggestions = True
+

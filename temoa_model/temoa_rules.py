@@ -28,7 +28,7 @@ def TotalCost_rule ( M ):
 	r"""
 
 Using the :code:`Activity` and :code:`Capacity` variables, the Temoa objective
-funciton calculates the costs associated with supplying the system with energy,
+function calculates the costs associated with supplying the system with energy,
 under the assumption that all costs are paid for through loans (rather than with
 lump-sum sales).  This implementation sums up all the costs incurred by the
 solution, and is defined as :math:`C_{tot} = \text{C}_\text{loans} +
@@ -70,7 +70,7 @@ partial-period processes, the activity is constant for all years within a
 period.  There is thus no need to calculate the time-value of money factor for
 each process, and instead, :math:`R_p` is calculated once for each period, as a
 pseudo-parameter.  While this amounts to little more than an efficiency of model
-generation, it is pedogogically significant in that it highlights the fact that
+generation, it is pedagogically significant in that it highlights the fact that
 Temoa optimizes only a single characteristic year within each period.
 
 """
@@ -460,7 +460,7 @@ associated with use of a technology.  In English, this constraint states that
 There is one caveat to keep in mind in regards to the Activity variable: if
 there is more than one output, there is currently no attempt by Temoa to convert
 to a common unit of measurement.  For example, common measurements for heat
-include mass of steam at a given tempurature, or total BTUs, while electricity
+include mass of steam at a given temperature, or total BTUs, while electricity
 is generally measured in a variant of watt-hours.  Reconciling these units of
 measurement, as for example with a cogeneration plant, is currently left as an
 accounting exercise for the modeler.
