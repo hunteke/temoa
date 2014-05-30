@@ -30,13 +30,13 @@ extensions = [
   'sphinx.ext.autodoc',
   'sphinx.ext.todo',
   'sphinx.ext.coverage',
-  #'sphinx.ext.mathjax',
-  'sphinx.ext.pngmath',
+  'sphinx.ext.mathjax',
+  #'sphinx.ext.pngmath',
   'sphinx.ext.ifconfig',
   'sphinx.ext.viewcode',
   'sphinx.ext.graphviz',
   'sphinxcontrib.bibtex',
-  #'sphinxcontrib.spelling',
+  'sphinxcontrib.spelling',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
