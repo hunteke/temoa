@@ -8,6 +8,29 @@ UPDPKG='.temoaproject.org-updating.tbz'
 DELDIR='.temoaproject.org-deleting'
 WEBDIR='temoaproject.org'
 
+function usage () {
+	BNAME=$(basename "$0")
+
+	cat <<EOF
+usage synopsis: $BNAME [--help|--debug]
+
+This script is basically a codification of the steps to deploy to the website.
+In other words, since most of the steps can be automated, this scripts does
+that, also serving as a written form of the necessary actions to take and
+providing some simple sanity checks.
+
+This script also offers a reminder to seed a new torrent file for the
+VirtualBox ova file that has become the Temoa Project's preferred method of
+supporting Windows.
+EOF
+
+	exit 1
+}
+
+if [[ "$1" = "--help" ]]; then
+	usage
+fi
+
 if [[ -e "./docs/" ]]; then
 	cat <<EOF
 Please remove the directory './docs/'.  This script will destroy anything in
