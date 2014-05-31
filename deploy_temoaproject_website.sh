@@ -191,14 +191,15 @@ mv /tmp/TemoaDocumentationBuild/singlehtml/* ./docs/
 mv /tmp/TemoaDocumentationBuild/latex/TemoaProject.pdf ./download/TemoaDocumentation.pdf
 mv "$TMP_DIR/"{temoa.py,example_data_sets.zip} ./download/
 
-# Convert '&' to '&amp;' for proper HTML, and escape '&' so that the next sed
-# invocation doesn't mistake it for the regex '&'
-MAGNET_URL=$(transmission-show -m TemoaBox.ova.torrent | \
-             sed "{s/\&/\\\&amp;/g}")
+# Convert '&' to '&amp;' for proper HTML
+MAGNET_URL=$(transmission-show -m TemoaBox.ova.torrent | sed "{s/\&/\&amp;/g}")
+
+# Escape '&' so the next sed doesn't mistake it for the regex '&'
+MAGNET_URL_SED_SAFE=$(echo "$MAGNET_URL" | sed "{s/\&/\\\&/g}")
 
 echo "  Writing Magnet URL: $MAGNET_URL"
 sed -i "{
-	s|REGEX_REPLACE_WITH_MAGNET_URL|$MAGNET_URL|;
+	s|REGEX_REPLACE_WITH_MAGNET_URL|$MAGNET_URL_SED_SAFE|;
 }" ./download/index.html
 
 chmod 755 ./download/temoa.py
