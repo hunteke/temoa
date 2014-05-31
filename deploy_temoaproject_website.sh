@@ -127,12 +127,12 @@ function cleanup () {
 
 	\rm -rf "$TMP_DIR"
 	\rm -rf /tmp/TemoaDocumentationBuild/
+	git checkout --quiet temoaproject.org
+	git checkout -- download/index.html  # undo MAGNET_URL
 	\rm -rf ./docs/
 	\rm -f ./download/temoa.py
 	\rm -f ./download/TemoaDocumentation.pdf
 	\rm -f ./download/example_data_sets.zip
-	git checkout --quiet temoaproject.org
-	git checkout -- download/index.html  # undo MAGNET_URL
 }
 
 if [[ "$1" != "--debug" ]]; then
