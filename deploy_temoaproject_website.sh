@@ -173,6 +173,7 @@ echo "Making documentation"
 
 find . -name "*.pyc" -delete
 
+echo "Piecing together website downloads ..."
 git checkout --quiet temoaproject.org
 
 mkdir -p ./docs/
