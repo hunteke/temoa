@@ -71,6 +71,16 @@ directories, use sudo.  If you wish to install within Coopr, use Coopr's pip:
 
       # install within Coopr's directories
     $ $(dirname $(which coopr_python))/pip install sphinx
+
+Be sure to also install these packages from pip:
+
+    sphinxcontrib-spelling
+    sphinxcontrib-bibtex
+    pyenchant
+
+Also, if running Ubuntu, you may need to update the 'six' library:
+
+    $ sudo pip install --upgrade six
 EOF
 
 	exit 1
