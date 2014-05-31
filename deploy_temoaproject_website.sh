@@ -142,7 +142,7 @@ else
 fi
 
 
-echo "Testing ssh connection to $REMOTE_SERVER"
+echo -e "\nTesting ssh connection to $REMOTE_SERVER"
 ssh -n $REMOTE_SERVER
 ssh_error="$?"
 if [[ "0" != "$ssh_error" ]]; then
@@ -154,13 +154,13 @@ EOF
 	exit $ssh_error
 fi
 
-echo "Making temoa.py"
+echo -e "\nMaking temoa.py"
 
 git checkout --quiet energysystem
 ./create_archive.sh
 mv ./temoa.py "$TMP_DIR/"
 
-echo "Creating example_data_sets.zip"
+echo "  Creating example_data_sets.zip"
 
 cp -ra ./data_files/ "$TMP_DIR/example_data_sets/"
 ( cd "$TMP_DIR/"
@@ -168,7 +168,7 @@ cp -ra ./data_files/ "$TMP_DIR/example_data_sets/"
   rm -rf ./example_data_sets/
 )
 
-echo "Making documentation"
+echo -e "\nMaking documentation"
 
 ( cd docs/
   make spelling
@@ -183,7 +183,7 @@ echo "Making documentation"
 
 find . -name "*.pyc" -delete
 
-echo "Piecing together website downloads ..."
+echo -e "\nPiecing together website downloads ..."
 git checkout --quiet temoaproject.org
 
 mkdir -p ./docs/
@@ -196,6 +196,7 @@ mv "$TMP_DIR/"{temoa.py,example_data_sets.zip} ./download/
 MAGNET_URL=$(transmission-show -m TemoaBox.ova.torrent | \
              sed "{s/\&/\\\&amp;/g}")
 
+echo "  Writing Magnet URL: $MAGNET_URL"
 sed -i "{
 	s|REGEX_REPLACE_WITH_MAGNET_URL|$MAGNET_URL|;
 }" ./download/index.html
@@ -203,7 +204,7 @@ sed -i "{
 chmod 755 ./download/temoa.py
 chmod 644 ./download/{example_data_sets.zip,TemoaDocumentation.pdf}
 
-echo "Uploading to website"
+echo -e "\nUploading to website"
 BYTES=$(tar --totals -cf - * .htaccess 2>&1 1> /dev/null | awk {'print $4'})
 
 # We use this convoluted 'tar' pipeline to update the website, rather than a
