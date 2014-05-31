@@ -74,9 +74,6 @@ script:
   * start seeding the torrent somewhere (CRITICAL; NOT YET SCRIPT IMPLEMENTED)
 
   * place a copy of TemoaBox.ova.torrent in this directory
-
-(And yes, there is no reason for this script to need the .torrent file, other
-than as a reminder to you to have created and started it.  :-) )
 EOF
 
 	exit 1
@@ -102,6 +99,7 @@ function cleanup () {
 	\rm -f ./download/TemoaDocumentation.pdf
 	\rm -f ./download/example_data_sets.zip
 	git checkout --quiet temoaproject.org
+	git checkout -- download/index.html  # undo MAGNET_URL
 }
 
 if [[ "$1" != "--debug" ]]; then
@@ -158,6 +156,15 @@ mkdir -p ./docs/
 mv /tmp/TemoaDocumentationBuild/singlehtml/* ./docs/
 mv /tmp/TemoaDocumentationBuild/latex/TemoaProject.pdf ./download/TemoaDocumentation.pdf
 mv "$TMP_DIR/"{temoa.py,example_data_sets.zip} ./download/
+
+# Convert '&' to '&amp;' for proper HTML, and escape '&' so that the next sed
+# invocation doesn't mistake it for the regex '&'
+MAGNET_URL=$(transmission-show -m TemoaBox.ova.torrent | \
+             sed "{s/\&/\\\&amp;/g}")
+
+sed -i "{
+	s|REGEX_REPLACE_WITH_MAGNET_URL|$MAGNET_URL|;
+}" ./download/index.html
 
 chmod 755 ./download/temoa.py
 chmod 644 ./download/{example_data_sets.zip,TemoaDocumentation.pdf}
