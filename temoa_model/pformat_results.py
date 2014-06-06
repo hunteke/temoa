@@ -27,12 +27,10 @@ from sys import stderr as SE, stdout as SO
 
 from coopr.pyomo import value
 
-def get_int_padding ( obj ):
-	val = obj[ 1 ]         # obj is 2-tuple, with type(item[ 1 ]) == number
-	return len(str(int(val)))
-def get_dec_padding ( obj ):
-	val = abs(obj[ 1 ])    # obj is 2-tuple, with type(item[ 1 ]) == number
-	return len(str(val - int(val)))
+def get_int_frac_padding ( obj ):
+	# obj is 2-tuple, with type(item[ 1 ]) == number
+	i, f = str( obj[ 1 ] ).split('.')
+	return ( len(i), len(f) )
 
 
 def stringify_data ( data, ostream=SO, format='plain' ):
@@ -44,16 +42,16 @@ def stringify_data ( data, ostream=SO, format='plain' ):
 
 	# This padding code is what makes the display of the output values
 	# line up on the decimal point.
-	int_padding = max(map( get_int_padding, data ))
-	dec_padding = max(map( get_dec_padding, data ))
-	format = "  %%%ds%%-%ds  %%s\n" % (int_padding, dec_padding)
-		# Works out to something like "%8d%-11s  %s"
+	paddings = map( get_int_frac_padding, data )
+	ints, fracs = zip(*paddings)
+	int_padding = max( ints )
+	dec_padding = max( fracs )
+	format = "  %%%ds.%%-%ds  %%s\n" % (int_padding, dec_padding)
+		# Works out to something like "%8d.%-11s  %s"
 
-	for key, val in data:
-		int_part = int(abs(val))
-		dec_part = str(abs(val) - int_part)[1:]  # remove (negative and) 0
-		if val < 0: int_part = "-%d" % int_part
-		ostream.write( format % (int_part, dec_part, key) )
+	for var, val in data:
+		int_part, dec_part = str(val).split('.')
+		ostream.write( format % (int_part, dec_part, var) )
 
 
 
