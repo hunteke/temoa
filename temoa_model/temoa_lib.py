@@ -2084,7 +2084,7 @@ def temoa_solve ( model ):
 	opt = SolverFactory( options.solver )
 	if opt:
 		if options.keepPyomoLP:
-			opt.keepFiles = True
+			opt.keepfiles = True
 			opt.symbolic_solver_labels = True
 
 	elif options.solver != 'NONE':
