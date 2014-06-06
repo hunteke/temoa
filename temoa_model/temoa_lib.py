@@ -1357,8 +1357,7 @@ def parse_args ( ):
 	solver.add_argument('--keep_coopr_lp_file',
 	  help='Save the LP file as written by Pyomo.  This is distinct from the '
 	       "solver's generated LP file, but /should/ represent the same model.  "
-	       'Mainly used for debugging purposes.  The file name will have the '
-	       'same base name as the first dot_dat file specified.  '
+	       'Mainly used for debugging purposes.  '
 	       '[Default: remove Pyomo LP file]',
 	  action='store_true',
 	  dest='keepPyomoLP',
