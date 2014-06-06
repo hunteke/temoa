@@ -1498,49 +1498,48 @@ def solve_perfect_foresight ( model, optimizer, options ):
 					try:
 						value, var = match.groups()
 						value = float( value )
-
-						# Assumption: All variables are indexed
-						vgroup, vindex = var.split('[')
-						vindex = vindex[:-1].split(',')  # remove final ']'
-						for i, index in enumerate( vindex ):
-							# if index is an integer, convert it so it matches indices
-							# Problem: if modeler has used integer values for indices
-							# other than period or vintage.
-							if int_re.match( index ):
-								vindex[ i ] = int( index )
-
-						try:
-							m_var = getattr( instance, vgroup )[ tuple(vindex) ]
-							m_var.fixed = True
-							m_var.set_value( value )
-
-						except AttributeError as ae:
-							if "'AbstractModel' object has no attribute " in str(ae):
-								# This could be so much cleaner if Coopr had
-								# Coopr-specific error classes.  Sigh.
-
-								msg = ('Model does not have a variable named "{}".  '
-								  '(Line {:d})')
-								msg = msg.format( vgroup, lineno )
-								raise TemoaObjectNotFoundError( msg )
-
-							raise
-
-						except KeyError as ke:
-							if 'Error accessing indexed component' in str(ke):
-								# This could be so much cleaner if Coopr had
-								# Coopr-specific error classes.  Sigh.
-
-								msg = 'Variable "{}" has no index "{}".  (Line {:d})'
-								vindex = str( tuple(vindex) )
-								msg = msg.format( vgroup, vindex, lineno )
-								raise TemoaKeyError( msg )
-
-							raise
-
 					except ValueError as ve:
 						msg = '\nUnable to parse value for "{}" (Line {:d})\n'
 						raise TemoaValidationError( msg.format( var, lineno ))
+
+					# Assumption: All variables are indexed
+					vgroup, vindex = var.split('[')
+					vindex = vindex[:-1].split(',')  # remove final ']'
+					for i, index in enumerate( vindex ):
+						# if index is an integer, convert it so it matches indices
+						# Problem: if modeler has used integer values for indices
+						# other than period or vintage.
+						if int_re.match( index ):
+							vindex[ i ] = int( index )
+
+					try:
+						m_var = getattr( instance, vgroup )[ tuple(vindex) ]
+						m_var.fixed = True
+						m_var.set_value( value )
+
+					except AttributeError as ae:
+						if "'AbstractModel' object has no attribute " in str(ae):
+							# This could be so much cleaner if Coopr had
+							# Coopr-specific error classes.  Sigh.
+
+							msg = ('Model does not have a variable named "{}".  '
+							  '(Line {:d})')
+							msg = msg.format( vgroup, lineno )
+							raise TemoaObjectNotFoundError( msg )
+
+						raise
+
+					except KeyError as ke:
+						if 'Error accessing indexed component' in str(ke):
+							# This could be so much cleaner if Coopr had
+							# Coopr-specific error classes.  Sigh.
+
+							msg = 'Variable "{}" has no index "{}".  (Line {:d})'
+							vindex = str( tuple(vindex) )
+							msg = msg.format( vgroup, vindex, lineno )
+							raise TemoaKeyError( msg )
+
+						raise
 
 		SE.write( '\r[%8.2f\n' % duration() )
 		SE.write( '[        ] Preprocessing fixed variables.'); SE.flush()
