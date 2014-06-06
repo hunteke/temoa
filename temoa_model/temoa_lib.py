@@ -1349,6 +1349,7 @@ def parse_args ( ):
 	  help='Request that solver create an LP representation of the optimization '
 	       'problem.  Mainly used for model debugging purposes.  The file name '
 	       'will have the same base name as the first dot_dat file specified.  '
+	       '[Note: this option currently only works with the GLPK solver.] '
 	       '[Default: do not create solver LP file]',
 	  action='store_true',
 	  dest='generateSolverLP',
