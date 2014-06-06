@@ -159,7 +159,6 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 		psvars['V_ActivityByProcess'               ][t, v]       += val
 		psvars['V_ActivityByPeriodInputAndTech'    ][p, i, t]    += val
 		psvars['V_ActivityByPeriodTechAndOutput'   ][p, t, o]    += val
-		psvars['V_ActivityByPeriodAndProcess'      ][p, t, v]    += val
 		psvars['V_ActivityByPeriodInputAndProcess' ][p, i, t, v] += val
 		psvars['V_ActivityByPeriodProcessAndOutput'][p, t, v, o] += val
 
