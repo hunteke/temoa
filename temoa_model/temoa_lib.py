@@ -1345,14 +1345,6 @@ def parse_args ( ):
 	  dest='solver',
 	  default=default_solver)
 
-	solver.add_argument('--symbolic_solver_labels',
-	  help='When interfacing with the solver, use model-derived symbol names.  '
-	       'For example, "V_Capacity(coal_plant,2000)" instead of "x(47)".  '
-	       'Mainly used for debugging purposes.  [Default: use x(47) style]',
-	  action='store_true',
-	  dest='useSymbolLabels',
-	  default=False)
-
 	solver.add_argument('--generate_solver_lp_file',
 	  help='Request that solver create an LP representation of the optimization '
 	       'problem.  Mainly used for model debugging purposes.  The file name '
@@ -2091,8 +2083,9 @@ def temoa_solve ( model ):
 
 	opt = SolverFactory( options.solver )
 	if opt:
-		opt.keepFiles = options.keepPyomoLP
-		opt.symbolic_solver_labels = options.useSymbolLabels
+		if options.keepPyomoLP:
+			opt.keepFiles = True
+			opt.symbolic_solver_labels = True
 
 	elif options.solver != 'NONE':
 		SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
