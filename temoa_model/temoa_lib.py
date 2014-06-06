@@ -1487,12 +1487,14 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		SE.write( '[        ] Fixing supplied variables.'); SE.flush()
 		import re
 
-		var_data_re = re.compile( r'^(\d\S+)\s+(V_\S+$)' )
+		# Assumption: All variables are indexed
+		# We accept \S+ instead of the more precise (\d+(?:\.\d+)?) because we
+		# want to be helpful in case of a user typo.
+		var_data_re = re.compile( r'^ *(\S+) +(V_\w+)\[(\S+)\]$' )
 		int_re = re.compile( r'^\d+$' )
 
 		with open( options.fix_variables, 'rb' ) as f:
 			for lineno, line in enumerate( f, 1 ):    # humans think 1-based
-				line = line.strip()
 				match = var_data_re.match( line )
 
 				# We ignore (and thereby allow) lines that don't match the Temoa
@@ -1501,15 +1503,14 @@ def solve_perfect_foresight ( model, optimizer, options ):
 				if not match: continue
 
 				try:
-					value, var = match.groups()
+					value, vgroup, vindex = match.groups()
+					vindex = vindex.split(',')
 					value = float( value )
 				except ValueError as ve:
-					msg = '\nUnable to parse value for "{}" (Line {:d})\n'
-					raise TemoaValidationError( msg.format( var, lineno ))
+					msg = '\nLine {:d}: Unable to parse value for "{}{}" ({})\n'
+					raise TemoaValidationError( msg.format(
+					  lineno, vgroup, vindex, value ))
 
-				# Assumption: All variables are indexed
-				vgroup, vindex = var.split('[')
-				vindex = vindex[:-1].split(',')  # remove final ']'
 				for i, index in enumerate( vindex ):
 					# if index is an integer, convert it so it matches indices
 					# Problem: if modeler has used integer values for indices
@@ -1527,9 +1528,8 @@ def solve_perfect_foresight ( model, optimizer, options ):
 						# This could be so much cleaner if Coopr had Coopr-specific
 						# error classes.  Sigh.
 
-						msg = ('Model does not have a variable named "{}".  '
-						  '(Line {:d})')
-						msg = msg.format( vgroup, lineno )
+						msg = 'Line {:d}: Model does not have a variable named "{}".'
+						msg = msg.format( lineno, vgroup )
 						raise TemoaObjectNotFoundError( msg )
 
 					raise
@@ -1539,9 +1539,9 @@ def solve_perfect_foresight ( model, optimizer, options ):
 						# This could be so much cleaner if Coopr had Coopr-specific
 						# error classes.  Sigh.
 
-						msg = 'Variable "{}" has no index "{}".  (Line {:d})'
+						msg = 'Line {:d}: Variable "{}" has no index "{}".'
 						vindex = str( tuple(vindex) )
-						msg = msg.format( vgroup, vindex, lineno )
+						msg = msg.format( lineno, vgroup, vindex )
 						raise TemoaKeyError( msg )
 
 					raise
