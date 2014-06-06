@@ -1480,7 +1480,6 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
-	# Now do the solve and ...
 	instance = model.create( mdata )
 	SE.write( '\r[%8.2f\n' % duration() )
 
@@ -1552,6 +1551,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		instance.preprocess()
 		SE.write( '\r[%8.2f\n' % duration() )
 
+	# Now do the solve and ...
 	SE.write( '[        ] Solving.'); SE.flush()
 	if opt:
 		result = opt.solve( instance )
@@ -1564,13 +1564,14 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		SE.write( '\r---------- Not solving: no available solver\n' )
 		return
 
+	# ... print the easier-to-read/parse format
 	msg = '[        ] Calculating reporting variables and formatting results.'
 	SE.write( msg ); SE.flush()
-	# ... print the easier-to-read/parse format
 	updated_results = instance.update_results( result )
 	instance.load( result )
 	formatted_results = pformat_results( instance, updated_results )
 	SE.write( '\r[%8.2f\n' % duration() )
+
 	SO.write( formatted_results.getvalue() )
 
 	if options.graph_format:
