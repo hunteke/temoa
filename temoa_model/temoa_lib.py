@@ -1491,7 +1491,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		int_re = re.compile( r'^\d+$' )
 
 		with open( options.fix_variables, 'rb' ) as f:
-			for lineno, line in enumerate( f ):
+			for lineno, line in enumerate( f, 1 ):    # humans think 1-based
 				line = line.strip()
 				match = var_data_re.match( line )
 				if match:
@@ -1515,7 +1515,6 @@ def solve_perfect_foresight ( model, optimizer, options ):
 							m_var.set_value( value )
 
 						except AttributeError as ae:
-							lineno += 1
 							if "'AbstractModel' object has no attribute " in str(ae):
 								# This could be so much cleaner if Coopr had
 								# Coopr-specific error classes.  Sigh.
@@ -1528,7 +1527,6 @@ def solve_perfect_foresight ( model, optimizer, options ):
 							raise
 
 						except KeyError as ke:
-							lineno += 1
 							if 'Error accessing indexed component' in str(ke):
 								# This could be so much cleaner if Coopr had
 								# Coopr-specific error classes.  Sigh.
@@ -1541,8 +1539,6 @@ def solve_perfect_foresight ( model, optimizer, options ):
 							raise
 
 					except ValueError as ve:
-						lineno += 1  # enumerate is 0-based, but humans not so much
-
 						msg = '\nUnable to parse value for "{}" (Line {:d})\n'
 						raise TemoaValidationError( msg.format( var, lineno ))
 
