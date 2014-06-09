@@ -35,6 +35,30 @@ from models import (
   Vintage,
 )
 
+
+
+def align_vertically ( lines ):
+	"""
+	This vertical alignment algorithm takes a matrix (list of lists) of
+	strings, calculates the maximum length of each column, and returns a single
+	string with each column aligned and separated by two spaces.  This function
+	is geared to an AMPL-like format (such as what Pyomo uses) and so the final
+	two columns are expected (though not required) to be the stringification of
+	an integer and a float less than zero.  These two fields will be combined in
+	the output so as to make a single number (integer_part.decimal_part) so that
+	the final column is aligned on the decimal point.
+	"""
+	lengths = ( map(len, l[:-1] ) for l in lines )
+	max_lengths = map(max, zip(*lengths))    # max length of each column
+	fmt = r'{{:<{}}}  ' * (len(max_lengths) -1) + '{{:>{}}}.{{}}'
+	fmt = fmt.format( *max_lengths )
+	for i, s in enumerate( lines ):
+		# update each row in place so as to not use more memory than necessary
+		lines[ i ] = fmt.format( *s )
+
+	return '\n '.join( lines )
+
+
 @require_GET
 @never_cache
 def analysis_download_as_dat ( req, analysis_id ):
@@ -251,15 +275,14 @@ param  GlobalDiscountRate  :=  {gdr} ;
 	dem = '# param Demand := ... ;   # No demands specified.  This should be an easy solve!'
 
 	if ddds:
-		lines = sorted( [d.timeslice.season, d.timeslice.time_of_day, d.value]
-		  for d in ddds )
+		lines = sorted( [
+		    d.timeslice.season,
+		    d.timeslice.time_of_day,
+		  ] + str(d.value).split('.')
+		  for d in ddds
+		)
 
-		maxlen_s = max(map(len, (i[0] for i in lines) )) # season
-		maxlen_d = max(map(len, (i[1] for i in lines) )) # time_of_day
-		fmt = r'{{:<{}}}  {{:<{}}}  {{}}'.format( maxlen_s, maxlen_d )
-		for i, s in enumerate( slices ):
-			lines[ i ] = fmt.format( *s )
-		ddd = '\n '.join( lines )
+		ddd = align_vertically( lines )
 		ddd = 'param  DemandDefaultDistribution  :=\n {}\n\t;'.format( ddd )
 
 	if dsds:
@@ -267,43 +290,24 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		    d.timeslice.season,
 		    d.timeslice.time_of_day,
 		    d.demand.commodity.name,
-		    d.value
-		  ]
+		  ] + str(d.value).split('.')
 		  for d in dsds
 		]
 		lines.sort( key=itemgetter(2, 0) )
 
-		maxlen_s = max(map(len, (i[0] for i in lines) )) # season
-		maxlen_d = max(map(len, (i[1] for i in lines) )) # time_of_day
-		maxlen_o = max(map(len, (i[2] for i in lines) )) # demands/outputs
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{}}'
-		fmt = fmt.format( maxlen_s, maxlen_d, maxlen_o )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		dsd = '\n '.join( lines )
+		dsd = align_vertically( lines )
 		dsd = 'param  DemandSpecificDistribution  :=\n {}\n\t;'.format( dsd )
 
 	if demands:
 		lines = [ [
 		    str(d.period.vintage),
 		    d.demand.commodity.name,
-		    str(int(d.value)),
-		    str(d.value - int(d.value))[1:]  # remove leading 0
-		  ]
+		  ] + str(d.value).split('.')
 		  for d in demands ]
 		lines.sort( key=itemgetter(1, 0) )
 
 		# work out column alignment, just in case a human consumes this file ...
-		maxlen_p   = max(map(len, (i[0] for i in lines) ))
-		maxlen_dem = max(map(len, (i[1] for i in lines) ))
-		maxlen_int = max(map(len, (i[2] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_p, maxlen_dem, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		dem = '\n '.join( lines )
+		dem = align_vertically( lines )
 		dem = 'param  Demand  :=\n {}\n\t;'.format( dem )
 
 	eff = '# param Efficiency := ... ;   # None specified in DB'
@@ -313,24 +317,12 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		    e.process.technology.name,
 		    str(e.process.vintage.vintage),
 		    e.out_commodity.commodity.name,
-		    str(int(e.value)),
-		    str(e.value - int(e.value))[1:]  # remove leading 0
-		  ]
+		  ] + str(e.value).split('.')
 		  for e in efficiencies
 		]
 		lines.sort( key=itemgetter(1, 2, 0, 3) )
 
-		maxlen_i   = max(map(len, (i[0] for i in lines) ))
-		maxlen_t   = max(map(len, (i[1] for i in lines) ))
-		maxlen_v   = max(map(len, (i[2] for i in lines) ))
-		maxlen_o   = max(map(len, (i[3] for i in lines) ))
-		maxlen_int = max(map(len, (i[4] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_i, maxlen_t, maxlen_v, maxlen_o, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		eff = '\n '.join( lines )
+		eff = align_vertically( lines )
 		eff = 'param  Efficiency  :=\n {}\n\t;'.format( eff )
 
 	ems = '# param EmissionActivity := ... ;   # None specified in DB'
@@ -341,25 +333,12 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		    em.efficiency.process.technology.name,
 		    str(em.efficiency.process.vintage.vintage),
 		    em.efficiency.out_commodity.commodity.name,
-		    str(int(em.value)),
-		    str(em.value - int(em.value))[1:]  # remove leading 0
-		  ]
+		  ] + str(em.value).split('.')
 		  for em in emissions
 		]
 		lines.sort( key=itemgetter(2, 3, 1, 4, 0) )
 
-		maxlen_e   = max(map(len, (i[0] for i in lines) ))
-		maxlen_i   = max(map(len, (i[1] for i in lines) ))
-		maxlen_t   = max(map(len, (i[2] for i in lines) ))
-		maxlen_v   = max(map(len, (i[3] for i in lines) ))
-		maxlen_o   = max(map(len, (i[4] for i in lines) ))
-		maxlen_int = max(map(len, (i[5] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_e, maxlen_i, maxlen_t, maxlen_v, maxlen_o, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		ems = '\n '.join( lines )
+		ems = align_vertically( lines )
 		ems = 'param  EmissionActivity  :=\n {}\n\t;'.format( ems )
 
 	existingcap = Process.objects.filter(
@@ -373,21 +352,11 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		lines = sorted( [
 		    ec.technology.name,
 		    str(ec.vintage.vintage),
-		    str(int(ec.existingcapacity)),
-		    str(ec.existingcapacity - int(ec.existingcapacity))[1:],
-		  ]
+		  ] + str(ec.existingcapacity).split('.')
 		  for ec in existingcap
 		)
 
-		maxlen_t   = max(map(len, (i[0] for i in lines) ))
-		maxlen_v   = max(map(len, (i[1] for i in lines) ))
-		maxlen_int = max(map(len, (i[2] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_t, maxlen_v, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		ecap = '\n '.join( lines )
+		ecap = align_vertically( lines )
 		ecap = 'param  ExistingCapacity  :=\n {}\n\t;'.format( ecap )
 
 	cap2act = Param_CapacityToActivity.objects.filter(
@@ -397,22 +366,11 @@ param  GlobalDiscountRate  :=  {gdr} ;
 
 	c2a = '# param CapacityToActivity := ... ;   # None specified in DB'
 	if cap2act:
-		lines = sorted( [
-		    cta.technology.name,
-		    str(int( cta.value )),
-		    str(cta.value - int(cta.value))[1:]
-		  ]
+		lines = sorted( [ cta.technology.name ] + str(cta.value).split('.')
 		  for cta in cap2act
 		)
 
-		maxlen_t   = max(map(len, (i[0] for i in lines) ))
-		maxlen_int = max(map(len, (i[1] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_t, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		c2a = '\n '.join( lines )
+		c2a = align_vertically( lines )
 		c2a = 'param  CapacityToActivity  :=\n {}\n\t;'.format( c2a )
 
 	capfactech = Param_CapacityFactorTech.objects.filter(
@@ -426,23 +384,12 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		    cft.timeslice.season,
 		    cft.timeslice.time_of_day,
 		    cft.technology.name,
-		    str(int( cft.value )),
-		    str(cft.value - int(cft.value))[1:]
-		  ]
+		  ] + str( cft.value ).split('.')
 		  for cft in capfactech
 		]
 		lines.sort( key=itemgetter(2, 0, 1) )
 
-		maxlen_s   = max(map(len, (i[0] for i in lines) ))
-		maxlen_d   = max(map(len, (i[1] for i in lines) ))
-		maxlen_t   = max(map(len, (i[2] for i in lines) ))
-		maxlen_int = max(map(len, (i[3] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_s, maxlen_d, maxlen_t, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		cftech = '\n '.join( lines )
+		cftech = align_vertically( lines )
 		cftech = 'param  CapacityFactorTech  :=\n {}\n\t;'.format( cftech )
 
 	capfacprocess = Param_CapacityFactorProcess.objects.filter(
@@ -457,24 +404,12 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		    cfp.timeslice.time_of_day,
 		    cfp.process.technology.name,
 		    str(cfp.process.vintage.vintage),
-		    str(int( cfp.value )),
-		    str(cfp.value - int(cfp.value))[1:]
-		  ]
+		  ] + str( cfp.value ).split('.')
 		  for cfp in capfacprocess
 		]
 		lines.sort( key=itemgetter(2, 3, 0, 1) )
 
-		maxlen_s   = max(map(len, (i[0] for i in lines) ))
-		maxlen_d   = max(map(len, (i[1] for i in lines) ))
-		maxlen_t   = max(map(len, (i[2] for i in lines) ))
-		maxlen_v   = max(map(len, (i[3] for i in lines) ))
-		maxlen_int = max(map(len, (i[4] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_s, maxlen_d, maxlen_t, maxlen_v, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		cfprocess = '\n '.join( lines )
+		cfprocess = align_vertically( lines )
 		cfprocess = 'param  CapacityFactorProcess  :=\n {}\n\t;'.format( cfprocess )
 
 	costinvest = Process.objects.filter(
@@ -488,21 +423,11 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		lines = sorted( [
 		    i.technology.name,
 		    str(i.vintage.vintage),
-		    str(int(i.costinvest)),
-		    str(i.costinvest - int(i.costinvest))[1:],
-		  ]
+		  ] + str(i.costinvest).split('.')
 		  for i in costinvest
 		)
 
-		maxlen_t   = max(map(len, (i[0] for i in lines) ))
-		maxlen_v   = max(map(len, (i[1] for i in lines) ))
-		maxlen_int = max(map(len, (i[2] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_t, maxlen_v, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		ci = '\n '.join( lines )
+		ci = align_vertically( lines )
 		ci = 'param  CostInvest  :=\n {}\n\t;'.format( ci )
 
 	costfixed = Param_CostFixed.objects.filter(
@@ -517,23 +442,12 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		    str(i.period.vintage),
 		    i.process.technology.name,
 		    str(i.process.vintage.vintage),
-		    str(int(i.value)),
-		    str(i.value - int(i.value))[1:],
-		  ]
+		  ] + str(i.value).split('.')
 		  for i in costfixed
 		]
 		lines.sort( key=itemgetter(1, 2, 0) )
 
-		maxlen_p   = max(map(len, (i[0] for i in lines) ))
-		maxlen_t   = max(map(len, (i[1] for i in lines) ))
-		maxlen_v   = max(map(len, (i[2] for i in lines) ))
-		maxlen_int = max(map(len, (i[3] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_p, maxlen_t, maxlen_v, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		cf = '\n '.join( lines )
+		cf = align_vertically( lines )
 		cf = 'param  CostFixed  :=\n {}\n\t;'.format( cf )
 
 	costvariable = Param_CostVariable.objects.filter(
@@ -548,23 +462,12 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		    str(i.period.vintage),
 		    i.process.technology.name,
 		    str(i.process.vintage.vintage),
-		    str(int(i.value)),
-		    str(i.value - int(i.value))[1:],
-		  ]
+		  ] + str(i.value).split('.')
 		  for i in costvariable
 		]
 		lines.sort( key=itemgetter(1, 2, 0) )
 
-		maxlen_p   = max(map(len, (i[0] for i in lines) ))
-		maxlen_t   = max(map(len, (i[1] for i in lines) ))
-		maxlen_v   = max(map(len, (i[2] for i in lines) ))
-		maxlen_int = max(map(len, (i[3] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_p, maxlen_t, maxlen_v, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		cv = '\n '.join( lines )
+		cv = align_vertically( lines )
 		cv = 'param  CostVariable  :=\n {}\n\t;'.format( cv )
 
 	tech_life = Param_LifetimeTech.objects.filter(
@@ -574,22 +477,11 @@ param  GlobalDiscountRate  :=  {gdr} ;
 
 	tlife = '# param LifetimeTech := ... ;   # None specified in DB'
 	if tech_life:
-		lines = sorted( [
-		    tl.technology.name,
-		    str(int(tl.value)),
-		    str(tl.value - int(tl.value))[1:],
-		  ]
+		lines = sorted( [ tl.technology.name ] + str(tl.value).split('.')
 		  for tl in tech_life
 		)
 
-		maxlen_t   = max(map(len, (i[0] for i in lines) ))
-		maxlen_int = max(map(len, (i[1] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_t, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		tlife = '\n '.join( lines )
+		tlife = align_vertically( lines )
 		tlife = 'param  LifetimeTech  :=\n {}\n\t;'.format( tlife )
 
 	process_life = Process.objects.filter(
@@ -602,21 +494,11 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		lines = sorted( [
 		    pl.technology.name,
 		    str(pl.vintage.vintage),
-		    str(int(pl.lifetime)),
-		    str(pl.lifetime - int(pl.lifetime))[1:],
-		  ]
+		  ] + str(pl.lifetime).split('.')
 		  for pl in process_life
 		)
 
-		maxlen_t   = max(map(len, (i[0] for i in lines) ))
-		maxlen_v   = max(map(len, (i[1] for i in lines) ))
-		maxlen_int = max(map(len, (i[2] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_t, maxlen_v, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		plife = '\n '.join( lines )
+		plife = align_vertically( lines )
 		plife = 'param  LifetimeProcess  :=\n {}\n\t;'.format( plife )
 
 	tech_loanlife = Param_LifetimeTechLoan.objects.filter(
@@ -627,22 +509,11 @@ param  GlobalDiscountRate  :=  {gdr} ;
 
 	tllife = '# param LifetimeLoanTech := ... ;   # None specified in DB'
 	if tech_loanlife:
-		lines = sorted( [
-		    tll.technology.name,
-		    str(int(tll.value)),
-		    str(tll.value - int(tll.value))[1:],
-		  ]
+		lines = sorted( [ tll.technology.name ] + str(tll.value).split('.')
 		  for tll in tech_loanlife
 		)
 
-		maxlen_t   = max(map(len, (i[0] for i in lines) ))
-		maxlen_int = max(map(len, (i[1] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_t, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		tllife = '\n '.join( lines )
+		tllife = align_vertically( lines )
 		tllife = 'param  LifetimeLoanTech  :=\n {}\n\t;'.format( tllife )
 
 	process_loanlife = Process.objects.filter(
@@ -655,21 +526,11 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		lines = sorted( [
 		    pl.technology.name,
 		    str(pl.vintage.vintage),
-		    str(int(pl.loanlife)),
-		    str(pl.loanlife - int(pl.loanlife))[1:],
-		  ]
+		  ] + str(pl.loanlife).split('.')
 		  for pl in process_loanlife
 		)
 
-		maxlen_t   = max(map(len, (i[0] for i in lines) ))
-		maxlen_v   = max(map(len, (i[1] for i in lines) ))
-		maxlen_int = max(map(len, (i[2] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_t, maxlen_v, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		pllife = '\n '.join( lines )
+		pllife = align_vertically( lines )
 		pllife = 'param  LifetimeLoanProcess  :=\n {}\n\t;'.format( pllife )
 
 	tis = '# param TechInputSplit := ... ;   # None specified in DB'
@@ -690,42 +551,22 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		lines = sorted( [
 		    inps.inp_commodity.commodity.name,
 		    inps.technology.name,
-		    str(int(inps.fraction)),
-		    str(inps.fraction - int(inps.fraction))[1:]
-		  ]
+		  ] + str(inps.fraction).split('.')
 		  for inps in tech_is
 		)
 
-		maxlen_c   = max(map(len, (i[0] for i in lines) ))
-		maxlen_t   = max(map(len, (i[1] for i in lines) ))
-		maxlen_int = max(map(len, (i[2] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_c, maxlen_t, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		tis = '\n '.join( lines )
+		tis = align_vertically( lines )
 		tis = 'param  TechInputSplit  :=\n {}\n\t;'.format( tis )
 
 	if tech_os:
 		lines = sorted( [
 		    outs.technology.name,
 		    outs.out_commodity.commodity.name,
-		    str(int(outs.fraction)),
-		    str(outs.fraction - int(outs.fraction))[1:]
-		  ]
+		  ] + str(outs.fraction).split('.')
 		  for outs in tech_os
 		)
 
-		maxlen_t   = max(map(len, (i[0] for i in lines) ))
-		maxlen_c   = max(map(len, (i[1] for i in lines) ))
-		maxlen_int = max(map(len, (i[2] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_t, maxlen_c, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		tos = '\n '.join( lines )
+		tos = align_vertically( lines )
 		tos = 'param  TechOutputSplit  :=\n {}\n\t;'.format( tos )
 
 	maxcap = '# param MaxCapacity := ... ;   # None specified in DB'
@@ -746,44 +587,24 @@ param  GlobalDiscountRate  :=  {gdr} ;
 		lines = [ [
 		    str(mc.period.vintage),
 		    mc.technology.name,
-		    str(int(mc.value)),
-		    str(mc.value - int(mc.value))[1:]
-		  ]
+		  ] + str(mc.value).split('.')
 		  for mc in max_caps
 		]
 		lines.sort( key=itemgetter(1, 0) )
 
-		maxlen_p   = max(map(len, (i[0] for i in lines) ))
-		maxlen_t   = max(map(len, (i[1] for i in lines) ))
-		maxlen_int = max(map(len, (i[2] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_p, maxlen_t, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		maxcap = '\n '.join( lines )
+		maxcap = align_vertically( lines )
 		maxcap = 'param  MaxCapacity  :=\n {}\n\t;'.format( maxcap )
 
 	if min_caps:
 		lines = [ [
 		    str(mc.period.vintage),
 		    mc.technology.name,
-		    str(int(mc.value)),
-		    str(mc.value - int(mc.value))[1:]
-		  ]
+		  ] + str(mc.value).split('.')
 		  for mc in min_caps
 		]
 		lines.sort( key=itemgetter(1, 0) )
 
-		maxlen_p   = max(map(len, (i[0] for i in lines) ))
-		maxlen_t   = max(map(len, (i[1] for i in lines) ))
-		maxlen_int = max(map(len, (i[2] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_p, maxlen_t, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		mincap = '\n '.join( lines )
+		mincap = align_vertically( lines )
 		mincap = 'param  MinCapacity  :=\n {}\n\t;'.format( mincap )
 
 	growthrate = Param_GrowthRate.objects.filter(
@@ -795,40 +616,18 @@ param  GlobalDiscountRate  :=  {gdr} ;
 	grm = '# param GrowthRateMax := ... ;   # None specified in DB'
 	grs = '# param GrowthRateSeed := ... ;   # None specified in DB'
 	if growthrate:
-		lines = sorted( [
-		    gr.technology.name,
-		    str(int(gr.ratelimit)),
-		    str(gr.ratelimit - int(gr.ratelimit))[1:]
-		  ]
+		lines = sorted( [ gr.technology.name ] + str(gr.ratelimit).split('.')
 		  for gr in growthrate
 		)
 
-		maxlen_t   = max(map(len, (i[0] for i in lines) ))
-		maxlen_int = max(map(len, (i[1] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_t, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		grm = '\n '.join( lines )
+		grm = align_vertically( lines )
 		grm = 'param  GrowthRateMax  :=\n {}\n\t;'.format( grm )
 
-		lines = sorted( [
-		    gr.technology.name,
-		    str(int(gr.seed)),
-		    str(gr.seed - int(gr.seed))[1:]
-		  ]
+		lines = sorted( [ gr.technology.name ] + str(gr.seed).split('.')
 		  for gr in growthrate
 		)
 
-		maxlen_t   = max(map(len, (i[0] for i in lines) ))
-		maxlen_int = max(map(len, (i[1] for i in lines) ))
-		fmt = r'{{:<{}}}  {{:>{}}}{{}}'
-		fmt = fmt.format( maxlen_t, maxlen_int )
-		for i, s in enumerate( lines ):
-			lines[ i ] = fmt.format( *s )
-
-		grs = '\n '.join( lines )
+		grs = align_vertically( lines )
 		grs = 'param  GrowthRateSeed  :=\n {}\n\t;'.format( grs )
 
 	data = dat_format.format(
