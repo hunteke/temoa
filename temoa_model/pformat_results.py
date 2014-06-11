@@ -108,6 +108,9 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	emission_keys = { (i, t, v, o) : e for e, i, t, v, o in m.EmissionActivity }
 	P_0 = min( m.time_optimize )
 	GDR = value( m.GlobalDiscountRate )
+	MLL = m.ModelLoanLife
+	MPL = m.ModelProcessLife
+	x   = 1 + GDR    # convenience variable, nothing more
 
 	for p, s, d, t, v in m.V_Activity:
 		val = value( m.V_Activity[p, s, d, t, v] )
@@ -184,11 +187,11 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 
 
 		icost *= value( m.LoanAnnualize[t, v] )
-		icost *= sum(
-		  (1 + GDR) ** -y
-		  for y in range( v - P_0,
-		                  v - P_0 + value( m.ModelLoanLife[t, v] ))
+		icost *= (
+		  value( MLL[t, v] ) if not GDR else
+		    (x **(P_0 - v + 1) * (1 - x **(-value( MLL[t, v] ))) / GDR)
 		)
+
 		psvars[ 'V_DiscountedInvestmentByPeriod'  ][ v ]  += icost
 		psvars[ 'V_DiscountedInvestmentByTech'    ][ t ]  += icost
 		psvars[ 'V_DiscountedInvestmentByProcess' ][t, v] += icost
@@ -206,11 +209,11 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 		psvars[ 'V_UndiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
 		psvars[ 'V_UndiscountedPeriodCost'          ][ p ]  += fcost
 
-		fcost *= sum(
-		  (1 + GDR) ** -y
-		  for y in range( p - P_0,
-		                  p - P_0 + value( m.ModelProcessLife[p, t, v] ))
+		fcost *= (
+		  value( MPL[p, t, v] ) if not GDR else
+		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, t, v] ))) / GDR)
 		)
+
 		psvars[ 'V_DiscountedFixedCostsByPeriod'  ][ p ]  += fcost
 		psvars[ 'V_DiscountedFixedCostsByTech'    ][ t ]  += fcost
 		psvars[ 'V_DiscountedFixedCostsByVintage' ][ v ]  += fcost
