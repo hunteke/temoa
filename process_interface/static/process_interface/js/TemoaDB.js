@@ -897,6 +897,13 @@ can.Control('AnalysisDetail', {
 					$div.replaceWith($('<div>', {id: 'AnalysisParameters'}));
 			});
 		});
+		$el.find('#ShowHideUnsolvedSystemMap').click( function ( ev ) {
+			var $div = $('#AnalysisUnsolvedSystemMap');
+			$div.toggle( 'slide', {direction: 'left'} );
+		});
+		setTimeout( function ( ) {
+			$('#ShowHideUnsolvedSystemMap').click();
+		}, 1 );
 	},
 	save: function ( $el ) {
 		var errors = {};

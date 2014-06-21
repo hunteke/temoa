@@ -13,7 +13,7 @@ body { height: 100% ; margin: 1em ; }
 #ReloadLibs { float: right ; display: none ; }
 
 .center_wrapper { margin: 0 auto ; text-align:center ; }
-#ShowHideTechs, #ShowHideAnalysis { margin: 0 auto ; }
+#ShowHideTechs, #ShowHideAnalysis, #ShowHideUnsolvedSystemMap { margin: 0 auto ; }
 
 #DownloadDataFile { margin: 0 auto; float: right; }
 
@@ -31,7 +31,7 @@ body { height: 100% ; margin: 1em ; }
 	overflow: auto ;
 }
 
-#AnalysisCommodities, #AnalysisParameters { position: fixed ; border: 1px solid red ; top: 1em ; bottom: 1em ; right: 1em ; left: 1em ; background: #eee ; overflow: auto ; opacity: 1 ; z-index: 150 ; display: none; }
+#AnalysisCommodities, #AnalysisParameters, #AnalysisUnsolvedSystemMap { position: fixed ; border: 1px solid red ; top: 1em ; bottom: 1em ; right: 1em ; left: 1em ; background: #eee ; overflow: auto ; opacity: 1 ; z-index: 150 ; display: none; }
 #AnalysisCommodities > form { float: left ; width: 15em ; }
 #AnalysisCommodities > form > table { width: 100% ; border-top: 2pt solid black ; margin-top: 1ex ; }
 
