@@ -35,6 +35,8 @@ body { height: 100% ; margin: 1em ; }
 #AnalysisCommodities > form { float: left ; width: 15em ; }
 #AnalysisCommodities > form > table { width: 100% ; border-top: 2pt solid black ; margin-top: 1ex ; }
 
+#AnalysisUnsolvedSystemMap { overflow: hidden; }
+
 svg { overflow: hidden; }
 
 svg .node rect { stroke: #333; stroke-width: 0.1em; fill: #fff; }
