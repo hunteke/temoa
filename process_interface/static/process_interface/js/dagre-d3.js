@@ -265,10 +265,13 @@ function defaultDrawNodes(g, root) {
   svgNodes.selectAll('*').remove();
 
   svgNodes
-    .enter()
-      .append('g')
-        .style('opacity', 0)
-        .attr('class', 'node enter');
+      .enter()
+    .append('g')
+      .style('opacity', 0)
+      .attr('class', function(u) {
+        var data = g.node(u);
+        return 'class' in data ? data.class : 'node enter';
+      });
 
   svgNodes.each(function(u) { addLabel(g.node(u), d3.select(this), 10, 10); });
 
@@ -288,10 +291,14 @@ function defaultDrawEdgeLabels(g, root) {
   svgEdgeLabels.selectAll('*').remove();
 
   svgEdgeLabels
-    .enter()
-      .append('g')
-        .style('opacity', 0)
-        .attr('class', 'edgeLabel enter');
+      .enter()
+    .append('g')
+      .style('opacity', 0)
+      .attr('class', function(u) {
+        var data = g.edges(u);
+        return 'class' in data ? data.class : 'edgeLabel enter';
+      })
+
 
   svgEdgeLabels.each(function(e) { addLabel(g.edge(e), d3.select(this), 0, 0); });
 
@@ -309,12 +316,15 @@ var defaultDrawEdgePaths = function(g, root) {
     .data(g.edges(), function(e) { return e; });
 
   svgEdgePaths
-    .enter()
-      .append('g')
-        .attr('class', 'edgePath enter')
-        .append('path')
-          .style('opacity', 0)
-          .attr('marker-end', 'url(#arrowhead)');
+      .enter()
+    .append('g')
+      .attr('class', function(u) {
+        var data = g.edge(u);
+        return 'class' in data ? data.class : 'edgePath enter';
+      })
+    .append('path')
+      .style('opacity', 0)
+      .attr('marker-end', 'url(#arrowhead)');
 
   this._transition(svgEdgePaths.exit())
       .style('opacity', 0)
