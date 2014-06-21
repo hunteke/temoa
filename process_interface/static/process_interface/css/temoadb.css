@@ -35,6 +35,22 @@ body { height: 100% ; margin: 1em ; }
 #AnalysisCommodities > form { float: left ; width: 15em ; }
 #AnalysisCommodities > form > table { width: 100% ; border-top: 2pt solid black ; margin-top: 1ex ; }
 
+svg { overflow: hidden; }
+
+svg .node rect { stroke: #333; stroke-width: 0.1em; fill: #fff; }
+svg .node text { font-size: 12pt; }
+svg .energy rect { fill: #555; }
+svg .energy text { stroke: none; fill: #fff;}
+svg .unconnected rect { fill: #000; stroke: #f00; stroke-width: 0.3em; }
+svg .unconnected text { fill: #fff; stroke: none; font-weight: bold; }
+
+svg .edgeLabel rect { fill: #fff; }
+
+svg .edgePath { stroke: #333; stroke-width: 2.5px; fill: none; }
+
+svg .input  { stroke: #b33; }
+svg .output { stroke: #3b3; }
+
 
 #technology_list { background-color: transparent ; clear: left ; float: left ; margin-left: 1em ; }
 

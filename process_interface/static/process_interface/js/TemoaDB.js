@@ -899,10 +899,19 @@ can.Control('AnalysisDetail', {
 		});
 		$el.find('#ShowHideUnsolvedSystemMap').click( function ( ev ) {
 			var $div = $('#AnalysisUnsolvedSystemMap');
+			if ( $div.is(':hidden') ) {
+				// currently closed, but user has requested it to be opened;
+				// however, must draw, /after/ div is visible
+				setTimeout( drawUnsolvedSystemDigraph, 1);
+			}
 			$div.toggle( 'slide', {direction: 'left'} );
 		});
 		setTimeout( function ( ) {
-			$('#ShowHideUnsolvedSystemMap').click();
+			// necessary to attach listener /after/ CanJS has finished, so
+			// setTimeout to the rescue
+			$('#AnalysisUnsolvedSystemMapCloseButton').click( function ( ) {
+				$('#ShowHideUnsolvedSystemMap').click();
+			});
 		}, 1 );
 	},
 	save: function ( $el ) {
@@ -2492,7 +2501,7 @@ can.Control('ProcessList', {
 				}
 			});
 
-			// Finally, pre-select what was selected in this session.
+			// Pre-select what was selected in this session.
 			// (Handy if the page needs to reload.)
 			var $cookie = getCookie();
 			if ( $cookie.process_ids ) {
@@ -2502,6 +2511,9 @@ can.Control('ProcessList', {
 				$tbody.find( sel ).addClass('ui-selected');
 				$tbody.trigger('selectablestop')
 			}
+
+			$('#ProcessList').data('processes', processes);
+
 		}, function ( error ) {
 			console.log( error );
 			showStatus( 'An unknown error occurred while collecting analysis ' +
@@ -3550,6 +3562,76 @@ can.Control('AnalysisTechnologyDetail', {
 	},
 });
 
+
+function drawUnsolvedSystemDigraph ( ) {
+	var processes = $('#ProcessList').data('processes');
+
+	// Unfortunately, doing a straight jQuery tag creation ('$("<svg>")') doesn't
+	// work currently as the <svg> tag is eventually created with
+	// document.createElement, which defaults to the XHTML namespace rather than
+	// the svg namespace.  This messes with the d3 rendering assumptions, so let
+	// the browser figure out the correct semantics through it's normal parsing
+	// routines by inserting the tag string instead.
+
+	// Note also, that this implementation requires an <svg> element already
+	// be in place.  A note for future test writers.  Ahem.
+	$('#AnalysisUnsolvedSystemMap').find('svg').first().replaceWith('<svg><g/></svg>');
+
+	var energy_nodes = new Object(); // abusing for it's set-like attributes
+	var tech_nodes = new Object();   // abusing for it's set-like attributes
+	var unconnected_nodes = new Object();  // abusing for it's set-like attributes
+	var inp_edges = new Object();    // abusing for it's set-like attributes
+	var out_edges = new Object();    // abusing for it's set-like attributes
+	for ( var i = 0; i < processes.length; ++i ) {
+		var p = processes[ i ];
+		var eff_list = p.efficiencies;
+		var tech_name = p.technology.name;
+
+		for ( var ei = 0; ei < eff_list.length; ++ei ) {
+			var e = eff_list[ ei ];
+			inp_edges[ e.inp + ' - ' + tech_name ] = 1;
+			out_edges[ tech_name + ' - ' + e.out ] = 1;
+			energy_nodes[ e.inp ] = 1;
+			energy_nodes[ e.out ] = 1;
+		}
+		// utilize unconnected_nodes to make it obvious (through a CSS class) what
+		// nodes have no efficiencies.
+		if ( eff_list.length ) { tech_nodes[ tech_name ] = 1; }
+		else                   { unconnected_nodes[ tech_name ] = 1; }
+	}
+
+	for ( var node in unconnected_nodes ) {
+		if ( node in tech_nodes )
+			delete unconnected_nodes[ node ];
+	}
+
+	if ( (0 === Object.keys( tech_nodes ).length) &&
+	     (0 === Object.keys( energy_nodes ).length) &&
+	     (0 === Object.keys( unconnected_nodes ).length) )
+	{
+		return;
+	}
+
+	var g = new dagreD3.Digraph();   // equivalent to 'digraph g {}'
+
+	for ( var tech in tech_nodes ) { g.addNode( tech, {label: tech, 'class': 'node tech'} ); }
+	for ( var form in energy_nodes ) { g.addNode( form, {label: form, 'class': 'node energy'} ); }
+	for ( var node in unconnected_nodes ) { g.addNode( node, {label: node, 'class': 'node unconnected'} ); }
+	for ( var i in inp_edges ) {
+		var inp = i.split(' - ')[0], tech = i.split(' - ')[1];
+		g.addEdge( null, inp, tech, {'class': 'edgePath input'} );
+	}
+	for ( var i in out_edges ) {
+		var tech = i.split(' - ')[0], out = i.split(' - ')[1];
+		g.addEdge( null, tech, out, {'class': 'edgePath output'} );
+	}
+
+	var layout = dagreD3.layout()
+	  .nodeSep(20)
+	  .rankDir("LR");
+	var renderer = new dagreD3.Renderer();
+	renderer.layout(layout).run(g, d3.select("#AnalysisUnsolvedSystemMap svg g"));
+}
 
 function processCookie ( ) {
 	// These settings are set by the server.  Changing them -- maliciously or
