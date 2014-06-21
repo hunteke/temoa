@@ -171,11 +171,9 @@ class ModelAnalysisTest ( TestCase ):
 
 
 	def test_analysis_uniqueness ( self ):
+		a = AnalysisFactory.create()
 		with self.assertRaises( IntegrityError ) as ie:
-			a = AnalysisFactory.create()
-			b = AnalysisFactory.create(user=a.user)
-
-		self.assertIn( u'user_id, name are not unique', str(ie.exception) )
+			AnalysisFactory.create(user=a.user)
 
 
 	def test_analysis_str_empty ( self ):
@@ -244,24 +242,18 @@ class ModelTechnologyTest ( TestCase ):
 class ModelVintageTest ( TestCase ):
 
 	def test_uniqueness_creation ( self ):
+		a = VintageFactory.create()
 		with self.assertRaises( IntegrityError ) as ie:
-			a = VintageFactory.create()
-			b = VintageFactory.create(analysis=a.analysis)
-
-		self.assertIn( u'analysis_id, vintage are not unique',
-		  str(ie.exception) )
+			VintageFactory.create(analysis=a.analysis)
 
 
 	def test_uniqueness_update ( self ):
 		a = VintageFactory.create()
 		b = VintageFactory.create( vintage=a.vintage+10, analysis=a.analysis )
 
+		b.vintage = a.vintage
 		with self.assertRaises( IntegrityError ) as ie:
-			b.vintage = a.vintage
 			b.save()
-
-		self.assertIn( u'analysis_id, vintage are not unique',
-		  str(ie.exception) )
 
 
 	def test_vintage_is_integer ( self ):
@@ -302,22 +294,18 @@ class ModelVintageTest ( TestCase ):
 class ModelCommodityTest ( TestCase ):
 
 	def test_uniqueness_creation ( self ):
+		CommodityFactory.create()
 		with self.assertRaises( IntegrityError ) as ie:
 			CommodityFactory.create()
-			CommodityFactory.create()
-
-		self.assertIn( u'name is not unique', str(ie.exception) )
 
 
 	def test_uniqueness_update ( self ):
 		a = CommodityFactory.create()
 		b = CommodityFactory.create( name=u'OtherCommodity' )
 
+		b.name = a.name
 		with self.assertRaises( IntegrityError ) as ie:
-			b.name = a.name
 			b.save()
-
-		self.assertIn( u'name is not unique', str(ie.exception) )
 
 
 	def test_str_empty ( self ):
@@ -336,12 +324,9 @@ class ModelCommodityTest ( TestCase ):
 class ModelParam_SegFracTest ( TestCase ):
 
 	def test_uniqueness ( self ):
+		a = Param_SegFracFactory.create()
 		with self.assertRaises( IntegrityError ) as ie:
-			a = Param_SegFracFactory.create()
-			b = Param_SegFracFactory.create( analysis=a.analysis )
-
-		self.assertIn( u'season, time_of_day are not unique',
-		  str(ie.exception) )
+			Param_SegFracFactory.create( analysis=a.analysis )
 
 
 	def test_clean_bad_season ( self ):
@@ -434,12 +419,10 @@ class ModelsTechnologySetMemberTest ( TestCase ):
 	def test_tech_baseload_uniqueness_creation ( self ):
 		a = AnalysisFactory.create()
 		t = TechnologyFactory.create(user=a.user)
+
+		Set_tech_baseloadFactory.create( analysis=a, technology=t )
 		with self.assertRaises( IntegrityError ) as ie:
 			Set_tech_baseloadFactory.create( analysis=a, technology=t )
-			Set_tech_baseloadFactory.create( analysis=a, technology=t )
-
-		self.assertIn( u' analysis_id, technology_id are not unique',
-		  str(ie.exception) )
 
 
 	def test_tech_baseload_str_empty ( self ):
@@ -641,9 +624,7 @@ class ModelCommodityTypeTest ( TestCase ):
 
 
 	def test_uniqueness ( self ):
+		CommodityType(name='Unit Test CommodityType').save()
 		with self.assertRaises( IntegrityError ) as ie:
 			CommodityType(name='Unit Test CommodityType').save()
-			CommodityType(name='Unit Test CommodityType').save()
-
-		self.assertIn( u'name is not unique', str(ie.exception) )
 
