@@ -27,31 +27,23 @@ from sys import stderr as SE, stdout as SO
 
 from coopr.pyomo import value
 
-def get_int_frac_padding ( obj ):
-	# obj is 2-tuple, with type(item[ 1 ]) == number
-	i, f = str( obj[ 1 ] ).split('.')
-	return ( len(i), len(f) )
-
-
 def stringify_data ( data, ostream=SO, format='plain' ):
 	# data is a list of tuples of ('var_name[index]', value)
-	# this function iterates over the list multiple times, so it must at least
-	# be reiterable
+	#  data must be a list, as this function replaces each row,
 	# format is currently unused, but will be utilized to implement things like
 	# csv
 
 	# This padding code is what makes the display of the output values
 	# line up on the decimal point.
-	paddings = map( get_int_frac_padding, data )
-	ints, fracs = zip(*paddings)
-	int_padding = max( ints )
-	dec_padding = max( fracs )
-	format = "  %%%ds.%%-%ds  %%s\n" % (int_padding, dec_padding)
-		# Works out to something like "%8d.%-11s  %s"
+	for i, (v, val) in enumerate( data ):
+		ipart, fpart = str(val).split('.')
+		data[i] = (ipart, fpart, v)
+	cell_lengths = ( map(len, l[:-1] ) for l in data )
+	max_lengths = map(max, zip(*cell_lengths))   # max length of each column
+	fmt = u'  {{:>{:d}}}.{{:<{:d}}}  {{}}\n'.format( *max_lengths )
 
-	for var, val in data:
-		int_part, dec_part = str(val).split('.')
-		ostream.write( format % (int_part, dec_part, var) )
+	for row in data:
+		ostream.write( fmt.format(*row) )
 
 
 
