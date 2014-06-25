@@ -28,22 +28,33 @@
 		<div class='entry page clear'>
 			<p>The abstract formulation of the Temoa energy system model is written with <a href='https://software.sandia.gov/trac/coopr/wiki/Pyomo'>Pyomo</a>, which is in turn written in <a href='http://www.python.org/'>Python</a>.  Consequently, <strong>Temoa will run on Linux, Mac, Windows, or any operating system that Pyomo supports.</strong></p>
 
-			<p>If you already have Python, Coopr, and a solver, you can just download the <a href='/download/temoa.py' title='The Temoa Energy-Economy Optimization model.'>Temoa EEO model</a>.  If these are not already in place, then the installation is currently in two parts:</p>
+			<p>That said, getting to a functional Coopr installation has historically proven a somewhat difficult task, so we offer two modes of installation:</p>
+
+			<h2>Simple Installation</h2>
+
+			<p>The <q>simple installation</q> runs Coopr and Temoa inside of a <a href='http://en.wikipedia.org/wiki/Virtual_machine' title='(VM) a software-based emulation of a computer'>virtual machine</a>.  We have setup a Linux distribution with Coopr, a solver, and Temoa preinstalled.  Follow these steps to run it:</p>
+
 			<ol>
-				<li>Install Python v2.7 and SetupTools.</li>
-				<li>Run the Temoa Installer script.</li>
+				<li>Download and install <a href='https://www.virtualbox.org/'>VirtualBox</a>.</li>
+				<li>Download and install a <a href='https://en.wikipedia.org/wiki/BitTorrent' title='Wikipedia article explaining what a Torrent is'>Torrent</a> application.  We suggest <a href='http://www.utorrent.com/' title='Mac and Windows users'>μTorrent</a> or <a href='http://www.transmissionbt.com/' 'Mac and Linux users'>Transmission</a>.  (Note that Ubuntu may already come with Transmission.)
+				<li>Download <a href='REGEX_REPLACE_WITH_MAGNET_URL' title='A Bittorrent "magnet" link for TemoaBox, our "Virtual" Linux installation with temoa.py and coopr already installed.'>TemoaBox.ova</a> (a "magnet" link that requires a Torrent application).</li>
 			</ol>
-			<p>Installation instructions for: [<a href='/download/nix/'>Unix</a>] [<a href='/download/mac/'>Mac OS X</a>] [<a href='/download/win/'>Windows</a>]</p>
+
+			<h3>Why not your normal download process?  Or "What that heck is a Torrent?!"</h3>
+			<p>The BitTorrent protocol is a peer-to-peer method to distribute large files over the net.  In a nutshell, large files are broken up into small pieces, and downloaders trade these pieces amongst themselves until they have the entire file.  In this way, downloaders share their otherwise unused (upload) bandwidth, which means every user benefits from higher speeds when downloading large files.  Kinda neat, huh?</p>
+
+			<h2>Advanced Installation</h2>
+			<p>If you know your way around the computer, and how to deal with intermittent network or installation issues, you may appreciate avoiding the overhead of TemoaBox, and instead installing the relevant tools yourself.  If you encounter difficulty with this avenue, you may ask for help on our Forum.  However, note that we offer minimal support in this area, and so you may have to ask for help elsewhere.  Here are the pieces you will need to install/plumb up:</p>
+
+			<ol>
+				<li><a href='https://www.python.org/' title='The Python scripting language'>Python v2.7</a>.  Temoa requires at least v2.7, and Coopr does not yet support Python 3+.</li>
+				<li><a href='https://software.sandia.gov/trac/coopr/' title='The AML API against which Temoa is written'>COOPR</a>.  Temoa employs APIs from the COmmon Optimization Python Repository (Coopr); mainly Pyomo and PySP.</li>
+				<li>A linear optimization solver.  We recommend <a href='http://www.gnu.org/software/glpk/'>GLPK</a> as it is GPL software and gratis, but any solver for which Coopr has an interface will do.</li>
+				<li>The Temoa model, <a href='./temoa.py'>temoa.py</a>.  (Or, if you'd like to closely follow development, <a href='/go-to-github/'>clone the repository</a>.)</li>
+				<li>(Optional) Test your installation by running some <a href='./example_data_sets.zip'>example data sets</a>.</li>
+			</ol>
 
 			<p>We have tested the installation process on multiple machines, but unexpected conditions inevitably come up.  Please use the Forum to ask for help.</p>
-
-			<p>The rest of this page covers the following topics:</p>
-			<ul style='padding-left: 3em;'>
-				<li><a href='#list-of-files'>All Temoa Downloads</a></li>
-				<li><a href='#software-components'>Temoa Software Components</a></li>
-				<li><a href='#testing-installation'>Testing the Installation</a></li>
-				<li><a href='#code-checkout'>Development Version</a></li>
-			</ul>
 
 			<h2 id='#list-of-files'>Temoa Downloads</h2>
 			<p>If you know the salient details, here are "just the downloads":</p>
@@ -51,83 +62,8 @@
 				<li><a href='/download/temoa.py' title='temoa.py (the product)'>temoa.py</a></li>
 				<li><a href='/download/example_data_sets.zip' title='Examples data sets with which to run the model; no warranties!'>example_data_sets.zip</a></li>
 				<li><a href='/download/TemoaDocumentation.pdf' title='The PDF form of the Temoa documentation.'>TemoaDocumentation.pdf</a></li>
-				<li><a href='REGEX_REPLACE_WITH_MAGNET_URL' title='A Bittorrent "magnet" link for TemoaBox, our "Virtual" Linux installation with temoa.py and coopr already installed.'>TemoaBox.ova</a> (torrent magnet link to a 540MiB VirtualBox appliance; will need μTorrent, Transmission, Deluge, or other Bittorrent application)</li>
+				<li><a href='REGEX_REPLACE_WITH_MAGNET_URL' title='A Bittorrent "magnet" link for TemoaBox, our "Virtual" Linux installation with temoa.py and coopr already installed.'>TemoaBox.ova</a> (torrent magnet link to a 540MiB VirtualBox appliance; will need <a href='https://www.utorrent.com/'>μTorrent</a>, <a href='https://www.transmissionbt.com/'>Transmission</a>, or other Bittorrent application)</li>
 			</ul>
-			<h2 id='software-components'>Temoa Software Components</h2>
-			<p>To run Temoa, you will need:</p>
-			<ul>
-				<li><strong><a title='The Python scripting language homepage' href='http://www.python.org/'>Python</a></strong> &ndash; a very robust open source scripting language that has become a staple of the scientific community.  At this time (Dec 2011), Temoa requires Python v2.7.  You may (not) have success with an earlier version.  Unless you run Windows, it is likely already installed on your computer.</li>
-				<li><strong><a title='COmmon Optimization Python Repository' href='https://software.sandia.gov/trac/coopr/'>COOPR</a></strong> &ndash; Temoa employs <span class='underline'>CO</span>mmon <span class='underline'>O</span>ptimization <span class='underline'>P</span>ython <span class='underline'>R</span>epository (Coopr), a set of open source optimization libraries developed by Sandia National Laboratory.  Temoa makes use of two key components within Coopr: (1) <span class='underline'>P</span>ython <span class='underline'>O</span>ptimization <span class='underline'>M</span>odeling <span class='underline'>O</span>bjects (Pyomo), an application programming interface (API) that emulates an algebraic modeling language similar to GAMS or AMPL and (2) <span class='underline'>P</span>ython-based <span class='underline'>S</span>tochastic <span class='underline'>P</span>rogramming (PySP), which partially automates the process of stochastic problem formulation.  Coopr is open source, and can be freely downloaded from Sandia.</li>
-				<li><strong>Solver</strong> &ndash; Pyomo is a description language for optimization models, but must be linked to a search algorithm (i.e., solver) to find an optimal solution.  The Temoa energy system is (currently) a linear formulation, and therefore requires a solver that works on linear programming problems.  If you are using a university machine, both <a href='http://www-01.ibm.com/software/integration/optimization/cplex-optimizer/'>CPLEX</a> and <a href='http://www.gurobi.com/'>Gurobi</a> can be used for free.  In addition, GLPK is freely available to all interested parties.  As <a title='Gnu Linear Programming Kit' href='http://www.gnu.org/software/glpk/'>GLPK</a> is free, it offers the lowest barrier to entry among the available solvers and consequently is what we explain how to install here.  However, be warned that it is a great deal less efficient (slower) than CPlex, Gurobi, and other commercial linear solvers.</li>
-				<li><strong>Temoa model</strong> &ndash; we are in early development stages of the project, but we have a <a href='/download/temoa.py' title='Temoa Energy System Model (Prototype)'>working prototype.</a>  Note that all of our code is registered under the GNU Public License, and is therefore publicly available to all interested parties.  (Interested developers: look to the section <q>Development Version</q> in this page for the repository checkout command and URL.)</li>
-			</ul>
-			<p>In general, once you&rsquo;ve downloaded and installed all of the above, working with the model is currently a command line venture.  The command to run it is (Unix/Mac) <code>$ coopr_python temoa.py</code> or (Windows) <code>\&gt; python temoa.py</code></p>
-
-			<p class='note'>Note that you do not need the install script to actually run Temoa; it is just a convenience script to aid installing the below software.  <a href='/download/temoa.py'>The Temoa model is a single file Python script</a>.</p>
-
-			<h2 id='testing-installation'>Testing the Installation</h2>
-			<p>Temoa has only a single file, <code>temoa.py</code>, so once the above 3 prerequisite components are installed, you're done.  Testing your setup is as simple as running one of the <a href='/download/example_data_sets.zip' title='Temoa supplied data files'>example data sets</a>.  Open a new terminal, and navigate to where you placed <code>temoa.py</code>:</p>
-			<pre style='line-height: 2.3ex; font-size: 1.2em; font-weight: bold;'>$ <span style='color: #04f;'>cd temoa/</span>
-
-   # just see what options the Temoa command line provides
-   # Windows users: &gt; <span style='color: #04f;'>python  temoa.py  -h</span>
-$ <span style='color: #04f;'>coopr_python  temoa.py  -h</span>
-usage: temoa.py [-h] [--graph_format GRAPH_FORMAT] [--show_capacity]
-                [--graph_type GRAPH_TYPE] [--use_splines]
-                dot_dat [dot_dat ...]
-
-positional arguments:
-  dot_dat               AMPL-format data file(s) with which to create a model
-                        instance. e.g. "data.dat"
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --graph_format GRAPH_FORMAT
-                        Create a system-wide visual depiction of the model.
-                        The available options are the formats available to
-                        Graphviz. To get a list of available formats, use the
-                        "dot" command: dot -Txxx. [Default: None]
-  --show_capacity       Choose whether or not the capacity shows up in the
-                        subgraphs. [Default: not shown]
-  --graph_type GRAPH_TYPE
-                        Choose the type of subgraph depiction desired. The
-                        available options are "explicit_vintages" and
-                        "separate_vintages". [Default: separate_vintages]
-  --use_splines         Choose whether the subgraph edges needs to be straight
-                        or curved. [Default: use straight lines, not splines]
-
-
-   # run Temoa with the supplied Utopia data set and save results to a file:
-   # Windows users: &gt; <span style='color: #04f;'>python  temoa.py  utopia.dat  &gt;  utopia.results</span>
-$ <span style='color: #04f;'>coopr_python  temoa.py  utopia.dat  &gt;  utopia.results</span>
-[    0.08] Reading data files.
-[    0.96] Creating Temoa model instance.
-[    1.65] Solving.
-[    1.77] Formatting results.
-
-  # inspect the results:
-  # Windows users: &gt; <span style='color: #04f;'>notepad  utopia.results</span>
-$ <span style='color: #04f;'>head  utopia.results</span>
-Model name: Temoa Entire Energy System Economic Optimization Model
-Objective function value (TotalCost): 35657.0718528
-Non-zero variable values:
-     0.578040628071     V_Activity(1990,inter,day,E01,1960)
-     0.1445872          V_Activity(1990,inter,day,E31,1980)
-     0.04337616         V_Activity(1990,inter,day,E31,1990)
-     0.0739960119289    V_Activity(1990,inter,day,E51,1980)
-     4.752987012987     V_Activity(1990,inter,day,IMPDSL1,1990)
-     3.319567099567     V_Activity(1990,inter,day,IMPGSL1,1990)
-     1.806376962722     V_Activity(1990,inter,day,IMPHCO1,1990)
-</pre>
-
-			<h2 id='code-checkout'>Development Version</h2>
-			<p>While we make available snapshots of the Temoa code base that we believe to be stable and correct, you are also welcome to check out the bleeding edge as we develop.  To do so, make sure that you have Subversion installed, and then check out our repository with a command like one of these:</p>
-			<pre style='line-height: 2.3ex; font-size: 1.2em; font-weight: bold;'>   # just what we've deemed stable
-$ <span style='color: #04f;'>svn  co  http://svn.temoaproject.org/temoa/trunk  temoa_trunk</span>
-
-   # parallel development branches that we may (not) merge into the mainline trunk.
-$ <span style='color: #04f;'>svn  co  http://svn.temoaproject.org/temoa/branches  temoa_branches</span>
-</pre>
 		</div><!--end entry-->
 	</div><!--end content-->
 
