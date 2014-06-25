@@ -44,7 +44,7 @@ def align_vertically ( lines ):
 	string with each column aligned and separated by two spaces.  This function
 	is geared to an AMPL-like format (such as what Pyomo uses) and so the final
 	two columns are expected (though not required) to be the stringification of
-	an integer and a float less than zero.  These two fields will be combined in
+	an integer and a float less than one.  These two fields will be combined in
 	the output so as to make a single number (integer_part.decimal_part) so that
 	the final column is aligned on the decimal point.
 	"""
@@ -52,11 +52,8 @@ def align_vertically ( lines ):
 	max_lengths = map(max, zip(*lengths))    # max length of each column
 	fmt = r'{{:<{}}}  ' * (len(max_lengths) -1) + '{{:>{}}}.{{}}'
 	fmt = fmt.format( *max_lengths )
-	for i, s in enumerate( lines ):
-		# update each row in place so as to not use more memory than necessary
-		lines[ i ] = fmt.format( *s )
 
-	return '\n '.join( lines )
+	return '\n '.join( fmt.format( *s ) for s in lines )
 
 
 @require_GET
