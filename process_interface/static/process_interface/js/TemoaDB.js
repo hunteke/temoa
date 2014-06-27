@@ -530,7 +530,7 @@ can.Model('Analysis', {
 			if ( Math.abs(1 - sum) > epsilon )
 				return "<span class='error'>" + sum + '</span>';
 			else
-				return sum
+				return sum;
 		}
 
 		return sum;
@@ -649,6 +649,10 @@ can.Control('AnalysisDetail', {
 			  new AnalysisCommodityPhysical.List() );
 		if ( ! analysis.segfracs )
 			analysis.attr('segfracs', new AnalysisSegFrac.List() );
+		if ( ! analysis.future_periods )
+			analysis.attr('future_periods', new can.List() );
+		if ( ! analysis.all_vintages )
+			analysis.attr('all_vintages', new can.List() );
 
 		var view_opts = {
 			username: getCookie().username || null,
@@ -674,19 +678,23 @@ can.Control('AnalysisDetail', {
 						map.attr( obj.name, obj );
 					}, 1 ); // 1 = delay until after obj builds itself
 				}
-				function update_future_periods ( ev, attr, how, newVal, oldVal ) {
-					var new_fp_list = analysis.vintages.split(',');
+				function update_periods ( ev, attr, how, newVal, oldVal ) {
+					var new_vint_list = analysis.vintages.split(',');
 					var fp_list = analysis.future_periods;
-					for ( var i = 0; i < new_fp_list.length; ++i )
-						new_fp_list[ i ] = +new_fp_list[ i ];
-					new_fp_list.sort( numericSort );
+					var av_list = analysis.all_vintages;
+					for ( var i = 0; i < new_vint_list.length; ++i )
+						new_vint_list[ i ] = +new_vint_list[ i ];
+					new_vint_list.sort( numericSort );
 
 					fp_list.splice( 0 ); // remove all current elements
-					for ( var i = 0; i < new_fp_list.length -1; ++i ) {
+					av_list.splice( 0 ); // remove all current elements
+					for ( var i = 0; i < new_vint_list.length -1; ++i ) {
 						// -1 == last year, which is _not_ a period
-						if ( +new_fp_list[ i ] < analysis.period_0 )
+						var year = +new_vint_list[ i ];
+						av_list.push( year )
+						if ( year < analysis.period_0 )
 							continue;
-						fp_list.push( new_fp_list[i] );
+						fp_list.push( year );
 					}
 				}
 				function update_future_demands ( ev, attr, how, newVal, oldVal ) {
@@ -744,7 +752,8 @@ can.Control('AnalysisDetail', {
 				var cd = commodities[0].demand;
 				var ce = commodities[0].emission;
 				var c_output = new can.Map(); // to be union of cd & cp
-				var future_periods = new can.List();
+				var future_periods = analysis.future_periods || new can.List();
+				var all_vintages   = analysis.all_vintages   || new can.List();
 				var future_demands = analysis.future_demands || new can.Map();
 				var segfracs = analysis.segfracs || new can.List();
 
@@ -754,6 +763,7 @@ can.Control('AnalysisDetail', {
 					commodity_physical: cp,
 					commodity_output:   c_output,  // to be union of cd & cp
 					future_demands:     future_demands,
+					all_vintages:       all_vintages,
 					future_periods:     future_periods,
 					segfracs:           segfracs,
 				});
@@ -771,10 +781,10 @@ can.Control('AnalysisDetail', {
 				// 'change' event.  Otherwise, the .push() will cause a 'change'
 				// event that bubbles to the analysis model, initiating infinite
 				// recursion.
-				analysis.on('vintages', update_future_periods );
+				analysis.on('vintages', update_periods );
 				analysis.on('vintages', update_future_demands );
 				cd.on('change', update_future_demands );
-				update_future_periods();
+				update_periods();
 				update_future_demands();
 
 				var _segFracs = {};
@@ -2181,7 +2191,7 @@ can.Model('Process', {
 		url += '/analysis/{aId}/process/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
-	}
+	},
 });
 
 can.Model('ProcessCapacityFactor', {
@@ -2701,6 +2711,8 @@ can.Control('ProcessDetail', {
 		if ( ! p.emissionactivities )
 			p.attr('emissionactivities',
 			  new ProcessEmissionActivity.List());
+		if ( ! p.analysis )
+			p.attr('analysis', options.analysis );
 
 		var view_opts = {
 			username: options.username || null,

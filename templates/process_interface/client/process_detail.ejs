@@ -18,6 +18,13 @@ if ( username && process.isNew() ) { %>
 	<option value='<%= e.attr('inp') %>, <%= e.attr('out') %>'>
 <% }); %>
 </datalist>
+<datalist id='CostNewPeriodList_<%= process.attr('id') %>'>
+<% analysis.attr('future_periods').each( function ( fp ) {
+	if ( fp < +process.vintage ) return;
+%>
+	<option value='<%= fp %>'>
+<% }); %>
+</datalist>
 
 <form onsubmit='return false;' id='Process_<%= process.attr('id') %>'></form>
 <form onsubmit='return false;' id='ProcessCapacityFactors_<%= process.attr('id') %>'></form>
@@ -134,7 +141,7 @@ if ( username && process.isNew() ) { %>
 						<tr <%= ($el) -> $el.data('costfixed', cf) %>>
 							<% if ( cf.isNew() ) { %>
 								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CostFixedRemove'>Cancel</button></td>
-								<td><span class='error'></span><input form='ProcessCostsFixed_<%= process.attr('id') %>' type='text'   class='costfixed_input' name='CostFixedNew_per' autocomplete='off' list='CommodityPhysicalList'></td>
+								<td><span class='error'></span><input form='ProcessCostsFixed_<%= process.attr('id') %>' type='text'   class='costfixed_input' name='CostFixedNew_per' autocomplete='off' list='CostNewPeriodList_<%= process.attr('id') %>'></td>
 								<td><span class='error'></span><input form='ProcessCostsFixed_<%= process.attr('id') %>' type='number' class='costfixed_input' name='CostFixedNew_value'></td>
 							<% } else { %>
 								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CostFixedRemove'>Del</button></td>
@@ -156,7 +163,7 @@ if ( username && process.isNew() ) { %>
 						<tr <%= ($el) -> $el.data('costvariable', cv) %>>
 							<% if ( cv.isNew() ) { %>
 								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CostVariableRemove'>Cancel</button></td>
-								<td><span class='error'></span><input form='ProcessCostsVariable_<%= process.attr('id') %>' type='text'   class='costvariable_input' name='CostVariableNew_per' autocomplete='off' list='CommodityPhysicalList'></td>
+								<td><span class='error'></span><input form='ProcessCostsVariable_<%= process.attr('id') %>' type='text'   class='costvariable_input' name='CostVariableNew_per' autocomplete='off' list='CostNewPeriodList_<%= process.attr('id') %>'></td>
 								<td><span class='error'></span><input form='ProcessCostsVariable_<%= process.attr('id') %>' type='number' class='costvariable_input' name='CostVariableNew_value'></td>
 							<% } else { %>
 								<td><button type='button' class='remove' disabled='disabled' title='Press Shift to enable buttons' name='CostVariableRemove'>Del</button></td>
