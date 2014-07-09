@@ -15,6 +15,7 @@ from django.test import TestCase
 
 from process_interface.models import (
   Analysis,
+  AnalysisCommodity,
   Commodity,
   CommodityType,
   Param_SegFrac,
@@ -628,4 +629,29 @@ class ModelParam_TechOutputSplitTest ( TestCase ):
 	def test_str_empty ( self ):
 		tos = Param_TechOutputSplit()
 		expected = u'(NoAnalysis) NoTechnology, NoOutput: NoValue'
+		self.assertEqual( str(tos), expected )
+
+
+	def test_str_only_technology ( self ):
+		t = TechnologyFactory.create()
+		tos = Param_TechOutputSplit( technology=t )
+		expected = u'{}, NoOutput: NoValue'.format( t )
+		self.assertEqual( str(tos), expected )
+
+
+	def test_str_only_outcommodity ( self ):
+		a = AnalysisFactory.create()
+		ct = CommodityType.objects.get(name='demand')
+		c = CommodityFactory.create()
+		dc = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+		tos = Param_TechOutputSplit( out_commodity=dc )
+		expected = u'(NoAnalysis) NoTechnology, {}: NoValue'.format( c )
+		self.assertEqual( str(tos), expected )
+
+
+	def test_str_only_fraction ( self ):
+		fraction = random()
+		tos = Param_TechOutputSplit( fraction=fraction )
+		expected = u'(NoAnalysis) NoTechnology, NoOutput: {}'.format( fraction )
 		self.assertEqual( str(tos), expected )
