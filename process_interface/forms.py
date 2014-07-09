@@ -345,7 +345,7 @@ class ProcessForm ( F.Form ):
 		if p.pk:
 			# process in DB, and name is not mutable here: remove the field
 			del self.fields['name']
-			if p.vintage.vintage < p.analysis.period_0:
+			if p.vintage.vintage < p.technology.analysis.period_0:
 				del self.fields['costinvest']
 				del self.fields['loanlife']
 				del self.fields['discountrate']
@@ -365,7 +365,7 @@ class ProcessForm ( F.Form ):
 		tname, vintage = cd['name'].split(',')
 		vintage = int( vintage )
 
-		vintages = Vintage.objects.filter( analysis=p.analysis )
+		vintages = Vintage.objects.filter( analysis=p.technology.analysis )
 		if vintage not in (i.vintage for i in vintages):
 			msg = '{} is not a valid vintage in this analysis.'
 			raise F.ValidationError( msg.format( vintage ))
@@ -412,7 +412,7 @@ class ProcessForm ( F.Form ):
 		# may be in flux (i.e. a modeler is changing the structure of the data).
 		# Meanwhile, this check *will* be performed when downloading the complete
 		# dat file.
-		if life + p.vintage.vintage <= p.analysis.period_0:
+		if life + p.vintage.vintage <= p.technology.analysis.period_0:
 			msg = ('Process lifetime guarantees no use in model optimization.  '
 			  'Either extend the lifetime, or change the analysis start year.')
 			raise F.ValidationError( msg )
@@ -435,7 +435,7 @@ class ProcessForm ( F.Form ):
 		p = self.process
 		v = cd['vintage'].vintage if 'vintage' in cd else p.vintage.vintage
 
-		if v < p.analysis.period_0:
+		if v < p.technology.analysis.period_0:
 			msg = ('Existing capacity cannot have a loan and therefore no loan '
 			  'life.')
 			raise F.ValidationError( msg )

@@ -160,7 +160,7 @@ class Technology ( DM.Model ):
 	# I can't think of a context that would use more than 100 characters for
 	# name, so I think 1024 characters (2**10) is more than adequate storage --
 	# overkill, just in case.
-	user        = DM.ForeignKey( User )
+	analysis    = DM.ForeignKey( Analysis )
 	name        = DM.CharField( max_length=1024 )
 	description = DM.TextField()
 
@@ -168,16 +168,18 @@ class Technology ( DM.Model ):
 	capacity_to_activity = DM.FloatField( null=True )
 
 	class Meta:
-		unique_together = ('user', 'name')
+		unique_together = ('analysis', 'name')
 		ordering = ('name',)
 
 
 	def __str__ ( self ):
-		n = 'NoName'
+		a, n = 'NoAnalysis', 'NoName'
+		if self.analysis_id:
+			a = self.analysis
 		if self.name:
 			n = self.name
 
-		return str( n )
+		return u'({}) {}'.format( a, n )
 
 
 	def clean ( self ):
@@ -213,20 +215,18 @@ class Commodity ( DM.Model ):
 
 
 class TechnologySetMember ( DM.Model ):
-	analysis   = DM.ForeignKey( Analysis )
-	technology = DM.ForeignKey( Technology )
+	technology = DM.ForeignKey( Technology, unique=True )
 
 	class Meta:
 		abstract = True
-		ordering = ('analysis', 'technology')
-		unique_together = ('analysis', 'technology',)
+		ordering = ('technology__analysis', 'technology')
 
 	def __str__ ( self ):
 		a, t = 'NoAnalysis', 'NoTechnology'
-		if self.analysis_id:
-			a = self.analysis
 		if self.technology_id:
 			t = self.technology
+			a = t.analysis
+
 		return u'({}) {}'.format( a, t )
 
 
@@ -237,7 +237,6 @@ class Set_tech_storage  ( TechnologySetMember ): pass
 
 
 class Process ( DM.Model ):
-	analysis         = DM.ForeignKey( Analysis )
 	technology       = DM.ForeignKey( Technology )
 	vintage          = DM.ForeignKey( Vintage )
 	lifetime         = DM.FloatField( null=True )
@@ -247,17 +246,17 @@ class Process ( DM.Model ):
 	existingcapacity = DM.FloatField( null=True )
 
 	class Meta:
-		ordering = ('analysis', 'technology', 'vintage')
-		unique_together = ('analysis', 'technology', 'vintage')
+		ordering = ('technology__analysis', 'technology', 'vintage')
+		unique_together = ('technology', 'vintage')
 
 	def __str__ ( self ):
 		a, t, v = 'NoAnalysis', 'NoTechnology', 'NoVintage'
-		if self.analysis_id:
-			a = self.analysis
 		if self.technology_id:
 			t = self.technology
+			a = t.analysis
 		if self.vintage_id:
 			v = self.vintage.vintage
+
 		return u'({}) {}, {}'.format( a, t, v )
 
 
@@ -279,7 +278,7 @@ class Process ( DM.Model ):
 
 
 	def clean_valid_vintage ( self ):
-		vintages = Vintage.objects.filter( analysis=self.analysis
+		vintages = Vintage.objects.filter( analysis=self.technology.analysis
 		  ).order_by( '-vintage' )
 
 		try:
@@ -338,21 +337,18 @@ class Process ( DM.Model ):
 
 
 class LifetimeParameter ( DM.Model ):
-	analysis   = DM.ForeignKey( Analysis )
-	technology = DM.ForeignKey( Technology )
+	technology = DM.ForeignKey( Technology, unique=True )
 	value      = DM.FloatField()
 
 	class Meta:
 		abstract = True
-		ordering = ('analysis', 'technology')
-		unique_together = ('analysis', 'technology')
+		ordering = ('technology__analysis', 'technology')
 
 	def __str__ ( self ):
 		a, t, v = u'NoAnalysis', u'NoTechnology', u'NoValue'
-		if self.analysis_id:
-			a = self.analysis
 		if self.technology_id:
 			t = self.technology
+			a = t.analysis
 		if self.value is not None:
 			v = self.value
 		return u'({}) {}: {}'.format( a, t, v )
@@ -417,17 +413,18 @@ class AnalysisCommodity ( DM.Model ):
 
 
 class Param_CapacityToActivity ( DM.Model ):
-	analysis   = DM.ForeignKey( Analysis )
-	technology = DM.ForeignKey( Technology )
+	technology = DM.ForeignKey( Technology, unique=True )
 	value      = DM.FloatField()
 
 	class Meta:
-		unique_together = ('analysis', 'technology')
+		ordering = ('technology__analysis', 'technology')
 
 
 	def __str__ ( self ):
-		a = self.analysis if self.analysis_id else 'NoAnalysis'
-		t = self.technology if self.technology_id else 'NoTechnology'
+		a, t = 'NoAnalysis', 'NoTechnology'
+		if self.technology_id:
+			t = self.technology
+			a = t.analysis
 		return '({}) {}: {}'.format( a, t, self.value )
 
 
@@ -561,12 +558,17 @@ class PeriodCostParameter ( DM.Model ):
 	class Meta:
 		abstract = True
 		unique_together = ('period', 'process')
-		ordering = ('process__technology', 'process__vintage', 'period')
+		ordering = (
+		  'process__technology__analysis',
+		  'process__technology',
+		  'process__vintage',
+		  'period'
+		)
 
 
 	def __str__ ( self ):
 		try:
-			analysis = self.process.analysis
+			analysis = self.process.technology.analysis
 			period   = self.period.vintage
 			tech     = self.process.technology
 			vintage  = self.process.vintage.vintage
@@ -668,9 +670,8 @@ class Param_TechInputSplit ( DM.Model ):
 			raise ValidationError( msg )
 
 		analysis = self.inp_commodity.analysis
-		analysis_techs = Technology.objects.filter(
-		  process__analysis=analysis ).distinct()
-		if self.technology not in analysis_techs:
+		techs = Technology.objects.filter( analysis=analysis ).distinct()
+		if self.technology not in techs:
 			msg = ("Technology class '{}' is not used in any processes of "
 			  'Analysis {}')
 			raise ValidationError( msg.format( self.technology, analysis ))
@@ -709,9 +710,8 @@ class Param_TechOutputSplit ( DM.Model ):
 			raise ValidationError( msg )
 
 		analysis = self.out_commodity.analysis
-		analysis_techs = Technology.objects.filter(
-		  process__analysis=analysis ).distinct()
-		if self.technology not in analysis_techs:
+		techs = Technology.objects.filter( analysis=analysis ).distinct()
+		if self.technology not in techs:
 			msg = ("Technology class '{}' is not used in any processes of "
 			  'Analysis {}')
 			raise ValidationError( msg.format( self.technology, analysis ))
@@ -749,7 +749,7 @@ class MinMaxParameter ( DM.Model ):
 			msg = 'Specified capacity not in optimization horizon'
 			raise ValidationError( msg )
 
-		if t not in Technology.objects.filter( process__analysis=a ):
+		if t not in Technology.objects.filter( analysis=a ):
 			msg = 'Specified technology not in period analysis'
 			raise ValidationError( msg )
 
@@ -808,7 +808,7 @@ class Param_Efficiency ( DM.Model ):
 
 	def __str__ ( self ):
 		try:
-			analysis = self.process.analysis
+			analysis = self.process.technology.analysis
 			inp      = self.inp_commodity.commodity
 			tech     = self.process.technology
 			vintage  = self.process.vintage.vintage
@@ -839,7 +839,7 @@ class Param_Efficiency ( DM.Model ):
 			raise ValidationError( msg.format( self.value ))
 
 		inp_analysis = self.inp_commodity.analysis
-		analysis = self.process.analysis
+		analysis = self.process.technology.analysis
 		out_analysis = self.out_commodity.analysis
 		if inp_analysis != analysis or analysis != out_analysis:
 			msg = ('Inconsistent analyses!  (input, process, output) analyses '
@@ -863,7 +863,7 @@ class Param_EmissionActivity ( DM.Model ):
 
 	def __str__ ( self ):
 		if self.efficiency_id:
-			analysis = self.efficiency.process.analysis
+			analysis = self.efficiency.process.technology.analysis
 			inp      = self.efficiency.inp_commodity.commodity
 			tech     = self.efficiency.process.technology
 			vint     = self.efficiency.process.vintage.vintage
@@ -979,7 +979,7 @@ class Param_CapacityFactorProcess ( DM.Model ):
 
 
 	def __str__ ( self ):
-		a = self.process_id and self.process.analysis or 'NoAnalysis'
+		a = self.process_id and self.process.technology.analysis or 'NoAnalysis'
 		s = self.timeslice.season if self.timeslice_id else 'NoSegFrac'
 		d = self.timeslice.time_of_day if self.timeslice_id else 'NoSegFrac'
 		t = self.process_id and self.process.technology or 'NoProcess'
@@ -991,7 +991,7 @@ class Param_CapacityFactorProcess ( DM.Model ):
 	def save ( self ):
 		epsilon = 1e-9   # something really small
 
-		if self.timeslice.analysis != self.process.analysis:
+		if self.timeslice.analysis != self.process.technology.analysis:
 			msg = ('Inconsistent analyses!  CapacityFactorProcess timeslice and '
 			  'process reference different analyses.')
 			raise ValidationError( msg )
@@ -1006,18 +1006,13 @@ class Param_CapacityFactorProcess ( DM.Model ):
 
 
 class Param_GrowthRate ( DM.Model ):
-	analysis   = DM.ForeignKey( Analysis )
-	technology = DM.ForeignKey( Technology )
+	technology = DM.ForeignKey( Technology, unique=True )
 	ratelimit  = DM.FloatField()
 	seed       = DM.FloatField()
 
 
-	class Meta:
-		unique_together = ('analysis', 'technology')
-
-
 	def __str__ ( self ):
-		analysis = self.analysis_id and self.analysis or 'NoAnalysis'
+		analysis = self.technology_id and self.technology.analysis or 'NoAnalysis'
 		tech     = self.technology_id and self.technology or 'NoTechnology'
 
 		return u'({}) {}: {}'.format( analysis, tech, self.ratelimit, self.seed )

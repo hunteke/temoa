@@ -55,7 +55,7 @@ class VintageFactory ( factory.django.DjangoModelFactory ):
 class TechnologyFactory ( factory.django.DjangoModelFactory ):
 	FACTORY_FOR = Technology
 
-	user = factory.SubFactory( UserFactory )
+	analysis = factory.SubFactory( AnalysisFactory )
 	name = 'Unit Test Technology'
 	description = 'Technology automatically created during unit testing.'
 	capacity_to_activity = None
@@ -64,7 +64,6 @@ class TechnologyFactory ( factory.django.DjangoModelFactory ):
 class NewProcessFactory ( factory.django.DjangoModelFactory ):
 	FACTORY_FOR = Process
 
-	analysis         = factory.SubFactory( AnalysisFactory )
 	technology       = factory.SubFactory( TechnologyFactory )
 	vintage          = factory.SubFactory( VintageFactory )
 	lifetime         = 10
@@ -310,10 +309,10 @@ class TestNewProcessForm ( TestCase ):
 		process clears other fields"
 		"""
 		a = AnalysisFactory.create()
-		t = TechnologyFactory.create( user=a.user )
+		t = TechnologyFactory.create( analysis=a )
 		v = VintageFactory.create( analysis=a, vintage=10 )
 		v = VintageFactory.create( analysis=a, vintage=0 )
-		p = NewProcessFactory.create(analysis=a, technology=t, vintage=v)
+		p = NewProcessFactory.create(technology=t, vintage=v)
 
 		for attr, val in (
 		  ('costinvest', '2000'), ('discountrate', '0.05'), ('lifetime', '20'),
@@ -327,14 +326,14 @@ class TestNewProcessForm ( TestCase ):
 
 
 	def test_new_process_invalid_vintage ( self ):
-		a = AnalysisFactory.create()
-		t = TechnologyFactory.create( user=a.user )
+		t = TechnologyFactory.create()
+		a = t.analysis
 		v = VintageFactory.create( analysis=a, vintage=0 )
 		v = VintageFactory.create( analysis=a, vintage=10 )
-		p = NewProcessFactory.build( analysis=a )
+		p = NewProcessFactory.build()
 
 		data = {'name': '{}, 5'.format( t.name, v.vintage ) }
-		f = ProcessForm( data, instance=p )
+		f = ProcessForm( data, instance=p, analysis=a )
 		self.assertFalse( f.is_valid() )
 		self.assertIn( 'name', f.errors )
 		self.assertIn( 'not a valid vintage ', str(f.errors) )
@@ -355,10 +354,15 @@ class TestNewProcessForm ( TestCase ):
 
 
 	def test_new_process_technology_dne ( self ):
-		a = AnalysisFactory.create()
+		"""
+		Check that the form returns a helpful 'invalid tech' if technology does
+		not exist in analysis
+		"""
+		t = TechnologyFactory.create()
+		a = t.analysis
 		v = VintageFactory.create( analysis=a, vintage=0 )
 		v = VintageFactory.create( analysis=a, vintage=10 )
-		p = NewProcessFactory.build( analysis=a )
+		p = NewProcessFactory.build( technology=t )
 
 		data = {'name': 'TechDNE, 0' }
 		f = ProcessForm( data, instance=p )
