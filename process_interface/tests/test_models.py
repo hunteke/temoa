@@ -62,7 +62,7 @@ class VintageFactory ( factory.django.DjangoModelFactory ):
 class TechnologyFactory ( factory.django.DjangoModelFactory ):
 	FACTORY_FOR = Technology
 
-	user = factory.SubFactory( UserFactory )
+	analysis = factory.SubFactory( AnalysisFactory )
 	name = 'Unit Test Technology'
 	description = 'Technology automatically created during unit testing.'
 	capacity_to_activity = None
@@ -90,7 +90,6 @@ class Param_SegFracFactory ( factory.django.DjangoModelFactory ):
 class Set_tech_baseloadFactory ( factory.django.DjangoModelFactory ):
 	FACTORY_FOR = Set_tech_baseload
 
-	analysis = factory.SubFactory( AnalysisFactory )
 	technology = factory.SubFactory( TechnologyFactory )
 
 
@@ -98,7 +97,6 @@ class Set_tech_baseloadFactory ( factory.django.DjangoModelFactory ):
 class ExistingProcessFactory ( factory.django.DjangoModelFactory ):
 	FACTORY_FOR = Process
 
-	analysis         = factory.SubFactory( AnalysisFactory )
 	technology       = factory.SubFactory( TechnologyFactory )
 	vintage          = factory.SubFactory( VintageFactory )
 	lifetime         = 10
@@ -106,6 +104,14 @@ class ExistingProcessFactory ( factory.django.DjangoModelFactory ):
 	costinvest       = None
 	discountrate     = None
 	existingcapacity = 31
+
+
+
+class Param_LifetimeTechFactory ( factory.django.DjangoModelFactory ):
+	FACTORY_FOR = Param_LifetimeTech
+
+	technology = factory.SubFactory( TechnologyFactory )
+	value = 30
 
 
 
@@ -234,7 +240,7 @@ class ModelTechnologyTest ( TestCase ):
 
 	def test_str_name ( self ):
 		t = TechnologyFactory.build()
-		expected = u'{}'.format( t.name )
+		expected = u'(NoAnalysis) {}'.format( t.name )
 		self.assertEqual( str(t), expected )
 
 
@@ -417,12 +423,11 @@ class ModelParam_SegFracTest ( TestCase ):
 class ModelsTechnologySetMemberTest ( TestCase ):
 
 	def test_tech_baseload_uniqueness_creation ( self ):
-		a = AnalysisFactory.create()
-		t = TechnologyFactory.create(user=a.user)
+		t = TechnologyFactory.create()
 
-		Set_tech_baseloadFactory.create( analysis=a, technology=t )
+		Set_tech_baseloadFactory.create( technology=t )
 		with self.assertRaises( IntegrityError ) as ie:
-			Set_tech_baseloadFactory.create( analysis=a, technology=t )
+			Set_tech_baseloadFactory.create( technology=t )
 
 
 	def test_tech_baseload_str_empty ( self ):
@@ -432,16 +437,15 @@ class ModelsTechnologySetMemberTest ( TestCase ):
 
 
 	def test_tech_baseload_only_analysis ( self ):
-		a = AnalysisFactory.create()
-		bl = Set_tech_baseloadFactory.build( analysis=a )
-		expected = u'({}) NoTechnology'.format( bl.analysis )
+		bl = Set_tech_baseloadFactory.build()
+		expected = u'(NoAnalysis) NoTechnology'
 		self.assertEqual( str(bl), expected )
 
 
 	def test_tech_baseload_only_technology ( self ):
 		t = TechnologyFactory.create()
 		bl = Set_tech_baseloadFactory.build( technology=t )
-		expected = u'(NoAnalysis) {}'.format( bl.technology )
+		expected = u'{}'.format( bl.technology )
 		self.assertEqual( str(bl), expected )
 
 
@@ -454,17 +458,10 @@ class ModelExistingProcessTest ( TestCase ):
 		self.assertEqual( str(p), expected )
 
 
-	def test_str_only_analysis ( self ):
-		a = AnalysisFactory.create()
-		p = ExistingProcessFactory.build( analysis=a )
-		expected = u'({}) NoTechnology, NoVintage'.format( p.analysis )
-		self.assertEqual( str(p), expected )
-
-
 	def test_str_only_technology ( self ):
 		t = TechnologyFactory.create()
 		p = ExistingProcessFactory.build( technology=t )
-		expected = u'(NoAnalysis) {}, NoVintage'.format( p.technology )
+		expected = u'{}, NoVintage'.format( p.technology )
 		self.assertEqual( str(p), expected )
 
 
@@ -476,8 +473,8 @@ class ModelExistingProcessTest ( TestCase ):
 
 
 	def test_ensure_vintage ( self ):
-		a = AnalysisFactory.create()
-		p = Process(analysis=a)
+		t = TechnologyFactory.create()
+		p = Process( technology=t )
 
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_vintage()
@@ -487,10 +484,11 @@ class ModelExistingProcessTest ( TestCase ):
 	def test_ensure_vintage_in_analysis ( self ):
 		a1 = AnalysisFactory.create(name='A Different Unit Test Analysis' )
 		a2 = AnalysisFactory.create(user=a1.user)
+		t1 = TechnologyFactory.create(analysis=a1)
 
 		# intentional misuse of a2 and a1
 		v = VintageFactory( analysis=a2, vintage=a1.period_0 -10 )
-		p = Process( analysis=a1, vintage=v )
+		p = Process( technology=t1, vintage=v )
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_vintage()
 
@@ -499,12 +497,13 @@ class ModelExistingProcessTest ( TestCase ):
 
 
 	def test_ensure_vintage_is_not_final_year ( self ):
-		a = AnalysisFactory.create()
+		t = TechnologyFactory.create()
+		a = t.analysis
 
 		# the first and only vintage in analysis
 		v = VintageFactory.create( analysis=a )
 
-		p = Process(analysis=a, vintage=v)
+		p = Process(technology=t, vintage=v)
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_vintage()
 
@@ -558,17 +557,10 @@ class ModelParam_LifetimeTechProcessTest ( TestCase ):
 		self.assertEqual( str(tl), expected )
 
 
-	def test_str_only_analysis ( self ):
-		a = AnalysisFactory.create()
-		tl = Param_LifetimeTech( analysis=a )
-		expected = u'({}) NoTechnology: NoValue'.format( tl.analysis )
-		self.assertEqual( str(tl), expected )
-
-
 	def test_str_only_technology ( self ):
 		t = TechnologyFactory.create()
 		tl = Param_LifetimeTech( technology=t )
-		expected = u'(NoAnalysis) {}: NoValue'.format( tl.technology )
+		expected = u'{}: NoValue'.format( tl.technology )
 		self.assertEqual( str(tl), expected )
 
 

@@ -296,8 +296,9 @@ class TestVintagesForm ( TestCase ):
 class TestNewProcessForm ( TestCase ):
 
 	def test_no_fields_are_there ( self ):
+		a = AnalysisFactory.create()
 		p = NewProcessFactory.build()
-		f = ProcessForm( instance=p )
+		f = ProcessForm( instance=p, analysis=a )
 
 		self.assertFalse( f.is_valid() )
 		self.assertEqual( len(f.fields), 0 )
@@ -319,7 +320,7 @@ class TestNewProcessForm ( TestCase ):
 		  ('loanlife', '20')
 		):
 			data = { attr : val }
-			f = ProcessForm( data, instance=p )
+			f = ProcessForm( data, instance=p, analysis=a )
 			self.assertTrue( f.is_valid() )
 			self.assertEqual( len(f.fields), 1 )
 			self.assertIn( attr, f.fields )
@@ -341,13 +342,13 @@ class TestNewProcessForm ( TestCase ):
 
 	def test_new_process_final_year_not_vintage ( self ):
 		a = AnalysisFactory.create()
-		t = TechnologyFactory.create( user=a.user )
+		t = TechnologyFactory.create( analysis=a )
 		v = VintageFactory.create( analysis=a, vintage=0 )
 		v = VintageFactory.create( analysis=a, vintage=10 )
-		p = NewProcessFactory.build( analysis=a )
+		p = NewProcessFactory.build()
 
 		data = {'name': '{}, {}'.format( t.name, v.vintage ) }
-		f = ProcessForm( data, instance=p )
+		f = ProcessForm( data, instance=p, analysis=a )
 		self.assertFalse( f.is_valid() )
 		self.assertIn( 'name', f.errors )
 		self.assertIn( 'final year in', str(f.errors) )
@@ -365,32 +366,7 @@ class TestNewProcessForm ( TestCase ):
 		p = NewProcessFactory.build( technology=t )
 
 		data = {'name': 'TechDNE, 0' }
-		f = ProcessForm( data, instance=p )
+		f = ProcessForm( data, instance=p, analysis=a )
 		self.assertFalse( f.is_valid() )
 		self.assertIn( 'name', f.errors )
 		self.assertIn( 'not a valid technology ', str(f.errors) )
-
-
-	def test_new_process_tech_not_unique ( self ):
-		"""
-		If there is only a single technology in the DB, then it's clear what the
-		modeler wants.  If there is more than one, then we assume they want the
-		technology they created.  If, however, the modeler has not created a
-		technology by this name, then it is ambiguous what they want.  The field
-		should fail.
-		"""
-		u1 = UserFactory.create(username='other1', email='a1@b.com')
-		u2 = UserFactory.create(username='other2', email='a2@b.com')
-		a = AnalysisFactory.create()
-		TechnologyFactory.create( user=u1 )
-		t = TechnologyFactory.create( user=u2 )
-		v = VintageFactory.create( analysis=a, vintage=0 )
-		v = VintageFactory.create( analysis=a, vintage=10 )
-		p = NewProcessFactory.build( analysis=a )
-
-		data = {'name': '{}, {}'.format( t.name, 0 ) }
-		f = ProcessForm( data, instance=p )
-		self.assertFalse( f.is_valid() )
-		self.assertIn( 'name', f.errors )
-		self.assertIn( 'not a unique tech', str(f.errors) )
-

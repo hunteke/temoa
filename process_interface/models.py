@@ -222,12 +222,11 @@ class TechnologySetMember ( DM.Model ):
 		ordering = ('technology__analysis', 'technology')
 
 	def __str__ ( self ):
-		a, t = 'NoAnalysis', 'NoTechnology'
+		t = '(NoAnalysis) NoTechnology'
 		if self.technology_id:
 			t = self.technology
-			a = t.analysis
 
-		return u'({}) {}'.format( a, t )
+		return u'{}'.format( t )
 
 
 
@@ -252,8 +251,8 @@ class Process ( DM.Model ):
 	def __str__ ( self ):
 		a, t, v = 'NoAnalysis', 'NoTechnology', 'NoVintage'
 		if self.technology_id:
-			t = self.technology
-			a = t.analysis
+			t = self.technology.name
+			a = self.technology.analysis
 		if self.vintage_id:
 			v = self.vintage.vintage
 
@@ -345,13 +344,12 @@ class LifetimeParameter ( DM.Model ):
 		ordering = ('technology__analysis', 'technology')
 
 	def __str__ ( self ):
-		a, t, v = u'NoAnalysis', u'NoTechnology', u'NoValue'
+		t, v = u'(NoAnalysis) NoTechnology', u'NoValue'
 		if self.technology_id:
 			t = self.technology
-			a = t.analysis
 		if self.value is not None:
 			v = self.value
-		return u'({}) {}: {}'.format( a, t, v )
+		return u'{}: {}'.format( t, v )
 
 
 	def clean ( self ):

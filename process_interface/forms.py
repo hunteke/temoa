@@ -340,6 +340,7 @@ class ProcessForm ( F.Form ):
 
 	def __init__ ( self, *args, **kwargs ):
 		p = self.process = kwargs.pop( 'instance' )
+		self.analysis = kwargs.pop( 'analysis' )
 		super( ProcessForm, self ).__init__( *args, **kwargs )
 
 		if p.pk:
@@ -361,11 +362,12 @@ class ProcessForm ( F.Form ):
 	def clean_name ( self ):
 		cd = self.cleaned_data
 		p  = self.process
+		a  = self.analysis
 
 		tname, vintage = cd['name'].split(',')
 		vintage = int( vintage )
 
-		vintages = Vintage.objects.filter( analysis=p.technology.analysis )
+		vintages = Vintage.objects.filter( analysis=a )
 		if vintage not in (i.vintage for i in vintages):
 			msg = '{} is not a valid vintage in this analysis.'
 			raise F.ValidationError( msg.format( vintage ))
@@ -374,27 +376,18 @@ class ProcessForm ( F.Form ):
 			raise F.ValidationError( msg )
 		vintage = [i for i in vintages if vintage == i.vintage][0]
 
-		tech = None
-		techs = Technology.objects.filter( name=tname )
+		techs = Technology.objects.filter( analysis=a, name=tname )
 		if not techs:
 			msg = "'{}' is not a valid technology name.  Do you need to create it?"
 			raise F.ValidationError( msg.format( tname ))
 		elif len( techs ) > 1:
-			for t in techs:
-				if t.user == p.analysis.user:
-					tech = t
-					break
-			if not tech:
-				msg = ("'{}' is not a unique technology name in the database.  If "
-				  'you would like to use this name, you will need to create this '
-				  'technology under your account.')
-				raise F.ValidationError( msg.format( tname ))
-
-		if not tech:
-			tech = techs[0]
+			msg = ("Database Error: '{}' is not a unique technology name.  This "
+			  'is a programming error.  Please inform the Temoa Project '
+			  'developers of how to get this message.')
+			raise F.ValidationError( msg.format( tname ))
 
 		# store the work already done for save() method
-		cd['technology'] = tech
+		cd['technology'] = techs[0]
 		cd['vintage'] = vintage
 
 		return '{}, {}'.format( tname, vintage )
