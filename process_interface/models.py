@@ -689,11 +689,15 @@ class Param_TechOutputSplit ( DM.Model ):
 
 
 	def __str__ ( self ):
-		analysis = self.out_commodity.analysis
-		out      = self.out_commodity.commodity
-		tech     = self.technology
+		t, o, val = '(NoAnalysis) NoTechnology', 'NoOutput', 'NoValue'
+		if self.technology_id:
+			t = self.technology
+		if self.out_commodity_id:
+			o = self.out_commodity.commodity
+		if self.fraction:
+			val = self.fraction
 
-		return u'({}) {}, {}: {}'.format( analysis, tech, out, self.fraction )
+		return u'{}, {}: {}'.format( t, o, val )
 
 
 	def save ( self ):

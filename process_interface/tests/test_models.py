@@ -19,6 +19,7 @@ from process_interface.models import (
   CommodityType,
   Param_SegFrac,
   Param_LifetimeTech,
+  Param_TechOutputSplit,
   Process,
   Technology,
   Vintage,
@@ -620,3 +621,11 @@ class ModelCommodityTypeTest ( TestCase ):
 		with self.assertRaises( IntegrityError ) as ie:
 			CommodityType(name='Unit Test CommodityType').save()
 
+
+
+class ModelParam_TechOutputSplitTest ( TestCase ):
+
+	def test_str_empty ( self ):
+		tos = Param_TechOutputSplit()
+		expected = u'(NoAnalysis) NoTechnology, NoOutput: NoValue'
+		self.assertEqual( str(tos), expected )
