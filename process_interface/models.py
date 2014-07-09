@@ -700,7 +700,7 @@ class Param_TechOutputSplit ( DM.Model ):
 		return u'{}, {}: {}'.format( t, o, val )
 
 
-	def save ( self ):
+	def clean ( self ):
 		if self.out_commodity.commodity_type.name not in ('demand', 'physical'):
 			msg = ('TechOutputSplit commodity must be of type "demand" or '
 			  '"physical".')
@@ -718,7 +718,10 @@ class Param_TechOutputSplit ( DM.Model ):
 			  'Analysis {}')
 			raise ValidationError( msg.format( self.technology, analysis ))
 
-		super( Param_TechOutputSplit, self).save()
+
+	def save ( self, *args, **kwargs ):
+		self.clean()
+		super( Param_TechOutputSplit, self ).save( *args, **kwargs )
 
 
 
