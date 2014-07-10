@@ -664,3 +664,66 @@ class ModelParam_TechOutputSplitTest ( TestCase ):
 		tos = Param_TechOutputSplit( fraction=fraction )
 		expected = u'(NoAnalysis) NoTechnology, NoOutput: {}'.format( fraction )
 		self.assertEqual( str(tos), expected )
+
+
+	def test_uniqueness ( self ):
+		t = TechnologyFactory.create()
+		a = t.analysis
+		ct = CommodityType.objects.get_or_create(name='demand')[0]
+		c = CommodityFactory.create()
+		dc = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+
+		Param_TechOutputSplit.objects.create(
+		  technology=t, out_commodity=dc, fraction=random() )
+
+		with self.assertRaises( IntegrityError ) as ie:
+			Param_TechOutputSplit.objects.create(
+			  technology=t, out_commodity=dc, fraction=random() )
+
+
+	def test_commodity_is_an_output ( self ):
+		t = TechnologyFactory.create()
+		a = t.analysis
+		ct = CommodityType.objects.get_or_create(name='demand')[0]
+		c = CommodityFactory.create()
+		ac = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+
+		Param_TechOutputSplit(
+		  technology=t, out_commodity=ac, fraction=random() ).clean()
+		ac.delete()
+
+		ct = CommodityType.objects.get_or_create(name='physical')[0]
+		ac = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+		Param_TechOutputSplit(
+		  technology=t, out_commodity=ac, fraction=random() ).clean()
+		ac.delete()
+
+		ct = CommodityType.objects.get_or_create(name='emission')[0]
+		ac = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+		with self.assertRaises( ValidationError ):
+			Param_TechOutputSplit(
+			  technology=t, out_commodity=ac, fraction=random() ).clean()
+
+
+	def test_fraction_is_between_0_and_1 ( self ):
+		t = TechnologyFactory.create()
+		a = t.analysis
+		ct = CommodityType.objects.get_or_create(name='demand')[0]
+		c = CommodityFactory.create()
+		ac = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+
+		Param_TechOutputSplit(
+		  technology=t, out_commodity=ac, fraction=random() ).clean()
+
+		with self.assertRaises( ValidationError ):
+			Param_TechOutputSplit(
+			  technology=t, out_commodity=ac, fraction=random() -2 ).clean()
+
+		with self.assertRaises( ValidationError ):
+			Param_TechOutputSplit(
+			  technology=t, out_commodity=ac, fraction=random() +2 ).clean()
