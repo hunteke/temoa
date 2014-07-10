@@ -650,7 +650,7 @@ class ModelParam_TechOutputSplitTest ( TestCase ):
 
 	def test_str_only_outcommodity ( self ):
 		a = AnalysisFactory.create()
-		ct = CommodityType.objects.get(name='demand')
+		ct = CommodityType.objects.get_or_create(name='demand')[0]
 		c = CommodityFactory.create()
 		dc = AnalysisCommodity.objects.create(
 		  analysis=a, commodity_type=ct, commodity=c )
