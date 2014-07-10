@@ -1025,8 +1025,13 @@ class Param_GrowthRate ( DM.Model ):
 
 
 	def __str__ ( self ):
-		analysis = self.technology_id and self.technology.analysis or 'NoAnalysis'
-		tech     = self.technology_id and self.technology or 'NoTechnology'
+		t, rl, s = '(NoAnalysis) NoTechnology', 'NoLimit', 'NoSeed'
+		if self.technology_id:
+			t = self.technology
+		if self.ratelimit is not None:
+			rl = self.ratelimit
+		if self.seed is not None:
+			s = self.seed
 
-		return u'({}) {}: {}'.format( analysis, tech, self.ratelimit, self.seed )
+		return u'{}: {} [{}]'.format( t, rl, s )
 
