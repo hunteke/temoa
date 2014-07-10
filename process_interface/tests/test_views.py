@@ -36,6 +36,8 @@ class ViewLoginLogout ( TestCase ):
 		# some fuzz testing
 		# 257 is one byte longer than 256.  Just testing a potential off-by-one
 		# error, or length-issues.
+		login_url    = reverse('process_interface:login')
+		interact_url = reverse('process_interface:view')
 		for i in range(10):
 			len_username = randint( 1, 257 ) # 1 and 257 are possible results
 			len_password = randint( 1, 257 ) # 1 and 257 are possible results
@@ -45,8 +47,6 @@ class ViewLoginLogout ( TestCase ):
 				# this is tested below, and should /not/ fail.
 				continue
 
-			login_url    = reverse('process_interface:login')
-			interact_url = reverse('process_interface:view')
 			res = c.post(login_url, {'username': u, 'password': p})
 
 			cookie = b64decodestring( res.cookies['ServerState'].coded_value )
