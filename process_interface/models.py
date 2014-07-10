@@ -650,11 +650,16 @@ class Param_TechInputSplit ( DM.Model ):
 
 
 	def __str__ ( self ):
-		analysis = self.inp_commodity.analysis
-		inp      = self.inp_commodity.commodity
-		tech     = self.technology
+		a, i, t, f = 'NoAnalysis', 'NoInput', 'NoTechnology', 'NoValue'
+		if self.technology_id:
+			t = self.technology.name
+			a = self.technology.analysis
+		if self.inp_commodity_id:
+			i = self.inp_commodity.commodity.name
+		if self.fraction:
+			f = self.fraction
 
-		return u'({}) {}, {}: {}'.format( analysis, inp, tech, self.fraction )
+		return u'({}) {}, {}: {}'.format( a, i, t, f )
 
 
 	def clean ( self ):
