@@ -657,7 +657,7 @@ class Param_TechInputSplit ( DM.Model ):
 		return u'({}) {}, {}: {}'.format( analysis, inp, tech, self.fraction )
 
 
-	def save ( self ):
+	def clean ( self ):
 		if self.inp_commodity.commodity_type.name != 'physical':
 			msg = 'TechInputSplit commodity must be of type "physical".'
 			raise ValidationError( msg )
@@ -674,7 +674,10 @@ class Param_TechInputSplit ( DM.Model ):
 			  'Analysis {}')
 			raise ValidationError( msg.format( self.technology, analysis ))
 
-		super( Param_TechInputSplit, self ).save()
+
+	def save ( self, *args, **kwargs ):
+		self.clean()
+		super( Param_TechInputSplit, self ).save( *args, **kwargs )
 
 
 class Param_TechOutputSplit ( DM.Model ):
