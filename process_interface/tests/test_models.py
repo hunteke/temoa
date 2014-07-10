@@ -20,6 +20,7 @@ from process_interface.models import (
   CommodityType,
   Param_SegFrac,
   Param_LifetimeTech,
+  Param_TechInputSplit,
   Param_TechOutputSplit,
   Process,
   Technology,
@@ -630,6 +631,104 @@ class ModelCommodityTypeTest ( TestCase ):
 		CommodityType(name='Unit Test CommodityType').save()
 		with self.assertRaises( IntegrityError ) as ie:
 			CommodityType(name='Unit Test CommodityType').save()
+
+
+
+class ModelParam_TechInputSplitTest ( TestCase ):
+
+	def test_str_empty ( self ):
+		tis = Param_TechInputSplit()
+		expected = u'(NoAnalysis) NoInput, NoTechnology: NoValue'
+		self.assertEqual( str(tis), expected )
+
+
+	def test_str_only_technology ( self ):
+		t = TechnologyFactory.create()
+		tis = Param_TechInputSplit( technology=t )
+		expected = u'({}) NoInput, {}: NoValue'.format( t.analysis, t.name )
+		self.assertEqual( str(tis), expected )
+
+
+	def test_str_only_inpcommodity ( self ):
+		a = AnalysisFactory.create()
+		ct = CommodityType.objects.get_or_create(name='physical')[0]
+		c = CommodityFactory.create()
+		ac = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+		tis = Param_TechInputSplit( inp_commodity=ac )
+		expected = u'(NoAnalysis) {}, NoTechnology: NoValue'.format( c )
+		self.assertEqual( str(tis), expected )
+
+
+	def test_str_only_fraction ( self ):
+		fraction = random()
+		tis = Param_TechInputSplit( fraction=fraction )
+		expected = u'(NoAnalysis) NoInput, NoTechnology: {}'.format( fraction )
+		self.assertEqual( str(tis), expected )
+
+
+	def test_uniqueness ( self ):
+		t = TechnologyFactory.create()
+		a = t.analysis
+		ct = CommodityType.objects.get_or_create(name='physical')[0]
+		c = CommodityFactory.create()
+		ac = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+
+		Param_TechInputSplit.objects.create(
+		  inp_commodity=ac, technology=t, fraction=random() )
+
+		with self.assertRaises( IntegrityError ) as ie:
+			Param_TechInputSplit.objects.create(
+			  inp_commodity=ac, technology=t, fraction=random() )
+
+
+	def test_commodity_is_an_input ( self ):
+		t = TechnologyFactory.create()
+		a = t.analysis
+		ct = CommodityType.objects.get_or_create(name='physical')[0]
+		c = CommodityFactory.create()
+		ac = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+
+		Param_TechInputSplit(
+		  inp_commodity=ac, technology=t, fraction=random() ).clean()
+		ac.delete()
+
+		ct = CommodityType.objects.get_or_create(name='demand')[0]
+		ac = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+		with self.assertRaises( ValidationError ):
+			Param_TechInputSplit(
+			  inp_commodity=ac, technology=t, fraction=random() ).clean()
+		ac.delete()
+
+		ct = CommodityType.objects.get_or_create(name='emission')[0]
+		ac = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+		with self.assertRaises( ValidationError ):
+			Param_TechInputSplit(
+			  inp_commodity=ac, technology=t, fraction=random() ).clean()
+
+
+	def test_fraction_is_between_0_and_1 ( self ):
+		t = TechnologyFactory.create()
+		a = t.analysis
+		ct = CommodityType.objects.get_or_create(name='physical')[0]
+		c = CommodityFactory.create()
+		ac = AnalysisCommodity.objects.create(
+		  analysis=a, commodity_type=ct, commodity=c )
+
+		Param_TechInputSplit(
+		  inp_commodity=ac, technology=t, fraction=random() ).clean()
+
+		with self.assertRaises( ValidationError ):
+			Param_TechInputSplit(
+			  inp_commodity=ac, technology=t, fraction=random() -2 ).clean()
+
+		with self.assertRaises( ValidationError ):
+			Param_TechInputSplit(
+			  inp_commodity=ac, technology=t, fraction=random() +2 ).clean()
 
 
 
