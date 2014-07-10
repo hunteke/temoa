@@ -21,7 +21,8 @@ from process_interface.models import (
 )
 
 class UserFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = DjangoUser
+	class Meta:
+		model = DjangoUser
 
 	is_active = True
 	is_staff = False
@@ -34,7 +35,8 @@ class UserFactory ( factory.django.DjangoModelFactory ):
 
 
 class AnalysisFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Analysis
+	class Meta:
+		model = Analysis
 
 	user = factory.SubFactory( UserFactory )
 	name = 'Unit Test Analysis'
@@ -45,7 +47,8 @@ class AnalysisFactory ( factory.django.DjangoModelFactory ):
 
 
 class VintageFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Vintage
+	class Meta:
+		model = Vintage
 
 	analysis = factory.SubFactory( AnalysisFactory )
 	vintage  = 0
@@ -53,7 +56,8 @@ class VintageFactory ( factory.django.DjangoModelFactory ):
 
 
 class TechnologyFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Technology
+	class Meta:
+		model = Technology
 
 	analysis = factory.SubFactory( AnalysisFactory )
 	name = 'Unit Test Technology'
@@ -62,7 +66,8 @@ class TechnologyFactory ( factory.django.DjangoModelFactory ):
 
 
 class NewProcessFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Process
+	class Meta:
+		model = Process
 
 	technology       = factory.SubFactory( TechnologyFactory )
 	vintage          = factory.SubFactory( VintageFactory )

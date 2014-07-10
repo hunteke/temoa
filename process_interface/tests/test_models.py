@@ -30,7 +30,8 @@ from process_interface.models import (
 
 
 class UserFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = DjangoUser
+	class Meta:
+		model = DjangoUser
 
 	is_active = True
 	is_staff = False
@@ -43,7 +44,8 @@ class UserFactory ( factory.django.DjangoModelFactory ):
 
 
 class AnalysisFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Analysis
+	class Meta:
+		model = Analysis
 
 	user = factory.SubFactory( UserFactory )
 	name = 'Unit Test Analysis'
@@ -54,7 +56,8 @@ class AnalysisFactory ( factory.django.DjangoModelFactory ):
 
 
 class VintageFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Vintage
+	class Meta:
+		model = Vintage
 
 	analysis = factory.SubFactory( AnalysisFactory )
 	vintage  = 0
@@ -62,7 +65,8 @@ class VintageFactory ( factory.django.DjangoModelFactory ):
 
 
 class TechnologyFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Technology
+	class Meta:
+		model = Technology
 
 	analysis = factory.SubFactory( AnalysisFactory )
 	name = 'Unit Test Technology'
@@ -72,7 +76,8 @@ class TechnologyFactory ( factory.django.DjangoModelFactory ):
 
 
 class CommodityFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Commodity
+	class Meta:
+		model = Commodity
 
 	name = 'Unit Test Commodity'
 	description = 'Commodity automatically created during unit testing.'
@@ -80,7 +85,8 @@ class CommodityFactory ( factory.django.DjangoModelFactory ):
 
 
 class Param_SegFracFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Param_SegFrac
+	class Meta:
+		model = Param_SegFrac
 
 	analysis = factory.SubFactory( AnalysisFactory )
 	season = 'Unit_Test_Season'
@@ -90,14 +96,16 @@ class Param_SegFracFactory ( factory.django.DjangoModelFactory ):
 
 
 class Set_tech_baseloadFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Set_tech_baseload
+	class Meta:
+		model = Set_tech_baseload
 
 	technology = factory.SubFactory( TechnologyFactory )
 
 
 
 class ExistingProcessFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Process
+	class Meta:
+		model = Process
 
 	technology       = factory.SubFactory( TechnologyFactory )
 	vintage          = factory.SubFactory( VintageFactory )
@@ -110,7 +118,8 @@ class ExistingProcessFactory ( factory.django.DjangoModelFactory ):
 
 
 class Param_LifetimeTechFactory ( factory.django.DjangoModelFactory ):
-	FACTORY_FOR = Param_LifetimeTech
+	class Meta:
+		model = Param_LifetimeTech
 
 	technology = factory.SubFactory( TechnologyFactory )
 	value = 30
