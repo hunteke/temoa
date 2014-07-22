@@ -36,7 +36,7 @@ def stringify_data ( data, ostream=SO, format='plain' ):
 	# This padding code is what makes the display of the output values
 	# line up on the decimal point.
 	for i, (v, val) in enumerate( data ):
-		ipart, fpart = repr(val).split('.')
+		ipart, fpart = repr(float(val)).split('.')
 		data[i] = (ipart, fpart, v)
 	cell_lengths = ( map(len, l[:-1] ) for l in data )
 	max_lengths = map(max, zip(*cell_lengths))   # max length of each column
