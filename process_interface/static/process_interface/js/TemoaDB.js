@@ -1,4 +1,4 @@
-(function () {
+(function ( window ) {
 
 "use strict";  // ECMA v5 pragma, similar to Perl's functionality.
   // FYI: http://ejohn.org/blog/ecmascript-5-strict-mode-json-and-more/
@@ -3794,14 +3794,21 @@ function BeginTemoaDBApp ( ) {
 	});
 }
 
-$(document).ready( function () {
-	if ( DEBUG )
-		$.getScript( ROOT_URL + '/static/process_interface/js/ejs_fulljslint.js' );
+// As this is a visual, specifically human-oriented interface (a UI!), ensure
+// that there is at least a window object, and that it has a document property.
+// If so, make the TemoaUI application available to the global namespace, and
+// then start the application.
+if ( typeof window === "object" && typeof window.document === "object" ) {
+	$(document).ready( function () {
+		window.Temoa = Temoa;
 
-	BeginTemoaDBApp();
-});
+		if ( DEBUG )
+			$.getScript( ROOT_URL + '/static/process_interface/js/ejs_fulljslint.js' );
 
-})();
+		BeginTemoaDBApp();
+	});
+}
+
+})( window );
 
 console.log( 'TemoaLib loaded: ' + Date() );
-
