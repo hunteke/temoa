@@ -10,6 +10,7 @@ from views import (
   user,
   view,
   get_client_template,
+  unit_test_ui,
 
   analysis_list,
   analysis_info,
@@ -188,5 +189,7 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/OutputSplit/update/(?P<tos_id>\d+)$', analysis_technology_outputsplit_update, name='analysis_technology_outputsplit_update'),
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/OutputSplit/remove/(?P<tos_id>\d+)$', analysis_technology_outputsplit_remove, name='analysis_technology_outputsplit_remove'),
 
+# UI Tests  (i.e., client-side JS application testing pages)
+  url(r'^interact/unit_test_ui$', unit_test_ui, { 'template_path': 'process_interface/client/unit_test_ui.html'} ),
 )
 

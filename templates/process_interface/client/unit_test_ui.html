@@ -1,0 +1,41 @@
+{% load staticfiles %}<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<title>TemoaDB UI Unit Tests</title>
+	<link rel='stylesheet' type='text/css' href='{% static 'process_interface/css/qunit-1.14.0.css' %}' />
+	<style>
+	body { background: #000; }
+	</style>
+</head>
+<body>
+<div id='qunit'></div>
+<div id='qunit-fixture'></div>
+<script charset='utf-8' type='text/javascript' src='{{ CD.JQUERYBASE   }}/jquery.min.js'></script>
+<script charset='utf-8' type='text/javascript' src='{{ CD.JQUERYUI     }}/jquery-ui.min.js'></script>
+<script charset='utf-8' type='text/javascript' src='{{ CD.JQUERYCOOKIE }}/jquery.cookie.min.js'></script>
+<script charset='utf-8' type='text/javascript' src='{{ CD.JQUERYHOTKEYS }}/jquery-hotkeys.js'></script>
+<script charset='utf-8' type='text/javascript' src='{{ CD.CANJS }}/can.jquery.min.js'></script>
+<script charset='utf-8' type='text/javascript' src='{{ CD.D3 }}/d3.v3.js'></script>
+<script charset='utf-8' type='text/javascript' src='{{ CD.D3_DAGRE }}/dagre-d3.js'></script>
+<script charset='utf-8' type='text/javascript' src='{% static 'process_interface/js/TemoaDB.js' %}'></script>
+<script charset='utf-8' type='text/javascript' src='{% static 'process_interface/js/qunit-1.14.0.js' %}'></script>
+<script type='text/javascript'>
+	var Temoa = window.Temoa;
+
+	QUnit.module( 'function getCookie' );
+	QUnit.test( 'return empty object if no cookie exists', function ( assert ) {
+		$.removeCookie( Temoa.C.COOKIE );  // ensure there is no cookie already set.
+
+		var $cookie = Temoa.fn.getCookie();
+		assert.equal( typeof( $cookie ), "object" );
+		assert.equal( Object.keys( $cookie ).length, 3 );
+		assert.deepEqual( $cookie.username, null );
+		assert.deepEqual( $cookie.analysis_id, null );
+		assert.deepEqual( $cookie.process_ids, null );
+
+		// Getting the cookie should /not/ set the cookie
+		assert.deepEqual( $.cookie( Temoa.C.COOKIE ), null );
+	});
+</script>
+</body></html>

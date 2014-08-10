@@ -3,7 +3,18 @@
 "use strict";  // ECMA v5 pragma, similar to Perl's functionality.
   // FYI: http://ejohn.org/blog/ecmascript-5-strict-mode-json-and-more/
 
-var COOKIE = 'TemoaDB_UISettings';
+// The Temoa namespace
+//  This code is in transition, so do not be surprised to see some functions and
+//  objects not yet in this namespace.  Apologies for not having perfect
+//  foresight.
+var Temoa = {
+	C: {}, // C = constants
+	fn: {}, // standalone functions
+	vars: {}, // variables
+};
+
+
+Temoa.C.COOKIE = 'TemoaDB_UISettings';
 
 var DEBUG = window.location.search.indexOf( 'debug=true' ) > -1;
 var ROOT_URL = window.location.pathname.replace( '/interact/', '' );
@@ -28,8 +39,8 @@ function csrfSafeMethod ( method ) {
 }
 
 
-function getCookie ( ) {
-	var $obj = $.cookie( COOKIE );
+Temoa.fn.getCookie = function ( ) {
+	var $obj = $.cookie( Temoa.C.COOKIE );
 	if ( $obj ) {
 		return JSON.parse( atob( $obj ));
 	}
@@ -43,7 +54,7 @@ function getCookie ( ) {
 }
 
 function setCookie ( obj ) {
-	$.cookie( COOKIE, btoa( JSON.stringify( obj )));
+	$.cookie( Temoa.C.COOKIE, btoa( JSON.stringify( obj )));
 }
 
 
@@ -558,7 +569,7 @@ can.Control('Analyses', {
 		var thisAnalyses = this;
 		clearAnalysisViews()
 		Analysis.findAll({}, function ( analyses ) {
-			var username = getCookie().username || null;
+			var username = Temoa.fn.getCookie().username || null;
 			if ( username )
 				analyses.unshift( new Analysis() );
 
@@ -570,7 +581,7 @@ can.Control('Analyses', {
 			$el.html( can.view( view, view_opts ));
 			$el.removeClass('hidden');
 
-			var $cookie = getCookie();
+			var $cookie = Temoa.fn.getCookie();
 			if ( $cookie.analysis_id ) {
 				$('#analysis_selection').val( $cookie.analysis_id ).change();
 			}
@@ -595,7 +606,7 @@ can.Control('Analyses', {
 		var val = $el.val();
 		var analysis;
 
-		var $cookie = getCookie();
+		var $cookie = Temoa.fn.getCookie();
 		$cookie.analysis_id = val;
 		setCookie( $cookie );
 
@@ -655,7 +666,7 @@ can.Control('AnalysisDetail', {
 			analysis.attr('all_vintages', new can.List() );
 
 		var view_opts = {
-			username: getCookie().username || null,
+			username: Temoa.fn.getCookie().username || null,
 			analysis: analysis,
 		};
 
@@ -1058,14 +1069,14 @@ can.Control('AnalysisCommodityLists', {
 
 		$el.html( can.view( view, {
 			analysis: analysis,
-			username: getCookie().username || null,
+			username: Temoa.fn.getCookie().username || null,
 		}));
 
 		$('#AnalysisCommoditiesCloseButton').click( function ( ) {
 			$('#ShowHideCommodities').click();
 		});
 
-		var username = getCookie().username;
+		var username = Temoa.fn.getCookie().username;
 		if ( ! (username && username === analysis.username ) )
 			return;
 
@@ -1085,7 +1096,7 @@ can.Control('AnalysisCommodityLists', {
 			if ( ! (coms.length > 0) ) {
 				return;
 			}
-			var username = getCookie().username || null;
+			var username = Temoa.fn.getCookie().username || null;
 
 			function createCommodityDetail ( toCreate ) {
 				new CommodityDetail( $info, {
@@ -1162,7 +1173,7 @@ can.Control('AnalysisCommodityLists', {
 	createNewCommodity: function ( CommodityObj, commodityOpts ) {
 		var $newDiv = $('<div>', {id: 'commodity_detail'} );
 		new CommodityDetail( $newDiv, {
-			username: getCookie().username || null,
+			username: Temoa.fn.getCookie().username || null,
 			analysis: this.analysis,
 			commodity: new CommodityObj( commodityOpts )
 		});
@@ -1328,7 +1339,7 @@ can.Control('AnalysisParameters', {
 		this.analysis = this.options.analysis
 		$el.html( can.view( view, {
 			analysis: this.analysis,
-			username: getCookie().username || null,
+			username: Temoa.fn.getCookie().username || null,
 		}));
 		$('#AnalysisParametersCloseButton').click( function ( ) {
 			$('#ShowHideAnalysisParameters').click();
@@ -2008,7 +2019,7 @@ can.Control('TechnologyList', {
 
 			$el.empty()
 			var view_opts = {
-				username:  getCookie().username || null,
+				username:  Temoa.fn.getCookie().username || null,
 				technologies: technologies
 			};
 
@@ -2036,7 +2047,7 @@ can.Control('TechnologyList', {
 					return;
 				}
 
-				var $cookie = getCookie();
+				var $cookie = Temoa.fn.getCookie();
 				var username = $cookie.username || null;
 
 				function createTechnologyDetail ( toCreate ) {
@@ -2396,7 +2407,7 @@ can.Control('ProcessList', {
 			}
 
 			var view_opts = {
-				username:  getCookie().username || null,
+				username:  Temoa.fn.getCookie().username || null,
 				analysis:  analysis,
 				processes: processes
 			};
@@ -2465,7 +2476,7 @@ can.Control('ProcessList', {
 				}
 
 				ids.sort( numericSort );
-				var $cookie = getCookie();
+				var $cookie = Temoa.fn.getCookie();
 				$cookie.process_ids = ids;
 				setCookie( $cookie );
 
@@ -2488,7 +2499,7 @@ can.Control('ProcessList', {
 				} else { // something to display
 					var view_opts = {
 						analysis: analysis,
-						username: getCookie().username || null
+						username: Temoa.fn.getCookie().username || null
 					}
 
 					// remove any child divs so browser can GC.
@@ -2513,7 +2524,7 @@ can.Control('ProcessList', {
 
 			// Pre-select what was selected in this session.
 			// (Handy if the page needs to reload.)
-			var $cookie = getCookie();
+			var $cookie = Temoa.fn.getCookie();
 			if ( $cookie.process_ids ) {
 				var ids = $cookie.process_ids;
 
@@ -2540,7 +2551,7 @@ can.Control('ProcessList', {
 		}
 		var $div = $('<div>', {id: 'NewProcess'});
 		new ProcessDetail( $div, {
-			username: getCookie().username || null,
+			username: Temoa.fn.getCookie().username || null,
 			process: new Process({aId: this.analysis.id}),
 			analysis: this.analysis
 		});
@@ -2590,7 +2601,7 @@ can.Control('ProcessList', {
 			}
 			var $div = $('<div>', {id: 'ProcessDetail_' + obj.id});
 			new ProcessDetail( $div, {
-				username: getCookie().username || null,
+				username: Temoa.fn.getCookie().username || null,
 				process: new_process,
 				analysis: control.analysis
 			});
@@ -2621,7 +2632,7 @@ can.Control('ProcessList', {
 			}
 
 			new ProcessDetail( $div, {
-				username: getCookie().username || null,
+				username: Temoa.fn.getCookie().username || null,
 				process: p,
 				analysis: control.analysis
 			});
@@ -2653,7 +2664,7 @@ can.Control('ProcessList', {
 			var p    = $( sel ).find('.process').data('process');
 
 			new ProcessDetail( $div, {
-				username: getCookie().username || null,
+				username: Temoa.fn.getCookie().username || null,
 				process: p,
 				analysis: control.analysis
 			});
@@ -2678,7 +2689,7 @@ can.Control('ProcessList', {
 			var p    = $( sel ).find('.process').data('process');
 
 			new ProcessDetail( $div, {
-				username: getCookie().username || null,
+				username: Temoa.fn.getCookie().username || null,
 				process: p,
 				analysis: control.analysis
 			});
@@ -3645,35 +3656,28 @@ function drawUnsolvedSystemDigraph ( ) {
 	renderer.layout(layout).run(g, d3.select("#AnalysisUnsolvedSystemMap svg g"));
 }
 
-function processCookie ( ) {
-	// These settings are set by the server.  Changing them -- maliciously or
-	// otherwise -- will only affect the client experience.  From a security
-	// perspective, they have no bearing on the choices the server makes.
+function processCookie ( c ) {
+	// c is perhaps a poor name for 'cookie', but this is a small function
+	// specific to TemoaUI.  Refactor later, if it's necessary.
+	if ( ! c ) { return; }
 
-	var $ss = $.cookie( 'ServerState' );
-	if ( ! $ss ) { return; }
+	var c = JSON.parse( atob( c ));
 
-	var $ss = JSON.parse( atob( $.cookie( 'ServerState' )));
+	var $TUIcookie = Temoa.fn.getCookie();
+	if ( 'analysis_id'    in c ) {
+		$TUIcookie.analysis_id = c.analysis_id; }
+	if ( 'process_ids'    in c ) {
+		$TUIcookie.process_ids = c.process_ids; }
+	if ( 'technology_ids' in c ) {
+		$TUIcookie.technology_ids = c.technology_ids; }
 
-	var $cookie = getCookie();
-	if ( 'analysis_id'    in $ss ) {
-		$cookie.analysis_id = $ss.analysis_id; }
-	if ( 'process_ids'    in $ss ) {
-		$cookie.process_ids = $ss.process_ids; }
-	if ( 'technology_ids' in $ss ) {
-		$cookie.technology_ids = $ss.technology_ids; }
-
-	if ( 'username'      in $ss ) {
-		var uname = $ss.username;
-		$cookie.username = uname;
+	if ( 'username' in c ) {
+		var uname = c.username;
+		$TUIcookie.username = uname;
 		if ( uname ) { $('#unauthorized').addClass('hidden'); }
 		else         { $('#unauthorized').removeClass('hidden'); }
 	}
-	$.cookie( COOKIE, btoa( JSON.stringify( $cookie )));
-
-	// To "prove" the above point, remove the cookie sent by the server,
-	// although one cookie ($cookie) is as good as another ($ss).
-	$.removeCookie( 'ServerState', { 'path' : '/' } );
+	$.cookie( Temoa.C.COOKIE, btoa( JSON.stringify( $TUIcookie )));
 }
 
 
@@ -3681,7 +3685,7 @@ function BeginTemoaDBApp ( ) {
 	// The below complete: function has neither been setup, nor had a chance to
 	// run at this point.  Given that some pieces of code rely on this cookie
 	// for UI state info, we manually process the cookie the first time.
-	processCookie();
+	processCookie( $.cookie( 'ServerState' ) );
 
 	console.log( 'Begin TemoaDB' );
 	showStatus( 'TemoaDB has begun.  Loading analyses ...', 'info' );
@@ -3689,7 +3693,12 @@ function BeginTemoaDBApp ( ) {
 	$.ajaxSetup({
 		crossDomain: false, //there should be no need to talk elsewhere
 		complete: function( jqXHR, textStatus ) {
-			processCookie( jqXHR );
+			processCookie( $.cookie( 'ServerState' ) );
+
+			// Originally for debugging; now make sure that every access to the
+			// server receives an updated version of events, by removing the now-
+			// stale cookie.
+			$.removeCookie( 'ServerState', { 'path' : '/' } );
 			var status = jqXHR.status;
 		},
 		beforeSend: function ( xhr, settings ) {
@@ -3724,7 +3733,7 @@ function BeginTemoaDBApp ( ) {
 				if ( 401 === status ) {
 					msg = "<p>401 (unauthorized) - You are not currently known to the server.  This likely means that your session 'timed out' by not communicating with the server in an appropriate amount of time, or logged out in another tab or window (making this tab/window 'stale').  You will need to login again.";
 				} else if ( 403 === status ) {
-					msg = "<p>403 (forbidden) - Though the server recognizes you by the username '" + getCookie().username + "', the server does not recognize your authority to perform this action.  If you believe the action you took should be allowed (and thereby believe this message to be in error), please consider informing the Temoa Project via a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless you can provide exact instructions to recreate the issue, we may not be able to fix it.</p>"
+					msg = "<p>403 (forbidden) - Though the server recognizes you by the username '" + Temoa.fn.getCookie().username + "', the server does not recognize your authority to perform this action.  If you believe the action you took should be allowed (and thereby believe this message to be in error), please consider informing the Temoa Project via a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless you can provide exact instructions to recreate the issue, we may not be able to fix it.</p>"
 				} else if ( 404 === status ) {
 					msg = "<p>404 (not found) - The requested item could not be found.  Perhaps you need to reload the view in question?  If not, and you have discovered a <strong>recreatable</strong> error, please consider informing the Temoa Project via a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless there is an exact mechanism to recreate the issue, we may not be able to fix it.</p>";
 				} else if ( 405 === status ) {
@@ -3796,9 +3805,10 @@ function BeginTemoaDBApp ( ) {
 
 // As this is a visual, specifically human-oriented interface (a UI!), ensure
 // that there is at least a window object, and that it has a document property.
-// If so, make the TemoaUI application available to the global namespace, and
-// then start the application.
-if ( typeof window === "object" && typeof window.document === "object" ) {
+// In other words, we're running in a browser-like environment (e.g., Chromium,
+// Firefox, PhantomJS, etc.).  If so, make the TemoaUI application available to
+// the global namespace and start the application.
+if ( "object" === typeof window && "object" === typeof window.document  ) {
 	$(document).ready( function () {
 		window.Temoa = Temoa;
 
@@ -3807,6 +3817,12 @@ if ( typeof window === "object" && typeof window.document === "object" ) {
 
 		BeginTemoaDBApp();
 	});
+} else {
+	console.log( 'TemoaUI requires use of a DOM-capable Javascript '
+	+ 'interpreter.  To that end, it assumes that the window and '
+	+ 'window.document objects are available.  If you are attempting to unit '
+	+ 'test, consider testing with a browser, or a headless solution like '
+	+ 'PhantomJS.' );
 }
 
 })( window );

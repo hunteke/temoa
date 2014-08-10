@@ -75,3 +75,9 @@ def user ( req ):
 	response['Content-Length'] = len( data )
 	return response
 
+
+def unit_test_ui ( req, template_path ):
+	c = { 'CD': CD }
+	c.update(csrf(req))
+
+	return render( req, template_path, c )
