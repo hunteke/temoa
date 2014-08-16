@@ -1453,7 +1453,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	from time import clock
 	import sys, os, gc
 
-	from coopr.pyomo import ModelData
+	from coopr.pyomo import DataPortal
 
 	from pformat_results import pformat_results
 
@@ -1470,17 +1470,16 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	begin = clock()
 	duration = lambda: clock() - begin
 
-	mdata = ModelData()
-	for f in dot_dats:
-		if f[-4:] != '.dat':
+	modeldata = DataPortal( model=model )
+	for fname in dot_dats:
+		if fname[-4:] != '.dat':
 			msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
-			raise TemoaValidationError( msg.format( f ))
-		mdata.add( f )
-	mdata.read( model )
+			raise TemoaValidationError( msg.format( fname ))
+		modeldata.load( filename=fname )
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
-	instance = model.create( mdata )
+	instance = model.create( modeldata )
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	if options.fix_variables:
@@ -1598,7 +1597,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	from os import getcwd, chdir
 	from os.path import isfile, abspath, exists
 
-	from coopr.pyomo import ModelData, Var
+	from coopr.pyomo import DataPortal, Var
 	from coopr.pysp.util.scenariomodels import scenario_tree_model
 	from coopr.pysp.phutils import extractVariableNameAndIndex
 
@@ -1738,11 +1737,11 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		from coopr.opt import SolverFactory
 		opt = SolverFactory( solver_options )
 
-		mdata = ModelData()
-		for node_name in scen_nodes[ assumed_fs ]:
-			mdata.add( node_name + '.dat' )
 		model = temoa_create_model()
-		mdata.read( model )
+
+		mdata = DataPortal( model=model )
+		for node_name in scen_nodes[ assumed_fs ]:
+			mdata.load( filename=node_name + '.dat' )
 		m = model.create( mdata )
 
 		# path_so_far includes nodes with CP of 1.
