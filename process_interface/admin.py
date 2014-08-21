@@ -8,7 +8,6 @@ to_administrate = (
   'CommodityType',
   'Param_CapacityFactorProcess',
   'Param_CapacityFactorTech',
-  'Param_CapacityToActivity',
   'Param_CostFixed',
   'Param_CostVariable',
   'Param_Demand',

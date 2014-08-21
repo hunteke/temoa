@@ -62,7 +62,7 @@ class TechnologyFactory ( factory.django.DjangoModelFactory ):
 	analysis = factory.SubFactory( AnalysisFactory )
 	name = 'Unit Test Technology'
 	description = 'Technology automatically created during unit testing.'
-	capacity_to_activity = None
+	capacitytoactivity = None
 
 
 class NewProcessFactory ( factory.django.DjangoModelFactory ):

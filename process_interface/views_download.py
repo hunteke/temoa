@@ -13,7 +13,6 @@ from models import (
   Analysis,
   Param_CapacityFactorTech,
   Param_CapacityFactorProcess,
-  Param_CapacityToActivity,
   Param_CostFixed,
   Param_CostVariable,
   Param_Demand,

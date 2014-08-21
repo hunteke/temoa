@@ -8,7 +8,6 @@ __all__ = (
   'CommodityType',
   'Param_CapacityFactorProcess',
   'Param_CapacityFactorTech',
-  'Param_CapacityToActivity',
   'Param_CostFixed',
   'Param_CostVariable',
   'Param_Demand',
@@ -195,6 +194,7 @@ class Technology ( DM.Model ):
 	# overkill, just in case.
 	analysis    = DM.ForeignKey( Analysis )
 	baseload    = DM.BooleanField()
+	capacitytoactivity = DM.FloatField( null=True )
 	description = DM.TextField()
 	lifetime    = DM.FloatField( null=True )
 	loanlife    = DM.FloatField( null=True )
@@ -202,9 +202,6 @@ class Technology ( DM.Model ):
 	ratelimit   = DM.FloatField( null=True )
 	rateseed    = DM.FloatField( null=True )
 	storage     = DM.BooleanField()
-
-	# may be overridden, but must be defined by something
-	capacity_to_activity = DM.FloatField( null=True )
 
 	class Meta:
 		unique_together = ('analysis', 'name')
@@ -271,6 +268,28 @@ class Technology ( DM.Model ):
 		self.storage = self.storage and True or False
 
 
+	def clean_capacitytoactivity ( self ):
+		c2a = self.capacitytoactivity
+		if not c2a:
+			self.capacitytoactivity = None
+			return
+
+		try:
+			c2a = float(c2a)
+		except ValueError as ve:
+			raise ValidationError( 'CapacityToActivity is not a valid number.' )
+
+		if c2a < 0:
+			msg = ('CapacityToActivity must not be specifed or must be a '
+			  'positive number.')
+			raise ValidationError( msg )
+
+		if c2a < 1e-9:
+			msg = ('CapacityToActivity must not be specifed or must be a '
+			  'positive number.')
+			raise ValidationError( msg )
+
+
 	def clean_growth_rate ( self ):
 		r = self.ratelimit
 		s = self.rateseed
@@ -301,6 +320,7 @@ class Technology ( DM.Model ):
 		self.clean_life()
 		self.clean_loanlife()
 		self.clean_baseload()
+		self.clean_capacitytoactivity()
 		self.clean_storage()
 		self.clean_growth_rate()
 
@@ -460,31 +480,6 @@ class AnalysisCommodity ( DM.Model ):
 		t = self.commodity_type if self.commodity_type_id else 'NoType'
 		c = self.commodity if self.commodity_id else 'NoCommodity'
 		return u'({}) [{}] {}'.format( a, t, c )
-
-
-
-class Param_CapacityToActivity ( DM.Model ):
-	technology = DM.ForeignKey( Technology, unique=True )
-	value      = DM.FloatField()
-
-	class Meta:
-		ordering = ('technology__analysis', 'technology')
-
-
-	def __str__ ( self ):
-		a, t = 'NoAnalysis', 'NoTechnology'
-		if self.technology_id:
-			t = self.technology
-			a = t.analysis
-		return '({}) {}: {}'.format( a, t, self.value )
-
-
-	def save ( self, *args, **kwargs ):
-		if self.value <= 0:
-			msg = 'CapacityToActivity value must be a positive value'
-			raise ValidationError( msg )
-
-		super( Param_CapacityToActivity, self ).save( *args, **kwargs )
 
 
 

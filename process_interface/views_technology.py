@@ -17,7 +17,6 @@ from decorators.auth import require_login
 from models import (
   Analysis,
   Param_CapacityFactorTech,
-  Param_CapacityToActivity,
   Param_TechInputSplit,
   Param_TechOutputSplit,
   Process,
@@ -36,12 +35,6 @@ from view_helpers import set_cookie
 def get_technology_info ( analysis, technologies ):
 	def null ( ):
 		return None
-
-	CapacityToActivity = defaultdict( null )
-	CapacityToActivity.update({ c2a.technology : c2a.value
-	  for c2a in Param_CapacityToActivity.objects.filter(
-	    technology__in=technologies )
-	})
 
 	CapacityFactors = defaultdict( list )
 	for capfac in Param_CapacityFactorTech.objects.filter(
@@ -81,8 +74,7 @@ def get_technology_info ( analysis, technologies ):
 	    'id'                 : t.pk,
 	    'aId'                : analysis.pk,
 	    'baseload'           : t.baseload,
-	    'capacitytoactivity' : CapacityToActivity[ t ],
-	    'capacityfactors'    : CapacityFactors[ t ],
+	    'capacitytoactivity' : t.capacitytoactivity,
 	    'description'        : str( t.description ),
 	    'growthratelimit'    : t.ratelimit,
 	    'growthrateseed'     : t.rateseed,
@@ -90,6 +82,7 @@ def get_technology_info ( analysis, technologies ):
 	    'loanlife'           : t.loanlife,
 	    'name'               : t.name,
 	    'storage'            : t.storage,
+	    'capacityfactors'    : CapacityFactors[ t ],
 	    'inputsplits'        : TechInputSplit[ t ],
 	    'outputsplits'       : TechOutputSplit[ t ],
 	  }
@@ -158,11 +151,11 @@ def technology_create ( req ):
 				form.save()
 
 			msgs.update(
-			  id                   = tech.pk,
-			  username             = tech.user.username,
-			  name                 = tech.name,
-			  capacity_to_activity = tech.capacity_to_activity,
-			  description          = tech.description,
+			  id                 = tech.pk,
+			  username           = tech.user.username,
+			  name               = tech.name,
+			  capacitytoactivity = tech.capacitytoactivity,
+			  description        = tech.description,
 			)
 
 		except IntegrityError as ie:
@@ -206,11 +199,11 @@ def technology_update ( req, technology_id ):
 			form.save()
 
 		msgs.update(
-		  id                   = tech.pk,
-		  username             = tech.user.username,
-		  name                 = tech.name,
-		  capacity_to_activity = tech.capacity_to_activity,
-		  description          = tech.description,
+		  id                 = tech.pk,
+		  username           = tech.user.username,
+		  name               = tech.name,
+		  capacitytoactivity = tech.capacitytoactivity,
+		  description        = tech.description,
 		)
 
 	data = json.dumps( msgs )

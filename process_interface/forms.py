@@ -12,7 +12,6 @@ from models import (
   AnalysisCommodity,
   Commodity,
   CommodityType,
-  Param_CapacityToActivity,
   Param_CostFixed,
   Param_CostVariable,
   Param_Efficiency,
@@ -131,7 +130,7 @@ class VintagesForm ( F.Form ):
 class TechnologyForm ( F.ModelForm ):
 	class Meta:
 		model = Technology
-		fields = ('name', 'capacity_to_activity', 'description')
+		fields = ('name', 'capacitytoactivity', 'description')
 
 
 

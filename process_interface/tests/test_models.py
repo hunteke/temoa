@@ -68,15 +68,15 @@ class TechnologyFactory ( factory.django.DjangoModelFactory ):
 		model = Technology
 
 	analysis = factory.SubFactory( AnalysisFactory )
-	name = 'Unit Test Technology'
-	description = 'Technology automatically created during unit testing.'
-	capacity_to_activity = None
 	baseload = False
+	capacitytoactivity = None
+	description = 'Technology automatically created during unit testing.'
 	lifetime = None
 	loanlife = None
-	storage = False
+	name = 'Unit Test Technology'
 	ratelimit = None
 	rateseed = None
+	storage = False
 
 
 
@@ -242,6 +242,65 @@ class ModelTechnologyTest ( TestCase ):
 		t = TechnologyFactory.build()
 		expected = u'(NoAnalysis) {}'.format( t.name )
 		self.assertEqual( str(t), expected )
+
+
+	def test_capacitytoactivity_can_be_null ( self ):
+		t = TechnologyFactory.build()
+
+		t.capacitytoactivity = None
+		try:
+			t.clean_capacitytoactivity()
+		except:
+			msg = ('Technology parameter capacitytoactivity does not have to be '
+			  'specified.')
+			self.fail( msg )
+
+
+	def test_capacitytoactivity_empty_is_converted_to_null ( self ):
+		t = TechnologyFactory.build()
+
+		for val in (0, [], {}, (), '', False):
+			t.capacitytoactivity = val
+			t.clean_capacitytoactivity()
+			self.assertEqual( t.capacitytoactivity, None )
+
+
+	def test_capacitytoactivity_requires_valid_number ( self ):
+		t = TechnologyFactory.build()
+
+		t.capacitytoactivity = 'asdf'
+		with self.assertRaises( ValidationError ):
+			t.clean_capacitytoactivity()
+
+
+	def test_capacitytoactivity_cannot_be_negative ( self ):
+		t = TechnologyFactory.build()
+
+		t.capacitytoactivity = random() * randint(-1e9, -1)
+		with self.assertRaises( ValidationError ):
+			t.clean_capacitytoactivity()
+
+
+	def test_capacitytoactivity_must_not_be_almost_zero ( self ):
+		""" This will probably never occur, but the threshold is 1e-9.  Numbers
+		smaller than that snuck past the 'not 0' test, but are close enough to be
+		practically 0.  Thus, inform user of the error. """
+		t = TechnologyFactory.build()
+
+		t.capacitytoactivity = 1e-10
+		with self.assertRaises( ValidationError ):
+			t.clean_capacitytoactivity()
+
+
+	def test_capacitytoactivity_can_be_positive ( self ):
+		t = TechnologyFactory.build()
+
+		t.capacitytoactivity = random() * randint(1, 1e9)
+		try:
+			t.clean_capacitytoactivity()
+		except:
+			self.fail('A positive capacitytoactivity should be valid.')
+			raise
 
 
 	def test_baseload_is_true_or_false ( self ):
