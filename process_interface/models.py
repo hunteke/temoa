@@ -12,7 +12,6 @@ __all__ = (
   'Param_CostFixed',
   'Param_CostVariable',
   'Param_Demand',
-  'Param_DemandDefaultDistribution',
   'Param_DemandSpecificDistribution',
   'Param_Efficiency',
   'Param_EmissionActivity',
@@ -112,6 +111,7 @@ class Param_SegFrac ( DM.Model ):
 	season      = DM.CharField( max_length=100 )
 	time_of_day = DM.CharField( max_length=100 )
 	value       = DM.FloatField()
+	demanddefaultdistribution = DM.FloatField( null=True )
 
 	class Meta:
 		unique_together = ('analysis', 'season', 'time_of_day')
@@ -129,22 +129,61 @@ class Param_SegFrac ( DM.Model ):
 		return u'({}) {}, {}: {}'.format( a, s, d, v )
 
 
-	def clean ( self ):
+	def clean_season ( self ):
 		name_re = re.compile( r'^[A-z_]\w*$' )
 		if not name_re.match( self.season ):
 			msg = ('Season name is not valid.  Use only alphanumeric (A-z, 0-9, '
 			  'and underscore [_]) characters and begin with a letter.')
 			raise ValidationError( msg )
 
+
+	def clean_time_of_day ( self ):
+		name_re = re.compile( r'^[A-z_]\w*$' )
 		if not name_re.match( self.time_of_day ):
 			msg = ('"Time of Day" name is not valid.  Use only alphanumeric '
 			  '(A-z, 0-9, and underscore [_]) characters and begin with a '
 			  'letter.')
 			raise ValidationError( msg )
 
-		if self.value and not (0 < self.value and self.value <= 1):
+
+	def clean_value ( self ):
+		v = self.value
+
+		if v is None:
+			raise ValidationError( 'Must specify time slice value.' )
+
+		try:
+			v = float(v)
+		except ValueError as ve:
+			raise ValidationError( 'Time slice value is not a valid number.' )
+
+		if not (0 < v and v <= 1):
 			msg = 'Time slice must be a fractional value between 0 and 1.'
 			raise ValidationError( msg )
+
+
+	def clean_demanddefaultdistribution ( self ):
+		ddd = self.demanddefaultdistribution
+		if ddd is None:
+			return
+
+		try:
+			ddd = float(ddd)
+		except ValueError as ve:
+			msg = 'DemandDefaultDistribution value is not a valid number.'
+			raise ValidationError( msg )
+
+		if not (0 < ddd and ddd <= 1):
+			msg = ('DemandDefaultDistribution must be a fractional value between '
+			  '0 and 1.')
+			raise ValidationError( msg )
+
+
+	def clean ( self ):
+		self.clean_season()
+		self.clean_time_of_day()
+		self.clean_value()
+		self.clean_demanddefaultdistribution()
 
 
 	def save ( self, *args, **kwargs ):
@@ -429,28 +468,6 @@ class Param_CapacityToActivity ( DM.Model ):
 			raise ValidationError( msg )
 
 		super( Param_CapacityToActivity, self ).save( *args, **kwargs )
-
-
-
-class Param_DemandDefaultDistribution ( DM.Model ):
-	timeslice = DM.ForeignKey( Param_SegFrac, unique=True )
-	value     = DM.FloatField()
-
-
-	def __str__ ( self ):
-		analysis    = self.timeslice.analysis
-		season      = self.timeslice.season
-		time_of_day = self.timeslice.time_of_day
-
-		return u'({}) {}, {}: {}'.format(
-		  analysis, season, time_of_day, self.value )
-
-
-	def save ( self, *args, **kwargs ):
-		if not ( 0 < self.value and self.value <= 1 ):
-			raise ValidationError( 'Distribution value must be in range (0, 1].' )
-
-		super( Param_DemandDefaultDistribution, self ).save( *args, **kwargs )
 
 
 

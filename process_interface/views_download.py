@@ -17,7 +17,6 @@ from models import (
   Param_CostFixed,
   Param_CostVariable,
   Param_Demand,
-  Param_DemandDefaultDistribution,
   Param_DemandSpecificDistribution,
   Param_Efficiency,
   Param_EmissionActivity,

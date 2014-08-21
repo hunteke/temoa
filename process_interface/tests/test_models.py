@@ -95,6 +95,7 @@ class Param_SegFracFactory ( factory.django.DjangoModelFactory ):
 	season = 'Unit_Test_Season'
 	time_of_day = 'Unit_Test_Day'
 	value = 1
+	demanddefaultdistribution = 0.8
 
 
 
@@ -378,7 +379,7 @@ class ModelParam_SegFracTest ( TestCase ):
 	def test_clean_bad_season ( self ):
 		sf = Param_SegFracFactory.build()
 		name_re = re.compile( r'^[A-z_]\w*$' )
-		sf.clean() # ensure it is valid to begin with
+		sf.clean_season() # ensure it is valid to begin with
 
 		# Fuzz test
 		for i in range(10):
@@ -386,36 +387,88 @@ class ModelParam_SegFracTest ( TestCase ):
 			while name_re.match( sf.season ):
 				sf.season = urandom( length )
 			with self.assertRaises( ValidationError ):
-				sf.clean()
+				sf.clean_season()
 
 
 	def test_clean_bad_timeofday ( self ):
 		sf = Param_SegFracFactory.build()
 		name_re = re.compile( r'^[A-z_]\w*$' )
-		sf.clean() # ensure it is valid to begin with
+		sf.clean_time_of_day() # ensure it is valid to begin with
 
-		# Fuzz test
-		for i in range(10):
-			length = randint(1, 1025)
-			while name_re.match( sf.time_of_day ):
-				sf.time_of_day = urandom( length )
-			with self.assertRaises( ValidationError ):
-				sf.clean()
+		length = randint(1, 1025)
+		while name_re.match( sf.time_of_day ):
+			sf.time_of_day = urandom( length )
+
+		with self.assertRaises( ValidationError ):
+			sf.clean_time_of_day()
 
 
-	def test_clean_value ( self ):
+	def test_clean_value_requires_value ( self ):
 		sf = Param_SegFracFactory.build()
-		sf.clean() # ensure it is valid to begin with
+		sf.value = None
+		with self.assertRaises( ValidationError ):
+			sf.clean_value()
 
-		# Fuzz test
-		for i in range(10):
-			multiplier = randint(-1e9, 1e9)
-			value = 0.5
-			while 0 < value <= 1:
-				value = random() * multiplier
-			sf.value = value
-			with self.assertRaises( ValidationError ):
-				sf.clean()
+
+	def test_clean_value_requires_valid_number ( self ):
+		sf = Param_SegFracFactory.build()
+		while True:
+			length = randint(1, 20)
+			sf.value = urandom( length )
+			try:
+				# ensure value is invalid
+				float( sf.value )
+			except:
+				break
+
+		with self.assertRaises( ValidationError ):
+			sf.clean_value()
+
+
+	def test_clean_value_requires_between_0_and_1 ( self ):
+		sf = Param_SegFracFactory.build()
+
+		sf.value = 0.5
+		while 0 < sf.value <= 1:
+			sf.value = random() * randint(-1e9, 1e9)
+
+		with self.assertRaises( ValidationError ):
+			sf.clean_value()
+
+
+	def test_clean_demandefaultdistribution_can_be_null ( self ):
+		sf = Param_SegFracFactory.build()
+		sf.demanddefaultdistribution = None
+		try:
+			sf.clean_demanddefaultdistribution()
+		except:
+			self.fail( 'DemandDefaultDistribution should be allowed to be null.' )
+
+
+	def test_clean_demandefaultdistribution_does_not_accept_invalid_number ( self ):
+		sf = Param_SegFracFactory.build()
+		while True:
+			length = randint(1, 20)
+			sf.demanddefaultdistribution = urandom( length )
+			try:
+				# ensure value is invalid
+				float( sf.demanddefaultdistribution )
+			except:
+				break
+
+		with self.assertRaises( ValidationError ):
+			sf.clean_demanddefaultdistribution()
+
+
+	def test_clean_demandefaultdistribution_requires_between_0_and_1 ( self ):
+		sf = Param_SegFracFactory.build()
+
+		sf.demanddefaultdistribution = 0.5
+		while 0 < sf.demanddefaultdistribution <= 1:
+			sf.demanddefaultdistribution = random() * randint(-1e9, 1e9)
+
+		with self.assertRaises( ValidationError ):
+			sf.clean_demanddefaultdistribution()
 
 
 	def test_str_empty ( self ):
