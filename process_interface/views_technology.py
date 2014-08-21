@@ -35,8 +35,6 @@ from forms import (
 
 from view_helpers import set_cookie
 
-from IPython import embed as II
-
 def technology_list ( req ):
 	techs = Technology.objects.all().order_by('user__username', 'name')
 
