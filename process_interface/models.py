@@ -16,7 +16,6 @@ __all__ = (
   'Param_Efficiency',
   'Param_EmissionActivity',
   'Param_EmissionLimit',
-  'Param_GrowthRate',
   'Param_MaxCapacity',
   'Param_MinCapacity',
   'Param_ResourceBound',
@@ -195,11 +194,13 @@ class Technology ( DM.Model ):
 	# name, so I think 1024 characters (2**10) is more than adequate storage --
 	# overkill, just in case.
 	analysis    = DM.ForeignKey( Analysis )
-	name        = DM.CharField( max_length=1024 )
+	baseload    = DM.BooleanField()
 	description = DM.TextField()
 	lifetime    = DM.FloatField( null=True )
 	loanlife    = DM.FloatField( null=True )
-	baseload    = DM.BooleanField()
+	name        = DM.CharField( max_length=1024 )
+	ratelimit   = DM.FloatField( null=True )
+	rateseed    = DM.FloatField( null=True )
 	storage     = DM.BooleanField()
 
 	# may be overridden, but must be defined by something
@@ -270,6 +271,30 @@ class Technology ( DM.Model ):
 		self.storage = self.storage and True or False
 
 
+	def clean_growth_rate ( self ):
+		r = self.ratelimit
+		s = self.rateseed
+
+		if r is None and s is None:
+			return
+
+		if (r is None and s is not None) or (r is not None and s is None):
+			msg = ('Either leave the growth rate and seed fields empty, or must '
+			  'specify them both.')
+			raise ValidationError( msg )
+
+		msg = '{} is not a valid number.'
+		try:
+			r = float(r)
+		except ValueError as ve:
+			raise ValidationError( msg.format( 'Rate limit' ))
+
+		try:
+			s = float(s)
+		except ValueError as ve:
+			raise ValidationError( msg.format( 'Rate seed' ))
+
+
 	def clean ( self ):
 		self.clean_name()
 		self.clean_description()
@@ -277,6 +302,7 @@ class Technology ( DM.Model ):
 		self.clean_loanlife()
 		self.clean_baseload()
 		self.clean_storage()
+		self.clean_growth_rate()
 
 
 	def save ( self, *args, **kwargs ):
@@ -1020,23 +1046,3 @@ class Param_CapacityFactorProcess ( DM.Model ):
 			raise ValidationError( msg.format( self.value ))
 
 		super( Param_CapacityFactorProcess, self).save()
-
-
-
-class Param_GrowthRate ( DM.Model ):
-	technology = DM.ForeignKey( Technology, unique=True )
-	ratelimit  = DM.FloatField()
-	seed       = DM.FloatField()
-
-
-	def __str__ ( self ):
-		t, rl, s = '(NoAnalysis) NoTechnology', 'NoLimit', 'NoSeed'
-		if self.technology_id:
-			t = self.technology
-		if self.ratelimit is not None:
-			rl = self.ratelimit
-		if self.seed is not None:
-			s = self.seed
-
-		return u'{}: {} [{}]'.format( t, rl, s )
-

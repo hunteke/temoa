@@ -18,7 +18,6 @@ from models import (
   Analysis,
   Param_CapacityFactorTech,
   Param_CapacityToActivity,
-  Param_GrowthRate,
   Param_TechInputSplit,
   Param_TechOutputSplit,
   Process,
@@ -43,12 +42,6 @@ def get_technology_info ( analysis, technologies ):
 	  for c2a in Param_CapacityToActivity.objects.filter(
 	    technology__in=technologies )
 	})
-
-	GrowthRate = defaultdict( null )
-	for gr in Param_GrowthRate.objects.filter(
-	  technology__in=technologies ):
-		GrowthRate[ gr.technology, 'ratelimit' ] = gr.ratelimit
-		GrowthRate[ gr.technology, 'seed' ] = gr.seed
 
 	CapacityFactors = defaultdict( list )
 	for capfac in Param_CapacityFactorTech.objects.filter(
@@ -91,8 +84,8 @@ def get_technology_info ( analysis, technologies ):
 	    'capacitytoactivity' : CapacityToActivity[ t ],
 	    'capacityfactors'    : CapacityFactors[ t ],
 	    'description'        : str( t.description ),
-	    'growthratelimit'    : GrowthRate[ t, 'ratelimit' ],
-	    'growthrateseed'     : GrowthRate[ t, 'seed' ],
+	    'growthratelimit'    : t.ratelimit,
+	    'growthrateseed'     : t.rateseed,
 	    'lifetime'           : t.lifetime,
 	    'loanlife'           : t.loanlife,
 	    'name'               : t.name,

@@ -18,7 +18,6 @@ from process_interface.models import (
   AnalysisCommodity,
   Commodity,
   CommodityType,
-  Param_GrowthRate,
   Param_SegFrac,
   Param_TechInputSplit,
   Param_TechOutputSplit,
@@ -76,6 +75,8 @@ class TechnologyFactory ( factory.django.DjangoModelFactory ):
 	lifetime = None
 	loanlife = None
 	storage = False
+	ratelimit = None
+	rateseed = None
 
 
 
@@ -387,6 +388,57 @@ class ModelTechnologyTest ( TestCase ):
 		except:
 			self.fail('Positive loanlife values are valid.')
 			raise
+
+
+	def test_growth_rate_fields_both_null_is_okay ( self ):
+		t = TechnologyFactory.build()
+
+		t.ratelimit = t.rateseed = None
+		try:
+			t.clean_growth_rate()
+		except:
+			msg = ('It should be allowed for both ratelimit and rateseed to be '
+			  'null.')
+			self.fail( msg )
+
+
+	def test_growth_rate_only_1_field_set_is_error ( self ):
+		t = TechnologyFactory.build()
+
+		t.ratelimit = 0.5
+		t.rateseed = None
+		with self.assertRaises( ValidationError ):
+			t.clean_growth_rate()
+
+		t.ratelimit = None
+		t.rateseed = 0.5
+		with self.assertRaises( ValidationError ):
+			t.clean_growth_rate()
+
+
+	def test_growth_rate_requires_valid_numbers ( self ):
+		t = TechnologyFactory.build()
+
+		t.ratelimit = 'asdf'
+		t.rateseed = 1
+		with self.assertRaises( ValidationError ):
+			t.clean_growth_rate()
+
+		t.ratelimit = 1
+		t.rateseed = 'asdf'
+		with self.assertRaises( ValidationError ):
+			t.clean_growth_rate()
+
+
+	def test_growth_rate_accepts_valid_numbers ( self ):
+		t = TechnologyFactory.build()
+
+		t.ratelimit = -1
+		t.rateseed = 1
+		try:
+			t.clean_growth_rate()
+		except:
+			self.fail('Growth Rate fields should accept any number.')
 
 
 
@@ -930,42 +982,3 @@ class ModelParam_TechOutputSplitTest ( TestCase ):
 			Param_TechOutputSplit(
 			  technology=t, out_commodity=ac, fraction=random() +2 ).clean()
 
-
-
-class ModelParam_GrowthRateTest ( TestCase ):
-
-	def test_str_empty ( self ):
-		gr = Param_GrowthRate()
-		expected = u'(NoAnalysis) NoTechnology: NoLimit [NoSeed]'
-		self.assertEqual( str(gr), expected )
-
-
-	def test_str_only_technology ( self ):
-		t = TechnologyFactory.create()
-		gr = Param_GrowthRate( technology=t )
-		expected = u'{}: NoLimit [NoSeed]'.format( t )
-		self.assertEqual( str(gr), expected )
-
-
-	def test_str_only_ratelimit ( self ):
-		rl = random()
-		gr = Param_GrowthRate( ratelimit=rl )
-		expected = u'(NoAnalysis) NoTechnology: {} [NoSeed]'.format( rl )
-		self.assertEqual( str(gr), expected )
-
-
-	def test_str_only_seed ( self ):
-		s = random() * 1e6
-		gr = Param_GrowthRate( seed=s )
-		expected = u'(NoAnalysis) NoTechnology: NoLimit [{}]'.format( s )
-		self.assertEqual( str(gr), expected )
-
-
-	def test_uniqueness ( self ):
-		t = TechnologyFactory.create()
-		rl = random()
-		s = random() * 1e6
-		Param_GrowthRate.objects.create( technology=t, ratelimit=rl, seed=s )
-
-		with self.assertRaises( IntegrityError ):
-			Param_GrowthRate.objects.create( technology=t, ratelimit=rl, seed=s )

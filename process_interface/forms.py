@@ -16,7 +16,6 @@ from models import (
   Param_CostFixed,
   Param_CostVariable,
   Param_Efficiency,
-  Param_GrowthRate,
   Param_SegFrac,
   Process,
   Technology,

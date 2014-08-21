@@ -16,7 +16,6 @@ to_administrate = (
   'Param_Efficiency',
   'Param_EmissionActivity',
   'Param_EmissionLimit',
-  'Param_GrowthRate',
   'Param_MaxCapacity',
   'Param_MinCapacity',
   'Param_ResourceBound',

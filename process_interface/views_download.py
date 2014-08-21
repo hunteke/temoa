@@ -20,7 +20,6 @@ from models import (
   Param_DemandSpecificDistribution,
   Param_Efficiency,
   Param_EmissionActivity,
-  Param_GrowthRate,
   Param_MaxCapacity,
   Param_MinCapacity,
   Param_SegFrac,
