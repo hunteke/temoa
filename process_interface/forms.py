@@ -1,14 +1,10 @@
 # vim:sw=3:ts=3:fileencoding=utf-8:list:listchars=tab\:»·,trail\:·:noexpandtab:
 # :encoding=utf-8:indentSize=3:tabSize=3:noTabs=false:
 
-from collections import defaultdict
-from operator import itemgetter as iget
 import math, re
 
 from django import forms as F
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Max
-from django.forms.models import inlineformset_factory
 from django.utils.translation import ugettext_lazy as _
 
 from models import (
