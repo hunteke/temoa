@@ -285,15 +285,16 @@ class ModelTechnologyTest ( TestCase ):
 		try:
 			t.clean_life()
 		except:
-			self.fail('Technology lifetimes do not have to be specified.')
+			self.fail('Technology lifetime does not have to be specified.')
 
 
-	def test_lifetime_0_is_converted_to_null ( self ):
+	def test_lifetime_empty_is_converted_to_null ( self ):
 		t = TechnologyFactory.build()
 
-		t.lifetime = 0
-		t.clean_life()
-		self.assertEqual( t.lifetime, None )
+		for val in (0, [], {}, (), '', False):
+			t.lifetime = val
+			t.clean_life()
+			self.assertEqual( t.lifetime, None )
 
 
 	def test_lifetime_requires_valid_number ( self ):
@@ -307,7 +308,7 @@ class ModelTechnologyTest ( TestCase ):
 	def test_lifetime_must_not_negative ( self ):
 		t = TechnologyFactory.build()
 
-		t.lifetime = -10
+		t.lifetime = random() * randint(-1e9, -1)
 		with self.assertRaises( ValidationError ):
 			t.clean_life()
 
@@ -326,11 +327,11 @@ class ModelTechnologyTest ( TestCase ):
 	def test_lifetime_can_be_positive ( self ):
 		t = TechnologyFactory.build()
 
-		t.lifetime = 10
+		t.lifetime = random() * randint(1, 1e9)
 		try:
 			t.clean_life()
 		except:
-			self.fail('Positive lifetimes are valid.')
+			self.fail('Positive lifetimes should be valid.')
 			raise
 
 
@@ -341,15 +342,16 @@ class ModelTechnologyTest ( TestCase ):
 		try:
 			t.clean_loanlife()
 		except:
-			self.fail('Technology loanlifes do not have to be specified.')
+			self.fail('Technology loanlife does not have to be specified.')
 
 
-	def test_loanlife_0_is_converted_to_null ( self ):
+	def test_loanlife_empty_is_converted_to_null ( self ):
 		t = TechnologyFactory.build()
 
-		t.loanlife = 0
-		t.clean_loanlife()
-		self.assertEqual( t.loanlife, None )
+		for val in (0, [], {}, (), '', False):
+			t.loanlife = val
+			t.clean_loanlife()
+			self.assertEqual( t.loanlife, None )
 
 
 	def test_loanlife_requires_valid_number ( self ):
@@ -363,7 +365,7 @@ class ModelTechnologyTest ( TestCase ):
 	def test_loanlife_must_not_negative ( self ):
 		t = TechnologyFactory.build()
 
-		t.loanlife = -10
+		t.loanlife = random() * randint(-1e9, -1)
 		with self.assertRaises( ValidationError ):
 			t.clean_loanlife()
 
@@ -382,11 +384,11 @@ class ModelTechnologyTest ( TestCase ):
 	def test_loanlife_can_be_positive ( self ):
 		t = TechnologyFactory.build()
 
-		t.loanlife = 10
+		t.loanlife = random() * randint(1, 1e9)
 		try:
 			t.clean_loanlife()
 		except:
-			self.fail('Positive loanlife values are valid.')
+			self.fail('Positive loanlife values should be valid.')
 			raise
 
 
