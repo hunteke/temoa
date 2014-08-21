@@ -5,11 +5,14 @@ from base64 import decodestring as b64decodestring
 from os import urandom
 from random import randint
 
-from django.core.urlresolvers import reverse
+import json
+
+from django.core.urlresolvers import resolve, reverse
 from django.test import TestCase
 from django.test.client import Client
 
 from process_interface.models import Analysis, Vintage
+from process_interface.views_technology import analysis_technology_list
 
 class ViewLoginLogout ( TestCase ):
 
@@ -621,3 +624,26 @@ class ViewAnalysisTest ( TestCase ):
 			  getattr(analysis_after, attr)
 			)
 
+
+
+class APITechnologyTest ( TestCase ):
+
+	def test_list_url_resolves_to_list_view ( self ):
+		resolved_url = resolve('/analysis/1/technology/list')
+		self.assertEqual( resolved_url.func, analysis_technology_list )
+
+
+	def test_list_view_returns_json_data ( self ):
+		class User:
+			def is_authenticated(self): return False
+		class Req:
+			user = User()
+
+		req = Req()
+		res = analysis_technology_list( req, 1 )
+		try:
+			data = json.loads( res.content )
+		except:
+			msg = 'Did not receive expected JSON structure.  Received: {} ...'
+			self.fail( msg.format( res.content[:30] ))
+			raise  # so as not to hide the actual exception

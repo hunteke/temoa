@@ -67,36 +67,36 @@ def get_technology_info ( analysis, technologies ):
 
 	BaseloadTechs = set( bt.technology
 	  for bt in Set_tech_baseload.objects.filter(
-	    analysis=analysis, technology__in=technologies )
+	    technology__in=technologies )
 	)
 
 	StorageTechs = set( st.technology
 	  for st in Set_tech_storage.objects.filter(
-	    analysis=analysis, technology__in=technologies )
+	    technology__in=technologies )
 	)
 
 	CapacityToActivity = defaultdict( null )
 	CapacityToActivity.update({ c2a.technology : c2a.value
 	  for c2a in Param_CapacityToActivity.objects.filter(
-	    analysis=analysis, technology__in=technologies )
+	    technology__in=technologies )
 	})
 
 	GrowthRate = defaultdict( null )
 	for gr in Param_GrowthRate.objects.filter(
-	  analysis=analysis, technology__in=technologies ):
+	  technology__in=technologies ):
 		GrowthRate[ gr.technology, 'ratelimit' ] = gr.ratelimit
 		GrowthRate[ gr.technology, 'seed' ] = gr.seed
 
 	LifetimeTech = defaultdict( null )
 	LifetimeTech.update({ lt.technology: lt.value
 	  for lt in Param_LifetimeTech.objects.filter(
-	    analysis=analysis, technology__in=technologies )
+	    technology__in=technologies )
 	})
 
 	LifetimeTechLoan = defaultdict( null )
 	LifetimeTechLoan.update({ ltl.technology: ltl.value
 	  for ltl in Param_LifetimeTechLoan.objects.filter(
-	    analysis=analysis, technology__in=technologies )
+	    technology__in=technologies )
 	})
 
 	CapacityFactors = defaultdict( list )
@@ -159,7 +159,7 @@ def get_technology_info ( analysis, technologies ):
 @never_cache
 def analysis_technology_list ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
-	techs = Technology.objects.filter( process__analysis=analysis ).distinct()
+	techs = Technology.objects.filter( analysis=analysis ).distinct()
 
 	data = None
 	if len( techs ):
