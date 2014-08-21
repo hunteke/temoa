@@ -12,7 +12,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 from process_interface.models import Analysis, Vintage
-from process_interface.views_technology import analysis_technology_list
+from process_interface.views_technology import technology_list
 
 class ViewLoginLogout ( TestCase ):
 
@@ -630,7 +630,7 @@ class APITechnologyTest ( TestCase ):
 
 	def test_list_url_resolves_to_list_view ( self ):
 		resolved_url = resolve('/analysis/1/technology/list')
-		self.assertEqual( resolved_url.func, analysis_technology_list )
+		self.assertEqual( resolved_url.func, technology_list )
 
 
 	def test_list_view_returns_json_data ( self ):
@@ -640,7 +640,7 @@ class APITechnologyTest ( TestCase ):
 			user = User()
 
 		req = Req()
-		res = analysis_technology_list( req, 1 )
+		res = technology_list( req, 1 )
 		try:
 			data = json.loads( res.content )
 		except:

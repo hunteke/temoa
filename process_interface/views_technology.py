@@ -35,27 +35,6 @@ from forms import (
 
 from view_helpers import set_cookie
 
-def technology_list ( req ):
-	techs = Technology.objects.all().order_by('user__username', 'name')
-
-	techs = [{
-	    'id'                   : t.pk,
-	    'username'             : t.user.username,
-	    'name'                 : t.name,
-	    'capacity_to_activity' : t.capacity_to_activity,
-	    'description'          : t.description,
-	  }
-
-	  for t in techs
-	]
-
-	data = json.dumps( { 'data' : techs } )
-	res = HttpResponse( data, content_type='application/json' )
-	res['Content-Length'] = len( data )
-	set_cookie( req, res )
-
-	return res
-
 
 def get_technology_info ( analysis, technologies ):
 	def null ( ):
@@ -143,7 +122,7 @@ def get_technology_info ( analysis, technologies ):
 
 
 @never_cache
-def analysis_technology_list ( req, analysis_id ):
+def technology_list ( req, analysis_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
 	techs = Technology.objects.filter( analysis=analysis ).distinct()
 
@@ -160,7 +139,7 @@ def analysis_technology_list ( req, analysis_id ):
 
 
 @never_cache
-def analysis_technology_info ( req, analysis_id, technology_id ):
+def technology_info ( req, analysis_id, technology_id ):
 	analysis = get_object_or_404( Analysis, pk=analysis_id )
 	tech = get_object_or_404( Technology, pk=technology_id )
 

@@ -39,9 +39,8 @@ from views import (
   analysis_delete_demand,
 
   technology_list,
-  technology_create,
+  technology_info,
   technology_update,
-  technology_remove,
 
   process_list,
   process_new,
@@ -67,10 +66,6 @@ from views import (
   process_emissionactivity_new,
   process_emissionactivity_update,
   process_emissionactivity_remove,
-
-  analysis_technology_list,
-  analysis_technology_info,
-  analysis_technology_update,
 
   analysis_technology_capacityfactor_new,
   analysis_technology_capacityfactor_update,
@@ -156,16 +151,9 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/Efficiency/(?P<efficiency_id>\d+)/remove/EmissionActivity/(?P<emissionactivity_id>\d+)$', process_emissionactivity_remove, name='process_emissionactivity_remove'),
 
 # Technology
-  url(r'^technology/list$',   technology_list, name='technology_list'),
-  url(r'^technology/create$', technology_create, name='technology_create'),
-  url(r'^technology/update/(?P<technology_id>(?:\d+))$', technology_update, name='technology_update'),
-  # url(r'^technology/info/(?P<technology_ids>(?:\d+,?)+)$', technology_info, name='technology_info' ),
-  url(r'^technology/remove/(?P<technology_id>(?:\d+,?)+)$', technology_remove, name='technology_remove' ),
-
-# AnalysisTechnology
-  url(r'^analysis/(?P<analysis_id>\d+)/technology/list$', analysis_technology_list, name='analysis_technology_list'),
-  url(r'^analysis/(?P<analysis_id>\d+)/technology/info/(?P<technology_id>\d+)$', analysis_technology_info, name='analysis_technology_info'),
-  url(r'^analysis/(?P<analysis_id>\d+)/technology/update/(?P<technology_id>\d+)$', analysis_technology_update, name='analysis_technology_update'),
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/list$', technology_list, name='technology_list'),
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/info/(?P<technology_id>\d+)$', technology_info, name='technology_info'),
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/update/(?P<technology_id>\d+)$', technology_update, name='technology_update'),
 
 # AnalysisCommodity
   url(r'^analysis/(?P<analysis_id>\d+)/commodity/list$', analysis_commodity_list, name='analysis_commodity_list' ),
