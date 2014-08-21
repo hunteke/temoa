@@ -28,7 +28,6 @@ __all__ = (
   'PeriodCostParameter',
   'Process',
   'Technology',
-  'TechnologySetMember',
   'Vintage'
 )
 
