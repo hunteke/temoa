@@ -21,8 +21,6 @@ from models import (
   Param_CostVariable,
   Param_Efficiency,
   Param_EmissionActivity,
-  Param_LifetimeTech,
-  Param_LifetimeTechLoan,
   Process,
 )
 

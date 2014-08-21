@@ -17,8 +17,6 @@ from models import (
   Param_CostVariable,
   Param_Efficiency,
   Param_GrowthRate,
-  Param_LifetimeTech,
-  Param_LifetimeTechLoan,
   Param_SegFrac,
   Process,
   Technology,

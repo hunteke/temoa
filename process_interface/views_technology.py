@@ -19,8 +19,6 @@ from models import (
   Param_CapacityFactorTech,
   Param_CapacityToActivity,
   Param_GrowthRate,
-  Param_LifetimeTech,
-  Param_LifetimeTechLoan,
   Param_TechInputSplit,
   Param_TechOutputSplit,
   Process,
@@ -51,18 +49,6 @@ def get_technology_info ( analysis, technologies ):
 	  technology__in=technologies ):
 		GrowthRate[ gr.technology, 'ratelimit' ] = gr.ratelimit
 		GrowthRate[ gr.technology, 'seed' ] = gr.seed
-
-	LifetimeTech = defaultdict( null )
-	LifetimeTech.update({ lt.technology: lt.value
-	  for lt in Param_LifetimeTech.objects.filter(
-	    technology__in=technologies )
-	})
-
-	LifetimeTechLoan = defaultdict( null )
-	LifetimeTechLoan.update({ ltl.technology: ltl.value
-	  for ltl in Param_LifetimeTechLoan.objects.filter(
-	    technology__in=technologies )
-	})
 
 	CapacityFactors = defaultdict( list )
 	for capfac in Param_CapacityFactorTech.objects.filter(
@@ -107,12 +93,12 @@ def get_technology_info ( analysis, technologies ):
 	    'description'        : str( t.description ),
 	    'growthratelimit'    : GrowthRate[ t, 'ratelimit' ],
 	    'growthrateseed'     : GrowthRate[ t, 'seed' ],
+	    'lifetime'           : t.lifetime,
+	    'loanlife'           : t.loanlife,
+	    'name'               : t.name,
 	    'storage'            : t.storage,
 	    'inputsplits'        : TechInputSplit[ t ],
 	    'outputsplits'       : TechOutputSplit[ t ],
-	    'lifetime'           : LifetimeTech[ t ],
-	    'loanlife'           : LifetimeTechLoan[ t ],
-	    'name'               : t.name,
 	  }
 
 	  for t in technologies

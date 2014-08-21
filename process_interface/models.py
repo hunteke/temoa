@@ -17,8 +17,6 @@ __all__ = (
   'Param_EmissionActivity',
   'Param_EmissionLimit',
   'Param_GrowthRate',
-  'Param_LifetimeTech',
-  'Param_LifetimeTechLoan',
   'Param_MaxCapacity',
   'Param_MinCapacity',
   'Param_ResourceBound',
@@ -199,6 +197,8 @@ class Technology ( DM.Model ):
 	analysis    = DM.ForeignKey( Analysis )
 	name        = DM.CharField( max_length=1024 )
 	description = DM.TextField()
+	lifetime    = DM.FloatField( null=True )
+	loanlife    = DM.FloatField( null=True )
 	baseload    = DM.BooleanField()
 	storage     = DM.BooleanField()
 
@@ -236,6 +236,32 @@ class Technology ( DM.Model ):
 			raise ValidationError( 'Technologies must have a description.' )
 
 
+	def clean_life ( self, name='lifetime' ):
+		v = getattr( self, name )
+		if not v:
+			setattr( self, name, None )
+			return
+
+		try:
+			v = float(v)
+		except ValueError as ve:
+			msg = 'Technology {} is not a valid number.'
+			raise ValidationError( msg.format( name ))
+
+		if v < 0:
+			msg = 'Technology {} must not exist or must be a positive value.'
+			raise ValidationError( msg.format( name ))
+
+		if v < 1e-9:
+			# most likely redundant, given the setattr above, but a small chance
+			msg = 'Technology {} must not exist or must be a positive value.'
+			raise ValidationError( msg.format( name ))
+
+
+	def clean_loanlife ( self, name='loanlife' ):
+		self.clean_life( name=name )
+
+
 	def clean_baseload ( self ):
 		self.baseload = self.baseload and True or False
 
@@ -247,6 +273,8 @@ class Technology ( DM.Model ):
 	def clean ( self ):
 		self.clean_name()
 		self.clean_description()
+		self.clean_life()
+		self.clean_loanlife()
 		self.clean_baseload()
 		self.clean_storage()
 
@@ -367,42 +395,6 @@ class Process ( DM.Model ):
 	def save ( self, *args, **kwargs ):
 		self.clean()
 		super( Process, self ).save( *args, **kwargs )
-
-
-
-class LifetimeParameter ( DM.Model ):
-	technology = DM.ForeignKey( Technology, unique=True )
-	value      = DM.FloatField()
-
-	class Meta:
-		abstract = True
-		ordering = ('technology__analysis', 'technology')
-
-	def __str__ ( self ):
-		t, v = u'(NoAnalysis) NoTechnology', u'NoValue'
-		if self.technology_id:
-			t = self.technology
-		if self.value is not None:
-			v = self.value
-		return u'{}: {}'.format( t, v )
-
-
-	def clean ( self ):
-		try:
-			self.value = float(self.value)
-		except ValueError as ve:
-			raise ValidationError( 'Life value must be a valid float.' )
-
-		if self.value <= 0:
-			raise ValidationError( 'Life value must be greater than 0.' )
-
-	def save ( self, *args, **kwargs ):
-		self.clean()
-		super( LifetimeParameter, self ).save( *args, **kwargs )
-
-
-class Param_LifetimeTech     ( LifetimeParameter ): pass
-class Param_LifetimeTechLoan ( LifetimeParameter ): pass
 
 
 

@@ -21,8 +21,6 @@ from models import (
   Param_Efficiency,
   Param_EmissionActivity,
   Param_GrowthRate,
-  Param_LifetimeTech,
-  Param_LifetimeTechLoan,
   Param_MaxCapacity,
   Param_MinCapacity,
   Param_SegFrac,

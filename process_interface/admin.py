@@ -17,8 +17,6 @@ to_administrate = (
   'Param_EmissionActivity',
   'Param_EmissionLimit',
   'Param_GrowthRate',
-  'Param_LifetimeTech',
-  'Param_LifetimeTechLoan',
   'Param_MaxCapacity',
   'Param_MinCapacity',
   'Param_ResourceBound',

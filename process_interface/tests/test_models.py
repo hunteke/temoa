@@ -20,7 +20,6 @@ from process_interface.models import (
   CommodityType,
   Param_GrowthRate,
   Param_SegFrac,
-  Param_LifetimeTech,
   Param_TechInputSplit,
   Param_TechOutputSplit,
   Process,
@@ -74,6 +73,8 @@ class TechnologyFactory ( factory.django.DjangoModelFactory ):
 	description = 'Technology automatically created during unit testing.'
 	capacity_to_activity = None
 	baseload = False
+	lifetime = None
+	loanlife = None
 	storage = False
 
 
@@ -110,15 +111,6 @@ class ExistingProcessFactory ( factory.django.DjangoModelFactory ):
 	costinvest       = None
 	discountrate     = None
 	existingcapacity = 31
-
-
-
-class Param_LifetimeTechFactory ( factory.django.DjangoModelFactory ):
-	class Meta:
-		model = Param_LifetimeTech
-
-	technology = factory.SubFactory( TechnologyFactory )
-	value = 30
 
 
 
@@ -283,6 +275,118 @@ class ModelTechnologyTest ( TestCase ):
 		truth_value = t.storage and True or False
 		t.clean_storage()
 		self.assertEqual( t.storage, truth_value )
+
+
+	def test_lifetime_can_be_null ( self ):
+		t = TechnologyFactory.build()
+
+		t.lifetime = None
+		try:
+			t.clean_life()
+		except:
+			self.fail('Technology lifetimes do not have to be specified.')
+
+
+	def test_lifetime_0_is_converted_to_null ( self ):
+		t = TechnologyFactory.build()
+
+		t.lifetime = 0
+		t.clean_life()
+		self.assertEqual( t.lifetime, None )
+
+
+	def test_lifetime_requires_valid_number ( self ):
+		t = TechnologyFactory.build()
+
+		t.lifetime = 'asdf'
+		with self.assertRaises( ValidationError ):
+			t.clean_life()
+
+
+	def test_lifetime_must_not_negative ( self ):
+		t = TechnologyFactory.build()
+
+		t.lifetime = -10
+		with self.assertRaises( ValidationError ):
+			t.clean_life()
+
+
+	def test_lifetime_must_not_be_almost_zero ( self ):
+		""" This will probably never occur, but the threshold is 1e-9.  Numbers
+		smaller than that snuck past the 'not 0' test, but are close enough to be
+		practically 0.  Thus, inform user of the error. """
+		t = TechnologyFactory.build()
+
+		t.lifetime = 1e-10
+		with self.assertRaises( ValidationError ):
+			t.clean_life()
+
+
+	def test_lifetime_can_be_positive ( self ):
+		t = TechnologyFactory.build()
+
+		t.lifetime = 10
+		try:
+			t.clean_life()
+		except:
+			self.fail('Positive lifetimes are valid.')
+			raise
+
+
+	def test_loanlife_can_be_null ( self ):
+		t = TechnologyFactory.build()
+
+		t.loanlife = None
+		try:
+			t.clean_loanlife()
+		except:
+			self.fail('Technology loanlifes do not have to be specified.')
+
+
+	def test_loanlife_0_is_converted_to_null ( self ):
+		t = TechnologyFactory.build()
+
+		t.loanlife = 0
+		t.clean_loanlife()
+		self.assertEqual( t.loanlife, None )
+
+
+	def test_loanlife_requires_valid_number ( self ):
+		t = TechnologyFactory.build()
+
+		t.loanlife = 'asdf'
+		with self.assertRaises( ValidationError ):
+			t.clean_loanlife()
+
+
+	def test_loanlife_must_not_negative ( self ):
+		t = TechnologyFactory.build()
+
+		t.loanlife = -10
+		with self.assertRaises( ValidationError ):
+			t.clean_loanlife()
+
+
+	def test_loanlife_must_not_be_almost_zero ( self ):
+		""" This will probably never occur, but the threshold is 1e-9.  Numbers
+		smaller than that snuck past the 'not 0' test, but are close enough to be
+		practically 0.  Thus, inform user of the error. """
+		t = TechnologyFactory.build()
+
+		t.loanlife = 1e-10
+		with self.assertRaises( ValidationError ):
+			t.clean_loanlife()
+
+
+	def test_loanlife_can_be_positive ( self ):
+		t = TechnologyFactory.build()
+
+		t.loanlife = 10
+		try:
+			t.clean_loanlife()
+		except:
+			self.fail('Positive loanlife values are valid.')
+			raise
 
 
 
@@ -609,58 +713,6 @@ class ModelExistingProcessTest ( TestCase ):
 		with self.assertRaises( ValidationError ) as ve:
 			p.clean_valid_existingcapacity()
 		self.assertIn( u' positive integer or ', str(ve.exception) )
-
-
-
-class ModelParam_LifetimeTechProcessTest ( TestCase ):
-
-	def test_str_empty ( self ):
-		tl = Param_LifetimeTech()
-		expected = u'(NoAnalysis) NoTechnology: NoValue'
-		self.assertEqual( str(tl), expected )
-
-
-	def test_str_only_technology ( self ):
-		t = TechnologyFactory.create()
-		tl = Param_LifetimeTech( technology=t )
-		expected = u'{}: NoValue'.format( tl.technology )
-		self.assertEqual( str(tl), expected )
-
-
-	def test_str_only_value ( self ):
-		tl = Param_LifetimeTech( value='15.2' )
-		expected = u'(NoAnalysis) NoTechnology: {}'.format( tl.value )
-		self.assertEqual( str(tl), expected )
-
-
-	def test_value_is_valid_number ( self ):
-		for i in range(10):
-			length = randint(1, 256)
-			value = urandom( length )
-			try:
-				value = float(value)
-				continue
-			except ValueError:
-				pass
-
-			with self.assertRaises( ValidationError ) as ve:
-				Param_LifetimeTech( value=value ).clean()
-			self.assertIn( u' be a valid float', str(ve.exception) )
-
-
-	def test_value_is_positive_number ( self ):
-		with self.assertRaises( ValidationError ) as ve:
-			Param_LifetimeTech( value=0 ).clean()
-		self.assertIn( u'greater than 0', str(ve.exception) )
-
-		with self.assertRaises( ValidationError ) as ve:
-			Param_LifetimeTech( value=-randint(1, 1e9)*random() ).clean()
-		self.assertIn( u'greater than 0', str(ve.exception) )
-
-		try:
-			Param_LifetimeTech( value=randint(1, 1e9)*random() ).clean()
-		except:
-			self.fail( 'Positive lifetime values should be valid.' )
 
 
 
