@@ -24,8 +24,6 @@ from models import (
   Param_TechInputSplit,
   Param_TechOutputSplit,
   Process,
-  Set_tech_baseload,
-  Set_tech_storage,
   Technology,
 )
 from forms import (
@@ -64,16 +62,6 @@ def technology_list ( req ):
 def get_technology_info ( analysis, technologies ):
 	def null ( ):
 		return None
-
-	BaseloadTechs = set( bt.technology
-	  for bt in Set_tech_baseload.objects.filter(
-	    technology__in=technologies )
-	)
-
-	StorageTechs = set( st.technology
-	  for st in Set_tech_storage.objects.filter(
-	    technology__in=technologies )
-	)
 
 	CapacityToActivity = defaultdict( null )
 	CapacityToActivity.update({ c2a.technology : c2a.value
@@ -136,13 +124,13 @@ def get_technology_info ( analysis, technologies ):
 	  {
 	    'id'                 : t.pk,
 	    'aId'                : analysis.pk,
-	    'baseload'           : t in BaseloadTechs,
+	    'baseload'           : t.baseload,
 	    'capacitytoactivity' : CapacityToActivity[ t ],
 	    'capacityfactors'    : CapacityFactors[ t ],
 	    'description'        : str( t.description ),
 	    'growthratelimit'    : GrowthRate[ t, 'ratelimit' ],
 	    'growthrateseed'     : GrowthRate[ t, 'seed' ],
-	    'storage'            : t in StorageTechs,
+	    'storage'            : t.storage,
 	    'inputsplits'        : TechInputSplit[ t ],
 	    'outputsplits'       : TechOutputSplit[ t ],
 	    'lifetime'           : LifetimeTech[ t ],

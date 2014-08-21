@@ -30,8 +30,6 @@ from models import (
   Param_TechInputSplit,
   Param_TechOutputSplit,
   Process,
-  Set_tech_baseload,
-  Set_tech_storage,
   Vintage,
 )
 

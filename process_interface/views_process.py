@@ -24,8 +24,6 @@ from models import (
   Param_LifetimeTech,
   Param_LifetimeTechLoan,
   Process,
-  Set_tech_baseload,
-  Set_tech_storage,
 )
 
 from forms import (

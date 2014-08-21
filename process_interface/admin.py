@@ -27,8 +27,6 @@ to_administrate = (
   'Param_TechInputSplit',
   'Param_TechOutputSplit',
   'Process',
-  'Set_tech_baseload',
-  'Set_tech_storage',
   'Technology',
   'Vintage',
 )
@@ -49,4 +47,3 @@ from django.contrib import admin
 register = admin.site.register
 for cls in to_administrate:
 	register( getattr( _temp, cls ))
-

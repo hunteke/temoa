@@ -25,8 +25,6 @@ from models import (
   Param_LifetimeTechLoan,
   Param_SegFrac,
   Process,
-  Set_tech_baseload,
-  Set_tech_storage,
   Technology,
   Vintage,
 )

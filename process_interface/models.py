@@ -28,8 +28,6 @@ __all__ = (
   'Param_TechOutputSplit',
   'PeriodCostParameter',
   'Process',
-  'Set_tech_baseload',
-  'Set_tech_storage',
   'Technology',
   'TechnologySetMember',
   'Vintage'
@@ -163,6 +161,8 @@ class Technology ( DM.Model ):
 	analysis    = DM.ForeignKey( Analysis )
 	name        = DM.CharField( max_length=1024 )
 	description = DM.TextField()
+	baseload    = DM.BooleanField()
+	storage     = DM.BooleanField()
 
 	# may be overridden, but must be defined by something
 	capacity_to_activity = DM.FloatField( null=True )
@@ -182,17 +182,35 @@ class Technology ( DM.Model ):
 		return u'({}) {}'.format( a, n )
 
 
-	def clean ( self ):
+	def clean_name ( self ):
 		if self.name:
 			self.name = re.sub(r'[\s\r\n\v\0]', '', self.name).strip()
-		if self.description:
-			self.description = re.sub(r'[\r\v\0]', '', self.description).strip()
 
 		if not self.name:
 			raise ValidationError( 'Technologies must have a name.' )
 
+
+	def clean_description ( self ):
+		if self.description:
+			self.description = re.sub(r'[\r\v\0]', '', self.description).strip()
+
 		if not self.description:
 			raise ValidationError( 'Technologies must have a description.' )
+
+
+	def clean_baseload ( self ):
+		self.baseload = self.baseload and True or False
+
+
+	def clean_storage ( self ):
+		self.storage = self.storage and True or False
+
+
+	def clean ( self ):
+		self.clean_name()
+		self.clean_description()
+		self.clean_baseload()
+		self.clean_storage()
 
 
 	def save ( self, *args, **kwargs ):
@@ -211,27 +229,6 @@ class Commodity ( DM.Model ):
 			n = self.name
 
 		return str( n )
-
-
-
-class TechnologySetMember ( DM.Model ):
-	technology = DM.ForeignKey( Technology, unique=True )
-
-	class Meta:
-		abstract = True
-		ordering = ('technology__analysis', 'technology')
-
-	def __str__ ( self ):
-		t = '(NoAnalysis) NoTechnology'
-		if self.technology_id:
-			t = self.technology
-
-		return u'{}'.format( t )
-
-
-
-class Set_tech_baseload ( TechnologySetMember ): pass
-class Set_tech_storage  ( TechnologySetMember ): pass
 
 
 

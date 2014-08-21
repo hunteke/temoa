@@ -26,7 +26,6 @@ from process_interface.models import (
   Process,
   Technology,
   Vintage,
-  Set_tech_baseload,
 )
 
 
@@ -74,6 +73,8 @@ class TechnologyFactory ( factory.django.DjangoModelFactory ):
 	name = 'Unit Test Technology'
 	description = 'Technology automatically created during unit testing.'
 	capacity_to_activity = None
+	baseload = False
+	storage = False
 
 
 
@@ -94,14 +95,6 @@ class Param_SegFracFactory ( factory.django.DjangoModelFactory ):
 	season = 'Unit_Test_Season'
 	time_of_day = 'Unit_Test_Day'
 	value = 1
-
-
-
-class Set_tech_baseloadFactory ( factory.django.DjangoModelFactory ):
-	class Meta:
-		model = Set_tech_baseload
-
-	technology = factory.SubFactory( TechnologyFactory )
 
 
 
@@ -255,6 +248,40 @@ class ModelTechnologyTest ( TestCase ):
 		t = TechnologyFactory.build()
 		expected = u'(NoAnalysis) {}'.format( t.name )
 		self.assertEqual( str(t), expected )
+
+
+	def test_baseload_is_true_or_false ( self ):
+		t = TechnologyFactory.build()
+
+		t.baseload = None
+		t.clean_baseload()
+		self.assertEqual( t.baseload, False )
+
+		t.baseload = 'asdf'
+		t.clean_baseload()
+		self.assertEqual( t.baseload, True )
+
+		t.baseload = urandom( 2 )  # two bytes worth of random data
+		truth_value = t.baseload and True or False
+		t.clean_baseload()
+		self.assertEqual( t.baseload, truth_value )
+
+
+	def test_storage_is_true_or_false ( self ):
+		t = TechnologyFactory.build()
+
+		t.storage = None
+		t.clean_storage()
+		self.assertEqual( t.storage, False )
+
+		t.storage = 'asdf'
+		t.clean_storage()
+		self.assertEqual( t.storage, True )
+
+		t.storage = urandom( 2 )  # two bytes worth of random data
+		truth_value = t.storage and True or False
+		t.clean_storage()
+		self.assertEqual( t.storage, truth_value )
 
 
 
@@ -430,36 +457,6 @@ class ModelParam_SegFracTest ( TestCase ):
 		expected = u'({}) {}, {}: {}'.format(
 		  sf.analysis, sf.season, sf.time_of_day, sf.value )
 		self.assertEqual( str(sf), expected )
-
-
-
-class ModelsTechnologySetMemberTest ( TestCase ):
-
-	def test_tech_baseload_uniqueness_creation ( self ):
-		t = TechnologyFactory.create()
-
-		Set_tech_baseloadFactory.create( technology=t )
-		with self.assertRaises( IntegrityError ) as ie:
-			Set_tech_baseloadFactory.create( technology=t )
-
-
-	def test_tech_baseload_str_empty ( self ):
-		bl = Set_tech_baseload()
-		expected = u'(NoAnalysis) NoTechnology'
-		self.assertEqual( str(bl), expected )
-
-
-	def test_tech_baseload_only_analysis ( self ):
-		bl = Set_tech_baseloadFactory.build()
-		expected = u'(NoAnalysis) NoTechnology'
-		self.assertEqual( str(bl), expected )
-
-
-	def test_tech_baseload_only_technology ( self ):
-		t = TechnologyFactory.create()
-		bl = Set_tech_baseloadFactory.build( technology=t )
-		expected = u'{}'.format( bl.technology )
-		self.assertEqual( str(bl), expected )
 
 
 
