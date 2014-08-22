@@ -759,15 +759,15 @@ class Param_TechOutputSplit ( DM.Model ):
 
 
 
-class MinMaxParameter ( DM.Model ):
+class Param_MaxMinCapacity ( DM.Model ):
 	# The check that period is >= Period_0 and is a valid analysis vintage
 	# happens in clean()
 	period     = DM.ForeignKey( Vintage )
 	technology = DM.ForeignKey( Technology )
-	value      = DM.FloatField()
+	maximum    = DM.FloatField( null=True )
+	minimum    = DM.FloatField( null=True )
 
 	class Meta:
-		abstract = True
 		unique_together = ('period', 'technology')
 
 	def __str__ ( self ):
@@ -778,7 +778,7 @@ class MinMaxParameter ( DM.Model ):
 		return u'({}) {}, {}: {}'.format( analysis, period, tech, self.value )
 
 
-	def clean ( self ):
+	def clean_period_and_technology ( self ):
 		a = self.period.analysis
 		p = self.period.vintage
 		p0 = a.period_0
@@ -793,8 +793,67 @@ class MinMaxParameter ( DM.Model ):
 			raise ValidationError( msg )
 
 
-class Param_MinCapacity ( MinMaxParameter ): pass
-class Param_MaxCapacity ( MinMaxParameter ): pass
+	def clean_minimum ( self ):
+		mn = self.minimum
+		if not mn:
+			self.minimum = None
+			return
+
+		try:
+			mn = float(mn)
+		except ValueError as ve:
+			raise ValidationError('Minimum capacity is not a valid number.')
+
+		if mn < 0:
+			raise ValidationError('Minimum capacity cannot be negative.')
+
+		if mn < 1e-9:
+			msg = 'Minimum capacity must not be specified, or must be positive.'
+			raise ValidationError( msg )
+
+
+	def clean_maximum ( self ):
+		mx = self.maximum
+		if not mx:
+			self.maximum = None
+			return
+
+		try:
+			mx = float(mx)
+		except ValueError as ve:
+			raise ValidationError('Maximum capacity is not a valid number.')
+
+		if mx < 0:
+			raise ValidationError('Maximum capacity cannot be negative.')
+
+		# intentionally no mx == 0 check: maximum capacity /could/ be 0.
+
+
+	def clean_max_and_min ( self ):
+		mn, mx = self.minimum, self.maximum
+
+		if mn is None and mx is None:
+			msg = ('Pointless attempt to unset both minimum and maximum '
+			  'period-technology capacities.  Remove the entry instead.')
+			raise ValidationError( msg )
+
+		if mn is not None and mx is not None:
+			mn, mx = float(mn), float(mx)
+
+			if (mx < mn):
+				self.maximum, self.minimum = mn, mx
+
+
+	def clean ( self ):
+		self.clean_minimum()
+		self.clean_maximum()
+		self.clean_period()
+		self.clean_max_and_min()
+
+
+	def save ( self, *args, **kwargs ):
+		self.clean()
+		super( Param_MaxMinCapacity, self ).save( *args, **kwargs )
 
 
 

@@ -19,8 +19,6 @@ from models import (
   Param_DemandSpecificDistribution,
   Param_Efficiency,
   Param_EmissionActivity,
-  Param_MaxCapacity,
-  Param_MinCapacity,
   Param_SegFrac,
   Param_TechInputSplit,
   Param_TechOutputSplit,

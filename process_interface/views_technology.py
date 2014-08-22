@@ -17,6 +17,7 @@ from decorators.auth import require_login
 from models import (
   Analysis,
   Param_CapacityFactorTech,
+  Param_MaxMinCapacity,
   Param_TechInputSplit,
   Param_TechOutputSplit,
   Process,
@@ -45,6 +46,17 @@ def get_technology_info ( analysis, technologies ):
 			'sfId'  : capfac.timeslice.pk,
 			'id'    : capfac.pk,
 			'value' : capfac.value
+		})
+
+	MaxMinCapacities = defaultdict( list )
+	for maxmin in Param_MaxMinCapacity.objects.filter(
+	  technology__in=technologies ).order_by( 'period' ):
+		MaxMinCapacities[ maxmin.technology ].append({
+		  'aId'     : analysis.pk,
+		  'tId'     : maxmin.technology.pk,
+		  'period'  : maxmin.period.vintage,
+		  'maximum' : maxmin.maximum,
+		  'minimum' : maxmin.minimum
 		})
 
 	TechInputSplit = defaultdict( list )
@@ -83,6 +95,7 @@ def get_technology_info ( analysis, technologies ):
 	    'name'               : t.name,
 	    'storage'            : t.storage,
 	    'capacityfactors'    : CapacityFactors[ t ],
+	    'maxmincapacities'   : MaxMinCapacities[ t ],
 	    'inputsplits'        : TechInputSplit[ t ],
 	    'outputsplits'       : TechOutputSplit[ t ],
 	  }

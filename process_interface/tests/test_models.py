@@ -18,6 +18,7 @@ from process_interface.models import (
   AnalysisCommodity,
   Commodity,
   CommodityType,
+  Param_MaxMinCapacity,
   Param_SegFrac,
   Param_TechInputSplit,
   Param_TechOutputSplit,
@@ -112,6 +113,17 @@ class ExistingProcessFactory ( factory.django.DjangoModelFactory ):
 	costinvest       = None
 	discountrate     = None
 	existingcapacity = 31
+
+
+
+class Param_MaxMinCapacityFactory ( factory.django.DjangoModelFactory ):
+	class Meta:
+		model = Param_MaxMinCapacity
+
+	period = factory.SubFactory( VintageFactory )
+	technology = factory.SubFactory( TechnologyFactory )
+	maximum = 10
+	minimum = 1
 
 
 
@@ -1043,3 +1055,155 @@ class ModelParam_TechOutputSplitTest ( TestCase ):
 			Param_TechOutputSplit(
 			  technology=t, out_commodity=ac, fraction=random() +2 ).clean()
 
+
+
+class ModelParam_MaxMinCapacityTest ( TestCase ):
+
+	def test_period_must_be_in_horizon ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.period.vintage = 10
+		mmc.period.analysis.period_0 = 10000
+
+		with self.assertRaises( ValidationError ):
+			mmc.clean_period_and_technology()
+
+
+	def test_period_technology_analysis_must_be_equal ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+		mmc.technology.analysis = Analysis()
+
+		with self.assertRaises( ValidationError ):
+			mmc.clean_period_and_technology()
+
+
+	def test_minimum_capacity_can_be_null ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.minimum = None
+		try:
+			mmc.clean_minimum()
+		except:
+			self.fail('Specification of minimum capacity should not be required.')
+
+
+	def test_maximum_capacity_can_be_null ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.maximum = None
+		try:
+			mmc.clean_maximum()
+		except:
+			self.fail('Specification of maximum capacity should not be required.')
+
+
+	def test_minimum_capacity_empty_is_converted_to_null ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		for val in (0, [], {}, (), '', False):
+			mmc.minimum = val
+			mmc.clean_minimum()
+			self.assertEqual( mmc.minimum, None )
+
+
+	def test_maximum_capacity_empty_is_converted_to_null ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		for val in (0, [], {}, (), '', False):
+			mmc.maximum = val
+			mmc.clean_maximum()
+			self.assertEqual( mmc.maximum, None )
+
+
+	def test_minimum_capacity_requires_valid_number ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.minimum = 'asdf'
+		with self.assertRaises( ValidationError ):
+			mmc.clean_minimum()
+
+
+	def test_maximum_capacity_requires_valid_number ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.maximum = 'asdf'
+		with self.assertRaises( ValidationError ):
+			mmc.clean_maximum()
+
+
+	def test_minimum_capacity_cannot_be_negative ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.minimum = random() * randint(-1e9, -1)
+		with self.assertRaises( ValidationError ):
+			mmc.clean_minimum()
+
+
+	def test_maximum_capacity_cannot_be_negative ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.maximum = random() * randint(-1e9, -1)
+		with self.assertRaises( ValidationError ):
+			mmc.clean_maximum()
+
+
+	def test_minimum_must_not_be_almost_zero ( self ):
+		""" This will probably never occur, but the threshold is 1e-9.  Numbers
+		smaller than that snuck past the 'not 0' test, but are close enough to be
+		practically 0.  Thus, inform user of the error. """
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.minimum = 1e-10
+		with self.assertRaises( ValidationError ):
+			mmc.clean_minimum()
+
+
+	def test_maximum_can_be_zero ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.maximum = 0
+		try:
+			mmc.clean_maximum()
+		except:
+			self.fail('Maximum capacity should be allowed to be 0.')
+			raise
+
+
+	def test_minimum_can_be_positive ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.minimum = random() * randint(1, 1e9)
+		try:
+			mmc.clean_minimum()
+		except:
+			self.fail('A positive minimum capacity should be valid.')
+			raise
+
+
+	def test_maximum_can_be_positive ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.maximum = random() * randint(1, 1e9)
+		try:
+			mmc.clean_maximum()
+		except:
+			self.fail('A positive maximum capacity should be valid.')
+			raise
+
+
+	def test_maximum_minimum_capacity_cannot_both_be_null ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.maximum = mmc.minimum = None
+		with self.assertRaises( ValidationError ):
+			mmc.clean_max_and_min()
+
+
+	def test_clean_switches_min_and_max_capacity_if_max_smaller_than_min ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+
+		mmc.maximum = 10
+		mmc.minimum = 20
+		mmc.clean_max_and_min()
+		self.assertEqual( mmc.maximum, 20 )
+		self.assertEqual( mmc.minimum, 10 )
