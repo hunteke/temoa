@@ -41,11 +41,7 @@ jQuery.cachedScript = function( url, options ) {
 	return jQuery.ajax( options );
 };
 
-var activeAnalysisList   = null
-  , activeTechnologyList = null
-  , activeProcessList    = null
-  ;
-
+var activeTechnologyList = null;
 
 can.Control('AnalysisCommodityLists', {
 	defaults: {
@@ -1753,7 +1749,7 @@ function BeginTemoaDBApp ( ) {
 		}
 	});
 
-	activeAnalysisList = new Analyses('#analysis_info');
+	new Analyses('#analysis_info');
 
 	$(document).bind('keyup', 'shift+space', function () {
 		var url = Temoa.C.ROOT_URL + '/static/process_interface/js/QuickFunction.js';
