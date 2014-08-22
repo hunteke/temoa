@@ -3,10 +3,29 @@
 "use strict";  // ECMA v5 pragma, similar to Perl's functionality.
   // FYI: http://ejohn.org/blog/ecmascript-5-strict-mode-json-and-more/
 
-var COOKIE = 'TemoaDB_UISettings';
+// The Temoa namespace
+//
+// Assume the word 'Temoa' is sufficiently unique in development circles: if
+// it exists, then assume some other Temoa related library has already loaded
+// and use it as our namespace.  Meanwhile, if it doesn't exist, create it.
+var Temoa;
 
-var DEBUG = window.location.search.indexOf( 'debug=true' ) > -1;
-var ROOT_URL = window.location.pathname.replace( '/interact/', '' );
+if ( 'Temoa' in window ) {
+	Temoa = window.Temoa;
+} else {
+	window.Temoa = Temoa = {
+	  C:     {}, // constants
+	  vars:  {}, // variables
+	  fn:    {}, // functions
+	  eventHandler: {},  // also functions; but specifically for handling events
+	  canModel:   {},
+	  canControl: {},
+	};
+}
+
+Temoa.C.COOKIE = 'TemoaUISettings';
+Temoa.C.DEBUG = window.location.search.indexOf( 'debug=true' ) > -1;
+Temoa.C.ROOT_URL = window.location.pathname.replace( '/interact/', '' );
 
 var activeAnalysisList   = null
   , activeTechnologyList = null
@@ -29,7 +48,7 @@ function csrfSafeMethod ( method ) {
 
 
 function getCookie ( ) {
-	var $obj = $.cookie( COOKIE );
+	var $obj = $.cookie( Temoa.C.COOKIE );
 	if ( $obj ) {
 		return JSON.parse( atob( $obj ));
 	}
@@ -43,7 +62,7 @@ function getCookie ( ) {
 }
 
 function setCookie ( obj ) {
-	$.cookie( COOKIE, btoa( JSON.stringify( obj )));
+	$.cookie( Temoa.C.COOKIE, btoa( JSON.stringify( obj )));
 }
 
 
@@ -303,7 +322,7 @@ function update_timeslice ( mapping, oldKey ) {
 ///////////////////////////////////////////////////////////////////////////////
 
 can.Model('AnalysisCommodity', {
-	findOne: 'GET ' + ROOT_URL + '/analysis/{aId}/commodity/{id}',
+	findOne: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/commodity/{id}',
 	attributes: {
 		aId: 'int',
 		id:  'int',
@@ -313,38 +332,38 @@ can.Model('AnalysisCommodity', {
 
 AnalysisCommodity.extend('AnalysisCommodityDemand', {
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/delete/commodity/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/create/commodity/demand',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/update/commodity/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/create/commodity/demand',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/update/commodity/{id}',
 }, {
 });
 AnalysisCommodity.extend('AnalysisCommodityEmission', {
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/delete/commodity/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/create/commodity/emission',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/update/commodity/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/create/commodity/emission',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/update/commodity/{id}',
 }, {});
 AnalysisCommodity.extend('AnalysisCommodityPhysical', {
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/delete/commodity/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
 	},
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/create/commodity/physical',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/update/commodity/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/create/commodity/physical',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/update/commodity/{id}',
 }, {});
 
 can.Model('AnalysisCommodities', {
-	findAll: 'GET ' + ROOT_URL + '/analysis/{aId}/commodity/list',
+	findAll: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/commodity/list',
 	attributes: {
 		demand:   'AnalysisCommodityDemand.models',
 		emission: 'AnalysisCommodityEmission.models',
@@ -353,9 +372,9 @@ can.Model('AnalysisCommodities', {
 }, {});
 
 can.Model('AnalysisSegFrac', {
-	create:  'POST '   + ROOT_URL + '/analysis/{aId}/segfrac/create',
-	update:  'POST '   + ROOT_URL + '/analysis/{aId}/segfrac/update/{id}',
-	destroy: 'DELETE ' + ROOT_URL + '/analysis/{aId}/segfrac/remove/{id}',
+	create:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/segfrac/create',
+	update:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/segfrac/update/{id}',
+	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/analysis/{aId}/segfrac/remove/{id}',
 	attributes: {
 		aId: 'int',
 		id: 'int',
@@ -371,7 +390,7 @@ can.Model('AnalysisSegFrac', {
 		return '';
 	}),
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/segfrac/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -379,9 +398,9 @@ can.Model('AnalysisSegFrac', {
 });
 
 can.Model('AnalysisDemandDefaultDistribution', {
-	create:  'POST '   + ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/create/segfrac/{sfId}',
-	update:  'POST '   + ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/update/{id}',
-	destroy: 'DELETE ' + ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/remove/{id}',
+	create:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/create/segfrac/{sfId}',
+	update:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/update/{id}',
+	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/remove/{id}',
 	attributes: {
 		aId: 'int',
 		sfId: 'int',
@@ -391,7 +410,7 @@ can.Model('AnalysisDemandDefaultDistribution', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/demanddefaultdistribution/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -399,9 +418,9 @@ can.Model('AnalysisDemandDefaultDistribution', {
 });
 
 can.Model('AnalysisDemandSpecificDistribution', {
-	create:  'POST '   + ROOT_URL + '/analysis/{aId}/demandspecificdistribution/create/segfrac/{sfId}/demand/{dId}',
-	update:  'POST '   + ROOT_URL + '/analysis/{aId}/demandspecificdistribution/update/{id}',
-	destroy: 'DELETE ' + ROOT_URL + '/analysis/{aId}/demandspecificdistribution/remove/{id}',
+	create:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demandspecificdistribution/create/segfrac/{sfId}/demand/{dId}',
+	update:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demandspecificdistribution/update/{id}',
+	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/analysis/{aId}/demandspecificdistribution/remove/{id}',
 	attributes: {
 		aId: 'int',
 		dId: 'int',
@@ -412,7 +431,7 @@ can.Model('AnalysisDemandSpecificDistribution', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/demandspecificdistribution/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -420,9 +439,9 @@ can.Model('AnalysisDemandSpecificDistribution', {
 });
 
 can.Model('AnalysisDemand', {
-	create:  'POST '   + ROOT_URL + '/analysis/{aId}/demand/create/commodity/{cId}/period/{period}',
-	update:  'POST '   + ROOT_URL + '/analysis/{aId}/demand/update/{id}',
-	destroy: 'DELETE ' + ROOT_URL + '/analysis/{aId}/demand/remove/{id}',
+	create:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demand/create/commodity/{cId}/period/{period}',
+	update:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demand/update/{id}',
+	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/analysis/{aId}/demand/remove/{id}',
 	attributes: {
 		aId: 'int',
 		cId: 'int',
@@ -439,7 +458,7 @@ can.Model('AnalysisDemand', {
 		return '';
 	}),
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/demand/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -447,20 +466,20 @@ can.Model('AnalysisDemand', {
 });
 
 can.Model('Analysis', {
-	findAll: 'GET ' + ROOT_URL + '/analysis/list',
-	findOne: 'GET ' + ROOT_URL + '/analysis/view/{aId}',
+	findAll: 'GET ' + Temoa.C.ROOT_URL + '/analysis/list',
+	findOne: 'GET ' + Temoa.C.ROOT_URL + '/analysis/view/{aId}',
 	create:  function ( attrs ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/create';
 		return $.post( url, attrs, 'json' );
 	},
 	update:  function ( id, attrs ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/update';
 		url = url.replace( /{aId}/, attrs.id );
 		return $.post( url, attrs, 'json' );
 	},
-	destroy: 'DELETE ' + ROOT_URL + '/analysis/remove/{aId}',
+	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/analysis/remove/{aId}',
 	attributes: {
 		id: 'int',
 		username: 'string',
@@ -484,7 +503,7 @@ can.Model('Analysis', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/update';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -498,7 +517,7 @@ can.Model('Analysis', {
 		return name;
 	},
 	download_url: function ( ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{id}/download_as_dat';
 		url = replaceNamedArgs( url, this.attr() );
 		return url;
@@ -547,12 +566,12 @@ function clearAnalysisViews ( ) {
 
 can.Control('Analyses', {
 	defaults: {
-			view: ROOT_URL + '/client_template/analysis_list.ejs'
+			view: Temoa.C.ROOT_URL + '/client_template/analysis_list.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
 		var view = options.view;
-		if ( DEBUG )
+		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
 
 		var thisAnalyses = this;
@@ -628,12 +647,12 @@ can.Control('Analyses', {
 
 can.Control('AnalysisDetail', {
 	defaults: {
-			view: ROOT_URL + '/client_template/analysis_info.ejs'
+			view: Temoa.C.ROOT_URL + '/client_template/analysis_info.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
 		var view = options.view;
-		if ( DEBUG )
+		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
 
 		var analysis = options.analysis;
@@ -1045,12 +1064,12 @@ can.Control('AnalysisDetail', {
 
 can.Control('AnalysisCommodityLists', {
 	defaults: {
-			view: ROOT_URL + '/client_template/analysis_commodities.ejs'
+			view: Temoa.C.ROOT_URL + '/client_template/analysis_commodities.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
 		var view = options.view;
-		if ( DEBUG )
+		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
 
 		this.analysis = options.analysis;
@@ -1203,12 +1222,12 @@ can.Control('AnalysisCommodityLists', {
 
 can.Control('CommodityDetail', {
 	defaults: {
-			view: ROOT_URL + '/client_template/analysis_commodity_detail.ejs'
+			view: Temoa.C.ROOT_URL + '/client_template/analysis_commodity_detail.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
 		var view = options.view;
-		if ( DEBUG )
+		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
 
 		this.commodity = options.commodity;
@@ -1317,12 +1336,12 @@ can.Control('CommodityDetail', {
 
 can.Control('AnalysisParameters', {
 	defaults: {
-			view: ROOT_URL + '/client_template/analysis_parameters.ejs'
+			view: Temoa.C.ROOT_URL + '/client_template/analysis_parameters.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
 		var view = options.view;
-		if ( DEBUG )
+		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
 
 		this.analysis = this.options.analysis
@@ -1800,11 +1819,11 @@ can.Control('AnalysisParameters', {
 
 // ================== Technology MVC ==================
 can.Model('Technology', {
-	findAll: 'GET '    + ROOT_URL + '/technology/list',
-	findOne: 'GET '    + ROOT_URL + '/technology/info/{tId}',
-	create:  'POST '   + ROOT_URL + '/technology/create',
-	update:  'POST '   + ROOT_URL + '/technology/update/{id}',
-	destroy: 'DELETE ' + ROOT_URL + '/technology/remove/{id}',
+	findAll: 'GET '    + Temoa.C.ROOT_URL + '/technology/list',
+	findOne: 'GET '    + Temoa.C.ROOT_URL + '/technology/info/{tId}',
+	create:  'POST '   + Temoa.C.ROOT_URL + '/technology/create',
+	update:  'POST '   + Temoa.C.ROOT_URL + '/technology/update/{id}',
+	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/technology/remove/{id}',
 	attributes: {
 		id:   'int',
 		username: 'string',
@@ -1815,9 +1834,9 @@ can.Model('Technology', {
 }, {});
 
 can.Model('AnalysisTechnology', {
-	findAll: 'GET '  + ROOT_URL + '/analysis/{aId}/technology/list',
-	findOne: 'GET '  + ROOT_URL + '/analysis/{aId}/technology/info/{id}',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/update/{id}',
+	findAll: 'GET '  + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/list',
+	findOne: 'GET '  + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/info/{id}',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/update/{id}',
 	attributes: {
 		id:       'int',
 		aId:      'int',
@@ -1836,7 +1855,7 @@ can.Model('AnalysisTechnology', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/technology/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -1844,10 +1863,10 @@ can.Model('AnalysisTechnology', {
 });
 
 can.Model('AnalysisTechnologyCapacityFactor', {
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/CapacityFactor/create',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/CapacityFactor/update/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/CapacityFactor/create',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/CapacityFactor/update/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/technology/{tId}/CapacityFactor/remove/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
@@ -1862,7 +1881,7 @@ can.Model('AnalysisTechnologyCapacityFactor', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/technology/{tId}/CapacityFactor/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -1870,10 +1889,10 @@ can.Model('AnalysisTechnologyCapacityFactor', {
 });
 
 can.Model('AnalysisTechnologyInputSplit', {
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/InputSplit/create',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/InputSplit/update/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/InputSplit/create',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/InputSplit/update/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/technology/{tId}/InputSplit/remove/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
@@ -1887,7 +1906,7 @@ can.Model('AnalysisTechnologyInputSplit', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/technology/{tId}/InputSplit/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -1895,12 +1914,12 @@ can.Model('AnalysisTechnologyInputSplit', {
 });
 
 can.Model('AnalysisTechnologyOutputSplit', {
-	findAll: 'GET ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/list',
-	findOne: 'GET ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/{id}',
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/create',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/update/{id}',
+	findAll: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/list',
+	findOne: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/create',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/update/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/technology/{tId}/OutputSplit/remove/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
@@ -1914,7 +1933,7 @@ can.Model('AnalysisTechnologyOutputSplit', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/technology/{tId}/OutputSplit/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -1924,7 +1943,7 @@ can.Model('AnalysisTechnologyOutputSplit', {
 
 can.Control('TechnologyCreate', {
 	defaults: {
-			view: ROOT_URL + '/client_template/technology_create.ejs'
+			view: Temoa.C.ROOT_URL + '/client_template/technology_create.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
@@ -1994,12 +2013,12 @@ can.Control('TechnologyCreate', {
 
 can.Control('TechnologyList', {
 	defaults: {
-			view: ROOT_URL + '/client_template/technology_list.ejs'
+			view: Temoa.C.ROOT_URL + '/client_template/technology_list.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
 		var view = options.view;
-		if ( DEBUG )
+		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
 
 		Technology.findAll( {}, function ( technologies ) {
@@ -2081,12 +2100,12 @@ can.Control('TechnologyList', {
 
 can.Control('TechnologyDetail', {
 	defaults: {
-			view: ROOT_URL + '/client_template/technology_info.ejs'
+			view: Temoa.C.ROOT_URL + '/client_template/technology_info.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
 		var view = options.view;
-		if ( DEBUG )
+		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
 
 		var view_opts = {
@@ -2165,12 +2184,12 @@ can.Control('TechnologyDetail', {
 // ================== Process MVC ==================
 
 can.Model('Process', {
-	findAll: 'GET ' + ROOT_URL + '/analysis/{aId}/process/list/json',
-	findOne: 'GET ' + ROOT_URL + '/analysis/{aId}/process/info/{id}',
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/create',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/process/update/{id}',
+	findAll: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/list/json',
+	findOne: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/info/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/create',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/update/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/remove/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
@@ -2187,7 +2206,7 @@ can.Model('Process', {
 	},
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -2195,10 +2214,10 @@ can.Model('Process', {
 });
 
 can.Model('ProcessCapacityFactor', {
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/CapacityFactor/create',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/CapacityFactor/update/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/{pId}/CapacityFactor/create',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/{pId}/CapacityFactor/update/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/{pId}/CapacityFactor/remove/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
@@ -2213,7 +2232,7 @@ can.Model('ProcessCapacityFactor', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/{pId}/CapacityFactor/update/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -2221,10 +2240,10 @@ can.Model('ProcessCapacityFactor', {
 });
 
 can.Model('ProcessCostFixed', {
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/create/CostFixed',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/update/CostFixed/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/{pId}/create/CostFixed',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/{pId}/update/CostFixed/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/{pId}/remove/CostFixed/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
@@ -2238,7 +2257,7 @@ can.Model('ProcessCostFixed', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/{pId}/update/CostFixed/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -2246,10 +2265,10 @@ can.Model('ProcessCostFixed', {
 });
 
 can.Model('ProcessCostVariable', {
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/create/CostVariable',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/update/CostVariable/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/{pId}/create/CostVariable',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/{pId}/update/CostVariable/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/{pId}/remove/CostVariable/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
@@ -2263,7 +2282,7 @@ can.Model('ProcessCostVariable', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/{pId}/update/CostVariable/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -2271,10 +2290,10 @@ can.Model('ProcessCostVariable', {
 });
 
 can.Model('ProcessEfficiency', {
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/create/Efficiency',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/update/Efficiency/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/{pId}/create/Efficiency',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/{pId}/update/Efficiency/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/{pId}/remove/Efficiency/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
@@ -2289,7 +2308,7 @@ can.Model('ProcessEfficiency', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/{pId}/update/Efficiency/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -2297,10 +2316,10 @@ can.Model('ProcessEfficiency', {
 });
 
 can.Model('ProcessEmissionActivity', {
-	create:  'POST ' + ROOT_URL + '/analysis/{aId}/process/{pId}/create/EmissionActivity',
-	update:  'POST ' + ROOT_URL + '/analysis/{aId}/Efficiency/{eId}/update/EmissionActivity/{id}',
+	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/process/{pId}/create/EmissionActivity',
+	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/Efficiency/{eId}/update/EmissionActivity/{id}',
 	destroy: function ( id ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/Efficiency/{eId}/remove/EmissionActivity/{id}';
 		url = replaceNamedArgs( url, this.store[ id ].attr() );
 		return $.ajax({ type: 'DELETE', url: url });
@@ -2316,7 +2335,7 @@ can.Model('ProcessEmissionActivity', {
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
-		var url = ROOT_URL;
+		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/Efficiency/{eId}/update/EmissionActivity/{id}';
 		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
@@ -2327,12 +2346,12 @@ can.Model('ProcessEmissionActivity', {
 
 can.Control('ProcessList', {
 	defaults: {
-			view: ROOT_URL + '/client_template/process_list.ejs'
+			view: Temoa.C.ROOT_URL + '/client_template/process_list.ejs'
 		}
 	},{
 	init: function ( $el, options ) {
 		var view = options.view;
-		if ( DEBUG )
+		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
 
 		var control = this;
@@ -2690,12 +2709,12 @@ can.Control('ProcessList', {
 
 can.Control('ProcessDetail', {
 	defaults: {
-			view: ROOT_URL + '/client_template/process_detail.ejs',
+			view: Temoa.C.ROOT_URL + '/client_template/process_detail.ejs',
 		}
 	},{
 	init: function ( $el, options ) {  // ProcessDetail
 		var view = options.view;
-		if ( DEBUG )
+		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
 
 		var p = options.process;
@@ -3223,12 +3242,12 @@ can.Control('ProcessDetail', {
 
 can.Control('AnalysisTechnologyDetail', {
 	defaults: {
-			view: ROOT_URL + '/client_template/analysis_technology_detail.ejs',
+			view: Temoa.C.ROOT_URL + '/client_template/analysis_technology_detail.ejs',
 		}
 	},{
 	init: function ( $el, options ) {  // AnalysisTechnologyDetail
 		var view = options.view;
-		if ( DEBUG )
+		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
 
 		var t = options.technology;
@@ -3669,7 +3688,7 @@ function processCookie ( ) {
 		if ( uname ) { $('#unauthorized').addClass('hidden'); }
 		else         { $('#unauthorized').removeClass('hidden'); }
 	}
-	$.cookie( COOKIE, btoa( JSON.stringify( $cookie )));
+	$.cookie( Temoa.C.COOKIE, btoa( JSON.stringify( $cookie )));
 
 	// To "prove" the above point, remove the cookie sent by the server,
 	// although one cookie ($cookie) is as good as another ($ss).
@@ -3758,7 +3777,7 @@ function BeginTemoaDBApp ( ) {
 	activeAnalysisList = new Analyses('#analysis_info');
 
 	$(document).bind('keyup', 'shift+space', function () {
-		var url = ROOT_URL + '/static/process_interface/js/QuickFunction.js';
+		var url = Temoa.C.ROOT_URL + '/static/process_interface/js/QuickFunction.js';
 		url += '?_=' + new Date().getTime();
 		$.getScript( url )
 		.fail( function ( jqXHR, status, error ) {
@@ -3795,8 +3814,8 @@ function BeginTemoaDBApp ( ) {
 }
 
 $(document).ready( function () {
-	if ( DEBUG )
-		$.getScript( ROOT_URL + '/static/process_interface/js/ejs_fulljslint.js' );
+	if ( Temoa.C.DEBUG )
+		$.getScript( Temoa.C.ROOT_URL + '/static/process_interface/js/ejs_fulljslint.js' );
 
 	BeginTemoaDBApp();
 });
