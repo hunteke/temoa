@@ -3814,9 +3814,6 @@ function BeginTemoaDBApp ( ) {
 }
 
 $(document).ready( function () {
-	if ( Temoa.C.DEBUG )
-		$.getScript( Temoa.C.ROOT_URL + '/static/process_interface/js/ejs_fulljslint.js' );
-
 	BeginTemoaDBApp();
 });
 
