@@ -27,6 +27,20 @@ Temoa.C.COOKIE = 'TemoaUISettings';
 Temoa.C.DEBUG = window.location.search.indexOf( 'debug=true' ) > -1;
 Temoa.C.ROOT_URL = window.location.pathname.replace( '/interact/', '' );
 
+// cachedScript borrowed from the jQuery docs
+jQuery.cachedScript = function( url, options ) {
+	// Allow user to set any option except for dataType, cache, and url
+	options = $.extend( options || {}, {
+	  dataType: "script",
+	  cache: true,
+	  url: url
+	});
+
+	// Use $.ajax() since it is more flexible than $.getScript
+	// Return the jqXHR object so we can chain callbacks
+	return jQuery.ajax( options );
+};
+
 var activeAnalysisList   = null
   , activeTechnologyList = null
   , activeProcessList    = null
@@ -3299,22 +3313,53 @@ can.Control('AnalysisTechnologyDetail', {
 
 
 function BeginTemoaDBApp ( ) {
+
+	function load_file ( url ) {
+		// Handle failure as graceully as possible (if any), and tell user what
+		// files failed to load.  They won't be able to do anything about it
+		// directly, but it will be a debugging point for the TemoaUI devs.
+		return $.cachedScript( url ).fail( function ( jqxhr, settings, exception ) {
+			var msg = '<h1>Error loading required file: {file}</h1><p>Please accept our apologies.  There was an error loading a required file for TemoaUI.  Your browser says:</p><p style="background: #0ff;">{exception}</p><p>If a simple reload of this page does not correct this issue, please inform the Temoa Project.</p>';
+
+			if ( url.indexOf('/') > -1 )
+				url = url.slice(url.lastIndexOf('/') +1, url.length);
+
+			msg = msg.replace('{file}', url );
+			msg = msg.replace('{exception}', exception );
+			$('body').empty().html( msg );
+		});
+	}
+
+	var TemoaDBComponents = [
+	  'TemoaDB_functions',
+	];
+	var loaded = [];
+
+	// Load all necessary components (hardcoded in this function), and proceed
+	// only when finished.
+	for ( var i = 0; i < TemoaDBComponents.length; ++i ) {
+		var url = Temoa.C.base_js_url + TemoaDBComponents[ i ] + '.js';
+		loaded[i] = load_file( url );
+	}
+	$.when.apply( null, loaded ).then( function ( ) {
+		// All library elements have been loaded.  Begin the application!
+
 	// The below complete: function has neither been setup, nor had a chance to
 	// run at this point.  Given that some pieces of code rely on this cookie
 	// for UI state info, we manually process the cookie the first time.
-	processCookie();
+	Temoa.fn.processCookie();
 
 	console.log( 'Begin TemoaDB' );
-	showStatus( 'TemoaDB has begun.  Loading analyses ...', 'info' );
+	Temoa.fn.showStatus( 'TemoaDB has begun.  Loading analyses ...', 'info' );
 
 	$.ajaxSetup({
 		crossDomain: false, //there should be no need to talk elsewhere
 		complete: function( jqXHR, textStatus ) {
-			processCookie( jqXHR );
+			Temoa.fn.processCookie( jqXHR );
 			var status = jqXHR.status;
 		},
 		beforeSend: function ( xhr, settings ) {
-			if ( ! csrfSafeMethod( settings.type )) {
+			if ( ! Temoa.fn.csrfSafeMethod( settings.type )) {
 				xhr.setRequestHeader( 'X-CSRFToken', $.cookie('csrftoken') );
 			}
 		},
@@ -3345,7 +3390,7 @@ function BeginTemoaDBApp ( ) {
 				if ( 401 === status ) {
 					msg = "<p>401 (unauthorized) - You are not currently known to the server.  This likely means that your session 'timed out' by not communicating with the server in an appropriate amount of time, or logged out in another tab or window (making this tab/window 'stale').  You will need to login again.";
 				} else if ( 403 === status ) {
-					msg = "<p>403 (forbidden) - Though the server recognizes you by the username '" + getCookie().username + "', the server does not recognize your authority to perform this action.  If you believe the action you took should be allowed (and thereby believe this message to be in error), please consider informing the Temoa Project via a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless you can provide exact instructions to recreate the issue, we may not be able to fix it.</p>"
+					msg = "<p>403 (forbidden) - Though the server recognizes you by the username '" + Temoa.fn.getCookie().username + "', the server does not recognize your authority to perform this action.  If you believe the action you took should be allowed (and thereby believe this message to be in error), please consider informing the Temoa Project via a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless you can provide exact instructions to recreate the issue, we may not be able to fix it.</p>"
 				} else if ( 404 === status ) {
 					msg = "<p>404 (not found) - The requested item could not be found.  Perhaps you need to reload the view in question?  If not, and you have discovered a <strong>recreatable</strong> error, please consider informing the Temoa Project via a <a href='https://github.com/hunteke/temoa/issues'>bug report.</a>  Note that unless there is an exact mechanism to recreate the issue, we may not be able to fix it.</p>";
 				} else if ( 405 === status ) {
@@ -3370,7 +3415,7 @@ function BeginTemoaDBApp ( ) {
 					msg = '<p>' + status + " - There was a (currently undiagnosed) error with your browser's request to the server.  Consequently, the server has rejected the request.  If you can <strong>consistently</strong> recreate this error message from a fresh reload (e.g., close and reopen the browser), then the Temoa Project developers would appreciate a bug report with the specifics.  Please file the bug on our <a href='https://github.com/hunteke/temoa/issues'>GitHub Issues</a> page.<p><p>Message from server: " + errorThrown + '</p>';
 				}
 			}
-			showStatus( null, null, msg );
+			Temoa.fn.showStatus( null, null, msg );
 
 		}
 	});
@@ -3386,7 +3431,7 @@ function BeginTemoaDBApp ( ) {
 			console.log(  'Error jqXHR: ', jqXHR );
 			console.log(  'Error status message: ', status );
 			console.log(  'Error information: ', error );
-			showStatus('Error reading quick function.  Typo?');
+			Temoa.fn.showStatus('Error reading quick function.  Typo?');
 		});
 	});
 
@@ -3404,22 +3449,31 @@ function BeginTemoaDBApp ( ) {
 	});
 
 	$(document).bind('keydown', 'shift', function ( e ) {
-		hideStatus();
-		showStatus('Enabling remove buttons ...', 'info');
+		Temoa.fn.hideStatus();
+		Temoa.fn.showStatus('Enabling remove buttons ...', 'info');
 		setTimeout( function ( ) { $('.remove').removeAttr('disabled'); }, 1 );
 	});
 	$(document).bind('keyup', 'shift', function ( e ) {
-		hideStatus();
-		showStatus('Disabling remove buttons ...', 'info');
+		Temoa.fn.hideStatus();
+		Temoa.fn.showStatus('Disabling remove buttons ...', 'info');
 		setTimeout( function ( ) { $('.remove').attr('disabled', true); }, 1 );
 	});
+
+	}); // all libraries loaded
 }
 
 $(document).ready( function () {
+	var scripts = document.getElementsByTagName('script')
+	  , this_script_url = scripts[scripts.length -1].src
+	  , base_js_url = this_script_url.slice(0, this_script_url.lastIndexOf('/'));
+
+	// As a special exception, define the base URL so that other JS scripts may
+	// use it for loading.
+	Temoa.C.base_js_url = base_js_url + '/';
+
 	BeginTemoaDBApp();
 });
 
 })();
 
 console.log( 'TemoaLib loaded: ' + Date() );
-
