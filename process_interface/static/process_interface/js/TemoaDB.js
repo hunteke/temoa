@@ -1923,7 +1923,6 @@ function BeginTemoaDBApp ( ) {
 		}
 	});
 
-	new TechnologyList('#technology_list');
 	activeAnalysisList = new Analyses('#analysis_info');
 
 	$(document).bind('keyup', 'shift+space', function () {
