@@ -10,13 +10,13 @@
 
 // Function borrowed from the Django Online documentation on CSRF:
 // https://docs.djangoproject.com/en/dev/ref/contrib/csrf/
-function csrfSafeMethod ( method ) {
+Temoa.fn.csrfSafeMethod = function ( method ) {
 	// these HTTP methods do not require CSRF protection
 	return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
 }
 
 
-function getCookie ( ) {
+Temoa.fn.getCookie = function ( ) {
 	var $obj = $.cookie( Temoa.C.COOKIE );
 	if ( $obj ) {
 		return JSON.parse( atob( $obj ));
@@ -30,19 +30,19 @@ function getCookie ( ) {
 	return $obj;
 }
 
-function setCookie ( obj ) {
+Temoa.fn.setCookie = function ( obj ) {
 	$.cookie( Temoa.C.COOKIE, btoa( JSON.stringify( obj )));
 }
 
 
-function escapeHTML ( to_escape ) {
+Temoa.fn.escapeHTML = function ( to_escape ) {
 	var el = document.createElement('p');
 	el.appendChild( document.createTextNode( to_escape ));
 	return el.innerHTML;
-};
+}
 
 
-function replaceNamedArgs ( str, replacements ) {
+Temoa.fn.replaceNamedArgs = function ( str, replacements ) {
 	for ( var i in replacements ) {
 		var arg = '{' + i + '}';
 		if ( str.indexOf( arg ) > -1 ) {
@@ -53,20 +53,21 @@ function replaceNamedArgs ( str, replacements ) {
 }
 
 
-function disable ( list_of_inputs ) {
+Temoa.fn.disable = function ( list_of_inputs ) {
 	for ( var i = 0; i < list_of_inputs.length; ++i ) {
 		$(list_of_inputs[ i ]).attr('disabled', 'true');
 	}
 }
 
-function enable ( list_of_inputs ) {
+
+Temoa.fn.enable = function ( list_of_inputs ) {
 	for ( var i = 0; i < list_of_inputs.length; ++i ) {
 		$(list_of_inputs[ i ]).removeAttr('disabled');
 	}
 }
 
 
-function hideStatus ( nxt_func ) {
+Temoa.fn.hideStatus = function( nxt_func ) {
 	var $status = $('#status');
 	$status.empty();
 	$status.clearQueue().stop(true, true).fadeOut( 1 );
@@ -75,12 +76,12 @@ function hideStatus ( nxt_func ) {
 }
 
 
-function showStatus ( msg, cssclass, safe_msg ) {
+Temoa.fn.showStatus = function ( msg, cssclass, safe_msg ) {
 	var $st = $('<div>', {id: 'status'});
 	if ( ! cssclass ) { cssclass = 'error' }
 
 	if ( msg ) {
-		msg = escapeHTML( msg );
+		msg = Temoa.fn.escapeHTML( msg );
 	} else if ( safe_msg ) {
 		msg = safe_msg;
 	} else {
@@ -103,11 +104,11 @@ function showStatus ( msg, cssclass, safe_msg ) {
 	    $st.clearQueue().stop(true, true).show().fadeIn( 1 ).delay(delayLength);
 	    // flash twice
 	    $st.fadeOut().fadeIn().delay( 1000 ).fadeOut().fadeIn();
-	    $st.delay( 1000 ).fadeOut( 4000 ).queue( hideStatus );
+	    $st.delay( 1000 ).fadeOut( 4000 ).queue( Temoa.fn.hideStatus );
 	  },
 	  'info' : function ( ) {
 	    $st.clearQueue().stop(true, true).show().fadeIn( 1 ).delay( 1000 );
-	    $st.fadeOut( 2000 ).queue( hideStatus );
+	    $st.fadeOut( 2000 ).queue( Temoa.fn.hideStatus );
 	  }
 	};
 	actions[ cssclass ]();
@@ -115,7 +116,7 @@ function showStatus ( msg, cssclass, safe_msg ) {
 }
 
 
-function clearAnalysisViews ( ) {
+Temoa.fn.clearAnalysisViews = function ( ) {
 	$('#ProcessList .items').replaceWith(
 		$('<div>', {class: 'items'}) );
 	$('#AnalysisProcessDetails .items').replaceWith(
@@ -123,13 +124,13 @@ function clearAnalysisViews ( ) {
 }
 
 
-function isInteger ( x ) {
+Temoa.fn.isInteger = function ( x ) {
 	var _ceil = Math.ceil( Number(x) ), _floor = Math.floor( Number(x) );
 	return (_ceil === _floor) && (_ceil === parseInt(x));
 }
 
 
-function displayErrors ( $el, errors ) {
+Temoa.fn.displayErrors = function ( $el, errors ) {
 	// errors should be a dictionary-like object of arrays.
 	if ( 'General Error' in errors ) {
 		$el.find('p.error').html( errors['General Error'] );
@@ -151,7 +152,7 @@ function displayErrors ( $el, errors ) {
 }
 
 
-function save_to_server ( args ) {
+Temoa.fn.save_to_server = function ( args ) {
 	// Will save a list of [model, data] tuples to the server, weeding out
 	// information that has not changed.  Thus, this sends only the minimal
 	// amount of data.  For example, if a user changes just one field, it is
@@ -172,7 +173,7 @@ function save_to_server ( args ) {
 			deferred = model_copy.partialUpdate( model_copy.id, data );
 
 		deferred.then( function ( new_data, text_status, jqXHR ) {
-			enable( $inputs );
+			Temoa.fn.enable( $inputs );
 
 			// "atomically" update model
 			if ( model_copy.real_model.isNew() )
@@ -183,17 +184,17 @@ function save_to_server ( args ) {
 			model_copy.real_model = null; // don't inadvertently remove real thing
 			model_copy.attr({id: null}).destroy();
 
-			showStatus('Saved!', 'info' );
+			Temoa.fn.showStatus('Saved!', 'info' );
 		}, function ( jqXHR, text_status, description ) {
-			enable( $inputs );
+			Temoa.fn.enable( $inputs );
 			model_copy.real_model = null; // don't inadvertently remove real thing
 			model_copy.attr({id: null}).destroy();
 
 			if ( jqXHR && jqXHR.responseJSON ) {
-				displayErrors( $displayContainer, jqXHR.responseJSON );
+				Temoa.fn.displayErrors( $displayContainer, jqXHR.responseJSON );
 			} else {
 				console.log( 'Error received, but no JSON response: ', jqXHR );
-				showStatus( 'Unknown error while saving data: ' + description );
+				Temoa.fn.showStatus( 'Unknown error while saving data: ' + description );
 			}
 		});
 	}
@@ -226,8 +227,8 @@ function save_to_server ( args ) {
 	}
 
 	if ( ! to_save.length ) {
-		showStatus( 'No changes; no need to talk to server.', 'info' );
-		enable( args.inputs );
+		Temoa.fn.showStatus( 'No changes; no need to talk to server.', 'info' );
+		Temoa.fn.enable( args.inputs );
 		return;
 	}
 
@@ -245,10 +246,11 @@ function save_to_server ( args ) {
 	}
 }
 
-function numericSort ( lhs, rhs ) { return lhs - rhs; }
+
+Temoa.fn.numericSort = function ( lhs, rhs ) { return lhs - rhs; }
 
 
-function processCookie ( ) {
+Temoa.fn.processCookie = function ( ) {
 	// These settings are set by the server.  Changing them -- maliciously or
 	// otherwise -- will only affect the client experience.  From a security
 	// perspective, they have no bearing on the choices the server makes.
@@ -258,7 +260,7 @@ function processCookie ( ) {
 
 	var $ss = JSON.parse( atob( $.cookie( 'ServerState' )));
 
-	var $cookie = getCookie();
+	var $cookie = Temoa.fn.getCookie();
 	if ( 'analysis_id'    in $ss ) {
 		$cookie.analysis_id = $ss.analysis_id; }
 	if ( 'process_ids'    in $ss ) {
@@ -280,14 +282,10 @@ function processCookie ( ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                        End miscellaneous functions                        //
-///////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////
 //                            EJS helper functions                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-can.EJS.Helpers.prototype.escapeHTML = escapeHTML;
+can.EJS.Helpers.prototype.escapeHTML = Temoa.fn.escapeHTML;
 
 can.EJS.Helpers.prototype.apostrophe_escape = function ( s ) {
 	return s.replace(/'/g, "&apos;");
@@ -301,7 +299,7 @@ can.EJS.Helpers.prototype.quote_escape = function ( s ) {
 //                               Event handlers                              //
 ///////////////////////////////////////////////////////////////////////////////
 
-function update_timeslice ( mapping, oldKey ) {
+Temoa.eventHandler.update_timeslice = function ( mapping, oldKey ) {
 	// Because the key is a timeslice name, and it is hardcoded by
 	// the server, we need to update it if it changes.  Everything
 	// would right itself if the user reloaded the page, but that
@@ -337,7 +335,7 @@ can.Model.prototype.clone = function ( ) {
 //                                  Graphviz                                 //
 ///////////////////////////////////////////////////////////////////////////////
 
-function drawUnsolvedSystemDigraph ( ) {
+Temoa.fn.drawUnsolvedSystemDigraph = function ( ) {
 	var processes = $('#ProcessList').data('processes');
 
 	// Unfortunately, doing a straight jQuery tag creation ('$("<svg>")') doesn't
