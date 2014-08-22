@@ -58,9 +58,9 @@ can.Control('Analyses', {
 			view += '?_=' + new Date().getTime();
 
 		var thisAnalyses = this;
-		clearAnalysisViews()
+		Temoa.fn.clearAnalysisViews()
 		Analysis.findAll({}, function ( analyses ) {
-			var username = getCookie().username || null;
+			var username = Temoa.fn.getCookie().username || null;
 			if ( username )
 				analyses.unshift( new Analysis() );
 
@@ -72,12 +72,12 @@ can.Control('Analyses', {
 			$el.html( can.view( view, view_opts ));
 			$el.removeClass('hidden');
 
-			var $cookie = getCookie();
+			var $cookie = Temoa.fn.getCookie();
 			if ( $cookie.analysis_id ) {
 				$('#analysis_selection').val( $cookie.analysis_id ).change();
 			}
 
-			showStatus('Analyses loaded.', 'info');
+			Temoa.fn.showStatus('Analyses loaded.', 'info');
 		}, function ( exception, data, status, xhr ) {
 			if ( 'success' === status ) {
 				console.log( exception );
@@ -85,21 +85,21 @@ can.Control('Analyses', {
 				msg += 'message after a page reload, please inform the ';
 				msg += 'TemoaProject exactly how.  Library message: "';
 				msg += exception.toString() + '"';
-				showStatus( msg );
+				Temoa.fn.showStatus( msg );
 			} else {
 				console.log( exception, data, status, xhr );
-				showStatus( 'Unknown error retrieving analyses data.' );
+				Temoa.fn.showStatus( 'Unknown error retrieving analyses data.' );
 			}
 		});
 	},
 	'select change': function ( $el, event ) {
-		clearAnalysisViews();
+		Temoa.fn.clearAnalysisViews();
 		var val = $el.val();
 		var analysis;
 
-		var $cookie = getCookie();
+		var $cookie = Temoa.fn.getCookie();
 		$cookie.analysis_id = val;
-		setCookie( $cookie );
+		Temoa.fn.setCookie( $cookie );
 
 		if ( ! val ) {
 			$('#analysis_detail').fadeOut( function ( ) { $(this).empty(); });
@@ -157,7 +157,7 @@ can.Control('AnalysisDetail', {
 			analysis.attr('all_vintages', new can.List() );
 
 		var view_opts = {
-			username: getCookie().username || null,
+			username: Temoa.fn.getCookie().username || null,
 			analysis: analysis,
 		};
 
@@ -186,7 +186,7 @@ can.Control('AnalysisDetail', {
 					var av_list = analysis.all_vintages;
 					for ( var i = 0; i < new_vint_list.length; ++i )
 						new_vint_list[ i ] = +new_vint_list[ i ];
-					new_vint_list.sort( numericSort );
+					new_vint_list.sort( Temoa.fn.numericSort );
 
 					fp_list.splice( 0 ); // remove all current elements
 					av_list.splice( 0 ); // remove all current elements
@@ -378,7 +378,7 @@ can.Control('AnalysisDetail', {
 			}
 		).fail( function ( error ) {
 			console.log( error );
-			showStatus( null, null, "Unknown error retrieving the Analysis' commodity list.  If you can recreate this error after <em>reloading</em> the page, please inform the Temoa Project developers.");
+			Temoa.fn.showStatus( null, null, "Unknown error retrieving the Analysis' commodity list.  If you can recreate this error after <em>reloading</em> the page, please inform the Temoa Project developers.");
 		});
 
 		$el.find('#ShowHideCommodities').click( function ( ev ) {
@@ -414,7 +414,7 @@ can.Control('AnalysisDetail', {
 			if ( $div.is(':hidden') ) {
 				// currently closed, but user has requested it to be opened;
 				// however, must draw, /after/ div is visible
-				setTimeout( drawUnsolvedSystemDigraph, 1);
+				setTimeout( Temoa.fn.drawUnsolvedSystemDigraph, 1);
 			}
 			$div.toggle( 'slide', {direction: 'left'} );
 		});
@@ -432,7 +432,7 @@ can.Control('AnalysisDetail', {
 		var inputs = $form.find(':input');
 		var data = can.deparam( $form.serialize() );
 
-		disable( inputs );
+		Temoa.fn.disable( inputs );
 		$form.find('.error').empty();  // remove any previous errors
 
 		// Vintages should be a comma separated list of vintages, which we test
@@ -463,7 +463,7 @@ can.Control('AnalysisDetail', {
 			var msg = 'Please provide at least a minimal description.';
 			errors['description'] = [msg];
 		}
-		if ( ! data.period_0 || ! isInteger( data.period_0 )) {
+		if ( ! data.period_0 || ! Temoa.fn.isInteger( data.period_0 )) {
 			var msg = 'Please specify an integer for Period 0.';
 			errors['period_0'] = [msg];
 		} else {
@@ -492,20 +492,20 @@ can.Control('AnalysisDetail', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			enable( inputs );
-			displayErrors( $form, errors );
+			Temoa.fn.enable( inputs );
+			Temoa.fn.displayErrors( $form, errors );
 			return;
 		}
 
 		var analysis = $el.closest('.analysis').data('analysis');
 		var isNew = analysis.isNew();
 		analysis.attr( data ).save( function ( model ) {
-			enable( inputs );
-			showStatus( 'Successfully saved.', 'info' );
+			Temoa.fn.enable( inputs );
+			Temoa.fn.showStatus( 'Successfully saved.', 'info' );
 		}, function ( xhr ) {
-			enable( inputs );
+			Temoa.fn.enable( inputs );
 			if ( xhr && xhr.responseJSON ) {
-				displayErrors( $form, xhr.responseJSON );
+				Temoa.fn.displayErrors( $form, xhr.responseJSON );
 			}
 		});
 	},
@@ -528,7 +528,7 @@ can.Control('AnalysisDetail', {
 		$item.find('[name="global_discount_rate"]').val( analysis.global_discount_rate );
 		$item.find('[name="vintages"]').val( analysis.vintages );
 		$item.find('[name="period_0"]').val( analysis.period_0 );
-		showStatus('Alteration cancelled', 'info');
+		Temoa.fn.showStatus('Alteration cancelled', 'info');
 	},
 	'input keyup': function ( $el, ev ) {
 		if ( 13 !== ev.keyCode )
@@ -560,14 +560,14 @@ can.Control('AnalysisCommodityLists', {
 
 		$el.html( can.view( view, {
 			analysis: analysis,
-			username: getCookie().username || null,
+			username: Temoa.fn.getCookie().username || null,
 		}));
 
 		$('#AnalysisCommoditiesCloseButton').click( function ( ) {
 			$('#ShowHideCommodities').click();
 		});
 
-		var username = getCookie().username;
+		var username = Temoa.fn.getCookie().username;
 		if ( ! (username && username === analysis.username ) )
 			return;
 
@@ -587,7 +587,7 @@ can.Control('AnalysisCommodityLists', {
 			if ( ! (coms.length > 0) ) {
 				return;
 			}
-			var username = getCookie().username || null;
+			var username = Temoa.fn.getCookie().username || null;
 
 			function createCommodityDetail ( toCreate ) {
 				new CommodityDetail( $info, {
@@ -639,32 +639,32 @@ can.Control('AnalysisCommodityLists', {
 		var $inputs = $form.find(':input');
 		var data   = can.deparam( $form.serialize() );
 
-		disable( $inputs );
+		Temoa.fn.disable( $inputs );
 		$form.find('.error').empty();  // remove any previous errors
 
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			enable( $inputs );
-			displayErrors( $form, errors );
+			Temoa.fn.enable( $inputs );
+			Temoa.fn.displayErrors( $form, errors );
 			return;
 		}
 
 		this.analysis.attr( data ).save(
 			function ( model ) {
-				enable( $inputs );
-				showStatus( 'Analysis successfully created.', 'info' );
+				Temoa.fn.enable( $inputs );
+				Temoa.fn.showStatus( 'Analysis successfully created.', 'info' );
 		}, function ( xhr ) {
-				enable( $inputs );
+				Temoa.fn.enable( $inputs );
 				if ( xhr && xhr.responseJSON ) {
-					displayErrors( $form, xhr.responseJSON );
+					Temoa.fn.displayErrors( $form, xhr.responseJSON );
 				}
 		});
 	},
 	createNewCommodity: function ( CommodityObj, commodityOpts ) {
 		var $newDiv = $('<div>', {id: 'commodity_detail'} );
 		new CommodityDetail( $newDiv, {
-			username: getCookie().username || null,
+			username: Temoa.fn.getCookie().username || null,
 			analysis: this.analysis,
 			commodity: new CommodityObj( commodityOpts )
 		});
@@ -729,7 +729,7 @@ can.Control('CommodityDetail', {
 		var inputs = $form.find(':input');
 		var data   = can.deparam( $form.serialize() );
 
-		disable( inputs );
+		Temoa.fn.disable( inputs );
 		$form.find('.error').empty();  // remove any previous errors
 
 		data.name = $.trim( data.name );
@@ -749,8 +749,8 @@ can.Control('CommodityDetail', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			enable( inputs );
-			displayErrors( $form, errors );
+			Temoa.fn.enable( inputs );
+			Temoa.fn.displayErrors( $form, errors );
 			return;
 		}
 
@@ -765,19 +765,19 @@ can.Control('CommodityDetail', {
 
 		saver.attr( data ).save(
 			function ( updated_model ) {
-				enable( inputs );
+				Temoa.fn.enable( inputs );
 				model.attr( updated_model.attr() );  // "atomically" update
 
 				saver.real_model = null;
 				saver.attr( {id: null} ).destroy();  // don't delete in DB
 
-				showStatus('Saved!', 'info' );
+				Temoa.fn.showStatus('Saved!', 'info' );
 			}, function ( xhr ) {
-				enable( inputs );
+				Temoa.fn.enable( inputs );
 				saver.attr({id: null}).destroy();  // don't delete in DB
 
 				if ( xhr && xhr.responseJSON ) {
-					displayErrors( $form, xhr.responseJSON );
+					Temoa.fn.displayErrors( $form, xhr.responseJSON );
 				}
 		});
 	},
@@ -830,7 +830,7 @@ can.Control('AnalysisParameters', {
 		this.analysis = this.options.analysis
 		$el.html( can.view( view, {
 			analysis: this.analysis,
-			username: getCookie().username || null,
+			username: Temoa.fn.getCookie().username || null,
 		}));
 		$('#AnalysisParametersCloseButton').click( function ( ) {
 			$('#ShowHideAnalysisParameters').click();
@@ -854,7 +854,7 @@ can.Control('AnalysisParameters', {
 				var msg = 'All demands are already visible.';
 				if ( ! dsd_list[ 0 ].attr('name') )
 					msg = 'Please save new demand before adding another.';
-				showStatus( msg, 'info' );
+				Temoa.fn.showStatus( msg, 'info' );
 
 				return;
 			} else if ( ! dsd_list[ 0 ].attr('name') ) {
@@ -883,7 +883,7 @@ can.Control('AnalysisParameters', {
 		var ddData  = can.deparam( $ddForm.serialize() );
 
 		$sfTable.find('.error').empty(); // remove any previous attempt's errors
-		disable( $inputs );
+		Temoa.fn.disable( $inputs );
 
 		for ( var name in sfData ) {
 			sfData[ name ] = $.trim( sfData[ name ]);
@@ -928,8 +928,8 @@ can.Control('AnalysisParameters', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			enable( $inputs );
-			displayErrors( $sfTable, errors );
+			Temoa.fn.enable( $inputs );
+			Temoa.fn.displayErrors( $sfTable, errors );
 			return;
 		}
 
@@ -957,7 +957,7 @@ can.Control('AnalysisParameters', {
 			}
 		}
 
-		save_to_server({ to_save: to_save, inputs: $inputs, display: $sfTable });
+		Temoa.fn.save_to_server({ to_save: to_save, inputs: $inputs, display: $sfTable });
 	},
 	saveDemands: function ( $el ) {  // AnalysisParameters
 		var aId = this.analysis.id;
@@ -972,7 +972,7 @@ can.Control('AnalysisParameters', {
 		var data = can.deparam( $form.serialize() );
 
 		$demTable.find('.error').empty(); // remove any previous attempt's errors
-		disable( $inputs );
+		Temoa.fn.disable( $inputs );
 
 		for ( var name in data ) {
 			data[ name ] = $.trim( data[ name ]);
@@ -990,8 +990,8 @@ can.Control('AnalysisParameters', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			enable( $inputs );
-			displayErrors( $demTable, errors );
+			Temoa.fn.enable( $inputs );
+			Temoa.fn.displayErrors( $demTable, errors );
 			return;
 		}
 
@@ -1031,16 +1031,16 @@ can.Control('AnalysisParameters', {
 				delete this._el;
 
 				if ( jqXHR && jqXHR.responseJSON ) {
-					displayErrors( $dsdTable, jqXHR.responseJSON );
+					Temoa.fn.displayErrors( $dsdTable, jqXHR.responseJSON );
 				} else {
 					console.log( 'Error received, but no JSON response: ', jqXHR );
-					showStatus( 'Unknown error while removing demand: '
+					Temoa.fn.showStatus( 'Unknown error while removing demand: '
 					  + description );
 				}
 			});
 		}
 
-		save_to_server({ to_save: to_save, inputs: $inputs, display: $demTable });
+		Temoa.fn.save_to_server({ to_save: to_save, inputs: $inputs, display: $demTable });
 	},
 	saveDemandSpecificDistributions: function ( $el ) {  // AnalysisParameters
 		var aId = this.analysis.id;
@@ -1055,7 +1055,7 @@ can.Control('AnalysisParameters', {
 		var data = can.deparam( $form.serialize() );
 
 		$dsdTable.find('.error').empty(); // remove any previous attempt's errors
-		disable( $inputs );
+		Temoa.fn.disable( $inputs );
 
 		if ( 'NewDSD_name' in data ) {
 			var name = data.NewDSD_name;
@@ -1088,8 +1088,8 @@ can.Control('AnalysisParameters', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			enable( $inputs );
-			displayErrors( $dsdTable, errors );
+			Temoa.fn.enable( $inputs );
+			Temoa.fn.displayErrors( $dsdTable, errors );
 			return;
 		}
 
@@ -1158,16 +1158,16 @@ can.Control('AnalysisParameters', {
 				delete this._el;
 
 				if ( jqXHR && jqXHR.responseJSON ) {
-					displayErrors( $dsdTable, jqXHR.responseJSON );
+					Temoa.fn.displayErrors( $dsdTable, jqXHR.responseJSON );
 				} else {
 					console.log( 'Error received, but no JSON response: ', jqXHR );
-					showStatus( 'Unknown error while removing distribution: '
+					Temoa.fn.showStatus( 'Unknown error while removing distribution: '
 					  + description );
 				}
 			});
 		}
 
-		save_to_server({ to_save: to_save, inputs: $inputs, display: $dsdTable });
+		Temoa.fn.save_to_server({ to_save: to_save, inputs: $inputs, display: $dsdTable });
 	},
 	'[name="SegFracUpdate"] click': function ( $el, ev ) {
 		this.saveSegFracs( $el );
@@ -1220,7 +1220,7 @@ can.Control('AnalysisParameters', {
 		}
 
 		$item.find('.error').empty();
-		showStatus('Alteration cancelled', 'info');
+		Temoa.fn.showStatus('Alteration cancelled', 'info');
 	},
 	'[name="DemandsCancel"] click': function ( $el, ev ) {
 		var $item = $el.closest('.demands');
@@ -1233,7 +1233,7 @@ can.Control('AnalysisParameters', {
 		}
 
 		$item.find('.error').empty();
-		showStatus('Alteration cancelled', 'info');
+		Temoa.fn.showStatus('Alteration cancelled', 'info');
 	},
 	'[name="DemandSpecificDistributionCancel"] click': function ( $el, ev ) {
 		var $item = $el.closest('.demandspecificdistributions');
@@ -1257,7 +1257,7 @@ can.Control('AnalysisParameters', {
 		}
 
 		$item.find('.error').empty();
-		showStatus('Alteration cancelled', 'info');
+		Temoa.fn.showStatus('Alteration cancelled', 'info');
 	},
 	'input keyup': function ( $el, ev ) {
 		if ( ! $el.attr('form') )
@@ -1332,7 +1332,7 @@ can.Control('TechnologyCreate', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking, for speed.  The server will double check,
 			// of course.
-			displayErrors( $form, errors );
+			Temoa.fn.displayErrors( $form, errors );
 			return;
 		}
 
@@ -1341,7 +1341,7 @@ can.Control('TechnologyCreate', {
 			control.hide();
 		}, function ( xhr ) {
 			if ( xhr && xhr.responseJSON ) {
-				displayErrors( $form, xhr.responseJSON );
+				Temoa.fn.displayErrors( $form, xhr.responseJSON );
 			}
 		});
 	},
@@ -1388,7 +1388,7 @@ can.Control('TechnologyList', {
 
 			$el.empty()
 			var view_opts = {
-				username:  getCookie().username || null,
+				username:  Temoa.fn.getCookie().username || null,
 				technologies: technologies
 			};
 
@@ -1416,7 +1416,7 @@ can.Control('TechnologyList', {
 					return;
 				}
 
-				var $cookie = getCookie();
+				var $cookie = Temoa.fn.getCookie();
 				var username = $cookie.username || null;
 
 				function createTechnologyDetail ( toCreate ) {
@@ -1501,17 +1501,17 @@ can.Control('TechnologyDetail', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			displayErrors( $form, errors );
+			Temoa.fn.displayErrors( $form, errors );
 			return;
 		}
 
 		var control = this;
 		var tech = $el.closest('.technology').data('technology');
 		tech.attr( data ).save( function ( model ) {
-			showStatus( 'Successfully updated.', 'info' );
+			Temoa.fn.showStatus( 'Successfully updated.', 'info' );
 		}, function ( xhr ) {
 			if ( xhr && xhr.responseJSON ) {
-				displayErrors( $form, xhr.responseJSON );
+				Temoa.fn.displayErrors( $form, xhr.responseJSON );
 			}
 		});
 	},
@@ -1530,7 +1530,7 @@ can.Control('TechnologyDetail', {
 		var tech = $item.data('technology');
 		$item.find('[name="description"]').val( tech.description );
 		$item.find('[name="capacity_to_activity"]').val( tech.capacity_to_activity );
-		showStatus('Alteration cancelled', 'info');
+		Temoa.fn.showStatus('Alteration cancelled', 'info');
 	},
 	'input keyup': function ( $el, ev ) {
 		if ( $(ev.target).closest('.technology').get(0) !== this.getElement() ) {
@@ -1614,7 +1614,7 @@ can.Control('ProcessList', {
 			}
 
 			var view_opts = {
-				username:  getCookie().username || null,
+				username:  Temoa.fn.getCookie().username || null,
 				analysis:  analysis,
 				processes: processes
 			};
@@ -1682,10 +1682,10 @@ can.Control('ProcessList', {
 					a_techs[ p.tId ] = p.technology;
 				}
 
-				ids.sort( numericSort );
-				var $cookie = getCookie();
+				ids.sort( Temoa.fn.numericSort );
+				var $cookie = Temoa.fn.getCookie();
 				$cookie.process_ids = ids;
-				setCookie( $cookie );
+				Temoa.fn.setCookie( $cookie );
 
 				var $pcItems = $('#AnalysisProcessDetails .items');
 				var $tcItems = $('#AnalysisTechnologyDetails .items');
@@ -1706,7 +1706,7 @@ can.Control('ProcessList', {
 				} else { // something to display
 					var view_opts = {
 						analysis: analysis,
-						username: getCookie().username || null
+						username: Temoa.fn.getCookie().username || null
 					}
 
 					// remove any child divs so browser can GC.
@@ -1731,7 +1731,7 @@ can.Control('ProcessList', {
 
 			// Pre-select what was selected in this session.
 			// (Handy if the page needs to reload.)
-			var $cookie = getCookie();
+			var $cookie = Temoa.fn.getCookie();
 			if ( $cookie.process_ids ) {
 				var ids = $cookie.process_ids;
 
@@ -1744,7 +1744,7 @@ can.Control('ProcessList', {
 
 		}, function ( error ) {
 			console.log( error );
-			showStatus( 'An unknown error occurred while collecting analysis ' +
+			Temoa.fn.showStatus( 'An unknown error occurred while collecting analysis ' +
 			  'processes and technologies.  If after a fresh page reload (e.g. ' +
 			  'close and reopen your browser) this message still occurs, ' +
 			  'please let the Temoa Project know about it.  Debugging ' +
@@ -1758,7 +1758,7 @@ can.Control('ProcessList', {
 		}
 		var $div = $('<div>', {id: 'NewProcess'});
 		new ProcessDetail( $div, {
-			username: getCookie().username || null,
+			username: Temoa.fn.getCookie().username || null,
 			process: new Process({aId: this.analysis.id}),
 			analysis: this.analysis
 		});
@@ -1808,7 +1808,7 @@ can.Control('ProcessList', {
 			}
 			var $div = $('<div>', {id: 'ProcessDetail_' + obj.id});
 			new ProcessDetail( $div, {
-				username: getCookie().username || null,
+				username: Temoa.fn.getCookie().username || null,
 				process: new_process,
 				analysis: control.analysis
 			});
@@ -1839,7 +1839,7 @@ can.Control('ProcessList', {
 			}
 
 			new ProcessDetail( $div, {
-				username: getCookie().username || null,
+				username: Temoa.fn.getCookie().username || null,
 				process: p,
 				analysis: control.analysis
 			});
@@ -1871,7 +1871,7 @@ can.Control('ProcessList', {
 			var p    = $( sel ).find('.process').data('process');
 
 			new ProcessDetail( $div, {
-				username: getCookie().username || null,
+				username: Temoa.fn.getCookie().username || null,
 				process: p,
 				analysis: control.analysis
 			});
@@ -1896,7 +1896,7 @@ can.Control('ProcessList', {
 			var p    = $( sel ).find('.process').data('process');
 
 			new ProcessDetail( $div, {
-				username: getCookie().username || null,
+				username: Temoa.fn.getCookie().username || null,
 				process: p,
 				analysis: control.analysis
 			});
@@ -2001,7 +2001,7 @@ can.Control('ProcessDetail', {
 		//    connection, but "just in case" there's a hangup.  Don't forget to
 		//    enable( $inputs ) once any computation is complete (e.g. an error
 		//    occurs, or we've successfully saved the data).
-		disable( $inputs );
+		Temoa.fn.disable( $inputs );
 
 		// 3. First check the data and queue each can.Model for saving
 		if ( process.isNew() ) {
@@ -2194,8 +2194,8 @@ can.Control('ProcessDetail', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			enable( $inputs );
-			displayErrors( $pTable, errors );
+			Temoa.fn.enable( $inputs );
+			Temoa.fn.displayErrors( $pTable, errors );
 			return;
 		}
 
@@ -2307,7 +2307,7 @@ can.Control('ProcessDetail', {
 			}
 		}
 
-		save_to_server({ to_save: to_save, inputs: $inputs, display: $pTable });
+		Temoa.fn.save_to_server({ to_save: to_save, inputs: $inputs, display: $pTable });
 
 	},
 	'[name="ProcessCancel"] click': function ( $el, ev ) {  // ProcessDetail
@@ -2520,7 +2520,7 @@ can.Control('AnalysisTechnologyDetail', {
 		//    connection, but "just in case" there's a hangup.  Don't forget to
 		//    enable( $inputs ) once any computation is complete (e.g. an error
 		//    occurs, or we've successfully saved the data).
-		disable( $inputs );
+		Temoa.fn.disable( $inputs );
 
 		// 3. First check the data and queue each can.Model for saving
 		if ( tech.isNew() ) {
@@ -2644,8 +2644,8 @@ can.Control('AnalysisTechnologyDetail', {
 		if ( Object.keys( errors ).length > 0 ) {
 			// client-side checking for user convenience.  The server will check
 			// for itself, of course.
-			enable( $inputs );
-			displayErrors( $tTable, errors );
+			Temoa.fn.enable( $inputs );
+			Temoa.fn.displayErrors( $tTable, errors );
 			return;
 		}
 
@@ -2700,7 +2700,7 @@ can.Control('AnalysisTechnologyDetail', {
 			}
 		}
 
-		save_to_server({ to_save: to_save, inputs: $inputs, display: $tTable});
+		Temoa.fn.save_to_server({ to_save: to_save, inputs: $inputs, display: $tTable});
 	},
 	'[name="TechnologyCancel"] click': function ( $el, ev ) {  // AnalysisTechnologyDetail
 		var $block = $el.closest('.technology');
