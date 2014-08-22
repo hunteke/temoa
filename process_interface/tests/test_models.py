@@ -364,7 +364,7 @@ class ModelTechnologyTest ( TestCase ):
 			t.clean_life()
 
 
-	def test_lifetime_must_not_negative ( self ):
+	def test_lifetime_cannot_be_negative ( self ):
 		t = TechnologyFactory.build()
 
 		t.lifetime = random() * randint(-1e9, -1)
@@ -421,7 +421,7 @@ class ModelTechnologyTest ( TestCase ):
 			t.clean_loanlife()
 
 
-	def test_loanlife_must_not_negative ( self ):
+	def test_loanlife_cannot_be_negative ( self ):
 		t = TechnologyFactory.build()
 
 		t.loanlife = random() * randint(-1e9, -1)
