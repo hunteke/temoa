@@ -39,13 +39,13 @@ def get_technology_info ( analysis, technologies ):
 
 	CapacityFactors = defaultdict( list )
 	for capfac in Param_CapacityFactorTech.objects.filter(
-	  timeslice__analysis=analysis, technology__in=technologies ):
+	  technology__in=technologies ):
 		CapacityFactors[ capfac.technology ].append({
-			'aId'   : analysis.pk,
-			'tId'   : capfac.technology.pk,
-			'sfId'  : capfac.timeslice.pk,
-			'id'    : capfac.pk,
-			'value' : capfac.value
+		  'aId'   : analysis.pk,
+		  'tId'   : capfac.technology.pk,
+		  'sfId'  : capfac.timeslice.pk,
+		  'id'    : capfac.pk,
+		  'value' : capfac.value
 		})
 
 	MaxMinCapacities = defaultdict( list )
@@ -61,24 +61,24 @@ def get_technology_info ( analysis, technologies ):
 
 	TechInputSplit = defaultdict( list )
 	for isplit in Param_TechInputSplit.objects.filter(
-	  inp_commodity__analysis=analysis, technology__in=technologies ):
+	  technology__in=technologies ):
 		TechInputSplit[ isplit.technology ].append({
-			'aId'   : analysis.pk,
-			'tId'   : isplit.technology.pk,
-			'id'    : isplit.pk,
-			'inp'   : isplit.inp_commodity.commodity.name,
-			'value' : isplit.fraction
+		  'aId'   : analysis.pk,
+		  'tId'   : isplit.technology.pk,
+		  'id'    : isplit.pk,
+		  'inp'   : isplit.inp_commodity.commodity.name,
+		  'value' : isplit.fraction
 		})
 
 	TechOutputSplit = defaultdict( list )
 	for osplit in Param_TechOutputSplit.objects.filter(
-	  out_commodity__analysis=analysis, technology__in=technologies ):
+	  technology__in=technologies ):
 		TechOutputSplit[ osplit.technology ].append({
-			'aId'   : analysis.pk,
-			'tId'   : osplit.technology.pk,
-			'id'    : osplit.pk,
-			'out'   : osplit.out_commodity.commodity.name,
-			'value' : osplit.fraction
+		  'aId'   : analysis.pk,
+		  'tId'   : osplit.technology.pk,
+		  'id'    : osplit.pk,
+		  'out'   : osplit.out_commodity.commodity.name,
+		  'value' : osplit.fraction
 		})
 
 	data = [
