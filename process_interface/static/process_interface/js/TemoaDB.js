@@ -979,13 +979,13 @@ function BeginTemoaDBApp ( ) {
 	$.when.apply( null, loaded ).then( function ( ) {
 		// All library elements have been loaded.  Begin the application!
 
+	console.log( 'Begin TemoaDB' );
+	Temoa.fn.showStatus( 'TemoaDB has begun.  Loading analyses ...', 'info' );
+
 	// The below complete: function has neither been setup, nor had a chance to
 	// run at this point.  Given that some pieces of code rely on this cookie
 	// for UI state info, we manually process the cookie the first time.
 	Temoa.fn.processCookie();
-
-	console.log( 'Begin TemoaDB' );
-	Temoa.fn.showStatus( 'TemoaDB has begun.  Loading analyses ...', 'info' );
 
 	$.ajaxSetup({
 		crossDomain: false, //there should be no need to talk elsewhere
