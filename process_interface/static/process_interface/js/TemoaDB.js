@@ -1055,7 +1055,10 @@ function BeginTemoaDBApp ( ) {
 		}
 	});
 
-	new Analyses('#analysis_info');
+	// The first graphical object on screen (after the raw HTML, of course).
+	// This creates the first box that includes the dropdown list of available
+	// analyses.
+	new Temoa.canControl.Analyses('#analysis_info');
 
 	$(document).bind('keyup', 'shift+space', function () {
 		var url = Temoa.C.ROOT_URL + '/static/process_interface/js/QuickFunction.js';
