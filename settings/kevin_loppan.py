@@ -110,10 +110,6 @@ DATABASES = {
 # global_settings.py
 CD = {
   'JQUERYBASE'        : '/static/process_interface/js',
-  'JQUERYUI'          : '/static/process_interface/js',
-  'JQUERYCOOKIE'      : '/static/process_interface/js',
-  'JQUERYTABLESORTER' : '/static/process_interface/js',
-  'JQUERYHOTKEYS'     : '/static/process_interface/js',
   'CANJS'             : '/static/process_interface/js',
 }
 

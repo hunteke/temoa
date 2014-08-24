@@ -958,24 +958,32 @@ function BeginTemoaDBApp ( ) {
 	}
 
 	var TemoaDBComponents = [
-	  'TemoaDB_functions',
-	  'TemoaDB_Models',
-	  'TemoaDB_Views_AnalysisDetail',
-	  'TemoaDB_Views_AnalysisList',
-	  'TemoaDB_Views_AnalysisParameters',
-	  'TemoaDB_Views_CommodityDetail',
-	  'TemoaDB_Views_CommodityLists',
-	  'TemoaDB_Views_TechnologyCreate',
-	  'TemoaDB_Views_TechnologyDetail',
+	  'TemoaDB_functions.js',
+	  'TemoaDB_Models.js',
+	  'TemoaDB_Views_AnalysisDetail.js',
+	  'TemoaDB_Views_AnalysisList.js',
+	  'TemoaDB_Views_AnalysisParameters.js',
+	  'TemoaDB_Views_CommodityDetail.js',
+	  'TemoaDB_Views_CommodityLists.js',
+	  'TemoaDB_Views_TechnologyCreate.js',
+	  'TemoaDB_Views_TechnologyDetail.js',
+	];
+	var ancillaryLibraries = [
+	  'd3.v3.js',
+	  'dagre-d3.js',
+	  'jquery-hotkeys.js',
+	  'jquery-ui.js',
+	  'jquery.cookie.min.js',
 	];
 	var loaded = [];
 
 	// Load all necessary components (hardcoded in this function), and proceed
 	// only when finished.
-	for ( var i = 0; i < TemoaDBComponents.length; ++i ) {
-		var url = Temoa.C.base_js_url + TemoaDBComponents[ i ] + '.js';
-		loaded[i] = load_file( url );
-	}
+	for ( var i = 0; i < TemoaDBComponents.length; ++i )
+		loaded.push( load_file( Temoa.C.base_js_url + TemoaDBComponents[ i ] ));
+	for ( var i = 0; i < ancillaryLibraries.length; ++i )
+		loaded.push( load_file( Temoa.C.base_js_url + ancillaryLibraries[ i ] ));
+
 	$.when.apply( null, loaded ).then( function ( ) {
 		// All library elements have been loaded.  Begin the application!
 

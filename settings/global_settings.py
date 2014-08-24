@@ -91,12 +91,5 @@ LOGGING = {
 
 CD = {
   'JQUERYBASE'        : '//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3',
-  'JQUERYUI'          : '//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.3',
-  'JQUERYCOOKIE'      : '//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.3.1',
-  'JQUERYHOTKEYS'     : '/static/process_interface/js',
-  'JQUERYTABLESORTER' : '//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.10.8',
   'CANJS'             : '//cdnjs.cloudflare.com/ajax/libs/can.js/1.1.7',
 }
-
-
-
