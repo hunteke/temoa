@@ -1089,9 +1089,6 @@ function BeginTemoaDBApp ( ) {
 	$('#ShowHideAnalysis').click( function () {
 		$('#analysis_detail').toggle( 'slide', {direction: 'up'} );
 	});
-	$('#ShowHideTechs').click( function () {
-		$('#DBTechnologies').toggle( 'slide', {direction: 'down'} );
-	});
 
 	$(document).bind('keydown', 'shift', function ( e ) {
 		Temoa.fn.hideStatus();
