@@ -29,15 +29,15 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 
 		if ( ! analysis.commodity_emission )
 			analysis.attr('commodity_emission',
-			  new AnalysisCommodityEmission.List() );
+			  new CommodityEmission.List() );
 		if ( ! analysis.commodity_demand )
 			analysis.attr('commodity_demand',
-			  new AnalysisCommodityDemand.List() );
+			  new CommodityDemand.List() );
 		if ( ! analysis.commodity_physical )
 			analysis.attr('commodity_physical',
-			  new AnalysisCommodityPhysical.List() );
+			  new CommodityPhysical.List() );
 		if ( ! analysis.segfracs )
-			analysis.attr('segfracs', new AnalysisSegFrac.List() );
+			analysis.attr('segfracs', new SegFrac.List() );
 		if ( ! analysis.future_periods )
 			analysis.attr('future_periods', new can.List() );
 		if ( ! analysis.all_vintages )
@@ -54,7 +54,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 			// a new analysis won't have anything attached to it ...
 			return;
 
-		AnalysisCommodities.findAll( {aId: analysis.id},
+		Commodities.findAll( {aId: analysis.id},
 			function ( commodities ) {
 				// Function declarations all at top to avoid confusion.  Hoisting
 				// shouldn't be an issue; let's not inadvertently make it one.
@@ -99,7 +99,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 							var fd = fd_map.attr( key );
 
 							if ( ! fd ) {
-								fd = new AnalysisDemand({
+								fd = new Demand({
 									aId:    analysis.id,
 									cId:    dem.id,
 									period: fp_list[ i ],
@@ -108,7 +108,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 							} else if ( ! fd.isNew ) {
 								// CanJS doesn't convert non-List returned models, so we
 								// need to explicitly make it a can.Model
-								fd = new AnalysisDemand( fd.attr() );
+								fd = new Demand( fd.attr() );
 							}
 							fd_map.attr( key, fd );
 
@@ -194,7 +194,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 						var dem = future_demands.attr( dem_name )
 
 						if ( ! dem ) {
-							dem = new AnalysisDemand({
+							dem = new Demand({
 								aId: analysis.id,
 								cId: dem_coms[ i ]['id'],
 								period: future_periods[ i ],
@@ -203,7 +203,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 						} else if ( ! dem.isNew ) {
 							// CanJS doesn't convert non-List returned models, so we
 							// need to explicitly make it a can.Model
-							dem = new AnalysisDemand( dem.attr() );
+							dem = new Demand( dem.attr() );
 						}
 						dem_map.attr( dem_name, dem );
 					}
@@ -213,7 +213,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 					var ddd = ddd_map[ sf_key ];
 					var sf = _segFracs[ sf_key ];
 					if ( ! ddd ) {
-						ddd = new AnalysisDemandDefaultDistribution({
+						ddd = new DemandDefaultDistribution({
 							aId: analysis.id,
 							sfId: sf.attr('id')
 						});
@@ -223,7 +223,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 						// attributes plugin, only a can.List().  Unfortunately, we
 						// only want random access for DDD.  So, we convert each
 						// Map into a Model.
-						ddd = new AnalysisDemandDefaultDistribution( ddd.attr() );
+						ddd = new DemandDefaultDistribution( ddd.attr() );
 					}
 					ddd.attr('timeslice', sf);
 					ddd_map.attr( sf_key, ddd );
@@ -244,13 +244,13 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 						var dist = dsd[ sf_key ];
 						var sf = _segFracs[ sf_key ];
 						if ( ! dist ) {
-							dist = new AnalysisDemandSpecificDistribution({
+							dist = new DemandSpecificDistribution({
 								aId: analysis.id,
 								dId: com['id'],
 								sfId: sf['id'],
 							});
 						} else if ( ! dist.isNew ) {
-							dist = new AnalysisDemandSpecificDistribution(
+							dist = new DemandSpecificDistribution(
 							  dist.attr() );
 						}
 						dist.attr( 'timeslice', sf );
@@ -259,7 +259,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 					}
 				}
 
-				new AnalysisCommodityLists( '#AnalysisCommodities', {
+				new CommodityLists( '#Commodities', {
 					analysis: analysis });
 
 			}
@@ -269,7 +269,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 		});
 
 		$el.find('#ShowHideCommodities').click( function ( ev ) {
-			$('#AnalysisCommodities').toggle( 'slide', { direction: 'left' });
+			$('#Commodities').toggle( 'slide', { direction: 'left' });
 		});
 		$el.find('#ShowHideAnalysisParameters').click( function ( ev ) {
 			// due to the order of events when adding and removing various models
@@ -297,7 +297,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 			});
 		});
 		$el.find('#ShowHideUnsolvedSystemMap').click( function ( ev ) {
-			var $div = $('#AnalysisUnsolvedSystemMap');
+			var $div = $('#UnsolvedSystemMap');
 			if ( $div.is(':hidden') ) {
 				// currently closed, but user has requested it to be opened;
 				// however, must draw, /after/ div is visible
@@ -308,7 +308,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 		setTimeout( function ( ) {
 			// necessary to attach listener /after/ CanJS has finished, so
 			// setTimeout to the rescue
-			$('#AnalysisUnsolvedSystemMapCloseButton').click( function ( ) {
+			$('#UnsolvedSystemMapCloseButton').click( function ( ) {
 				$('#ShowHideUnsolvedSystemMap').click();
 			});
 		}, 1 );

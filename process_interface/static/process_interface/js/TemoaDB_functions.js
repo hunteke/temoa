@@ -119,7 +119,7 @@ Temoa.fn.showStatus = function ( msg, cssclass, safe_msg ) {
 Temoa.fn.clearAnalysisViews = function ( ) {
 	$('#ProcessList .items').replaceWith(
 		$('<div>', {class: 'items'}) );
-	$('#AnalysisProcessDetails .items').replaceWith(
+	$('#ProcessDetails .items').replaceWith(
 		$('<div>', {class: 'items'}) );
 }
 
@@ -347,7 +347,7 @@ Temoa.fn.drawUnsolvedSystemDigraph = function ( ) {
 
 	// Note also, that this implementation requires an <svg> element already
 	// be in place.  A note for future test writers.  Ahem.
-	$('#AnalysisUnsolvedSystemMap').find('svg').first().replaceWith('<svg><g/></svg>');
+	$('#UnsolvedSystemMap').find('svg').first().replaceWith('<svg><g/></svg>');
 
 	var energy_nodes = new Object(); // abusing for it's set-like attributes
 	var tech_nodes = new Object();   // abusing for it's set-like attributes
@@ -402,7 +402,7 @@ Temoa.fn.drawUnsolvedSystemDigraph = function ( ) {
 	  .nodeSep(20)
 	  .rankDir("LR");
 	var renderer = new dagreD3.Renderer();
-	renderer.layout(layout).run(g, d3.select("#AnalysisUnsolvedSystemMap svg g"));
+	renderer.layout(layout).run(g, d3.select("#UnsolvedSystemMap svg g"));
 }
 
 })();

@@ -18,7 +18,7 @@ if ( !('Temoa' in window) ) {
 //                                  Analysis                                 //
 ///////////////////////////////////////////////////////////////////////////////
 
-Temoa.canModel.AnalysisCommodity = can.Model('AnalysisCommodity', {
+Temoa.canModel.Commodity = can.Model('Commodity', {
 	findOne: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/commodity/{id}',
 	attributes: {
 		aId: 'int',
@@ -27,7 +27,7 @@ Temoa.canModel.AnalysisCommodity = can.Model('AnalysisCommodity', {
 	}
 }, {});
 
-Temoa.canModel.AnalysisCommodityDemand = AnalysisCommodity.extend('AnalysisCommodityDemand', {
+Temoa.canModel.CommodityDemand = Temoa.canModel.Commodity.extend('CommodityDemand', {
 	destroy: function ( id ) {
 		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/delete/commodity/{id}';
@@ -38,7 +38,7 @@ Temoa.canModel.AnalysisCommodityDemand = AnalysisCommodity.extend('AnalysisCommo
 	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/update/commodity/{id}',
 }, {
 });
-Temoa.canModel.AnalysisCommodityEmission = AnalysisCommodity.extend('AnalysisCommodityEmission', {
+Temoa.canModel.CommodityEmission = Temoa.canModel.Commodity.extend('CommodityEmission', {
 	destroy: function ( id ) {
 		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/delete/commodity/{id}';
@@ -48,7 +48,7 @@ Temoa.canModel.AnalysisCommodityEmission = AnalysisCommodity.extend('AnalysisCom
 	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/create/commodity/emission',
 	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/update/commodity/{id}',
 }, {});
-Temoa.canModel.AnalysisCommodityPhysical = AnalysisCommodity.extend('AnalysisCommodityPhysical', {
+Temoa.canModel.CommodityPhysical = Temoa.canModel.Commodity.extend('CommodityPhysical', {
 	destroy: function ( id ) {
 		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/delete/commodity/{id}';
@@ -59,16 +59,16 @@ Temoa.canModel.AnalysisCommodityPhysical = AnalysisCommodity.extend('AnalysisCom
 	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/update/commodity/{id}',
 }, {});
 
-Temoa.canModel.AnalysisCommodities = can.Model('AnalysisCommodities', {
+Temoa.canModel.Commodities = can.Model('Commodities', {
 	findAll: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/commodity/list',
 	attributes: {
-		demand:   'AnalysisCommodityDemand.models',
-		emission: 'AnalysisCommodityEmission.models',
-		physical: 'AnalysisCommodityPhysical.models',
+		demand:   'CommodityDemand.models',
+		emission: 'CommodityEmission.models',
+		physical: 'CommodityPhysical.models',
 	}
 }, {});
 
-Temoa.canModel.AnalysisSegFrac = can.Model('AnalysisSegFrac', {
+Temoa.canModel.SegFrac = can.Model('SegFrac', {
 	create:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/segfrac/create',
 	update:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/segfrac/update/{id}',
 	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/analysis/{aId}/segfrac/remove/{id}',
@@ -94,7 +94,7 @@ Temoa.canModel.AnalysisSegFrac = can.Model('AnalysisSegFrac', {
 	}
 });
 
-Temoa.canModel.AnalysisDemandDefaultDistribution = can.Model('AnalysisDemandDefaultDistribution', {
+Temoa.canModel.DemandDefaultDistribution = can.Model('DemandDefaultDistribution', {
 	create:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/create/segfrac/{sfId}',
 	update:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/update/{id}',
 	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/remove/{id}',
@@ -102,7 +102,7 @@ Temoa.canModel.AnalysisDemandDefaultDistribution = can.Model('AnalysisDemandDefa
 		aId: 'int',
 		sfId: 'int',
 		id: 'int',
-		timeslice: 'AnalysisSegFrac.model',
+		timeslice: 'SegFrac.model',
 		value: 'number'
 	}
 }, {
@@ -114,7 +114,7 @@ Temoa.canModel.AnalysisDemandDefaultDistribution = can.Model('AnalysisDemandDefa
 	}
 });
 
-Temoa.canModel.AnalysisDemandSpecificDistribution = can.Model('AnalysisDemandSpecificDistribution', {
+Temoa.canModel.DemandSpecificDistribution = can.Model('DemandSpecificDistribution', {
 	create:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demandspecificdistribution/create/segfrac/{sfId}/demand/{dId}',
 	update:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demandspecificdistribution/update/{id}',
 	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/analysis/{aId}/demandspecificdistribution/remove/{id}',
@@ -123,7 +123,7 @@ Temoa.canModel.AnalysisDemandSpecificDistribution = can.Model('AnalysisDemandSpe
 		dId: 'int',
 		sfId: 'int',
 		id: 'int',
-		timeslice: 'AnalysisSegFrac.model',
+		timeslice: 'SegFrac.model',
 		value: 'number'
 	}
 }, {
@@ -135,7 +135,7 @@ Temoa.canModel.AnalysisDemandSpecificDistribution = can.Model('AnalysisDemandSpe
 	}
 });
 
-Temoa.canModel.AnalysisDemand = can.Model('AnalysisDemand', {
+Temoa.canModel.Demand = can.Model('Demand', {
 	create:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demand/create/commodity/{cId}/period/{period}',
 	update:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demand/update/{id}',
 	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/analysis/{aId}/demand/remove/{id}',
@@ -185,18 +185,18 @@ Temoa.canModel.Analysis = can.Model('Analysis', {
 		global_discount_rate: 'number',
 		vintages: 'string',
 		period_0: 'int',
-		segfracs: 'AnalysisSegFrac.models',
+		segfracs: 'SegFrac.models',
 
 		// Comments left to show intended connection.  Problem: CanJS can't
 		// return a /dictionary/ of Models, so instead dynamically create as a
 		// Map of Maps, and convert each item to models during initialization.
 		// (For implementation, search for 'ddd' below.)
-//		demanddefaultdistribution: 'AnalysisDemandDefaultDistribution.models',
-//		demandspecificdistribution: 'AnalysisDemandSpecificDistribution.models',
-//		future_demands: 'AnalysisDemand.models',
-		commodity_demand:   'AnalysisCommodityDemand.models',
-		commodity_emission: 'AnalysisCommodityEmission.models',
-		commodity_physical: 'AnalysisCommodityPhysical.models',
+//		demanddefaultdistribution: 'DemandDefaultDistribution.models',
+//		demandspecificdistribution: 'DemandSpecificDistribution.models',
+//		future_demands: 'Demand.models',
+		commodity_demand:   'CommodityDemand.models',
+		commodity_emission: 'CommodityEmission.models',
+		commodity_physical: 'CommodityPhysical.models',
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
@@ -258,21 +258,6 @@ Temoa.canModel.Analysis = can.Model('Analysis', {
 ///////////////////////////////////////////////////////////////////////////////
 
 Temoa.canModel.Technology = can.Model('Technology', {
-	findAll: 'GET '    + Temoa.C.ROOT_URL + '/technology/list',
-	findOne: 'GET '    + Temoa.C.ROOT_URL + '/technology/info/{tId}',
-	create:  'POST '   + Temoa.C.ROOT_URL + '/technology/create',
-	update:  'POST '   + Temoa.C.ROOT_URL + '/technology/update/{id}',
-	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/technology/remove/{id}',
-	attributes: {
-		id:   'int',
-		username: 'string',
-		name: 'string',
-		capacity_to_activity: 'number',
-		description: 'string'
-	},
-}, {});
-
-Temoa.canModel.AnalysisTechnology = can.Model('AnalysisTechnology', {
 	findAll: 'GET '  + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/list',
 	findOne: 'GET '  + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/info/{id}',
 	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/update/{id}',
@@ -288,9 +273,9 @@ Temoa.canModel.AnalysisTechnology = can.Model('AnalysisTechnology', {
 		capacitytoactivity: 'number',
 		growthratelimit: 'number',
 		growthrateseed: 'number',
-		capacityfactors: 'AnalysisTechnologyCapacityFactor.models',
-		inputsplits: 'AnalysisTechnologyInputSplit.models',
-		outputsplits: 'AnalysisTechnologyOutputSplit.models',
+		capacityfactors: 'TechnologyCapacityFactor.models',
+		inputsplits: 'TechnologyInputSplit.models',
+		outputsplits: 'TechnologyOutputSplit.models',
 	}
 }, {
 	partialUpdate: function ( id, attr ) {
@@ -301,7 +286,7 @@ Temoa.canModel.AnalysisTechnology = can.Model('AnalysisTechnology', {
 	}
 });
 
-Temoa.canModel.AnalysisTechnologyCapacityFactor = can.Model('AnalysisTechnologyCapacityFactor', {
+Temoa.canModel.TechnologyCapacityFactor = can.Model('TechnologyCapacityFactor', {
 	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/CapacityFactor/create',
 	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/CapacityFactor/update/{id}',
 	destroy: function ( id ) {
@@ -315,7 +300,7 @@ Temoa.canModel.AnalysisTechnologyCapacityFactor = can.Model('AnalysisTechnologyC
 		tId:     'int',
 		id:      'int',
 		sfId:    'int',
-		segfrac: 'AnalysisSegFrac.model',
+		segfrac: 'SegFrac.model',
 		value:   'number',
 	}
 }, {
@@ -327,7 +312,7 @@ Temoa.canModel.AnalysisTechnologyCapacityFactor = can.Model('AnalysisTechnologyC
 	}
 });
 
-Temoa.canModel.AnalysisTechnologyInputSplit = can.Model('AnalysisTechnologyInputSplit', {
+Temoa.canModel.TechnologyInputSplit = can.Model('TechnologyInputSplit', {
 	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/InputSplit/create',
 	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/InputSplit/update/{id}',
 	destroy: function ( id ) {
@@ -352,7 +337,7 @@ Temoa.canModel.AnalysisTechnologyInputSplit = can.Model('AnalysisTechnologyInput
 	}
 });
 
-Temoa.canModel.AnalysisTechnologyOutputSplit = can.Model('AnalysisTechnologyOutputSplit', {
+Temoa.canModel.TechnologyOutputSplit = can.Model('TechnologyOutputSplit', {
 	findAll: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/list',
 	findOne: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/{id}',
 	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/create',
@@ -397,7 +382,7 @@ Temoa.canModel.Process = can.Model('Process', {
 	attributes: {
 		id: 'int',
 		aId: 'int',  // for updating, deleting (the urls)
-		technology:         'AnalysisTechnology.model',
+		technology:         'Technology.model',
 		capacityfactors:    'ProcessCapacityFactor.models',
 		costsfixed:         'ProcessCostFixed.models',
 		costsvariable:      'ProcessCostVariable.models',
@@ -427,7 +412,7 @@ Temoa.canModel.ProcessCapacityFactor = can.Model('ProcessCapacityFactor', {
 		pId:     'int',
 		id:      'int',
 		sfId:    'int',
-		segfrac: 'AnalysisSegFrac.model',
+		segfrac: 'SegFrac.model',
 		value:   'number',
 	}
 }, {

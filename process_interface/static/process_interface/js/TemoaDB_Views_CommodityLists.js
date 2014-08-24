@@ -15,7 +15,7 @@ if ( !('Temoa' in window) ) {
 }
 
 
-Temoa.canControl.CommodityLists = can.Control('AnalysisCommodityLists', {
+Temoa.canControl.CommodityLists = can.Control('CommodityLists', {
 	defaults: {
 			view: Temoa.C.ROOT_URL + '/client_template/analysis_commodities.ejs'
 		}
@@ -33,7 +33,7 @@ Temoa.canControl.CommodityLists = can.Control('AnalysisCommodityLists', {
 			username: Temoa.fn.getCookie().username || null,
 		}));
 
-		$('#AnalysisCommoditiesCloseButton').click( function ( ) {
+		$('#CommoditiesCloseButton').click( function ( ) {
 			$('#ShowHideCommodities').click();
 		});
 
@@ -142,15 +142,15 @@ Temoa.canControl.CommodityLists = can.Control('AnalysisCommodityLists', {
 	},
 	'#NewCommodityDemand click': function ( $el ) {
 		var opts = {aId: this.analysis.id}
-		this.createNewCommodity( AnalysisCommodityDemand, opts );
+		this.createNewCommodity( CommodityDemand, opts );
 	},
 	'#NewCommodityEmission click': function ( $el ) {
 		var opts = {aId: this.analysis.id, name: 'New Emission Commodity'}
-		this.createNewCommodity( AnalysisCommodityEmission, opts );
+		this.createNewCommodity( CommodityEmission, opts );
 	},
 	'#NewCommodityPhysical click': function ( $el ) {
 		var opts = {aId: this.analysis.id, name: 'New Physical Commodity'}
-		this.createNewCommodity( AnalysisCommodityPhysical, opts );
+		this.createNewCommodity( CommodityPhysical, opts );
 	},
 	'[name="CommodityDemandRemove"] click': function ( $el, ev ) {
 		$el.closest( 'tr' ).data('commodity').destroy();
@@ -161,13 +161,13 @@ Temoa.canControl.CommodityLists = can.Control('AnalysisCommodityLists', {
 	'[name="CommodityPhysicalRemove"] click': function ( $el, ev ) {
 		$el.closest( 'tr' ).data('commodity').destroy();
 	},
-	'{AnalysisCommodityDemand} created': function ( list, ev, commodity ) {
+	'{CommodityDemand} created': function ( list, ev, commodity ) {
 		this.analysis.commodity_demand.unshift( commodity.real_model );
 	},
-	'{AnalysisCommodityEmission} created' : function ( list, ev, commodity ) {
+	'{CommodityEmission} created' : function ( list, ev, commodity ) {
 		this.analysis.commodity_emission.unshift( commodity.real_model );
 	},
-	'{AnalysisCommodityPhysical} created' : function ( list, ev, commodity ) {
+	'{CommodityPhysical} created' : function ( list, ev, commodity ) {
 		this.analysis.commodity_physical.unshift( commodity.real_model );
 	},
 });

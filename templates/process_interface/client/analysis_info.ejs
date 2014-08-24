@@ -11,7 +11,7 @@
 </datalist>
 
 <div class='analysis'>
-<div id='AnalysisUnsolvedSystemMap'><button id='AnalysisUnsolvedSystemMapCloseButton' class='closeButton'>Close</button><svg></svg></div>
+<div id='UnsolvedSystemMap'><button id='UnsolvedSystemMapCloseButton' class='closeButton'>Close</button><svg></svg></div>
 <div id='AnalysisInfo' <%= ($el) -> $el.data('analysis', analysis) %>>
 	<form onsubmit='return false;' id='AnalysisInfoForm_<%= analysis.attr('id') %>'>
 	<table>
@@ -47,19 +47,19 @@
 	<p class='error'></p>
 	</form>
 	<% if ( ! analysis.isNew() ) { %>
-		<button type='button' id='ShowHideCommodities'>Analysis Commodities</button>
+		<button type='button' id='ShowHideCommodities'>Commodities</button>
 		<button type='button' id='ShowHideAnalysisParameters'>Analysis Parameters</button>
 		<button type='button' id='ShowHideUnsolvedSystemMap'>Toggle System Map</button>
 		<a href='<%= analysis.download_url() %>' title='Download a server-generated dat file.  This may take a minute.'
 		  download='<%= analysis.download_name() %>'><button type='button' id='DownloadDataFile'>Download as DAT</button></a>
 	<% } %>
-	<div id='AnalysisCommodities'></div>
+	<div id='Commodities'></div>
 	<div id='AnalysisParameters'></div>
 </div>
 </div>
 <% } else { %>
 <div class='analysis'>
-<div id='AnalysisUnsolvedSystemMap'><button id='AnalysisUnsolvedSystemMapCloseButton' class='closeButton'>Close</button><svg></svg></div>
+<div id='UnsolvedSystemMap'><button id='UnsolvedSystemMapCloseButton' class='closeButton'>Close</button><svg></svg></div>
 <div id='AnalysisInfo'>
 	<table>
 		<tbody>
@@ -71,16 +71,15 @@
 		</tbody>
 	</table>
 	<% if ( ! analysis.isNew() ) { %>
-		<button type='button' id='ShowHideCommodities'>Analysis Commodities</button>
+		<button type='button' id='ShowHideCommodities'>Commodities</button>
 		<button type='button' id='ShowHideAnalysisParameters'>Analysis Parameters</button>
 		<button type='button' id='ShowHideUnsolvedSystemMap'>Toggle System Map</button>
 		<a href='<%= analysis.download_url() %>' title='Download a server-generated dat file.  This may take a minute.'
 		  download='<%= analysis.download_name() %>'><button type='button' id='DownloadDataFile'>Download as DAT</button></a>
 	<% } %>
-	<div id='AnalysisCommodities'></div>
+	<div id='Commodities'></div>
 	<div id='AnalysisParameters'></div>
 </div>
 </div>
 
 <% } %>
-

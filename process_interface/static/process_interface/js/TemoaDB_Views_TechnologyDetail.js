@@ -15,12 +15,12 @@ if ( !('Temoa' in window) ) {
 }
 
 
-Temoa.canControl.TechnologyDetail = can.Control('AnalysisTechnologyDetail', {
+Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 	defaults: {
 			view: Temoa.C.ROOT_URL + '/client_template/analysis_technology_detail.ejs',
 		}
 	},{
-	init: function ( $el, options ) {  // AnalysisTechnologyDetail
+	init: function ( $el, options ) {  // TechnologyDetail
 		var view = options.view;
 		if ( Temoa.C.DEBUG )
 			view += '?_=' + new Date().getTime();
@@ -28,11 +28,11 @@ Temoa.canControl.TechnologyDetail = can.Control('AnalysisTechnologyDetail', {
 		var t = options.technology;
 
 		if ( ! t.capacityfactors )
-			t.attr('capacityfactors', new AnalysisTechnologyCapacityFactor.List());
+			t.attr('capacityfactors', new TechnologyCapacityFactor.List());
 		if ( ! t.inputsplits )
-			t.attr('inputsplits', new AnalysisTechnologyInputSplit.List());
+			t.attr('inputsplits', new TechnologyInputSplit.List());
 		if ( ! t.outputsplits )
-			t.attr('outputsplits', new AnalysisTechnologyOutputSplit.List());
+			t.attr('outputsplits', new TechnologyOutputSplit.List());
 
 		var view_opts = {
 			username:   options.username || null,
@@ -42,7 +42,7 @@ Temoa.canControl.TechnologyDetail = can.Control('AnalysisTechnologyDetail', {
 
 		$el.append( can.view( view, view_opts ));
 	},
-	destroy: function ( ) {  // AnalysisTechnologyDetail
+	destroy: function ( ) {  // TechnologyDetail
 		var capfac_list = this.options.technology.capacityfactors;
 		var is_list = this.options.technology.inputsplits;
 		var os_list = this.options.technology.outputsplits;
@@ -55,7 +55,7 @@ Temoa.canControl.TechnologyDetail = can.Control('AnalysisTechnologyDetail', {
 
 		can.Control.prototype.destroy.call(this);
 	},
-	save: function ( $el ) {  // AnalysisTechnologyDetail
+	save: function ( $el ) {  // TechnologyDetail
 		var errors = {}
 		  , $tForm  = null, tData  = null
 		  , $cfForm = null, cfData = null
@@ -278,7 +278,7 @@ Temoa.canControl.TechnologyDetail = can.Control('AnalysisTechnologyDetail', {
 
 		Temoa.fn.save_to_server({ to_save: to_save, inputs: $inputs, display: $tTable});
 	},
-	'[name="TechnologyCancel"] click': function ( $el, ev ) {  // AnalysisTechnologyDetail
+	'[name="TechnologyCancel"] click': function ( $el, ev ) {  // TechnologyDetail
 		var $block = $el.closest('.technology');
 		var t = $block.data('technology');
 
@@ -301,18 +301,18 @@ Temoa.canControl.TechnologyDetail = can.Control('AnalysisTechnologyDetail', {
 		// var cf = this.options.process.costsfixed;
 		// if ( cf && cf.length && cf[0].isNew() ) cf[0].destroy();
 	},
-	'[name="TechnologyUpdate"] click': function ( $el, ev ) {  // AnalysisTechnologyDetail
+	'[name="TechnologyUpdate"] click': function ( $el, ev ) {  // TechnologyDetail
 		this.save( $el );
 	},
-	'[name="TechnologyCreate"] click': function ( $el, ev ) {  // AnalysisTechnologyDetail
+	'[name="TechnologyCreate"] click': function ( $el, ev ) {  // TechnologyDetail
 		this.save( $el );
 	},
-	'input keyup': function ( $el, ev ) {  // AnalysisTechnologyDetail
+	'input keyup': function ( $el, ev ) {  // TechnologyDetail
 		if ( 13 === ev.keyCode ) { // 13 == enter
 			this.save( $(ev.target) );
 		}
 	},
-	'[name="AddCapacityFactorTech"] click': function ( $el, ev ) {  // AnalysisTechnologyDetail
+	'[name="AddCapacityFactorTech"] click': function ( $el, ev ) {  // TechnologyDetail
 		var capfac_list = this.options.technology.capacityfactors;
 		if ( capfac_list && capfac_list.length && capfac_list[0].isNew() ) {
 			// only one new CF at a time.
@@ -323,10 +323,10 @@ Temoa.canControl.TechnologyDetail = can.Control('AnalysisTechnologyDetail', {
 		var opts = { aId: tOpts.analysis.id, tId: tOpts.technology.id };
 
 		// Create the client-side version, then display it.
-		var newCF = new AnalysisTechnologyCapacityFactor( opts );
+		var newCF = new TechnologyCapacityFactor( opts );
 		capfac_list.unshift( newCF );
 	},
-	'[name="AddInputSplit"] click': function ( $el, ev ) {  // AnalysisTechnologyDetail
+	'[name="AddInputSplit"] click': function ( $el, ev ) {  // TechnologyDetail
 		var is_list = this.options.technology.inputsplits;
 		if ( is_list && is_list.length && is_list[0].isNew() ) {
 			// only one new split at a time.
@@ -335,10 +335,10 @@ Temoa.canControl.TechnologyDetail = can.Control('AnalysisTechnologyDetail', {
 
 		var tOpts = this.options;
 		var opts = { aId: tOpts.analysis.id, tId: tOpts.technology.id };
-		var newIS = new AnalysisTechnologyInputSplit( opts );
+		var newIS = new TechnologyInputSplit( opts );
 		is_list.unshift( newIS );
 	},
-	'[name="AddOutputSplit"] click': function ( $el, ev ) { // AnalysisTechnologyDetail
+	'[name="AddOutputSplit"] click': function ( $el, ev ) { // TechnologyDetail
 		var os_list = this.options.technology.outputsplits;
 		if ( os_list && os_list.length && os_list[0].isNew() ) {
 			// only one new split at a time.
@@ -347,19 +347,19 @@ Temoa.canControl.TechnologyDetail = can.Control('AnalysisTechnologyDetail', {
 
 		var tOpts = this.options;
 		var opts = { aId: tOpts.analysis.id, tId: tOpts.technology.id };
-		var newOS = new AnalysisTechnologyOutputSplit( opts );
+		var newOS = new TechnologyOutputSplit( opts );
 		os_list.unshift( newOS );
 	},
-	'[name="CapacityFactorTechRemove"] click': function ( $el, ev ) { // AnalysisTechnologyDetail
+	'[name="CapacityFactorTechRemove"] click': function ( $el, ev ) { // TechnologyDetail
 		$el.closest( 'tr' ).data('capacityfactor').destroy();
 	},
-	'[name="InputSplitRemove"] click': function ( $el, ev ) { // AnalysisTechnologyDetail
+	'[name="InputSplitRemove"] click': function ( $el, ev ) { // TechnologyDetail
 		$el.closest( 'tr' ).data('inputsplit').destroy();
 	},
-	'[name="OutputSplitRemove"] click': function ( $el, ev ) { // AnalysisTechnologyDetail
+	'[name="OutputSplitRemove"] click': function ( $el, ev ) { // TechnologyDetail
 		$el.closest( 'tr' ).data('outputsplit').destroy();
 	},
-	'{AnalysisTechnologyCapacityFactor} created' : function ( list, ev, obj ) {
+	'{TechnologyCapacityFactor} created' : function ( list, ev, obj ) {
 		var segfracs = this.options.analysis.segfracs;
 		for ( var i = 0; i < segfracs.length; ++i ) {
 			if ( segfracs[ i ].id === obj.sfId )

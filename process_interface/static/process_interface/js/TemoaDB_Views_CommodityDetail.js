@@ -109,19 +109,19 @@ Temoa.canControl.CommodityDetail = can.Control('CommodityDetail', {
 			this.save( $(ev.target) );
 		}
 	},
-	'{AnalysisCommodityDemand} destroyed': function ( Model, ev, commodity ) {
+	'{CommodityDemand} destroyed': function ( Model, ev, commodity ) {
 		if ( this.commodity === commodity ) {
 			var $div = this.element.find( '#CommodityForm_' + commodity.id );
 			$div.remove();
 		}
 	},
-	'{AnalysisCommodityEmission} destroyed': function ( Model, ev, commodity ) {
+	'{CommodityEmission} destroyed': function ( Model, ev, commodity ) {
 		if ( this.commodity === commodity ) {
 			var $div = this.element.find( '#CommodityForm_' + commodity.id );
 			$div.remove();
 		}
 	},
-	'{AnalysisCommodityPhysical} destroyed': function ( Model, ev, commodity ) {
+	'{CommodityPhysical} destroyed': function ( Model, ev, commodity ) {
 		if ( this.commodity === commodity ) {
 			var $div = this.element.find( '#CommodityForm_' + commodity.id );
 			$div.remove();

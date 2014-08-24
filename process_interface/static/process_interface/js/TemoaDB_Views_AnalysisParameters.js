@@ -40,7 +40,7 @@ Temoa.canControl.AnalysisParameters = can.Control('AnalysisParameters', {
 			// only have one new time slice (segfrac) at a time
 			return;
 
-		segfracs.unshift( new AnalysisSegFrac({ aId: this.analysis.id }));
+		segfracs.unshift( new SegFrac({ aId: this.analysis.id }));
 	},
 	'#AddDemandDistribution click': function ( $el, ev ) {
 		var com_demands = this.analysis.commodity_demand;
@@ -73,8 +73,8 @@ Temoa.canControl.AnalysisParameters = can.Control('AnalysisParameters', {
 		var slice_name_val_re = /^([A-z_]\w*),\s*([A-z_]\w*)$/
 		var defaultdemand_id_re = /^DDD_(\d*)$/;
 
-		var $sfForm = $( 'form#AnalysisSegFracs_' + aId );
-		var $ddForm = $( 'form#AnalysisDemandDefaultDistribution_' + aId );
+		var $sfForm = $( 'form#SegFracs_' + aId );
+		var $ddForm = $( 'form#DemandDefaultDistribution_' + aId );
 		var $sfTable = $el.closest('.segfracs');
 		var $inputs = $sfTable.find(':input').not("[disabled='disabled']");
 		var sfData  = can.deparam( $sfForm.serialize() );
@@ -164,7 +164,7 @@ Temoa.canControl.AnalysisParameters = can.Control('AnalysisParameters', {
 		var to_remove = new Array();
 		var demand_name_re = /^([A-z_]\w*), (\d+)$/;  // not flexible on space.
 
-		var $form = $( 'form#AnalysisDemands_' + aId );
+		var $form = $( 'form#Demands_' + aId );
 		var $demTable = $el.closest('.demands');
 		var $inputs = $demTable.find(':input').not("[disabled='disabled']");
 		var data = can.deparam( $form.serialize() );
@@ -247,7 +247,7 @@ Temoa.canControl.AnalysisParameters = can.Control('AnalysisParameters', {
 		var to_remove = new Array();
 		var dsd_name_re = /^DSD_value_(\d+),(\d+)$/;
 
-		var $form = $( 'form#AnalysisDemandSpecificDistribution_' + aId );
+		var $form = $( 'form#DemandSpecificDistribution_' + aId );
 		var $dsdTable = $el.closest('.demandspecificdistributions');
 		var $inputs = $dsdTable.find(':input').not("[disabled='disabled']");
 		var data = can.deparam( $form.serialize() );
@@ -305,7 +305,7 @@ Temoa.canControl.AnalysisParameters = can.Control('AnalysisParameters', {
 
 			for ( var i = 0; i < analysis.segfracs.length; ++i ) {
 				var sf = analysis.segfracs[ i ];
-				var new_d = new AnalysisDemandSpecificDistribution({
+				var new_d = new DemandSpecificDistribution({
 					aId:  this.analysis.id,
 					dId:  dem.id,
 					sfId: sf.id,
@@ -387,7 +387,7 @@ Temoa.canControl.AnalysisParameters = can.Control('AnalysisParameters', {
 		var slice_name = slice.name();
 		ddd.destroy();
 
-		ddd = new AnalysisDemandDefaultDistribution({
+		ddd = new DemandDefaultDistribution({
 			aId: this.analysis.id,
 			sfId: slice.id,
 			timeslice: slice
@@ -463,34 +463,34 @@ Temoa.canControl.AnalysisParameters = can.Control('AnalysisParameters', {
 
 		if ( 13 === ev.keyCode ) { // enter
 			var formAttr = $el.attr('form');
-			if ( 0 === formAttr.indexOf( 'AnalysisSegFracs_' )
-			  || 0 === formAttr.indexOf( 'AnalysisDemandDefaultDistribution_' ))
+			if ( 0 === formAttr.indexOf( 'SegFracs_' )
+			  || 0 === formAttr.indexOf( 'DemandDefaultDistribution_' ))
 			{
 				this.saveSegFracs( $el );
-			} else if ( 0 === formAttr.indexOf( 'AnalysisDemands_' )) {
+			} else if ( 0 === formAttr.indexOf( 'Demands_' )) {
 				$('[name="DemandsUpdate"]').click();
-			} else if ( 0 === formAttr.indexOf( 'AnalysisDemandSpecificDistribution_' )) {
+			} else if ( 0 === formAttr.indexOf( 'DemandSpecificDistribution_' )) {
 				this.saveDemandSpecificDistributions( $el );
 			}
 		} else if ( 27 === ev.keyCode ) {  // escape
 			var formAttr = $el.attr('form');
 
-			if ( 0 === formAttr.indexOf( 'AnalysisSegFracs_' )
-			  || 0 === formAttr.indexOf( 'AnalysisDemandDefaultDistribution_' ))
+			if ( 0 === formAttr.indexOf( 'SegFracs_' )
+			  || 0 === formAttr.indexOf( 'DemandDefaultDistribution_' ))
 			{
 				$el.closest('.segfracs').find('[name="SegFracCancel"]').click();
 			}
-			if ( 0 === formAttr.indexOf( 'AnalysisDemands_' )) {
+			if ( 0 === formAttr.indexOf( 'Demands_' )) {
 				$el.closest('.demands').find('[name="DemandsCancel"]').click();
 			}
-			if ( 0 === formAttr.indexOf( 'AnalysisDemandSpecificDistribution_' )) {
+			if ( 0 === formAttr.indexOf( 'DemandSpecificDistribution_' )) {
 				$el.closest('.demandspecificdistributions').find('[name="DemandSpecificDistributionCancel"]').click();
 			}
 		}
 	},
-	'{AnalysisSegFrac} created': function ( list, ev, segfrac ) {
+	'{SegFrac} created': function ( list, ev, segfrac ) {
 		var slice_name = segfrac.name();
-		var ddd = new AnalysisDemandDefaultDistribution({
+		var ddd = new DemandDefaultDistribution({
 			aId: this.analysis.id,
 			sfId: segfrac.id,
 		});

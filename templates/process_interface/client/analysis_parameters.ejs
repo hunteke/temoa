@@ -1,17 +1,17 @@
 <% var oddeven = ['odd', 'even'], count, sum, epsilon = 1e-7; %>
 <button type='button' id='AnalysisParametersCloseButton' class='closeButton'>Close</button>
 <% if ( username !== null && (analysis.username === username) ) { %>
-	<form onsubmit='return false;' id='AnalysisSegFracs_<%= analysis.attr('id') %>'></form>
-	<form onsubmit='return false;' id='AnalysisDemands_<%= analysis.attr('id') %>'></form>
-	<form onsubmit='return false;' id='AnalysisDemandDefaultDistribution_<%= analysis.attr('id') %>'></form>
-	<form onsubmit='return false;' id='AnalysisDemandSpecificDistribution_<%= analysis.attr('id') %>'></form>
+	<form onsubmit='return false;' id='SegFracs_<%= analysis.attr('id') %>'></form>
+	<form onsubmit='return false;' id='Demands_<%= analysis.attr('id') %>'></form>
+	<form onsubmit='return false;' id='DemandDefaultDistribution_<%= analysis.attr('id') %>'></form>
+	<form onsubmit='return false;' id='DemandSpecificDistribution_<%= analysis.attr('id') %>'></form>
 	<table class='items segfracs'>
 		<caption>Annual Time Slices (SegFrac), Default Distribution (DD)</caption>
 		<thead><tr><th><button type='button' class='add' id='AddTimeSlice' title='Add new annual slice'>Add</button></th>
 		<% analysis.segfracs.each( function( s ) { %>
 			<th <%= ($el) -> $el.data('segfrac', s ) %>>
 				<button class='remove' disabled='disabled' type='button' name='SegFracRemove' title='Press Shift to enable buttons'>Del</button><br />
-				<input form='AnalysisSegFracs_<%= analysis.attr('id') %>' name='<%= s.isNew() ? 'SliceName_New' : 'SliceName_' + s.attr('id') %>' type='text' autocomplete='off' placeholder='[season], [daily_seg]' value='<%= s.attr('name') || '' %>'>
+				<input form='SegFracs_<%= analysis.attr('id') %>' name='<%= s.isNew() ? 'SliceName_New' : 'SliceName_' + s.attr('id') %>' type='text' autocomplete='off' placeholder='[season], [daily_seg]' value='<%= s.attr('name') || '' %>'>
 				<span class='error'></span>
 			</th>
 		<% }); %>
@@ -21,7 +21,7 @@
 		<tr class='odd'><th>SegFrac</th>
 		<% analysis.segfracs.each( function( sf ) { %>
 			<td>
-				<input form='AnalysisSegFracs_<%= analysis.attr('id') %>' name='<%= sf.isNew() ? 'SliceValue_New' : 'SliceValue_' + sf.attr('id') %>' type='number' autocomplete='off' value='<%= sf.attr( 'value' ) || '' %>'>
+				<input form='SegFracs_<%= analysis.attr('id') %>' name='<%= sf.isNew() ? 'SliceValue_New' : 'SliceValue_' + sf.attr('id') %>' type='number' autocomplete='off' value='<%= sf.attr( 'value' ) || '' %>'>
 				<span class='error'></span>
 			</td>
 		<% }); %>
@@ -33,7 +33,7 @@
 			<td <%= ($el) -> $el.data('slicedefault', ddd)%>>
 			<% if ( ! sf.isNew() ) { %>
 				<%== ddd.isNew() ? '' : "<button class='remove' disabled='disabled' type='button' name='DDDRemove' title='Press Shift to enable buttons'>Del</button>" %><br />
-				<input form='AnalysisDemandDefaultDistribution_<%= analysis.attr('id') %>' name='DDD_<%= sf.attr('id') %>' type='number' autocomplete='off' value='<%= ddd.attr( 'value' ) || '' %>'>
+				<input form='DemandDefaultDistribution_<%= analysis.attr('id') %>' name='DDD_<%= sf.attr('id') %>' type='number' autocomplete='off' value='<%= ddd.attr( 'value' ) || '' %>'>
 				<span class='error'></span>
 			<% } %>
 			</td>
@@ -61,7 +61,7 @@
 					var dem = analysis.future_demands.attr( name );
 				%>
 					<td <%= ($el) -> $el.data('demand', dem) %>><input
-					  form='AnalysisDemands_<%= analysis.attr('id') %>'
+					  form='Demands_<%= analysis.attr('id') %>'
 					  name='<%= dem.attr('name') %>'
 					  type='number'
 					  autocomplete='off'
@@ -98,7 +98,7 @@
 		<tbody>
 		<% count = 0; analysis.demandspecificdistribution.each( function ( demand ) { %>
 			<tr class='dsd <%== oddeven[++count % 2] %>'>
-			<th><%== demand.attr('name') ? escapeHTML( demand.attr('name') ) : "<input form='AnalysisDemandSpecificDistribution_" + analysis.attr('id') + "' name='NewDSD_name' type='text' autocomplete='off' list='ValidDemandSpecificDistributionList' placeholder='[demand commodity]'>"; %><span class='error'></span></th>
+			<th><%== demand.attr('name') ? escapeHTML( demand.attr('name') ) : "<input form='DemandSpecificDistribution_" + analysis.attr('id') + "' name='NewDSD_name' type='text' autocomplete='off' list='ValidDemandSpecificDistributionList' placeholder='[demand commodity]'>"; %><span class='error'></span></th>
 			<%
 				analysis.segfracs.each( function( sf ) {
 					if ( sf.isNew() )
@@ -108,7 +108,7 @@
 				<td <%= ($el) -> $el.data('demanddistribution', dsd ) %>>
 				<% if ( demand.attr('name') ) { %>
 					<input
-						form='AnalysisDemandSpecificDistribution_<%= analysis.attr('id') %>'
+						form='DemandSpecificDistribution_<%= analysis.attr('id') %>'
 						name='DSD_value_<%= dsd.attr('dId') + ',' + dsd.attr('sfId') %>'
 						type='number' autocomplete='off'
 						value='<%= dsd.attr('value') || "" %>'>
