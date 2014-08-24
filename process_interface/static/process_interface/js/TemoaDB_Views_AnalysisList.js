@@ -85,9 +85,10 @@ Temoa.canControl.Analyses = can.Control('Analyses', {
 		if ( analysis.isNew() )
 			return;
 
-		new ProcessList( $div, {analysis: analysis} );
-		$('#ProcessList').fadeIn();
-		$('#ProcessList .items').replaceWith( $div );
+		new TechnologyList( $div, {analysis: analysis} );
+		$('#TechnologyList').fadeIn();
+		$('#TechnologyDetails').fadeIn();
+		$('#TechnologyList .items').replaceWith( $div );
 
 	},
 	'{Analysis} created' : function ( list, ev, analysis ) {

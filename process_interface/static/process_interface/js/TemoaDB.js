@@ -967,6 +967,7 @@ function BeginTemoaDBApp ( ) {
 	  'TemoaDB_Views_CommodityLists.js',
 	  'TemoaDB_Views_TechnologyCreate.js',
 	  'TemoaDB_Views_TechnologyDetail.js',
+	  'TemoaDB_Views_TechnologyList.js',
 	];
 	var ancillaryLibraries = [
 	  'd3.v3.js',
