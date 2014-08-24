@@ -77,7 +77,8 @@ Temoa.canModel.SegFrac = can.Model('SegFrac', {
 		id: 'int',
 		season: 'string',
 		time_of_day: 'string',
-		value: 'number'
+		value: 'number',
+		demanddefaultdistribution: 'number',
 	}
 }, {
 	name: can.compute( function ( ) {
@@ -90,26 +91,6 @@ Temoa.canModel.SegFrac = can.Model('SegFrac', {
 		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/segfrac/update/{id}';
 		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
-		return $.post( url, attr );
-	}
-});
-
-Temoa.canModel.DemandDefaultDistribution = can.Model('DemandDefaultDistribution', {
-	create:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/create/segfrac/{sfId}',
-	update:  'POST '   + Temoa.C.ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/update/{id}',
-	destroy: 'DELETE ' + Temoa.C.ROOT_URL + '/analysis/{aId}/demanddefaultdistribution/remove/{id}',
-	attributes: {
-		aId: 'int',
-		sfId: 'int',
-		id: 'int',
-		timeslice: 'SegFrac.model',
-		value: 'number'
-	}
-}, {
-	partialUpdate: function ( id, attr ) {
-		var url = Temoa.C.ROOT_URL;
-		url += '/analysis/{aId}/demanddefaultdistribution/update/{id}';
-		url = replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
 	}
 });
@@ -190,9 +171,8 @@ Temoa.canModel.Analysis = can.Model('Analysis', {
 		// Comments left to show intended connection.  Problem: CanJS can't
 		// return a /dictionary/ of Models, so instead dynamically create as a
 		// Map of Maps, and convert each item to models during initialization.
-		// (For implementation, search for 'ddd' below.)
-//		demanddefaultdistribution: 'DemandDefaultDistribution.models',
-//		demandspecificdistribution: 'DemandSpecificDistribution.models',
+		// (For implementation, search for 'dsd' below.)
+//		demandspecificdistribution: 'AnalysisDemandSpecificDistribution.models',
 //		future_demands: 'Demand.models',
 		commodity_demand:   'CommodityDemand.models',
 		commodity_emission: 'CommodityEmission.models',
@@ -236,9 +216,9 @@ Temoa.canModel.Analysis = can.Model('Analysis', {
 		return sum;
 	}),
 	dddFracSum: can.compute( function ( style ) {
-		var sum = 0, ddd_list = this.demanddefaultdistribution, epsilon = 1e-6;
+		var sum = 0, epsilon = 1e-6;
 		this.segfracs.each( function ( sf ) {
-			sum += ddd_list[ sf.name() ].attr('value') || 0;
+			sum += sf.attr('demanddefaultdistribution') || 0;
 		});
 		sum = Number(sum.toFixed( 6 ));
 

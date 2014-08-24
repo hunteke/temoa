@@ -358,7 +358,8 @@ def analysis_create_segfrac ( req, analysis_id ):
 			msgs.update(
 			  aId   = analysis.pk,
 			  id    = sf.pk,
-			  value = sf.value
+			  value = sf.value,
+			  demanddefaultdistribution = sf.demanddefaultdistribution
 			)
 
 		except IntegrityError as ie:
@@ -417,7 +418,8 @@ def analysis_update_segfrac ( req, analysis_id, segfrac_id ):
 			msgs.update(
 			  aId   = analysis.pk,
 			  id    = sf.pk,
-			  value = sf.value
+			  value = sf.value,
+			  demanddefaultdistribution = sf.demanddefaultdistribution
 			)
 
 		except IntegrityError as ie:

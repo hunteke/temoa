@@ -3,7 +3,6 @@
 <% if ( username !== null && (analysis.username === username) ) { %>
 	<form onsubmit='return false;' id='SegFracs_<%= analysis.attr('id') %>'></form>
 	<form onsubmit='return false;' id='Demands_<%= analysis.attr('id') %>'></form>
-	<form onsubmit='return false;' id='DemandDefaultDistribution_<%= analysis.attr('id') %>'></form>
 	<form onsubmit='return false;' id='DemandSpecificDistribution_<%= analysis.attr('id') %>'></form>
 	<table class='items segfracs'>
 		<caption>Annual Time Slices (SegFrac), Default Distribution (DD)</caption>
@@ -28,12 +27,11 @@
 			<td><%== analysis.segFracSum('html') %></td>
 		</tr><tr class='even'><th><abbr title='"Default Distribution": If specified, will provide a demand distribution different than the average for the timeslice'>DD</abbr></th>
 		<% analysis.segfracs.each( function( sf ) {
-			var ddd = analysis.demanddefaultdistribution.attr( sf.attr('name') );
+			var ddd = sf.attr('demanddefaultdistribution');
 		%>
 			<td <%= ($el) -> $el.data('slicedefault', ddd)%>>
 			<% if ( ! sf.isNew() ) { %>
-				<%== ddd.isNew() ? '' : "<button class='remove' disabled='disabled' type='button' name='DDDRemove' title='Press Shift to enable buttons'>Del</button>" %><br />
-				<input form='DemandDefaultDistribution_<%= analysis.attr('id') %>' name='DDD_<%= sf.attr('id') %>' type='number' autocomplete='off' value='<%= ddd.attr( 'value' ) || '' %>'>
+				<input form='SegFracs_<%= analysis.attr('id') %>' name='DDD' type='number' autocomplete='off' value='<%= sf.attr( 'demanddefaultdistribution' ) || '' %>'>
 				<span class='error'></span>
 			<% } %>
 			</td>
@@ -147,11 +145,11 @@
 		</tr><tr class='even'><th>DD</th>
 		<% sum = 0; analysis.segfracs.each( function( sf ) {
 			var name = sf.attr('name');
-			ddd  = analysis.demanddefaultdistribution.attr( name );
-			if ( ddd && 'attr' in ddd )
-				sum += ddd.attr( 'value' ) || 0;
+			var ddd  = sf.attr('demanddefaultdistribution');
+			if ( ddd )
+				sum += ddd || 0;
 		%>
-			<td><%= ddd && ddd.attr( 'value' ) || ' - ' %></td>
+			<td><%= ddd || ' - ' %></td>
 		<% }); %>
 			<td><%== sum ? (Math.abs(1 - sum) > epsilon ? '<span class="error">' + sum + '</span>' : 1) : '' %></td>
 		</tr>

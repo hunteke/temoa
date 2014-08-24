@@ -177,7 +177,6 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 				update_future_demands();
 
 				var _segFracs = {};
-				var ddd_map = analysis.demanddefaultdistribution;
 				var dsd_map = analysis.demandspecificdistribution;
 				var dem_map = analysis.future_demands;
 
@@ -207,27 +206,6 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 						}
 						dem_map.attr( dem_name, dem );
 					}
-				}
-
-				for ( var sf_key in _segFracs ) {
-					var ddd = ddd_map[ sf_key ];
-					var sf = _segFracs[ sf_key ];
-					if ( ! ddd ) {
-						ddd = new DemandDefaultDistribution({
-							aId: analysis.id,
-							sfId: sf.attr('id')
-						});
-					} else if ( ! ddd.isNew ) {
-						// Workaround a lacking feature in CanJS: there appears to
-						// be no way to return a /dictionary/ of models via the
-						// attributes plugin, only a can.List().  Unfortunately, we
-						// only want random access for DDD.  So, we convert each
-						// Map into a Model.
-						ddd = new DemandDefaultDistribution( ddd.attr() );
-					}
-					ddd.attr('timeslice', sf);
-					ddd_map.attr( sf_key, ddd );
-					update_timeslice( ddd_map, sf_key );
 				}
 
 				for ( var key in dsd_map.attr() ) {

@@ -74,7 +74,6 @@ Temoa.canControl.AnalysisParameters = can.Control('AnalysisParameters', {
 		var defaultdemand_id_re = /^DDD_(\d*)$/;
 
 		var $sfForm = $( 'form#SegFracs_' + aId );
-		var $ddForm = $( 'form#DemandDefaultDistribution_' + aId );
 		var $sfTable = $el.closest('.segfracs');
 		var $inputs = $sfTable.find(':input').not("[disabled='disabled']");
 		var sfData  = can.deparam( $sfForm.serialize() );
@@ -381,36 +380,16 @@ Temoa.canControl.AnalysisParameters = can.Control('AnalysisParameters', {
 	'[name="SegFracRemove"] click': function ( $el, ev ) {
 		$el.closest('th').data('segfrac').destroy();
 	},
-	'[name="DDDRemove"] click': function ( $el, ev ) {
-		var ddd = $el.closest('td').data('slicedefault');
-		var slice = ddd.timeslice;
-		var slice_name = slice.name();
-		ddd.destroy();
-
-		ddd = new DemandDefaultDistribution({
-			aId: this.analysis.id,
-			sfId: slice.id,
-			timeslice: slice
-		});
-		this.analysis.demanddefaultdistribution.attr( slice_name, ddd );
-
-		// Since the template keys off of segfracs, replacing the ddd is not
-		// good enough.  Also, segfracs does not have a "setDirty" setter,
-		// so we make it dirty with an effective non-op kludge:
-		this.analysis.segfracs.unshift( this.analysis.segfracs.shift() );
-	},
 	'[name="SegFracCancel"] click': function ( $el, ev ) {
 		var $item = $el.closest('.segfracs');
 		var segfracs = this.analysis.segfracs;
-		var demanddefaultdistribution = this.analysis.demanddefaultdistribution;
 
 		if ( segfracs && segfracs.length > 0 && segfracs[0].isNew() )
 			segfracs.shift();
 
 		for ( var i = 0; i < segfracs.length; ++i ) {
 			var sf = segfracs[ i ];
-			var ddd = demanddefaultdistribution.attr( sf.attr('name') );
-			ddd = ddd ? ddd.attr('value') : '';
+			var ddd = sf.demanddefaultdistribution || '';
 
 			$item.find('[name="SliceName_' + sf.id + '"]').val( sf.attr('name') );
 			$item.find('[name="SliceValue_' + sf.id + '"]').val( sf.value );
@@ -487,14 +466,6 @@ Temoa.canControl.AnalysisParameters = can.Control('AnalysisParameters', {
 				$el.closest('.demandspecificdistributions').find('[name="DemandSpecificDistributionCancel"]').click();
 			}
 		}
-	},
-	'{SegFrac} created': function ( list, ev, segfrac ) {
-		var slice_name = segfrac.name();
-		var ddd = new DemandDefaultDistribution({
-			aId: this.analysis.id,
-			sfId: segfrac.id,
-		});
-		this.analysis.demanddefaultdistribution.attr( slice_name, ddd );
 	},
 });
 
