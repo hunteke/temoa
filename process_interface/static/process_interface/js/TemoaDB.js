@@ -1068,19 +1068,19 @@ function BeginTemoaDBApp ( ) {
 	// analyses.
 	new Temoa.canControl.Analyses('#analysis_info');
 
-	$(document).bind('keyup', 'shift+space', function () {
+	$(document).bind('keyup', 'esc', function () {
 		var url = Temoa.C.ROOT_URL + '/static/process_interface/js/QuickFunction.js';
 		url += '?_=' + new Date().getTime();
 		$.getScript( url )
 		.fail( function ( jqXHR, status, error ) {
-			console.log(  'Error jqXHR: ', jqXHR );
-			console.log(  'Error status message: ', status );
-			console.log(  'Error information: ', error );
+			console.log( 'Error jqXHR: ', jqXHR );
+			console.log( 'Error status message: ', status );
+			console.log( 'Error information: ', error );
 			Temoa.fn.showStatus('Error reading quick function.  Typo?');
 		});
 	});
 
-	$(document).bind('keyup', 'ctrl+space', function () {
+	$(document).bind('keyup', '`', function () {
 		var queryString = '?_=' + new Date().getTime();
 		$('link[rel="stylesheet"]').each( function ( ) {
 			this.href = this.href.replace(/\?.*|$/, queryString);
