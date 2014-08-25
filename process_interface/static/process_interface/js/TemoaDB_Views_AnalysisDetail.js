@@ -237,7 +237,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 					}
 				}
 
-				new CommodityLists( '#Commodities', {
+				new CommodityLists( '#CommodityLists', {
 					analysis: analysis });
 
 			}
@@ -246,8 +246,8 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 			Temoa.fn.showStatus( null, null, "Unknown error retrieving the Analysis' commodity list.  If you can recreate this error after <em>reloading</em> the page, please inform the Temoa Project developers.");
 		});
 
-		$el.find('#ShowHideCommodities').click( function ( ev ) {
-			$('#Commodities').toggle( 'slide', { direction: 'left' });
+		$el.find('#ShowHideCommodityLists').click( function ( ev ) {
+			$('#CommodityLists').toggle( 'slide', { direction: 'left' });
 		});
 		$el.find('#ShowHideAnalysisParameters').click( function ( ev ) {
 			// due to the order of events when adding and removing various models

@@ -33,8 +33,8 @@ Temoa.canControl.CommodityLists = can.Control('CommodityLists', {
 			username: Temoa.fn.getCookie().username || null,
 		}));
 
-		$('#CommoditiesCloseButton').click( function ( ) {
-			$('#ShowHideCommodities').click();
+		$('#CommodityListsCloseButton').click( function ( ) {
+			$('#ShowHideCommodityLists').click();
 		});
 
 		var username = Temoa.fn.getCookie().username;

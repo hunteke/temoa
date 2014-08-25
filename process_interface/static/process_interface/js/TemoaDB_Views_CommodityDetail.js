@@ -93,15 +93,15 @@ Temoa.canControl.CommodityDetail = can.Control('CommodityDetail', {
 				}
 		});
 	},
-	'[name="CommoditiesCancel"] click': function ( $el, ev ) {
+	'[name="CommodityCancel"] click': function ( $el, ev ) {
 		var $block = $el.closest('.commodity');
 		var c = $block.data('process');
 		$block.find('[name="name"]').val( c.attr('name') || '' );
 	},
-	'[name="CommoditiesUpdate"] click': function ( $el, ev ) {
+	'[name="CommodityUpdate"] click': function ( $el, ev ) {
 		this.save( $el );
 	},
-	'[name="CommoditiesCreate"] click': function ( $el, ev ) {
+	'[name="CommodityCreate"] click': function ( $el, ev ) {
 		this.save( $el );
 	},
 	'input keyup': function ( $el, ev ) {
