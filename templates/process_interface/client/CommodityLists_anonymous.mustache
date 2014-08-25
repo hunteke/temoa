@@ -1,0 +1,32 @@
+<button type='button' id='CommodityListsCloseButton' class='closeButton'>Close</button>
+<table class='items demand'>
+	<caption>Demand Commodities</caption>
+	<tbody>
+	{{#each demand}}
+		<tr data-id='{{id}}' {{data 'commodity'}}>
+			<td>{{name}}</td>
+		</tr>
+	{{/each}}
+	</tbody>
+</table>
+<table class='items physical'>
+	<caption>Physical Commodities</caption>
+	<tbody>
+	{{#each physical}}
+		<tr data-id='{{id}}' {{data 'commodity'}}>
+			<td>{{name}}</td>
+		</tr>
+	{{/each}}
+	</tbody>
+</table>
+<table class='items emission'>
+	<caption>Emission Commodities</caption>
+	<tbody>
+	{{#each emission}}
+		<tr data-id='{{id}}' {{data 'commodity'}}>
+			<td>{{name}}</td>
+		</tr>
+	{{/each}}
+	</tbody>
+</table>
+<div id='commodity_detail'></div>

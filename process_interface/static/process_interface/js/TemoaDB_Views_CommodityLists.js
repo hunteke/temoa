@@ -17,28 +17,35 @@ if ( !('Temoa' in window) ) {
 
 Temoa.canControl.CommodityLists = can.Control('CommodityLists', {
 	defaults: {
-			view: Temoa.C.ROOT_URL + '/client_template/analysis_commodities.ejs'
+			view_url: Temoa.C.ROOT_URL + '/client_template/CommodityLists.mustache',
 		}
 	},{
 	init: function ( $el, options ) {
-		var view = options.view;
+		var view_url = options.view_url;
+
+		var analysis = options.analysis;  // needed for closure, below
+		var username = Temoa.fn.getCookie().username || null;
+
+		if ( analysis.username !== username )
+			// -9 == length of .mustache
+			view_url = view_url.insert(-9, '_anonymous');
+
 		if ( Temoa.C.DEBUG )
-			view += '?_=' + new Date().getTime();
+			view_url += '?_=' + new Date().getTime();
 
-		this.analysis = options.analysis;
-		var analysis = this.analysis;  // needed for closure, below
-
-		$el.html( can.view( view, {
-			analysis: analysis,
-			username: Temoa.fn.getCookie().username || null,
-		}));
+		var view_opts = {
+		  demand:   analysis.commodity_demand,
+		  emission: analysis.commodity_emission,
+		  physical: analysis.commodity_physical,
+		  output:   analysis.commodity_output,
+		}
+		$el.html( can.view( view_url, view_opts ));
 
 		$('#CommodityListsCloseButton').click( function ( ) {
 			$('#ShowHideCommodityLists').click();
 		});
 
-		var username = Temoa.fn.getCookie().username;
-		if ( ! (username && username === analysis.username ) )
+		if ( analysis.username !== username )
 			return;
 
 		function select_start () {

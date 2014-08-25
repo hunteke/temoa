@@ -1,0 +1,44 @@
+<datalist id='CommodityEmissionList'>{{#each emission}}<option value='{{name}}' />{{/each}}</datalist>
+<datalist id='CommodityPhysicalList'>{{#each physical}}<option value='{{name}}' />{{/each}}</datalist>
+<datalist id='CommodityOutputList'>{{#each output}}	<option value='{{name}}' />{{/each}}</datalist>
+
+<button type='button' id='CommodityListsCloseButton' class='closeButton'>Close</button>
+<form>
+	<table class='items demand'>
+		<caption>Demand Commodities</caption>
+		<thead><tr><th class='action'><button id='NewCommodityDemand' class='add' type='button'>Add</button></th><th>Name</th></tr></thead>
+		<tbody>
+		{{#each demand}}
+			<tr data-id='{{id}}' {{data 'commodity'}}>
+				<td class='action'><button class='remove' disabled='disabled' title='Press Shift to enable buttons' type='button' name='CommodityDemandRemove'>Del</button></td>
+				<td>{{name}}</td>
+			</tr>
+		{{/each}}
+		</tbody>
+	</table>
+	<table class='items physical'>
+		<caption>Physical Commodities</caption>
+		<thead><tr><th class='action'><button id='NewCommodityPhysical' class='add' type='button'>Add</button></th><th>Name</th></tr></thead>
+		<tbody>
+		{{#each physical}}
+			<tr data-id='{{id}}' {{data 'commodity'}}>
+				<td class='action'><button class='remove' disabled='disabled' title='Press Shift to enable buttons' type='button' name='CommodityPhysicalRemove'>Del</button></td>
+				<td>{{name}}</td>
+			</tr>
+		{{/each}}
+		</tbody>
+	</table>
+	<table class='items emission'>
+		<caption>Emission Commodities</caption>
+		<thead><tr><th class='action'><button id='NewCommodityEmission' class='add' type='button'>Add</button></th><th>Name</th></tr></thead>
+		<tbody>
+		{{#each emission}}
+			<tr data-id='{{id}}' {{data 'commodity'}}>
+				<td class='action'><button class='remove' disabled='disabled' title='Press Shift to enable buttons' type='button' name='CommodityPhysicalRemove'>Del</button></td>
+				<td>{{name}}</td>
+			</tr>
+		{{/each}}
+		</tbody>
+	</table>
+</form>
+<div id='commodity_detail'></div>

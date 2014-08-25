@@ -86,6 +86,8 @@ svg .output { stroke: #3b3; }
 #AnalysisProcessDetails .items .multiple_values { text-align: center ; font-size: 90% ; font-weight: bold ; }
 #AnalysisProcessDetails .items .process { width: 100% ; }
 
+table.items tr:nth-child(odd)  { background-color: #ddd ; }
+table.items tr:nth-child(even) { background-color: #fff ; }
 
 .items .action { width: 45px ; }
 #commodity_detail { float: left ; width: 20em ; border: 1px solid #000 ; }
