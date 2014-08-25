@@ -17,15 +17,21 @@ if ( !('Temoa' in window) ) {
 
 Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 	defaults: {
-			view: Temoa.C.ROOT_URL + '/client_template/analysis_info.ejs'
+			view_url: Temoa.C.ROOT_URL + '/client_template/AnalysisDetail.mustache',
 		}
 	},{
 	init: function ( $el, options ) {
-		var view = options.view;
-		if ( Temoa.C.DEBUG )
-			view += '?_=' + new Date().getTime();
+		var view_url = options.view_url;
 
 		var analysis = options.analysis;
+		var username = Temoa.fn.getCookie().username || null;
+
+		if ( analysis.username !== username )
+			// -9 == length of .mustache
+			view_url = view_url.insert(-9, '_anonymous');
+
+		if ( Temoa.C.DEBUG )
+			view_url += '?_=' + new Date().getTime();
 
 		if ( ! analysis.commodity_emission )
 			analysis.attr('commodity_emission',
@@ -43,12 +49,8 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 		if ( ! analysis.all_vintages )
 			analysis.attr('all_vintages', new can.List() );
 
-		var view_opts = {
-			username: Temoa.fn.getCookie().username || null,
-			analysis: analysis,
-		};
-
-		$el.append( can.view( view, view_opts )).fadeIn();
+		var view_opts = { analysis: analysis };
+		$el.append( can.view( view_url, view_opts )).fadeIn();
 
 		if ( analysis.isNew() )
 			// a new analysis won't have anything attached to it ...
@@ -237,8 +239,7 @@ Temoa.canControl.AnalysisDetail = can.Control('AnalysisDetail', {
 					}
 				}
 
-				new CommodityLists( '#CommodityLists', {
-					analysis: analysis });
+				new CommodityLists( '#CommodityLists', { analysis: analysis });
 
 			}
 		).fail( function ( error ) {

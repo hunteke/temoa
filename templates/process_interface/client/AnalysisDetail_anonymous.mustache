@@ -1,0 +1,21 @@
+<div class='analysis'>
+<div id='UnsolvedSystemMap'><button id='UnsolvedSystemMapCloseButton' class='closeButton'>Close</button><svg></svg></div>
+<div id='AnalysisInfo'>
+	<table>
+		<tbody>
+			<tr><th>Name:</th><td class='full_input textleftalign'>{{analysis.name}}</td></tr>
+			<tr><th>Description:</th><td>{{analysis.description}}</td></tr>
+			<tr><th>Period 0:</th><td>{{#if analysis.period_0}}{{analysis.period_0}}{{else}}No start year specified{{/if}}</td></tr>
+			<tr><th>Global Discount Rate (GDR):</th><td>{{#if analysis.global_discount_rate}}{{analysis.global_discount_rate}}{{else}}No GDR specified{{/if}}</td></tr>
+			<tr><th>Vintages:</th><td class='full_input textleftalign'>{{#if analysis.vintages}}{{analysis.vintages}}{{else}}No vintages specified{{/if}}</td></tr>
+		</tbody>
+	</table>
+	<button type='button' id='ShowHideCommodityLists'>Commodities</button>
+	<button type='button' id='ShowHideAnalysisParameters'>Analysis Parameters</button>
+	<button type='button' id='ShowHideUnsolvedSystemMap'>Toggle System Map</button>
+	<a href='{{analysis.download_url}}' title='Download a server-generated dat file.  This may take a minute.'
+	  download='{{analysis.download_name}}'><button type='button' id='DownloadDataFile'>Download as DAT</button></a>
+	<div id='CommodityLists'></div>
+	<div id='AnalysisParameters'></div>
+</div>
+</div>

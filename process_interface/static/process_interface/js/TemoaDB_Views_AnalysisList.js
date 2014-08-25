@@ -31,7 +31,7 @@ Temoa.canControl.Analyses = can.Control('Analyses', {
 		Analysis.findAll({}, function ( analyses ) {
 			var username = Temoa.fn.getCookie().username || null;
 			if ( username )
-				analyses.unshift( new Analysis() );
+				analyses.unshift( new Analysis({username: username}) );
 
 			thisAnalyses.analyses = analyses
 			var view_opts = {

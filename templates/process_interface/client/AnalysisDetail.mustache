@@ -1,0 +1,49 @@
+<datalist id='EmissionList'>{{#each analysis.commodity_emission}}<option value='{{name}}' />{{/each}}</datalist>
+<datalist id='TimesliceList'>{{#each analysis.segfracs}}<option value='{{name}}' />{{/each}}</datalist>
+
+<div class='analysis'>
+<div id='UnsolvedSystemMap'><button id='UnsolvedSystemMapCloseButton' class='closeButton'>Close</button><svg></svg></div>
+<div id='AnalysisInfo' {{data 'analysis'}}>
+	<form onsubmit='return false;' id='AnalysisInfoForm_{{analysis.id}}'>
+	<table>
+		<tbody>
+			<tr>
+				<th><label for='AnalysisName_{{analysis.id}}'>Name</label>:</th>
+				<td class='full_input textleftalign'><input id='AnalysisName_{{analysis.id}}' type='text' name='name' autocomplete='off' form='AnalysisInfoForm_{{analysis.id}}'  placeholder='Analysis Name' {{#analysis.name}}value='{{analysis.name}}'{{/analysis.name}}><span class='error'></span></td>
+			</tr><tr>
+				<th><label for='AnalysisDescription_{{analysis.id}}'>Description</label>:</th>
+				<td><textarea id='AnalysisDescription_{{analysis.id}}' name='description' placeholder='General information about this analysis.  For which publication, motivation, methodology, pertinent details ...'>{{#analysis.description}}{{analysis.description}}{{/analysis.description}}</textarea><span class='error'></span></td>
+			</tr><tr>
+				<th><label for='AnalysisGDR_{{analysis.id}}'>Global Discount Rate (GDR)</label>:</th>
+				<td><input id='AnalysisGDR_{{analysis.id}}' type='number' name='global_discount_rate' autocomplete='off' form='AnalysisInfoForm_{{analysis.id}}' placeholder='decimal rate' {{#analysis.global_discount_rate}}value='{{analysis.global_discount_rate}}'{{/analysis.global_discount_rate}}><span class='error'></span></td>
+			</tr><tr>
+				<th><label for='AnalysisVintages_{{analysis.id}}'>Vintages</label>:</th>
+				<td class='full_input textleftalign'><input id='AnalysisVintages_{{analysis.id}}' type='text' name='vintages' autocomplete='off' form='AnalysisInfoForm_{{analysis.id}}' placeholder='comma separated list of period boundaries (years)' {{#analysis.vintages}}value='{{analysis.vintages}}'{{/analysis.vintages}}><span class='error'></span></td>
+			</tr><tr>
+				<th><label for='AnalysisPeriod0_{{analysis.id}}'>Period 0</label>:</th>
+				<td><input id='AnalysisPeriod0_{{analysis.id}}' type='number' name='period_0' autocomplete='off' form='AnalysisInfoForm_{{analysis.id}}' placeholder='start year' {{#analysis.period_0}}value='{{analysis.period_0}}'{{/analysis.period_0}}><span class='error'></span></td>
+			</tr><tr>
+				<td></td>
+				<td>
+				{{#if analysis.isNew}}
+					<button type='button' form='AnalysisInfoForm_{{analysis.id}}' name='AnalysisCreate'>Create</button>
+				{{else}}
+					<button type='button' form='AnalysisInfoForm_{{analysis.id}}' name='AnalysisUpdate'>Update</button>
+				{{/if}}
+					<button type='button' form='AnalysisInfoForm_{{analysis.id}}' name='AnalysisCancel'>Cancel</button>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<p class='error'></p>
+	</form>
+	{{#if analysis.id}}
+		<button type='button' id='ShowHideCommodityLists'>Commodities</button>
+		<button type='button' id='ShowHideAnalysisParameters'>Analysis Parameters</button>
+		<button type='button' id='ShowHideUnsolvedSystemMap'>Toggle System Map</button>
+		<a href='{{analysis.download_url}}' title='Download a server-generated dat file.  It may take a minute for the server to respond (while it generates the file).' download='{{analysis.download_name}}'><button type='button' id='DownloadDataFile'>Download as DAT</button></a>
+	{{/if}}
+	<div id='CommodityLists'></div>
+	<div id='AnalysisParameters'></div>
+</div>
+</div>
