@@ -21,16 +21,6 @@ body { height: 100% ; margin: 1em ; }
 	float: right ;
 }
 
-#DBTechnologies {
-	position: fixed ;
-	border: 1px solid red ;
-	height: 99% ;
-	width: 98% ;
-	top: 1px ;
-	background: #eee ;
-	overflow: auto ;
-}
-
 #AnalysisCommodities, #AnalysisParameters, #AnalysisUnsolvedSystemMap { position: fixed ; border: 1px solid red ; top: 1em ; bottom: 1em ; right: 1em ; left: 1em ; background: #eee ; overflow: auto ; opacity: 1 ; z-index: 150 ; display: none; }
 #AnalysisCommodities > form { float: left ; width: 15em ; }
 #AnalysisCommodities > form > table { width: 100% ; border-top: 2pt solid black ; margin-top: 1ex ; }
