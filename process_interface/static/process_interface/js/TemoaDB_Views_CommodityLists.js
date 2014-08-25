@@ -152,11 +152,11 @@ Temoa.canControl.CommodityLists = can.Control('CommodityLists', {
 		this.createNewCommodity( CommodityDemand, opts );
 	},
 	'#NewCommodityEmission click': function ( $el ) {
-		var opts = {aId: this.analysis.id, name: 'New Emission Commodity'}
+		var opts = {aId: this.analysis.id, name: 'New Emission Commodity'};
 		this.createNewCommodity( CommodityEmission, opts );
 	},
 	'#NewCommodityPhysical click': function ( $el ) {
-		var opts = {aId: this.analysis.id, name: 'New Physical Commodity'}
+		var opts = {aId: this.analysis.id, name: 'New Physical Commodity'};
 		this.createNewCommodity( CommodityPhysical, opts );
 	},
 	'[name="CommodityDemandRemove"] click': function ( $el, ev ) {
