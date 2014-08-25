@@ -23,7 +23,7 @@ Temoa.canControl.CommodityLists = can.Control('CommodityLists', {
 	init: function ( $el, options ) {
 		var view_url = options.view_url;
 
-		var analysis = options.analysis;  // needed for closure, below
+		var analysis = options.analysis;
 		var username = Temoa.fn.getCookie().username || null;
 
 		if ( analysis.username !== username )
@@ -32,6 +32,8 @@ Temoa.canControl.CommodityLists = can.Control('CommodityLists', {
 
 		if ( Temoa.C.DEBUG )
 			view_url += '?_=' + new Date().getTime();
+
+		this.analysis = analysis;
 
 		var view_opts = {
 		  demand:   analysis.commodity_demand,

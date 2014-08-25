@@ -17,23 +17,25 @@ if ( !('Temoa' in window) ) {
 
 Temoa.canControl.CommodityDetail = can.Control('CommodityDetail', {
 	defaults: {
-			view: Temoa.C.ROOT_URL + '/client_template/analysis_commodity_detail.ejs'
+			view_url: Temoa.C.ROOT_URL + '/client_template/CommodityDetail.mustache',
 		}
 	},{
 	init: function ( $el, options ) {
-		var view = options.view;
+		var view_url = options.view_url;
+
+		var analysis = options.analysis;
+		var username = Temoa.fn.getCookie().username || null;
+
+		if ( analysis.username !== username )
+			// -9 == length of .mustache
+			view_url = view_url.insert(-9, '_anonymous');
+
 		if ( Temoa.C.DEBUG )
-			view += '?_=' + new Date().getTime();
+			view_url += '?_=' + new Date().getTime();
 
 		this.commodity = options.commodity;
 
-		var view_opts = {
-			username:   options.username || null,
-			analysis:   options.analysis,
-			commodity:  options.commodity
-		};
-
-		$el.append( can.view( view, view_opts ));
+		$el.append( can.view( view_url, options.commodity ));
 	},
 	save: function ( $el ) {
 		var errors = {};

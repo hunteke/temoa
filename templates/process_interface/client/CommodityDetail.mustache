@@ -1,0 +1,12 @@
+<div class='commodity' id='CommodityForm_{{id}}' {{data 'commodity'}}>
+	<form onsubmit='return false;'>
+		<h3>{{#if name}}{{name}}{{else}}New Commodity{{/if}}</h3>
+		<p><label for='Commodity_{{id}}'>Name:</label> <input id='Commodity_{{id}}' type='text' name='name' placeholder='commodity name' {{#id}}value='{{name}}'{{/id}}><span class='error'></span></p>
+		{{#if isNew}}
+		<button type='button' name='CommoditiesCreate'>Create</button><button type='button' name='Cancel'>Cancel</button>
+		{{else}}
+		<button type='button' name='CommoditiesUpdate'>Update</button><button type='button' name='Cancel'>Cancel</button>
+		{{/if}}
+		<p class='error'></p>
+	</form>
+</div>
