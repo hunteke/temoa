@@ -17,20 +17,20 @@ if ( !('Temoa' in window) ) {
 
 Temoa.canControl.TechnologyList = can.Control('TechnologyList', {
 	defaults: {
-			view_url: Temoa.C.ROOT_URL + '/client_template/technology_list.mustache',
-			view_url_anonymous: Temoa.C.ROOT_URL + '/client_template/technology_list_anonymous.mustache'
+			view_url: Temoa.C.ROOT_URL + '/client_template/TechnologyList.mustache',
 		}
 	},{
 	init: function ( $el, options ) {
 		// $el -> the element to which this view is attached.  Removing this
 		//        element will tell CanJS to cleanup all associated references.
-		var view_url = options.view_url_anonymous;
+		var view_url = options.view_url;
 
 		var analysis = options.analysis;
 		var username = Temoa.fn.getCookie().username || null;
 
-		if ( analysis.isNew() || analysis.username === username )
-			view_url = options.view_url;
+		if ( analysis.username !== username )
+			// -9 == length of .mustache
+			view_url = view_url.insert(-9, '_anonymous');
 
 		if ( Temoa.C.DEBUG )
 			view_url += '?_=' + new Date().getTime();
@@ -38,14 +38,8 @@ Temoa.canControl.TechnologyList = can.Control('TechnologyList', {
 		Technology.findAll( {aId: analysis.id}, function ( technologies ) {
 			options['technologies'] = technologies;
 
-			$el.empty()
-			var view_opts = {
-				username: Temoa.fn.getCookie().username || null,
-				technologies: technologies,
-				analysis: analysis
-			};
-
-			$el.append( can.view( view_url, view_opts ));
+			var view_opts = { technologies: technologies };
+			$el.empty().append( can.view( view_url, view_opts ));
 
 			var $tbody = $el.find('.items:first tbody');
 

@@ -1,0 +1,8 @@
+<table class='items'>
+	<thead><tr><th>Name</th></tr></thead>
+	<tbody>
+	{{#each technologies}}
+		<tr data-id='{{id}}' {{data 'technology'}}><td>{{name}}</td></tr>
+	{{/each}}
+	</tbody>
+</table>

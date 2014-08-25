@@ -1,0 +1,13 @@
+<datalist id='TechnologyNames'>{{#each technologies}}<option value='{{name}}' />{{/each}}</datalist>
+
+<table class='items'>
+	<thead><tr><th><button id='NewTechnology' class='add' type='button'>Add</button></th><th>Name</th></tr></thead>
+	<tbody>
+	{{#each technologies}}
+		<tr data-id='{{id}}' {{data 'technology'}}>
+			<td><button class='remove' disabled='disabled' title='Press Shift to enable buttons' type='button' name='RemoveTechnology'>Del</button></td>
+			<td>{{name}}</td>
+		</tr>
+	{{/each}}
+	</tbody>
+</table>
