@@ -148,7 +148,7 @@ Temoa.canControl.CommodityLists = can.Control('CommodityLists', {
 		$('#commodity_detail').replaceWith( $newDiv );
 	},
 	'#NewCommodityDemand click': function ( $el ) {
-		var opts = {aId: this.analysis.id}
+		var opts = {aId: this.analysis.id, name: 'New Demand Commodity'};
 		this.createNewCommodity( CommodityDemand, opts );
 	},
 	'#NewCommodityEmission click': function ( $el ) {
