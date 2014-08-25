@@ -72,7 +72,6 @@ Temoa.canControl.CommodityLists = can.Control('CommodityLists', {
 				new CommodityDetail( $info, {
 					analysis:  analysis,
 					commodity: toCreate.shift(),
-					username:  username
 				});
 
 				if ( toCreate.length > 0 ) {
@@ -143,7 +142,6 @@ Temoa.canControl.CommodityLists = can.Control('CommodityLists', {
 	createNewCommodity: function ( CommodityObj, commodityOpts ) {
 		var $newDiv = $('<div>', {id: 'commodity_detail'} );
 		new CommodityDetail( $newDiv, {
-			username: Temoa.fn.getCookie().username || null,
 			analysis: this.analysis,
 			commodity: new CommodityObj( commodityOpts )
 		});
