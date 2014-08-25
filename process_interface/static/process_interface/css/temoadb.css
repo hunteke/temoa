@@ -21,11 +21,11 @@ body { height: 100% ; margin: 1em ; }
 	float: right ;
 }
 
-#AnalysisCommodities, #AnalysisParameters, #AnalysisUnsolvedSystemMap { position: fixed ; border: 1px solid red ; top: 1em ; bottom: 1em ; right: 1em ; left: 1em ; background: #eee ; overflow: auto ; opacity: 1 ; z-index: 150 ; display: none; }
-#AnalysisCommodities > form { float: left ; width: 15em ; }
-#AnalysisCommodities > form > table { width: 100% ; border-top: 2pt solid black ; margin-top: 1ex ; }
+#CommodityLists, #AnalysisParameters, #UnsolvedSystemMap { position: fixed ; border: 1px solid red ; top: 1em ; bottom: 1em ; right: 1em ; left: 1em ; background: #eee ; overflow: auto ; opacity: 1 ; z-index: 150 ; display: none; }
+#CommodityLists > form { float: left ; width: 15em ; }
+#CommodityLists > form > table { width: 100% ; border-top: 2pt solid black ; margin-top: 1ex ; }
 
-#AnalysisUnsolvedSystemMap { overflow: hidden; }
+#UnsolvedSystemMap { overflow: hidden; }
 
 svg { overflow: hidden; }
 
