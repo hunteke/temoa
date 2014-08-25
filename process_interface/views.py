@@ -7,10 +7,12 @@ from django.contrib.auth.models import User
 from django.core.context_processors import csrf
 from django.http import HttpResponse, Http404
 from django.shortcuts import render, render_to_response
+from django.template.base import TemplateDoesNotExist
+from django.template.loaders.filesystem import Loader as FSLoader
 from django.views.decorators.cache import cache_control
 
 from decorators.http import require_GET
-from settings import CD   # CD = content delivery
+from settings import CD, TEMPLATE_DIRS   # CD = content delivery
 from forms import LoginForm
 
 from views_analysis import *
@@ -20,6 +22,8 @@ from views_process import *
 from views_technology import *
 
 from view_helpers import set_cookie
+
+template_loader = FSLoader()
 
 @require_GET
 def home ( req ):
@@ -47,12 +51,22 @@ def view ( req ):
 @require_GET
 @cache_control(public=True, max_age=300)  # in seconds
 def get_client_template ( req, template ):
-	# Client templates are templates rendered by the client (e.g., ejs).
+	# Client templates are templates rendered by the client (e.g., mustache).
 	# Due to caching, these are somewhat difficult to update.  So, for the case
 	# of a rollout, ensure that these templates have a reasonably small cache
 	# life.  Reasonably small is probably 5 minutes, allowing a rollout during
 	# the workday.
-	return render_to_response('process_interface/client/' + template )
+	content_type = 'text/plain'
+	if template.endswith('.mustache'):
+		content_type = 'text/x-tmpl-mustache'
+
+	template_path = 'process_interface/client/' + template
+	try:
+		content, path = template_loader.load_template_source( template_path )
+	except TemplateDoesNotExist as tdne:
+		raise Http404( 'Requested template not found on server.' )
+
+	return HttpResponse(content, content_type=content_type)
 
 
 def tutorial ( req ):

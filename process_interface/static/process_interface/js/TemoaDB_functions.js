@@ -282,20 +282,6 @@ Temoa.fn.processCookie = function ( ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-//                            EJS helper functions                           //
-///////////////////////////////////////////////////////////////////////////////
-
-can.EJS.Helpers.prototype.escapeHTML = Temoa.fn.escapeHTML;
-
-can.EJS.Helpers.prototype.apostrophe_escape = function ( s ) {
-	return s.replace(/'/g, "&apos;");
-}
-
-can.EJS.Helpers.prototype.quote_escape = function ( s ) {
-	return s.replace(/'/g, "&quot;");
-}
-
-///////////////////////////////////////////////////////////////////////////////
 //                               Event handlers                              //
 ///////////////////////////////////////////////////////////////////////////////
 

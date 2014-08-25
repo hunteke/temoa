@@ -1,0 +1,7 @@
+<select id='analysis_selection'>
+	<option value=''>----- Select Analysis -----</option>
+	{{#each analyses}}
+		{{#if isNew}}<option {{data 'analysis'}} value='New'>Create Analysis ...</option>
+		{{else}}     <option {{data 'analysis'}} value='{{id}}'>({{username}}) - {{name}}</option>{{/if}}
+	{{/each}}
+</select>

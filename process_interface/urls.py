@@ -83,7 +83,7 @@ urlpatterns = patterns('',
   url(r'^interact/$', view,        name='view'),
   url(r'^tutorial/$', tutorial,    name='tutorial'),
   url(r'^user/list$', user,        name='users'),
-  url(r'^client_template/(?P<template>[A-z0-9_]+\.ejs)$', get_client_template, name='get_client_template'),
+  url(r'^client_template/(?P<template>[A-z0-9_]+\.mustache)$', get_client_template, name='get_client_template'),
 
   url(r'^analysis/(?P<analysis_id>\d+)/process/list/json$',   process_list, name='process_list'),
 

@@ -17,13 +17,14 @@ if ( !('Temoa' in window) ) {
 
 Temoa.canControl.Analyses = can.Control('Analyses', {
 	defaults: {
-			view: Temoa.C.ROOT_URL + '/client_template/analysis_list.ejs'
+			view_url: Temoa.C.ROOT_URL + '/client_template/AnalysisList.mustache',
 		}
 	},{
 	init: function ( $el, options ) {
-		var view = options.view;
+		var view_url = options.view_url;
+
 		if ( Temoa.C.DEBUG )
-			view += '?_=' + new Date().getTime();
+			view_url += '?_=' + new Date().getTime();
 
 		var thisAnalyses = this;
 		Temoa.fn.clearAnalysisViews()
@@ -37,7 +38,8 @@ Temoa.canControl.Analyses = can.Control('Analyses', {
 				username: username,
 				analyses: analyses
 			}
-			$el.html( can.view( view, view_opts ));
+
+			$el.html( can.view( view_url, view_opts ));
 			$el.removeClass('hidden');
 
 			var $cookie = Temoa.fn.getCookie();
