@@ -70,6 +70,7 @@ Temoa.canControl.Analyses = can.Control('Analyses', {
 		Temoa.fn.setCookie( $cookie );
 
 		if ( ! val ) {
+			// i.e., the user has the null option, like 'Select Analysis'
 			$('#analysis_detail').fadeOut( function ( ) { $(this).empty(); });
 			return;
 		}
