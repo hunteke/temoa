@@ -18,6 +18,32 @@
 		</tbody>
 	</table>
 	<table>
+		<caption>Maximum and Minimum Capacities</caption>
+		<thead>
+			<tr><th>Vintages:</th>
+				{{#each analysis.future_periods}}<th>{{.}}</th>{{/each}}
+			</tr>
+		</thead>
+		<tbody>
+			<tr><th>Max:</th>
+				{{#each technology.maxcapacities}}
+				{{#if .}}
+				<td class='cell_has_data'>{{.}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}{{/each}}
+			</tr>
+			<tr><th>Min:</th>
+				{{#each technology.mincapacities}}
+				{{#if .}}
+				<td class='cell_has_data'>{{.}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}{{/each}}
+			</tr>
+		</tbody>
+	</table>
+	<table>
 		<thead>
 			<tr>
 				<th>Vintages:</th>
