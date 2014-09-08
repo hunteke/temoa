@@ -61,30 +61,32 @@ svg .output { stroke: #3b3; }
 #launchers ul li { float: left ; width: 15em ; border: 1px dotted blue ; margin: 0 2em ; }
 #launchers ul li a { overflow: hidden ; display: block ; height: 15em ; width: 15em ; }
 
-#ProcessList {
+#TechnologyList {
 	background-color: inherit ;
 	clear: left ;
 	float: left ;
+	min-width: 20% ;
 	max-width: 30% ;
+	border-right: 1pt dotted black ;
+	margin-right: 1pt ;
 }
 
 #analysis { border: 1px solid #000 ; min-height: 10ex ; width: 100% ; clear: both ; }
 
-#AnalysisProcessDetails h2, #AnalysisTechnologyDetails h2 { text-align: center ; }
-#AnalysisProcessDetails { background-color: transparent ; opacity: 0.8 ; float: left ; width: auto ; max-width: 30% ;}
+#TechnologyDetails h2 { text-align: center ; }
+#TechnologyDetails { background-color: transparent ; opacity: 0.8 ; float: left ; width: auto ; max-width: 30% ; }
+#TechnologyDetails .noitems { position: relative ; z-index: 10 ; width: 25em ; }
+#TechnologyDetails .items:empty { display: none ; }
+#TechnologyDetails .items { position: absolute ; top: 0px ; left: 0px ; width: 100% ; height: 100% ; z-index: 20 ; background: #CCC ; border-spacing: 0 ; }
+#TechnologyDetails .items table { border-collapse: collapse ; border-width: 1pt 0.5pt ; border-color: #000 ; border-style: solid ; }
+#TechnologyDetails .items tbody { padding: 2em ; }
+#TechnologyDetails .items td { padding: 0.2ex 1em 0.2ex 1em ;  }
+#TechnologyDetails .items thead tr       { border-top: 1pt solid #000 ; border-bottom: 1pt dotted #000 ; background: #29f ; font-size: 120% ; }
+#TechnologyDetails .items thead tr.error { background: #f00 ; color: #fff ; }
+#TechnologyDetails .items .info { color: #777 ; font-weight: normal ; font-style: italic ; }
+#TechnologyDetails .items .multiple_values { text-align: center ; font-size: 90% ; font-weight: bold ; }
+#TechnologyDetails .items .process { width: 100% ; }
 
-#AnalysisProcessDetails .noitems { position: relative ; z-index: 10 ; width: 25em ; }
-
-#AnalysisProcessDetails .items:empty { display: none ; }
-#AnalysisProcessDetails .items { position: absolute ; top: 0px ; left: 0px ; width: 100% ; height: 100% ; z-index: 20 ; background: #CCC ; border-spacing: 0 ; }
-#AnalysisProcessDetails .items table { border-collapse: collapse ; border-width: 1pt 0.5pt ; border-color: #000 ; border-style: solid ; }
-#AnalysisProcessDetails .items tbody { padding: 2em ; }
-#AnalysisProcessDetails .items td { padding: 0.2ex 1em 0.2ex 1em ;  }
-#AnalysisProcessDetails .items thead tr       { border-top: 1pt solid #000 ; border-bottom: 1pt dotted #000 ; background: #29f ; font-size: 120% ; }
-#AnalysisProcessDetails .items thead tr.error { background: #f00 ; color: #fff ; }
-#AnalysisProcessDetails .items .info { color: #777 ; font-weight: normal ; font-style: italic ; }
-#AnalysisProcessDetails .items .multiple_values { text-align: center ; font-size: 90% ; font-weight: bold ; }
-#AnalysisProcessDetails .items .process { width: 100% ; }
 
 table.items tr:nth-child(odd)  { background-color: #ddd ; }
 table.items tr:nth-child(even) { background-color: #fff ; }
