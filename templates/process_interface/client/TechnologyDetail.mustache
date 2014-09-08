@@ -33,6 +33,14 @@
 				{{else}}
 				<td class='empty_cell'></td>
 				{{/if}}{{/each}}
+			</tr><tr>
+				<th>Discount Rate (decimal):</th>
+				{{#each technology.processes.discountrate}}
+				{{#if .}}
+				<td class='cell_has_data'>{{.}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}{{/each}}
 			</tr>
 		</tbody>
 	</table>
