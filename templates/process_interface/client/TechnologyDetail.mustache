@@ -49,6 +49,22 @@
 				{{else}}
 				<td class='empty_cell'></td>
 				{{/if}}{{/each}}
+			</tr><tr>
+				<th>Expected Life (years):</th>
+				{{#each technology.processes.lifetime}}
+				{{#if .}}
+				<td class='cell_has_data'>{{.}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}{{/each}}
+			</tr><tr>
+				<th>Loan Length (years):</th>
+				{{#each technology.processes.loanlife}}
+				{{#if .}}
+				<td class='cell_has_data'>{{.}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}{{/each}}
 			</tr>
 		</tbody>
 	</table>
