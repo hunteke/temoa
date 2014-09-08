@@ -17,13 +17,21 @@ if ( !('Temoa' in window) ) {
 
 Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 	defaults: {
-			view: Temoa.C.ROOT_URL + '/client_template/analysis_technology_detail.ejs',
+			view_url: Temoa.C.ROOT_URL + '/client_template/TechnologyDetail.mustache',
 		}
 	},{
 	init: function ( $el, options ) {  // TechnologyDetail
-		var view = options.view;
+		var view_url = options.view_url;
+
+		var analysis = options.analysis;
+		var username = Temoa.fn.getCookie().username || null;
+
+		if ( analysis.username !== username )
+			// -9 == length of .mustache
+			view_url = view_url.insert(-9, '_anonymous');
+
 		if ( Temoa.C.DEBUG )
-			view += '?_=' + new Date().getTime();
+			view_url += '?_=' + new Date().getTime();
 
 		var t = options.technology;
 
@@ -34,13 +42,8 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		if ( ! t.outputsplits )
 			t.attr('outputsplits', new TechnologyOutputSplit.List());
 
-		var view_opts = {
-			username:   options.username || null,
-			analysis:   options.analysis,
-			technology: t
-		};
-
-		$el.append( can.view( view, view_opts ));
+		var view_opts = { technology: t, analysis: analysis };
+		$el.append( can.view( view_url, view_opts ));
 	},
 	destroy: function ( ) {  // TechnologyDetail
 		var capfac_list = this.options.technology.capacityfactors;

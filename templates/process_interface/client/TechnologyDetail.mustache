@@ -1,0 +1,20 @@
+<div class='technology' {{#technology}}{{data 'technology'}}{{/technology}}>
+	<form onsubmit='return false;' id='TechUpdateForm_{{id}}'></form>
+
+	<h3>{{technology.name}}</h3>
+	<p>{{#if technology.description}}{{technology.description}}{{else}}<span class='empty'>No description.  Double click here to add one.</span>{{/if}}</p>
+	<table>
+		<thead>
+			<tr>
+				<th><label for='IsBaseload_{{id}}'><abbr title='Baseload?'>B</abbr></label></th>
+				<th><label for='IsStorage_{{id}}'><abbr title='Storage?'>S</abbr></label></th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><input form='TechUpdateForm_{{id}}' type='checkbox' title='Baseload?' id='IsBaseload_{{id}}' {{#technology.baseload}}checked='checked'{{/technology.baseload}} /></td>
+				<td><input form='TechUpdateForm_{{id}}' type='checkbox' title='Storage?' id='IsStorage_{{id}}' {{#technology.storage}}checked='checked'{{/technology.storage}} /></td>
+			</tr>
+		</tbody>
+	</table>
+</div>

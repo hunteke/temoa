@@ -42,10 +42,11 @@ Temoa.canControl.TechnologyList = can.Control('TechnologyList', {
 			$el.empty().append( can.view( view_url, view_opts ));
 
 			var $tbody = $el.find('.items:first tbody');
+			var $tdItems = $('#TechnologyDetails .items');
 
 			$tbody.selectable( {} );
 			$tbody.on( 'selectablestart', function () {
-				$('#TechnologyDetails .items').fadeOut();
+				$tdItems.fadeOut();
 			});
 			$tbody.on( 'selectablestop', function () {
 				function createTechnologyDetailBlocks ( toCreate ) {
@@ -55,12 +56,10 @@ Temoa.canControl.TechnologyList = can.Control('TechnologyList', {
 					// immediately see results, even for large selections.  This
 					// also presents a graduated fade-in effect that some may find
 					// pleasing.
+					var t = toCreate.shift();
 					var $div = $('<div>', {id: 'TechnologyDetail_' + t.id});
-					var control_opts = {
-					  technology: toCreate.shift(),
-					  analysis: analysis
-					}
 
+					var control_opts = { technology: t, analysis: analysis }
 					new TechnologyDetail( $div, control_opts );
 					$tdItems.append( $div );  // add to DOM /after/ creation
 
@@ -70,8 +69,6 @@ Temoa.canControl.TechnologyList = can.Control('TechnologyList', {
 						}, 50 );  // 50 = something tiny; i.e., "reluinquish thread"
 					}
 				}
-
-				var $info = $('#TechnologyDetails .items');
 
 				var $sel = $( this ).find( 'tr.ui-selected' );
 				var to_display = new Array();
@@ -92,10 +89,6 @@ Temoa.canControl.TechnologyList = can.Control('TechnologyList', {
 				$cookie.technology_ids = ids
 				Temoa.fn.setCookie( $cookie );
 
-				var username = $cookie.username || null;
-
-				var $tdItems = $('#TechnologyDetails .items');
-
 				if ( ! to_display.length ) {
 					// Nothing to display.  If the first child is a new technology,
 					// then remove all others, but leave it.
@@ -110,23 +103,15 @@ Temoa.canControl.TechnologyList = can.Control('TechnologyList', {
 						}
 					}
 				} else { // something to display
-					var view_opts = {
-						analysis: analysis,
-						username: username,
-					}
-
+					$tdItems.empty();  // remove any child divs so browser can GC.
 					$el.removeClass('hidden').fadeIn();
-					// remove any child divs so browser can GC.
-					$tdItems.empty();
-
 
 					createTechnologyDetailBlocks( to_display );
 				}
+
+				$tdItems.fadeIn();
 			});
 
-			new TechnologyCreate('#technology_create', {
-				technologies: technologies
-			});
 			// Pre-select what was selected in this session.
 			// (Handy if the page needs to reload.)
 			var $cookie = Temoa.fn.getCookie();

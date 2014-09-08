@@ -37,33 +37,35 @@ def get_technology_info ( analysis, technologies ):
 	def null ( ):
 		return None
 
+	a_pk = analysis.pk
+	p0 = analysis.period_0
+
 	CapacityFactors = defaultdict( list )
 	for capfac in Param_CapacityFactorTech.objects.filter(
 	  technology__in=technologies ):
 		CapacityFactors[ capfac.technology ].append({
-		  'aId'   : analysis.pk,
+		  'aId'   : a_pk,
 		  'tId'   : capfac.technology.pk,
 		  'sfId'  : capfac.timeslice.pk,
 		  'id'    : capfac.pk,
 		  'value' : capfac.value
 		})
 
-	MaxMinCapacities = defaultdict( list )
+	MaxMinCapacities = defaultdict( dict )
 	for maxmin in Param_MaxMinCapacity.objects.filter(
 	  technology__in=technologies ).order_by( 'period' ):
-		MaxMinCapacities[ maxmin.technology ].append({
-		  'aId'     : analysis.pk,
+		MaxMinCapacities[ maxmin.technology ][ maxmin.period.vintage ] = {
+		  'aId'     : a_pk,
 		  'tId'     : maxmin.technology.pk,
-		  'period'  : maxmin.period.vintage,
 		  'maximum' : maxmin.maximum,
 		  'minimum' : maxmin.minimum
-		})
+		}
 
 	TechInputSplit = defaultdict( list )
 	for isplit in Param_TechInputSplit.objects.filter(
 	  technology__in=technologies ):
 		TechInputSplit[ isplit.technology ].append({
-		  'aId'   : analysis.pk,
+		  'aId'   : a_pk,
 		  'tId'   : isplit.technology.pk,
 		  'id'    : isplit.pk,
 		  'inp'   : isplit.inp_commodity.commodity.name,
@@ -74,12 +76,51 @@ def get_technology_info ( analysis, technologies ):
 	for osplit in Param_TechOutputSplit.objects.filter(
 	  technology__in=technologies ):
 		TechOutputSplit[ osplit.technology ].append({
-		  'aId'   : analysis.pk,
+		  'aId'   : a_pk,
 		  'tId'   : osplit.technology.pk,
 		  'id'    : osplit.pk,
 		  'out'   : osplit.out_commodity.commodity.name,
 		  'value' : osplit.fraction
 		})
+
+	Vintages = defaultdict( list )
+	MaxC = {}
+	MinC = {}
+	CI = defaultdict( dict )
+	DR = defaultdict( dict )
+	EC = defaultdict( dict )
+	Lifetimes = defaultdict( dict )
+	Loanlives = defaultdict( dict )
+	for p in Process.objects.filter( technology__in=technologies ).order_by(
+	  'vintage__vintage' ):
+		t, v = p.technology, p.vintage.vintage
+		Vintages[ t ].append( v )
+		CI[ t ][ v ] = p.costinvest
+		DR[ t ][ v ] = p.discountrate
+		EC[ t ][ v ] = p.existingcapacity
+		Lifetimes[ t ][ v ] = p.lifetime
+		Loanlives[ t ][ v ] = p.loanlife
+
+		MaxMinCapacities[ t ]   # create the entry if it doesn't exist
+
+	# The frontend expects process information in the form of a matrix for each
+	# Technology.  If a process does not have a value, it expects a null value.
+	# So, if a process does not have a value for a parameter, this loop puts in
+	# the required None/null.  (i.e., need a dense matrix, not a sparse
+	# representation)
+	for t in Vintages:
+		ci, dr, ec, life, loan = CI[t], DR[t], EC[t], Lifetimes[t], Loanlives[t]
+		vs, mmc = Vintages[t], MaxMinCapacities[ t ]
+		CI[ t ] = [ v in ci and ci[v] or None for v in vs ]
+		DR[ t ] = [ v in dr and dr[v] or None for v in vs ]
+		EC[ t ] = [ v in ec and ec[v] or None for v in vs ]
+		Lifetimes[ t ] = [ v in life and life[v] or None for v in vs ]
+		Loanlives[ t ] = [ v in loan and loan[v] or None for v in vs ]
+
+		MaxC[ t ] = [ v in mmc and mmc[v]['maximum'] or None for v in vs
+		  if v >= p0 ]
+		MinC[ t ] = [ v in mmc and mmc[v]['minimum'] or None for v in vs
+		  if v >= p0 ]
 
 	data = [
 	  {
@@ -95,9 +136,18 @@ def get_technology_info ( analysis, technologies ):
 	    'name'               : t.name,
 	    'storage'            : t.storage,
 	    'capacityfactors'    : CapacityFactors[ t ],
-	    'maxmincapacities'   : MaxMinCapacities[ t ],
 	    'inputsplits'        : TechInputSplit[ t ],
+	    'maxcapacities'      : MaxC[ t ],
+	    'mincapacities'      : MinC[ t ],
 	    'outputsplits'       : TechOutputSplit[ t ],
+	    'vintages'           : Vintages[ t ],
+	    'processes'          : {
+	      'costinvest'         : CI[ t ],
+	      'discountrate'       : DR[ t ],
+	      'existingcapacity'   : EC[ t ],
+	      'lifetime'           : Lifetimes[ t ],
+	      'loanlife'           : Loanlives[ t ],
+	    },
 	  }
 
 	  for t in technologies
