@@ -17,4 +17,23 @@
 			</tr>
 		</tbody>
 	</table>
+	<table>
+		<thead>
+			<tr>
+				<th>Vintages:</th>
+			{{#each technology.vintages}}<th>{{.}}</th>{{/each}}
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<th>Investment Cost:</th>
+				{{#each technology.processes.costinvest}}
+				{{#if .}}
+				<td class='cell_has_data'>{{.}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}{{/each}}
+			</tr>
+		</tbody>
+	</table>
 </div>

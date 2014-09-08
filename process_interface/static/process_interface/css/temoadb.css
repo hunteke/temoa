@@ -143,6 +143,10 @@ table.items tr:nth-child(even) { background-color: #fff ; }
 	height: auto ;
 }
 
+td.empty_cell {
+	background-color: #fcc;
+}
+
 .innertable .data { font-family: monospace ; text-align: right ; }
 #AnalysisProcessDetails .items .innertable .data td { padding-right: 1em ; }
 #AnalysisProcessDetails .items .innertable { background: inherit ; font-weight:normal ; width: 100% ; }
