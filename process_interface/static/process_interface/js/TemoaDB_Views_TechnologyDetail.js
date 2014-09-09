@@ -49,7 +49,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		var capfac_list = this.options.technology.capacityfactors;
 		var is_list = this.options.technology.inputsplits;
 		var os_list = this.options.technology.outputsplits;
-		if ( capfac_list && capfac_list.length && capfac_list[0].isNew() )
+		if ( capfac_list && capfac_list[0] && capfac_list[0].isNew() )
 			capfac_list[0].destroy();
 		if ( is_list && is_list.length && is_list[0].isNew() )
 			is_list[0].destroy();
