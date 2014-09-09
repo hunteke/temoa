@@ -4,19 +4,105 @@
 	<h3>{{technology.name}}</h3>
 	<p>{{#if technology.description}}{{technology.description}}{{else}}<span class='empty'>No description.  Double click here to add one.</span>{{/if}}</p>
 	<table>
+		<caption title='These are the default values used when a vintage does not otherwise have a value.'>Technology Default Values</caption>
 		<thead>
 			<tr>
-				<th><label for='IsBaseload_{{id}}'><abbr title='Baseload?'>B</abbr></label></th>
-				<th><label for='IsStorage_{{id}}'><abbr title='Storage?'>S</abbr></label></th>
+				<th>Attribute</th>
+				<th>Value</th>
 			</tr>
 		</thead>
 		<tbody>
 			<tr>
+				<th><label for='IsBaseload_{{id}}'><span title='If checked, all instances of this technology must have the same output in the time_of_day slice.'>Baseload</span></label>:</th>
 				<td><input form='TechUpdateForm_{{id}}' type='checkbox' title='Baseload?' id='IsBaseload_{{id}}' {{#technology.baseload}}checked='checked'{{/technology.baseload}} /></td>
+			</tr><tr>
+				<th><label for='IsStorage_{{id}}'><span title='If checked, this technology may use more energy in any time_of_day slice, provided it makes up the difference in other time_of_day slices.'>Storage</span></label>:</th>
 				<td><input form='TechUpdateForm_{{id}}' type='checkbox' title='Storage?' id='IsStorage_{{id}}' {{#technology.storage}}checked='checked'{{/technology.storage}} /></td>
+			</tr><tr>
+				<th><label for=''><span title=''>Capacity to Activity</span></label>:</th>
+				{{#if technology.capacitytoactivity}}
+				<td class='cell_has_data'>{{technology.capacitytoactivity}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}
+			</tr><tr>
+				<th><label for=''><span title=''>Growth Rate Limit</span></label>:</th>
+				{{#if technology.ratelimit}}
+				<td class='cell_has_data'>{{technology.ratelimit}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}
+			</tr><tr>
+				<th><label for=''><span title=''>Growth Rate Seed</span></label>:</th>
+				{{#if technology.rateseed}}
+				<td class='cell_has_data'>{{technology.rateseed}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}
+			</tr><tr>
+				<th><label for=''><span title=''>Expected Life</span></label>:</th>
+				{{#if technology.lifetime}}
+				<td class='cell_has_data'>{{technology.lifetime}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}
+			</tr><tr>
+				<th><label for=''><span title=''>Loan Length</span></label>:</th>
+				{{#if technology.loanlife}}
+				<td class='cell_has_data'>{{technology.loanlife}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}
 			</tr>
 		</tbody>
 	</table>
+	<table>
+		<caption><span title=''>Capacity Factors</span></caption>
+		<thead>
+			<tr><th>Time Slice:</th>
+				{{#each analysis.segfracs}}<th>{{name}}</th>{{/each}}
+			</tr>
+		</thead>
+		<tbody>
+			<tr><th>CF:</th>
+				{{#each technology.capacityfactors}}
+				{{#if .}}
+				<td class='cell_has_data'>{{value}}</td>
+				{{else}}
+				<td class='empty_cell'></td>
+				{{/if}}{{/each}}
+			</tr>
+		</tbody>
+	</table>
+	<table>
+		<caption><span title=''>Input Energy Splits</span></caption>
+		<thead>
+			<tr><th>Input</th><th>Percentage</th></tr>
+		</thead>
+		<tbody>
+			{{#each technology.inputsplits}}
+			<tr>
+				<td class='cell_has_data'>{{inp}}</td>
+				<td class='cell_has_data'>{{value}}</td>
+			</tr>
+			{{/each}}
+		</tbody>
+	</table>
+	<table>
+		<caption><span title=''>Output Energy Splits</span></caption>
+		<thead>
+			<tr><th>Output</th><th>Percentage</th></tr>
+		</thead>
+		<tbody>
+			{{#each technology.outputsplits}}
+			<tr>
+				<td class='cell_has_data'>{{out}}</td>
+				<td class='cell_has_data'>{{value}}</td>
+			</tr>
+			{{/each}}
+		</tbody>
+	</table>
+
 	<table>
 		<caption>Maximum and Minimum Capacities</caption>
 		<thead>

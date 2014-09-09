@@ -18,10 +18,12 @@ from models import (
   Analysis,
   Param_CapacityFactorTech,
   Param_MaxMinCapacity,
+  Param_SegFrac,
   Param_TechInputSplit,
   Param_TechOutputSplit,
   Process,
   Technology,
+  Vintage,
 )
 from forms import (
   AnalysisTechnologyForm,
@@ -40,16 +42,30 @@ def get_technology_info ( analysis, technologies ):
 	a_pk = analysis.pk
 	p0 = analysis.period_0
 
-	CapacityFactors = defaultdict( list )
-	for capfac in Param_CapacityFactorTech.objects.filter(
-	  technology__in=technologies ):
-		CapacityFactors[ capfac.technology ].append({
+	horizon = sorted( v.vintage for v in Vintage.objects.filter(
+	  analysis=analysis, vintage__gte=p0 ) )[:-1]  # last year is not a vintage
+
+	slices = []
+	slices.extend( Param_SegFrac.objects.filter( analysis=analysis ).order_by(
+	  'season', 'time_of_day' ).select_related( 'analysis'
+	))
+
+	CapacityFactors = defaultdict( dict )
+	for cf in Param_CapacityFactorTech.objects.filter(
+	  technology__in=technologies ).order_by(
+	  'technology', 'timeslice__season', 'timeslice__time_of_day'
+	):
+		CapacityFactors[ cf.technology ][ cf.timeslice ] = {
 		  'aId'   : a_pk,
-		  'tId'   : capfac.technology.pk,
-		  'sfId'  : capfac.timeslice.pk,
-		  'id'    : capfac.pk,
-		  'value' : capfac.value
-		})
+		  'tId'   : cf.technology.pk,
+		  'sfId'  : cf.timeslice.pk,
+		  'id'    : cf.pk,
+		  'value' : cf.value
+		}
+
+	for t in technologies:
+		cf = CapacityFactors[ t ]
+		CapacityFactors[ t ] = [ sl in cf and cf[ sl ] or None for sl in slices ]
 
 	MaxMinCapacities = defaultdict( dict )
 	for maxmin in Param_MaxMinCapacity.objects.filter(
@@ -63,7 +79,7 @@ def get_technology_info ( analysis, technologies ):
 
 	TechInputSplit = defaultdict( list )
 	for isplit in Param_TechInputSplit.objects.filter(
-	  technology__in=technologies ):
+	  technology__in=technologies ).order_by( 'inp_commodity__commodity__name' ):
 		TechInputSplit[ isplit.technology ].append({
 		  'aId'   : a_pk,
 		  'tId'   : isplit.technology.pk,
@@ -83,9 +99,16 @@ def get_technology_info ( analysis, technologies ):
 		  'value' : osplit.fraction
 		})
 
+	# The frontend expects process information in the form of a matrix for each
+	# Technology.  If a process does not have a value, it expects a null value.
+	# So, if a process does not have a value for a parameter, the following two
+	# loops put in the required None/null.  (i.e., need a dense matrix, not a
+	# sparse representation)
+
 	Vintages = defaultdict( list )
 	MaxC = {}
 	MinC = {}
+	CapFacs = defaultdict( list )
 	CI = defaultdict( dict )
 	DR = defaultdict( dict )
 	EC = defaultdict( dict )
@@ -103,23 +126,18 @@ def get_technology_info ( analysis, technologies ):
 
 		MaxMinCapacities[ t ]   # create the entry if it doesn't exist
 
-	# The frontend expects process information in the form of a matrix for each
-	# Technology.  If a process does not have a value, it expects a null value.
-	# So, if a process does not have a value for a parameter, this loop puts in
-	# the required None/null.  (i.e., need a dense matrix, not a sparse
-	# representation)
 	for t in Vintages:
 		ci, dr, ec, life, loan = CI[t], DR[t], EC[t], Lifetimes[t], Loanlives[t]
-		vs, mmc = Vintages[t], MaxMinCapacities[ t ]
+		vs, mmc, cf = Vintages[t], MaxMinCapacities[t], CapacityFactors[t]
 		CI[ t ] = [ v in ci and ci[v] or None for v in vs ]
 		DR[ t ] = [ v in dr and dr[v] or None for v in vs ]
 		EC[ t ] = [ v in ec and ec[v] or None for v in vs ]
 		Lifetimes[ t ] = [ v in life and life[v] or None for v in vs ]
 		Loanlives[ t ] = [ v in loan and loan[v] or None for v in vs ]
 
-		MaxC[ t ] = [ v in mmc and mmc[v]['maximum'] or None for v in vs
+		MaxC[ t ] = [ v in mmc and mmc[v]['maximum'] or None for v in horizon
 		  if v >= p0 ]
-		MinC[ t ] = [ v in mmc and mmc[v]['minimum'] or None for v in vs
+		MinC[ t ] = [ v in mmc and mmc[v]['minimum'] or None for v in horizon
 		  if v >= p0 ]
 
 	data = [
