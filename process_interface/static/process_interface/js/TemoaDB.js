@@ -1069,7 +1069,8 @@ function BeginTemoaDBApp ( ) {
 	// analyses.
 	new Temoa.canControl.Analyses('#analysis_info');
 
-	$(document).bind('keyup', 'esc', function () {
+	$(document).on('keyup', null, '`', function () {
+		console.log('Running Quickfunction ... ' + new Date() );
 		var url = Temoa.C.ROOT_URL + '/static/process_interface/js/QuickFunction.js';
 		url += '?_=' + new Date().getTime();
 		$.getScript( url )
@@ -1081,12 +1082,14 @@ function BeginTemoaDBApp ( ) {
 		});
 	});
 
-	$(document).bind('keyup', '`', function () {
+	$(document).on('keyup', null, 'esc', function () {
+		console.log('Acquiring new css ... ' + new Date() );
 		var queryString = '?_=' + new Date().getTime();
 		$('link[rel="stylesheet"]').each( function ( ) {
 			this.href = this.href.replace(/\?.*|$/, queryString);
 		});
 	});
+
 	$('#ShowHideAnalysis').click( function () {
 		$('#analysis_detail').toggle( 'slide', {direction: 'up'} );
 	});
@@ -1117,6 +1120,6 @@ $(document).ready( function () {
 	BeginTemoaDBApp();
 });
 
-})();
+})( document );
 
 console.log( 'TemoaLib loaded: ' + Date() );
