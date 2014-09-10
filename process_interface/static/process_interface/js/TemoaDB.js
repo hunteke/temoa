@@ -974,7 +974,7 @@ function BeginTemoaDBApp ( ) {
 	  'dagre-d3.js',
 	  'jquery-hotkeys.js',
 	  'jquery-ui.js',
-	  'jquery.cookie.min.js',
+	  'jquery-cookie.js',
 	];
 	var loaded = [];
 
