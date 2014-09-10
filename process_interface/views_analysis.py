@@ -55,7 +55,8 @@ def get_analyses_data ( analyses ):
 
 	SegFracs = defaultdict(list)
 	for sf in Param_SegFrac.objects.filter(
-	  analysis__in=analyses ).select_related(
+	  analysis__in=analyses ).order_by(
+	  'analysis', 'season', 'time_of_day' ).select_related(
 	  'analysis'
 	):
 		s   = sf.season
@@ -68,8 +69,6 @@ def get_analyses_data ( analyses ):
 		  u'value'       : sf.value,
 		  u'demanddefaultdistribution' : sf.demanddefaultdistribution
 		})
-	for a in SegFracs:
-		SegFracs[ a ].sort( key=lambda x: (x['season'], x['time_of_day']) )
 
 	_DSDistribution = defaultdict( nested_defaultdict(dict) )
 	for dsd in Param_DemandSpecificDistribution.objects.filter(
