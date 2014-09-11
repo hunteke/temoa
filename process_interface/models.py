@@ -193,7 +193,7 @@ class Technology ( DM.Model ):
 	# name, so I think 1024 characters (2**10) is more than adequate storage --
 	# overkill, just in case.
 	analysis    = DM.ForeignKey( Analysis )
-	baseload    = DM.BooleanField()
+	baseload    = DM.BooleanField( default=False )
 	capacitytoactivity = DM.FloatField( null=True )
 	description = DM.TextField()
 	lifetime    = DM.FloatField( null=True )
@@ -201,7 +201,7 @@ class Technology ( DM.Model ):
 	name        = DM.CharField( max_length=1024 )
 	ratelimit   = DM.FloatField( null=True )
 	rateseed    = DM.FloatField( null=True )
-	storage     = DM.BooleanField()
+	storage     = DM.BooleanField( default=False )
 
 	class Meta:
 		unique_together = ('analysis', 'name')
