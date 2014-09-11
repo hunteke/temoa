@@ -41,7 +41,7 @@ $.fn.editableTableWidget = function (options) {
 		editor = activeOptions.editor.css('position', 'absolute').hide().appendTo(element.parent()),
 		active,
 		showEditor = function (select) {
-			active = element.find('td:focus');
+			active = element.find('td:focus').not("[data-editable='false']");
 			if (active.length) {
 				editor.val(active.text())
 					.removeClass('error')
@@ -138,7 +138,7 @@ $.fn.editableTableWidget = function (options) {
 			}
 		});
 
-		element.find('td').prop('tabindex', 1);
+		element.find('td').not("[data-editable='false']").prop('tabindex', 1);
 
 		$(window).on('resize', function () {
 			if (editor.is(':visible')) {
