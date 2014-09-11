@@ -3,7 +3,7 @@
 
 	<h3>{{technology.name}}</h3>
 	<p>{{#if technology.description}}{{technology.description}}{{else}}<span class='empty'>No description.  Double click here to add one.</span>{{/if}}</p>
-	<table>
+	<table id='TechnologyDetail_GeneralAttributes_{{technology.id}}'>
 		<caption title='These are the default values used when a vintage does not otherwise have a value.'>Technology Default Values</caption>
 		<thead>
 			<tr>
@@ -14,10 +14,10 @@
 		<tbody>
 			<tr>
 				<th><label for='IsBaseload_{{id}}'><span title='If checked, all instances of this technology must have the same output in the time_of_day slice.'>Baseload</span></label>:</th>
-				<td><input form='TechUpdateForm_{{id}}' type='checkbox' title='Baseload?' id='IsBaseload_{{id}}' {{#technology.baseload}}checked='checked'{{/technology.baseload}} /></td>
+				<td data-editable='false'><input form='TechUpdateForm_{{id}}' type='checkbox' title='Baseload?' id='IsBaseload_{{id}}' {{#technology.baseload}}checked='checked'{{/technology.baseload}} /></td>
 			</tr><tr>
 				<th><label for='IsStorage_{{id}}'><span title='If checked, this technology may use more energy in any time_of_day slice, provided it makes up the difference in other time_of_day slices.'>Storage</span></label>:</th>
-				<td><input form='TechUpdateForm_{{id}}' type='checkbox' title='Storage?' id='IsStorage_{{id}}' {{#technology.storage}}checked='checked'{{/technology.storage}} /></td>
+				<td data-editable='false'><input form='TechUpdateForm_{{id}}' type='checkbox' title='Storage?' id='IsStorage_{{id}}' {{#technology.storage}}checked='checked'{{/technology.storage}} /></td>
 			</tr><tr>
 				<th><label for=''><span title=''>Capacity to Activity</span></label>:</th>
 				{{#if technology.capacitytoactivity}}
@@ -56,7 +56,7 @@
 			</tr>
 		</tbody>
 	</table>
-	<table>
+	<table id='TechnologyDetail_CapacityFactors_{{technology.id}}'>
 		<caption><span title=''>Capacity Factors</span></caption>
 		<thead>
 			<tr><th>Time Slice:</th>
@@ -74,7 +74,7 @@
 			</tr>
 		</tbody>
 	</table>
-	<table>
+	<table id='TechnologyDetail_InputSplits_{{technology.id}}'>
 		<caption><span title=''>Input Energy Splits</span></caption>
 		<thead>
 			<tr><th>Input</th><th>Percentage</th></tr>
@@ -88,7 +88,7 @@
 			{{/each}}
 		</tbody>
 	</table>
-	<table>
+	<table id='TechnologyDetail_OutputSplits_{{technology.id}}'>
 		<caption><span title=''>Output Energy Splits</span></caption>
 		<thead>
 			<tr><th>Output</th><th>Percentage</th></tr>
@@ -103,7 +103,7 @@
 		</tbody>
 	</table>
 
-	<table>
+	<table id='TechnologyDetail_MaxMinCapacities_{{technology.id}}'>
 		<caption>Maximum and Minimum Capacities</caption>
 		<thead>
 			<tr><th>Vintages:</th>
@@ -129,7 +129,7 @@
 			</tr>
 		</tbody>
 	</table>
-	<table>
+	<table id='TechnologyDetail_ProcessAttributes_{{technology.id}}'>
 		<thead>
 			<tr>
 				<th>Vintages:</th>
@@ -137,45 +137,46 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr>
+			<tr><td data-editable='false'><p class='error'></p></td></tr>
+			<tr data-name='costinvest'>
 				<th>Investment Cost:</th>
 				{{#each technology.processes.costinvest}}
-				{{#if .}}
-				<td class='cell_has_data'>{{.}}</td>
+				{{#if costinvest}}
+				<td data-id='{{id}}' class='cell_has_data'>{{costinvest}}</td>
 				{{else}}
-				<td class='empty_cell'></td>
+				<td data-id='{{id}}' class='empty_cell'></td>
 				{{/if}}{{/each}}
-			</tr><tr>
-				<th>Discount Rate (decimal):</th>
+			</tr><tr data-name='discountrate'>
+				<th>Discount Rate (decimal):<span class='error'></span></th>
 				{{#each technology.processes.discountrate}}
-				{{#if .}}
-				<td class='cell_has_data'>{{.}}</td>
+				{{#if discountrate}}
+				<td data-id='{{id}}' class='cell_has_data'>{{discountrate}}</td>
 				{{else}}
-				<td class='empty_cell'></td>
+				<td data-id='{{id}}' class='empty_cell'></td>
 				{{/if}}{{/each}}
-			</tr><tr>
-				<th>Existing Capacity:</th>
+			</tr><tr data-name='existingcapacity'>
+				<th>Existing Capacity:<span class='error'></span></th>
 				{{#each technology.processes.existingcapacity}}
-				{{#if .}}
-				<td class='cell_has_data'>{{.}}</td>
+				{{#if existingcapacity}}
+				<td data-id='{{id}}' class='cell_has_data'>{{existingcapacity}}</td>
 				{{else}}
-				<td class='empty_cell'></td>
+				<td data-id='{{id}}' class='empty_cell'></td>
 				{{/if}}{{/each}}
-			</tr><tr>
+			</tr><tr data-name='lifetime'>
 				<th>Expected Life (years):</th>
 				{{#each technology.processes.lifetime}}
-				{{#if .}}
-				<td class='cell_has_data'>{{.}}</td>
+				{{#if lifetime}}
+				<td data-id='{{id}}' class='cell_has_data'>{{lifetime}}</td>
 				{{else}}
-				<td class='empty_cell'></td>
+				<td data-id='{{id}}' class='empty_cell'></td>
 				{{/if}}{{/each}}
-			</tr><tr>
+			</tr><tr data-name='loanlife'>
 				<th>Loan Length (years):</th>
 				{{#each technology.processes.loanlife}}
-				{{#if .}}
-				<td class='cell_has_data'>{{.}}</td>
+				{{#if loanlife}}
+				<td data-id='{{id}}' class='cell_has_data'>{{loanlife}}</td>
 				{{else}}
-				<td class='empty_cell'></td>
+				<td data-id='{{id}}' class='empty_cell'></td>
 				{{/if}}{{/each}}
 			</tr>
 		</tbody>

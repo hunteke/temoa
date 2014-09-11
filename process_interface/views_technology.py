@@ -118,11 +118,11 @@ def get_technology_info ( analysis, technologies ):
 	  'vintage__vintage' ):
 		t, v = p.technology, p.vintage.vintage
 		Vintages[ t ].append( v )
-		CI[ t ][ v ] = p.costinvest
-		DR[ t ][ v ] = p.discountrate
-		EC[ t ][ v ] = p.existingcapacity
-		Lifetimes[ t ][ v ] = p.lifetime
-		Loanlives[ t ][ v ] = p.loanlife
+		CI[ t ][ v ] = {'id': p.pk, 'costinvest': p.costinvest}
+		DR[ t ][ v ] = {'id': p.pk, 'discountrate': p.discountrate}
+		EC[ t ][ v ] = {'id': p.pk, 'existingcapacity': p.existingcapacity}
+		Lifetimes[ t ][ v ] = {'id': p.pk, 'lifetime': p.lifetime}
+		Loanlives[ t ][ v ] = {'id': p.pk, 'loanlife': p.loanlife}
 
 		MaxMinCapacities[ t ]   # create the entry if it doesn't exist
 

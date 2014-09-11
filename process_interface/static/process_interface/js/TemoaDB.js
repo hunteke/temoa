@@ -972,9 +972,10 @@ function BeginTemoaDBApp ( ) {
 	var ancillaryLibraries = [
 	  'd3.v3.js',
 	  'dagre-d3.js',
+	  'jquery-cookie.js',
+	  'jquery-editable-table.js',
 	  'jquery-hotkeys.js',
 	  'jquery-ui.js',
-	  'jquery-cookie.js',
 	];
 	var loaded = [];
 

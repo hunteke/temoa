@@ -44,6 +44,14 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 
 		var view_opts = { technology: t, analysis: analysis };
 		$el.append( can.view( view_url, view_opts ));
+
+		// With the view added to the dom, make values editable
+		var table_types = ['GeneralAttributes', 'CapacityFactors', 'InputSplits',
+		  'OutputSplits', 'MaxMinCapacities', 'ProcessAttributes'];
+		for ( var i = 0; i < table_types.length; ++i ) {
+			var sel = '#TechnologyDetail_' + table_types[ i ] + '_' + t.id;
+			$el.find(sel).editableTableWidget();
+		}
 	},
 	destroy: function ( ) {  // TechnologyDetail
 		var capfac_list = this.options.technology.capacityfactors;
