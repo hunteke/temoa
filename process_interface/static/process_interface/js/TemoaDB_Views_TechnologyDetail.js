@@ -87,9 +87,12 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 
 		// this function outsources a secondary function that knows
 		// how to retrieve the information from each technology block; save_*
+		var $tab = $el.closest('table');
 		var param = $el.closest('tr').data('name');
 		var func = $el.closest('table').attr('id');
 		func = 'save_' + func.replace(/^\w+_([A-z]+)_\d+$/, '$1');
+
+		$tab.find('.error').empty(); // remove any previous error messages
 
 		this[func]( $el, newValue )
 		.done( function ( newData, msg, jqXHR ) {
