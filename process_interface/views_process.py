@@ -207,7 +207,8 @@ def process_new ( req, analysis_id ):
 def process_update ( req, analysis_id, process_id ):
 	# first, ensure user owns the specified analysis
 	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
-	process = get_object_or_404( Process, pk=process_id, analysis=analysis )
+	process = get_object_or_404( Process, pk=process_id,
+	  technology__analysis=analysis )
 
 	status = 200
 	msgs = {}
@@ -222,7 +223,9 @@ def process_update ( req, analysis_id, process_id ):
 		try:
 			with transaction.atomic():
 				form.save()
-			msgs = get_process_info( [process] )[0]
+			process = Process.objects.get(id=process.pk)
+			for field in form.cleaned_data:
+				msgs.update( {field: getattr(process, field) } )
 
 		except IntegrityError as ie:
 			status = 422  # to let Javascript know there was an error

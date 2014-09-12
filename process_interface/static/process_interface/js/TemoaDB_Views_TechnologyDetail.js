@@ -14,6 +14,14 @@ if ( !('Temoa' in window) ) {
 	throw msg;
 }
 
+function cellChangeWatcher ( canControl ) {
+	// This wrapper function required so as to preserve the CanJS 'this'
+	// variable in the save() function.  Otherwise, editableTableWidget
+	// overrides 'this' to be the modified cell.
+	return function ( evt, newValue ) {
+		canControl.save( $(this), newValue );
+	}
+}
 
 Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 	defaults: {
@@ -33,7 +41,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		if ( Temoa.C.DEBUG )
 			view_url += '?_=' + new Date().getTime();
 
-		var t = options.technology;
+		var t = this.technology = options.technology;
 
 		if ( ! t.capacityfactors )
 			t.attr('capacityfactors', new TechnologyCapacityFactor.List());
@@ -50,7 +58,13 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		  'OutputSplits', 'MaxMinCapacities', 'ProcessAttributes'];
 		for ( var i = 0; i < table_types.length; ++i ) {
 			var sel = '#TechnologyDetail_' + table_types[ i ] + '_' + t.id;
-			$el.find(sel).editableTableWidget();
+			var $tab = $el.find( sel );
+
+			// Make td elements editable (jquery-editable-table!)
+			$tab.editableTableWidget();
+
+			// 'this' refers to this can.Control instance
+			$tab.find('td').on('change', cellChangeWatcher( this ) );
 		}
 	},
 	destroy: function ( ) {  // TechnologyDetail
@@ -66,228 +80,39 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 
 		can.Control.prototype.destroy.call(this);
 	},
-	save: function ( $el ) {  // TechnologyDetail
-		var errors = {}
-		  , $tForm  = null, tData  = null
-		  , $cfForm = null, cfData = null
-		  , $isForm = null, isData = null
-		  , $osForm = null, osData = null
-		  , to_save = new Array();
-		var $tTable = $el.closest('.technology');
+	save: function ( $el, newValue ) {
+		// The save function is called by cellChangeWatcher (above)
+		//  $el -> the jQuery-ized element; should be a <td>
+		//  newValue is the new contents of the cell; a string
 
-		// don't collect any inputs that might be disabled for other reasons
-		// (like the delete buttons)
-		var $inputs = $tTable.find(':input').not('[disabled="disabled"]');
-		var tech = $tTable.data('technology');
-		var tId = tech.attr('id');
+		// this function outsources a secondary function that knows
+		// how to retrieve the information from each technology block; save_*
+		var param = $el.closest('tr').data('name');
+		var func = $el.closest('table').attr('id');
+		func = 'save_' + func.replace(/^\w+_([A-z]+)_\d+$/, '$1');
 
-		if ( tId ) {
-			$tForm  = $('#FormTechnology_' + tId);
-			$cfForm = $('#FormTechnologyCapacityFactors_' + tId);
-			$isForm = $('#FormTechnologyInputSplits_' + tId);
-			$osForm = $('#FormTechnologyOutputSplits_' + tId);
-		} else {
-			$tForm = $('#NewTechnologyForm');
-		}
-
-		$tTable.find('.error').empty(); // remove any previous error messages
-
-		// 1. Collect the data
-		if ( $tForm )
-			tData = can.deparam( $tForm.serialize() );
-		if ( $cfForm )
-			cfData = can.deparam( $cfForm.serialize() );
-		if ( $isForm )
-			isData = can.deparam( $isForm.serialize() );
-		if ( $osForm )
-			osData = can.deparam( $osForm.serialize() );
-
-		// 2. Try to ensure user doesn't make a change while we're saving.  This
-		//    will normally not be a problem given a fast-enough network
-		//    connection, but "just in case" there's a hangup.  Don't forget to
-		//    enable( $inputs ) once any computation is complete (e.g. an error
-		//    occurs, or we've successfully saved the data).
-		Temoa.fn.disable( $inputs );
-
-		// 3. First check the data and queue each can.Model for saving
-		if ( tech.isNew() ) {
-			if ( ! tData.name.match( /^[A-z_]\w*$/ ) ) {
-				var msg = 'The technology name must begin with a letter and only ';
-				msg += 'use alphanumerics.  In other words, it must be one of ';
-				msg += 'technology names already in the database.  If you are ';
-				msg += 'unsure of valid names, press the up or down arrow keys ';
-				msg += 'while this field has focus (has the blinking cursor), ';
-				msg += 'and a list of options should appear.';
-				errors['name'] = [msg];
+		this[func]( $el, newValue )
+		.done( function ( newData, msg, jqXHR ) {
+			Temoa.fn.showStatus('Successfully saved: ' + newData[ param ], 'info' );
+		})
+		.fail( function ( jqXHR, msg, reason ) {
+			if ( jqXHR && jqXHR.responseJSON ) {
+				Temoa.fn.displayErrors( $el, jqXHR.responseJSON );
+			} else {
+				console.log( 'Error received, but no JSON response: ', jqXHR );
+				Temoa.fn.showStatus( 'Unknown error while saving data: ' + description );
 			}
-		} else {
-			if ( ! tData.baseload )
-				// necessary because we want the functionality of a radio button
-				// but folks think in terms of a checkbox.  A radio button would
-				// certaintly guarantee a defined .baseload, but would clutter the
-				// UI with two buttons, when we only need a simple true/false.  In
-				// other words, this is working with the semantics of a checkbox
-				tData.baseload = false;
-			if ( ! tData.storage )
-				tData.storage = false;
+		});
+	},
+	save_ProcessAttributes: function ( $el, newValue ) {
+		var $row = $el.closest('tr');
+		var param = $row.data('name');  // e.g, 'costinvest' or 'loanlife'
 
-			if ( tData.lifetime && (
-			     isNaN(Number(tData.lifetime)) || ( Number(tData.lifetime) <= 0 )
-			)) {
-				var msg = 'Please specify a positive number or leave blank.';
-				errors['lifetime'] = [msg];
-			}
-
-			if ( tData.loanlife && (
-			     isNaN(Number(tData.loanlife)) || ( Number(tData.loanlife) <= 0 )
-			)) {
-				var msg = 'Please specify a positive number or leave blank.';
-				errors['loanlife'] = [msg];
-			}
-
-			if ( tData.capacitytoactivity &&
-			   isNaN(Number(tData.capacitytoactivity))
-			) {
-				var msg = 'Please specify a number or leave blank.';
-				errors['capacitytoactivity'] = [msg];
-			}
-
-			// Capacity Factor
-			var cfNewTS  = $.trim(cfData.CapacityFactorTechNew_timeslice)
-			  , cfNewVal = $.trim(cfData.CapacityFactorTechNew_value);
-			if ( cfNewTS.length || cfNewVal.length ) {
-				if ( ! (cfNewTS.length && cfNewVal.length) ) {
-					var msg = 'If you specify either field of a Capacity Factor, ';
-					msg += 'you need to fill out both fields.  If you would rather ';
-					msg += 'cancel, click anywhere outside of a field (so no ';
-					msg += 'fields have focus), and push Shift to display the red ';
-					msg += '"Cancel" button.';
-					errors['General Error'] = [msg];
-				}
-				if ( isNaN(Number(cfNewVal)) ) {
-					var msg = 'Please specify a number.';
-					errors['CapacityFactorTechNew_value'] = [msg];
-				}
-				if ( ! cfNewTS.match( /^[A-z_]\w*, *[A-z_]\w*$/ ) ) {
-					var msg = 'Invalid timeslice name.  If you are unsure of what ';
-					msg += 'to put here, press the up or down arrow keys while ';
-					msg += 'this field has focus (has the blinking cursor), and a ';
-					msg += 'list of options should appear.';
-					errors['CapacityFactorTechNew_timeslice'] = [msg];
-				}
-			}
-
-			// Input Split
-			var isNewInp = $.trim(isData.InputSplitNew_inp)
-			  , isNewVal = $.trim(isData.InputSplitNew_value);
-			if ( isNewInp.length || isNewVal.length ) {
-				if ( ! (isNewInp.length && isNewVal.length) ) {
-					var msg = 'If you specify either part of an Input Split, you ';
-					msg += 'need to fill out both fields.  If you would rather ';
-					msg += 'cancel, click anywhere outside of a field (so no ';
-					msg += 'fields have focus), and push Shift to display the red ';
-					msg += '"Cancel" button.';
-					errors['General Error'] = [msg];
-				}
-				if ( isNaN(Number(isNewVal)) ) {
-					var msg = 'Please specify a number.';
-					errors['InputSplitNew_value'] = [msg];
-				}
-				if ( ! isNewInp.match( /^[A-z_]\w*$/ ) ) {
-					var msg = 'Invalid commodity name.  If you are unsure of what ';
-					msg += 'to put here, press the up or down arrow keys while ';
-					msg += 'this field has focus (has the blinking cursor), and a ';
-					msg += 'list of options should appear.';
-					errors['InputSplitNew_inp'] = [msg];
-				}
-			}
-
-			// Output Split
-			var osNewInp = $.trim(osData.OutputSplitNew_out)
-			  , osNewVal = $.trim(osData.OutputSplitNew_value);
-			if ( osNewInp.length || osNewVal.length ) {
-				if ( ! (osNewInp.length && osNewVal.length) ) {
-					var msg = 'If you specify either part of an Output Split, you ';
-					msg += 'need to fill out both fields.  If you would rather ';
-					msg += 'cancel, click anywhere outside of a field (so no ';
-					msg += 'fields have focus), and push Shift to display the red ';
-					msg += '"Cancel" button.';
-					errors['General Error'] = [msg];
-				}
-				if ( isNaN(Number(osNewVal)) ) {
-					var msg = 'Please specify a number.';
-					errors['OutputSplitNew_value'] = [msg];
-				}
-				if ( ! osNewInp.match( /^[A-z_]\w*$/ ) ) {
-					var msg = 'Invalid commodity name.  If you are unsure of what ';
-					msg += 'to put here, press the up or down arrow keys while ';
-					msg += 'this field has focus (has the blinking cursor), and a ';
-					msg += 'list of options should appear.';
-					errors['OutputSplitNew_out'] = [msg];
-				}
-			}
-		}
-
-		if ( Object.keys( errors ).length > 0 ) {
-			// client-side checking for user convenience.  The server will check
-			// for itself, of course.
-			Temoa.fn.enable( $inputs );
-			Temoa.fn.displayErrors( $tTable, errors );
-			return;
-		}
-
-		// client side error checking complete.
-		to_save.push( [tech, tData] );
-
-		for ( var name in cfData ) {
-			var sel = '[name="' + name + '"]';
-			if ( name.match(/^CapacityFactorTechNew/) ) {
-				if ( name.match( /_timeslice$/ ) ) {
-					var cf = $tTable.find( sel ).closest('tr').data('capacityfactor');
-					to_save.push( [cf, {
-					  timeslice: cfData.CapacityFactorTechNew_timeslice,
-					  value:     cfData.CapacityFactorTechNew_value,
-					}]);
-				}
-			} else if ( name.match(/^CapacityFactorTech_\d+$/) ) {
-				var cf = $tTable.find( sel ).closest('tr').data('capacityfactor');
-				to_save.push( [cf, {value: cfData[ name ]}] );
-			}
-		}
-
-		for ( var name in isData ) {
-			var sel = '[name="' + name + '"]';
-			if ( name.match(/^InputSplitNew/) ) {
-				if ( name.match( /_inp$/ ) ) {
-					var is = $tTable.find( sel ).closest('tr').data('inputsplit');
-					to_save.push( [is, {
-					  inp:   isData.InputSplitNew_inp,
-					  value: isData.InputSplitNew_value,
-					}]);
-				}
-			} else if ( name.match(/^InputSplit_\d+$/) ) {
-				var is = $tTable.find( sel ).closest('tr').data('inputsplit');
-				to_save.push( [is, {value: isData[ name ]}] );
-			}
-		}
-
-		for ( var name in osData ) {
-			var sel = '[name="' + name + '"]';
-			if ( name.match(/^OutputSplitNew/) ) {
-				if ( name.match( /_out$/ ) ) {
-					var os = $tTable.find( sel ).closest('tr').data('outputsplit');
-					to_save.push( [os, {
-					  out:   osData.OutputSplitNew_out,
-					  value: osData.OutputSplitNew_value,
-					}]);
-				}
-			} else if ( name.match(/^OutputSplit_\d+$/) ) {
-				var os = $tTable.find( sel ).closest('tr').data('outputsplit');
-				to_save.push( [os, {value: osData[ name ]}] );
-			}
-		}
-
-		Temoa.fn.save_to_server({ to_save: to_save, inputs: $inputs, display: $tTable});
+		var id = $el.data('id');
+		var data = {}
+		data[param] = newValue;
+		console.log( data );
+		return this.technology.save_ProcessAttributes( id, data );
 	},
 	'[name="TechnologyCancel"] click': function ( $el, ev ) {  // TechnologyDetail
 		var $block = $el.closest('.technology');

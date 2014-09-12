@@ -263,6 +263,12 @@ Temoa.canModel.Technology = can.Model('Technology', {
 		url += '/analysis/{aId}/technology/update/{id}';
 		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
 		return $.post( url, attr );
+	},
+	save_ProcessAttributes: function ( id, data ) {
+		var url = Temoa.C.ROOT_URL;
+		url += '/analysis/{aId}/process/update/' + id;
+		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
+		return $.post( url, data );
 	}
 });
 

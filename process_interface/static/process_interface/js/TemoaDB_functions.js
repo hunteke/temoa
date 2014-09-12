@@ -137,10 +137,9 @@ Temoa.fn.displayErrors = function ( $el, errors ) {
 		delete errors['General Error'];
 	}
 	for ( var key in errors ) {
-		var $input = $el.find('[name="' + key + '"]');
-		var $err = $input.parent().find('.error');
+		var $err = $el.parent().find('.error');
 
-		$input.focus(); // ideally only place at first input, but so what ...
+		$el.focus(); // ideally only place at first input, but so what ...
 		if ( ! $err.length ) {
 			console.log( 'Warning: no errors displayed.  Element and Error ' +
 			  'object: ', $el, errors );
