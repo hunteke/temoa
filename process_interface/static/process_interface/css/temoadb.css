@@ -87,6 +87,10 @@ svg .output { stroke: #3b3; }
 #TechnologyDetails .items .multiple_values { text-align: center ; font-size: 90% ; font-weight: bold ; }
 #TechnologyDetails .items .process { width: 100% ; }
 
+/* Show empty cells with a pale red background, to aid in visual understanding
+   that they're empty
+*/
+#TechnologyDetails div.technology td:empty { background-color: #fcc; opacity: 0.5; }
 
 table.items tr:nth-child(odd)  { background-color: #ddd ; }
 table.items tr:nth-child(even) { background-color: #fff ; }
@@ -141,10 +145,6 @@ table.items tr:nth-child(even) { background-color: #fff ; }
 	background-image: url('../icons/red_list_remove.svg') ;
 	background-size: 38px 12px ;
 	height: auto ;
-}
-
-td.empty_cell {
-	background-color: #fcc;
 }
 
 .innertable .data { font-family: monospace ; text-align: right ; }
