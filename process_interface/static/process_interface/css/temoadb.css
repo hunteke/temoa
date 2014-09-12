@@ -92,8 +92,8 @@ svg .output { stroke: #3b3; }
 */
 #TechnologyDetails div.technology td:empty { background-color: #fcc; opacity: 0.5; }
 
-table.items tr:nth-child(odd)  { background-color: #ddd ; }
-table.items tr:nth-child(even) { background-color: #fff ; }
+tr:nth-child(odd)  { background-color: #ddd ; }
+tr:nth-child(even) { background-color: #fff ; }
 
 .items .action { width: 45px ; }
 #commodity_detail { float: left ; width: 20em ; border: 1px solid #000 ; }
