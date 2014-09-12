@@ -321,7 +321,6 @@ class ProcessForm ( F.Form ):
 	  a field has not changed, the UI need not send it.
 	"""
 
-	name         = F.RegexField( required=True, label=_('name'), regex=r'^[A-z_]\w*, *-?\d+$')
 	discountrate = F.FloatField( required=False, label=_('Discount Rate') )
 	lifetime     = F.FloatField( required=False, label=_('Lifetime') )
 	loanlife     = F.FloatField( required=False, label=_('Loan Lifetime') )
@@ -330,75 +329,18 @@ class ProcessForm ( F.Form ):
 
 	def __init__ ( self, *args, **kwargs ):
 		p = self.process = kwargs.pop( 'instance' )
-		self.analysis = kwargs.pop( 'analysis' )
 		super( ProcessForm, self ).__init__( *args, **kwargs )
-
-		if p.pk:
-			# process in DB, and name is not mutable here: remove the field
-			del self.fields['name']
-			if p.vintage.vintage < p.technology.analysis.period_0:
-				del self.fields['costinvest']
-				del self.fields['loanlife']
-				del self.fields['discountrate']
-			else:
-				del self.fields['existingcapacity']
 
 		# ensure that we don't remove fields user did not change.
 		for fname in list( self.fields ):
-			if fname not in self.data and fname in self.fields:
+			if fname not in self.data:
 				del self.fields[ fname ]
-
-
-	def clean_name ( self ):
-		cd = self.cleaned_data
-		p  = self.process
-		a  = self.analysis
-
-		tname, vintage = cd['name'].split(',')
-		vintage = int( vintage )
-
-		vintages = Vintage.objects.filter( analysis=a )
-		if vintage not in (i.vintage for i in vintages):
-			msg = '{} is not a valid vintage in this analysis.'
-			raise F.ValidationError( msg.format( vintage ))
-		elif vintage == max( i.vintage for i in vintages ):
-			msg = 'The final year in "vintages" is not a valid vintage.'
-			raise F.ValidationError( msg )
-		vintage = [i for i in vintages if vintage == i.vintage][0]
-
-		techs = Technology.objects.filter( analysis=a, name=tname )
-		if not techs:
-			msg = "'{}' is not a valid technology name.  Do you need to create it?"
-			raise F.ValidationError( msg.format( tname ))
-		elif len( techs ) > 1:
-			msg = ("Database Error: '{}' is not a unique technology name.  This "
-			  'is a programming error.  Please inform the Temoa Project '
-			  'developers of how to get this message.')
-			raise F.ValidationError( msg.format( tname ))
-
-		# store the work already done for save() method
-		cd['technology'] = techs[0]
-		cd['vintage'] = vintage
-
-		return '{}, {}'.format( tname, vintage )
 
 
 	def clean_lifetime ( self ):
 		life = self.cleaned_data['lifetime']
 		if life is None:
 			return life
-
-		p = self.process
-
-		# Ensure that value reaches to at least the first period from process
-		# vintage.  Note that this is _not_ done at the DB level because a model
-		# may be in flux (i.e. a modeler is changing the structure of the data).
-		# Meanwhile, this check *will* be performed when downloading the complete
-		# dat file.
-		if life + p.vintage.vintage <= p.technology.analysis.period_0:
-			msg = ('Process lifetime guarantees no use in model optimization.  '
-			  'Either extend the lifetime, or change the analysis start year.')
-			raise F.ValidationError( msg )
 
 		if life <= 0:
 			msg = ('Either do not specify a lifetime, or specify one greater than '
@@ -409,19 +351,9 @@ class ProcessForm ( F.Form ):
 
 
 	def clean_loanlife ( self ):
-		cd = self.cleaned_data
-
-		life = cd['loanlife']
+		life = self.cleaned_data['loanlife']
 		if life is None:
 			return life
-
-		p = self.process
-		v = cd['vintage'].vintage if 'vintage' in cd else p.vintage.vintage
-
-		if v < p.technology.analysis.period_0:
-			msg = ('Existing capacity cannot have a loan and therefore no loan '
-			  'life.')
-			raise F.ValidationError( msg )
 
 		if life <= 0:
 			msg = ('Either do not specify a loan lifetime, or specify one greater '
@@ -432,16 +364,7 @@ class ProcessForm ( F.Form ):
 
 
 	def clean_existingcapacity ( self ):
-		cd = self.cleaned_data
-		ecap = cd['existingcapacity']
-		p = self.process
-
-		if ecap and not p.pk:
-			if cd['vintage'].vintage >= p.analysis.period_0:
-				msg = ('Cannot have existing capacity for a vintage in the '
-				  'optimization horizon (Period 0 or larger).')
-				raise F.ValidationError( msg )
-
+		ecap = self.cleaned_data['existingcapacity']
 		if ecap is None:
 			return ecap
 
@@ -452,28 +375,11 @@ class ProcessForm ( F.Form ):
 		return ecap
 
 
-	def clean_costinvest ( self ):
-		cd = self.cleaned_data
-		ci = cd['costinvest']
-		p = self.process
-
-		if ci and not p.pk:
-			if cd['vintage'].vintage < p.analysis.period_0:
-				msg = ('Cannot specify an investment cost for a vintage that '
-				  'exists prior to the optimization horizon (before Period 0).')
-				raise F.ValidationError( msg )
-
-		if ci is None:
-			return ci
-
-		return ci
-
-
 	def save ( self ):
 		p = self.process
 		cd = self.cleaned_data
-		for attr in ('technology', 'vintage', 'existingcapacity', 'costinvest',
-		             'lifetime', 'loanlife', 'discountrate'):
+		for attr in ('existingcapacity', 'costinvest', 'lifetime', 'loanlife',
+		  'discountrate'):
 			if attr in cd:
 				setattr( p, attr, cd[ attr ] )
 
