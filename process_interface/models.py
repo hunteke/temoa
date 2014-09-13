@@ -61,10 +61,11 @@ class Analysis ( DM.Model ):
 
 
 	def __str__ ( self ):
-		u, n = 'NoUser', 'NoName'
+		u, n = 'NoUser', '\r\nNoNameGiven\0\n'
+		  # impossible name, if saved normally
 		if self.user_id:
 			u = self.user.username
-		if self.name:
+		if self.name is not None:
 			n = self.name
 
 		return u'{} - {}'.format( u, n )
