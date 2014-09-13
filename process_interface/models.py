@@ -941,17 +941,21 @@ class Param_Efficiency ( DM.Model ):
 
 
 	def __str__ ( self ):
-		try:
-			analysis = self.process.technology.analysis
-			inp      = self.inp_commodity.commodity
-			tech     = self.process.technology
-			vintage  = self.process.vintage.vintage
-			out      = self.out_commodity.commodity
-		except:
-			return u'(new - unsaved)'
+		a, t, v = 'NoProcess', 'NoProcess', 'NoProcess'
+		i, o = 'NoInput', 'NoOutput'
+		val = 'NoValue'
+		if self.process_id:
+			a = self.process.technology.analysis
+			t = self.process.technology.name
+			v = self.process.vintage.vintage
+		if self.inp_commodity_id:
+			i = self.inp_commodity.commodity.name
+		if self.out_commodity_id:
+			o = self.out_commodity.commodity.name
+		if self.value is not None:
+			val = self.value
 
-		return u'({}) {} - {}, {} - {}: {}'.format(
-		  analysis, inp, tech, vintage, out, self.value )
+		return u'({}) {} - {}, {} - {}: {}'.format( a, i, t, v, o, val )
 
 
 	def save ( self ):
