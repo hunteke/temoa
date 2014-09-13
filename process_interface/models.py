@@ -335,8 +335,8 @@ class Commodity ( DM.Model ):
 	description = DM.TextField('Backround information')
 
 	def __str__ ( self ):
-		n = 'NoName'
-		if self.name:
+		n = '\r\nNoNameGiven\0\n'  # impossible name, if saved normally
+		if self.name is not None:
 			n = self.name
 
 		return str( n )
