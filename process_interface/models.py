@@ -540,7 +540,8 @@ class Param_Demand ( DM.Model ):
 			c = self.demand.commodity
 		if self.period_id:
 			p = self.period.vintage
-		val = self.value or 'NoValue'
+		if self.value is not None:
+			val = self.value
 
 		return u'({}) {}, {}: {}'.format( a, c, p, val )
 
