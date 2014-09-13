@@ -476,10 +476,15 @@ class AnalysisCommodity ( DM.Model ):
 
 
 	def __str__ ( self ):
-		a = self.analysis if self.analysis_id else 'NoAnalysis'
-		t = self.commodity_type if self.commodity_type_id else 'NoType'
-		c = self.commodity if self.commodity_id else 'NoCommodity'
-		return u'({}) [{}] {}'.format( a, t, c )
+		a, ty, c = 'NoAnalysis', 'NoType', 'NoCommodity'
+		if self.analysis_id:
+			a = self.analysis
+		if self.commodity_type_id:
+			ty = self.commodity_type
+		if self.commodity_id:
+			c = self.commodity
+
+		return u'({}) [{}] {}'.format( a, ty, c )
 
 
 
