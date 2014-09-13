@@ -1061,12 +1061,18 @@ class Param_CapacityFactorTech ( DM.Model ):
 
 
 	def __str__ ( self ):
-		a = self.timeslice.analysis if self.timeslice_id else 'NoAnalysis'
-		t = self.technology.name if self.technology_id else 'NoTechnology'
-		s = self.timeslice.season if self.timeslice_id else 'NoSegFrac'
-		d = self.timeslice.time_of_day if self.timeslice_id else 'NoSegFrac'
+		a, s, d = ('NoTimeslice',) * 3
+		t, val = 'NoTechnology', 'NoValue'
+		if self.timeslice_id:
+			a = self.timeslice.analysis
+			s = self.timeslice.season
+			d = self.timeslice.time_of_day
+		if self.technology_id:
+			t = self.technology.name
+		if self.value is not None:
+			val = self.value
 
-		return u'({}) {} - {}, {}: {}'.format( a, t, s, d, self.value )
+		return u'({}) {} - {}, {}: {}'.format( a, t, s, d, val )
 
 
 	def save ( self ):
