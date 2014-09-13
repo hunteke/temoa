@@ -567,12 +567,14 @@ class Param_ResourceBound ( DM.Model ):
 
 
 	def __str__ ( self ):
-		analysis  = self.resource.analysis
-		period    = self.period.vintage
-		commodity = self.resource.commodity
-
-		return u'({}) {}, {}: {}'.format(
-		  analysis, period, commodity, self.value )
+		a, p, c = 'NoResource', 'NoPeriod', 'NoResource'
+		if self.resource_id:
+			a = self.resource.analysis
+			c = self.resource.commodity
+		if self.period_id:
+			p = self.period.vintage
+		val = self.value or 'NoValue'
+		return u'({}) {}, {}: {}'.format( a, p, c, val )
 
 
 	def save ( self ):
