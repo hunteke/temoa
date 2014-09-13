@@ -498,13 +498,15 @@ class Param_DemandSpecificDistribution ( DM.Model ):
 
 	def __str__ ( self ):
 		a, s, d, dem = 'NoTimeslice', 'NoTimeslice', 'NoTimeslice', 'NoDemand'
+		val = 'NoValue'
 		if self.timeslice_id:
 			a = self.timeslice.analysis
 			s = self.timeslice.season
 			d = self.timeslice.time_of_day
 		if self.demand_id:
 			dem = self.demand.commodity.name
-		val = self.value or 'NoValue'
+		if self.value is not None:
+			val = self.value
 
 		return u'({}) {}, {}, {}: {}'.format( a, s, d, dem, val )
 
