@@ -124,40 +124,6 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		console.log( data );
 		return this.technology.save_ProcessAttributes( id, data );
 	},
-	'[name="TechnologyCancel"] click': function ( $el, ev ) {  // TechnologyDetail
-		var $block = $el.closest('.technology');
-		var t = $block.data('technology');
-
-		// Because this is a Detail, there may be 2+ copies of it at a time.
-		// They all will receive this click event, so put a guard in to only
-		// continue if the event was meant for this technology.
-		if ( t !== this.options.technology )
-			return;
-
-		// If this technology is new, the simplest way to cancel is just to
-		// remove it.
-		if ( t.isNew() ) {
-			this.element.remove();
-			return;
-		}
-
-		// Alright, now let's do the grunt work and reset various form values.
-		// $block.find('[name="discountrate"]').val( p.attr('discountrate') || '' );
-
-		// var cf = this.options.process.costsfixed;
-		// if ( cf && cf.length && cf[0].isNew() ) cf[0].destroy();
-	},
-	'[name="TechnologyUpdate"] click': function ( $el, ev ) {  // TechnologyDetail
-		this.save( $el );
-	},
-	'[name="TechnologyCreate"] click': function ( $el, ev ) {  // TechnologyDetail
-		this.save( $el );
-	},
-	'input keyup': function ( $el, ev ) {  // TechnologyDetail
-		if ( 13 === ev.keyCode ) { // 13 == enter
-			this.save( $(ev.target) );
-		}
-	},
 	'[name="AddCapacityFactorTech"] click': function ( $el, ev ) {  // TechnologyDetail
 		var capfac_list = this.options.technology.capacityfactors;
 		if ( capfac_list && capfac_list.length && capfac_list[0].isNew() ) {
