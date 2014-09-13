@@ -742,7 +742,7 @@ class Param_TechOutputSplit ( DM.Model ):
 			t = self.technology
 		if self.out_commodity_id:
 			o = self.out_commodity.commodity
-		if self.fraction:
+		if self.fraction is not None:
 			val = self.fraction
 
 		return u'{}, {}: {}'.format( t, o, val )
