@@ -605,16 +605,16 @@ class PeriodCostParameter ( DM.Model ):
 
 
 	def __str__ ( self ):
-		try:
-			analysis = self.process.technology.analysis
-			period   = self.period.vintage
-			tech     = self.process.technology
-			vintage  = self.process.vintage.vintage
-		except:
-			return u'(new - no period or process)'
+		a, p, t, v = 'NoProcess', 'NoPeriod', 'NoProcess', 'NoProcess'
+		if self.process_id:
+			t = self.process.technology.name
+			a = self.process.technology.analysis
+			v = self.process.vintage.vintage
+		if self.period_id:
+			p = self.period.vintage
+		val = self.value or 'NoValue'
 
-		return u'({}) {}, {}, {}: {}'.format(
-		  analysis, period, tech, vintage, self.value )
+		return u'({}) {}, {}, {}: {}'.format( a, p, t, v, val )
 
 
 	def clean ( self ):
