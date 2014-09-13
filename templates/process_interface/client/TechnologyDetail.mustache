@@ -113,19 +113,13 @@
 		<tbody>
 			<tr><th>Max:</th>
 				{{#each technology.maxcapacities}}
-				{{#if .}}
-				<td class='cell_has_data'>{{.}}</td>
-				{{else}}
-				<td class='empty_cell'></td>
-				{{/if}}{{/each}}
+				<td>{{.}}</td>
+				{{/each}}
 			</tr>
 			<tr><th>Min:</th>
 				{{#each technology.mincapacities}}
-				{{#if .}}
-				<td class='cell_has_data'>{{.}}</td>
-				{{else}}
-				<td class='empty_cell'></td>
-				{{/if}}{{/each}}
+				<td>{{.}}</td>
+				{{/each}}
 			</tr>
 		</tbody>
 	</table>
