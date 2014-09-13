@@ -87,16 +87,23 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 
 		// this function outsources a secondary function that knows
 		// how to retrieve the information from each technology block; save_*
-		var $tab = $el.closest('table');
-		var param = $el.closest('tr').data('name');
-		var func = $el.closest('table').attr('id');
+		var $tr = $el.closest('tr');
+		var $tab = $tr.closest('table');
+		var param = $tr.data('name');
+		var func = $tab.attr('id');
 		func = 'save_' + func.replace(/^\w+_([A-z]+)_\d+$/, '$1');
 
 		$tab.find('.error').empty(); // remove any previous error messages
+		var t = this.technology;  // for closure (below), because this changes
 
 		this[func]( $el, newValue )
 		.done( function ( newData, msg, jqXHR ) {
-			Temoa.fn.showStatus('Successfully saved: ' + newData[ param ], 'info' );
+			// Update the client-side model's notion of the data
+			var index = $.inArray( $el[0], $tr.children() ) - 1;
+			var val = newData[ param ];
+			t.processes.attr( param )[ index ].attr( param, val );
+
+			Temoa.fn.showStatus('Successfully saved: ' + val, 'info' );
 		})
 		.fail( function ( jqXHR, msg, reason ) {
 			if ( jqXHR && jqXHR.responseJSON ) {
