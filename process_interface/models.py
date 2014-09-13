@@ -696,7 +696,7 @@ class Param_TechInputSplit ( DM.Model ):
 			a = self.technology.analysis
 		if self.inp_commodity_id:
 			i = self.inp_commodity.commodity.name
-		if self.fraction:
+		if self.fraction is not None:
 			f = self.fraction
 
 		return u'({}) {}, {}: {}'.format( a, i, t, f )
