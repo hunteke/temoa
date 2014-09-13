@@ -121,7 +121,6 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		var id = $el.data('id');
 		var data = {}
 		data[param] = newValue;
-		console.log( data );
 		return this.technology.save_ProcessAttributes( id, data );
 	},
 	'[name="AddCapacityFactorTech"] click': function ( $el, ev ) {
