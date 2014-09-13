@@ -90,8 +90,8 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		var $tr = $el.closest('tr');
 		var $tab = $tr.closest('table');
 		var param = $tr.data('name');
-		var func = $tab.attr('id');
-		func = 'save_' + func.replace(/^\w+_([A-z]+)_\d+$/, '$1');
+		var func = $tab.attr('id').replace(/^\w+_([A-z]+)_\d+$/, '$1');
+		func = 'save_' + func;
 
 		$tab.find('.error').empty(); // remove any previous error messages
 		var t = this.technology;  // for closure (below), because this changes
