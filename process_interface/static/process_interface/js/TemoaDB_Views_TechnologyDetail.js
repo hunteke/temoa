@@ -28,7 +28,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 			view_url: Temoa.C.ROOT_URL + '/client_template/TechnologyDetail.mustache',
 		}
 	},{
-	init: function ( $el, options ) {  // TechnologyDetail
+	init: function ( $el, options ) {
 		var view_url = options.view_url;
 
 		var analysis = options.analysis;
@@ -67,7 +67,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 			$tab.find('td').on('change', cellChangeWatcher( this ) );
 		}
 	},
-	destroy: function ( ) {  // TechnologyDetail
+	destroy: function ( ) {
 		var capfac_list = this.options.technology.capacityfactors;
 		var is_list = this.options.technology.inputsplits;
 		var os_list = this.options.technology.outputsplits;
@@ -124,7 +124,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		console.log( data );
 		return this.technology.save_ProcessAttributes( id, data );
 	},
-	'[name="AddCapacityFactorTech"] click': function ( $el, ev ) {  // TechnologyDetail
+	'[name="AddCapacityFactorTech"] click': function ( $el, ev ) {
 		var capfac_list = this.options.technology.capacityfactors;
 		if ( capfac_list && capfac_list.length && capfac_list[0].isNew() ) {
 			// only one new CF at a time.
@@ -138,7 +138,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		var newCF = new TechnologyCapacityFactor( opts );
 		capfac_list.unshift( newCF );
 	},
-	'[name="AddInputSplit"] click': function ( $el, ev ) {  // TechnologyDetail
+	'[name="AddInputSplit"] click': function ( $el, ev ) {
 		var is_list = this.options.technology.inputsplits;
 		if ( is_list && is_list.length && is_list[0].isNew() ) {
 			// only one new split at a time.
@@ -150,7 +150,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		var newIS = new TechnologyInputSplit( opts );
 		is_list.unshift( newIS );
 	},
-	'[name="AddOutputSplit"] click': function ( $el, ev ) { // TechnologyDetail
+	'[name="AddOutputSplit"] click': function ( $el, ev ) {
 		var os_list = this.options.technology.outputsplits;
 		if ( os_list && os_list.length && os_list[0].isNew() ) {
 			// only one new split at a time.
@@ -162,13 +162,13 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		var newOS = new TechnologyOutputSplit( opts );
 		os_list.unshift( newOS );
 	},
-	'[name="CapacityFactorTechRemove"] click': function ( $el, ev ) { // TechnologyDetail
+	'[name="CapacityFactorTechRemove"] click': function ( $el, ev ) {
 		$el.closest( 'tr' ).data('capacityfactor').destroy();
 	},
-	'[name="InputSplitRemove"] click': function ( $el, ev ) { // TechnologyDetail
+	'[name="InputSplitRemove"] click': function ( $el, ev ) {
 		$el.closest( 'tr' ).data('inputsplit').destroy();
 	},
-	'[name="OutputSplitRemove"] click': function ( $el, ev ) { // TechnologyDetail
+	'[name="OutputSplitRemove"] click': function ( $el, ev ) {
 		$el.closest( 'tr' ).data('outputsplit').destroy();
 	},
 	'{TechnologyCapacityFactor} created' : function ( list, ev, obj ) {
