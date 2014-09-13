@@ -576,7 +576,7 @@ class Param_ResourceBound ( DM.Model ):
 
 
 	def save ( self ):
-		if self.resource.commodity_type != 'physical':
+		if self.resource.commodity_type.name != 'physical':
 			msg = 'Resource commodity must be of type "physical".'
 			raise ValidationError( msg )
 
