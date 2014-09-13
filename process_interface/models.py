@@ -902,12 +902,16 @@ class Param_EmissionLimit ( DM.Model ):
 
 
 	def __str__ ( self ):
-		analysis = self.period.analysis
-		period   = self.period.vintage
-		emission = self.emission.commodity
+		a, p, e, val = 'NoPeriod', 'NoPeriod', 'NoEmission', 'NoValue'
+		if self.period_id:
+			a = self.period.analysis
+			p = self.period.vintage
+		if self.emission_id:
+			e = self.emission.commodity.name
+		if self.value is not None:
+			val = self.value
 
-		return u'({}) {}, {}: {}'.format(
-		  analysis, period, emission, self.value )
+		return u'({}) {}, {}: {}'.format( a, p, e, val )
 
 
 	def save ( self ):
