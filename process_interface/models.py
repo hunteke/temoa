@@ -1000,26 +1000,20 @@ class Param_EmissionActivity ( DM.Model ):
 
 
 	def __str__ ( self ):
+		a, i, t, v, o = ('NoEfficiency',) * 5
+		e, val = 'NoEmission', 'NoValue'
 		if self.efficiency_id:
-			analysis = self.efficiency.process.technology.analysis
-			inp      = self.efficiency.inp_commodity.commodity
-			tech     = self.efficiency.process.technology
-			vint     = self.efficiency.process.vintage.vintage
-			out      = self.efficiency.out_commodity.commodity
-		else:
-			analysis = 'NoAnalysis'
-			inp  = 'NoInput'
-			tech = 'NoTechnology'
-			vint = 'NoVintage'
-			out  = 'NoOutput'
-
+			a = self.efficiency.process.technology.analysis
+			i = self.efficiency.inp_commodity.commodity.name
+			t = self.efficiency.process.technology.name
+			v = self.efficiency.process.vintage.vintage
+			o = self.efficiency.out_commodity.commodity.name
 		if self.emission_id:
-			emission = self.emission.commodity
-		else:
-			emission = 'NoEmission'
+			e = self.emission.commodity.name
+		if self.value is not None:
+			val = self.value
 
-		return u'({}) {} {} {} {}: {} {}'.format(
-		  analysis, inp, tech, vint, out, emission, self.value )
+		return u'({}) {} - {} {} - {}: {} {}'.format( a, i, t, v, o, e, val )
 
 
 	def clean ( self ):
