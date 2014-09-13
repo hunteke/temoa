@@ -208,10 +208,12 @@ class Technology ( DM.Model ):
 
 
 	def __str__ ( self ):
-		a, n = 'NoAnalysis', 'NoName'
+		a, n = 'NoAnalysis', '\r\nNoNameGiven\0\n'
+		  # impossible name, if saved normally
+
 		if self.analysis_id:
 			a = self.analysis
-		if self.name:
+		if self.name is not None:
 			n = self.name
 
 		return u'({}) {}'.format( a, n )
