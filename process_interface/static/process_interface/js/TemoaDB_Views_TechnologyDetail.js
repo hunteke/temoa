@@ -116,12 +116,12 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 	},
 	save_ProcessAttributes: function ( $el, newValue ) {
 		var $row = $el.closest('tr');
-		var param = $row.data('name');  // e.g, 'costinvest' or 'loanlife'
+		var param = $row.data('name');  // e.g., 'costinvest' or 'loanlife'
 
-		var id = $el.data('id');
+		var pid = $el.data('pid');
 		var data = {}
-		data[param] = newValue;
-		return this.technology.save_ProcessAttributes( id, data );
+		data[ param ] = newValue;
+		return this.technology.save_ProcessAttributes( pid, data );
 	},
 	'[name="AddCapacityFactorTech"] click': function ( $el, ev ) {
 		var capfac_list = this.options.technology.capacityfactors;

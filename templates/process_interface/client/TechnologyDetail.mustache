@@ -134,27 +134,27 @@
 			<tr data-name='costinvest'>
 				<th>Investment Cost:</th>
 				{{#each technology.processes.costinvest}}
-				<td data-id='{{id}}'>{{costinvest}}</td>
+				<td data-pid='{{pId}}'>{{costinvest}}</td>
 				{{/each}}
 			</tr><tr data-name='discountrate'>
 				<th>Discount Rate (decimal):<span class='error'></span></th>
 				{{#each technology.processes.discountrate}}
-				<td data-id='{{id}}'>{{discountrate}}</td>
+				<td data-pid='{{pId}}'>{{discountrate}}</td>
 				{{/each}}
 			</tr><tr data-name='existingcapacity'>
 				<th>Existing Capacity:<span class='error'></span></th>
 				{{#each technology.processes.existingcapacity}}
-				<td data-id='{{id}}'>{{existingcapacity}}</td>
+				<td data-pid='{{pId}}'>{{existingcapacity}}</td>
 				{{/each}}
 			</tr><tr data-name='lifetime'>
 				<th>Expected Life (years):</th>
 				{{#each technology.processes.lifetime}}
-				<td data-id='{{id}}'>{{lifetime}}</td>
+				<td data-pid='{{pId}}'>{{lifetime}}</td>
 				{{/each}}
 			</tr><tr data-name='loanlife'>
 				<th>Loan Length (years):</th>
 				{{#each technology.processes.loanlife}}
-				<td data-id='{{id}}'>{{loanlife}}</td>
+				<td data-pid='{{pId}}'>{{loanlife}}</td>
 				{{/each}}
 			</tr>
 		</tbody>
