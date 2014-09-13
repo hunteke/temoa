@@ -534,11 +534,15 @@ class Param_Demand ( DM.Model ):
 
 
 	def __str__ ( self ):
-		analysis  = self.demand.analysis
-		commodity = self.demand.commodity
+		a, c, p, val = 'NoDemand', 'NoDemand', 'NoPeriod', 'NoValue'
+		if self.demand_id:
+			a = self.demand.analysis
+			c = self.demand.commodity
+		if self.period_id:
+			p = self.period.vintage
+		val = self.value or 'NoValue'
 
-		return u'({}) {}, {}: {}'.format(
-		  analysis, commodity, self.period, self.value )
+		return u'({}) {}, {}: {}'.format( a, c, p, val )
 
 
 	def save ( self ):
