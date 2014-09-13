@@ -1117,13 +1117,20 @@ class Param_CapacityFactorProcess ( DM.Model ):
 
 
 	def __str__ ( self ):
-		a = self.process_id and self.process.technology.analysis or 'NoAnalysis'
-		s = self.timeslice.season if self.timeslice_id else 'NoSegFrac'
-		d = self.timeslice.time_of_day if self.timeslice_id else 'NoSegFrac'
-		t = self.process_id and self.process.technology or 'NoProcess'
-		v = self.process_id and self.process.vintage.vintage or 'NoProcess'
+		a, t, v = ('NoProcess',) * 3
+		s, d = ('NoTimeslice',) * 2
+		val = 'NoValue'
+		if self.process_id:
+			a = self.process.technology.analysis
+			t = self.process.technology.name
+			v = self.process.vintage.vintage
+		if self.timeslice_id:
+			s = self.timeslice.season
+			d = self.timeslice.time_of_day
+		if self.value is not None:
+			val = self.value
 
-		return u'({}) {}, {} - {}, {}: {}'.format( a, t, v, s, d, self.value )
+		return u'({}) {}, {} - {}, {}: {}'.format( a, t, v, s, d, val )
 
 
 	def save ( self ):
