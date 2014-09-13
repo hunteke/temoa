@@ -111,7 +111,7 @@ class Param_SegFrac ( DM.Model ):
 		unique_together = ('analysis', 'season', 'time_of_day')
 
 	def __str__ ( self ):
-		a, s, d, v = 'NoAnalysis', 'NoSeason', 'NoTimeOfDay', 'NoValue'
+		a, s, d, val = 'NoAnalysis', 'NoSeason', 'NoTimeOfDay', 'NoValue'
 		if self.analysis_id:
 			a = self.analysis
 		if self.season:
@@ -119,8 +119,9 @@ class Param_SegFrac ( DM.Model ):
 		if self.time_of_day:
 			d = self.time_of_day
 		if self.value is not None:
-			v = self.value
-		return u'({}) {}, {}: {}'.format( a, s, d, v )
+			val = self.value
+
+		return u'({}) {}, {}: {}'.format( a, s, d, val )
 
 
 	def clean_season ( self ):
