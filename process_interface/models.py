@@ -785,11 +785,18 @@ class Param_MaxMinCapacity ( DM.Model ):
 		unique_together = ('period', 'technology')
 
 	def __str__ ( self ):
-		analysis = self.period.analysis
-		period   = self.period.vintage
-		tech     = self.technology
+		a, p, t, mx, mn = 'NoPeriod', 'NoPeriod', 'NoTechnology', 'NoMax', 'NoMin'
+		if self.period_id:
+			a = self.period.analysis
+			p = self.period.vintage
+		if self.technology_id:
+			t = self.technology.name
+		if self.maximum is not None:
+			mx = self.maximum
+		if self.minimum is not None:
+			mn = self.minimum
 
-		return u'({}) {}, {}: {}'.format( analysis, period, tech, self.value )
+		return u'({}) {}, {}: [{}, {}]'.format( a, p, t, mn, mx )
 
 
 	def clean_period_and_technology ( self ):
