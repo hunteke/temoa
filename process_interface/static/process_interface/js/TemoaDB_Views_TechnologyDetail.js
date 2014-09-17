@@ -117,7 +117,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		data[ param ] = newValue;
 		var deferred = null;
 		if ( ! mmc_id ) {
-			deferred = this.technology.create_MaxMinCapacity( period_id, data )
+			deferred = t.create_MaxMinCapacity( period_id, data )
 			.done( function ( newData, msg, jqXHR ) {
 				// Apparently, jQuery's .data is a cached value; force-update the
 				// cache
@@ -126,7 +126,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 			});
 		}
 		else {
-			deferred = this.technology.save_MaxMinCapacity( mmc_id, period_id, data );
+			deferred = t.save_MaxMinCapacity( mmc_id, period_id, data );
 		}
 		deferred.done( function ( newData, msg, jqXHR ) {
 			// Update the client-side model's notion of the data
@@ -151,7 +151,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		var data = {}
 		data[ param ] = newValue;
 
-		var deferred = this.technology.save_ProcessAttributes( pid, data )
+		var deferred = t.save_ProcessAttributes( pid, data )
 		.done( function ( newData, msg, jqXHR ) {
 			// Update the client-side model's notion of the data
 			var index = $.inArray( $el[0], $row.children() ) - 1;
