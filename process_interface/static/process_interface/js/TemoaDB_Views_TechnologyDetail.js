@@ -133,6 +133,10 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 			var index = $.inArray( $el[0], $row.children() ) - 1;
 			var val = newData[ param ];
 			t.attr('maxmincapacities')[ index ].attr( newData );
+			if ( 'id' in newData ) {
+				$row.find('[data-period_id="' + period_id + '"]')
+				    .data('mmc_id', newData['id']);
+			}
 
 			Temoa.fn.showStatus('Successfully saved: ' + val, 'info' );
 		});

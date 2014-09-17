@@ -524,7 +524,44 @@ def technology_maxmincapacity_create (
 def technology_maxmincapacity_update (
   req, analysis_id, technology_id, period_id, mmc_id
 ):
-	pass
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	tech = get_object_or_404( Technology, pk=technology_id, analysis=analysis )
+	per = get_object_or_404( Vintage, pk=period_id, analysis=analysis )
+	mmc = get_object_or_404( Param_MaxMinCapacity, pk=mmc_id, period=per,
+	  technology=tech )
+
+	status = 200
+	msgs = {}
+
+	form = MaxMinCapacityForm( req.POST, instance=mmc )
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+
+	else:
+		try:
+			with transaction.atomic():
+				form.save()
+			for field in form.cleaned_data:
+				msgs.update( {field: getattr(mmc, field) } )
+
+			# special case because there's no obvious method to delete a MMC.  So,
+			# when the max and min are None, the form will delete the MMC, but we
+			# need to tell the UI that the ID is no longer valid.
+			if mmc.maximum is None and mmc.minimum is None:
+				msgs.update( {'id': None} )
+
+		except (IntegrityError, ValidationError) as e:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to complete update.  Database said: {}')
+			msgs.update({ 'General Error' : msg.format( e ) })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
 
 
 ## InputSplit #################################################################

@@ -1236,5 +1236,9 @@ class MaxMinCapacityForm ( F.Form ):
 		if 'minimum' in cd:
 			mmc.minimum = cd[ 'minimum' ]
 
+		if mmc.maximum is None and mmc.minimum is None:
+			mmc.delete()
+			return
+
 		mmc.save()
 
