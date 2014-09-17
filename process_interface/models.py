@@ -794,6 +794,7 @@ class Param_MaxMinCapacity ( DM.Model ):
 
 	class Meta:
 		unique_together = ('period', 'technology')
+		ordering = ( 'technology__name', 'period__vintage' )
 
 	def __str__ ( self ):
 		a, p, t, mx, mn = 'NoPeriod', 'NoPeriod', 'NoTechnology', 'NoMax', 'NoMin'
