@@ -99,7 +99,7 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		this[func]( $el, newValue )
 		.fail( function ( jqXHR, msg, reason ) {
 			if ( jqXHR && jqXHR.responseJSON ) {
-				Temoa.fn.displayErrors( $tr, jqXHR.responseJSON );
+				Temoa.fn.displayErrors( $el, jqXHR.responseJSON );
 			} else {
 				console.log( 'Error received, but no JSON response: ', jqXHR );
 				Temoa.fn.showStatus( 'Unknown error while saving data: ' + description );

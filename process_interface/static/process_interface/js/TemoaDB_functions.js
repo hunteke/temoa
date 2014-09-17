@@ -133,7 +133,7 @@ Temoa.fn.isInteger = function ( x ) {
 Temoa.fn.displayErrors = function ( $el, errors ) {
 	// errors should be a dictionary-like object of arrays.
 	if ( 'General Error' in errors ) {
-		$el.find('p.error').html( errors['General Error'] );
+		$el.find('.error').html( errors['General Error'] );
 		delete errors['General Error'];
 	}
 	for ( var key in errors ) {

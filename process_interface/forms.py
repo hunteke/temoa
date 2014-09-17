@@ -1208,7 +1208,7 @@ class MaxMinCapacityForm ( F.Form ):
 		if mx is None:
 			return mx
 
-		if mx <= 0:
+		if mx < 0:
 			msg = 'Maximum capacity cannot be negative.'
 			raise F.ValidationError( msg )
 
@@ -1221,7 +1221,7 @@ class MaxMinCapacityForm ( F.Form ):
 			return mn
 
 		if mn <= 0:
-			msg = 'Minimum capacity cannot be negative.'
+			msg = 'Minimum capacity must be empty or greater than zero.'
 			raise F.ValidationError( msg )
 
 		return mn
