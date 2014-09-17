@@ -539,6 +539,7 @@ def technology_maxmincapacity_update (
 		try:
 			with transaction.atomic():
 				form.save()
+			mmc = Param_MaxMinCapacity.objects.get(id=mmc.pk)
 			for field in form.cleaned_data:
 				msgs.update( {field: getattr(mmc, field) } )
 
