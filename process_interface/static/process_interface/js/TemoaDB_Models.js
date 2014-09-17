@@ -263,7 +263,6 @@ Temoa.canModel.Technology = can.Model('Technology', {
 		url += '/analysis/{aId}/technology/{id}/MaxMinCapacity/create/period/';
 		url += period_id;
 		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
-		console.log('Create: ', url, data );
 		return $.post( url, data );
 	},
 	save_MaxMinCapacity: function ( mmcid, period_id, data ) {
@@ -271,7 +270,6 @@ Temoa.canModel.Technology = can.Model('Technology', {
 		url += '/analysis/{aId}/technology/{id}/MaxMinCapacity/update/' + mmcid;
 		url += '/period/' + period_id;
 		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
-		console.log('Save: ', url, data );
 		return $.post( url, data );
 	},
 	save_ProcessAttributes: function ( id, data ) {
