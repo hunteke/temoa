@@ -877,9 +877,9 @@ class Param_MaxMinCapacity ( DM.Model ):
 
 
 	def clean ( self ):
+		self.clean_period_and_technology()
 		self.clean_minimum()
 		self.clean_maximum()
-		self.clean_period()
 		self.clean_max_and_min()
 
 

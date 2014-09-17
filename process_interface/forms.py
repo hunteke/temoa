@@ -1187,3 +1187,54 @@ class TechOutputSplitForm ( F.Form ):
 
 		tos.save()
 
+
+
+class MaxMinCapacityForm ( F.Form ):
+	maximum = F.FloatField( required=False, label=_('Maximum Capacity') )
+	minimum = F.FloatField( required=False, label=_('Minimum Capacity') )
+
+	def __init__ ( self, *args, **kwargs ):
+		self.MaxMinCapacity = kwargs.pop( 'instance' )
+		super( MaxMinCapacityForm, self ).__init__( *args, **kwargs )
+
+		# ensure that we don't remove fields user did not change.
+		for fname in list( self.fields ):
+			if fname not in self.data:
+				del self.fields[ fname ]
+
+
+	def clean_maximum ( self ):
+		mx = self.cleaned_data['maximum']
+		if mx is None:
+			return mx
+
+		if mx <= 0:
+			msg = 'Maximum capacity cannot be negative.'
+			raise F.ValidationError( msg )
+
+		return mx
+
+
+	def clean_minimum ( self ):
+		mn = self.cleaned_data['minimum']
+		if mn is None:
+			return mn
+
+		if mn <= 0:
+			msg = 'Minimum capacity cannot be negative.'
+			raise F.ValidationError( msg )
+
+		return mn
+
+
+	def save ( self ):
+		mmc = self.MaxMinCapacity
+		cd = self.cleaned_data
+
+		if 'maximum' in cd:
+			mmc.maximum = cd[ 'maximum' ]
+		if 'minimum' in cd:
+			mmc.minimum = cd[ 'minimum' ]
+
+		mmc.save()
+

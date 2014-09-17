@@ -14,6 +14,7 @@ if ( !('Temoa' in window) ) {
 	throw msg;
 }
 
+
 function cellChangeWatcher ( canControl ) {
 	// This wrapper function required so as to preserve the CanJS 'this'
 	// variable in the save() function.  Otherwise, editableTableWidget
@@ -54,8 +55,8 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		$el.append( can.view( view_url, view_opts ));
 
 		// With the view added to the dom, make values editable
-		var table_types = ['GeneralAttributes', 'CapacityFactors', 'InputSplits',
-		  'OutputSplits', 'MaxMinCapacities', 'ProcessAttributes'];
+		var table_types = ['GeneralAttributes', 'CapacityFactor', 'InputSplit',
+		  'OutputSplit', 'MaxMinCapacity', 'ProcessAttributes'];
 		for ( var i = 0; i < table_types.length; ++i ) {
 			var sel = '#TechnologyDetail_' + table_types[ i ] + '_' + t.id;
 			var $tab = $el.find( sel );
@@ -94,34 +95,69 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 		func = 'save_' + func;
 
 		$tab.find('.error').empty(); // remove any previous error messages
-		var t = this.technology;  // for closure (below), because this changes
 
 		this[func]( $el, newValue )
-		.done( function ( newData, msg, jqXHR ) {
-			// Update the client-side model's notion of the data
-			var index = $.inArray( $el[0], $tr.children() ) - 1;
-			var val = newData[ param ];
-			t.processes.attr( param )[ index ].attr( param, val );
-
-			Temoa.fn.showStatus('Successfully saved: ' + val, 'info' );
-		})
 		.fail( function ( jqXHR, msg, reason ) {
 			if ( jqXHR && jqXHR.responseJSON ) {
-				Temoa.fn.displayErrors( $el, jqXHR.responseJSON );
+				Temoa.fn.displayErrors( $tr, jqXHR.responseJSON );
 			} else {
 				console.log( 'Error received, but no JSON response: ', jqXHR );
 				Temoa.fn.showStatus( 'Unknown error while saving data: ' + description );
 			}
 		});
 	},
+	save_MaxMinCapacity: function ( $el, newValue ) {
+		var t = this.technology;  // for closure (below), because this changes
+		var $row = $el.closest('tr');
+		var param = $row.data('name');  // i.e., 'maximum' or 'minimum'
+		var mmc_id = $el.data('mmc_id');  // MaxMin.id; an integer (string)
+		var period_id = $el.data('period_id');  // similar to mmc_id
+
+		var data = {}
+		data[ param ] = newValue;
+		var deferred = null;
+		if ( ! mmc_id ) {
+			deferred = this.technology.create_MaxMinCapacity( period_id, data )
+			.done( function ( newData, msg, jqXHR ) {
+				// Apparently, jQuery's .data is a cached value; force-update the
+				// cache
+				$row.find('[data-period_id="' + period_id + '"]')
+				    .data('mmc_id', newData['id']);
+			});
+		}
+		else {
+			deferred = this.technology.save_MaxMinCapacity( mmc_id, period_id, data );
+		}
+		deferred.done( function ( newData, msg, jqXHR ) {
+			// Update the client-side model's notion of the data
+			var index = $.inArray( $el[0], $row.children() ) - 1;
+			var val = newData[ param ];
+			t.attr('maxmincapacities')[ index ].attr( newData );
+
+			Temoa.fn.showStatus('Successfully saved: ' + val, 'info' );
+		});
+		return deferred;
+	},
 	save_ProcessAttributes: function ( $el, newValue ) {
+		var t = this.technology;  // for closure (below), because this changes
 		var $row = $el.closest('tr');
 		var param = $row.data('name');  // e.g., 'costinvest' or 'loanlife'
 
 		var pid = $el.data('pid');
 		var data = {}
 		data[ param ] = newValue;
-		return this.technology.save_ProcessAttributes( pid, data );
+
+		var deferred = this.technology.save_ProcessAttributes( pid, data )
+		.done( function ( newData, msg, jqXHR ) {
+			// Update the client-side model's notion of the data
+			var index = $.inArray( $el[0], $row.children() ) - 1;
+			var val = newData[ param ];
+			t.processes.attr( param )[ index ].attr( param, val );
+
+			Temoa.fn.showStatus('Successfully saved: ' + val, 'info' );
+		});
+		return deferred;
+
 	},
 	'[name="AddCapacityFactorTech"] click': function ( $el, ev ) {
 		var capfac_list = this.options.technology.capacityfactors;

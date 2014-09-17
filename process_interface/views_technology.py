@@ -28,6 +28,7 @@ from models import (
 from forms import (
   AnalysisTechnologyForm,
   CapacityFactorTechForm,
+  MaxMinCapacityForm,
   TechInputSplitForm,
   TechOutputSplitForm,
 )
@@ -42,8 +43,19 @@ def get_technology_info ( analysis, technologies ):
 	a_pk = analysis.pk
 	p0 = analysis.period_0
 
-	horizon = sorted( v.vintage for v in Vintage.objects.filter(
-	  analysis=analysis, vintage__gte=p0 ) )[:-1]  # last year is not a vintage
+	horizon = list(Vintage.objects.filter(
+	  analysis=analysis, vintage__gte=p0 ).order_by( 'vintage' )
+	)[:-1]  # last year is not a vintage
+
+	def empty_mmc ( ):
+		return {v : {
+		    'id': None,
+		    'period_id': v.pk,
+		    'minimum': None,
+		    'maximum': None
+		  }
+		  for v in horizon
+		}
 
 	slices = []
 	slices.extend( Param_SegFrac.objects.filter( analysis=analysis ).order_by(
@@ -67,14 +79,14 @@ def get_technology_info ( analysis, technologies ):
 		cf = CapacityFactors[ t ]
 		CapacityFactors[ t ] = [ sl in cf and cf[ sl ] or None for sl in slices ]
 
-	MaxMinCapacities = defaultdict( dict )
+	MaxMinCapacities = defaultdict( empty_mmc )
 	for maxmin in Param_MaxMinCapacity.objects.filter(
 	  technology__in=technologies ).order_by( 'period' ):
-		MaxMinCapacities[ maxmin.technology ][ maxmin.period.vintage ] = {
-		  'aId'     : a_pk,
-		  'tId'     : maxmin.technology.pk,
-		  'maximum' : maxmin.maximum,
-		  'minimum' : maxmin.minimum
+		MaxMinCapacities[ maxmin.technology ][ maxmin.period ] = {
+		  'id'        : maxmin.pk,
+		  'period_id' : maxmin.period.pk,
+		  'maximum'   : maxmin.maximum,
+		  'minimum'   : maxmin.minimum,
 		}
 
 	TechInputSplit = defaultdict( list )
@@ -105,9 +117,8 @@ def get_technology_info ( analysis, technologies ):
 	# loops put in the required None/null.  (i.e., need a dense matrix, not a
 	# sparse representation)
 
+	Techs = set()
 	Vintages = defaultdict( list )
-	MaxC = {}
-	MinC = {}
 	CapFacs = defaultdict( list )
 	CI = defaultdict( dict )
 	DR = defaultdict( dict )
@@ -117,14 +128,13 @@ def get_technology_info ( analysis, technologies ):
 	for p in Process.objects.filter( technology__in=technologies ).order_by(
 	  'vintage__vintage' ):
 		t, v = p.technology, p.vintage.vintage
+		Techs.add( t );
 		Vintages[ t ].append( v )
 		CI[ t ][ v ] = {'pId': p.pk, 'costinvest': p.costinvest}
 		DR[ t ][ v ] = {'pId': p.pk, 'discountrate': p.discountrate}
 		EC[ t ][ v ] = {'pId': p.pk, 'existingcapacity': p.existingcapacity}
 		Lifetimes[ t ][ v ] = {'pId': p.pk, 'lifetime': p.lifetime}
 		Loanlives[ t ][ v ] = {'pId': p.pk, 'loanlife': p.loanlife}
-
-		MaxMinCapacities[ t ]   # create the entry if it doesn't exist
 
 	for t in Vintages:
 		ci, dr, ec, life, loan = CI[t], DR[t], EC[t], Lifetimes[t], Loanlives[t]
@@ -135,10 +145,10 @@ def get_technology_info ( analysis, technologies ):
 		Lifetimes[ t ] = [ v in life and life[v] or None for v in vs ]
 		Loanlives[ t ] = [ v in loan and loan[v] or None for v in vs ]
 
-		MaxC[ t ] = [ v in mmc and mmc[v]['maximum'] or None for v in horizon
-		  if v >= p0 ]
-		MinC[ t ] = [ v in mmc and mmc[v]['minimum'] or None for v in horizon
-		  if v >= p0 ]
+	# Similar to the above two loops, except the empty_mmc function has done
+	# the hard work; this just converts from dicts to lists
+	for t in Techs:
+		MaxMinCapacities[ t ] = [ MaxMinCapacities[ t ][ v ] for v in horizon ]
 
 	data = [
 	  {
@@ -155,8 +165,7 @@ def get_technology_info ( analysis, technologies ):
 	    'storage'            : t.storage,
 	    'capacityfactors'    : CapacityFactors[ t ],
 	    'inputsplits'        : TechInputSplit[ t ],
-	    'maxcapacities'      : MaxC[ t ],
-	    'mincapacities'      : MinC[ t ],
+	    'maxmincapacities'   : MaxMinCapacities[ t ],
 	    'outputsplits'       : TechOutputSplit[ t ],
 	    'vintages'           : Vintages[ t ],
 	    'processes'          : {
@@ -460,6 +469,62 @@ def analysis_technology_capacityfactor_remove (
 
 	set_cookie( req, res );
 	return res
+
+
+## MaxMinCapacity #################################################################
+
+@require_login
+@require_POST
+@never_cache
+def technology_maxmincapacity_create (
+  req, analysis_id, technology_id, period_id
+):
+	analysis = get_object_or_404( Analysis, pk=analysis_id, user=req.user )
+	tech = get_object_or_404( Technology, pk=technology_id, analysis=analysis )
+	per = get_object_or_404( Vintage, pk=period_id, analysis=analysis )
+
+	status = 201  # Created
+	msgs = {}
+
+	mmc = Param_MaxMinCapacity( technology=tech, period=per )
+	form = MaxMinCapacityForm( req.POST, instance=mmc )
+	if not form.is_valid():
+		status = 422  # to let Javascript know there was an error
+		msgs.update( form.errors )
+
+	else:
+		try:
+			with transaction.atomic():
+				form.save()
+			mmc = Param_MaxMinCapacity.objects.get(id=mmc.pk)
+			for field in form.cleaned_data:
+				msgs.update( {field: getattr(mmc, field) } )
+			msgs.update({ 'id': mmc.pk })
+
+		except IntegrityError as e:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to create capacity constraint.  It already exists!')
+			msgs.update({ 'General Error' : msg })
+		except ValidationError as e:
+			status = 422  # to let Javascript know there was an error
+			msg = ('Unable to create capacity constraint.  Database said: {}')
+			msgs.update({ 'General Error' : msg.format( e ) })
+
+	data = json.dumps( msgs )
+	res = HttpResponse( data, content_type='application/json', status=status )
+	res['Content-Length'] = len( data )
+
+	set_cookie( req, res )
+	return res
+
+
+@require_login
+@require_POST
+@never_cache
+def technology_maxmincapacity_update (
+  req, analysis_id, technology_id, period_id, mmc_id
+):
+	pass
 
 
 ## InputSplit #################################################################

@@ -103,7 +103,7 @@
 		</tbody>
 	</table>
 
-	<table id='TechnologyDetail_MaxMinCapacities_{{technology.id}}'>
+	<table id='TechnologyDetail_MaxMinCapacity_{{technology.id}}'>
 		<caption>Maximum and Minimum Capacities</caption>
 		<thead>
 			<tr><th>Vintages:</th>
@@ -111,14 +111,14 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr><th>Max:</th>
-				{{#each technology.maxcapacities}}
-				<td>{{.}}</td>
+			<tr data-name='maximum'><th>Max:<span class='error'></span></th>
+				{{#each technology.maxmincapacities}}
+				<td data-mmc_id='{{id}}' data-period_id='{{period_id}}'>{{maximum}}</td>
 				{{/each}}
 			</tr>
-			<tr><th>Min:</th>
-				{{#each technology.mincapacities}}
-				<td>{{.}}</td>
+			<tr data-name='minimum'><th>Min:<span class='error'></span></th>
+				{{#each technology.maxmincapacities}}
+				<td data-mmc_id='{{id}}' data-period_id='{{period_id}}'>{{minimum}}</td>
 				{{/each}}
 			</tr>
 		</tbody>

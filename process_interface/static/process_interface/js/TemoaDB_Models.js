@@ -258,18 +258,28 @@ Temoa.canModel.Technology = can.Model('Technology', {
 		outputsplits: 'TechnologyOutputSplit.models',
 	}
 }, {
-	partialUpdate: function ( id, attr ) {
+	create_MaxMinCapacity: function ( period_id, data ) {
 		var url = Temoa.C.ROOT_URL;
-		url += '/analysis/{aId}/technology/update/{id}';
+		url += '/analysis/{aId}/technology/{id}/MaxMinCapacity/create/period/';
+		url += period_id;
 		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
-		return $.post( url, attr );
+		console.log('Create: ', url, data );
+		return $.post( url, data );
+	},
+	save_MaxMinCapacity: function ( mmcid, period_id, data ) {
+		var url = Temoa.C.ROOT_URL;
+		url += '/analysis/{aId}/technology/{id}/MaxMinCapacity/update/' + mmcid;
+		url += '/period/' + period_id;
+		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
+		console.log('Save: ', url, data );
+		return $.post( url, data );
 	},
 	save_ProcessAttributes: function ( id, data ) {
 		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/process/update/' + id;
 		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
 		return $.post( url, data );
-	}
+	},
 });
 
 Temoa.canModel.TechnologyCapacityFactor = can.Model('TechnologyCapacityFactor', {

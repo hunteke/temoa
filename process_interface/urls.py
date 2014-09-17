@@ -63,6 +63,9 @@ from views import (
   process_emissionactivity_update,
   process_emissionactivity_remove,
 
+  technology_maxmincapacity_create,
+  technology_maxmincapacity_update,
+
   analysis_technology_capacityfactor_new,
   analysis_technology_capacityfactor_update,
   analysis_technology_capacityfactor_remove,
@@ -156,6 +159,10 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/create$', analysis_technology_capacityfactor_new ),
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/update/(?P<cf_id>\d+)$', analysis_technology_capacityfactor_update ),
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/CapacityFactor/remove/(?P<cf_id>\d+)$', analysis_technology_capacityfactor_remove ),
+
+# TechMaxMinCap
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/MaxMinCapacity/create/period/(?P<period_id>\d+)$', technology_maxmincapacity_create ),
+  url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/MaxMinCapacity/update/(?P<mmc_id>\d+)/period/(?P<period_id>\d+)$', technology_maxmincapacity_update ),
 
 # TechInputSplit
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/InputSplit/create$', analysis_technology_inputsplit_new, name='analysis_technology_inputsplit_new'),
