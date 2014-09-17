@@ -37,9 +37,6 @@ from view_helpers import set_cookie
 
 
 def get_technology_info ( analysis, technologies ):
-	def null ( ):
-		return None
-
 	a_pk = analysis.pk
 	p0 = analysis.period_0
 
