@@ -868,12 +868,6 @@ class Param_MaxMinCapacity ( DM.Model ):
 			  'period-technology capacities.  Remove the entry instead.')
 			raise ValidationError( msg )
 
-		if mn is not None and mx is not None:
-			mn, mx = float(mn), float(mx)
-
-			if (mx < mn):
-				self.maximum, self.minimum = mn, mx
-
 
 	def clean ( self ):
 		self.clean_period_and_technology()
