@@ -828,8 +828,7 @@ class Param_MaxMinCapacity ( DM.Model ):
 
 	def clean_minimum ( self ):
 		mn = self.minimum
-		if not mn:
-			self.minimum = None
+		if mn is None:
 			return
 
 		try:
@@ -847,8 +846,7 @@ class Param_MaxMinCapacity ( DM.Model ):
 
 	def clean_maximum ( self ):
 		mx = self.maximum
-		if not mx:
-			self.maximum = None
+		if mx is None:
 			return
 
 		try:
