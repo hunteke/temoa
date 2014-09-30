@@ -1272,6 +1272,7 @@ def parse_args ( ):
 	solver      = parser.add_argument_group('Solver Options')
 	stochastic  = parser.add_argument_group('Stochastic Options')
 	postprocess = parser.add_argument_group('Postprocessing Options')
+	mga         = parser.add_argument_group('MGA Options')
 
 	parser.add_argument('dot_dat',
 	  type=str,
@@ -1374,6 +1375,13 @@ def parse_args ( ):
 	  dest='eciu',
 	  default=None)
 
+	#An optional arguement with the ability to take a flag (--MGA) and a
+	#numeric slack value
+	mga.add_argument('--mga',
+	  help='Include the flag --MGA and supply a slack-value and recieve a '
+	    'Modeling to generate alternatives solution',
+	  dest='mga',
+	  type=float)
 
 	options = parser.parse_args()
 
@@ -1388,7 +1396,7 @@ def parse_args ( ):
 
 	# It would be nice if this implemented with add_mutually_exclusive_group
 	# but I /also/ want them in separate groups for display.  Bummer.
-	if not (options.dot_dat or options.eciu):
+	if not (options.dot_dat or options.eciu or options.mga):
 		usage = parser.format_usage()
 		msg = ('Missing a data file to optimize (e.g., test.dat)')
 		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
@@ -1403,6 +1411,7 @@ def parse_args ( ):
 		       'line.')
 		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
 		raise TemoaCommandLineArgumentError( msg )
+
 	elif options.eciu:
 		# can this be subsumed directly into the argparse module functionality?
 		from os.path import isdir, isfile, join
@@ -1437,6 +1446,9 @@ def parse_args ( ):
 
 			raise TemoaNoExecutableError( msg )
 
+	if options.mga:
+		print 'you are using the MGA option'
+
 	s_choice = str( options.solver ).upper()
 	SE.write('Notice: Using the {} solver interface.\n'.format( s_choice ))
 	SE.flush()
@@ -1448,6 +1460,119 @@ def parse_args ( ):
 
 ###############################################################################
 # Direct invocation methods (when modeler runs via "python model.py ..."
+
+
+
+
+
+#######
+##THE MGA FUNCTION WAS BUILT DIRECTLY INTO THE LIB FILE SO THAT IMPORTATION OF
+##AUCILIARY FILES INTO A FILE CONTAINING JUST THE MGA FUNCTION DID NOT HAVE TO BE
+##DEALT WITH.
+#######
+
+
+
+
+
+def MGA (model, optimizer, options):
+	from time import clock
+
+	import sys, os, gc
+
+	from sys import argv
+	print argv[2]
+
+	from coopr.pyomo import ModelData
+	from pformat_results import pformat_results
+
+	SE.write( '[        ] Reading data files.'); SE.flush()
+
+	begin = clock()
+	duration = lambda: clock() - begin
+
+	opt = optimizer              # for us lazy programmer types
+	dot_dats = options.dot_dat
+
+	mdata_1 = ModelData()
+
+	from temoa_rules import TotalCost_rule
+
+	#add data to model data handler
+	for f in dot_dats:
+		if f[-4:] != '.dat':
+			msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
+			raise TemoaValidationError( msg.format( f ))
+		mdata_1.add( f )
+
+	#It is neccessary to define the Objective before the 'reading' the model
+	#into mdata_1. If not, the Objective does not become a part of the
+	#concrete model (i.e. instance_1)
+	model.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
+
+	mdata_1.read( model )
+	#now mdata contains the data we will optimize
+	#mdata has data for constraints but has not manipulated it into constraints
+	SE.write( '\r[%8.2f\n' % duration() )
+
+	SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
+	# Now do the solve and ...
+	#create the concrete model. instance is the concrete model
+	instance_1 = model.create( mdata_1 )
+	SE.write( '\r[%8.2f\n' % duration() )
+
+	SE.write( '[        ] Solving.'); SE.flush()
+
+	if opt:
+
+		result_1 = opt.solve( instance_1 )
+
+		# ... print the easier-to-read/parse format
+		updated_results_1 = instance_1.update_results( result_1 )
+		instance_1.load( result_1 )
+		formatted_results = pformat_results( instance_1, updated_results_1 )
+
+		##This segment of code is attempting to create a dictionary of activity
+		##grouped by technology. It is still being worked on.
+		to_process=[]
+		for line in formatted_results.getvalue():
+			if 'V_ActivityByPeriodAndProcess' in line:
+				to_process.append(line)
+				break
+		print to_process
+
+		#dict_tech_act =
+
+		##Segment ends here.
+
+		##Perfect_Foresight_Obj is the objective value of the perfect foresight soln.
+		##The value was 'plucked' from result_1; which uses classes to divide the soln.
+		##Include 'print result_1' in this code to see the format of result_1.
+		Perfect_Foresight_Obj = result_1.Solution.Objective.__default_objective__.Value
+
+		model.del_component( 'FirstObj' )
+
+		from MGA_rules import ActivityObj_rule
+		from MGA_rules import CostConst_rule
+
+		model.SecondObj = Objective( rule = ActivityObj_rule, sense=minimize )
+
+		model.CostConst = Constraint( rule = CostConst_rule )
+
+		mdata_2 = ModelData()
+		mdata_2.add(f)
+		mdata_2.read( model )
+
+		#result_2 = opt.solve( instance_2 )
+
+		SE.write( '\r[%8.2f\n' % duration() )
+
+		# return signal handlers to defaults, again
+		signal(SIGINT, default_int_handler)
+	else:
+		SE.write( '\r---------- Not solving: no available solver\n' )
+		return
+
 
 def solve_perfect_foresight ( model, optimizer, options ):
 	from time import clock
@@ -2103,9 +2228,13 @@ def temoa_solve ( model ):
 
 	try:
 		if options.dot_dat:
-			solve_perfect_foresight( model, opt, options )
+			if options.mga:
+				MGA( model, opt, options )
+			else:
+				solve_perfect_foresight( model, opt, options )
 		elif options.eciu:
 			solve_true_cost_of_guessing( opt, options )
+
 	except IOError as e:
 		if e.errno == errno.EPIPE:
 			# stdout has been closed, e.g., a user has quit the 'less' pager

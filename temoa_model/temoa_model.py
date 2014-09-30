@@ -275,7 +275,19 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 
 	# Objective
-	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
+	#M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
+
+
+
+
+
+	#######
+	# THE OBJECTIVE HAS BEEN LEFT OUT OF THE MODEL FILE.
+	#######
+
+
+
+
 
 	# Constraints
 
@@ -316,10 +328,10 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 	M.GrowthRateConstraint = Constraint( M.GrowthRateMaxConstraint_tv, rule=GrowthRateConstraint_rule )
 
-
 	return M
 
 
+#default temoa_create_model function arg is 'name'
 model = temoa_create_model()
 
 
