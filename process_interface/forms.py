@@ -1098,44 +1098,44 @@ class TechInputSplitForm ( F.Form ):
 
 
 class TechOutputSplitForm ( F.Form ):
-	out   = F.ChoiceField( label=_('Output') )
-	value = F.FloatField( label=_('Percentage') )
+	out_commodity = F.ChoiceField( label=_('Output') )
+	fraction = F.FloatField( label=_('Percentage') )
 
 	def __init__( self, *args, **kwargs ):
-		self.techoutputsplit = tos = kwargs.pop('instance')
-		self.analysis = analysis = kwargs.pop('analysis')
-
+		self.TechOutputSplit = kwargs.pop('instance')
 		super( TechOutputSplitForm, self ).__init__( *args, **kwargs )
 
-		if tos.pk:
-			del self.fields['out']
+		# ensure that we don't remove fields user did not change.
+		for fname in list( self.fields ):
+			if fname not in self.data:
+				del self.fields[ fname ]
 
-		else:
+		if 'out_commodity' in self.fields:
 			out_choices = self.getOutputChoices()
-			self.fields['out'].choices = out_choices
+			self.fields['out_commodity'].choices = out_choices
 
 			msg = 'Invalid output commodity (%(value)s).  Valid choices are: {}'
 			pers = ', '.join( str(i[0]) for i in out_choices )
-			em = self.fields['out'].error_messages
+			em = self.fields['out_commodity'].error_messages
 			em['invalid_choice'] = _(msg.format( pers ))
 
 
 	def getOutputChoices ( self ):
+		analysis = self.TechOutputSplit.technology.analysis
 		outs = AnalysisCommodity.objects.filter(
-		  analysis=self.analysis,
+		  analysis=analysis,
 		  commodity_type__name__in=('physical', 'demand') )
 		return sorted(
 		  set(( ac.commodity.name, ac.commodity.name) for ac in outs)
 		)
 
 
-	def clean_out ( self ):
-		out = self.cleaned_data['out']
-		a = self.analysis
+	def clean_out_commodity ( self ):
+		out = self.cleaned_data['out_commodity']
 
 		try:
 			out = AnalysisCommodity.objects.get(
-			  analysis=a,
+			  analysis=self.TechOutputSplit.technology.analysis,
 			  commodity_type__name__in=('demand', 'physical'),
 			  commodity__name=out
 			)
@@ -1147,43 +1147,43 @@ class TechOutputSplitForm ( F.Form ):
 		return out  # note that it's now a Commodity _object_, not a string/num
 
 
-	def clean_value ( self ):
+	def clean_fraction ( self ):
 		epsilon = 1e-9
-		v = self.cleaned_data['value']
+		f = self.cleaned_data['fraction']
 
-		if v is None:
+		if f is None:
 			msg = ('Please specify a percentage.  To remove this split, push the '
 			  '"Shift" key and click on the corresponding red button.')
 			raise F.ValidationError( msg )
 
-		elif math.isnan( v ):
+		elif math.isnan( f ):
 			msg = ('Received NaN ("Not a Number").  Please specify a decimal '
 			  'value between 0 and 1.')
 			raise F.ValidationError( msg )
 
-		elif v < epsilon:
+		elif f < epsilon:
 			msg = ('Any number equal to or less than 0 (0%) is a useless or '
 			  'nonsensical entry.  Please either remove this row, or pick a '
 			  'value in the range (0, 1).')
 			raise F.ValidationError( msg )
 
-		elif v >= 1:
+		elif f >= 1:
 			msg = ('Any number equal to or greater than 1 (100%) is a useless '
 			  'or nonsensical entry.  Please either remove this row, or pick a '
 			  'value in the range (0, 1).')
 			raise F.ValidationError( msg )
 
-		return v
+		return f
 
 
 	def save ( self ):
-		tos = self.techoutputsplit
+		tos = self.TechOutputSplit
 		cd = self.cleaned_data
 
-		if 'out' in cd:
-			tos.out_commodity = cd[ 'out' ]
-		if 'value' in cd:
-			tos.fraction = cd[ 'value' ]
+		if 'out_commodity' in cd:
+			tos.out_commodity = cd[ 'out_commodity' ]
+		if 'fraction' in cd:
+			tos.fraction = cd[ 'fraction' ]
 
 		tos.save()
 

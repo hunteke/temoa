@@ -744,7 +744,8 @@ class Param_TechOutputSplit ( DM.Model ):
 
 
 	class Meta:
-		unique_together = ('technology', 'out_commodity',)
+		unique_together = ('technology', 'out_commodity')
+		ordering = ('technology__name', 'out_commodity__commodity__name')
 
 
 	def __str__ ( self ):
