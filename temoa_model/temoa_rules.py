@@ -202,8 +202,8 @@ def ParamLoanAnnualize_rule ( M, t, v ):
 	dr = value( M.DiscountRate[t, v] )
 	lln = value( M.LifetimeLoanProcess[t, v] )
 	if not dr:
-		return 1 / lln
-	annualized_rate = ( dr / (1 - (1 + dr)**(-lln) ))
+		return 1.0 / lln
+	annualized_rate = ( dr / (1.0 - (1.0 + dr)**(-lln) ))
 
 	return annualized_rate
 
