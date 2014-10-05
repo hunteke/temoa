@@ -731,19 +731,22 @@ def analysis_technology_outputsplit_update (
 	status = 200
 	msgs = {}
 
-	form = TechOutputSplitForm( req.POST, instance=tos, analysis=analysis )
+	form = TechOutputSplitForm( req.POST, instance=tos )
 	if not form.is_valid():
 		status = 422  # to let Javascript know there was an error
 		msgs.update( form.errors )
-		if 'value' in msgs.keys():
-			msgs['OutputSplit_{}'.format(tos.pk)] = msgs.pop( 'value' )
 
 	else:
 		try:
 			with transaction.atomic():
 				form.save()
 
-			msgs.update( value=tos.fraction )
+			tos = Param_TechOutputSplit.objects.get(id=tos.pk)
+			if 'out_commodity' in form.cleaned_data:
+				msgs.update( {'out_commodity': tos.out_commodity.commodity.name} )
+			if 'fraction' in form.cleaned_data:
+				msgs.update( {'fraction': tos.fraction} )
+
 		except (IntegrityError, ValidationError) as e:
 			status = 422  # to let Javascript know there was an error
 			msg = ('Unable to complete update.  Database said: {}')
@@ -753,7 +756,7 @@ def analysis_technology_outputsplit_update (
 	res = HttpResponse( data, content_type='application/json', status=status )
 	res['Content-Length'] = len( data )
 
-	set_cookie( req, res, analysis_id=analysis_id )
+	set_cookie( req, res )
 	return res
 
 
