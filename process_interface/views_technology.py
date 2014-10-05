@@ -101,10 +101,8 @@ def get_technology_info ( analysis, technologies ):
 	for osplit in Param_TechOutputSplit.objects.filter(
 	  technology__in=technologies ):
 		TechOutputSplit[ osplit.technology ].append({
-		  'aId'   : a_pk,
-		  'tId'   : osplit.technology.pk,
-		  'id'    : osplit.pk,
-		  'out'   : osplit.out_commodity.commodity.name,
+		  'id' : osplit.pk,
+		  'out_commodity' : osplit.out_commodity.commodity.name,
 		  'value' : osplit.fraction
 		})
 
