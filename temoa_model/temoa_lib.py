@@ -1375,7 +1375,7 @@ def parse_args ( ):
 	  dest='eciu',
 	  default=None)
 
-	#An optional arguement with the ability to take a flag (--MGA) and a
+	#An optional argument with the ability to take a flag (--MGA) and a
 	#numeric slack value
 	mga.add_argument('--mga',
 	  help='Include the flag --MGA and supply a slack-value and recieve a '
@@ -1447,7 +1447,8 @@ def parse_args ( ):
 			raise TemoaNoExecutableError( msg )
 
 	if options.mga:
-		print 'you are using the MGA option'
+		msg = 'MGA specified (slack value: {})\n'.format( options.mga )
+		SE.write( msg )
 
 	s_choice = str( options.solver ).upper()
 	SE.write('Notice: Using the {} solver interface.\n'.format( s_choice ))
@@ -1478,12 +1479,9 @@ def parse_args ( ):
 def MGA (model, optimizer, options):
 	from time import clock
 
-	import sys, os, gc
+	from coopr.pyomo import DataPortal
 
-	from sys import argv
-	print argv[2]
-
-	from coopr.pyomo import ModelData
+	from temoa_rules import TotalCost_rule
 	from pformat_results import pformat_results
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
@@ -1496,39 +1494,35 @@ def MGA (model, optimizer, options):
 
 	mdata_1 = ModelData()
 
-	from temoa_rules import TotalCost_rule
+	SE.write( '[        ] Reading data files.'); SE.flush()
+	begin = clock()
+	duration = lambda: clock() - begin
 
 	#add data to model data handler
 	for f in dot_dats:
 		if f[-4:] != '.dat':
 			msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
-			raise TemoaValidationError( msg.format( f ))
-		mdata_1.add( f )
-
-	#It is neccessary to define the Objective before the 'reading' the model
-	#into mdata_1. If not, the Objective does not become a part of the
-	#concrete model (i.e. instance_1)
-	model.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
-
-	mdata_1.read( model )
-	#now mdata contains the data we will optimize
-	#mdata has data for constraints but has not manipulated it into constraints
+			raise TemoaValidationError( msg.format( fname ))
+		mdata.load( filename=fname )
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
-	# Now do the solve and ...
-	#create the concrete model. instance is the concrete model
-	instance_1 = model.create( mdata_1 )
+
+	# Create concrete model
+	instance_1 = model.create( mdata )
+
+	# Now add in and objective function, like we earlier removed; note that name
+	# we choose here (FirstObj) will be copied to the output file.
+	instance_1.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
+	instance_1.preprocess()
+
 	SE.write( '\r[%8.2f\n' % duration() )
 
-	SE.write( '[        ] Solving.'); SE.flush()
+	SE.write( '[        ] Solving first model instance.'); SE.flush()
 
 	if opt:
 
 		result_1 = opt.solve( instance_1 )
-
-		# ... print the easier-to-read/parse format
-		updated_results_1 = instance_1.update_results( result_1 )
 		instance_1.load( result_1 )
 		formatted_results = pformat_results( instance_1, updated_results_1 )
 

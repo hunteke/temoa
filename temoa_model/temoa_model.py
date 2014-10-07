@@ -275,7 +275,7 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 
 	# Objective
-	#M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
+	M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
 
 
 
