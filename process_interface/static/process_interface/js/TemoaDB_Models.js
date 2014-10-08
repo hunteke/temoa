@@ -258,6 +258,18 @@ Temoa.canModel.Technology = can.Model('Technology', {
 		outputsplits: 'TechnologyOutputSplit.models',
 	}
 }, {
+	create_OutputSplit: function ( id, data ) {
+		var url = Temoa.C.ROOT_URL;
+		url += '/analysis/{aId}/technology/{id}/OutputSplit/create';
+		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
+		return $.post( url, data );
+	},
+	save_OutputSplit: function ( id, data ) {
+		var url = Temoa.C.ROOT_URL;
+		url += '/analysis/{aId}/technology/{id}/OutputSplit/update/' + id;
+		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
+		return $.post( url, data );
+	},
 	create_MaxMinCapacity: function ( period_id, data ) {
 		var url = Temoa.C.ROOT_URL;
 		url += '/analysis/{aId}/technology/{id}/MaxMinCapacity/create/period/';

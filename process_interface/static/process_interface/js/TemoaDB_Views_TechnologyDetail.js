@@ -106,6 +106,16 @@ Temoa.canControl.TechnologyDetail = can.Control('TechnologyDetail', {
 			}
 		});
 	},
+	save_OutputSplit: function ( $el, newValue ) {
+		var t = this.technology;  // for closure (below), because this changes
+		var $row = $el.closest('tr');
+		var id = $row.data('id');
+		var param = $el.data('param');
+
+		var data = {}
+		data[ param ] = newValue;
+		return t.save_OutputSplit( id, data );
+	},
 	save_MaxMinCapacity: function ( $el, newValue ) {
 		var t = this.technology;  // for closure (below), because this changes
 		var $row = $el.closest('tr');
