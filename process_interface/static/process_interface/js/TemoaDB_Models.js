@@ -343,32 +343,6 @@ Temoa.canModel.TechnologyInputSplit = can.Model('TechnologyInputSplit', {
 	}
 });
 
-Temoa.canModel.TechnologyOutputSplit = can.Model('TechnologyOutputSplit', {
-	findAll: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/list',
-	findOne: 'GET ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/{id}',
-	create:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/create',
-	update:  'POST ' + Temoa.C.ROOT_URL + '/analysis/{aId}/technology/{tId}/OutputSplit/update/{id}',
-	destroy: function ( id ) {
-		var url = Temoa.C.ROOT_URL;
-		url += '/analysis/{aId}/technology/{tId}/OutputSplit/remove/{id}';
-		url = Temoa.fn.replaceNamedArgs( url, this.store[ id ].attr() );
-		return $.ajax({ type: 'DELETE', url: url });
-	},
-	attributes: {
-		'aId'   : 'int',
-		'tId'   : 'int',
-		'id'    : 'int',
-		'out'   : 'string',
-		'value' : 'number',
-	}
-}, {
-	partialUpdate: function ( id, attr ) {
-		var url = Temoa.C.ROOT_URL;
-		url += '/analysis/{aId}/technology/{tId}/OutputSplit/update/{id}';
-		url = Temoa.fn.replaceNamedArgs( url, this.attr() );
-		return $.post( url, attr );
-	}
-});
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                  Process                                  //

@@ -169,7 +169,7 @@ urlpatterns = patterns('',
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/InputSplit/update/(?P<tis_id>\d+)$', analysis_technology_inputsplit_update, name='analysis_technology_inputsplit_update'),
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/InputSplit/remove/(?P<tis_id>\d+)$', analysis_technology_inputsplit_remove, name='analysis_technology_inputsplit_remove'),
 
-# TechInputSplit
+# TechOutputSplit
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/OutputSplit/create$', analysis_technology_outputsplit_new, name='analysis_technology_outputsplit_new'),
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/OutputSplit/update/(?P<tos_id>\d+)$', analysis_technology_outputsplit_update, name='analysis_technology_outputsplit_update'),
   url(r'^analysis/(?P<analysis_id>\d+)/technology/(?P<technology_id>\d+)/OutputSplit/remove/(?P<tos_id>\d+)$', analysis_technology_outputsplit_remove, name='analysis_technology_outputsplit_remove'),
