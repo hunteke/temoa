@@ -91,13 +91,13 @@
 	<table id='TechnologyDetail_OutputSplit_{{technology.id}}'>
 		<caption><span title=''>Output Energy Splits</span></caption>
 		<thead>
-			<tr><th>Output</th><th>Percentage</th></tr>
+			<tr><th><button type="button" class="add" name="AddOutputSplit">Add</button></th><th>Output</th><th>Fraction</th></tr>
 		</thead>
 		<tbody>
 			{{#each technology.outputsplits}}
-			<tr>
-				<td>{{out}}</td>
-				<td>{{value}}</td>
+			<tr data-id='{{id}}' {{data 'split'}}><th><span class='error'></span></th>
+				<td data-param='out_commodity'>{{#if out_commodity}}{{out_commodity}}{{else}}COMMODITY{{/if}}</td>
+				<td data-param='fraction'>{{value}}</td>
 			</tr>
 			{{/each}}
 		</tbody>
