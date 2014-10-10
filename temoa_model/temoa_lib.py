@@ -1462,21 +1462,8 @@ def parse_args ( ):
 ###############################################################################
 # Direct invocation methods (when modeler runs via "python model.py ..."
 
-
-
-
-
-#######
-##THE MGA FUNCTION WAS BUILT DIRECTLY INTO THE LIB FILE SO THAT IMPORTATION OF
-##AUCILIARY FILES INTO A FILE CONTAINING JUST THE MGA FUNCTION DID NOT HAVE TO BE
-##DEALT WITH.
-#######
-
-
-
-
-
-def MGA (model, optimizer, options):
+def MGA ( model, optimizer, options, epsilon=1e-6 ):
+	from collections import defaultdict
 	from time import clock
 
 	from coopr.pyomo import DataPortal
@@ -1492,15 +1479,37 @@ def MGA (model, optimizer, options):
 	opt = optimizer              # for us lazy programmer types
 	dot_dats = options.dot_dat
 
-	mdata_1 = ModelData()
+	def ActivityObj_rule ( M, prev_act_t ):
+		new_act = 0
+		for p, s, d, t, v in M.V_Activity:
+			if t in prev_act_t:
+				new_act += prev_act_t[ t ] * M.V_Activity[p, s, d, t, v]
+		return new_act
+
+	def SlackedObjective_rule ( M, prev_cost ):
+		# It is important that this function name *not* match its constraint name
+		# plus '_rule', else Pyomo will attempt to be too smart.  That is, at the
+		# first implementation, the associated constraint name is
+		# 'PreviousSlackedObjective', for which Pyomo searches the namespace for
+		# 'PreviousSlackedObjective_rule'.  We decidedly do not want Pyomo
+		# trying to call this function because it is not aware of the second arg.
+		slackcost = options.mga * prev_cost
+		oldobjective = TotalCost_rule( M )
+		expr = ( slackcost >= oldobjective )
+		return expr
+
+
+	# The MGA algorithm uses different objectives per iteration, so the first
+	# step is to remove the original objective function
+	model.del_component( 'TotalCost' )
 
 	SE.write( '[        ] Reading data files.'); SE.flush()
 	begin = clock()
 	duration = lambda: clock() - begin
 
-	#add data to model data handler
-	for f in dot_dats:
-		if f[-4:] != '.dat':
+	mdata = DataPortal( model=model )
+	for fname in dot_dats:
+		if fname[-4:] != '.dat':
 			msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
 			raise TemoaValidationError( msg.format( fname ))
 		mdata.load( filename=fname )
@@ -1524,40 +1533,35 @@ def MGA (model, optimizer, options):
 
 		result_1 = opt.solve( instance_1 )
 		instance_1.load( result_1 )
-		formatted_results = pformat_results( instance_1, updated_results_1 )
 
-		##This segment of code is attempting to create a dictionary of activity
-		##grouped by technology. It is still being worked on.
-		to_process=[]
-		for line in formatted_results.getvalue():
-			if 'V_ActivityByPeriodAndProcess' in line:
-				to_process.append(line)
-				break
-		print to_process
+		prev_activity_t = defaultdict( int )
+		for p, s, d, t, v in instance_1.V_Activity:
+			val = value( instance_1.V_Activity[p, s, d, t, v] )
+			if abs(val) < epsilon: continue
+			prev_activity_t[ t ] += val
 
-		#dict_tech_act =
+		# using value() converts the now-load()ed results into a single number,
+		# which we'll use with our slightly unusual SlackedObjective_rule below
+		# (but defined above).
+		Perfect_Foresight_Obj = value( instance_1.FirstObj )
 
-		##Segment ends here.
+		instance_2 = model.create( mdata )
 
-		##Perfect_Foresight_Obj is the objective value of the perfect foresight soln.
-		##The value was 'plucked' from result_1; which uses classes to divide the soln.
-		##Include 'print result_1' in this code to see the format of result_1.
-		Perfect_Foresight_Obj = result_1.Solution.Objective.__default_objective__.Value
+		# Update second instance with the new MGA-specific objective function
+		# and constraint.
+		instance_2.SecondObj = Objective(
+		  expr=ActivityObj_rule( instance_2, prev_activity_t ),
+		  noruleinit=True,
+		  sense=minimize
+		)
+		instance_2.PreviousSlackedObjective = Constraint(
+		  rule=None,
+		  expr=SlackedObjective_rule( instance_2, Perfect_Foresight_Obj ),
+		  noruleinit=True
+		)
+		instance_2.preprocess()
 
-		model.del_component( 'FirstObj' )
-
-		from MGA_rules import ActivityObj_rule
-		from MGA_rules import CostConst_rule
-
-		model.SecondObj = Objective( rule = ActivityObj_rule, sense=minimize )
-
-		model.CostConst = Constraint( rule = CostConst_rule )
-
-		mdata_2 = ModelData()
-		mdata_2.add(f)
-		mdata_2.read( model )
-
-		#result_2 = opt.solve( instance_2 )
+		result_2 = opt.solve( instance_2 )
 
 		SE.write( '\r[%8.2f\n' % duration() )
 
