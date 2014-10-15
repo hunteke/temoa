@@ -246,7 +246,7 @@ class ModelTechnologyTest ( TestCase ):
 
 	def test_str_empty ( self ):
 		t = Technology()
-		expected = u'(NoAnalysis) NoName'
+		expected = u'(NoAnalysis) \r\nNoNameGiven\0\n'
 		self.assertEqual( str(t), expected )
 
 

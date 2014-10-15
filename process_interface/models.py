@@ -215,7 +215,7 @@ class Technology ( DM.Model ):
 
 		if self.analysis_id:
 			a = self.analysis
-		if self.name is not None:
+		if self.name:
 			n = self.name
 
 		return u'({}) {}'.format( a, n )
