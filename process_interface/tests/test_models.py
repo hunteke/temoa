@@ -586,7 +586,7 @@ class ModelCommodityTest ( TestCase ):
 
 	def test_str_empty ( self ):
 		t = Commodity()
-		expected = u'NoName'
+		expected = u'\r\nNoNameGiven\0\n'
 		self.assertEqual( str(t), expected )
 
 

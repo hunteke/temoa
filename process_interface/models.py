@@ -336,11 +336,11 @@ class Technology ( DM.Model ):
 
 class Commodity ( DM.Model ):
 	name        = DM.CharField( max_length=32767, unique=True )
-	description = DM.TextField('Backround information')
+	description = DM.TextField('Background information')
 
 	def __str__ ( self ):
 		n = '\r\nNoNameGiven\0\n'  # impossible name, if saved normally
-		if self.name is not None:
+		if self.name:
 			n = self.name
 
 		return str( n )
