@@ -65,7 +65,7 @@ class Analysis ( DM.Model ):
 		  # impossible name, if saved normally
 		if self.user_id:
 			u = self.user.username
-		if self.name is not None:
+		if self.name:
 			n = self.name
 
 		return u'{} - {}'.format( u, n )

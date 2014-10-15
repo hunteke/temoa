@@ -196,12 +196,12 @@ class ModelAnalysisTest ( TestCase ):
 
 	def test_analysis_str_empty ( self ):
 		a = Analysis()
-		self.assertEqual( str(a), 'NoUser - NoName')
+		self.assertEqual( str(a), 'NoUser - \r\nNoNameGiven\0\n')
 
 
 	def test_analysis_str_only_user ( self ):
 		a = Analysis( user=UserFactory.create() )
-		expected = u'{} - NoName'.format( a.user.username )
+		expected = u'{} - \r\nNoNameGiven\0\n'.format( a.user.username )
 		self.assertEqual( str(a), expected )
 
 
