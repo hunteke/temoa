@@ -1196,12 +1196,3 @@ class ModelParam_MaxMinCapacityTest ( TestCase ):
 		with self.assertRaises( ValidationError ):
 			mmc.clean_max_and_min()
 
-
-	def test_clean_switches_min_and_max_capacity_if_max_smaller_than_min ( self ):
-		mmc = Param_MaxMinCapacityFactory.build()
-
-		mmc.maximum = 10
-		mmc.minimum = 20
-		mmc.clean_max_and_min()
-		self.assertEqual( mmc.maximum, 20 )
-		self.assertEqual( mmc.minimum, 10 )
