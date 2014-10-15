@@ -1106,13 +1106,13 @@ class ModelParam_MaxMinCapacityTest ( TestCase ):
 			self.assertEqual( mmc.minimum, None )
 
 
-	def test_maximum_capacity_empty_is_converted_to_null ( self ):
+	def test_maximum_capacity_zero_is_allowed ( self ):
 		mmc = Param_MaxMinCapacityFactory.build()
 
-		for val in (0, [], {}, (), '', False):
+		for val in (0, False):
 			mmc.maximum = val
 			mmc.clean_maximum()
-			self.assertEqual( mmc.maximum, None )
+			self.assertEqual( mmc.maximum, 0 )
 
 
 	def test_minimum_capacity_requires_valid_number ( self ):
