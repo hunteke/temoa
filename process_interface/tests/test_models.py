@@ -1115,6 +1115,13 @@ class ModelParam_MaxMinCapacityTest ( TestCase ):
 			self.assertEqual( mmc.maximum, 0 )
 
 
+	def test_maximum_capacity_can_be_null ( self ):
+		mmc = Param_MaxMinCapacityFactory.build()
+		mmc.maximum = None
+		mmc.clean_maximum()
+		self.assertEqual( mmc.maximum, None )
+
+
 	def test_minimum_capacity_requires_valid_number ( self ):
 		mmc = Param_MaxMinCapacityFactory.build()
 
