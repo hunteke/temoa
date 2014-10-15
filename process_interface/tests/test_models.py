@@ -1097,15 +1097,6 @@ class ModelParam_MaxMinCapacityTest ( TestCase ):
 			self.fail('Specification of maximum capacity should not be required.')
 
 
-	def test_minimum_capacity_empty_is_converted_to_null ( self ):
-		mmc = Param_MaxMinCapacityFactory.build()
-
-		for val in (0, [], {}, (), '', False):
-			mmc.minimum = val
-			mmc.clean_minimum()
-			self.assertEqual( mmc.minimum, None )
-
-
 	def test_maximum_capacity_zero_is_allowed ( self ):
 		mmc = Param_MaxMinCapacityFactory.build()
 
