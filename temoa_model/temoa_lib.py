@@ -1471,11 +1471,13 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	from temoa_rules import TotalCost_rule
 	from pformat_results import pformat_results
 
-	SE.write( '[        ] Reading data files.'); SE.flush()
-
-	begin = clock()
-	duration = lambda: clock() - begin
-
+	SE.write( '\nNOTE: This MGA implementation with Temoa is currently in an '
+	  'alpha state.  This code shows how to run the model with a normal Temoa '
+	  'input file, read in the results, and run with a different objective '
+	  'function and added constraint.  It does *not* do this dynamically, '
+	  'however, does *not* do this for more than one iteration, and does not '
+	  'allow a user to specify new objective functions per MGA run.  How best '
+	  'to do that is currently left as an exercise left to the modeler.\n\n')
 	opt = optimizer              # for us lazy programmer types
 	dot_dats = options.dot_dat
 
@@ -1530,7 +1532,6 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	SE.write( '[        ] Solving first model instance.'); SE.flush()
 
 	if opt:
-
 		result_1 = opt.solve( instance_1 )
 		instance_1.load( result_1 )
 
@@ -1570,6 +1571,19 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	else:
 		SE.write( '\r---------- Not solving: no available solver\n' )
 		return
+
+	SE.write( '\r[%8.2f\n' % duration() )
+
+	updated_results = instance_1.update_results( result_1 )
+	instance_1.load( result_1 )
+	formatted_results = pformat_results( instance_1, updated_results )
+	SO.write( formatted_results.getvalue() )
+
+	updated_results = instance_2.update_results( result_2 )
+	instance_2.load( result_2 )
+	formatted_results = pformat_results( instance_2, updated_results )
+
+	SO.write( formatted_results.getvalue() )
 
 
 def solve_perfect_foresight ( model, optimizer, options ):
