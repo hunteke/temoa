@@ -303,7 +303,7 @@ class TestNewProcessForm ( TestCase ):
 	def test_no_fields_are_there ( self ):
 		a = AnalysisFactory.create()
 		p = NewProcessFactory.build()
-		f = ProcessForm( instance=p, analysis=a )
+		f = ProcessForm( instance=p )
 
 		self.assertFalse( f.is_valid() )
 		self.assertEqual( len(f.fields), 0 )
@@ -325,7 +325,7 @@ class TestNewProcessForm ( TestCase ):
 		  ('loanlife', '20')
 		):
 			data = { attr : val }
-			f = ProcessForm( data, instance=p, analysis=a )
+			f = ProcessForm( data, instance=p )
 			self.assertTrue( f.is_valid() )
 			self.assertEqual( len(f.fields), 1 )
 			self.assertIn( attr, f.fields )
@@ -339,7 +339,7 @@ class TestNewProcessForm ( TestCase ):
 		p = NewProcessFactory.build()
 
 		data = {'name': '{}, 5'.format( t.name, v.vintage ) }
-		f = ProcessForm( data, instance=p, analysis=a )
+		f = ProcessForm( data, instance=p )
 		self.assertFalse( f.is_valid() )
 		self.assertIn( 'name', f.errors )
 		self.assertIn( 'not a valid vintage ', str(f.errors) )
