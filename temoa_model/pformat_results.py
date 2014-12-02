@@ -25,7 +25,7 @@ from collections import defaultdict
 from cStringIO import StringIO
 from sys import stderr as SE, stdout as SO
 
-from coopr.pyomo import value
+from pyomo.core import value
 
 def stringify_data ( data, ostream=SO, format='plain' ):
 	# data is a list of tuples of ('var_name[index]', value)
@@ -48,7 +48,7 @@ def stringify_data ( data, ostream=SO, format='plain' ):
 
 
 def pformat_results ( pyomo_instance, pyomo_result ):
-	from coopr.pyomo import Objective, Var, Constraint
+	from pyomo.core import Objective, Var, Constraint
 
 	output = StringIO()
 

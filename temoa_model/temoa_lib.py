@@ -37,7 +37,7 @@ import errno
 # 1000 = 19.  But 1000 is nice and round.)
 os_nice( 1000 )
 
-import coopr.environ
+import pyomo.environ
   # workaround for Coopr's brain dead signal handler
 signal(SIGINT, default_int_handler)
 
@@ -47,50 +47,23 @@ TEMOA_RELEASE_DATE = 'Today'
 from temoa_graphviz import CreateModelDiagrams
 
 try:
-	from coopr.pyomo import (
+	from pyomo.core import (
 	  AbstractModel, BuildAction, Constraint, NonNegativeReals, Objective, Param,
 	  Set, Var, minimize, value
 	)
 
 except:
-
-	import sys
-	cpath = path.join('path', 'to', 'coopr', 'executable', 'coopr_python')
-	if 'win' not in sys.platform:
-		msg = """\
-Option 1:
-$ PATH=%(cpath)s:$PATH
-$ coopr_python %(base)s  [options]  data.dat
-
-Option 2:
-$ %(cpath)s  %(base)s  [options]  data.dat
-"""
-
-	else:
-		msg = """\
-Option 1:
-C:\\> set PATH=%(cpath)s:%%PATH%%
-C:\\> coopr_python  %(base)s  [options]  data.dat
-
-Option 2:
-C:\\> %(cpath)s  %(base)s  [options]  data.dat
-"""
-
-	base = path.basename( sys.argv[0] )
-	msg %= { 'cpath' : cpath, 'base' : base }
-	msg = """\
-Unable to find coopr.pyomo on the Python system path.  Are you running Coopr's
+	msg = """
+Unable to find 'pyomo.core' on the Python system path.  Are you running Pyomo's
 version of Python?  Here is one way to check:
 
-  # look for items that have to do with the Coopr project
-python -c "import sys, pprint; pprint.pprint(sys.path)"
+      # look for items that have to do with the Pyomo project
+    python -c "import sys, pprint; pprint.pprint(sys.path)"
 
-If you aren't running with Coopr's environment for Python, you'll need to either
-update your PATH environment variable to use Coopr's Python setup, or always
-explicitly use the Coopr path:
-
-%s
-""" % msg
+If you aren't running with Pyomo's environment for Python, you'll need to either
+update your PATH environment variable to use Pyomo's Python setup, or always
+explicitly use the Coopr path.
+"""
 
 	raise ImportError( msg )
 
@@ -1220,7 +1193,7 @@ For copy and paste or BibTex use:
 def parse_args ( ):
 	import argparse, platform, sys
 
-	from coopr.opt import SolverFactory as SF
+	from pyomo.opt import SolverFactory as SF
 	from logging import getLogger
 
 	# used for some error messages below.
@@ -1230,7 +1203,7 @@ def parse_args ( ):
 		cyan_bold = '\x1b[1;36m'
 		reset     = '\x1b[0m'
 
-	logger = getLogger('coopr.solvers')
+	logger = getLogger('pyomo.solvers')
 	logger_status = logger.disabled
 	logger.disabled = True  # no need for warnings: it's what we're testing!
 
@@ -1355,7 +1328,7 @@ def parse_args ( ):
 	  dest='generateSolverLP',
 	  default=False)
 
-	solver.add_argument('--keep_coopr_lp_file',
+	solver.add_argument('--keep_pyomo_lp_file',
 	  help='Save the LP file as written by Pyomo.  This is distinct from the '
 	       "solver's generated LP file, but /should/ represent the same model.  "
 	       'Mainly used for debugging purposes.  '
@@ -1453,7 +1426,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	from time import clock
 	import sys, os, gc
 
-	from coopr.pyomo import DataPortal
+	from pyomo.core import DataPortal
 
 	from pformat_results import pformat_results
 
@@ -1597,9 +1570,9 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	from os import getcwd, chdir
 	from os.path import isfile, abspath, exists
 
-	from coopr.pyomo import DataPortal, Var
-	from coopr.pysp.util.scenariomodels import scenario_tree_model
-	from coopr.pysp.phutils import extractVariableNameAndIndex
+	from pyomo.core import DataPortal, Var
+	from pyomo.pysp.util.scenariomodels import scenario_tree_model
+	from pyomo.pysp.phutils import extractVariableNameAndIndex
 
 	from temoa_model import temoa_create_model
 	from temoa_rules import PeriodCost_rule
@@ -1734,7 +1707,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		SE.write( msg.format( solve_num, this_node, ','.join(assumptions),
 		   assumed_fs ))
 
-		from coopr.opt import SolverFactory
+		from pyomo.opt import SolverFactory
 		opt = SolverFactory( solver_options )
 
 		model = temoa_create_model()
@@ -2079,7 +2052,7 @@ def temoa_solve ( model ):
 
 	options = parse_args()
 
-	from coopr.opt import SolverFactory
+	from pyomo.opt import SolverFactory
 
 	opt = SolverFactory( options.solver )
 	if opt:

@@ -28,7 +28,7 @@ from shutil import rmtree
 from subprocess import call
 from sys import stderr as SE
 
-from coopr.pyomo import value
+from pyomo.core import value
 
 
 def _getLen ( key ):
