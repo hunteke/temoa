@@ -328,7 +328,7 @@ class ProcessForm ( F.Form ):
 	existingcapacity = F.FloatField( required=False, label=_('Existing Capacity') )
 
 	def __init__ ( self, *args, **kwargs ):
-		p = self.process = kwargs.pop( 'instance' )
+		self.process = kwargs.pop( 'instance' )
 		super( ProcessForm, self ).__init__( *args, **kwargs )
 
 		# ensure that we don't remove fields user did not change.
