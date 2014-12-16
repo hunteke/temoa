@@ -62,7 +62,7 @@ version of Python?  Here is one way to check:
 
 If you aren't running with Pyomo's environment for Python, you'll need to either
 update your PATH environment variable to use Pyomo's Python setup, or always
-explicitly use the Coopr path.
+explicitly use the Pyomo path.
 """
 
 	raise ImportError( msg )
