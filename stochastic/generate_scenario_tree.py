@@ -389,7 +389,13 @@ def _create_tree ( stochasticset, spoints, **kwargs ):
 	cprob  = kwargs.get('cprob')
 	decision_list = kwargs.get('decisions')
 
-	spoint = stochasticset.pop() # stochastic point, use of pop implies ordering
+	try:
+		spoint = stochasticset.pop() # stochastic point, use of pop implies ordering
+	except:
+		SE.write('\nError: mismatch in specified stochastic set.  Does '
+		  'stochastic_points match the dat file?')
+		raise
+
 	treekwargs = dict(
 	  spoint   = spoint,
 	  name     = name,
