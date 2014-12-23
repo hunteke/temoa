@@ -1676,16 +1676,16 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	  file_locks,         # MP.Lock dict: to prevent read/write collisions
 	  s_structure,        # PySP Scenario structure object
 	):
+		solve_num, num_solves = solve_counts
+
 		try:
 			from setproctitle import setproctitle as setProcessTitle
-			solve_num, num_solves = solve_counts
 			msg = '({}/{}) Solving assumption: {}'
 			msg = msg.format( solve_num, num_solves, this_assumptions )
 			setProcessTitle( msg )
+			del msg
 		except ImportError, e:
 			pass
-
-		del msg
 
 		CP = s_structure.ConditionalProbability
 
