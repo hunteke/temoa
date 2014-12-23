@@ -1,4 +1,4 @@
-#!/usr/bin/env coopr_python
+#!/usr/bin/env pyomo_python
 
 import os
 import sys
@@ -9,7 +9,7 @@ from pprint import pformat
 from shutil import copy as copyfile, rmtree
 from textwrap import TextWrapper
 
-from coopr.pyomo.base.sets import _SetProduct, _SetContainer
+from pyomo.core.base.sets import _SetProduct, _SetContainer
 
 SE = sys.stderr
 instance = None
@@ -503,9 +503,9 @@ def test_model_parameters ( M, opts ):
 
 def usage ( ):
 	SE.write("""
-synopsis: coopr_python  {0}  <options_to_import.py>
+synopsis: pyomo_python  {0}  <options_to_import.py>
 
-Example: coopr_python  {0}  options/utopia_coal_vs_nuc.py
+Example: pyomo_python  {0}  options/utopia_coal_vs_nuc.py
 
 For information about the options_to_import.py file, please see
 options/README.txt

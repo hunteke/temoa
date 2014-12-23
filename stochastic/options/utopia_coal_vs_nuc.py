@@ -4,7 +4,7 @@ force = True
 
 dirname    = 'utopia_demand'
 modelpath  = '../temoa_model/temoa_model.py'
-dotdatpath = '../data_files/utopia.dat'
+dotdatpath = '../data_files/utopia-15.dat'
 stochasticset = 'time_optimize'
 stochastic_indices = {'Demand': 0, 'CostInvest': 1}
 
