@@ -4,10 +4,10 @@ force = True
 
 dirname    = 'temoa_island'
 modelpath  = '../temoa_model/temoa_model.py'
-dotdatpath = '../data_files/temoa_island.dat'
+dotdatpath = '../data_files/iew2012.dat'
 stochasticset = 'time_optimize'
 stochastic_points = (2020, 2025, 2030, 2035)
-stochastic_indices = {'Demand': 0, 'CostMarginal': 0}
+stochastic_indices = {'Demand': 0, 'CostVariable': 0}
 types = (
   'DemD_NatD_OilD', 'DemD_NatD_OilU',
   'DemD_NatU_OilD', 'DemD_NatU_OilU',
@@ -36,7 +36,7 @@ rates = {
     DemU_NatU_OilD = (('*,*,r_cooling', 1.20281), ('*,*,r_heating', 1.20281), ('*,*,r_lighting', 1.20281), ('*,*,r_wheating', 1.20281)),
     DemU_NatU_OilU = (('*,*,r_cooling', 1.12236), ('*,*,r_heating', 1.12236), ('*,*,r_lighting', 1.12236), ('*,*,r_wheating', 1.12236)),
     ),
-  'CostMarginal' : dict(
+  'CostVariable' : dict(
     DemD_NatD_OilD = (('imp_natgas,*', 0.73351), ('imp_oil,*', 0.15309)),
     DemD_NatD_OilU = (('imp_natgas,*', 0.95164), ('imp_oil,*', 2.67004)),
     DemD_NatU_OilD = (('imp_natgas,*', 1.68052), ('imp_oil,*', 0.55464)),
