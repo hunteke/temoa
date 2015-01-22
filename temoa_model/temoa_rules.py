@@ -822,6 +822,54 @@ available for use throughout the period.
 	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] == cap_avail)
 	return expr
 
+def EnergyConsumptionByPeriodInputAndTech_Constraint ( M, p, i, t ):
+	energy_used = sum(
+	   M.V_FlowIn[p, S_s, S_d, i, t, S_v, S_o]
+
+	   for S_v in ProcessVintages( p, t )
+	   for S_o in ProcessOutputsByInput( p, t, S_v, i )
+	   for S_s in M.time_season
+	   for S_d in M.time_of_day
+	)
+
+	expr = (M.V_EnergyConsumptionByPeriodInputAndTech[p, i, t] == energy_used)
+	return expr
+	
+def ActivityByPeriodTechAndOutput_Constraint ( M, p, t, o ):
+	activity = sum(
+	   M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, o]
+
+	   for S_v in ProcessVintages( p, t )
+	   for S_i in ProcessInputsByOutput( p, t, S_v, o )
+	   for S_s in M.time_season
+	   for S_d in M.time_of_day
+	)
+
+	if int is type( activity ):
+		return Constraint.Skip
+
+	expr = (M.V_ActivityByPeriodTechAndOutput[p, t, o] == activity)
+	return expr
+	
+def EmissionActivityByPeriodAndTech_Constraint ( M, e, p, t ):
+	emission_total = sum(
+	   M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, S_o]
+	   * M.EmissionActivity[e, S_i, t, S_v, S_o]
+
+	   for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
+	   if tmp_e == e and S_t == t
+	   if ValidActivity( p, S_t, S_v )
+	   for S_s in M.time_season
+	   for S_d in M.time_of_day
+	)
+
+	if type( emission_total ) is int:
+		return Constraint.Skip
+
+	expr = (M.V_EmissionActivityByPeriodAndTech[e, p, t] == emission_total)
+	return expr	
+
+	
 
 # End additional and derived (informational) variable constraints
 ##############################################################################

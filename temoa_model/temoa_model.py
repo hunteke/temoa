@@ -223,6 +223,15 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.CapacityAvailableVar_pt = Set(
 	  dimen=2, initialize=CapacityAvailableVariableIndices )
 
+	M.EnergyConsumptionByPeriodInputAndTech_pit = Set(
+	  dimen=3, initialize=EnergyConsumptionByPeriodInputAndTechVariableIndices )
+	
+	M.ActivityByPeriodTechAndOutput_pto = Set(
+	  dimen=3, initialize=ActivityByPeriodTechAndOutputVariableIndices )
+	
+	M.EmissionActivityByPeriodAndTech_ept = Set(
+	dimen=3, initialize=EmissionActivityByPeriodAndTechVariableIndices )
+
 	M.FlowVar_psditvo = Set( dimen=7, initialize=FlowVariableIndices )
 
 	# Variables
@@ -243,6 +252,18 @@ CapacityFactorProcess(tech_all, vintage_all)
 	  M.CapacityAvailableVar_pt,
 	  domain=NonNegativeReals
 	)
+	
+	M.V_EnergyConsumptionByPeriodInputAndTech = Var(
+	  M.EnergyConsumptionByPeriodInputAndTech_pit, 
+	  domain=NonNegativeReals 
+	)
+	
+	M.V_ActivityByPeriodTechAndOutput = Var(
+	  M.ActivityByPeriodTechAndOutput_pto, 
+	  domain=NonNegativeReals )
+	
+	M.V_EmissionActivityByPeriodAndTech = Var( 
+	  M.EmissionActivityByPeriodAndTech_ept, domain=Reals )
 
 	M.BaseloadDiurnalConstraint_psdtv = Set(
 	  dimen=5, initialize=BaseloadDiurnalConstraintIndices )
@@ -282,6 +303,9 @@ CapacityFactorProcess(tech_all, vintage_all)
 	#   "Bookkeeping" constraints
 	M.ActivityConstraint = Constraint( M.ActivityVar_psdtv, rule=Activity_Constraint )
 	M.ActivityByPeriodAndProcessConstraint = Constraint( M.ActivityByPeriodAndProcessVar_ptv, rule=ActivityByPeriodAndProcess_Constraint )
+	M.EnergyConsumptionByPeriodInputAndTechConstraint = Constraint(M.EnergyConsumptionByPeriodInputAndTech_pit, rule=EnergyConsumptionByPeriodInputAndTech_Constraint )
+	M.ActivityByPeriodTechAndOutputConstraint = Constraint( M.ActivityByPeriodTechAndOutput_pto, rule=ActivityByPeriodTechAndOutput_Constraint )
+	M.EmissionActivityByPeriodAndTechConstraint = Constraint( M.EmissionActivityByPeriodAndTech_ept, rule=EmissionActivityByPeriodAndTech_Constraint )
 
 	M.CapacityConstraint = Constraint( M.ActivityVar_psdtv, rule=Capacity_Constraint )
 

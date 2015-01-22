@@ -48,7 +48,7 @@ from temoa_graphviz import CreateModelDiagrams
 
 try:
 	from pyomo.core import (
-	  AbstractModel, BuildAction, Constraint, NonNegativeReals, Objective, Param,
+	  AbstractModel, BuildAction, Constraint, NonNegativeReals, Reals, Objective, Param,
 	  Set, Var, minimize, value
 	)
 
@@ -723,6 +723,39 @@ def EmissionActivityIndices ( M ):
 
 	return indices
 
+
+def EnergyConsumptionByPeriodInputAndTechVariableIndices ( M ):
+	indices = set(
+	  (p, i, t)
+
+	  for i, t, v, o in M.Efficiency.sparse_iterkeys()
+	  for p in M.time_optimize
+	)
+
+	return indices
+	
+	
+def ActivityByPeriodTechAndOutputVariableIndices ( M ):
+	indices = set(
+	  (p, t, o)
+
+	  for i, t, v, o in M.Efficiency.sparse_iterkeys()
+	  for p in M.time_optimize
+	)
+
+	return indices	
+	
+	
+def EmissionActivityByPeriodAndTechVariableIndices ( M ):
+	indices = set(
+	  (e, p, t)
+
+	  for e, i, t, v, o in M.EmissionActivity.sparse_iterkeys()
+	  for p in M.time_optimize
+	)
+
+	return indices	
+	
 
 def LoanLifeFracIndices ( M ):
 	"""\
