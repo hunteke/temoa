@@ -1,4 +1,4 @@
-#!/usr/bin/env coopr_python
+#!/usr/bin/env python
 
 """
 Temoa - Tools for Energy Model Optimization and Analysis
@@ -30,7 +30,7 @@ from cStringIO import StringIO
 from zipfile import PyZipFile, ZIP_DEFLATED
 
 temoa_pkg = StringIO()
-temoa_pkg.write( '#!/usr/bin/env coopr_python\n' )
+temoa_pkg.write( '#!/usr/bin/env python\n' )
 with PyZipFile( temoa_pkg, mode='w', compression=ZIP_DEFLATED ) as zf:
 	zf.debug = 3
 	zf.writepy( './temoa_model/' )

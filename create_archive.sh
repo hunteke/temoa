@@ -64,7 +64,7 @@ TODAY="$(date -u +"%F")"
 
   find . -name "*.py" -print0 | xargs -0 zip "$PKG_NAME".zip -q9@ --symlinks
 
-  echo "#!/usr/bin/env coopr_python" > "$PKG_NAME"
+  echo "#!/usr/bin/env python" > "$PKG_NAME"
   cat "$PKG_NAME".zip >> "$PKG_NAME"
   chmod 755 "$PKG_NAME"
   mv "$PKG_NAME" "$CWD"

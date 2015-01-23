@@ -1,4 +1,4 @@
-#!/usr/bin/env coopr_python
+#!/usr/bin/env python
 
 """
 Temoa - Tools for Energy Model Optimization and Analysis
