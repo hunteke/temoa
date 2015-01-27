@@ -198,7 +198,7 @@ Conventions
 Temoa Origin and Pronunciation
 ------------------------------
 
-While we use 'temoa' as an acronym, it is an actual word in the Nahuatl (Aztec)
+While we use 'Temoa' as an acronym, it is an actual word in the Nahuatl (Aztec)
 language, meaning "to seek something."
 
 One pronounces the word 'Temoa' as "teh", "moe", "uh".
@@ -734,7 +734,7 @@ DemandDefaultDistribution
 
 :math:`{DDD}_{s \in S, d \in D}`
 
-By default, Temoa assumes that end-use demands (á la :ref:`Demand`) are evenly
+By default, Temoa assumes that end-use demands (:ref:`Demand`) are evenly
 distributed throughout a year.  In other words, the Demand will be apportioned
 by the :code:`SegFrac` parameter via:
 
@@ -1792,7 +1792,7 @@ variables for the optimal configuration, so we show just the first few lines in
 the documentation.  It is enough to get a sense of it however.
 
 Temoa provides line-by-line output as progresses through each stage of a solve.
-The very first line explains that temoa took 0.04 *processing* seconds to read
+The very first line explains that Temoa took 0.04 *processing* seconds to read
 and parse the supplied model data.  *Processing* seconds are roughly a measure
 of exactly how much time the program spent in the CPU, but are not a measure of
 how long the modeler actually waited: though the output above suggests that the
