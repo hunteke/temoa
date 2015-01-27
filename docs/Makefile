@@ -3,7 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = coopr_python `which sphinx-build`
+SPHINXBUILD   = python `which sphinx-build`
 PAPER         =
 BUILDDIR      = /tmp/TemoaDocumentationBuild
 
