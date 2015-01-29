@@ -23,19 +23,11 @@ an archive may not have received this license file.  If not, see
 from cStringIO import StringIO
 from itertools import product as cross_product, islice, izip
 from operator import itemgetter as iget
-from os import path, close as os_close, nice as os_nice
+from os import path, close as os_close
 from sys import argv, stderr as SE, stdout as SO
 from signal import signal, SIGINT, default_int_handler
 
 import errno
-
-# The assumption is that folks will run this either on their personal/business
-# machine, or on a cluster.  If on their PC, then it'll be the only thing
-# really running, and the rest of the machine can stay responsive.  Meanwhile,
-# the same argument applies for a cluster, in which case this lets use of Temoa
-# not impinge as rudely on other's work.  (And on most [all?] implementations,
-# 1000 = 19.  But 1000 is nice and round.)
-os_nice( 1000 )
 
 import pyomo.environ
   # workaround for Coopr's brain dead signal handler
