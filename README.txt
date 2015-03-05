@@ -1,51 +1,44 @@
-This branch, energysystem_process, is the current "main" branch of the Temoa
+This branch named 'energysystem' is the current "main" branch of the Temoa
 Project.  The four subdirectories are:
 
 1. temoa_model/
-  This contains the Temoa model code.
+This contains the Temoa model code.
 
 2. data_files/
-  The example data files that exemplar input to Temoa.
+The example input data (DAT) files for Temoa. Note that the file 'utopia-15.dat' represents a simple system called 'Utopia', which is packaged with the MARKAL model generator and has been used extensively for benchmarking exercises.
 
 3. stochastic/
-  Some (perhaps useful) scripts for generation of PySP event trees.
+Scripts for generation of PySP event trees.
 
 4. docs/
-  The ReST documentation source of the Temoa project manual.
+The ReST documentation source of the Temoa project manual.
 
-To run Temoa, you can either:
+***Running Temoa***
+
+To run Temoa, you have a few options.
+
+Option 1 uses Pyomo's own scripts and provides basic solver output:
 
 $ pyomo  temoa_model/temoa_model.py  path/to/dat/file
 
-  or
+Option 2 invokes python directly, and gives the user access to additional capability, including more nicely formatted output:
 
-$ coopr_python  temoa_model/  path/to/dat/file
+$ python  temoa_model/  path/to/dat/file
 
-  or
+Option 3 below copies the relevant Temoa model files into an executable archive (this only needs to be done once):
+$ python create_archive.py
 
-$ ./create_archive.sh
+This makes the model more portable by placing all contents in a single file. Now it is possible to execute the model with the following simply command:
+
 $ ./temoa.py  path/to/dat/file
 
-The first uses Pyomo through Coopr's scripts, while the latter two options are
-maintained by the Temoa developers and presents a more easily read output.  The
-latter is also how to gain access to some of the external features, like
-Graphviz.  For general help use --help:
+For general help use --help:
 
-$ coopr_python  temoa_model  --help
-
-Or for specific examples:
-
-$ coopr_python  temoa_model  --graph_format svg  data_files/utopia.dat
-$ coopr_python  temoa_model  --graph_format pdf  data_files/utopia.dat
-
-And to place the gobs of solution information into a file:
-
-$ coopr_python  temoa_model \
-  --graph_format svg \
-  data_files/utopia.dat > temoa_utopia.sol
+$ python  temoa_model/  --help
 
 
-If you are running Coopr from Windows, you may have more luck with a direct
-python command:
+And to place the solution information into a file:
 
-\> python  temoa_model  --graph_format svg  data_files\utopia.dat > temoa_utopia.sol
+$ python  temoa_model data_files/utopia.dat > temoa_utopia.sol
+
+
