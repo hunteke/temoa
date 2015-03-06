@@ -24,6 +24,8 @@ __all__ = ('pformat_results', 'stringify_data')
 from collections import defaultdict
 from cStringIO import StringIO
 from sys import stderr as SE, stdout as SO
+import sqlite3
+import os
 
 from pyomo.core import value
 
@@ -271,5 +273,60 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 	  "please run Temoa with the '--how_to_cite' command line argument for "
 	  'citation information.\n')
 
+###################################################################################	
+	if os.path.exists("examples.db") :
+		os.remove("examples.db")
+	
+	con = sqlite3.connect("examples.db")
+	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
+	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
+	
+	for table in svars.keys() :
+		if table == 'V_FlowIn' : 
+			cur.execute('''
+			CREATE TABLE Output_VFlow_In (
+				t_periods integer,
+				t_season text,
+				t_day text,
+				input_comm text,
+				tech text,
+				vintage integer,
+				output_comm text,
+				vflow_in real,
+				PRIMARY KEY(t_periods, t_season, t_day, input_comm, tech, vintage, output_comm));
+			''')
+			for xyz in svars[table].keys() :
+				xy = str(xyz)
+				xy = xy[:-1]
+				cur.execute("INSERT INTO 'Output_VFlow_In' VALUES"+xy+","+str(svars[table][xyz])+");")
+		elif table == 'V_FlowOut' :
+			cur.execute('''
+			CREATE TABLE Output_VFlow_Out (
+				t_periods integer,
+				t_season text,
+				t_day text,
+				input_comm text,
+				tech text,
+				vintage integer,
+				output_comm text,
+				vflow_out real,
+				PRIMARY KEY(t_periods, t_season, t_day, input_comm, tech, vintage, output_comm));			
+			''')
+			for xyz in svars[table].keys() :
+				xy = str(xyz)
+				xy = xy[:-1]
+				cur.execute("INSERT INTO 'Output_VFlow_Out' VALUES"+xy+","+str(svars[table][xyz])+");")
+		
+	con.commit()
+
+	#xyz = svars['V_FlowIn'].keys()
+	con.close()
+	#cur.execute("SELECT input_comm, tech, output_comm FROM Efficiency WHERE input_comm is "+inp_comm+" or output_comm is "+out_comm)
+	
+	
+	
+	
+	
+	
 	return output
 
