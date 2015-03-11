@@ -1566,7 +1566,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	SE.write( msg ); SE.flush()
 	updated_results = instance.update_results( result )
 	instance.load( result )
-	formatted_results = pformat_results( instance, updated_results )
+	formatted_results = pformat_results( instance, updated_results, dot_dats )
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	SO.write( formatted_results.getvalue() )
