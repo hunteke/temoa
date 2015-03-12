@@ -29,7 +29,14 @@ INSERT INTO "commodity_labels" VALUES('p', 'physical commodity');
 INSERT INTO "commodity_labels" VALUES('e', 'emissions commodity');
 INSERT INTO "commodity_labels" VALUES('d', 'demand commodity');
 
-
+CREATE TABLE sector_labels (
+  sector text primary key);
+INSERT INTO "sector_labels" VALUES('supply');
+INSERT INTO "sector_labels" VALUES('electric');
+INSERT INTO "sector_labels" VALUES('transport');
+INSERT INTO "sector_labels" VALUES('commercial');
+INSERT INTO "sector_labels" VALUES('residential');
+INSERT INTO "sector_labels" VALUES('industrial');
 
 --Tables below correspond to Temoa sets
 CREATE TABLE time_periods (
@@ -58,27 +65,29 @@ INSERT INTO "time_of_day" VALUES('night');
 CREATE TABLE technologies (
   tech text primary key,
   flag text,
+  sector text,
   tech_desc text,
-  FOREIGN KEY(flag) REFERENCES technology_labels(tech_labels));
-INSERT INTO "technologies" VALUES('IMPDSL1','r','# imported diesel');
-INSERT INTO "technologies" VALUES('IMPGSL1','r','# imported gasoline');
-INSERT INTO "technologies" VALUES('IMPHCO1','r','# imported coal');
-INSERT INTO "technologies" VALUES('IMPOIL1','r','# imported crude oil');
-INSERT INTO "technologies" VALUES('IMPURN1','r','# imported uranium');
-INSERT INTO "technologies" VALUES('IMPFEQ','r','# imported fossil equivalent');
-INSERT INTO "technologies" VALUES('IMPHYD','r','# imported water -- doesnt exist in Utopia');
-INSERT INTO "technologies" VALUES('E01','pb','# coal power plant');
-INSERT INTO "technologies" VALUES('E21','pb','# nuclear power plant');
-INSERT INTO "technologies" VALUES('E31','pb','# hydro power');
-INSERT INTO "technologies" VALUES('E51','ps','# electric storage');
-INSERT INTO "technologies" VALUES('E70','p','# diesel power plant');
-INSERT INTO "technologies" VALUES('RHE','p','# electric residential heating');
-INSERT INTO "technologies" VALUES('RHO','p','# diesel residential heating');
-INSERT INTO "technologies" VALUES('RL1','p','# residential lighting');
-INSERT INTO "technologies" VALUES('SRE','p','# crude oil processor');
-INSERT INTO "technologies" VALUES('TXD','p','# diesel powered vehicles');
-INSERT INTO "technologies" VALUES('TXE','p','# electric powered vehicles');
-INSERT INTO "technologies" VALUES('TXG','p','# gasoline powered vehicles');
+  FOREIGN KEY(flag) REFERENCES technology_labels(tech_labels),
+  FOREIGN KEY(sector) REFERENCES sector_labels(sector));
+INSERT INTO "technologies" VALUES('IMPDSL1','r','supply',' imported diesel');
+INSERT INTO "technologies" VALUES('IMPGSL1','r','supply',' imported gasoline');
+INSERT INTO "technologies" VALUES('IMPHCO1','r','supply',' imported coal');
+INSERT INTO "technologies" VALUES('IMPOIL1','r','supply',' imported crude oil');
+INSERT INTO "technologies" VALUES('IMPURN1','r','supply',' imported uranium');
+INSERT INTO "technologies" VALUES('IMPFEQ','r','supply',' imported fossil equivalent');
+INSERT INTO "technologies" VALUES('IMPHYD','r','supply',' imported water -- doesnt exist in Utopia');
+INSERT INTO "technologies" VALUES('E01','pb','electric',' coal power plant');
+INSERT INTO "technologies" VALUES('E21','pb','electric',' nuclear power plant');
+INSERT INTO "technologies" VALUES('E31','pb','electric',' hydro power');
+INSERT INTO "technologies" VALUES('E51','ps','electric',' electric storage');
+INSERT INTO "technologies" VALUES('E70','p','electric',' diesel power plant');
+INSERT INTO "technologies" VALUES('RHE','p','residential',' electric residential heating');
+INSERT INTO "technologies" VALUES('RHO','p','residential',' diesel residential heating');
+INSERT INTO "technologies" VALUES('RL1','p','residential',' residential lighting');
+INSERT INTO "technologies" VALUES('SRE','p','supply',' crude oil processor');
+INSERT INTO "technologies" VALUES('TXD','p','transport',' diesel powered vehicles');
+INSERT INTO "technologies" VALUES('TXE','p','transport',' electric powered vehicles');
+INSERT INTO "technologies" VALUES('TXG','p','transport',' gasoline powered vehicles');
 
 
 --can include a column that designates the commodity type (physical, emissions, demand)
@@ -87,20 +96,20 @@ CREATE TABLE commodities (
   flag text,  
   comm_desc text,
   FOREIGN KEY(flag) REFERENCES commodity_labels(comm_labels));
-INSERT INTO "commodities" VALUES('ethos','p','# dummy commodity to supply inputs (makes graph easier to read)');
-INSERT INTO "commodities" VALUES('DSL','p','# diesel');
-INSERT INTO "commodities" VALUES('ELC','p','# electricity');
-INSERT INTO "commodities" VALUES('FEQ','p','# fossil equivalent');
-INSERT INTO "commodities" VALUES('GSL','p','# gasoline');
-INSERT INTO "commodities" VALUES('HCO','p','# coal');
-INSERT INTO "commodities" VALUES('HYD','p','# water');
-INSERT INTO "commodities" VALUES('OIL','p','# crude oil');
-INSERT INTO "commodities" VALUES('URN','p','# uranium');
-INSERT INTO "commodities" VALUES('co2','e','#CO2 emissions');
-INSERT INTO "commodities" VALUES('nox','e','#NOX emissions');
-INSERT INTO "commodities" VALUES('RH','d','# residential heating');
-INSERT INTO "commodities" VALUES('RL','d','# residential lighting');
-INSERT INTO "commodities" VALUES('TX','d','# transportation');
+INSERT INTO "commodities" VALUES('ethos','p',' dummy commodity to supply inputs (makes graph easier to read)');
+INSERT INTO "commodities" VALUES('DSL','p',' diesel');
+INSERT INTO "commodities" VALUES('ELC','p',' electricity');
+INSERT INTO "commodities" VALUES('FEQ','p',' fossil equivalent');
+INSERT INTO "commodities" VALUES('GSL','p',' gasoline');
+INSERT INTO "commodities" VALUES('HCO','p',' coal');
+INSERT INTO "commodities" VALUES('HYD','p',' water');
+INSERT INTO "commodities" VALUES('OIL','p',' crude oil');
+INSERT INTO "commodities" VALUES('URN','p',' uranium');
+INSERT INTO "commodities" VALUES('co2','e','CO2 emissions');
+INSERT INTO "commodities" VALUES('nox','e','NOX emissions');
+INSERT INTO "commodities" VALUES('RH','d',' residential heating');
+INSERT INTO "commodities" VALUES('RL','d',' residential lighting');
+INSERT INTO "commodities" VALUES('TX','d',' transportation');
 
 /*
 -------------------------------------------------------
@@ -117,12 +126,12 @@ CREATE TABLE SegFrac (
    PRIMARY KEY(season_name, time_of_day_name), --here's where I define primary key as a combo of columns
    FOREIGN KEY(season_name) REFERENCES time_season(t_season),
    FOREIGN KEY(time_of_day_name) REFERENCES time_of_day(t_day) );
-INSERT INTO "SegFrac" VALUES('inter','day',0.1667,'# I-D');
-INSERT INTO "SegFrac" VALUES('inter','night',0.0833,'# I-N');
-INSERT INTO "SegFrac" VALUES('summer','day',0.1667,'# S-D');
-INSERT INTO "SegFrac" VALUES('summer','night',0.0833,'# S-N');
-INSERT INTO "SegFrac" VALUES('winter','day',0.3333,'# W-D');
-INSERT INTO "SegFrac" VALUES('winter','night',0.1667,'# W-N');
+INSERT INTO "SegFrac" VALUES('inter','day',0.1667,' I-D');
+INSERT INTO "SegFrac" VALUES('inter','night',0.0833,' I-N');
+INSERT INTO "SegFrac" VALUES('summer','day',0.1667,' S-D');
+INSERT INTO "SegFrac" VALUES('summer','night',0.0833,' S-N');
+INSERT INTO "SegFrac" VALUES('winter','day',0.3333,' W-D');
+INSERT INTO "SegFrac" VALUES('winter','night',0.1667,' W-N');
 	
 CREATE TABLE DemandSpecificDistribution (
    season_name text,
@@ -299,11 +308,11 @@ CREATE TABLE LifetimeProcess (
    PRIMARY KEY(tech, vintage),
    FOREIGN KEY(tech) REFERENCES technologies(tech),
    FOREIGN KEY(vintage) REFERENCES time_periods(t_periods) );
-INSERT INTO "LifetimeProcess" VALUES('RL1',1980,20,'#forexistingcap');
-INSERT INTO "LifetimeProcess" VALUES('TXD',1970,30,'#forexistingcap');
-INSERT INTO "LifetimeProcess" VALUES('TXD',1980,30,'#forexistingcap');
-INSERT INTO "LifetimeProcess" VALUES('TXG',1970,30,'#forexistingcap');
-INSERT INTO "LifetimeProcess" VALUES('TXG',1980,30,'#forexistingcap');
+INSERT INTO "LifetimeProcess" VALUES('RL1',1980,20,'forexistingcap');
+INSERT INTO "LifetimeProcess" VALUES('TXD',1970,30,'forexistingcap');
+INSERT INTO "LifetimeProcess" VALUES('TXD',1980,30,'forexistingcap');
+INSERT INTO "LifetimeProcess" VALUES('TXG',1970,30,'forexistingcap');
+INSERT INTO "LifetimeProcess" VALUES('TXG',1980,30,'forexistingcap');
 	
 CREATE TABLE LifetimeLoanTech (
    tech text,
@@ -411,63 +420,63 @@ INSERT INTO "Efficiency" VALUES('ethos','IMPOIL1',1990,'OIL',1.00,'');
 INSERT INTO "Efficiency" VALUES('ethos','IMPURN1',1990,'URN',1.00,'');
 INSERT INTO "Efficiency" VALUES('ethos','IMPFEQ',1990,'FEQ',1.00,'');
 INSERT INTO "Efficiency" VALUES('ethos','IMPHYD',1990,'HYD',1.00,'');
-INSERT INTO "Efficiency" VALUES('HCO','E01',1960,'ELC',0.32,'# 1/3.125');
-INSERT INTO "Efficiency" VALUES('HCO','E01',1970,'ELC',0.32,'# 1/3.125');
-INSERT INTO "Efficiency" VALUES('HCO','E01',1980,'ELC',0.32,'# 1/3.125');
-INSERT INTO "Efficiency" VALUES('HCO','E01',1990,'ELC',0.32,'# 1/3.125');
- INSERT INTO "Efficiency" VALUES('HCO','E01',2000,'ELC',0.32,'# 1/3.125');
- INSERT INTO "Efficiency" VALUES('HCO','E01',2010,'ELC',0.32,'# 1/3.125');
- INSERT INTO "Efficiency" VALUES('FEQ','E21',1990,'ELC',0.32,'# 1/3.125');
- INSERT INTO "Efficiency" VALUES('FEQ','E21',2000,'ELC',0.32,'# 1/3.125');
- INSERT INTO "Efficiency" VALUES('FEQ','E21',2010,'ELC',0.32,'# 1/3.125');
- INSERT INTO "Efficiency" VALUES('URN','E21',1990,'ELC',0.40,'# 1/2.5');
- INSERT INTO "Efficiency" VALUES('URN','E21',2000,'ELC',0.40,'# 1/2.5');
- INSERT INTO "Efficiency" VALUES('URN','E21',2010,'ELC',0.40,'# 1/2.5');
- INSERT INTO "Efficiency" VALUES('HYD','E31',1980,'ELC',0.32,'# 1/3.125');
- INSERT INTO "Efficiency" VALUES('HYD','E31',1990,'ELC',0.32,'# 1/3.125');
- INSERT INTO "Efficiency" VALUES('HYD','E31',2000,'ELC',0.32,'# 1/3.125');
- INSERT INTO "Efficiency" VALUES('HYD','E31',2010,'ELC',0.32,'# 1/3.125');
- INSERT INTO "Efficiency" VALUES('DSL','E70',1960,'ELC',0.294,'# 1/3.4');
- INSERT INTO "Efficiency" VALUES('DSL','E70',1970,'ELC',0.294,'# 1/3.4');
- INSERT INTO "Efficiency" VALUES('DSL','E70',1980,'ELC',0.294,'# 1/3.4');
- INSERT INTO "Efficiency" VALUES('DSL','E70',1990,'ELC',0.294,'# 1/3.4');
- INSERT INTO "Efficiency" VALUES('DSL','E70',2000,'ELC',0.294,'# 1/3.4');
- INSERT INTO "Efficiency" VALUES('DSL','E70',2010,'ELC',0.294,'# 1/3.4');
- INSERT INTO "Efficiency" VALUES('ELC','E51',1980,'ELC',0.720,'# 1/1.3889');
- INSERT INTO "Efficiency" VALUES('ELC','E51',1990,'ELC',0.720,'# 1/1.3889');
- INSERT INTO "Efficiency" VALUES('ELC','E51',2000,'ELC',0.720,'# 1/1.3889');
- INSERT INTO "Efficiency" VALUES('ELC','E51',2010,'ELC',0.720,'# 1/1.3889');
- INSERT INTO "Efficiency" VALUES('ELC','RHE',1990,'RH',1.00,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','RHE',2000,'RH',1.00,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','RHE',2010,'RH',1.00,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','RHO',1970,'RH',0.7,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','RHO',1980,'RH',0.7,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','RHO',1990,'RH',0.7,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','RHO',2000,'RH',0.7,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','RHO',2010,'RH',0.7,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','RL1',1980,'RL',1.00,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','RL1',1990,'RL',1.00,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','RL1',2000,'RL',1.00,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','RL1',2010,'RL',1.00,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('OIL','SRE',1990,'DSL',1.00,'# direct translation from PRC_INP2, PRC_OUT');
- INSERT INTO "Efficiency" VALUES('OIL','SRE',2000,'DSL',1.00,'# direct translation from PRC_INP2, PRC_OUT');
- INSERT INTO "Efficiency" VALUES('OIL','SRE',2010,'DSL',1.00,'# direct translation from PRC_INP2, PRC_OUT');
- INSERT INTO "Efficiency" VALUES('OIL','SRE',1990,'GSL',1.00,'# direct translation from PRC_INP2, PRC_OUT');
- INSERT INTO "Efficiency" VALUES('OIL','SRE',2000,'GSL',1.00,'# direct translation from PRC_INP2, PRC_OUT');
- INSERT INTO "Efficiency" VALUES('OIL','SRE',2010,'GSL',1.00,'# direct translation from PRC_INP2, PRC_OUT');
- INSERT INTO "Efficiency" VALUES('DSL','TXD',1970,'TX ',0.231,'# direct translation from DMD_EFF');    
- INSERT INTO "Efficiency" VALUES('DSL','TXD',1980,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','TXD',1990,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','TXD',2000,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','TXD',2010,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','TXE',1990,'TX ',0.827,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','TXE',2000,'TX ',0.827,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','TXE',2010,'TX ',0.827,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('GSL','TXG',1970,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('GSL','TXG',1980,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('GSL','TXG',1990,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('GSL','TXG',2000,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('GSL','TXG',2010,'TX ',0.231,'# direct translation from DMD_EFF');
+INSERT INTO "Efficiency" VALUES('HCO','E01',1960,'ELC',0.32,' 1/3.125');
+INSERT INTO "Efficiency" VALUES('HCO','E01',1970,'ELC',0.32,' 1/3.125');
+INSERT INTO "Efficiency" VALUES('HCO','E01',1980,'ELC',0.32,' 1/3.125');
+INSERT INTO "Efficiency" VALUES('HCO','E01',1990,'ELC',0.32,' 1/3.125');
+ INSERT INTO "Efficiency" VALUES('HCO','E01',2000,'ELC',0.32,' 1/3.125');
+ INSERT INTO "Efficiency" VALUES('HCO','E01',2010,'ELC',0.32,' 1/3.125');
+ INSERT INTO "Efficiency" VALUES('FEQ','E21',1990,'ELC',0.32,' 1/3.125');
+ INSERT INTO "Efficiency" VALUES('FEQ','E21',2000,'ELC',0.32,' 1/3.125');
+ INSERT INTO "Efficiency" VALUES('FEQ','E21',2010,'ELC',0.32,' 1/3.125');
+ INSERT INTO "Efficiency" VALUES('URN','E21',1990,'ELC',0.40,' 1/2.5');
+ INSERT INTO "Efficiency" VALUES('URN','E21',2000,'ELC',0.40,' 1/2.5');
+ INSERT INTO "Efficiency" VALUES('URN','E21',2010,'ELC',0.40,' 1/2.5');
+ INSERT INTO "Efficiency" VALUES('HYD','E31',1980,'ELC',0.32,' 1/3.125');
+ INSERT INTO "Efficiency" VALUES('HYD','E31',1990,'ELC',0.32,' 1/3.125');
+ INSERT INTO "Efficiency" VALUES('HYD','E31',2000,'ELC',0.32,' 1/3.125');
+ INSERT INTO "Efficiency" VALUES('HYD','E31',2010,'ELC',0.32,' 1/3.125');
+ INSERT INTO "Efficiency" VALUES('DSL','E70',1960,'ELC',0.294,' 1/3.4');
+ INSERT INTO "Efficiency" VALUES('DSL','E70',1970,'ELC',0.294,' 1/3.4');
+ INSERT INTO "Efficiency" VALUES('DSL','E70',1980,'ELC',0.294,' 1/3.4');
+ INSERT INTO "Efficiency" VALUES('DSL','E70',1990,'ELC',0.294,' 1/3.4');
+ INSERT INTO "Efficiency" VALUES('DSL','E70',2000,'ELC',0.294,' 1/3.4');
+ INSERT INTO "Efficiency" VALUES('DSL','E70',2010,'ELC',0.294,' 1/3.4');
+ INSERT INTO "Efficiency" VALUES('ELC','E51',1980,'ELC',0.720,' 1/1.3889');
+ INSERT INTO "Efficiency" VALUES('ELC','E51',1990,'ELC',0.720,' 1/1.3889');
+ INSERT INTO "Efficiency" VALUES('ELC','E51',2000,'ELC',0.720,' 1/1.3889');
+ INSERT INTO "Efficiency" VALUES('ELC','E51',2010,'ELC',0.720,' 1/1.3889');
+ INSERT INTO "Efficiency" VALUES('ELC','RHE',1990,'RH',1.00,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','RHE',2000,'RH',1.00,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','RHE',2010,'RH',1.00,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','RHO',1970,'RH',0.7,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','RHO',1980,'RH',0.7,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','RHO',1990,'RH',0.7,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','RHO',2000,'RH',0.7,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','RHO',2010,'RH',0.7,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','RL1',1980,'RL',1.00,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','RL1',1990,'RL',1.00,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','RL1',2000,'RL',1.00,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','RL1',2010,'RL',1.00,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('OIL','SRE',1990,'DSL',1.00,' direct translation from PRC_INP2, PRC_OUT');
+ INSERT INTO "Efficiency" VALUES('OIL','SRE',2000,'DSL',1.00,' direct translation from PRC_INP2, PRC_OUT');
+ INSERT INTO "Efficiency" VALUES('OIL','SRE',2010,'DSL',1.00,' direct translation from PRC_INP2, PRC_OUT');
+ INSERT INTO "Efficiency" VALUES('OIL','SRE',1990,'GSL',1.00,' direct translation from PRC_INP2, PRC_OUT');
+ INSERT INTO "Efficiency" VALUES('OIL','SRE',2000,'GSL',1.00,' direct translation from PRC_INP2, PRC_OUT');
+ INSERT INTO "Efficiency" VALUES('OIL','SRE',2010,'GSL',1.00,' direct translation from PRC_INP2, PRC_OUT');
+ INSERT INTO "Efficiency" VALUES('DSL','TXD',1970,'TX ',0.231,' direct translation from DMD_EFF');    
+ INSERT INTO "Efficiency" VALUES('DSL','TXD',1980,'TX ',0.231,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','TXD',1990,'TX ',0.231,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','TXD',2000,'TX ',0.231,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','TXD',2010,'TX ',0.231,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','TXE',1990,'TX ',0.827,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','TXE',2000,'TX ',0.827,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','TXE',2010,'TX ',0.827,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('GSL','TXG',1970,'TX ',0.231,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('GSL','TXG',1980,'TX ',0.231,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('GSL','TXG',1990,'TX ',0.231,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('GSL','TXG',2000,'TX ',0.231,' direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('GSL','TXG',2010,'TX ',0.231,' direct translation from DMD_EFF');
 
 CREATE TABLE ExistingCapacity (
    tech text,
