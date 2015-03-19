@@ -1,6 +1,10 @@
 import sqlite3
 import sys
 import re
+import getopt
+
+ifile = None
+ofile = None
 
 def query_table (t_properties, f):
     t_type = t_properties[0]  #table type (set or param)
@@ -40,8 +44,12 @@ def query_table (t_properties, f):
             before_comments = re.sub('[\',)]', '    ', str(before_comments))
             after_comments = line[t_index+2:]
             after_comments = re.sub('[(]', '', str(after_comments))
-            after_comments = re.sub('[\',)]', '    ', str(after_comments))            
-            str_row = before_comments + "# " + after_comments + "\n"
+            after_comments = re.sub('[\',)]', '    ', str(after_comments)) 
+            search_afcom = re.search(r'^\W+$', str(after_comments))		#Search if after_comments is empty.
+            if not search_afcom :
+            	str_row = before_comments + "# " + after_comments + "\n"
+            else :
+				str_row = before_comments + "\n"
             f.write(str_row)
             print str_row                
     f.write(';\n\n')
@@ -79,12 +87,48 @@ table_list =[['set','time_periods','time_exist','e',0], \
              ['param','CostVariable','','',3]]
 
 
-             
+			 
+try:
+	argv = sys.argv[1:]
+	opts, args = getopt.getopt(argv, "hi:o:", ["help", "input=", "output="])
+except getopt.GetoptError:          
+	print "Something's Wrong. Use as :\n	python DB_to_DAT.py -i <input_file> (Optional -o <output_dat_file>)\n	Use -h for help."                          
+	sys.exit(2) 
+	
+for opt, arg in opts:
+	if opt in ("-i", "--input"):
+		ifile = arg
+	elif opt in ("-o", "--output"):
+		ofile = arg
+	elif opt in ("-h", "--help") :
+		print "Use as :\n	python DB_to_DAT.py -i <input_file> (Optional -o <output_dat_file>)\n	Use -h for help."                          
+		sys.exit()
+
+		
+		
+		
+if ifile is None :
+	print "You did not specify the input file, remember to use '-i' option"
+	print "Use as :\n	python DB_to_DAT.py -i <input_file> (Optional -o <output_dat_file>)\n	Use -h for help."                          
+	sys.exit(2)
+else :
+	file_type = re.search(r"(\w+)\.(\w+)\b", ifile) # Extract the input filename and extension
+	if not file_type :
+		print "The file type %s is not recognized. Use a db file." % ifile
+		sys.exit(2)
+		
+	if ofile is None :
+		ofile = file_type.group(1) + ".dat"
+		print "Look for output in %s." % ofile
+
+
+		
+		
 #create a file to write output
-f = open('temoa_input.dat', 'w')
+f = open(ofile, 'w')
 f.write('data ;\n\n')
 #connect to the database
-con = sqlite3.connect('temoa_utopia_w_output_tables.db')
+con = sqlite3.connect(ifile)
 cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
