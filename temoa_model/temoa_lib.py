@@ -1464,7 +1464,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	from collections import defaultdict
 	from time import clock
 
-	from coopr.pyomo import DataPortal
+	from pyomo.environ import DataPortal
 
 	from temoa_rules import TotalCost_rule
 	from pformat_results import pformat_results
