@@ -1270,6 +1270,7 @@ def parse_args ( ):
 	solver      = parser.add_argument_group('Solver Options')
 	stochastic  = parser.add_argument_group('Stochastic Options')
 	postprocess = parser.add_argument_group('Postprocessing Options')
+	mga         = parser.add_argument_group('MGA Options')
 
 	parser.add_argument('dot_dat',
 	  type=str,
@@ -1372,6 +1373,13 @@ def parse_args ( ):
 	  dest='eciu',
 	  default=None)
 
+	#An optional argument with the ability to take a flag (--MGA) and a
+	#numeric slack value
+	mga.add_argument('--mga',
+	  help='Include the flag --MGA and supply a slack-value and recieve a '
+	    'Modeling to generate alternatives solution',
+	  dest='mga',
+	  type=float)
 
 	options = parser.parse_args()
 
@@ -1386,7 +1394,7 @@ def parse_args ( ):
 
 	# It would be nice if this implemented with add_mutually_exclusive_group
 	# but I /also/ want them in separate groups for display.  Bummer.
-	if not (options.dot_dat or options.eciu):
+	if not (options.dot_dat or options.eciu or options.mga):
 		usage = parser.format_usage()
 		msg = ('Missing a data file to optimize (e.g., test.dat)')
 		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
@@ -1401,6 +1409,7 @@ def parse_args ( ):
 		       'line.')
 		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
 		raise TemoaCommandLineArgumentError( msg )
+
 	elif options.eciu:
 		# can this be subsumed directly into the argparse module functionality?
 		from os.path import isdir, isfile, join
@@ -1435,6 +1444,10 @@ def parse_args ( ):
 
 			raise TemoaNoExecutableError( msg )
 
+	if options.mga:
+		msg = 'MGA specified (slack value: {})\n'.format( options.mga )
+		SE.write( msg )
+
 	s_choice = str( options.solver ).upper()
 	SE.write('Notice: Using the {} solver interface.\n'.format( s_choice ))
 	SE.flush()
@@ -1446,6 +1459,130 @@ def parse_args ( ):
 
 ###############################################################################
 # Direct invocation methods (when modeler runs via "python model.py ..."
+
+def MGA ( model, optimizer, options, epsilon=1e-6 ):
+	from collections import defaultdict
+	from time import clock
+
+	from coopr.pyomo import DataPortal
+
+	from temoa_rules import TotalCost_rule
+	from pformat_results import pformat_results
+
+	SE.write( '\nNOTE: This MGA implementation with Temoa is currently in an '
+	  'alpha state.  This code shows how to run the model with a normal Temoa '
+	  'input file, read in the results, and run with a different objective '
+	  'function and added constraint.  It does *not* do this dynamically, '
+	  'however, does *not* do this for more than one iteration, and does not '
+	  'allow a user to specify new objective functions per MGA run.  How best '
+	  'to do that is currently left as an exercise left to the modeler.\n\n')
+	opt = optimizer              # for us lazy programmer types
+	dot_dats = options.dot_dat
+
+	def ActivityObj_rule ( M, prev_act_t ):
+		new_act = 0
+		for p, s, d, t, v in M.V_Activity:
+			if t in prev_act_t:
+				new_act += prev_act_t[ t ] * M.V_Activity[p, s, d, t, v]
+		return new_act
+
+	def SlackedObjective_rule ( M, prev_cost ):
+		# It is important that this function name *not* match its constraint name
+		# plus '_rule', else Pyomo will attempt to be too smart.  That is, at the
+		# first implementation, the associated constraint name is
+		# 'PreviousSlackedObjective', for which Pyomo searches the namespace for
+		# 'PreviousSlackedObjective_rule'.  We decidedly do not want Pyomo
+		# trying to call this function because it is not aware of the second arg.
+		slackcost = options.mga * prev_cost
+		oldobjective = TotalCost_rule( M )
+		expr = ( slackcost >= oldobjective )
+		return expr
+
+
+	# The MGA algorithm uses different objectives per iteration, so the first
+	# step is to remove the original objective function
+	model.del_component( 'TotalCost' )
+
+	SE.write( '[        ] Reading data files.'); SE.flush()
+	begin = clock()
+	duration = lambda: clock() - begin
+
+	mdata = DataPortal( model=model )
+	for fname in dot_dats:
+		if fname[-4:] != '.dat':
+			msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
+			raise TemoaValidationError( msg.format( fname ))
+		mdata.load( filename=fname )
+	SE.write( '\r[%8.2f\n' % duration() )
+
+	SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
+
+	# Create concrete model
+	instance_1 = model.create( mdata )
+
+	# Now add in and objective function, like we earlier removed; note that name
+	# we choose here (FirstObj) will be copied to the output file.
+	instance_1.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
+	instance_1.preprocess()
+
+	SE.write( '\r[%8.2f\n' % duration() )
+
+	SE.write( '[        ] Solving first model instance.'); SE.flush()
+
+	if opt:
+		result_1 = opt.solve( instance_1 )
+		instance_1.load( result_1 )
+
+		prev_activity_t = defaultdict( int )
+		for p, s, d, t, v in instance_1.V_Activity:
+			val = value( instance_1.V_Activity[p, s, d, t, v] )
+			if abs(val) < epsilon: continue
+			prev_activity_t[ t ] += val
+
+		# using value() converts the now-load()ed results into a single number,
+		# which we'll use with our slightly unusual SlackedObjective_rule below
+		# (but defined above).
+		Perfect_Foresight_Obj = value( instance_1.FirstObj )
+
+		instance_2 = model.create( mdata )
+
+		# Update second instance with the new MGA-specific objective function
+		# and constraint.
+		instance_2.SecondObj = Objective(
+		  expr=ActivityObj_rule( instance_2, prev_activity_t ),
+		  noruleinit=True,
+		  sense=minimize
+		)
+		instance_2.PreviousSlackedObjective = Constraint(
+		  rule=None,
+		  expr=SlackedObjective_rule( instance_2, Perfect_Foresight_Obj ),
+		  noruleinit=True
+		)
+		instance_2.preprocess()
+
+		result_2 = opt.solve( instance_2 )
+
+		SE.write( '\r[%8.2f\n' % duration() )
+
+		# return signal handlers to defaults, again
+		signal(SIGINT, default_int_handler)
+	else:
+		SE.write( '\r---------- Not solving: no available solver\n' )
+		return
+
+	SE.write( '\r[%8.2f\n' % duration() )
+
+	updated_results = instance_1.update_results( result_1 )
+	instance_1.load( result_1 )
+	formatted_results = pformat_results( instance_1, updated_results )
+	SO.write( formatted_results.getvalue() )
+
+	updated_results = instance_2.update_results( result_2 )
+	instance_2.load( result_2 )
+	formatted_results = pformat_results( instance_2, updated_results )
+
+	SO.write( formatted_results.getvalue() )
+
 
 def solve_perfect_foresight ( model, optimizer, options ):
 	from time import clock
@@ -2101,9 +2238,13 @@ def temoa_solve ( model ):
 
 	try:
 		if options.dot_dat:
-			solve_perfect_foresight( model, opt, options )
+			if options.mga:
+				MGA( model, opt, options )
+			else:
+				solve_perfect_foresight( model, opt, options )
 		elif options.eciu:
 			solve_true_cost_of_guessing( opt, options )
+
 	except IOError as e:
 		if e.errno == errno.EPIPE:
 			# stdout has been closed, e.g., a user has quit the 'less' pager
