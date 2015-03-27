@@ -282,6 +282,7 @@ CREATE TABLE ExistingCapacity (
    FOREIGN KEY(vintage) REFERENCES time_periods(t_periods) );
  
 CREATE TABLE Output_VFlow_Out (
+   scenario text,
    t_periods integer,
    t_season text,
    t_day text,
@@ -300,6 +301,7 @@ CREATE TABLE Output_VFlow_Out (
    FOREIGN KEY(output_comm) REFERENCES commodities(comm_name));
 
 CREATE TABLE Output_VFlow_In (
+   scenario text,
    t_periods integer,
    t_season text,
    t_day text,
@@ -318,11 +320,12 @@ CREATE TABLE Output_VFlow_In (
    FOREIGN KEY(output_comm) REFERENCES commodities(comm_name));
  
 CREATE TABLE Output_Capacity (
+   scenario text,
+   t_periods integer,
    tech text,
-   vintage integer,
    capacity real,
-   PRIMARY KEY(tech, vintage),
-   FOREIGN KEY(tech) REFERENCES technologies(tech),
-   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods)); 
+   PRIMARY KEY(t_periods, tech),
+   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech)); 
  
 COMMIT;
