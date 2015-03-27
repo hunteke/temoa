@@ -274,12 +274,12 @@ def pformat_results ( pyomo_instance, pyomo_result, dot_dats ):
 	  'citation information.\n')
 
 ########################################################################################################################	
-	tables = {"V_FlowIn" : "Output_VFlow_In", "V_FlowOut" : "Output_VFlow_Out", "V_Capacity" : "Output_Capacity"}
+	tables = {"V_FlowIn" : "Output_VFlow_In", "V_FlowOut" : "Output_VFlow_Out", "V_CapacityAvailableByPeriodAndTech" : "Output_Capacity"}
 	
-	if not os.path.exists(r"db_io\\temoa_utopia_w_output_tables.db") :
+	if not os.path.exists(r"db_io"+os.sep+"temoa_utopia_w_output_tables.db") :
 		print "Please put the temoa_utopia_w_output_tables.db file in the 'db_io' Directory"
 	
-	con = sqlite3.connect(r"db_io\\temoa_utopia_w_output_tables.db")
+	con = sqlite3.connect(r"db_io"+os.sep+"temoa_utopia_w_output_tables.db")
 	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 	
@@ -288,8 +288,8 @@ def pformat_results ( pyomo_instance, pyomo_result, dot_dats ):
 			cur.execute("DELETE FROM "+tables[table]+";")
 			for xyz in svars[table].keys() :
 				xy = str(xyz)
-				xy = xy[:-1]
-				cur.execute("INSERT INTO "+tables[table]+" VALUES"+xy+","+str(svars[table][xyz])+");")
+				xy = xy[1:-1]
+				cur.execute("INSERT INTO "+tables[table]+" VALUES ('Run_1',"+xy+","+str(svars[table][xyz])+");")
 	con.commit()
 	con.close()
 	
