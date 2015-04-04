@@ -1493,7 +1493,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		# 'PreviousSlackedObjective', for which Pyomo searches the namespace for
 		# 'PreviousSlackedObjective_rule'.  We decidedly do not want Pyomo
 		# trying to call this function because it is not aware of the second arg.
-		slackcost = options.mga * prev_cost
+		slackcost = (1 + options.mga) * prev_cost 
 		oldobjective = TotalCost_rule( M )
 		expr = ( slackcost >= oldobjective )
 		return expr
