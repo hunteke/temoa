@@ -1533,56 +1533,63 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		result_1 = opt.solve( instance_1 )
 		instance_1.load( result_1 )
 
-		prev_activity_t = defaultdict( int )
-		for p, s, d, t, v in instance_1.V_Activity:
-			val = value( instance_1.V_Activity[p, s, d, t, v] )
-			if abs(val) < epsilon: continue
-			prev_activity_t[ t ] += val
+		SE.write( '\r[%8.2f\n' % duration() )
+
+		updated_results = instance_1.update_results( result_1 )
+		instance_1.load( result_1 )
+		formatted_results = pformat_results( instance_1, updated_results )
+		SO.write( formatted_results.getvalue() )
+
 
 		# using value() converts the now-load()ed results into a single number,
 		# which we'll use with our slightly unusual SlackedObjective_rule below
 		# (but defined above).
 		Perfect_Foresight_Obj = value( instance_1.FirstObj )
 
-		instance_2 = model.create( mdata )
+		prev_activity_t = defaultdict( int )
+		for p, s, d, t, v in instance_1.V_Activity:
+			val = value( instance_1.V_Activity[p, s, d, t, v] )
+			if abs(val) < epsilon: continue
+			prev_activity_t[ t ] += val
+		
+		#Perform 5 MGA iterations
+		for i in range(1, 6):
+			instance_mga = model.create( mdata )
 
-		# Update second instance with the new MGA-specific objective function
-		# and constraint.
-		instance_2.SecondObj = Objective(
-		  expr=ActivityObj_rule( instance_2, prev_activity_t ),
-		  noruleinit=True,
-		  sense=minimize
-		)
-		instance_2.PreviousSlackedObjective = Constraint(
-		  rule=None,
-		  expr=SlackedObjective_rule( instance_2, Perfect_Foresight_Obj ),
-		  noruleinit=True
-		)
-		instance_2.preprocess()
+			# Update second instance with the new MGA-specific objective function
+			# and constraint.
+			instance_mga.SecondObj = Objective(
+		  	expr=ActivityObj_rule( instance_mga, prev_activity_t ),
+		  	noruleinit=True,
+		  	sense=minimize
+			)
+			instance_mga.PreviousSlackedObjective = Constraint(
+		  	rule=None,
+		  	expr=SlackedObjective_rule( instance_mga, Perfect_Foresight_Obj ),
+		  	noruleinit=True
+			)
+			instance_mga.preprocess()
 
-		result_2 = opt.solve( instance_2 )
+			result_mga = opt.solve( instance_mga )
 
-		SE.write( '\r[%8.2f\n' % duration() )
+			SE.write( '\r[%8.2f\n' % duration() )
 
-		# return signal handlers to defaults, again
-		signal(SIGINT, default_int_handler)
+			updated_results = instance_mga.update_results( result_mga )
+			instance_mga.load( result_mga )	
+			formatted_results = pformat_results( instance_mga, updated_results )
+			SO.write( formatted_results.getvalue() )
+
+			#Keep adding activity from latest iteration to MGA Obj function
+			for p, s, d, t, v in instance_mga.V_Activity:
+				val = value( instance_mga.V_Activity[p, s, d, t, v] )
+				if abs(val) < epsilon: continue
+				prev_activity_t[ t ] += val
+
+			# return signal handlers to defaults, again
+			signal(SIGINT, default_int_handler)
 	else:
 		SE.write( '\r---------- Not solving: no available solver\n' )
 		return
-
-	SE.write( '\r[%8.2f\n' % duration() )
-
-	updated_results = instance_1.update_results( result_1 )
-	instance_1.load( result_1 )
-	formatted_results = pformat_results( instance_1, updated_results )
-	SO.write( formatted_results.getvalue() )
-
-	updated_results = instance_2.update_results( result_2 )
-	instance_2.load( result_2 )
-	formatted_results = pformat_results( instance_2, updated_results )
-
-	SO.write( formatted_results.getvalue() )
-
 
 def solve_perfect_foresight ( model, optimizer, options ):
 	from time import clock
