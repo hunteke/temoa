@@ -1216,6 +1216,7 @@ For copy and paste or BibTex use:
 
 
 def parse_args ( ):
+	from temoa_config import TemoaConfig
 	import argparse, platform, sys
 
 	from pyomo.opt import SolverFactory as SF
@@ -1300,6 +1301,12 @@ def parse_args ( ):
 	  default=False
 	)
 
+	parser.add_argument( '--config',
+	 help='Path to file containing configuration information.',
+	 action='store',
+	 dest='config',
+	 default=None
+	 )
 
 	graphviz.add_argument( '--graph_format',
 	  help='Create a system-wide visual depiction of the model.  The '
@@ -1374,6 +1381,13 @@ def parse_args ( ):
 
 
 	options = parser.parse_args()
+	# Use the Temoa configuration file to overwrite Kevin's argument parser
+	if options.config:
+		temoa_config = TemoaConfig(d_solver=default_solver)
+		temoa_config.build(config=options.config)
+		print temoa_config
+		options = temoa_config
+		raw_input('Press enter to continue...') # Give the user a chance to confirm input
 
 	# First, the options that exit or do not perform any "real" computation
 	if options.version:
