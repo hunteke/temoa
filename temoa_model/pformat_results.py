@@ -49,7 +49,7 @@ def stringify_data ( data, ostream=SO, format='plain' ):
 
 
 
-def pformat_results ( pyomo_instance, pyomo_result, dot_dats ):
+def pformat_results ( pyomo_instance, pyomo_result ):
 	from pyomo.core import Objective, Var, Constraint
 
 	output = StringIO()
