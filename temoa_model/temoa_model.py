@@ -243,6 +243,13 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.V_Activity = Var( M.ActivityVar_psdtv, domain=NonNegativeReals )
 	M.V_Capacity = Var( M.CapacityVar_tv,    domain=NonNegativeReals )
 
+	#This derived decision variable is used in MGA objective function
+	M.V_ActivityByTech = Var(
+	  M.tech_all,
+	  domain=NonNegativeReals
+	)
+
+
 	M.V_ActivityByPeriodAndProcess = Var(
 	  M.ActivityByPeriodAndProcessVar_ptv,
 	  domain=NonNegativeReals
@@ -315,6 +322,9 @@ CapacityFactorProcess(tech_all, vintage_all)
 	#   "Bookkeeping" constraints
 	M.ActivityConstraint = Constraint( M.ActivityVar_psdtv, rule=Activity_Constraint )
 	M.ActivityByPeriodAndProcessConstraint = Constraint( M.ActivityByPeriodAndProcessVar_ptv, rule=ActivityByPeriodAndProcess_Constraint )
+	#-------------------------
+	M.ActivityByTechConstraint = Constraint(M.tech_all, rule=ActivityByTech_Constraint )
+	#-------------------------
 	M.EnergyConsumptionByPeriodInputAndTechConstraint = Constraint(M.EnergyConsumptionByPeriodInputAndTech_pit, rule=EnergyConsumptionByPeriodInputAndTech_Constraint )
 	M.ActivityByPeriodTechAndOutputConstraint = Constraint( M.ActivityByPeriodTechAndOutput_pto, rule=ActivityByPeriodTechAndOutput_Constraint )
 	M.EmissionActivityByPeriodAndTechConstraint = Constraint( M.EmissionActivityByPeriodAndTech_ept, rule=EmissionActivityByPeriodAndTech_Constraint )

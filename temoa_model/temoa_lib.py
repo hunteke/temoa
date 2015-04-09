@@ -1481,9 +1481,9 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 
 	def ActivityObj_rule ( M, prev_act_t ):
 		new_act = 0
-		for p, s, d, t, v in M.V_Activity:
+		for t in M.V_ActivityByTech:
 			if t in prev_act_t:
-				new_act += prev_act_t[ t ] * M.V_Activity[p, s, d, t, v]
+				new_act += prev_act_t[ t ] * M.V_ActivityByTech[t]
 		return new_act
 
 	def SlackedObjective_rule ( M, prev_cost ):
