@@ -1,0 +1,30 @@
+# This is only a sample Temoa configuration file for format reference.
+# Legal chars in path: a-z A-Z 0-9 - _ \ / . : 
+# Use pound sign(#) for comments.
+
+# Mandatory, input file.
+# It can be a .db or .dat file, both relative path and absolute path are accepted.
+--input=data_files/utopia-15.dat
+
+# Mandatory, output file.
+# The output file must be a existing .db file specified by the path after "=".
+--output=db_io/temoa_utopia_w_output_tables.db
+
+# Mandatory, scenario name.
+# This argument specifies the scenario tag in the output .db file, and will be the default output Excel spreadsheet name.
+--scenario=joes_first_test
+
+# Optional, usage: --saveEXCEL or --saveEXCEL=<user_specified_name.xls>. 
+# Output to a spreadsheet, of which the name is specified after "=". 
+# If the spreadsheet name is not specified, the default name (scenaio name) will be used.
+--saveEXCEL
+
+# Miscellaneous
+#--how_to_cite                    # Optional, display citation info and terminate program.
+#--version                        # Optional, display version info and terminate program.
+#--fix_variables=fix              # Optional, path to file containing variables to fix. 
+
+# Solver related argument
+#--solver=glpk                    # Optional, indicate the solver to solve Temoa model.
+#--generate_solver_lp_file        # Optional, generate solver compatible LP file of the optimization problem.
+#--keep_pyomo_lp_file             # Optional, generate Pyomo compatilbe LP file or the optimization problem.
