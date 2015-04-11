@@ -118,6 +118,12 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 
 		svars['V_ActivityByPeriodAndProcess'][p, t, v] = val
 
+	for t in m.V_ActivityByTech:
+		val = value( m.V_ActivityByTech[t] )
+		if abs(val) < epsilon: continue
+
+		svars['V_ActivityByTech'][t] = val
+
 	for t, v in m.V_Capacity:
 		val = value( m.V_Capacity[t, v] )
 		if abs(val) < epsilon: continue

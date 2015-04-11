@@ -790,6 +790,24 @@ def ActivityByPeriodAndProcess_Constraint ( M, p, t, v ):
 	expr = (M.V_ActivityByPeriodAndProcess[p, t, v] == activity)
 	return expr
 
+#This is required for MGA objective function
+def ActivityByTech_Constraint ( M, t ):
+
+	activity = sum(
+	  M.V_Activity[S_p, S_s, S_d, t, S_v]
+
+	  for S_p in M.time_optimize
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
+	  for S_v in ProcessVintages( S_p, t )
+	)
+
+	if int is type( activity ):
+		return Constraint.Skip
+
+	expr = (M.V_ActivityByTech[t] == activity)
+	return expr
+
 
 def CapacityAvailableByPeriodAndTech_Constraint ( M, p, t ):
 	r"""
