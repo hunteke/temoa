@@ -1,0 +1,102 @@
+data ;
+
+set  time_exist   :=
+2005 
+;
+
+set  time_future   :=
+2010 
+2015 
+2020 
+;
+
+set  time_season   :=
+ Annual  
+;
+
+set  time_of_day   :=
+ day  
+ night  
+;
+
+set  tech_resource   :=
+ IMP_COAL    #imported coal  
+;
+
+set  tech_production   :=
+ E_COALSTM_R    #exisiting coal power plant 
+ E_WIND_F    #new wind power plant 
+;
+
+set  tech_baseload   :=
+ E_COALSTM_R    #exisiting coal power plant 
+;
+
+set  tech_storage   :=
+;
+
+set  commodity_physical   :=
+ COAL    #coal 
+ WND    #wind 
+ ethos    #dummy commodity to supply inputs 
+;
+
+set  commodity_emissions   :=
+ co2    #carbon dioxide 
+;
+
+set  commodity_demand   :=
+ ELC    #electricity 
+;
+
+param  SegFrac   :=
+ Annual    night   0.5   # 
+ Annual    day   0.5   # 
+;
+
+param  CapacityToActivity   :=
+ E_COALSTM_R   31.536   # 
+ E_WIND_F   31.536   # 
+;
+
+param  GlobalDiscountRate   :=
+0.05 
+;
+
+param  Demand   :=
+2010   ELC   900.0   #PJ    # 
+2015   ELC   1500.0   #PJ    # 
+;
+
+param  LifetimeTech   :=
+ E_COALSTM_R   15.0   # 
+ E_WIND_F   30.0   # 
+ IMP_COAL   100.0   # 
+;
+
+param  CapacityFactorTech   :=
+ Annual    night    E_COALSTM_R   0.8   # 
+ Annual    night    E_WIND_F   0.3   # 
+ Annual    day    E_WIND_F   0.3   # 
+ Annual    day    E_COALSTM_R   0.8   # 
+;
+
+param  Efficiency   :=
+ WND    E_WIND_F   2015   ELC   1.0   # 
+ ethos    IMP_COAL   2010   COAL   1.0   # 
+ COAL    E_COALSTM_R   2005   ELC   0.3   # 
+;
+
+param  ExistingCapacity   :=
+ E_COALSTM_R   2005  36.0   #GW    #36GW is constant through 2015 
+;
+
+param  CostInvest   :=
+ E_WIND_F   2015  2000.0   #M$/PJ    # 
+;
+
+param  CostVariable   :=
+2010   IMP_COAL   2010  3.0   #M$/PJ    # 
+2015   IMP_COAL   2010  3.0   #M$/PJ    # 
+;
+
