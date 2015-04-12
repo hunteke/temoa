@@ -15,7 +15,8 @@ class TemoaConfig( object ):
 		'generate_solver_lp_file',
 		'keep_pyomo_lp_file',
 		'eciu',
-		'saveEXCEL'
+		'saveEXCEL',
+		'mga'
 	)
 	
 	t_ignore  = '[ \t]'
@@ -32,7 +33,8 @@ class TemoaConfig( object ):
 		self.generateSolverLP = False
 		self.keepPyomoLP      = False
 		self.eciu             = None
-		
+		self.mga	      = None
+
 		# To keep consistent with Kevin's argumetn parser, will be removed in the futre.
 		self.graph_format     = None
 		self.show_capacity    = False
@@ -59,20 +61,24 @@ Citation output status: {}
 Selected solver status: {}
 Solver LP write status: {}
  Pyomo LP write status: {}
+
+       MGA slack value: {}
  
        Stochastic eciu: {}
-		""".format(self.file_location, \
-				   self.dot_dat, \
-				   self.output, \
-				   self.scenario, \
-				   self.saveEXCEL, \
-				   self.how_to_cite, \
-				   self.version, \
-				   self.fix_variables, \
-				   self.solver, \
-				   self.generateSolverLP, \
-				   self.keepPyomoLP, \
-				   self.eciu)
+		""".format(\
+			self.file_location, \
+			self.dot_dat, \
+			self.output, \
+			self.scenario, \
+			self.saveEXCEL, \
+			self.how_to_cite, \
+			self.version, \
+			self.fix_variables, \
+		  	self.solver, \
+			self.generateSolverLP, \
+			self.keepPyomoLP, \
+			self.mga, \
+			self.eciu)
 		return msg
 
 	def t_COMMENT(self, t):
@@ -125,6 +131,10 @@ Solver LP write status: {}
 	def t_eciu(self, t):
 		r'--eciu(\s+|\=)[-\\\/\:\.\~\w]+\b'
 		self.eciu = abspath(t.value.replace('=', ' ').split()[1])
+        
+	def t_mga(self, t):
+		r'--mga(\s+|\=)[\.\d]+'
+		self.mga = float(t.value.replace('=', '').split()[1])
 	
 	def t_newline(self,t):
 		r'\n+|(\r\n)+|\r+' # '\n' (In linux) = '\r\n' (In Windows) = '\r' (In Mac OS)
