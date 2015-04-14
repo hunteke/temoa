@@ -28,3 +28,9 @@
 #--solver=glpk                    # Optional, indicate the solver to solve Temoa model.
 #--generate_solver_lp_file        # Optional, generate solver compatible LP file of the optimization problem.
 #--keep_pyomo_lp_file             # Optional, generate Pyomo compatilbe LP file or the optimization problem.
+
+# MGA
+--mga {
+	slack=0.4                     # Optional, the slack value in MGA runs.
+	iteration=5                   # Optional, the number of iterations in MGA runs.
+	}

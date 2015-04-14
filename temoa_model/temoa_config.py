@@ -108,6 +108,10 @@ def db_2_dat(ifile, ofile):
 class TemoaConfigError ( TemoaError ): pass
 
 class TemoaConfig( object ):
+	states = (
+	('mga', 'exclusive'),
+	)
+	
 	tokens = (
 		'dot_dat',
 		'output',
@@ -120,10 +124,11 @@ class TemoaConfig( object ):
 		'keep_pyomo_lp_file',
 		'eciu',
 		'saveEXCEL',
-		'mga'
+		'mgaslack',
+		'mgaiter'
 	)
 	
-	t_ignore  = '[ \t]'
+	t_ANY_ignore  = '[ \t]'
 	
 	def __init__(self, **kwargs):
 		self.file_location    = None
@@ -137,7 +142,8 @@ class TemoaConfig( object ):
 		self.generateSolverLP = False
 		self.keepPyomoLP      = False
 		self.eciu             = None
-		self.mga	      = None
+		self.mga              = None # mga slack value
+		self.mga_iter         = None
 
 		# To keep consistent with Kevin's argumetn parser, will be removed in the futre.
 		self.graph_format     = None
@@ -151,41 +157,34 @@ class TemoaConfig( object ):
 			self.solver = None
 
 	def __repr__(self): 
-		msg = """
-           Config file: {}
-            Input file: {}
-           Output file: {}
-              Scenario: {}
-    Spreadsheet output: {}
-
-Citation output status: {}
- Version output status: {}
-   Fixed variable file: {}
-
-Selected solver status: {}
-Solver LP write status: {}
- Pyomo LP write status: {}
-
-       MGA slack value: {}
- 
-       Stochastic eciu: {}
-		""".format(\
-			self.file_location, \
-			self.dot_dat, \
-			self.output, \
-			self.scenario, \
-			self.saveEXCEL, \
-			self.how_to_cite, \
-			self.version, \
-			self.fix_variables, \
-		  	self.solver, \
-			self.generateSolverLP, \
-			self.keepPyomoLP, \
-			self.mga, \
-			self.eciu)
+		width = 25
+		spacer = '\n' + '-'*width + '\n'
+		msg = spacer
+		msg += '{:>{}s}: {}\n'.format('Config file', width, self.file_location)
+		for i in self.dot_dat:
+			if self.dot_dat.index(i) == 0:
+				msg += '{:>{}s}: {}\n'.format('Input file', width, i)
+			else:
+				msg += '{:>25s}  {}\n'.format(' ', i)
+		msg += '{:>{}s}: {}\n'.format('Output file', width, self.output)
+		msg += '{:>{}s}: {}\n'.format('Scenario', width, self.scenario)	
+		msg += '{:>{}s}: {}\n'.format('Spreadsheet output', width, self.saveEXCEL)
+		msg += spacer
+		msg += '{:>{}s}: {}\n'.format('Citation output status', width, self.how_to_cite)
+		msg += '{:>{}s}: {}\n'.format('Version output status', width, self.version)
+		msg += '{:>{}s}: {}\n'.format('Fixed variable file', width, self.fix_variables)
+		msg += spacer
+		msg += '{:>{}s}: {}\n'.format('Selected solver status', width, self.solver)
+		msg += '{:>{}s}: {}\n'.format('Solver LP write status', width, self.generateSolverLP)
+		msg += '{:>{}s}: {}\n'.format('Pyomo LP write status', width, self.keepPyomoLP)
+		msg += spacer
+		msg += '{:>{}s}: {}\n'.format('MGA slack value', width, self.mga)
+		msg += '{:>{}s}: {}\n'.format('MGA # of iterations', width, self.mga_iter)
+		msg += spacer
+		msg += '{:>{}s}: {}\n'.format('Stochastic eciu', width, self.eciu)
 		return msg
 
-	def t_COMMENT(self, t):
+	def t_ANY_COMMENT(self, t):
 		r'\#.*'
 		pass
 	
@@ -235,16 +234,33 @@ Solver LP write status: {}
 	def t_eciu(self, t):
 		r'--eciu(\s+|\=)[-\\\/\:\.\~\w]+\b'
 		self.eciu = abspath(t.value.replace('=', ' ').split()[1])
-        
-	def t_mga(self, t):
-		r'--mga(\s+|\=)[\.\d]+'
-		self.mga = float(t.value.replace('=', '').split()[1])
+    
+	def t_begin_mga(self, t):
+		r'--mga(\s)*\{'
+		t.lexer.push_state('mga')
+		t.lexer.level = 1
 	
-	def t_newline(self,t):
+	# def t_mga_mgaslack(self, t):
+		# r'--mga(\s+|\=)[\.\d]+'
+		# self.mga = float(t.value.replace('=', '').split()[1])
+	def t_mga_mgaslack(self, t):
+		r'slack(\s+|\=)[\.\d]+'
+		self.mga = float(t.value.replace('=', ' ').split()[1])
+	
+	def t_mga_mgaiter(self, t):
+		r'iteration(\s+|\=)[\d]+'
+		self.mga_iter = int(t.value.replace('=', ' ').split()[1])
+		
+	def t_mga_end(self, t):
+		r'\}'
+		t.lexer.pop_state()
+		t.lexer.level -= 1
+	
+	def t_ANY_newline(self,t):
 		r'\n+|(\r\n)+|\r+' # '\n' (In linux) = '\r\n' (In Windows) = '\r' (In Mac OS)
 		t.lexer.lineno += len(t.value)
 	
-	def t_error(self, t):
+	def t_ANY_error(self, t):
 		print "Illegal character '%s'" % t.value[0]
 		t.lexer.skip(1)
 	
