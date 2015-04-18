@@ -1391,11 +1391,15 @@ def parse_args ( ):
 	options = parser.parse_args()
 	# Use the Temoa configuration file to overwrite Kevin's argument parser
 	if options.config:
-		temoa_config = TemoaConfig(d_solver=default_solver)
-		temoa_config.build(config=options.config)
-		print temoa_config
-		options = temoa_config
-		raw_input('Press enter to continue...') # Give the user a chance to confirm input
+		try:
+			temoa_config = TemoaConfig(d_solver=default_solver)
+			temoa_config.build(config=options.config)
+			print temoa_config
+			options = temoa_config
+			raw_input('Please press enter to continue or Ctrl+C to quit.') # Give the user a chance to confirm input
+		except KeyboardInterrupt:
+			print '\n\nUser requested quit.  Exiting Temoa ...\n'
+			raise SystemExit()
 
 	# First, the options that exit or do not perform any "real" computation
 	if options.version:
@@ -1567,7 +1571,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 			prev_activity_t[ t ] += val
 		
 		#Perform 5 MGA iterations
-		for i in range(1, 6):
+		while options.next_mga():
 			instance_mga = model.create( mdata )
 
 			# Update second instance with the new MGA-specific objective function

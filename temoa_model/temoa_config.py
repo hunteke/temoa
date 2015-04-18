@@ -131,11 +131,17 @@ class TemoaConfig( object ):
 	t_ANY_ignore  = '[ \t]'
 	
 	def __init__(self, **kwargs):
+		from Queue import Queue
+		
+		self.__error          = list()
+		self.__mga_todo       = Queue()
+		self.__mga_done       = Queue()
+		
 		self.file_location    = None
 		self.dot_dat          = list() # Use Kevin's name.
 		self.output           = None # May update to a list if multiple output is required.
 		self.scenario         = None
-		self.saveEXCEL        = None
+		self.saveEXCEL        = False
 		self.how_to_cite      = None
 		self.version          = False
 		self.fix_variables    = None
@@ -201,11 +207,8 @@ class TemoaConfig( object ):
 		self.scenario = t.value.replace('=', ' ').split()[1]
 	
 	def t_saveEXCEL(self, t):
-		r'--saveEXCEL((\s+|\=)[-\\\/\:\.\~\w]+\.xlsx)?\b'
-		if ' ' in t.value.replace('=', ' '):
-			self.saveEXCEL = t.value.replace('=', ' ').split()[1]
-		elif self.scenario:
-			self.saveEXCEL = self.scenario + '.xlsx'
+		r'--saveEXCEL\b'
+		self.saveEXCEL = True
 	
 	def t_how_to_cite(self, t):
 		r'--how_to_cite\b'
@@ -240,13 +243,10 @@ class TemoaConfig( object ):
 		t.lexer.push_state('mga')
 		t.lexer.level = 1
 	
-	# def t_mga_mgaslack(self, t):
-		# r'--mga(\s+|\=)[\.\d]+'
-		# self.mga = float(t.value.replace('=', '').split()[1])
 	def t_mga_mgaslack(self, t):
 		r'slack(\s+|\=)[\.\d]+'
 		self.mga = float(t.value.replace('=', ' ').split()[1])
-	
+		
 	def t_mga_mgaiter(self, t):
 		r'iteration(\s+|\=)[\d]+'
 		self.mga_iter = int(t.value.replace('=', ' ').split()[1])
@@ -261,8 +261,23 @@ class TemoaConfig( object ):
 		t.lexer.lineno += len(t.value)
 	
 	def t_ANY_error(self, t):
-		print "Illegal character '%s'" % t.value[0]
+		if not self.__error:
+			self.__error.append({'line': [t.lineno, t.lineno], 'index': [t.lexpos, t.lexpos], 'value': t.value[0]})
+		elif t.lexpos - self.__error[-1]['index'][-1] == 1:
+			self.__error[-1]['line' ][-1] = t.lineno
+			self.__error[-1]['index'][-1] = t.lexpos
+			self.__error[-1]['value'] += t.value[0]
+		else:
+			self.__error.append({'line': [t.lineno, t.lineno], 'index': [t.lexpos, t.lexpos], 'value': t.value[0]})
 		t.lexer.skip(1)
+
+	def next_mga(self):
+		if not self.__mga_todo.empty():
+			self.__mga_done.put(self.scenario)
+			self.scenario = self.__mga_todo.get()
+			return True
+		else:
+			return False
 	
 	def build(self,**kwargs):
 		import ply.lex as lex, os, sys
@@ -281,6 +296,14 @@ class TemoaConfig( object ):
 				tok = self.lexer.token()
 				if not tok: break
 		
+		if self.__error:
+			print '\nIllegal character(s) in config file:'
+			print '-'*25
+			for e in self.__error:
+				print "Line {} to {}: '{}'".format(e['line'][0], e['line'][1], e['value'])
+			print '-'*25
+			raw_input('Please press enter to continue or Ctrl+C to quit...')
+		
 		if not self.dot_dat:
 			raise TemoaConfigError('Input file not specified.')
 		
@@ -288,7 +311,7 @@ class TemoaConfig( object ):
 			if not isfile(i):
 				raise TemoaConfigError('Cannot locate input file: {}'.format(i))
 		
-		if self.output is None:
+		if not self.output:
 			raise TemoaConfigError('Output file not specified.')
 		
 		if not isfile(self.output):
@@ -296,6 +319,10 @@ class TemoaConfig( object ):
 		
 		if not self.scenario:
 			raise TemoaConfigError('Scenario name not specified.')
+		
+		if self.mga_iter:
+			for i in range(self.mga_iter):
+				self.__mga_todo.put(self.scenario + '_mga_' + str(i))
 
 		f = open(os.devnull, 'w'); sys.stdout = f # Suppress the original DB_to_DAT.py output
 		counter = 0
