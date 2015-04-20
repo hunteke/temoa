@@ -26,6 +26,8 @@ from cStringIO import StringIO
 from sys import stderr as SE, stdout as SO
 import sqlite3
 import os
+import re
+import subprocess
 
 from pyomo.core import value
 
@@ -49,7 +51,7 @@ def stringify_data ( data, ostream=SO, format='plain' ):
 
 
 
-def pformat_results ( pyomo_instance, pyomo_result ):
+def pformat_results ( pyomo_instance, pyomo_result, options ):
 	from pyomo.core import Objective, Var, Constraint
 
 	output = StringIO()
@@ -282,21 +284,26 @@ def pformat_results ( pyomo_instance, pyomo_result ):
 ########################################################################################################################	
 	tables = {"V_FlowIn" : "Output_VFlow_In", "V_FlowOut" : "Output_VFlow_Out", "V_CapacityAvailableByPeriodAndTech" : "Output_Capacity"}
 	
-	if not os.path.exists(r"db_io"+os.sep+"temoa_utopia_w_output_tables.db") :
-		print "Please put the temoa_utopia_w_output_tables.db file in the 'db_io' Directory"
+	if not os.path.exists(options.output) :
+		print "Please put the "+options.output+" file in the right Directory"
 	
-	con = sqlite3.connect(r"db_io"+os.sep+"temoa_utopia_w_output_tables.db")
+	#con = sqlite3.connect(r"db_io"+os.sep+"temoa_utopia_w_output_tables.db")
+	con = sqlite3.connect(options.output)
 	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 	
 	for table in svars.keys() :
 		if table in tables :
-			cur.execute("DELETE FROM "+tables[table]+";")
+			if not re.search(r"\w+_mga_\d+", options.scenario) :
+				cur.execute("DELETE FROM "+tables[table]+";") # Delete existing values upon first iteration
 			for xyz in svars[table].keys() :
 				xy = str(xyz)
 				xy = xy[1:-1]
-				cur.execute("INSERT INTO "+tables[table]+" VALUES ('Run_1',"+xy+","+str(svars[table][xyz])+");")
+				cur.execute("INSERT INTO "+tables[table]+" VALUES ('"+options.scenario+"',"+xy+","+str(svars[table][xyz])+");")
 	con.commit()
 	con.close()
+	
+	if options.saveEXCEL :
+		os.system("python db_io"+os.sep+"DB_to_Excel.py -i \""+options.output+"\" -o db_io"+os.sep+options.scenario)
 	
 	return output

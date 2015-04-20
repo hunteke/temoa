@@ -50,31 +50,33 @@ else :
 		
 	if ofile is None :
 		ofile = file_type.group(1)
-		print "Look for output in %s.xls" % ofile
+		print "Look for output in %s_*.xls" % ofile
 
 con = sqlite3.connect(ifile)
 cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
-cur.execute("SELECT scenario FROM Output_VFlow_In")
-for val in cur :
-	scenario.add(val[0])
-
-cur.execute("SELECT sector FROM technologies")
-for val in cur :
-	sector.add(val[0])
-
-for x in sector :
-	cur.execute("SELECT tech FROM technologies WHERE sector is '"+x+"'")
+for k in tables.keys() :
+	cur.execute("SELECT DISTINCT scenario FROM "+k)
 	for val in cur :
-		tech[x].append(val[0])
+		scenario.add(val[0])
+
+	cur.execute("SELECT sector FROM technologies")
+	for val in cur :
+		sector.add(val[0])
 	
-cur.execute("SELECT t_periods FROM time_periods")
-for val in cur :
-	val = str(val[0])
-	if val not in period :
-		period.append(val)
-		header.append(val)
+	for x in sector :
+		cur.execute("SELECT tech  FROM technologies WHERE sector is '"+x+"'")
+		for val in cur :
+			if val[0] not in tech[x] :
+				tech[x].append(val[0])
+	
+	cur.execute("SELECT DISTINCT t_periods FROM "+k)
+	for val in cur :
+		val = str(val[0])
+		if val not in period :
+			period.append(val)
+			header.append(val)
 header[1:].sort()
 period.sort()
 
@@ -102,7 +104,7 @@ for scene in scenario :
 				count = 0
 			row = 0
 			i += 1
-	book[book_no].save(ofile+"_"+scene+".xls")
+	book[book_no].save(ofile+".xls")
 	book_no += 1
 
 cur.close()

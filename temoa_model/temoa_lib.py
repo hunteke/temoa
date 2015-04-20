@@ -1555,7 +1555,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 
 		updated_results = instance_1.update_results( result_1 )
 		instance_1.load( result_1 )
-		formatted_results = pformat_results( instance_1, updated_results )
+		formatted_results = pformat_results( instance_1, updated_results, options )
 		SO.write( formatted_results.getvalue() )
 
 
@@ -1594,7 +1594,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 
 			updated_results = instance_mga.update_results( result_mga )
 			instance_mga.load( result_mga )	
-			formatted_results = pformat_results( instance_mga, updated_results )
+			formatted_results = pformat_results( instance_mga, updated_results, options )
 			SO.write( formatted_results.getvalue() )
 
 			#Keep adding activity from latest iteration to MGA Obj function
@@ -1728,7 +1728,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	SE.write( msg ); SE.flush()
 	updated_results = instance.update_results( result )
 	instance.load( result )
-	formatted_results = pformat_results( instance, updated_results )
+	formatted_results = pformat_results( instance, updated_results, options )
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	SO.write( formatted_results.getvalue() )
