@@ -705,6 +705,13 @@ INSERT INTO "ExistingCapacity" VALUES('TXG',1980,1.5,'','');
  INSERT INTO "CostVariable" VALUES(2010,'SRE',2000,10,'','');
  INSERT INTO "CostVariable" VALUES(2010,'SRE',2010,10,'','');
  
+/*
+-------------------------------------------------------
+Tables in this section store model outputs
+-------------------------------------------------------
+*/
+
+
 CREATE TABLE Output_VFlow_Out (
    scenario text,
    t_periods integer,
@@ -715,7 +722,7 @@ CREATE TABLE Output_VFlow_Out (
    vintage integer,
    output_comm text,
    vflow_out real,
-   PRIMARY KEY(t_periods, t_season, t_day, input_comm, tech, vintage, output_comm),
+   PRIMARY KEY(scenario, t_periods, t_season, t_day, input_comm, tech, vintage, output_comm),
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(t_season) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(t_day) REFERENCES time_of_day(t_day),
@@ -736,7 +743,7 @@ CREATE TABLE Output_VFlow_In (
    vintage integer,
    output_comm text,
    vflow_in real,
-   PRIMARY KEY(t_periods, t_season, t_day, input_comm, tech, vintage, output_comm),
+   PRIMARY KEY(scenario, t_periods, t_season, t_day, input_comm, tech, vintage, output_comm),
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(t_season) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(t_day) REFERENCES time_of_day(t_day),
@@ -751,7 +758,7 @@ CREATE TABLE Output_Capacity (
    t_periods integer,   
    tech text,
    capacity real,
-   PRIMARY KEY(t_periods, tech),
+   PRIMARY KEY(scenario, t_periods, tech),
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(tech) REFERENCES technologies(tech)); 
 
