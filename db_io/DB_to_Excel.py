@@ -17,6 +17,7 @@ count = 0
 sheet = []
 book = []
 book_no = 0
+flag = None
 i = 0 # Sheet ID
 header = ['Technologies']
 tables = {"Output_VFlow_Out" : ["Activity", "vflow_out"], "Output_Capacity" : ["Capacity", "capacity"]}
@@ -24,7 +25,7 @@ tables = {"Output_VFlow_Out" : ["Activity", "vflow_out"], "Output_Capacity" : ["
 
 try:
 	argv = sys.argv[1:]
-	opts, args = getopt.getopt(argv, "hi:o:", ["help", "input=", "output="])
+	opts, args = getopt.getopt(argv, "hi:o:s:", ["help", "input=", "output=", "scenario="])
 except getopt.GetoptError:          
 	print "Something's Wrong. Use as :\n	python DB_to_Excel.py -i <input_file> (Optional -o <output_excel_file_name_only>)\n	Use -h for help."                          
 	sys.exit(2) 
@@ -34,6 +35,8 @@ for opt, arg in opts:
 		ifile = arg
 	elif opt in ("-o", "--output"):
 		ofile = arg
+	elif opt in ("-s", "--scenario"):
+		scenario.add(arg)
 	elif opt in ("-h", "--help") :
 		print "Use as :\n	python DB_to_Excel.py -i <input_file> (Optional -o <output_excel_file_name_only>)\n	Use -h for help."                          
 		sys.exit()
@@ -57,19 +60,33 @@ cur = con.cursor()   # a database cursor is a control structure that enables tra
 con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
 for k in tables.keys() :
-	cur.execute("SELECT DISTINCT scenario FROM "+k)
-	for val in cur :
-		scenario.add(val[0])
-
-	cur.execute("SELECT sector FROM technologies")
-	for val in cur :
-		sector.add(val[0])
-	
-	for x in sector :
-		cur.execute("SELECT tech  FROM technologies WHERE sector is '"+x+"'")
+	if not scenario :
+		cur.execute("SELECT DISTINCT scenario FROM "+k)
 		for val in cur :
-			if val[0] not in tech[x] :
-				tech[x].append(val[0])
+			scenario.add(val[0])
+	
+	for axy in cur.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='technologies';") :
+		if axy[0] :
+			fields = [ads[1] for ads in cur.execute('PRAGMA table_info(technologies)')]
+			if 'sector' in fields :
+				cur.execute("SELECT sector FROM technologies")
+				for val in cur :
+					sector.add(val[0])
+				if not sector :
+					sector.add('0')
+				else :
+					flag = 1
+	
+	if flag is None :
+		cur.execute("SELECT DISTINCT tech FROM "+k)
+		for val in cur :
+			tech['0'].append(val[0])
+	else :
+		for x in sector :
+			cur.execute("SELECT DISTINCT tech  FROM technologies WHERE sector is '"+x+"'")
+			for val in cur :
+				if val[0] not in tech[x] :
+					tech[x].append(val[0])
 	
 	cur.execute("SELECT DISTINCT t_periods FROM "+k)
 	for val in cur :
@@ -84,7 +101,10 @@ for scene in scenario :
 	book.append(xlwt.Workbook(encoding="utf-8"))
 	for z in sector :
 		for a in tables.keys() :
-			sheet_name = str(tables[a][0])+"_"+str(z)
+			if z is '0' :
+				sheet_name = str(tables[a][0])
+			else :
+				sheet_name = str(tables[a][0])+"_"+str(z)
 			sheet.append(book[book_no].add_sheet(sheet_name))
 			for col in range(0, len(header)) :
 				sheet[i].write(row, col, header[col], easyxf('alignment: vertical centre, horizontal centre, wrap True;'))
@@ -104,7 +124,10 @@ for scene in scenario :
 				count = 0
 			row = 0
 			i += 1
-	book[book_no].save(ofile+".xls")
+	if len(scenario) is 1:
+		book[book_no].save(ofile+".xls")
+	else :
+		book[book_no].save(ofile+"_"+scene+".xls")
 	book_no += 1
 
 cur.close()

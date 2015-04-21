@@ -287,15 +287,18 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	if not os.path.exists(options.output) :
 		print "Please put the "+options.output+" file in the right Directory"
 	
-	#con = sqlite3.connect(r"db_io"+os.sep+"temoa_utopia_w_output_tables.db")
 	con = sqlite3.connect(options.output)
 	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 	
+	print options.scenario
+	
 	for table in svars.keys() :
 		if table in tables :
-			if not re.search(r"\w+_mga_\d+", options.scenario) :
-				cur.execute("DELETE FROM "+tables[table]+";") # Delete existing values upon first iteration
+			cur.execute("SELECT DISTINCT scenario FROM '"+tables[table]+"'")
+			for val in cur : 
+				if options.scenario == val[0]:
+					cur.execute("DELETE FROM "+tables[table]+" WHERE scenario is '"+options.scenario+"'") # Delete existing values if exists
 			for xyz in svars[table].keys() :
 				xy = str(xyz)
 				xy = xy[1:-1]
@@ -304,6 +307,6 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	con.close()
 	
 	if options.saveEXCEL :
-		os.system("python db_io"+os.sep+"DB_to_Excel.py -i \""+options.output+"\" -o db_io"+os.sep+options.scenario)
+		os.system("python db_io"+os.sep+"DB_to_Excel.py -i \""+options.output+"\" -o db_io"+os.sep+options.scenario+" -s "+options.scenario)
 	
 	return output
