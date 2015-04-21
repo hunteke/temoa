@@ -297,12 +297,12 @@ class TemoaConfig( object ):
 				if not tok: break
 		
 		if self.__error:
-			print '\nIllegal character(s) in config file:'
-			print '-'*25
+			msg = '\nIllegal character(s) in config file:\n'
+			msg += '-'*25 + '\n'
 			for e in self.__error:
-				print "Line {} to {}: '{}'".format(e['line'][0], e['line'][1], e['value'])
-			print '-'*25
-			raw_input('Please press enter to continue or Ctrl+C to quit...')
+				msg += "Line {} to {}: '{}'\n".format(e['line'][0], e['line'][1], e['value'])
+			msg += '-'*25 + '\n'
+			sys.stderr.write(msg)
 		
 		if not self.dot_dat:
 			raise TemoaConfigError('Input file not specified.')
@@ -335,4 +335,4 @@ class TemoaConfig( object ):
 		f.close()
 		sys.stdout = sys.__stdout__
 		if counter > 0:
-			print "{} .db file(s) converted".format(counter)
+			sys.stderr.write("\n{} .db file(s) converted\n".format(counter))

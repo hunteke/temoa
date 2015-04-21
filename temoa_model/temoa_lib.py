@@ -1394,11 +1394,12 @@ def parse_args ( ):
 		try:
 			temoa_config = TemoaConfig(d_solver=default_solver)
 			temoa_config.build(config=options.config)
-			print temoa_config
+			SE.write(repr(temoa_config))
 			options = temoa_config
-			raw_input('Please press enter to continue or Ctrl+C to quit.') # Give the user a chance to confirm input
+			SE.write('\nPlease press enter to continue or Ctrl+C to quit.\n')
+			raw_input() # Give the user a chance to confirm input
 		except KeyboardInterrupt:
-			print '\n\nUser requested quit.  Exiting Temoa ...\n'
+			SE.write('\n\nUser requested quit.  Exiting Temoa ...\n')
 			raise SystemExit()
 
 	# First, the options that exit or do not perform any "real" computation
@@ -1588,6 +1589,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 			)
 			instance_mga.preprocess()
 
+			SE.write( '[        ] Solving {}.'.format(options.scenario)); SE.flush()
 			result_mga = opt.solve( instance_mga )
 
 			SE.write( '\r[%8.2f\n' % duration() )
