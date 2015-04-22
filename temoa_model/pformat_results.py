@@ -24,6 +24,7 @@ __all__ = ('pformat_results', 'stringify_data')
 from collections import defaultdict
 from cStringIO import StringIO
 from sys import stderr as SE, stdout as SO
+from temoa_config import TemoaConfig
 import sqlite3
 import os
 import re
@@ -283,30 +284,31 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 ########################################################################################################################	
 	tables = {"V_FlowIn" : "Output_VFlow_In", "V_FlowOut" : "Output_VFlow_Out", "V_CapacityAvailableByPeriodAndTech" : "Output_Capacity"}
-	
-	if not os.path.exists(options.output) :
-		print "Please put the "+options.output+" file in the right Directory"
-	
-	con = sqlite3.connect(options.output)
-	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
-	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
-	
-	print options.scenario
-	
-	for table in svars.keys() :
-		if table in tables :
-			cur.execute("SELECT DISTINCT scenario FROM '"+tables[table]+"'")
-			for val in cur : 
-				if options.scenario == val[0]:
-					cur.execute("DELETE FROM "+tables[table]+" WHERE scenario is '"+options.scenario+"'") # Delete existing values if exists
-			for xyz in svars[table].keys() :
-				xy = str(xyz)
-				xy = xy[1:-1]
-				cur.execute("INSERT INTO "+tables[table]+" VALUES ('"+options.scenario+"',"+xy+","+str(svars[table][xyz])+");")
-	con.commit()
-	con.close()
-	
-	if options.saveEXCEL :
-		os.system("python db_io"+os.sep+"DB_to_Excel.py -i \""+options.output+"\" -o db_io"+os.sep+options.scenario+" -s "+options.scenario)
+
+	if isinstance(options, TemoaConfig):	
+		if not os.path.exists(options.output) :
+			print "Please put the "+options.output+" file in the right Directory"
+		
+		con = sqlite3.connect(options.output)
+		cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
+		con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
+		
+		print options.scenario
+		
+		for table in svars.keys() :
+			if table in tables :
+				cur.execute("SELECT DISTINCT scenario FROM '"+tables[table]+"'")
+				for val in cur : 
+					if options.scenario == val[0]:
+						cur.execute("DELETE FROM "+tables[table]+" WHERE scenario is '"+options.scenario+"'") # Delete existing values if exists
+				for xyz in svars[table].keys() :
+					xy = str(xyz)
+					xy = xy[1:-1]
+					cur.execute("INSERT INTO "+tables[table]+" VALUES ('"+options.scenario+"',"+xy+","+str(svars[table][xyz])+");")
+		con.commit()
+		con.close()
+		
+		if options.saveEXCEL :
+			os.system("python db_io"+os.sep+"DB_to_Excel.py -i \""+options.output+"\" -o db_io"+os.sep+options.scenario+" -s "+options.scenario)
 	
 	return output
