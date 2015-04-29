@@ -1566,8 +1566,8 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		Perfect_Foresight_Obj = value( instance_1.FirstObj )
 
 		prev_activity_t = defaultdict( int )
-		for p, s, d, t, v in instance_1.V_Activity:
-			val = value( instance_1.V_Activity[p, s, d, t, v] )
+		for t in instance_1.V_ActivityByTech:
+			val = value( instance_1.V_ActivityByTech[t] )
 			if abs(val) < epsilon: continue
 			prev_activity_t[ t ] += val
 		
@@ -1600,8 +1600,8 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 			SO.write( formatted_results.getvalue() )
 
 			#Keep adding activity from latest iteration to MGA Obj function
-			for p, s, d, t, v in instance_mga.V_Activity:
-				val = value( instance_mga.V_Activity[p, s, d, t, v] )
+			for t in instance_mga.V_ActivityByTech:
+				val = value( instance_mga.V_ActivityByTech[t] )
 				if abs(val) < epsilon: continue
 				prev_activity_t[ t ] += val
 
