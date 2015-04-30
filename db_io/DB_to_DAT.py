@@ -81,6 +81,7 @@ table_list =[['set','time_periods','time_exist','e',0], \
              ['param','GlobalDiscountRate','','',0],          \
              ['param','EmissionActivity','','',5],            \
              ['param','Demand','','',2],                      \
+             ['param','TechInputSplit','','',2],              \
              ['param','TechOutputSplit','','',2],             \
              ['param','MinCapacity','','',2],                 \
              ['param','MaxCapacity','','',2],                 \

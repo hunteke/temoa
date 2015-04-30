@@ -136,6 +136,15 @@ CREATE TABLE Demand (
    FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(demand_comm) REFERENCES commodities(comm_name) );
 
+CREATE TABLE TechInputSplit (
+   tech text,
+   input_comm text,
+   ti_split real,
+   ti_split_notes text,
+   PRIMARY KEY(tech, input_comm),
+   FOREIGN KEY(tech) REFERENCES technologies(tech),
+   FOREIGN KEY(input_comm) REFERENCES commodities(comm_name) );
+
 
 CREATE TABLE TechOutputSplit (
    tech text,
