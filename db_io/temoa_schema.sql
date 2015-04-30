@@ -136,13 +136,13 @@ CREATE TABLE Demand (
    FOREIGN KEY(demand_comm) REFERENCES commodities(comm_name) );
 
 CREATE TABLE TechInputSplit (
-   tech text,
    input_comm text,
+   tech text,
    ti_split real,
    ti_split_notes text,
-   PRIMARY KEY(tech, input_comm),
-   FOREIGN KEY(tech) REFERENCES technologies(tech),
-   FOREIGN KEY(input_comm) REFERENCES commodities(comm_name) );
+   PRIMARY KEY(input_comm, tech),
+   FOREIGN KEY(input_comm) REFERENCES commodities(comm_name),
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );
  
 
 CREATE TABLE TechOutputSplit (
