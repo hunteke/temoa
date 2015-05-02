@@ -20,7 +20,7 @@ book_no = 0
 flag = None
 i = 0 # Sheet ID
 header = ['Technologies']
-tables = {"Output_VFlow_Out" : ["Activity", "vflow_out"], "Output_Capacity" : ["Capacity", "capacity"]}
+tables = {"Output_VFlow_Out" : ["Activity", "vflow_out"], "Output_Capacity" : ["Capacity", "capacity"], "Output_Emissions" : ["Emissions", "emissions"]}
 
 
 try:

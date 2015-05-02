@@ -342,5 +342,31 @@ CREATE TABLE Output_Capacity (
    PRIMARY KEY(scenario, t_periods, tech),
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech)); 
+
+CREATE TABLE Output_Emissions (    /*Seems like it should also be indexed by emissions commodity*/
+   scenario text,
+   t_periods integer,
+   tech text,
+   vintage integer,
+   emissions real,
+   PRIMARY KEY(scenario, t_periods, tech, vintage),
+   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech)
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
+
+CREATE TABLE Output_Costs (
+   scenario text,
+   output_name text,
+   tech text,
+   vintage integer,
+   output_cost real,
+   PRIMARY KEY(scenario, output_name, tech, vintage),
+   FOREIGN KEY(tech) REFERENCES technologies(tech),   
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods)); 
+
+CREATE TABLE Output_TotalCost (
+   scenario text,
+   total_system_cost real);
+   
  
 COMMIT;

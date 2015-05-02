@@ -98,6 +98,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 	svars = defaultdict( lambda: defaultdict( float ))    # "solved" vars
 	psvars = defaultdict( lambda: defaultdict( float ))   # "post-solve" vars
+	dbvars = defaultdict( lambda: defaultdict( float ))   # "Temp" vars to populate database
 	con_info = list()
 
 	epsilon = 1e-9   # threshold for "so small it's zero"
@@ -171,11 +172,12 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		e = emission_keys[i, t, v, o]
 		evalue = val * m.EmissionActivity[e, i, t, v, o]
 
-		psvars[ 'V_EmissionActivityByPeriod'        ][ p ]  += evalue
-		psvars[ 'V_EmissionActivityByTech'          ][ t ]  += evalue
-		psvars[ 'V_EmissionActivityByPeriodAndTech' ][p, t] += evalue
-		psvars[ 'V_EmissionActivityByProcess'       ][t, v] += evalue
-
+		psvars[ 'V_EmissionActivityByPeriod'           ][ p ]  += evalue
+		psvars[ 'V_EmissionActivityByTech'             ][ t ]  += evalue
+		psvars[ 'V_EmissionActivityByPeriodAndTech'    ][p, t] += evalue
+		psvars[ 'V_EmissionActivityByProcess'          ][t, v] += evalue
+		psvars[ 'V_EmissionActivityByPeriodAndProcess' ][p, t, v] += evalue
+		
 	for t, v in m.CostInvest.sparse_iterkeys():
 		# CostInvest guaranteed not 0
 
@@ -188,6 +190,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		psvars[ 'V_UndiscountedInvestmentByProcess' ][t, v] += icost
 		psvars[ 'V_UndiscountedPeriodCost'          ][ v ]  += icost
 
+		dbvars[	'Costs'	][ 'V_UndiscountedInvestmentByProcess', t, v] += icost # A small hack to make output to dbs easier
 
 		icost *= value( m.LoanAnnualize[t, v] )
 		icost *= (
@@ -200,6 +203,8 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		psvars[ 'V_DiscountedInvestmentByProcess' ][t, v] += icost
 		psvars[ 'V_DiscountedPeriodCost'          ][ v ]  += icost
 
+		dbvars[	'Costs'	][ 'V_DiscountedInvestmentByProcess', t, v] += icost		
+		
 	for p, t, v in m.CostFixed.sparse_iterkeys():
 		fcost = value( m.V_Capacity[t, v] )
 		if abs(fcost) < epsilon: continue
@@ -212,6 +217,8 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		psvars[ 'V_UndiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
 		psvars[ 'V_UndiscountedPeriodCost'          ][ p ]  += fcost
 
+		dbvars[	'Costs'	][ 'V_UndiscountedFixedCostsByProcess', t, v] += fcost
+		
 		fcost *= (
 		  value( MPL[p, t, v] ) if not GDR else
 		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, t, v] ))) / GDR)
@@ -224,6 +231,8 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		psvars[ 'V_DiscountedFixedCostsByPeriodAndProcess' ][p, t, v] = fcost
 		psvars[ 'V_DiscountedPeriodCost'          ][ p ]  += fcost
 
+		dbvars[	'Costs'	][ 'V_DiscountedFixedCostsByProcess', t, v] += fcost
+		
 	for p, t, v in m.CostVariable.sparse_iterkeys():
 		vcost = value( m.V_ActivityByPeriodAndProcess[p, t, v] )
 		if abs(vcost) < epsilon: continue
@@ -236,12 +245,16 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		psvars[ 'V_UndiscountedVariableCostsByPeriodAndProcess' ][p, t, v] = vcost
 		psvars[ 'V_UndiscountedPeriodCost'             ][ p ]  += vcost
 
+		dbvars[	'Costs'	][ 'V_UndiscountedVariableCostsByProcess', t, v] += vcost
+
 		vcost *= value( m.PeriodRate[ p ])
 		psvars[ 'V_DiscountedVariableCostsByPeriod'  ][ p ]  += vcost
 		psvars[ 'V_DiscountedVariableCostsByTech'    ][ t ]  += vcost
 		psvars[ 'V_DiscountedVariableCostsByVintage' ][ v ]  += vcost
 		psvars[ 'V_DiscountedVariableCostsByProcess' ][t, v] += vcost
 		psvars[ 'V_DiscountedPeriodCost'             ][ p ]  += vcost
+
+		dbvars[	'Costs'	][ 'V_DiscountedVariableCostsByProcess', t, v] += vcost
 
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
 
@@ -283,7 +296,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	  'citation information.\n')
 
 ########################################################################################################################	
-	tables = {"V_FlowIn" : "Output_VFlow_In", "V_FlowOut" : "Output_VFlow_Out", "V_CapacityAvailableByPeriodAndTech" : "Output_Capacity"}
+	tables = {"V_FlowIn" : "Output_VFlow_In", "V_FlowOut" : "Output_VFlow_Out", "V_CapacityAvailableByPeriodAndTech" : "Output_Capacity", "V_EmissionActivityByPeriodAndProcess" : "Output_Emissions", "TotalCost" : "Output_TotalCost", "Costs" : "Output_Costs"}
 
 	if isinstance(options, TemoaConfig):	
 		if not os.path.exists(options.output) :
@@ -305,6 +318,32 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 					xy = str(xyz)
 					xy = xy[1:-1]
 					cur.execute("INSERT INTO "+tables[table]+" VALUES ('"+options.scenario+"',"+xy+","+str(svars[table][xyz])+");")
+		for table in psvars.keys() :
+			if table in tables :
+				cur.execute("SELECT DISTINCT scenario FROM '"+tables[table]+"'")
+				for val in cur : 
+					if options.scenario == val[0]:
+						cur.execute("DELETE FROM "+tables[table]+" WHERE scenario is '"+options.scenario+"'") # Delete existing values if exists
+				for xyz in psvars[table].keys() :
+					xy = str(xyz)
+					xy = xy[1:-1]
+					cur.execute("INSERT INTO "+tables[table]+" VALUES ('"+options.scenario+"',"+xy+","+str(psvars[table][xyz])+");")
+		for table in dbvars.keys() :
+			if table in tables :
+				cur.execute("SELECT DISTINCT scenario FROM '"+tables[table]+"'")
+				for val in cur : 
+					if options.scenario == val[0]:
+						cur.execute("DELETE FROM "+tables[table]+" WHERE scenario is '"+options.scenario+"'") # Delete existing values if exists
+				for xyz in dbvars[table].keys() :
+					xy = str(xyz)
+					xy = xy[1:-1]
+					cur.execute("INSERT INTO "+tables[table]+" VALUES ('"+options.scenario+"',"+xy+","+str(dbvars[table][xyz])+");")
+		if obj_name in tables :
+			cur.execute("SELECT DISTINCT scenario FROM '"+tables[obj_name]+"'")
+			for val in cur : 
+				if options.scenario == val[0]:
+					cur.execute("DELETE FROM "+tables[obj_name]+" WHERE scenario is '"+options.scenario+"'") # Delete existing values if exists
+			cur.execute("INSERT INTO "+tables[obj_name]+" VALUES ('"+options.scenario+"', "+str(obj_value)+");")
 		con.commit()
 		con.close()
 		
