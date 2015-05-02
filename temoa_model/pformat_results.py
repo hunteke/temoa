@@ -176,7 +176,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		psvars[ 'V_EmissionActivityByTech'             ][ t ]  += evalue
 		psvars[ 'V_EmissionActivityByPeriodAndTech'    ][p, t] += evalue
 		psvars[ 'V_EmissionActivityByProcess'          ][t, v] += evalue
-		psvars[ 'V_EmissionActivityByPeriodAndProcess' ][p, t, v] += evalue
+		psvars[ 'V_EmissionActivityByPeriodAndProcess' ][p, e, t, v] += evalue
 		
 	for t, v in m.CostInvest.sparse_iterkeys():
 		# CostInvest guaranteed not 0
@@ -190,7 +190,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		psvars[ 'V_UndiscountedInvestmentByProcess' ][t, v] += icost
 		psvars[ 'V_UndiscountedPeriodCost'          ][ v ]  += icost
 
-		dbvars[	'Costs'	][ 'V_UndiscountedInvestmentByProcess', t, v] += icost # A small hack to make output to dbs easier
+		dbvars[	'Costs'	][ 'V_UndiscountedInvestmentByProcess', t, v] += icost # A small hack to make output to db easier
 
 		icost *= value( m.LoanAnnualize[t, v] )
 		icost *= (

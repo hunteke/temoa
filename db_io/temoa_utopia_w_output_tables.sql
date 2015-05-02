@@ -784,13 +784,15 @@ CREATE TABLE Output_Capacity (
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(tech) REFERENCES technologies(tech)); 
 
-CREATE TABLE Output_Emissions (    /*Seems like it should also be indexed by emissions commodity*/
+CREATE TABLE Output_Emissions (    
    scenario text,
    t_periods integer,
+   emissions_comm text,
    tech text,
    vintage integer,
    emissions real,
-   PRIMARY KEY(scenario, t_periods, tech, vintage),
+   PRIMARY KEY(scenario, t_periods, emissions_comm, tech, vintage),
+   FOREIGN KEY(emissions_comm) REFERENCES EmissionActivity(emis_comm),
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech)
    FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
