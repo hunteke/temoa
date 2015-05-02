@@ -109,6 +109,16 @@ CREATE TABLE GlobalDiscountRate (
    rate real );
 
 
+CREATE TABLE DiscountRate (
+   tech text,
+   vintage integer,
+   tech_rate real,
+   tech_rate_notes text,
+   PRIMARY KEY(tech, vintage),
+   FOREIGN KEY(tech) REFERENCES technologies(tech),
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
+
+
 CREATE TABLE EmissionActivity  (
    emis_comm text,
    input_comm text,
@@ -124,6 +134,17 @@ CREATE TABLE EmissionActivity  (
    FOREIGN KEY(tech) REFERENCES technologies(tech),
    FOREIGN KEY(vintage) REFERENCES time_periods(t_periods), 
    FOREIGN KEY(output_comm) REFERENCES commodities(comm_name) );
+
+
+CREATE TABLE EmissionLimit  (
+   periods integer,
+   emis_comm text,
+   emis_limit real,
+   emis_limit_units text,
+   emis_limit_notes text,
+   PRIMARY KEY(periods, emis_comm),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(emis_comm) REFERENCES commodities(comm_name) );
 
 
 CREATE TABLE Demand (

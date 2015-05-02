@@ -174,9 +174,20 @@ INSERT INTO "CapacityToActivity" VALUES('TXD',1,'');
 INSERT INTO "CapacityToActivity" VALUES('TXE',1,'');
 INSERT INTO "CapacityToActivity" VALUES('TXG',1,'');
 
+
 CREATE TABLE GlobalDiscountRate (
    rate real );
 INSERT INTO "GlobalDiscountRate" VALUES(0.05);
+
+
+CREATE TABLE DiscountRate (
+   tech text,
+   vintage integer,
+   tech_rate real,
+   tech_rate_notes text,
+   PRIMARY KEY(tech, vintage),
+   FOREIGN KEY(tech) REFERENCES technologies(tech),
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
 
 
 CREATE TABLE EmissionActivity  (
@@ -208,6 +219,17 @@ INSERT INTO "EmissionActivity" VALUES('nox','GSL','TXG',1980,'TX',1,'','');
 INSERT INTO "EmissionActivity" VALUES('nox','GSL','TXG',1990,'TX',1,'','');
 INSERT INTO "EmissionActivity" VALUES('nox','GSL','TXG',2000,'TX',1,'','');
 INSERT INTO "EmissionActivity" VALUES('nox','GSL','TXG',2010,'TX',1,'','');
+
+
+CREATE TABLE EmissionLimit  (
+   periods integer,
+   emis_comm text,
+   emis_limit real,
+   emis_limit_units text,
+   emis_limit_notes text,
+   PRIMARY KEY(periods, emis_comm),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(emis_comm) REFERENCES commodities(comm_name) );
 
 
 CREATE TABLE Demand (

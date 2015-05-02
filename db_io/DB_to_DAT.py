@@ -79,7 +79,9 @@ table_list =[['set','time_periods','time_exist','e',0], \
              ['param','DemandSpecificDistribution','','',3],  \
              ['param','CapacityToActivity','','',1],          \
              ['param','GlobalDiscountRate','','',0],          \
+             ['param','DiscountRate','','',2],                \
              ['param','EmissionActivity','','',5],            \
+	     ['param','EmissionLimit','','',2],               \
              ['param','Demand','','',2],                      \
              ['param','TechInputSplit','','',2],              \
              ['param','TechOutputSplit','','',2],             \
