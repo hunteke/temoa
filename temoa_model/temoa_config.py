@@ -15,6 +15,9 @@ def db_2_dat(ifile, ofile):
 	    t_index = t_properties[4] #table column index after which '#' should be specified
 	    if type(t_flag) is list:  #tech production table has a list for flags; this is currently hard-wired
 		db_query = "SELECT * FROM " + t_name + " WHERE flag=='p' OR flag=='pb' OR flag=='ps'"
+		cur.execute(db_query)
+        	if cur.fetchone() is None:
+            	    return
 		dat_table_name = t_properties[2]
 		if t_type == "set":
 		    f.write("set " + dat_table_name + " := \n")
@@ -22,6 +25,9 @@ def db_2_dat(ifile, ofile):
 		    f.write("param " + dat_table_name + " := \n")
 	    elif t_flag != '':    #check to see if flag is empty, if not use it to make table
 		db_query = "SELECT * FROM " + t_name + " WHERE flag=='" + t_flag + "'"
+		cur.execute(db_query)
+        	if cur.fetchone() is None:
+            	    return
 		dat_table_name = t_properties[2]
 		if t_type == "set":
 		    f.write("set " + dat_table_name + " := \n")
@@ -29,6 +35,9 @@ def db_2_dat(ifile, ofile):
 		    f.write("param " + dat_table_name + " := \n")
 	    else:    #Only other possible case is no flag
 		db_query = "SELECT * FROM " + t_name
+		cur.execute(db_query)
+        	if cur.fetchone() is None:
+            	    return
 		if t_type == "set":
 		    f.write("set " + t_name + " := \n")
 		else:
