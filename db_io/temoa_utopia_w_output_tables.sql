@@ -294,7 +294,22 @@ CREATE TABLE MaxCapacity (
  INSERT INTO "MaxCapacity" VALUES(1990,'TXD',0.6,'','');
  INSERT INTO "MaxCapacity" VALUES(2000,'TXD',1.76,'','');
  INSERT INTO "MaxCapacity" VALUES(2010,'TXD',4.76,'','');
-	
+
+
+CREATE TABLE GrowthRateMax (
+   tech text,
+   growthrate_max real,
+   growthrate_max_notes text,
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );
+
+
+CREATE TABLE GrowthRateSeed (
+   tech text,
+   growthrate_seed real,
+   growthrate_seed_units text,
+   growthrate_seed_notes text,
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );	
+
  
 CREATE TABLE  LifetimeTech (
    tech text,

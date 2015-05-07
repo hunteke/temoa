@@ -88,6 +88,8 @@ def db_2_dat(ifile, ofile):
 		     ['param','TechOutputSplit','','',2],             \
 		     ['param','MinCapacity','','',2],                 \
 		     ['param','MaxCapacity','','',2],                 \
+		     ['param','GrowthRateMax','','',1],               \
+		     ['param','GrowthRateSeed','','',1],              \
 		     ['param','LifetimeTech','','',1],                \
 		     ['param','LifetimeProcess','','',2],             \
 		     ['param','LifetimeLoanTech','','',1],            \

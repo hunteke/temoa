@@ -198,7 +198,22 @@ CREATE TABLE MaxCapacity (
    FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech) );
 	
- 
+
+CREATE TABLE GrowthRateMax (
+   tech text,
+   growthrate_max real,
+   growthrate_max_notes text,
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );
+
+
+CREATE TABLE GrowthRateSeed (
+   tech text,
+   growthrate_seed real,
+   growthrate_seed_units text,
+   growthrate_seed_notes text,
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );
+
+
 CREATE TABLE  LifetimeTech (
    tech text,
    life real,
