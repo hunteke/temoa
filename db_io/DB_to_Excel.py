@@ -20,6 +20,7 @@ sheet = []
 book = []
 book_no = 0
 flag = None
+flag1 = None
 flag2 = None
 i = 0 # Sheet ID
 header = ['Technologies', ]
@@ -120,21 +121,27 @@ for scene in scenario :
 		for a in tables.keys() :
 			if z is '0' :
 				sheet_name = str(tables[a][0])
-				flag2 = '1'
-			elif a is "Output_Costs" and flag2 is None :
+				if a is "Output_Costs" :
+					flag2 = '1'
+				if a is "Output_Emissions" :
+					flag1 = '1'
+			elif (a is "Output_Costs" and flag2 is None) :
 				sheet_name = str(tables[a][0])
 				flag2 = '1'
-			elif a is "Output_Costs" and flag2 is not None :
+			elif (a is "Output_Emissions" and flag1 is None) :
+				sheet_name = str(tables[a][0])
+				flag1 = '1'
+			elif (a is "Output_Costs" and flag2 is not None) or (a is "Output_Emissions" and flag1 is not None) :
 				continue
 			else :
 				sheet_name = str(tables[a][0])+"_"+str(z)
 			sheet.append(book[book_no].add_sheet(sheet_name))
-			if a is "Output_Emissions" :
+			if a is "Output_Emissions" and flag1 is '1':
 				for col in range(0, len(header_emiss)) :
 					sheet[i].write(row, col, header_emiss[col], easyxf('alignment: vertical centre, horizontal centre, wrap True;'))
 					sheet[i].col(col).width_in_pixels = 3300
 				row += 1
-				for x in tech[z] :
+				for x in tech_set :
 					for q in emiss :
 						sheet[i].write(row, 0, x, easyxf('alignment: vertical centre, horizontal centre;'))
 						sheet[i].write(row, 1, q, easyxf('alignment: vertical centre, horizontal centre;'))
@@ -150,6 +157,7 @@ for scene in scenario :
 						count = 0
 				row = 0
 				i += 1
+				flag1 = '2'
 			elif a is "Output_Costs" and flag2 is '1':
 				for col in range(0, len(header_v)) :
 					sheet[i].write(row, col, header_v[col], easyxf('alignment: vertical centre, horizontal centre, wrap True;'))
@@ -173,7 +181,7 @@ for scene in scenario :
 				row = 0
 				i += 1
 				flag2 = '2'
-			elif a is "Output_Costs" and flag2 is '2':
+			elif (a is "Output_Costs" and flag2 is '2') or (a is "Output_Emissions" and flag1 is '2'):
 				pass
 			else :
 				for col in range(0, len(header)) :
