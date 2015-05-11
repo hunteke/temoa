@@ -335,7 +335,7 @@ allowed to (not) have available of a certain technology.  Note that the indices
 for these constraints are period and tech_all, not tech and vintage.
 
 .. math::
-   :label: MinCapacity
+   :label: MinCapacityCapacityAvailableByPeriodAndTech
 
    \textbf{CAPAVL}_{p, t} \ge MIN_{p, t}
 
@@ -350,6 +350,24 @@ for these constraints are period and tech_all, not tech and vintage.
 """
 	max_cap = value( M.MaxCapacity[p, t] )
 	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] <= max_cap)
+	return expr
+
+def MaxActivity_Constraint ( M, p, t ):
+	r"""
+
+The MaxActivity sets an upper bound on the activity from a specific technology.  Note that the indices
+for these constraints are period and tech_all, not tech and vintage.
+
+"""
+  
+	activity_pt = sum( M.V_Activity[p, S_s, S_d, t, S_v]
+        
+      for S_s in M.time_season
+      for S_d in M.time_of_day
+      for S_v in ProcessVintages( p, t )       
+    )
+	max_act = value( M.MaxActivity[p, t] )
+	expr = (activity_pt <= max_act)
 	return expr
 
 

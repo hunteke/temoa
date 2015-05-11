@@ -198,6 +198,16 @@ CREATE TABLE MaxCapacity (
    FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech) );
 	
+CREATE TABLE MaxActivity (
+   periods integer,
+   tech text,
+   maxact real,
+   maxact_units text,
+   maxact_notes text,
+   PRIMARY KEY(periods, tech),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );
+
 
 CREATE TABLE GrowthRateMax (
    tech text,
