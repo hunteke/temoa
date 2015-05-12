@@ -210,6 +210,8 @@ for scene in scenario :
 	else :
 		book[book_no].save(ofile+"_"+scene+".xls")
 	book_no += 1
+	flag1 = None
+	flag2 = None
 
 cur.close()
 con.close()
