@@ -251,6 +251,17 @@ INSERT INTO "Demand" VALUES(1990,'TX',5.2,'','');
 INSERT INTO "Demand" VALUES(2000,'TX',7.8,'','');
 INSERT INTO "Demand" VALUES(2010,'TX',11.69,'','');
 
+
+CREATE TABLE TechInputSplit (
+   input_comm text,
+   tech text,
+   ti_split real,
+   ti_split_notes text,
+   PRIMARY KEY(input_comm, tech),
+   FOREIGN KEY(input_comm) REFERENCES commodities(comm_name),
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );
+
+
 CREATE TABLE TechOutputSplit (
    tech text,
    output_comm text,
@@ -294,6 +305,17 @@ CREATE TABLE MaxCapacity (
  INSERT INTO "MaxCapacity" VALUES(1990,'TXD',0.6,'','');
  INSERT INTO "MaxCapacity" VALUES(2000,'TXD',1.76,'','');
  INSERT INTO "MaxCapacity" VALUES(2010,'TXD',4.76,'','');
+
+
+CREATE TABLE MaxActivity (
+   periods integer,
+   tech text,
+   maxact real,
+   maxact_units text,
+   maxact_notes text,
+   PRIMARY KEY(periods, tech),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );
 
 
 CREATE TABLE GrowthRateMax (
