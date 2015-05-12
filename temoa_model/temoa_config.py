@@ -81,13 +81,14 @@ def db_2_dat(ifile, ofile):
 		     ['param','DemandSpecificDistribution','','',3],  \
 		     ['param','CapacityToActivity','','',1],          \
 		     ['param','GlobalDiscountRate','','',0],          \
-                     ['param','DiscountRate','','',2],                \
+		     ['param','DiscountRate','','',2],                \
 		     ['param','EmissionActivity','','',5],            \
-	             ['param','EmissionLimit','','',2],               \
+		     ['param','EmissionLimit','','',2],               \
 		     ['param','Demand','','',2],                      \
 		     ['param','TechOutputSplit','','',2],             \
 		     ['param','MinCapacity','','',2],                 \
 		     ['param','MaxCapacity','','',2],                 \
+		     ['param','MaxActivity','','',2],                 \
 		     ['param','GrowthRateMax','','',1],               \
 		     ['param','GrowthRateSeed','','',1],              \
 		     ['param','LifetimeTech','','',1],                \
