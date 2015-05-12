@@ -115,6 +115,9 @@ period.sort()
 header_emiss = header[:]
 header_emiss.insert(1, "Emission Commodity")
 
+ostyle = easyxf('alignment: vertical centre, horizontal centre;')
+ostyle_header = easyxf('alignment: vertical centre, horizontal centre, wrap True;')
+
 for scene in scenario :	
 	book.append(xlwt.Workbook(encoding="utf-8"))
 	for z in sector :
@@ -138,20 +141,20 @@ for scene in scenario :
 			sheet.append(book[book_no].add_sheet(sheet_name))
 			if a is "Output_Emissions" and flag1 is '1':
 				for col in range(0, len(header_emiss)) :
-					sheet[i].write(row, col, header_emiss[col], easyxf('alignment: vertical centre, horizontal centre, wrap True;'))
+					sheet[i].write(row, col, header_emiss[col], ostyle_header)
 					sheet[i].col(col).width_in_pixels = 3300
 				row += 1
 				for x in tech_set :
 					for q in emiss :
-						sheet[i].write(row, 0, x, easyxf('alignment: vertical centre, horizontal centre;'))
-						sheet[i].write(row, 1, q, easyxf('alignment: vertical centre, horizontal centre;'))
+						sheet[i].write(row, 0, x, ostyle)
+						sheet[i].write(row, 1, q, ostyle)
 						for y in period :
 							cur.execute("SELECT sum("+tables[a][1]+") FROM "+a+" WHERE t_periods is '"+y+"' and scenario is '"+scene+"' and tech is '"+x+"' and emissions_comm is '"+q+"'")
 							xyz = cur.fetchone()
 							if xyz[0] is not None :
-								sheet[i].write(row, count+2, float(xyz[0]), easyxf('alignment: vertical centre, horizontal centre;'))
+								sheet[i].write(row, count+2, float(xyz[0]), ostyle)
 							else :
-								sheet[i].write(row, count+2, '-', easyxf('alignment: vertical centre, horizontal centre;'))
+								sheet[i].write(row, count+2, '-', ostyle)
 							count += 1
 						row += 1
 						count = 0
@@ -160,22 +163,22 @@ for scene in scenario :
 				flag1 = '2'
 			elif a is "Output_Costs" and flag2 is '1':
 				for col in range(0, len(header_v)) :
-					sheet[i].write(row, col, header_v[col], easyxf('alignment: vertical centre, horizontal centre, wrap True;'))
+					sheet[i].write(row, col, header_v[col], ostyle_header)
 					sheet[i].col(col).width_in_pixels = 3300
 				row += 1
 				for x in tech_set :			
 					cur.execute("SELECT output_name, vintage, "+tables[a][1]+" FROM "+a+" WHERE scenario is '"+scene+"' and tech is '"+x+"'")
 					for xyz in cur :
 						if xyz[0] is not None :
-							sheet[i].write(row, 0, x, easyxf('alignment: vertical centre, horizontal centre;'))
-							sheet[i].write(row, count+1, xyz[0], easyxf('alignment: vertical centre, horizontal centre;'))
-							sheet[i].write(row, count+2, xyz[1], easyxf('alignment: vertical centre, horizontal centre;'))
-							sheet[i].write(row, count+3, xyz[2], easyxf('alignment: vertical centre, horizontal centre;'))
+							sheet[i].write(row, 0, x, ostyle)
+							sheet[i].write(row, count+1, xyz[0], ostyle)
+							sheet[i].write(row, count+2, xyz[1], ostyle)
+							sheet[i].write(row, count+3, xyz[2], ostyle)
 						else :
-							sheet[i].write(row, 0, x, easyxf('alignment: vertical centre, horizontal centre;'))
-							sheet[i].write(row, count+1, '-', easyxf('alignment: vertical centre, horizontal centre;'))
-							sheet[i].write(row, count+2, '-', easyxf('alignment: vertical centre, horizontal centre;'))
-							sheet[i].write(row, count+3, '-', easyxf('alignment: vertical centre, horizontal centre;'))
+							sheet[i].write(row, 0, x, ostyle)
+							sheet[i].write(row, count+1, '-', ostyle)
+							sheet[i].write(row, count+2, '-', ostyle)
+							sheet[i].write(row, count+3, '-', ostyle)
 						row += 1
 					count = 0
 				row = 0
@@ -185,18 +188,18 @@ for scene in scenario :
 				pass
 			else :
 				for col in range(0, len(header)) :
-					sheet[i].write(row, col, header[col], easyxf('alignment: vertical centre, horizontal centre, wrap True;'))
+					sheet[i].write(row, col, header[col], ostyle_header)
 					sheet[i].col(col).width_in_pixels = 3300
 				row += 1
 				for x in tech[z] :
-					sheet[i].write(row, 0, x, easyxf('alignment: vertical centre, horizontal centre;'))
+					sheet[i].write(row, 0, x, ostyle)
 					for y in period :
 						cur.execute("SELECT sum("+tables[a][1]+") FROM "+a+" WHERE t_periods is '"+y+"' and scenario is '"+scene+"' and tech is '"+x+"'")
 						xyz = cur.fetchone()
 						if xyz[0] is not None :
-							sheet[i].write(row, count+1, float(xyz[0]), easyxf('alignment: vertical centre, horizontal centre;'))
+							sheet[i].write(row, count+1, float(xyz[0]), ostyle)
 						else :
-							sheet[i].write(row, count+1, '-', easyxf('alignment: vertical centre, horizontal centre;'))
+							sheet[i].write(row, count+1, '-', ostyle)
 						count += 1
 					row += 1
 					count = 0
