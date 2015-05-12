@@ -61,6 +61,7 @@ CREATE TABLE technologies (
   FOREIGN KEY(flag) REFERENCES technology_labels(tech_labels),
   FOREIGN KEY(sector) REFERENCES sector_labels(sector));
 
+
 CREATE TABLE commodities (
   comm_name text primary key,
   flag text,  
@@ -108,6 +109,16 @@ CREATE TABLE GlobalDiscountRate (
    rate real );
 
 
+CREATE TABLE DiscountRate (
+   tech text,
+   vintage integer,
+   tech_rate real,
+   tech_rate_notes text,
+   PRIMARY KEY(tech, vintage),
+   FOREIGN KEY(tech) REFERENCES technologies(tech),
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
+
+
 CREATE TABLE EmissionActivity  (
    emis_comm text,
    input_comm text,
@@ -123,6 +134,17 @@ CREATE TABLE EmissionActivity  (
    FOREIGN KEY(tech) REFERENCES technologies(tech),
    FOREIGN KEY(vintage) REFERENCES time_periods(t_periods), 
    FOREIGN KEY(output_comm) REFERENCES commodities(comm_name) );
+
+
+CREATE TABLE EmissionLimit  (
+   periods integer,
+   emis_comm text,
+   emis_limit real,
+   emis_limit_units text,
+   emis_limit_notes text,
+   PRIMARY KEY(periods, emis_comm),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(emis_comm) REFERENCES commodities(comm_name) );
 
 
 CREATE TABLE Demand (
@@ -143,7 +165,7 @@ CREATE TABLE TechInputSplit (
    PRIMARY KEY(input_comm, tech),
    FOREIGN KEY(input_comm) REFERENCES commodities(comm_name),
    FOREIGN KEY(tech) REFERENCES technologies(tech) );
- 
+
 
 CREATE TABLE TechOutputSplit (
    tech text,
@@ -176,7 +198,32 @@ CREATE TABLE MaxCapacity (
    FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech) );
 	
- 
+CREATE TABLE MaxActivity (
+   periods integer,
+   tech text,
+   maxact real,
+   maxact_units text,
+   maxact_notes text,
+   PRIMARY KEY(periods, tech),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );
+
+
+CREATE TABLE GrowthRateMax (
+   tech text,
+   growthrate_max real,
+   growthrate_max_notes text,
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );
+
+
+CREATE TABLE GrowthRateSeed (
+   tech text,
+   growthrate_seed real,
+   growthrate_seed_units text,
+   growthrate_seed_notes text,
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );
+
+
 CREATE TABLE  LifetimeTech (
    tech text,
    life real,
@@ -288,6 +335,86 @@ CREATE TABLE ExistingCapacity (
    FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech),
    FOREIGN KEY(vintage) REFERENCES time_periods(t_periods) );
-  
+
+/*
+-------------------------------------------------------
+Tables in this section store model outputs
+-------------------------------------------------------
+*/
+ 
+CREATE TABLE Output_VFlow_Out (
+   scenario text,
+   t_periods integer,
+   t_season text,
+   t_day text,
+   input_comm text,
+   tech text,
+   vintage integer,
+   output_comm text,
+   vflow_out real,
+   PRIMARY KEY(scenario, t_periods, t_season, t_day, input_comm, tech, vintage, output_comm),
+   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(t_season) REFERENCES time_periods(t_periods),   
+   FOREIGN KEY(t_day) REFERENCES time_of_day(t_day),
+   FOREIGN KEY(input_comm) REFERENCES commodities(comm_name),
+   FOREIGN KEY(tech) REFERENCES technologies(tech),
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods), 
+   FOREIGN KEY(output_comm) REFERENCES commodities(comm_name));
+
+CREATE TABLE Output_VFlow_In (
+   scenario text,
+   t_periods integer,
+   t_season text,
+   t_day text,
+   input_comm text,
+   tech text,
+   vintage integer,
+   output_comm text,
+   vflow_in real,
+   PRIMARY KEY(scenario, t_periods, t_season, t_day, input_comm, tech, vintage, output_comm),
+   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(t_season) REFERENCES time_periods(t_periods),   
+   FOREIGN KEY(t_day) REFERENCES time_of_day(t_day),
+   FOREIGN KEY(input_comm) REFERENCES commodities(comm_name),
+   FOREIGN KEY(tech) REFERENCES technologies(tech),
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods), 
+   FOREIGN KEY(output_comm) REFERENCES commodities(comm_name));
+ 
+CREATE TABLE Output_Capacity (
+   scenario text,
+   t_periods integer,
+   tech text,
+   capacity real,
+   PRIMARY KEY(scenario, t_periods, tech),
+   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech)); 
+
+CREATE TABLE Output_Emissions (    
+   scenario text,
+   t_periods integer,
+   emissions_comm text,
+   tech text,
+   vintage integer,
+   emissions real,
+   PRIMARY KEY(scenario, t_periods, emissions_comm, tech, vintage),
+   FOREIGN KEY(emissions_comm) REFERENCES EmissionActivity(emis_comm),
+   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech)
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
+
+CREATE TABLE Output_Costs (
+   scenario text,
+   output_name text,
+   tech text,
+   vintage integer,
+   output_cost real,
+   PRIMARY KEY(scenario, output_name, tech, vintage),
+   FOREIGN KEY(tech) REFERENCES technologies(tech),   
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods)); 
+
+CREATE TABLE Output_TotalCost (
+   scenario text,
+   total_system_cost real);
+   
  
 COMMIT;
