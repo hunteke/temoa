@@ -114,8 +114,11 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.tech_resource   = Set()
 	M.tech_production = Set()
 	M.tech_all = M.tech_resource | M.tech_production  # '|' = union operator
+
 	M.tech_baseload   = Set( within=M.tech_all )
 	M.tech_storage    = Set( within=M.tech_all )
+  	M.tech_mga        = Set( within=M.tech_all )
+
 
 	M.commodity_demand    = Set()
 	M.commodity_emissions = Set()

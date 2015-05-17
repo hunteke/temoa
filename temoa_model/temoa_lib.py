@@ -1501,7 +1501,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	def ActivityObj_rule ( M, prev_act_t ):
 		new_act = 0
 		for t in M.V_ActivityByTech:
-			if t in prev_act_t:
+			if t in prev_act_t and t in M.tech_mga:
 				new_act += prev_act_t[ t ] * M.V_ActivityByTech[t]
 		return new_act
 
