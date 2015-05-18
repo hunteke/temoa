@@ -692,8 +692,6 @@ CREATE TABLE EmissionActivity  (
 INSERT INTO "EmissionActivity" VALUES('co2','ethos','IMPELCDSL',2015,'DSLCT_R',          11.95,'#kt/PJout','');   
 INSERT INTO "EmissionActivity" VALUES('co2','ethos','IMPELCDSL',2015,'DSLCC_R',          11.95,'#kt/PJout','');   
 INSERT INTO "EmissionActivity" VALUES('co2','ethos','IMPELCRFL',2015,'OIL_R',            11.95,'#kt/PJout','');   
-INSERT INTO "EmissionActivity" VALUES('co2','ethos','IMPELCBSTMEA',2015,'BIO_R',         -108.31,'#kt/PJout','');   
-INSERT INTO "EmissionActivity" VALUES('co2','ethos','IMPELCBIO',2015,'BIO_N',            -94.68,'#kt/PJout','');   
 INSERT INTO "EmissionActivity" VALUES('co2','ethos','IMPELCCOAB',2015,'COAB_EA',         0.44,'#kt/PJout','');    
 INSERT INTO "EmissionActivity" VALUES('co2','ethos','IMPELCCOAS',2015,'COAS_EA',         0.44,'#kt/PJout','');      
 INSERT INTO "EmissionActivity" VALUES('co2','ethos','IMPELCCOAL',2015,'COAL_EA',         0.44,'#kt/PJout','');     
@@ -780,16 +778,16 @@ INSERT INTO "EmissionActivity" VALUES('co2','DSLCC_R','E_DSLCC_R',2010,'ELC',   
 INSERT INTO "EmissionActivity" VALUES('co2','NGASTM_R','E_NGASTM_R',2010,'ELC',        176.2,'#kt/PJout','');
 INSERT INTO "EmissionActivity" VALUES('co2','NGACT_R','E_NGACT_R',2010,'ELC',        204,'#kt/PJout','');
 INSERT INTO "EmissionActivity" VALUES('co2','NGACC_R','E_NGACC_R',2010,'ELC',        136,'#kt/PJout','');
-INSERT INTO "EmissionActivity" VALUES('co2','BIO_R','E_BIOSTM_R',2010,'ELC',        527,'#kt/PJout','');
+INSERT INTO "EmissionActivity" VALUES('co2','BIO_R','E_BIOSTM_R',2010,'ELC',        1.22,'#kt/PJout','');
 INSERT INTO "EmissionActivity" VALUES('co2','MSW','E_MSWSTM_R',2010,'ELC',        185.5,'#kt/PJout','');
 --INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2015,'ELC',        374.6,'#kt/PJout','');
-INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2020,'ELC',        374.6,'#kt/PJout','');
-INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2025,'ELC',        374.6,'#kt/PJout','');
-INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2030,'ELC',        374.6,'#kt/PJout','');
-INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2035,'ELC',        374.6,'#kt/PJout','');
-INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2040,'ELC',        374.6,'#kt/PJout','');
-INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2045,'ELC',        374.6,'#kt/PJout','');
-INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2050,'ELC',        374.6,'#kt/PJout','');
+INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2020,'ELC',        0.371,'#kt/PJout','');
+INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2025,'ELC',        0.371,'#kt/PJout','');
+INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2030,'ELC',        0.371,'#kt/PJout','');
+INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2035,'ELC',        0.371,'#kt/PJout','');
+INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2040,'ELC',        0.371,'#kt/PJout','');
+INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2045,'ELC',        0.371,'#kt/PJout','');
+INSERT INTO "EmissionActivity" VALUES('co2','BIO_N','E_BIOIGCC_N',2050,'ELC',        0.371,'#kt/PJout','');
 --INSERT INTO "EmissionActivity" VALUES('co2','NGACT_N','E_NGACT_N',2015,'ELC',        158,'#kt/PJout','');
 INSERT INTO "EmissionActivity" VALUES('co2','NGACT_N','E_NGACT_N',2020,'ELC',        158,'#kt/PJout','');
 INSERT INTO "EmissionActivity" VALUES('co2','NGACT_N','E_NGACT_N',2025,'ELC',        158,'#kt/PJout','');
@@ -1036,13 +1034,25 @@ CREATE TABLE GrowthRateMax (
    growthrate_max real,
    growthrate_max_notes text,
    FOREIGN KEY(tech) REFERENCES technologies(tech) );
-INSERT INTO "GrowthRateMax" VALUES('E_WNDCL4_N',1.61,'#I did not use AEO b/c they assume tax credit on wind will be expired in the first 10 years');  
-INSERT INTO "GrowthRateMax" VALUES('E_WNDCL5_N',1.61,'# equal to max 10% growth/yr');  
-INSERT INTO "GrowthRateMax" VALUES('E_WNDCL6_N',1.61,'');  
-INSERT INTO "GrowthRateMax" VALUES('E_COALSTM_N',1.61,'#to cover CAIR constraint');  
-INSERT INTO "GrowthRateMax" VALUES('E_URNLWR_N',1.28,'#equal to max 5% growth/yr');  
-INSERT INTO "GrowthRateMax" VALUES('E_SOLPVCEN_N',1.61,'#equal to max 10% growth/yr');  
-INSERT INTO "GrowthRateMax" VALUES('E_SOLTHCEN_N',1.61,'#equal to max 10% growth/yr');  
+INSERT INTO "GrowthRateMax" VALUES('E_COALSTM_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_COALIGCC_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_COALIGCC_CCS_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_NGACT_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_NGACC_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_NGAACT_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_NGAACC_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_NGACC_CCS_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_BIOIGCC_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_GEOBCFS_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_CCR_COALSTM_N',1.28,'');
+INSERT INTO "GrowthRateMax" VALUES('E_CCR_COALIGCC_N',1.28,'');   
+INSERT INTO "GrowthRateMax" VALUES('E_WNDCL4_N',1.28,'#I did not use AEO b/c they assume tax credit on wind will be expired in the first 10 years');  
+INSERT INTO "GrowthRateMax" VALUES('E_WNDCL5_N',1.28,'# equal to max 10% growth/yr');  
+INSERT INTO "GrowthRateMax" VALUES('E_WNDCL6_N',1.28,'');  
+INSERT INTO "GrowthRateMax" VALUES('E_COALSTM_N',1.34,'#to cover CAIR constraint');  
+INSERT INTO "GrowthRateMax" VALUES('E_URNLWR_N',1.25,'#equal to max 5% growth/yr');  
+INSERT INTO "GrowthRateMax" VALUES('E_SOLPVCEN_N',1.28,'#equal to max 10% growth/yr');  
+INSERT INTO "GrowthRateMax" VALUES('E_SOLTHCEN_N',1.28,'#equal to max 10% growth/yr');  
 
 
 CREATE TABLE GrowthRateSeed (
@@ -1051,6 +1061,18 @@ CREATE TABLE GrowthRateSeed (
    growthrate_seed_units text,
    growthrate_seed_notes text,
    FOREIGN KEY(tech) REFERENCES technologies(tech) );   
+INSERT INTO "GrowthRateSeed" VALUES('E_COALSTM_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_COALIGCC_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_COALIGCC_CCS_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_NGACT_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_NGACC_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_NGAACT_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_NGAACC_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_NGACC_CCS_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_BIOIGCC_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_GEOBCFS_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_CCR_COALSTM_N',30,'#GW',''); 
+INSERT INTO "GrowthRateSeed" VALUES('E_CCR_COALIGCC_N',30,'#GW',''); 
 INSERT INTO "GrowthRateSeed" VALUES('E_WNDCL4_N',10,'#GW','');  
 INSERT INTO "GrowthRateSeed" VALUES('E_WNDCL5_N',10,'#GW','');  
 INSERT INTO "GrowthRateSeed" VALUES('E_WNDCL6_N',10,'#GW','');  
@@ -1068,7 +1090,7 @@ CREATE TABLE  LifetimeTech (
    FOREIGN KEY(tech) REFERENCES technologies(tech) );
 INSERT INTO "LifetimeTech" VALUES('IMPELCDSL',100,'');	
 INSERT INTO "LifetimeTech" VALUES('IMPELCRFL',100,'');	
-INSERT INTO "LifetimeTech" VALUES('IMPELCBSTMEA',100,'');	
+INSERT INTO "LifetimeTech" VALUES('IMPELCBSTMEA',20,'Only supplies E_BIOSTM_R, which is gone in 2035');	
 INSERT INTO "LifetimeTech" VALUES('IMPELCMSW',100,'');	
 INSERT INTO "LifetimeTech" VALUES('IMPELCBIO',100,'');	
 INSERT INTO "LifetimeTech" VALUES('IMPELCCOAB',100,'');	
@@ -1448,10 +1470,10 @@ INSERT INTO "CapacityFactorTech" VALUES('annual','am','E_SOLPVCEN_N',0.3453,'#as
 INSERT INTO "CapacityFactorTech" VALUES('annual','peak','E_SOLPVCEN_N',0.3453,'#assumed intermediate in 2050');
 INSERT INTO "CapacityFactorTech" VALUES('annual','pm','E_SOLPVCEN_N',0.3453,'#assumed intermediate in 2050');
 INSERT INTO "CapacityFactorTech" VALUES('annual','night','E_SOLPVCEN_N',0,'#assumed intermediate in 2050');
-INSERT INTO "CapacityFactorTech" VALUES('annual','am','E_SOLTHCEN_N',0.8,'#assumed intermediate in 2050');
-INSERT INTO "CapacityFactorTech" VALUES('annual','peak','E_SOLTHCEN_N',0.8,'#assumed intermediate in 2050');
-INSERT INTO "CapacityFactorTech" VALUES('annual','pm','E_SOLTHCEN_N',0.8,'#assumed intermediate in 2050');
-INSERT INTO "CapacityFactorTech" VALUES('annual','night','E_SOLTHCEN_N',0.45,'#assumed intermediate in 2050');
+INSERT INTO "CapacityFactorTech" VALUES('annual','am','E_SOLTHCEN_N',0.43,'#IRENA(2012) report on CSP');
+INSERT INTO "CapacityFactorTech" VALUES('annual','peak','E_SOLTHCEN_N',0.43,'#IRENA(2012) report on CSP');
+INSERT INTO "CapacityFactorTech" VALUES('annual','pm','E_SOLTHCEN_N',0.43,'#IRENA(2012) report on CSP');
+INSERT INTO "CapacityFactorTech" VALUES('annual','night','E_SOLTHCEN_N',0,'#IRENA(2012) report on CSP');
 
 
 CREATE TABLE CapacityFactorProcess (
@@ -1484,7 +1506,7 @@ INSERT INTO "Efficiency" VALUES('ethos','IMPELCDSL',   2015,'DSLCC_R',        1.
 INSERT INTO "Efficiency" VALUES('ethos','IMPELCRFL',   2015,'OIL_R',          1.00,'');
 INSERT INTO "Efficiency" VALUES('ethos','IMPELCBSTMEA',2015,'BIO_R',          1.00,'');
 INSERT INTO "Efficiency" VALUES('ethos','IMPELCMSW',   2015,'MSW',            1.00,'');
-INSERT INTO "Efficiency" VALUES('ethos','IMPELCBIO',   2015,'BIO_N',          1.00,'');
+INSERT INTO "Efficiency" VALUES('ethos','IMPELCBIO',   2020,'BIO_N',          1.00,'Only supplies new biomass beginning in 2020');
 INSERT INTO "Efficiency" VALUES('ethos','IMPELCCOAB',  2015,'COAB_EA',        1.00,'');
 INSERT INTO "Efficiency" VALUES('ethos','IMPELCCOAS',  2015,'COAS_EA',        1.00,'');
 INSERT INTO "Efficiency" VALUES('ethos','IMPELCCOAL',  2015,'COAL_EA',        1.00,'');
@@ -2487,13 +2509,13 @@ INSERT INTO "CostInvest" VALUES('E_SOLPVCEN_N',2040,3232,'#M$/GW','');
 INSERT INTO "CostInvest" VALUES('E_SOLPVCEN_N',2045,3232,'#M$/GW','');
 INSERT INTO "CostInvest" VALUES('E_SOLPVCEN_N',2050,3232,'#M$/GW','');
 --INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2015,4490,'#M$/GW','');
-INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2020,4490,'#M$/GW','');
-INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2025,4490,'#M$/GW','');
-INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2030,4490,'#M$/GW','');
-INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2035,4490,'#M$/GW','');
-INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2040,4490,'#M$/GW','');
-INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2045,4490,'#M$/GW','');
-INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2050,4490,'#M$/GW','');
+INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2020,6900,'#M$/GW','IRENA(2012) report on CSP');
+INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2025,6900,'#M$/GW','IRENA(2012) report on CSP');
+INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2030,6900,'#M$/GW','IRENA(2012) report on CSP');
+INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2035,6900,'#M$/GW','IRENA(2012) report on CSP');
+INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2040,6900,'#M$/GW','IRENA(2012) report on CSP');
+INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2045,6900,'#M$/GW','IRENA(2012) report on CSP');
+INSERT INTO "CostInvest" VALUES('E_SOLTHCEN_N',2050,6900,'#M$/GW','IRENA(2012) report on CSP');
 --INSERT INTO "CostInvest" VALUES('E_CCR_COALSTM_N',2015,20,'#M$/PJout','');
 INSERT INTO "CostInvest" VALUES('E_CCR_COALSTM_N',2020,20,'#M$/PJout','');
 INSERT INTO "CostInvest" VALUES('E_CCR_COALSTM_N',2025,20,'#M$/PJout','');
@@ -3650,11 +3672,7 @@ INSERT INTO "CostVariable" VALUES(2050,'IMPELCRFL',     2015,26.51,'#M$/PJ','');
 INSERT INTO "CostVariable" VALUES(2015,'IMPELCBSTMEA',  2015,3.39,'#M$/PJ','');   
 INSERT INTO "CostVariable" VALUES(2020,'IMPELCBSTMEA',  2015,3.39,'#M$/PJ','');   
 INSERT INTO "CostVariable" VALUES(2025,'IMPELCBSTMEA',  2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2030,'IMPELCBSTMEA',  2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2035,'IMPELCBSTMEA',  2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2040,'IMPELCBSTMEA',  2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2045,'IMPELCBSTMEA',  2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2050,'IMPELCBSTMEA',  2015,3.39,'#M$/PJ','');   
+INSERT INTO "CostVariable" VALUES(2030,'IMPELCBSTMEA',  2015,3.39,'#M$/PJ','');      
 INSERT INTO "CostVariable" VALUES(2015,'IMPELCMSW',     2015,2.7,'#M$/PJ','');   
 INSERT INTO "CostVariable" VALUES(2020,'IMPELCMSW',     2015,2.7,'#M$/PJ','');   
 INSERT INTO "CostVariable" VALUES(2025,'IMPELCMSW',     2015,2.7,'#M$/PJ','');   
@@ -3663,14 +3681,13 @@ INSERT INTO "CostVariable" VALUES(2035,'IMPELCMSW',     2015,2.7,'#M$/PJ','');
 INSERT INTO "CostVariable" VALUES(2040,'IMPELCMSW',     2015,2.7,'#M$/PJ','');   
 INSERT INTO "CostVariable" VALUES(2045,'IMPELCMSW',     2015,2.7,'#M$/PJ','');   
 INSERT INTO "CostVariable" VALUES(2050,'IMPELCMSW',     2015,2.7,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2015,'IMPELCBIO',     2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2020,'IMPELCBIO',     2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2025,'IMPELCBIO',     2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2030,'IMPELCBIO',     2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2035,'IMPELCBIO',     2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2040,'IMPELCBIO',     2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2045,'IMPELCBIO',     2015,3.39,'#M$/PJ','');   
-INSERT INTO "CostVariable" VALUES(2050,'IMPELCBIO',     2015,3.39,'#M$/PJ','');   
+INSERT INTO "CostVariable" VALUES(2020,'IMPELCBIO',     2020,3.39,'#M$/PJ','');   
+INSERT INTO "CostVariable" VALUES(2025,'IMPELCBIO',     2020,3.39,'#M$/PJ','');   
+INSERT INTO "CostVariable" VALUES(2030,'IMPELCBIO',     2020,3.39,'#M$/PJ','');   
+INSERT INTO "CostVariable" VALUES(2035,'IMPELCBIO',     2020,3.39,'#M$/PJ','');   
+INSERT INTO "CostVariable" VALUES(2040,'IMPELCBIO',     2020,3.39,'#M$/PJ','');   
+INSERT INTO "CostVariable" VALUES(2045,'IMPELCBIO',     2020,3.39,'#M$/PJ','');   
+INSERT INTO "CostVariable" VALUES(2050,'IMPELCBIO',     2020,3.39,'#M$/PJ','');   
 INSERT INTO "CostVariable" VALUES(2015,'IMPELCCOAB',    2015,2.81,'#M$/PJ','');   
 INSERT INTO "CostVariable" VALUES(2020,'IMPELCCOAB',    2015,2.93,'#M$/PJ','');   
 INSERT INTO "CostVariable" VALUES(2025,'IMPELCCOAB',    2015,3.06,'#M$/PJ','');   
