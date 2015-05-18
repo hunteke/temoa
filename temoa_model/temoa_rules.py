@@ -602,7 +602,7 @@ Demand :eq:`Demand` constraints.
    :label: CommodityBalance
 
    \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, c}
-   \ge
+   =
    \sum_{T, V, O} \textbf{FI}_{p, s, d, c, t, v, o}
 
    \\
@@ -629,7 +629,7 @@ Demand :eq:`Demand` constraints.
 
 	CommodityBalanceConstraintErrorCheck( vflow_out, vflow_in, p, s, d, c )
 
-	expr = (vflow_out >= vflow_in)
+	expr = (vflow_out == vflow_in)
 	return expr
 
 
