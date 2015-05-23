@@ -8,9 +8,10 @@ nodes = set()
 tech = set()
 to_tech = set()
 from_tech = set()
-ifile = None #Input File
-fname = None #Output Graphviz Filename
-ffmt = 'svg' #Default Format
+ifile = None  #Input File
+fname = None  #Output Graphviz Filename
+ffmt = 'svg'  #Default Format
+set_color = 0 #Default Colored Outputs
 inp_comm = None
 out_comm = None
 
@@ -21,11 +22,12 @@ def help_user() :
 	| -i (or --input) <input commodity name> (Optional)
 	| -o (or --output) <output commodity name> (Optional)
 	| -n (or --name) <name of output Graphviz file> (Optional: defaults to datafile name)
+	| -g (or --gray) if specified, prints graph in grayscale
 	| -h  (or --help) print help'''
 
 try:
 	argv = sys.argv[1:]
-	opts, args = getopt.getopt(argv, "hd:f:i:o:n:", ["help""datafile=", "format=", "input=", "output=", "name="])
+	opts, args = getopt.getopt(argv, "hgd:f:i:o:n:", ["help", "gray", "datafile=", "format=", "input=", "output=", "name="])
 except getopt.GetoptError:          
 	help_user()                          
 	sys.exit(2) 
@@ -41,6 +43,8 @@ for opt, arg in opts:
 		fname = arg
 	elif opt in ("-d", "--datafile") :
 		ifile = arg
+	elif opt in ("-g", "--gray") :
+		set_color = '1'
 	elif opt in ("-h", "--help") :
 		help_user()
 		sys.exit()
@@ -69,11 +73,13 @@ def db_file(ifile) : # Call this function if the input file is a database.
 
 	cur.execute("SELECT input_comm, tech, output_comm FROM Efficiency WHERE input_comm is "+inp_comm+" or output_comm is "+out_comm)
 	for row in cur:
-		nodes.add(row[0])
+		if row[0] != 'ethos':
+			nodes.add(row[0])
 		nodes.add(row[2])
 		tech.add(row[1])
 		# Now populate the dot file with the concerned commodities
-		to_tech.add('"%s"' % row[0] + '\t->\t"%s"' % row[1]) 
+		if row[0] != 'ethos':
+			to_tech.add('"%s"' % row[0] + '\t->\t"%s"' % row[1]) 
 		from_tech.add('"%s"' % row[1] + '\t->\t"%s"' % row[2])
 
 	cur.close()
@@ -99,17 +105,22 @@ def txt_file(ifile) : # Call this function if the input file is in Text Format
 				#Search for the line param Efficiency := (The script recognizes the commodities specified in this section)
 				eff_flag = True
 			elif eff_flag :
+				line = re.sub("[#].*$", " ", line)
 				if re.search("^\s*;\s*$", line)	:
 					break # Finish searching this section when encounter a ';'
+				if re.search("^\s+$", line)	:
+					continue
 				line = re.sub("^\s+|\s+$", "", line)
 				row = re.split("\s+", line)
 				if not re.search(inp_comm, row[0]) and not re.search(out_comm, row[3]) :
 					continue
-				nodes.add(row[0])
+				if row[0] != 'ethos':
+					nodes.add(row[0])
 				nodes.add(row[3])
 				tech.add(row[1])
 				# Now populate the dot file with the concerned commodities
-				to_tech.add('"%s"' % row[0] + '\t->\t"%s"' % row[1])
+				if row[0] != 'ethos':
+					to_tech.add('"%s"' % row[0] + '\t->\t"%s"' % row[1])
 				from_tech.add('"%s"' % row[1] + '\t->\t"%s"' % row[3])
 						
 	if eff_flag is False :	
@@ -147,13 +158,13 @@ strict digraph model {
 
 	// Define individual nodes
 	subgraph techs {
-		node [ color="%(tech_color)s", shape="box" ] ;
+		node [ color="%(tech_color)s", shape="box", fontcolor="%(font_color)s" ] ;
 
 		%(tnodes)s
 	}
 
 	subgraph energy_carriers {
-		node [ color="%(commodity_color)s", shape="circle" ] ;
+		node [ color="%(commodity_color)s", shape="circle", fillcolor="%(fill_color)s" ] ;
 
 		%(enodes)s
 	}
@@ -172,14 +183,29 @@ strict digraph model {
 	}
 }
 """
-
+if set_color == '1' :
+	arrowheadin_col  = "black"
+	arrowheadout_col = "black"
+	commodity_col    = "black"
+	tech_col         = "black"
+	font_col         = "white"
+	fill_col         = "white"
+else :
+	arrowheadin_col  = "firebrick"
+	arrowheadout_col = "forestgreen"
+	commodity_col    = "lightsteelblue"
+	tech_col         = "darkseagreen"
+	font_col         = "black"
+	fill_col         = "lightsteelblue"
 
 with open( fname + '.dot', 'w' ) as f:
 		f.write( model_dot_fmt % dict(
-		  arrowheadin_color  = "firebrick",
-		  arrowheadout_color = "forestgreen",
-		  commodity_color    = "lightsteelblue",
-		  tech_color         = "darkseagreen",
+		  arrowheadin_color  = arrowheadin_col,
+		  arrowheadout_color = arrowheadout_col,
+		  commodity_color    = commodity_col,
+		  tech_color         = tech_col,
+		  font_color         = font_col,
+		  fill_color         = fill_col,
 		  enodes             = "".join('"%s";\n\t\t' % x for x in nodes),
 		  tnodes             = "".join('"%s";\n\t\t' % x for x in tech),
 		  iedges             = "".join('%s;\n\t\t' % x for x in to_tech),
