@@ -872,10 +872,12 @@ CREATE TABLE EmissionLimit (
    PRIMARY KEY(periods, emis_comm),
    FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(emis_comm) REFERENCES commodities(comm_name) );
-INSERT INTO "EmissionLimit" VALUES(2035,'co2',2255553,'#kt','#20% below 2015 emission obtained from the model w/o co2 cap total 2015 emission obtained from this model w/o co2 cap');
-INSERT INTO "EmissionLimit" VALUES(2040,'co2',1691665,'#kt','#40% below 2015 emission obtained from the model w/o co2 cap');
-INSERT INTO "EmissionLimit" VALUES(2045,'co2',1127776,'#kt','#60% below 2015 emission obtained from the model w/o co2 cap');
-INSERT INTO "EmissionLimit" VALUES(2050,'co2',563888,'#kt','#80% below 2015 emission obtained from the model w/o co2 cap'); 
+INSERT INTO "EmissionLimit" VALUES(2025,'co2',2443518,'#kt','80% reduction below 2015 levels beginning in 2025');
+INSERT INTO "EmissionLimit" VALUES(2030,'co2',2067592,'#kt','');
+INSERT INTO "EmissionLimit" VALUES(2035,'co2',1691666,'#kt','');
+INSERT INTO "EmissionLimit" VALUES(2040,'co2',1315740,'#kt','');
+INSERT INTO "EmissionLimit" VALUES(2045,'co2',939815,'#kt','#');
+INSERT INTO "EmissionLimit" VALUES(2050,'co2',563889,'#kt','#'); 
   
 
 CREATE TABLE Demand (
