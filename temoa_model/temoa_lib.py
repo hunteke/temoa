@@ -1488,13 +1488,6 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	from temoa_rules import TotalCost_rule
 	from pformat_results import pformat_results
 
-	SE.write( '\nNOTE: This MGA implementation with Temoa is currently in an '
-	  'alpha state.  This code shows how to run the model with a normal Temoa '
-	  'input file, read in the results, and run with a different objective '
-	  'function and added constraint.  It does *not* do this dynamically, '
-	  'however, does *not* do this for more than one iteration, and does not '
-	  'allow a user to specify new objective functions per MGA run.  How best '
-	  'to do that is currently left as an exercise left to the modeler.\n\n')
 	opt = optimizer              # for us lazy programmer types
 	dot_dats = options.dot_dat
 
