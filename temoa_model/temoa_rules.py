@@ -370,6 +370,24 @@ for these constraints are period and tech_all, not tech and vintage.
 	expr = (activity_pt <= max_act)
 	return expr
 
+def MinActivity_Constraint ( M, p, t ):
+	r"""
+
+The MinActivity sets a lower bound on the activity from a specific technology.  Note that the indices
+for these constraints are period and tech_all, not tech and vintage.
+
+"""
+  
+	activity_pt = sum( M.V_Activity[p, S_s, S_d, t, S_v]
+        
+      for S_s in M.time_season
+      for S_d in M.time_of_day
+      for S_v in ProcessVintages( p, t )       
+    )
+	min_act = value( M.MinActivity[p, t] )
+	expr = (activity_pt => max_act)
+	return expr
+
 
 def Storage_Constraint ( M, p, s, i, t, v, o ):
 	r"""

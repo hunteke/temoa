@@ -126,8 +126,6 @@ CapacityFactorProcess(tech_all, vintage_all)
   	M.tech_residential  = Set( within=M.tech_all )
 
 
-
-
 	M.commodity_demand    = Set()
 	M.commodity_emissions = Set()
 	M.commodity_physical  = Set()
@@ -223,6 +221,8 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.MaxCapacity = Param( M.time_optimize, M.tech_all )
  
 	M.MaxActivity = Param( M.time_optimize, M.tech_all )
+	M.MinActivity = Param( M.time_optimize, M.tech_all )
+	
 
 	M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions )
 	M.EmissionActivity_eitvo = Set( dimen=5, initialize=EmissionActivityIndices )
@@ -299,6 +299,8 @@ CapacityFactorProcess(tech_all, vintage_all)
 	  dimen=2, initialize=lambda M: M.MinCapacity.sparse_iterkeys() )
 	M.MaxActivityConstraint_pt = Set(
       dimen=2, initialize=lambda M: M.MaxActivity.sparse_iterkeys() )
+	M.MinActivityConstraint_pt = Set(
+      dimen=2, initialize=lambda M: M.MinActivity.sparse_iterkeys() )      	
 	M.ProcessBalanceConstraint_psditvo = Set(
 	  dimen=7, initialize=ProcessBalanceConstraintIndices )
 	M.ResourceConstraint_pr = Set(
@@ -374,6 +376,7 @@ CapacityFactorProcess(tech_all, vintage_all)
 	M.MaxCapacityConstraint = Constraint( M.MaxCapacityConstraint_pt, rule=MaxCapacity_Constraint )
 
 	M.MaxActivityConstraint = Constraint( M.MaxActivityConstraint_pt, rule=MaxActivity_Constraint )
+	M.MinActivityConstraint = Constraint( M.MinActivityConstraint_pt, rule=MinActivity_Constraint )
 
 	M.EmissionLimitConstraint = Constraint( M.EmissionLimitConstraint_pe, rule=EmissionLimit_Constraint)
 
