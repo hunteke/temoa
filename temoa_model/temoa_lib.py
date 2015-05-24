@@ -1501,7 +1501,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	def ActivityObj_rule ( M, prev_act_t ):
 		new_act = 0
 		for t in M.V_ActivityByTech:
-			if t in prev_act_t and t in M.tech_mga:
+			if t in prev_act_t:
 				new_act += prev_act_t[ t ] * M.V_ActivityByTech[t]
 		return new_act
 
@@ -1516,6 +1516,31 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		oldobjective = TotalCost_rule( M )
 		expr = ( slackcost >= oldobjective )
 		return expr
+
+	def PreviousAct_rule ( instance ):
+		transport_act = sum(    #calculate total transport activity
+		  value( instance.V_ActivityByTech[S_t] )
+		  
+		  for S_t in instance.tech_transport
+		)
+		
+		electric_act = sum(   #calculate total electric activity
+		  value( instance.V_ActivityByTech[S_t] )
+		  
+		  for S_t in instance.tech_electric
+		)
+		
+		prev_activity_t = defaultdict( int )		
+		for t in instance_1.V_ActivityByTech:
+			if t in instance.tech_transport:
+				val = value( instance.V_ActivityByTech[t] )
+				if abs(val) < epsilon: continue
+				prev_activity_t[ t ] += val / transport_act
+			elif t in instance.tech_electric:
+				val = value( instance.V_ActivityByTech[t] )
+				if abs(val) < epsilon: continue
+				prev_activity_t[ t ] += val / electric_act
+                return prev_activity_t
 
 
 	# The MGA algorithm uses different objectives per iteration, so the first
@@ -1563,13 +1588,9 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		# using value() converts the now-load()ed results into a single number,
 		# which we'll use with our slightly unusual SlackedObjective_rule below
 		# (but defined above).
-		Perfect_Foresight_Obj = value( instance_1.FirstObj )
-
-		prev_activity_t = defaultdict( int )
-		for t in instance_1.V_ActivityByTech:
-			val = value( instance_1.V_ActivityByTech[t] )
-			if abs(val) < epsilon: continue
-			prev_activity_t[ t ] += val
+		Perfect_Foresight_Obj = value( instance_1.FirstObj )			
+		
+		prev_activity_t = PreviousAct_rule( instance_1 )
 		
 		#Perform 5 MGA iterations
 		while options.next_mga():
@@ -1600,10 +1621,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 			SO.write( formatted_results.getvalue() )
 
 			#Keep adding activity from latest iteration to MGA Obj function
-			for t in instance_mga.V_ActivityByTech:
-				val = value( instance_mga.V_ActivityByTech[t] )
-				if abs(val) < epsilon: continue
-				prev_activity_t[ t ] += val
+			prev_activity_t = PreviousAct_rule( instance_mga )
 
 			# return signal handlers to defaults, again
 			signal(SIGINT, default_int_handler)

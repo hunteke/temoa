@@ -117,7 +117,15 @@ CapacityFactorProcess(tech_all, vintage_all)
 
 	M.tech_baseload   = Set( within=M.tech_all )
 	M.tech_storage    = Set( within=M.tech_all )
-  	M.tech_mga        = Set( within=M.tech_all )
+  	
+        #Sets below can be used to for sector-specific MGA weights
+	M.tech_electric   = Set( within=M.tech_all )
+  	M.tech_transport  = Set( within=M.tech_all )
+  	M.tech_industrial  = Set( within=M.tech_all )
+  	M.tech_commercial  = Set( within=M.tech_all )
+  	M.tech_residential  = Set( within=M.tech_all )
+
+
 
 
 	M.commodity_demand    = Set()
