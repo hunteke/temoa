@@ -1032,7 +1032,24 @@ INSERT INTO "MaxActivity" VALUES(2035,'E_COALSTM_R',5994,'#PJ','#AEO2015');
 INSERT INTO "MaxActivity" VALUES(2040,'E_COALSTM_R',5987,'#PJ','#AEO2015');	
 INSERT INTO "MaxActivity" VALUES(2045,'E_COALSTM_R',5987,'#PJ','#AEO2015');	
 INSERT INTO "MaxActivity" VALUES(2050,'E_COALSTM_R',5987,'#PJ','#AEO2015'); 
---INSERT INTO "MaxActivity" VALUES(2020,'E_COALSTM_N',30,'#PJ','#AEO2015 1 GW planned and unplanned for coal in 2020'); 
+
+CREATE TABLE MinActivity (
+   periods integer,
+   tech text,
+   minact real,
+   minact_units text,
+   minact_notes text,
+   PRIMARY KEY(periods, tech),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech) );  
+INSERT INTO "MinActivity" VALUES(2015,'E_COALSTM_R',5600,'#PJ','#Based on base case results');	
+INSERT INTO "MinActivity" VALUES(2015,'E_GEO_R'    ,67,'#PJ','');	
+INSERT INTO "MinActivity" VALUES(2015,'E_HYDCONV_R',1131,'#PJ','');	
+INSERT INTO "MinActivity" VALUES(2015,'E_NGACC_R'  ,3955,'#PJ','');	
+INSERT INTO "MinActivity" VALUES(2015,'E_SOLPV_R'  ,49,'#PJ','');	
+INSERT INTO "MinActivity" VALUES(2015,'E_SOLTH_R'  ,48,'#PJ','');	
+INSERT INTO "MinActivity" VALUES(2015,'E_URNLWR_R' ,2795,'#PJ','');	
+INSERT INTO "MinActivity" VALUES(2015,'E_WND_R'    ,763,'#PJ',''); 
 
 
 CREATE TABLE GrowthRateMax (
