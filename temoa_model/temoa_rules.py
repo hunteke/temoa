@@ -385,7 +385,7 @@ for these constraints are period and tech_all, not tech and vintage.
       for S_v in ProcessVintages( p, t )       
     )
 	min_act = value( M.MinActivity[p, t] )
-	expr = (activity_pt => max_act)
+	expr = (activity_pt >= min_act)
 	return expr
 
 
