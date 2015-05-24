@@ -1034,7 +1034,6 @@ CREATE TABLE GrowthRateMax (
    growthrate_max real,
    growthrate_max_notes text,
    FOREIGN KEY(tech) REFERENCES technologies(tech) );
-INSERT INTO "GrowthRateMax" VALUES('E_COALSTM_N',1.28,'');
 INSERT INTO "GrowthRateMax" VALUES('E_COALIGCC_N',1.28,'');
 INSERT INTO "GrowthRateMax" VALUES('E_COALIGCC_CCS_N',1.28,'');
 INSERT INTO "GrowthRateMax" VALUES('E_NGACT_N',1.28,'');
@@ -1044,8 +1043,6 @@ INSERT INTO "GrowthRateMax" VALUES('E_NGAACC_N',1.28,'');
 INSERT INTO "GrowthRateMax" VALUES('E_NGACC_CCS_N',1.28,'');
 INSERT INTO "GrowthRateMax" VALUES('E_BIOIGCC_N',1.28,'');
 INSERT INTO "GrowthRateMax" VALUES('E_GEOBCFS_N',1.28,'');
-INSERT INTO "GrowthRateMax" VALUES('E_CCR_COALSTM_N',1.28,'');
-INSERT INTO "GrowthRateMax" VALUES('E_CCR_COALIGCC_N',1.28,'');   
 INSERT INTO "GrowthRateMax" VALUES('E_WNDCL4_N',1.28,'#I did not use AEO b/c they assume tax credit on wind will be expired in the first 10 years');  
 INSERT INTO "GrowthRateMax" VALUES('E_WNDCL5_N',1.28,'# equal to max 10% growth/yr');  
 INSERT INTO "GrowthRateMax" VALUES('E_WNDCL6_N',1.28,'');  
@@ -1061,7 +1058,6 @@ CREATE TABLE GrowthRateSeed (
    growthrate_seed_units text,
    growthrate_seed_notes text,
    FOREIGN KEY(tech) REFERENCES technologies(tech) );   
-INSERT INTO "GrowthRateSeed" VALUES('E_COALSTM_N',30,'#GW',''); 
 INSERT INTO "GrowthRateSeed" VALUES('E_COALIGCC_N',30,'#GW',''); 
 INSERT INTO "GrowthRateSeed" VALUES('E_COALIGCC_CCS_N',30,'#GW',''); 
 INSERT INTO "GrowthRateSeed" VALUES('E_NGACT_N',30,'#GW',''); 
@@ -1071,8 +1067,6 @@ INSERT INTO "GrowthRateSeed" VALUES('E_NGAACC_N',30,'#GW','');
 INSERT INTO "GrowthRateSeed" VALUES('E_NGACC_CCS_N',30,'#GW',''); 
 INSERT INTO "GrowthRateSeed" VALUES('E_BIOIGCC_N',30,'#GW',''); 
 INSERT INTO "GrowthRateSeed" VALUES('E_GEOBCFS_N',30,'#GW',''); 
-INSERT INTO "GrowthRateSeed" VALUES('E_CCR_COALSTM_N',30,'#GW',''); 
-INSERT INTO "GrowthRateSeed" VALUES('E_CCR_COALIGCC_N',30,'#GW',''); 
 INSERT INTO "GrowthRateSeed" VALUES('E_WNDCL4_N',10,'#GW','');  
 INSERT INTO "GrowthRateSeed" VALUES('E_WNDCL5_N',10,'#GW','');  
 INSERT INTO "GrowthRateSeed" VALUES('E_WNDCL6_N',10,'#GW','');  
