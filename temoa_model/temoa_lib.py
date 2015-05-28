@@ -1511,29 +1511,52 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		return expr
 
 	def PreviousAct_rule ( instance ):
-		transport_act = sum(    #calculate total transport activity
-		  value( instance.V_ActivityByTech[S_t] )
-		  
-		  for S_t in instance.tech_transport
-		)
-		
-		electric_act = sum(   #calculate total electric activity
-		  value( instance.V_ActivityByTech[S_t] )
-		  
-		  for S_t in instance.tech_electric
-		)
-		
+
+#   The version below weights each technology by its previous cumulative
+#   activity. However, different sectors may be tracked in different units and 
+#   have activities of very different magnitudes. Can also modify the code 
+#   changing 'val' to 1 to implement a unity-based weight to address this non-uniform
+#   weighting issue.
+
 		prev_activity_t = defaultdict( int )		
 		for t in instance_1.V_ActivityByTech:
-			if t in instance.tech_transport:
+			if t in instance.tech_mga:
 				val = value( instance.V_ActivityByTech[t] )
 				if abs(val) < epsilon: continue
-				prev_activity_t[ t ] += val / transport_act
-			elif t in instance.tech_electric:
+				prev_activity_t[ t ] += 1.0   #val
+			elif t in instance.tech_mga:
 				val = value( instance.V_ActivityByTech[t] )
 				if abs(val) < epsilon: continue
-				prev_activity_t[ t ] += val / electric_act
+				prev_activity_t[ t ] += 1.0   #val
                 return prev_activity_t
+                
+#   The version below calculates activity by sector and normalized technology-
+#   specific activity by the total activity for the sector. Currently accounts
+#   for electric and transport sectors, but others can be added to the block below.
+
+#		transport_act = sum(    #calculate total transport activity
+#		  value( instance.V_ActivityByTech[S_t] )
+#		  
+#		  for S_t in instance.tech_transport
+#		)
+#		
+#		electric_act = sum(   #calculate total electric activity
+#		  value( instance.V_ActivityByTech[S_t] )
+#		  
+#		  for S_t in instance.tech_electric
+#		)
+		
+#		prev_activity_t = defaultdict( int )		
+#		for t in instance_1.V_ActivityByTech:
+#			if t in instance.tech_transport:
+#				val = value( instance.V_ActivityByTech[t] )
+#				if abs(val) < epsilon: continue
+#				prev_activity_t[ t ] += val / transport_act
+#			elif t in instance.tech_electric:
+#				val = value( instance.V_ActivityByTech[t] )
+#				if abs(val) < epsilon: continue
+#				prev_activity_t[ t ] += val / electric_act
+#                return prev_activity_t
 
 
 	# The MGA algorithm uses different objectives per iteration, so the first
