@@ -1044,12 +1044,12 @@ CREATE TABLE MinActivity (
    FOREIGN KEY(tech) REFERENCES technologies(tech) );  
 INSERT INTO "MinActivity" VALUES(2015,'E_COALSTM_R',5600,'#PJ','#Based on base case results');	
 INSERT INTO "MinActivity" VALUES(2015,'E_GEO_R'    ,67,'#PJ','');	
-INSERT INTO "MinActivity" VALUES(2015,'E_HYDCONV_R',1131,'#PJ','');	
+INSERT INTO "MinActivity" VALUES(2015,'E_HYDCONV_R',1130,'#PJ','');	
 INSERT INTO "MinActivity" VALUES(2015,'E_NGACC_R'  ,3955,'#PJ','');	
 INSERT INTO "MinActivity" VALUES(2015,'E_SOLPV_R'  ,49,'#PJ','');	
-INSERT INTO "MinActivity" VALUES(2015,'E_SOLTH_R'  ,48,'#PJ','');	
+INSERT INTO "MinActivity" VALUES(2015,'E_SOLTH_R'  ,47,'#PJ','');	
 INSERT INTO "MinActivity" VALUES(2015,'E_URNLWR_R' ,2795,'#PJ','');	
-INSERT INTO "MinActivity" VALUES(2015,'E_WND_R'    ,763,'#PJ',''); 
+INSERT INTO "MinActivity" VALUES(2015,'E_WND_R'    ,762,'#PJ',''); 
 
 
 CREATE TABLE GrowthRateMax (
