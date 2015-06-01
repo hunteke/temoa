@@ -5,6 +5,7 @@ import getopt
 import re
 	
 nodes = set()
+ltech = set()
 tech = set()
 to_tech = set()
 from_tech = set()
@@ -75,6 +76,8 @@ def db_file(ifile) : # Call this function if the input file is a database.
 	for row in cur:
 		if row[0] != 'ethos':
 			nodes.add(row[0])
+		else :
+			ltech.add(row[1])
 		nodes.add(row[2])
 		tech.add(row[1])
 		# Now populate the dot file with the concerned commodities
@@ -107,7 +110,7 @@ def txt_file(ifile) : # Call this function if the input file is in Text Format
 			elif eff_flag :
 				line = re.sub("[#].*$", " ", line)
 				if re.search("^\s*;\s*$", line)	:
-					break # Finish searching this section when encounter a ';'
+					break #  Finish searching this section when encounter a ';'
 				if re.search("^\s+$", line)	:
 					continue
 				line = re.sub("^\s+|\s+$", "", line)
@@ -181,6 +184,8 @@ strict digraph model {
 
 		%(oedges)s
 	}
+	
+	{rank = same; %(snodes)s}
 }
 """
 if set_color == '1' :
@@ -210,6 +215,7 @@ with open( fname + '.dot', 'w' ) as f:
 		  tnodes             = "".join('"%s";\n\t\t' % x for x in tech),
 		  iedges             = "".join('%s;\n\t\t' % x for x in to_tech),
 		  oedges             = "".join('%s;\n\t\t' % x for x in from_tech),
+		  snodes             = ";".join('"%s"' %x for x in ltech),
 		))
 del nodes, tech, to_tech, from_tech
 
