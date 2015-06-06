@@ -119,6 +119,8 @@ def txt_file(ifile) : # Call this function if the input file is in Text Format
 					continue
 				if row[0] != 'ethos':
 					nodes.add(row[0])
+				else :
+					ltech.add(row[1])
 				nodes.add(row[3])
 				tech.add(row[1])
 				# Now populate the dot file with the concerned commodities
