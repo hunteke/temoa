@@ -1,12 +1,31 @@
 from temoa_lib import TemoaError
-from os.path import abspath, isfile
+from os.path import abspath, isfile, splitext
 
-def db_2_dat(ifile, ofile):
+def db_2_dat(ifile, ofile, options):
 	# Adapted from DB_to_DAT.py
 	import sqlite3
 	import sys
 	import re
 	import getopt
+
+	def write_tech_mga(f):
+		cur.execute("SELECT tech FROM technologies")
+		f.write("set tech_mga :=\n")
+		for row in cur:
+			f.write(row[0] + '\n')
+		f.write(';\n\n')
+	
+	def write_tech_sector(f):
+		sectors = set()
+		cur.execute("SELECT sector FROM technologies")
+		for row in cur:
+			sectors.add(row[0])
+		for s in sectors:
+			cur.execute("SELECT tech FROM technologies WHERE sector == '" + s + "'")
+			f.write("set tech_" + s + " :=\n")
+			for row in cur:
+				f.write(row[0] + '\n')
+			f.write(';\n\n')
 
 	def query_table (t_properties, f):
 	    t_type = t_properties[0]  #table type (set or param)
@@ -66,43 +85,43 @@ def db_2_dat(ifile, ofile):
 	    f.write(';\n\n')
 
 	#[set or param, table_name, DAT fieldname, flag (if any), index (where to insert '#')
-	table_list =[['set','time_periods','time_exist','e',0], \
-		     ['set','time_periods','time_future','f',0], \
-		     ['set','time_season','','',0],    \
-		     ['set','time_of_day','','',0],    \
-		     ['set','technologies','tech_resource','r',0],  \
-		     ['set','technologies','tech_production',['p','pb','ps'],0], \
-		     ['set','technologies','tech_baseload','pb',0], \
-		     ['set','technologies','tech_storage','ps',0],  \
-		     ['set','commodities','commodity_physical','p',0],   \
-		     ['set','commodities','commodity_emissions','e',0],   \
-		     ['set','commodities','commodity_demand','d',0],   \
-		     ['param','SegFrac','','',2],        \
-		     ['param','DemandSpecificDistribution','','',3],  \
-		     ['param','CapacityToActivity','','',1],          \
-		     ['param','GlobalDiscountRate','','',0],          \
-		     ['param','DiscountRate','','',2],                \
-		     ['param','EmissionActivity','','',5],            \
-		     ['param','EmissionLimit','','',2],               \
-		     ['param','Demand','','',2],                      \
-		     ['param','TechOutputSplit','','',2],             \
-		     ['param','TechInputSplit','','',2],              \
-		     ['param','MinCapacity','','',2],                 \
-		     ['param','MaxCapacity','','',2],                 \
-		     ['param','MaxActivity','','',2],                 \
-		     ['param','MinActivity','','',2],                 \
-		     ['param','GrowthRateMax','','',1],               \
-		     ['param','GrowthRateSeed','','',1],              \
-		     ['param','LifetimeTech','','',1],                \
-		     ['param','LifetimeProcess','','',2],             \
-		     ['param','LifetimeLoanTech','','',1],            \
-		     ['param','CapacityFactorTech','','',3],          \
-		     ['param','CapacityFactorProcess','','',4],       \
-		     ['param','Efficiency','','',4],                  \
-		     ['param','ExistingCapacity','','',2],            \
-		     ['param','CostInvest','','',2],                  \
-		     ['param','CostFixed','','',3],                   \
-		     ['param','CostVariable','','',3]]
+	table_list =[['set',  'time_periods',              'time_exist',          'e',            0], \
+	             ['set',  'time_periods',              'time_future',         'f',            0], \
+	             ['set',  'time_season',               '',                    '',             0], \
+	             ['set',  'time_of_day',               '',                    '',             0], \
+	             ['set',  'technologies',              'tech_resource',       'r',            0], \
+	             ['set',  'technologies',              'tech_production',    ['p','pb','ps'], 0], \
+	             ['set',  'technologies',              'tech_baseload',       'pb',           0], \
+	             ['set',  'technologies',              'tech_storage',        'ps',           0], \
+	             ['set',  'commodities',               'commodity_physical',  'p',            0], \
+	             ['set',  'commodities',               'commodity_emissions', 'e',            0], \
+	             ['set',  'commodities',               'commodity_demand',    'd',            0], \
+	             ['param','SegFrac',                   '',                    '',             2], \
+	             ['param','DemandSpecificDistribution','',                    '',             3], \
+	             ['param','CapacityToActivity',        '',                    '',             1], \
+	             ['param','GlobalDiscountRate',        '',                    '',             0], \
+	             ['param','DiscountRate',              '',                    '',             2], \
+	             ['param','EmissionActivity',          '',                    '',             5], \
+	             ['param','EmissionLimit',             '',                    '',             2], \
+	             ['param','Demand',                    '',                    '',             2], \
+	             ['param','TechOutputSplit',           '',                    '',             2], \
+	             ['param','TechInputSplit',            '',                    '',             2], \
+	             ['param','MinCapacity',               '',                    '',             2], \
+	             ['param','MaxCapacity',               '',                    '',             2], \
+	             ['param','MaxActivity',               '',                    '',             2], \
+	             ['param','MinActivity',               '',                    '',             2], \
+	             ['param','GrowthRateMax',             '',                    '',             1], \
+	             ['param','GrowthRateSeed',            '',                    '',             1], \
+	             ['param','LifetimeTech',              '',                    '',             1], \
+	             ['param','LifetimeProcess',           '',                    '',             2], \
+	             ['param','LifetimeLoanTech',          '',                    '',             1], \
+	             ['param','CapacityFactorTech',        '',                    '',             3], \
+	             ['param','CapacityFactorProcess',     '',                    '',             4], \
+	             ['param','Efficiency',                '',                    '',             4], \
+	             ['param','ExistingCapacity',          '',                    '',             2], \
+	             ['param','CostInvest',                '',                    '',             2], \
+	             ['param','CostFixed',                 '',                    '',             3], \
+	             ['param','CostVariable',              '',                    '',             3]]
 
 
 	#create a file to write output
@@ -115,7 +134,10 @@ def db_2_dat(ifile, ofile):
 
 	for table in table_list:
 	    query_table(table, f)
-
+	if options.mga_weight == 'integer':
+		write_tech_mga(f)
+	if options.mga_weight == 'normalized':
+		write_tech_sector(f)
 
 	f.close()   
 	cur.close()
@@ -141,7 +163,8 @@ class TemoaConfig( object ):
 		'eciu',
 		'saveEXCEL',
 		'mgaslack',
-		'mgaiter'
+		'mgaiter',
+		'mgaweight'
 	)
 	
 	t_ANY_ignore  = '[ \t]'
@@ -166,6 +189,7 @@ class TemoaConfig( object ):
 		self.eciu             = None
 		self.mga              = None # mga slack value
 		self.mga_iter         = None
+		self.mga_weight       = None
 
 		# To keep consistent with Kevin's argumetn parser, will be removed in the futre.
 		self.graph_format     = None
@@ -202,6 +226,7 @@ class TemoaConfig( object ):
 		msg += spacer
 		msg += '{:>{}s}: {}\n'.format('MGA slack value', width, self.mga)
 		msg += '{:>{}s}: {}\n'.format('MGA # of iterations', width, self.mga_iter)
+		msg += '{:>{}s}: {}\n'.format('MGA weighting method', width, self.mga_weight)
 		msg += spacer
 		msg += '{:>{}s}: {}\n'.format('Stochastic eciu', width, self.eciu)
 		return msg
@@ -211,11 +236,11 @@ class TemoaConfig( object ):
 		pass
 	
 	def t_dot_dat(self, t):
-		r'--input(\s+|\=)[-\\\/\:\.\~\w]+\.dat\b|--input(\s+|\=)[-\\\/\:\.\~\w]+\.db\b'
+		r'--input(\s+|\=)[-\\\/\:\.\~\w]+(\.dat|\.db|\.sqlite)\b'
 		self.dot_dat.append(abspath(t.value.replace('=', ' ').split()[1]))
 	
 	def t_output(self, t):
-		r'--output(\s+|\=)[-\\\/\:\.\~\w]+\.db\b'
+		r'--output(\s+|\=)[-\\\/\:\.\~\w]+(\.db|\.sqlite)\b'
 		self.output = abspath(t.value.replace('=', ' ').split()[1])
 	
 	def t_scenario(self, t):
@@ -266,6 +291,10 @@ class TemoaConfig( object ):
 	def t_mga_mgaiter(self, t):
 		r'iteration(\s+|\=)[\d]+'
 		self.mga_iter = int(t.value.replace('=', ' ').split()[1])
+	
+	def t_mga_mgaweight(self, t):
+		r'weight(\s+|\=)(integer|normalized)\b'
+		self.mga_weight = t.value.replace('=', ' ').split()[1]
 		
 	def t_mga_end(self, t):
 		r'\}'
@@ -313,11 +342,12 @@ class TemoaConfig( object ):
 				if not tok: break
 		
 		if self.__error:
+			width = 25
 			msg = '\nIllegal character(s) in config file:\n'
-			msg += '-'*25 + '\n'
+			msg += '-'*width + '\n'
 			for e in self.__error:
 				msg += "Line {} to {}: '{}'\n".format(e['line'][0], e['line'][1], e['value'])
-			msg += '-'*25 + '\n'
+			msg += '-'*width + '\n'
 			sys.stderr.write(msg)
 		
 		if not self.dot_dat:
@@ -343,9 +373,10 @@ class TemoaConfig( object ):
 		f = open(os.devnull, 'w'); sys.stdout = f # Suppress the original DB_to_DAT.py output
 		counter = 0
 		for ifile in self.dot_dat:
-			if ifile[-3:] == '.db':
-				ofile = ifile[:-3] + '.dat'
-				db_2_dat(ifile, ofile)
+			i_name, i_ext = splitext(ifile)
+			if i_ext != '.dat':
+				ofile = i_name + '.dat'
+				db_2_dat(ifile, ofile, self)
 				self.dot_dat[self.dot_dat.index(ifile)] = ofile
 				counter += 1
 		f.close()
