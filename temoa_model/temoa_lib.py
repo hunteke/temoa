@@ -1517,7 +1517,6 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		#   changing 'val' to 1 to implement a integer-based weight to address this non-uniform
 		#   weighting issue.
 		if options.mga_weight == 'integer':
-			prev_activity_t = defaultdict( int )		
 			for t in instance_1.V_ActivityByTech:
 				if t in instance.tech_mga:
 					val = value( instance.V_ActivityByTech[t] )
@@ -1555,7 +1554,6 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 			#   for S_t in instance.tech_electric
 			# )
        	
-			prev_activity_t = defaultdict( int )		
 			for t in instance_1.V_ActivityByTech:
 				for s in sectors:
 					if t in techs[s]:
@@ -1619,9 +1617,11 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		# using value() converts the now-load()ed results into a single number,
 		# which we'll use with our slightly unusual SlackedObjective_rule below
 		# (but defined above).
-		Perfect_Foresight_Obj = value( instance_1.FirstObj )			
+		Perfect_Foresight_Obj = value( instance_1.FirstObj )
 		
-		prev_activity_t = PreviousAct_rule( instance_1 )
+		# Create a new parameter that stores the MGA objective function weights
+		prev_activity_t = defaultdict( int )		
+		prev_activity_t = PreviousAct_rule( instance_1 )		
 		
 		#Perform 5 MGA iterations
 		while options.next_mga():
