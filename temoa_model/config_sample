@@ -38,4 +38,5 @@
 --mga {
 	slack=0.4                     # Objective function slack value in MGA runs
 	iteration=2                   # Number of MGA iterations
+	weight=integer                # Weighting method selection: integer or normalized
 	}
