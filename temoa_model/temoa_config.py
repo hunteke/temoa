@@ -227,6 +227,7 @@ class TemoaConfig( object ):
 		msg += '{:>{}s}: {}\n'.format('MGA slack value', width, self.mga)
 		msg += '{:>{}s}: {}\n'.format('MGA # of iterations', width, self.mga_iter)
 		msg += '{:>{}s}: {}\n'.format('MGA weighting method', width, self.mga_weight)
+		msg += '**NOTE: If you are performing MGA runs, navigate to the DAT file and make any modifications to the MGA sets before proceeding.'
 		msg += spacer
 		msg += '{:>{}s}: {}\n'.format('Stochastic eciu', width, self.eciu)
 		return msg
