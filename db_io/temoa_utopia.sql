@@ -306,6 +306,15 @@ CREATE TABLE MaxCapacity (
  INSERT INTO "MaxCapacity" VALUES(2000,'TXD',1.76,'','');
  INSERT INTO "MaxCapacity" VALUES(2010,'TXD',4.76,'','');
 
+CREATE TABLE MinActivity (
+   periods integer,
+   tech text,
+   minact real,
+   minact_units text,
+   minact_notes text,
+   PRIMARY KEY(periods, tech),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech) ); 
 
 CREATE TABLE MaxActivity (
    periods integer,

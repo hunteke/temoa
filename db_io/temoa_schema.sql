@@ -197,6 +197,16 @@ CREATE TABLE MaxCapacity (
    PRIMARY KEY(periods, tech),
    FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech) );
+
+CREATE TABLE MinActivity (
+   periods integer,
+   tech text,
+   minact real,
+   minact_units text,
+   minact_notes text,
+   PRIMARY KEY(periods, tech),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech) ); 
 	
 CREATE TABLE MaxActivity (
    periods integer,
