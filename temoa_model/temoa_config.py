@@ -28,31 +28,30 @@ def db_2_dat(ifile, ofile, options):
 			f.write(';\n\n')
 
 	def query_table (t_properties, f):
-	    t_type = t_properties[0]  #table type (set or param)
-	    t_name = t_properties[1]  #table name
-	    t_flag = t_properties[3]  #table flag, if any
-	    t_index = t_properties[4] #table column index after which '#' should be specified
-	    if type(t_flag) is list:  #tech production table has a list for flags; this is currently hard-wired
+	    t_type = t_properties[0]   #table type (set or param)
+	    t_name = t_properties[1]   #table name
+	    t_dtname = t_properties[2] #DAT table name when DB table must be subdivided
+	    t_flag = t_properties[3]   #table flag, if any
+	    t_index = t_properties[4]  #table column index after which '#' should be specified
+	    if type(t_flag) is list:   #tech production table has a list for flags; this is currently hard-wired
 		db_query = "SELECT * FROM " + t_name + " WHERE flag=='p' OR flag=='pb' OR flag=='ps'"
 		cur.execute(db_query)
         	if cur.fetchone() is None:
             	    return
-		dat_table_name = t_properties[2]
 		if t_type == "set":
-		    f.write("set " + dat_table_name + " := \n")
+		    f.write("set " + t_dtname + " := \n")
 		else:
-		    f.write("param " + dat_table_name + " := \n")
+		    f.write("param " + t_dtname + " := \n")
 	    elif t_flag != '':    #check to see if flag is empty, if not use it to make table
 		db_query = "SELECT * FROM " + t_name + " WHERE flag=='" + t_flag + "'"
 		cur.execute(db_query)
         	if cur.fetchone() is None:
             	    return
-		dat_table_name = t_properties[2]
 		if t_type == "set":
-		    f.write("set " + dat_table_name + " := \n")
+		    f.write("set " + t_dtname + " := \n")
 		else:
-		    f.write("param " + dat_table_name + " := \n")
-	    else:    #Only other possible case is no flag
+		    f.write("param " + t_dtname + " := \n")
+	    else:    #Only other possible case is empty flag, then 1-to-1 correspodence between DB and DAT table names
 		db_query = "SELECT * FROM " + t_name
 		cur.execute(db_query)
         	if cur.fetchone() is None:
