@@ -103,7 +103,9 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 	epsilon = 1e-9   # threshold for "so small it's zero"
 
-	emission_keys = { (i, t, v, o) : e for e, i, t, v, o in m.EmissionActivity }
+	emission_keys = { (i, t, v, o) : set() for e, i, t, v, o in m.EmissionActivity }
+	for e, i, t, v, o in m.EmissionActivity:
+		emission_keys[(i, t, v, o)].add(e)
 	P_0 = min( m.time_optimize )
 	GDR = value( m.GlobalDiscountRate )
 	MLL = m.ModelLoanLife
@@ -169,14 +171,15 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 		if (i, t, v, o) not in emission_keys: continue
 
-		e = emission_keys[i, t, v, o]
-		evalue = val * m.EmissionActivity[e, i, t, v, o]
+		emissions = emission_keys[i, t, v, o]
+		for e in emissions:
+			evalue = val * m.EmissionActivity[e, i, t, v, o]
 
-		psvars[ 'V_EmissionActivityByPeriod'           ][ p ]  += evalue
-		psvars[ 'V_EmissionActivityByTech'             ][ t ]  += evalue
-		psvars[ 'V_EmissionActivityByPeriodAndTech'    ][p, t] += evalue
-		psvars[ 'V_EmissionActivityByProcess'          ][t, v] += evalue
-		psvars[ 'V_EmissionActivityByPeriodAndProcess' ][p, e, t, v] += evalue
+			psvars[ 'V_EmissionActivityByPeriod'           ][ p ]  += evalue
+			psvars[ 'V_EmissionActivityByTech'             ][ t ]  += evalue
+			psvars[ 'V_EmissionActivityByPeriodAndTech'    ][p, t] += evalue
+			psvars[ 'V_EmissionActivityByProcess'          ][t, v] += evalue
+			psvars[ 'V_EmissionActivityByPeriodAndProcess' ][p, e, t, v] += evalue
 		
 	for t, v in m.CostInvest.sparse_iterkeys():
 		# CostInvest guaranteed not 0
