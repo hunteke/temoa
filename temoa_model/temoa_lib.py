@@ -1570,7 +1570,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
 
 	# Create concrete model
-	instance_1 = model.create( mdata )
+	instance_1 = model.create_instance( mdata )
 
 	# Now add in and objective function, like we earlier removed; note that name
 	# we choose here (FirstObj) will be copied to the output file.
@@ -1582,14 +1582,13 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	SE.write( '[        ] Solving first model instance.'); SE.flush()
 
 	if opt:
-		result_1 = opt.solve( instance_1 )
-		instance_1.load( result_1 )
+		result_1 = opt.solve( instance_1, load_solutions=False )  #, keepfiles=True, symbolic_solver_labels = True )
+		instance_1.solutions.load_from(result_1, delete_symbol_map=False)
 
 		SE.write( '\r[%8.2f\n' % duration() )
 
-		updated_results = instance_1.update_results( result_1 )
-		instance_1.load( result_1 )
-		formatted_results = pformat_results( instance_1, updated_results, options )
+		instance_1.solutions.load_from(result_1)
+		formatted_results = pformat_results( instance_1, result_1, options )  
 		SO.write( formatted_results.getvalue() )
 
 
@@ -1604,7 +1603,8 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		
 		#Perform 5 MGA iterations
 		while options.next_mga():
-			instance_mga = model.create( mdata )
+			instance_mga = model.create_instance( mdata )
+
 
 			# Update second instance with the new MGA-specific objective function
 			# and constraint.
@@ -1621,13 +1621,12 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 			instance_mga.preprocess()
 
 			SE.write( '[        ] Solving {}.'.format(options.scenario)); SE.flush()
-			result_mga = opt.solve( instance_mga )
+			result_mga = opt.solve( instance_mga, load_solutions=False )  #, keepfiles=True, symbolic_solver_labels = True  )
 
 			SE.write( '\r[%8.2f\n' % duration() )
 
-			updated_results = instance_mga.update_results( result_mga )
-			instance_mga.load( result_mga )	
-			formatted_results = pformat_results( instance_mga, updated_results, options )
+			instance_mga.solutions.load_from(result_mga, delete_symbol_map=False)
+			formatted_results = pformat_results( instance_mga, result_mga, options )
 			SO.write( formatted_results.getvalue() )
 
 			#Keep adding activity from latest iteration to MGA Obj function
@@ -1669,7 +1668,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
-	instance = model.create( modeldata )
+	instance = model.create_instance( modeldata )
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	if options.fix_variables:
@@ -1756,9 +1755,8 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	# ... print the easier-to-read/parse format
 	msg = '[        ] Calculating reporting variables and formatting results.'
 	SE.write( msg ); SE.flush()
-	updated_results = instance.update_results( result )
-	instance.load( result )
-	formatted_results = pformat_results( instance, updated_results, options )
+	instance.solutions.store_to(result)
+	formatted_results = pformat_results( instance, result, options )
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	SO.write( formatted_results.getvalue() )

@@ -71,15 +71,14 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		output.write( 'No solution found.' )
 		return output
 
-	objs = m.active_components( Objective )
+	objs = list(m.component_data_objects( Objective ))
 	if len( objs ) > 1:
 		msg = '\nWarning: More than one objective.  Using first objective.\n'
 		SE.write( msg )
 
-	# This awkward workaround so as to be generic.  Unfortunately, I don't
-	# know how else to automatically discover the objective name
-	objs = objs.items()[0]
-	obj_name, obj_value = objs[0], value( objs[1]() )
+	# This is a generic workaround.  Not sure how else to automatically discover 
+        # the objective name
+	obj_name, obj_value = objs[0].cname(True), value( objs[0] )
 
 	Cons = soln.Constraint
 
