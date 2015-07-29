@@ -1582,7 +1582,10 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	SE.write( '[        ] Solving first model instance.'); SE.flush()
 
 	if opt:
-		result_1 = opt.solve( instance_1, load_solutions=False )  #, keepfiles=True, symbolic_solver_labels = True )
+		result_1 = opt.solve( instance_1, 
+							  load_solutions=False, 
+							  keepfiles=options.keepPyomoLP, 
+							  symbolic_solver_labels = options.keepPyomoLP )
 		instance_1.solutions.load_from(result_1, delete_symbol_map=False)
 
 		SE.write( '\r[%8.2f\n' % duration() )
@@ -1621,7 +1624,10 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 			instance_mga.preprocess()
 
 			SE.write( '[        ] Solving {}.'.format(options.scenario)); SE.flush()
-			result_mga = opt.solve( instance_mga, load_solutions=False )  #, keepfiles=True, symbolic_solver_labels = True  )
+			result_mga = opt.solve( instance_mga, 
+									load_solutions=False, 
+									keepfiles=options.keepPyomoLP, 
+									symbolic_solver_labels = options.keepPyomoLP )
 
 			SE.write( '\r[%8.2f\n' % duration() )
 
@@ -1742,7 +1748,9 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	# Now do the solve and ...
 	SE.write( '[        ] Solving.'); SE.flush()
 	if opt:
-		result = opt.solve( instance )
+		result = opt.solve( instance , 
+							keepfiles=options.keepPyomoLP, 
+							symbolic_solver_labels=options.keepPyomoLP )
 		SE.write( '\r[%8.2f\n' % duration() )
 
 		# return signal handlers to defaults, again
@@ -2271,9 +2279,10 @@ def temoa_solve ( model ):
 
 	opt = SolverFactory( options.solver )
 	if opt:
-		if options.keepPyomoLP:
-			opt.keepfiles = True
-			opt.symbolic_solver_labels = True
+		pass
+		# if options.keepPyomoLP:
+		# 	opt.keepfiles = True
+		# 	opt.symbolic_solver_labels = True
 
 	elif options.solver != 'NONE':
 		SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
