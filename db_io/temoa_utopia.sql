@@ -533,19 +533,19 @@ INSERT INTO "Efficiency" VALUES('HCO','E01',1990,'ELC',0.32,'# 1/3.125');
  INSERT INTO "Efficiency" VALUES('OIL','SRE',1990,'GSL',1.00,'# direct translation from PRC_INP2, PRC_OUT');
  INSERT INTO "Efficiency" VALUES('OIL','SRE',2000,'GSL',1.00,'# direct translation from PRC_INP2, PRC_OUT');
  INSERT INTO "Efficiency" VALUES('OIL','SRE',2010,'GSL',1.00,'# direct translation from PRC_INP2, PRC_OUT');
- INSERT INTO "Efficiency" VALUES('DSL','TXD',1970,'TX ',0.231,'# direct translation from DMD_EFF');    
- INSERT INTO "Efficiency" VALUES('DSL','TXD',1980,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','TXD',1990,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','TXD',2000,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('DSL','TXD',2010,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','TXE',1990,'TX ',0.827,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','TXE',2000,'TX ',0.827,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('ELC','TXE',2010,'TX ',0.827,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('GSL','TXG',1970,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('GSL','TXG',1980,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('GSL','TXG',1990,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('GSL','TXG',2000,'TX ',0.231,'# direct translation from DMD_EFF');
- INSERT INTO "Efficiency" VALUES('GSL','TXG',2010,'TX ',0.231,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','TXD',1970,'TX',0.231,'# direct translation from DMD_EFF');    
+ INSERT INTO "Efficiency" VALUES('DSL','TXD',1980,'TX',0.231,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','TXD',1990,'TX',0.231,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','TXD',2000,'TX',0.231,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('DSL','TXD',2010,'TX',0.231,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','TXE',1990,'TX',0.827,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','TXE',2000,'TX',0.827,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('ELC','TXE',2010,'TX',0.827,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('GSL','TXG',1970,'TX',0.231,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('GSL','TXG',1980,'TX',0.231,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('GSL','TXG',1990,'TX',0.231,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('GSL','TXG',2000,'TX',0.231,'# direct translation from DMD_EFF');
+ INSERT INTO "Efficiency" VALUES('GSL','TXG',2010,'TX',0.231,'# direct translation from DMD_EFF');
 
 CREATE TABLE ExistingCapacity (
    tech text,
@@ -829,6 +829,26 @@ CREATE TABLE Output_Capacity (
    PRIMARY KEY(scenario, t_periods, tech),
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(tech) REFERENCES technologies(tech)); 
+
+CREATE TABLE V_Capacity (
+   scenario text,
+   tech text,
+   vintage integer,
+   capacity real,
+   PRIMARY KEY(scenario, tech, vintage),
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods), 
+   FOREIGN KEY(tech) REFERENCES technologies(tech)); 
+
+CREATE TABLE V_ActivityByPeriodAndProcess (    
+   scenario text,
+   t_periods integer,
+   tech text,
+   vintage integer,
+   activity real,
+   PRIMARY KEY(scenario, t_periods, tech, vintage),
+   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech)
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
 
 CREATE TABLE Output_Emissions (    
    scenario text,
