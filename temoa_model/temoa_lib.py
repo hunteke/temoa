@@ -27,7 +27,7 @@ from os import path, close as os_close
 from sys import argv, stderr as SE, stdout as SO
 from signal import signal, SIGINT, default_int_handler
 
-import errno
+import errno, warnings
 
 import pyomo.environ
   # workaround for Coopr's brain dead signal handler
@@ -499,7 +499,8 @@ def validate_TechFlowSplits ( M ):
 		  'sum over all inputs for each technology must sum to 1.\n\n    '
 		  'Current sum: {}')
 
-		raise TemoaValidationError( msg.format(t, val) )
+		# raise TemoaValidationError( msg.format(t, val) )
+		warnings.warn(Warning(msg.format(t, val)))
 
 	for t, val in osummed.iteritems():
 		# small enough; likely a rounding error
@@ -509,7 +510,8 @@ def validate_TechFlowSplits ( M ):
 		  'sum over all outputs for each technology must sum to 1.\n\n    '
 		  'Current sum: {}')
 
-		raise TemoaValidationError( msg.format(t, val) )
+		# raise TemoaValidationError( msg.format(t, val) )
+		warnings.warn(Warning(msg.format(t, val)))
 
 
 def init_set_time_optimize ( M ):
