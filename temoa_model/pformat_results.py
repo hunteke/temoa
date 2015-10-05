@@ -298,7 +298,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	  'citation information.\n')
 
 ########################################################################################################################	
-	tables = {"V_FlowIn" : "Output_VFlow_In", "V_FlowOut" : "Output_VFlow_Out", "V_CapacityAvailableByPeriodAndTech" : "Output_Capacity", "V_EmissionActivityByPeriodAndProcess" : "Output_Emissions", "TotalCost" : "Output_TotalCost", "Costs" : "Output_Costs"}
+	tables = {"V_FlowIn" : "Output_VFlow_In", "V_FlowOut" : "Output_VFlow_Out", "V_CapacityAvailableByPeriodAndTech" : "Output_Capacity", "V_EmissionActivityByPeriodAndProcess" : "Output_Emissions", "TotalCost" : "Output_TotalCost", "Costs" : "Output_Costs", "V_Capacity" : "V_Capacity", "V_ActivityByPeriodAndProcess" : "V_ActivityByPeriodAndProcess"}
 
 	if isinstance(options, TemoaConfig):	
 		if not os.path.exists(options.output) :
