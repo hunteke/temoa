@@ -4644,5 +4644,25 @@ CREATE TABLE Output_TotalCost (
    scenario text,
    total_system_cost real);
    
+CREATE TABLE V_Capacity (
+   scenario text,
+   tech text,
+   vintage integer,
+   capacity real,
+   PRIMARY KEY(scenario, tech, vintage),
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods), 
+   FOREIGN KEY(tech) REFERENCES technologies(tech)); 
+
+CREATE TABLE V_ActivityByPeriodAndProcess (    
+   scenario text,
+   t_periods integer,
+   tech text,
+   vintage integer,
+   activity real,
+   PRIMARY KEY(scenario, t_periods, tech, vintage),
+   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(tech) REFERENCES technologies(tech)
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
+
  
 COMMIT;
