@@ -36,8 +36,6 @@ signal(SIGINT, default_int_handler)
 TEMOA_GIT_VERSION  = 'HEAD'
 TEMOA_RELEASE_DATE = 'Today'
 
-from temoa_graphviz import CreateModelDiagrams
-
 try:
 	from pyomo.core import (
 	  AbstractModel, BuildAction, Constraint, NonNegativeReals, Reals, Objective, Param,
@@ -1162,13 +1160,12 @@ branch/commit that created '{}'.
 		args = (bname, TEMOA_RELEASE_DATE, TEMOA_GIT_VERSION, bname)
 
 	msg += """
-Copyright (C) 2011-2014 Kevin Hunter, Joseph F. DeCarolis
+Copyright (C) 2015 NC State University
 
 We provide Temoa -- the model and associated scripts -- "as-is" with no express
 or implied warranty for accuracy or accessibility.  Temoa is a research tool,
 given in good faith to the community (anyone who uses Temoa for any purpose) as
-free software under the terms of the GNU Affero Public License, version 3 or, at
-your option, any later version (AGPLv3+).
+free software under the terms of the GNU General Public License, version 2.
 """
 
 	SO.write( msg.format( *args ))
@@ -1262,14 +1259,13 @@ def parse_args ( ):
 			default_solver = iter(available_solvers).next()
 	else:
 		default_solver = 'NONE'
-		SE.write('\nNOTICE: Coopr did not find any suitable solvers.  Temoa will '
+		SE.write('\nNOTICE: Pyomo did not find any suitable solvers.  Temoa will '
 		   'not be able to solve any models.  If you need help, ask on the '
 		   'Temoa Project forum: http://temoaproject.org/\n\n' )
 
 	parser = argparse.ArgumentParser()
 	parser.prog = path.basename( argv[0].strip('/') )
 
-	graphviz    = parser.add_argument_group('Graphviz Options')
 	solver      = parser.add_argument_group('Solver Options')
 	stochastic  = parser.add_argument_group('Stochastic Options')
 	postprocess = parser.add_argument_group('Postprocessing Options')
@@ -1311,38 +1307,6 @@ def parse_args ( ):
 	 default=None
 	 )
 
-	graphviz.add_argument( '--graph_format',
-	  help='Create a system-wide visual depiction of the model.  The '
-	       'available options are the formats available to Graphviz.  To get '
-	       'a list of available formats, use the "dot" command: dot -Txxx. '
-	       '[Default: None]',
-	  action='store',
-	  dest='graph_format',
-	  default=None)
-
-	graphviz.add_argument('--show_capacity',
-	  help='Choose whether or not the capacity shows up in the subgraphs.  '
-	       '[Default: not shown]',
-	  action='store_true',
-	  dest='show_capacity',
-	  default=False)
-
-	graphviz.add_argument( '--graph_type',
-	  help='Choose the type of subgraph depiction desired.  [Default: '
-	       'separate_vintages]',
-	  action='store',
-	  dest='graph_type',
-	  choices=('explicit_vintages', 'separate_vintages'),
-	  default='separate_vintages')
-
-	graphviz.add_argument('--use_splines',
-	  help='Choose whether the subgraph edges needs to be straight or curved.'
-	       '  [Default: use straight lines, not splines]',
-	  action='store_true',
-	  dest='splinevar',
-	  default=False)
-
-
 	solver.add_argument('--solver',
 	  help="Which backend solver to use.  See 'pyomo --help-solvers' for a list "
 	       'of solvers with which Coopr can interface.  The list shown here is '
@@ -1371,7 +1335,6 @@ def parse_args ( ):
 	  action='store_true',
 	  dest='keepPyomoLP',
 	  default=False)
-
 
 	stochastic.add_argument('--eciu',
 	  help='"Expected Cost of Ignoring Uncertainty" -- Calculate the costs of '
@@ -1447,23 +1410,6 @@ def parse_args ( ):
 			msg = '{}{}{}'.format( red_bold, msg, reset )
 			raise TemoaCommandLineArgumentError(
 			   msg.format( reset, edir, red_bold ))
-
-	if options.graph_format:
-		try:
-			from subprocess import call
-			from os import devnull
-
-			with open(devnull, 'wb') as fnull:
-				call(('dot', '-Txxx'), stdout=fnull, stderr=fnull)
-
-		except OSError:
-			msg = ('Missing Graphviz.\n\nYou have requested to generate Graphviz '
-			  'images of your model.  Unfortunately, Python is not able to find '
-			  'the "dot" executable from the Graphviz suite.  Do you need to '
-			  'install the Graphviz suite?  If you need help with this step, '
-			  'please Google, or consult the Temoa forum.\n\n')
-
-			raise TemoaNoExecutableError( msg )
 
 	if options.mga:
 		msg = 'MGA specified (slack value: {})\n'.format( options.mga )
@@ -1770,23 +1716,6 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	SE.write( '\r[%8.2f\n' % duration() )
 
 	SO.write( formatted_results.getvalue() )
-
-	if options.graph_format:
-		# we can't simply call SO.close() here, because we use multiprocess.Process
-		# in _graphviz, which also calls close() -- an operation that may only be
-		# called once on a file object.  We also can't simply close stdout, because
-		# Python treats it specially with a guarantee that std* objects are /never/
-		# closed.  XXX: And still, for now, this doesn't appear to work at all
-		SO.flush()
-		os.close( SO.fileno() )
-		import sys
-		sys.stdout = open( '/dev/null', 'w' )
-
-		SE.write( '[        ] Creating Temoa model diagrams.' ); SE.flush()
-		instance.load( result )
-		CreateModelDiagrams( instance, options )
-		SE.write( '\r[%8.2f\n' % duration() )
-
 
 def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	import multiprocessing as MP, os, cPickle as pickle
