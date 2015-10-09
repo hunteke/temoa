@@ -475,43 +475,6 @@ def CreateCosts ( M ):
 		CV._constructed = True
 
 
-def validate_TechFlowSplits ( M ):
-	from collections import defaultdict
-
-	ispl = M.TechInputSplit
-	ospl = M.TechOutputSplit
-
-	isummed = defaultdict( float )
-	osummed = defaultdict( float )
-	for i, t in ispl:
-		isummed[t] += value(ispl[i, t])
-	for t, o in ospl:
-		osummed[t] += value(ospl[t, o])
-
-	epsilon = 1e-15
-	for t, val in isummed.iteritems():
-		# small enough; likely a rounding error
-		if abs(val - 1) < epsilon: continue
-
-		msg = ('TechInputSplit not fully specified for technology "{}".  The '
-		  'sum over all inputs for each technology must sum to 1.\n\n    '
-		  'Current sum: {}')
-
-		# raise TemoaValidationError( msg.format(t, val) )
-		warnings.warn(Warning(msg.format(t, val)))
-
-	for t, val in osummed.iteritems():
-		# small enough; likely a rounding error
-		if abs(val - 1) < epsilon: continue
-
-		msg = ('TechOutputSplit not fully specified for technology "{}".  The '
-		  'sum over all outputs for each technology must sum to 1.\n\n    '
-		  'Current sum: {}')
-
-		# raise TemoaValidationError( msg.format(t, val) )
-		warnings.warn(Warning(msg.format(t, val)))
-
-
 def init_set_time_optimize ( M ):
 	return sorted( M.time_future )[:-1]
 
@@ -962,7 +925,7 @@ def TechInputSplitConstraintIndices ( M ):
 	indices = set(
 	  (p, s, d, i, t, v)
 
-	  for i, t in M.TechInputSplit.sparse_iterkeys()
+	  for p, i, t in M.TechInputSplit.sparse_iterkeys()
 	  for p in M.time_optimize
 	  for v in ProcessVintages( p, t )
 	  for s in M.time_season
@@ -976,7 +939,7 @@ def TechOutputSplitConstraintIndices ( M ):
 	indices = set(
 	  (p, s, d, t, v, o)
 
-	  for t, o in M.TechOutputSplit.sparse_iterkeys()
+	  for p, t, o in M.TechOutputSplit.sparse_iterkeys()
 	  for p in M.time_optimize
 	  for v in ProcessVintages( p, t )
 	  for s in M.time_season

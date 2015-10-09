@@ -153,9 +153,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions )
     M.EmissionActivity_eitvo = Set( dimen=5, initialize=EmissionActivityIndices )
     M.EmissionActivity = Param( M.EmissionActivity_eitvo )
-    M.TechInputSplit  = Param( M.commodity_physical, M.tech_all )
-    M.TechOutputSplit = Param( M.tech_all, M.commodity_carrier )
-    M.validate_TechFlowSplits = BuildAction( rule=validate_TechFlowSplits )
+    M.TechInputSplit  = Param( M.time_optimize, M.commodity_physical, M.tech_all )
+    M.TechOutputSplit = Param( M.time_optimize, M.tech_all, M.commodity_carrier )
     
     # Decision Variables--------------------------------------------------------
     #   Base decision variables

@@ -429,9 +429,9 @@ the model. Currently, each slice is completely independent of other slices.
 def TechInputSplit_Constraint ( M, p, s, d, i, t, v ):
 	r"""
 
-Some processes make a single output from multiple inputs.  A subset of these
-processes have a constant ratio of inputs.  See TechOutputSplit_Constraint for
-the analogous math reasoning.
+Allows users to specify fixed or minimum shares of commodity inputs to a process 
+producing a single output. These shares can vary by model time period. See 
+TechOutputSplit_Constraint for an analogous explanation.
 """
 	inp = sum( M.V_FlowIn[p, s, d, i, t, v, S_o]
 	  for S_o in ProcessOutputsByInput( p, t, v, i ) )
@@ -441,26 +441,22 @@ the analogous math reasoning.
 	  for S_o in ProcessOutputsByInput( p, t, v, i )
 	)
 
-	expr = ( inp == M.TechInputSplit[i, t] * total_inp )
+	expr = ( inp >= M.TechInputSplit[p, i, t] * total_inp )
 	return expr
 
 
 def TechOutputSplit_Constraint ( M, p, s, d, t, v, o ):
 	r"""
 
-Some processes take a single input and make multiple outputs.  A subset of
-these processes have a constant ratio of outputs relative to their input.  The
-most canonical example is that of an oil refinery.  Crude oil is composed of
-many different types of hydrocarbons, and the refinery process exploits the fact
-that they each have a different boiling point.  The amount of each type of
-product that a refinery produces is thus directly related to the makeup of the
-crude oil input.
+Some processes take a single input and make multiple outputs, and the user would like to 
+specify either a constant or time-varying ratio of outputs per unit input.  The most 
+canonical example is an oil refinery.  Crude oil is used to produce many different refined 
+products. In many cases, the modeler would like to specify a minimum share of each refined 
+product produced by the refinery.
 
-The TechOutputSplit constraint assumes that the input to any process of interest
-has a constant ratio output.  For example, a hypothetical (and highly
-simplified) refinery might have a crude oil input that only contains 4 parts
-diesel, 3 parts gasoline, and 2 parts kerosene.  The relative ratios to the
-output then are:
+For example, a hypothetical (and highly simplified) refinery might have a crude oil input 
+that produces 4 parts diesel, 3 parts gasoline, and 2 parts kerosene.  The relative 
+ratios to the output then are:
 
 .. math::
 
@@ -468,21 +464,23 @@ output then are:
    g = \tfrac{3}{9} \cdot \text{total output}, \qquad
    k = \tfrac{2}{9} \cdot \text{total output}
 
-In constraint in set notation is:
+Note that it is possible to specify output shares that sum to less than unity. In such 
+cases, the model optimizes the remaining share. In addition, it is possible to change the 
+specified shares by model time period. The constraint is formulated as follows:
 
 .. math::
    :label: TechOutputSplit
 
      \sum_{I} \textbf{FO}_{p, s, d, i, t, v, o}
-   =
-     SPL_{t, o} \cdot \textbf{ACT}_{p, s, d, t, v}
+   \geq
+     SPL_{p, t, o} \cdot \textbf{ACT}_{p, s, d, t, v}
 
    \forall \{p, s, d, t, v, o\} \in \Theta_{\text{split output}}
 """
 	out = sum( M.V_FlowOut[p, s, d, S_i, t, v, o]
 	  for S_i in ProcessInputsByOutput( p, t, v, o ) )
 
-	expr = ( out == M.TechOutputSplit[t, o] * M.V_Activity[p, s, d, t, v] )
+	expr = ( out >= M.TechOutputSplit[p, t, o] * M.V_Activity[p, s, d, t, v] )
 	return expr
 
 
