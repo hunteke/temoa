@@ -124,8 +124,8 @@ def db_2_dat(ifile, ofile, options):
 	             ['param','EmissionActivity',          '',                    '',             5], \
 	             ['param','EmissionLimit',             '',                    '',             2], \
 	             ['param','Demand',                    '',                    '',             2], \
-	             ['param','TechOutputSplit',           '',                    '',             2], \
-	             ['param','TechInputSplit',            '',                    '',             2], \
+	             ['param','TechOutputSplit',           '',                    '',             3], \
+	             ['param','TechInputSplit',            '',                    '',             3], \
 	             ['param','MinCapacity',               '',                    '',             2], \
 	             ['param','MaxCapacity',               '',                    '',             2], \
 	             ['param','MaxActivity',               '',                    '',             2], \

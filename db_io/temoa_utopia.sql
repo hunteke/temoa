@@ -253,26 +253,33 @@ INSERT INTO "Demand" VALUES(2010,'TX',11.69,'','');
 
 
 CREATE TABLE TechInputSplit (
+   periods integer,
    input_comm text,
    tech text,
    ti_split real,
    ti_split_notes text,
-   PRIMARY KEY(input_comm, tech),
+   PRIMARY KEY(periods, input_comm, tech),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(input_comm) REFERENCES commodities(comm_name),
    FOREIGN KEY(tech) REFERENCES technologies(tech) );
 
 
 CREATE TABLE TechOutputSplit (
+   periods integer,
    tech text,
    output_comm text,
    to_split real,
    to_split_notes text,
-   PRIMARY KEY(tech, output_comm),
+   PRIMARY KEY(periods, tech, output_comm),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech),
    FOREIGN KEY(output_comm) REFERENCES commodities(comm_name) );
- INSERT INTO "TechOutputSplit" VALUES('SRE','DSL',0.7,'');
- INSERT INTO "TechOutputSplit" VALUES('SRE','GSL',0.3,'');
-	
+ INSERT INTO "TechOutputSplit" VALUES('1990','SRE','DSL',0.7,'');
+ INSERT INTO "TechOutputSplit" VALUES('2000','SRE','DSL',0.7,'');
+ INSERT INTO "TechOutputSplit" VALUES('2010','SRE','DSL',0.7,'');
+ INSERT INTO "TechOutputSplit" VALUES('1990','SRE','GSL',0.3,'');
+ INSERT INTO "TechOutputSplit" VALUES('2000','SRE','GSL',0.3,'');	
+ INSERT INTO "TechOutputSplit" VALUES('2010','SRE','GSL',0.3,'');
 
 CREATE TABLE MinCapacity (
    periods integer,

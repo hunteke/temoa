@@ -158,25 +158,28 @@ CREATE TABLE Demand (
    FOREIGN KEY(demand_comm) REFERENCES commodities(comm_name) );
 
 CREATE TABLE TechInputSplit (
+   periods integer,
    input_comm text,
    tech text,
    ti_split real,
    ti_split_notes text,
-   PRIMARY KEY(input_comm, tech),
+   PRIMARY KEY(periods, input_comm, tech),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(input_comm) REFERENCES commodities(comm_name),
    FOREIGN KEY(tech) REFERENCES technologies(tech) );
 
 
 CREATE TABLE TechOutputSplit (
+   periods integer,
    tech text,
    output_comm text,
    to_split real,
    to_split_notes text,
-   PRIMARY KEY(tech, output_comm),
+   PRIMARY KEY(periods, tech, output_comm),
+   FOREIGN KEY(periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech),
    FOREIGN KEY(output_comm) REFERENCES commodities(comm_name) );
  
-
 CREATE TABLE MinCapacity (
    periods integer,
    tech text,
