@@ -598,8 +598,23 @@ param  CostVariableVintageDefault  :=
 
 param TechOutputSplit :=
 # tech_all    # output carrier    # fractional output
- r_geoth       r_cooling           0.5
- r_geoth       r_heating           0.5
+2010   r_geoth       r_cooling           0.5
+2015   r_geoth       r_cooling           0.5
+2020   r_geoth       r_cooling           0.5
+2025   r_geoth       r_cooling           0.5
+2030   r_geoth       r_cooling           0.5
+2035   r_geoth       r_cooling           0.5
+2040   r_geoth       r_cooling           0.5
+2045   r_geoth       r_cooling           0.5
+
+2010   r_geoth       r_heating           0.5
+2015   r_geoth       r_heating           0.5
+2020   r_geoth       r_heating           0.5
+2025   r_geoth       r_heating           0.5
+2030   r_geoth       r_heating           0.5
+2035   r_geoth       r_heating           0.5
+2040   r_geoth       r_heating           0.5
+2045   r_geoth       r_heating           0.5
 	;
 
 param MaxCapacity :=

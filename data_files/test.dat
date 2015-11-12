@@ -136,9 +136,16 @@ param  Demand  :=
 
 param  TechOutputSplit  :=    # roughly TABLE PRC_OUT
 # tech            # output carrier    # fractional value
- t_oil_refinery    diesel              0.7
- t_oil_refinery    gasoline            0.3
-	;
+ 2010   t_oil_refinery    diesel              0.7
+ 2015   t_oil_refinery    diesel              0.7
+ 2020   t_oil_refinery    diesel              0.7
+ 2025   t_oil_refinery    diesel              0.7
+
+ 2010   t_oil_refinery    gasoline            0.3
+ 2015   t_oil_refinery    gasoline            0.3
+ 2020   t_oil_refinery    gasoline            0.3
+ 2025   t_oil_refinery    gasoline            0.3
+ 	;
 
 param  LifetimeTech  :=
  imp_coal   30

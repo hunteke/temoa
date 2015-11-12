@@ -1232,20 +1232,88 @@ param  CapacityFactorTech  :=
 
 param TechInputSplit :=
 # input carrier  # tech_all         # fractional output
- gasoline         tl_phev_gsl_10_s   0.922
- electricity      tl_phev_gsl_10_s   0.078
+ 2010   gasoline      tl_phev_gsl_10_s   0.922
+ 2015   gasoline      tl_phev_gsl_10_s   0.922
+ 2020   gasoline      tl_phev_gsl_10_s   0.922
+ 2025   gasoline      tl_phev_gsl_10_s   0.922
+ 2030   gasoline      tl_phev_gsl_10_s   0.922
+ 2035   gasoline      tl_phev_gsl_10_s   0.922
+ 2040   gasoline      tl_phev_gsl_10_s   0.922
+ 2045   gasoline      tl_phev_gsl_10_s   0.922
+ 2050   gasoline      tl_phev_gsl_10_s   0.922
+ 
+ 2010   electricity   tl_phev_gsl_10_s   0.922
+ 2015   electricity   tl_phev_gsl_10_s   0.922
+ 2020   electricity   tl_phev_gsl_10_s   0.922
+ 2025   electricity   tl_phev_gsl_10_s   0.922
+ 2030   electricity   tl_phev_gsl_10_s   0.922
+ 2035   electricity   tl_phev_gsl_10_s   0.922
+ 2040   electricity   tl_phev_gsl_10_s   0.922
+ 2045   electricity   tl_phev_gsl_10_s   0.922
+ 2050   electricity   tl_phev_gsl_10_s   0.922 
+ 
+ 2010   gasoline      tl_phev_gsl_40_s   0.794
+ 2015   gasoline      tl_phev_gsl_40_s   0.794
+ 2020   gasoline      tl_phev_gsl_40_s   0.794
+ 2025   gasoline      tl_phev_gsl_40_s   0.794
+ 2030   gasoline      tl_phev_gsl_40_s   0.794
+ 2035   gasoline      tl_phev_gsl_40_s   0.794
+ 2040   gasoline      tl_phev_gsl_40_s   0.794
+ 2045   gasoline      tl_phev_gsl_40_s   0.794
+ 2050   gasoline      tl_phev_gsl_40_s   0.794
 
- gasoline         tl_phev_gsl_40_s   0.794
- electricity      tl_phev_gsl_40_s   0.206
+ 2010   electricity   tl_phev_gsl_40_s   0.206
+ 2015   electricity   tl_phev_gsl_40_s   0.206
+ 2020   electricity   tl_phev_gsl_40_s   0.206
+ 2025   electricity   tl_phev_gsl_40_s   0.206
+ 2030   electricity   tl_phev_gsl_40_s   0.206
+ 2035   electricity   tl_phev_gsl_40_s   0.206
+ 2040   electricity   tl_phev_gsl_40_s   0.206
+ 2045   electricity   tl_phev_gsl_40_s   0.206
+ 2050   electricity   tl_phev_gsl_40_s   0.206
 
- electricity      r_swheater         0.5
- solar            r_swheater         0.5
+ 2010   electricity   r_swheater         0.5
+ 2015   electricity   r_swheater         0.5
+ 2020   electricity   r_swheater         0.5
+ 2025   electricity   r_swheater         0.5
+ 2030   electricity   r_swheater         0.5
+ 2035   electricity   r_swheater         0.5
+ 2040   electricity   r_swheater         0.5
+ 2045   electricity   r_swheater         0.5
+ 2050   electricity   r_swheater         0.5
+ 
+ 2010   solar         r_swheater         0.5
+ 2015   solar         r_swheater         0.5
+ 2020   solar         r_swheater         0.5
+ 2025   solar         r_swheater         0.5
+ 2030   solar         r_swheater         0.5
+ 2035   solar         r_swheater         0.5
+ 2040   solar         r_swheater         0.5
+ 2045   solar         r_swheater         0.5
+ 2050   solar         r_swheater         0.5 
 	;
 
 param TechOutputSplit :=
 # tech_all    # output carrier    # fractional output
- r_geoth       r_cooling           0.5
- r_geoth       r_heating           0.5
+2010   r_geoth       r_cooling           0.5
+2015   r_geoth       r_cooling           0.5
+2020   r_geoth       r_cooling           0.5
+2025   r_geoth       r_cooling           0.5
+2030   r_geoth       r_cooling           0.5
+2035   r_geoth       r_cooling           0.5
+2040   r_geoth       r_cooling           0.5
+2045   r_geoth       r_cooling           0.5
+2050   r_geoth       r_cooling           0.5
+
+2010   r_geoth       r_heating           0.5
+2015   r_geoth       r_heating           0.5
+2020   r_geoth       r_heating           0.5
+2025   r_geoth       r_heating           0.5
+2030   r_geoth       r_heating           0.5
+2035   r_geoth       r_heating           0.5
+2040   r_geoth       r_heating           0.5
+2045   r_geoth       r_heating           0.5
+2050   r_geoth       r_heating           0.5
 	;
 
 param MaxCapacity :=
