@@ -14,11 +14,13 @@ show_capacity = False
 graph_type = 'separate_vintages'
 splinevar = False
 quick_flag = False
+quick_name = None
 grey_flag = True
 scenario = None
 res_dir = None
 inp_comm = None
 out_comm = None
+db_dat_flag = None
 
 # Global Variables (dictionaries to cache parsing of Efficiency parameter)
 g_processInputs  = dict()
@@ -485,6 +487,7 @@ strict digraph TemoaModel {
 
 	# Outsource to Graphviz via the old Unix standby: temporary files
 	cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
+	print cmd
 	call( cmd )
 
 
@@ -1725,6 +1728,8 @@ strict digraph model {
 
 def quick_run( **kwargs ) : # Call this function if the input file is a database.
 	inp_file		   = kwargs.get( 'inp_file' )
+	q_flag			   = kwargs.get( 'q_flag' )
+	quick_n 		   = kwargs.get( 'quick_n' )
 	scenario_name	   = kwargs.get( 'scenario_name' )
 	images_dir         = kwargs.get( 'images_dir' )
 	ffmt               = kwargs.get( 'image_format' )
@@ -1740,41 +1745,85 @@ def quick_run( **kwargs ) : # Call this function if the input file is a database
 	
 	global inp_comm, out_comm
 	nodes, tech, ltech, to_tech, from_tech = set(), set(), set(), set(), set()
-	# Specify the Input and Output Commodities to choose from. Default puts all commodities in the Graph.
-	if inp_comm is None and out_comm is None :
-		inp_comm = "NOT NULL"
-		out_comm = "NOT NULL"
-	else :
-		if inp_comm is None :
-			inp_comm = "NULL"
+	if q_flag:
+		# Specify the Input and Output Commodities to choose from. Default puts all commodities in the Graph.
+		if inp_comm is None and out_comm is None :
+			inp_comm = "NOT NULL"
+			out_comm = "NOT NULL"
 		else :
-			inp_comm = "'"+inp_comm+"'"
-		if out_comm is None :
-			out_comm = "NULL"
-		else :
-			out_comm = "'"+out_comm+"'"
-	
-	#connect to the database
-	con = sqlite3.connect(inp_file)
-	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
-	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
+			if inp_comm is None :
+				inp_comm = "NULL"
+			else :
+				inp_comm = "'"+inp_comm+"'"
+			if out_comm is None :
+				out_comm = "NULL"
+			else :
+				out_comm = "'"+out_comm+"'"
+		
+		#connect to the database
+		con = sqlite3.connect(inp_file)
+		cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
+		con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
-	print inp_file
-	cur.execute("SELECT input_comm, tech, output_comm FROM Efficiency WHERE input_comm is "+inp_comm+" or output_comm is "+out_comm)
-	for row in cur:
-		if row[0] != 'ethos':
-			nodes.add(row[0])
-		else :
-			ltech.add(row[1])
-		nodes.add(row[2])
-		tech.add(row[1])
-		# Now populate the dot file with the concerned commodities
-		if row[0] != 'ethos':
-			to_tech.add('"%s"' % row[0] + '\t->\t"%s"' % row[1]) 
-		from_tech.add('"%s"' % row[1] + '\t->\t"%s"' % row[2])
+		print inp_file
+		cur.execute("SELECT input_comm, tech, output_comm FROM Efficiency WHERE input_comm is "+inp_comm+" or output_comm is "+out_comm)
+		for row in cur:
+			if row[0] != 'ethos':
+				nodes.add(row[0])
+			else :
+				ltech.add(row[1])
+			nodes.add(row[2])
+			tech.add(row[1])
+			# Now populate the dot file with the concerned commodities
+			if row[0] != 'ethos':
+				to_tech.add('"%s"' % row[0] + '\t->\t"%s"' % row[1]) 
+			from_tech.add('"%s"' % row[1] + '\t->\t"%s"' % row[2])
 
-	cur.close()
-	con.close()
+		cur.close()
+		con.close()
+		
+	else:
+		# Specify the Input and Output Commodities to choose from. Default puts all commodities in the Graph.
+		if inp_comm is None and out_comm is None :
+			inp_comm = "\w+"
+			out_comm = "\w+"
+		else :
+			if inp_comm is None :
+				inp_comm = "\W+"
+			if out_comm is None :
+				out_comm = "\W+"
+
+		eff_flag = False
+		#open the text file
+		with open (ifile) as f :
+			for line in f:
+				if eff_flag is False and re.search("^\s*param\s+efficiency\s*[:][=]", line, flags = re.I) : 
+					#Search for the line param Efficiency := (The script recognizes the commodities specified in this section)
+					eff_flag = True
+				elif eff_flag :
+					line = re.sub("[#].*$", " ", line)
+					if re.search("^\s*;\s*$", line)	:
+						break #  Finish searching this section when encounter a ';'
+					if re.search("^\s+$", line)	:
+						continue
+					line = re.sub("^\s+|\s+$", "", line)
+					row = re.split("\s+", line)
+					if not re.search(inp_comm, row[0]) and not re.search(out_comm, row[3]) :
+						continue
+					if row[0] != 'ethos':
+						nodes.add(row[0])
+					else :
+						ltech.add(row[1])
+					nodes.add(row[3])
+					tech.add(row[1])
+					# Now populate the dot file with the concerned commodities
+					if row[0] != 'ethos':
+						to_tech.add('"%s"' % row[0] + '\t->\t"%s"' % row[1])
+					from_tech.add('"%s"' % row[1] + '\t->\t"%s"' % row[3])
+							
+		if eff_flag is False :	
+			print ("Error: The Efficiency Parameters cannot be found in the specified file - "+ifile)
+			sys.exit(2)
 	
 	print "Creating Diagrams...\n"
 	model_dot_fmt = """\
@@ -1814,8 +1863,12 @@ strict digraph model {
 	{rank = same; %(snodes)s}
 }
 """
-	
-	with open( 'quick_run_%s'%scenario_name+'.dot', 'w' ) as f:
+	if quick_n is None:
+		qq = 'quick_run'
+	else:
+		qq = 'quick_run_%s'%quick_n
+
+	with open( qq+'.dot', 'w' ) as f:
 		f.write( model_dot_fmt % dict(
 		  arrowheadin_color  = arrowheadin_color,
 		  arrowheadout_color = arrowheadout_color,
@@ -1830,7 +1883,7 @@ strict digraph model {
 		  snodes             = ";".join('"%s"' %x for x in ltech),
 		))
 	del nodes, tech, to_tech, from_tech
-	cmd = ('dot', '-T' + ffmt, '-o' + 'quick_run_%s'%scenario_name+ '.' + ffmt, 'quick_run_%s'%scenario_name + '.dot')
+	cmd = ('dot', '-T' + ffmt, '-o' + qq+'.' + ffmt, qq+'.dot')
 	call( cmd )
 
 
@@ -1844,9 +1897,9 @@ def CreateModelDiagrams ():
 	# as the name of this run.
 	#datname = os.path.basename( options.dot_dat[0] )[:-4]
 	datname = scenario
-	images_dir = "images_" + datname
-
+	
 	if not quick_flag:
+		images_dir = "images_" + datname
 		if os.path.exists( images_dir ):
 			rmtree( images_dir )
 		os.mkdir( images_dir )
@@ -1860,6 +1913,8 @@ def CreateModelDiagrams ():
 	kwargs = dict(
 	  inp_file			 = ifile,
 	  scenario_name		 = scenario,
+	  q_flag			 = True if db_dat_flag else False,
+	  quick_n		 	 = quick_name,
 	  images_dir         = 'images_%s' % datname,
 	  image_format       = graph_format.lower(),
 
@@ -1931,14 +1986,13 @@ def help_user() :
 							[Default: separate_vintages]
 	| -g (or --gray) if specified, prints graph in grayscale
 	| -s (or --scenario) <required scenario name from database>
-	| -q (or --quick) if specified, runs a simple implementation where only the simple model
-						is generated
+	| -n (or --name) specify the extension you wish to give your quick run
 	| -o (or --output) <Optional output file path(to dump the images folder)>
 	| -h  (or --help) print help'''
   
 try:
 	argv = sys.argv[1:]
-	opts, args = getopt.getopt(argv, "hf:cvt:i:s:qgo:", ["help", "format=", "show_capacity", "splinevar", "graph_type=", "input=", "scenario=", "quick", "grey", "output="])
+	opts, args = getopt.getopt(argv, "hf:cvt:i:s:n:go:", ["help", "format=", "show_capacity", "splinevar", "graph_type=", "input=", "scenario=", "name=", "grey", "output="])
 except getopt.GetoptError:          
 	help_user()                          
 	sys.exit(2) 
@@ -1959,19 +2013,34 @@ for opt, arg in opts:
 		graph_type = arg
 	elif opt in ("-s", "--scenario") :
 		scenario = arg
-	elif opt in ("-q", "--quick") :
-		quick_flag = True
+	elif opt in ("-n", "--name") :
+		quick_name = arg
 	elif opt in ("-o", "--output") :
 		res_dir = arg
 	elif opt in ("-g", "--grey") :
 		grey_flag = False
 
-if ifile is None or scenario is None:
+if ifile is None:
 	print "You did not specify one or more of the following required flags: -i(or --input) and -s(or --scenario)"
 	help_user()
 	sys.exit()
 
-print "Reading Database %s ..." %ifile 
+file_ty = re.search(r"(\w+)\.(\w+)\b", ifile) # Extract the input filename and extension
+if not file_ty :
+	print "The file type %s is not recognized." % ifile
+	sys.exit(2)
+elif file_ty.group(2) in ("db", "sqlite", "sqlite3", "sqlitedb") :
+	db_dat_flag = 1
+elif file_ty.group(2) in ("dat", "txt") :
+	db_dat_flag = 0
+else :
+	print "The input file type %s is not recognized. Please specify a database or a text file." % ifile
+	sys.exit(2)
+	
+if (db_dat_flag == 1 and scenario is None) or db_dat_flag == 0:
+	quick_flag = True
+	
+print "Reading File %s ..." %ifile 
 if quick_flag :
 	ifile = os.path.realpath(ifile)
 	if res_dir is None:
