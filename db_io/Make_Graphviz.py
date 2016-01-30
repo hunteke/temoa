@@ -1863,12 +1863,8 @@ strict digraph model {
 	{rank = same; %(snodes)s}
 }
 """
-	if quick_n is None:
-		qq = 'quick_run'
-	else:
-		qq = 'quick_run_%s'%quick_n
 
-	with open( qq+'.dot', 'w' ) as f:
+	with open( quick_n + '.dot', 'w' ) as f:
 		f.write( model_dot_fmt % dict(
 		  arrowheadin_color  = arrowheadin_color,
 		  arrowheadout_color = arrowheadout_color,
@@ -1883,7 +1879,7 @@ strict digraph model {
 		  snodes             = ";".join('"%s"' %x for x in ltech),
 		))
 	del nodes, tech, to_tech, from_tech
-	cmd = ('dot', '-T' + ffmt, '-o' + qq+'.' + ffmt, qq+'.dot')
+	cmd = ('dot', '-T' + ffmt, '-o' + quick_n+'.' + ffmt, quick_n+'.dot')
 	call( cmd )
 
 
@@ -1899,7 +1895,7 @@ def CreateModelDiagrams ():
 	datname = scenario
 	
 	if not quick_flag:
-		images_dir = "images_" + datname
+		images_dir = quick_name + "_" + scenario
 		if os.path.exists( images_dir ):
 			rmtree( images_dir )
 		os.mkdir( images_dir )
@@ -1907,6 +1903,12 @@ def CreateModelDiagrams ():
 		os.makedirs( 'commodities' )
 		os.makedirs( 'processes' )
 		os.makedirs( 'results' )
+	else:
+		images_dir = quick_name
+		if os.path.exists( images_dir ):
+			rmtree( images_dir )
+		os.mkdir( images_dir )
+		os.chdir( images_dir )
 
 	##############################################
 	#MAIN MODEL AND RESULTS AND EVERYTHING ELSE
@@ -1915,7 +1917,7 @@ def CreateModelDiagrams ():
 	  scenario_name		 = scenario,
 	  q_flag			 = True if db_dat_flag else False,
 	  quick_n		 	 = quick_name,
-	  images_dir         = 'images_%s' % datname,
+	  images_dir         = '%s_%s' % (quick_name, scenario),
 	  image_format       = graph_format.lower(),
 
 	  tech_color         = 'darkseagreen' if grey_flag else 'black',
@@ -1968,8 +1970,7 @@ def CreateModelDiagrams ():
 	for func in gvizFunctions:
 			func( **kwargs )
 
-	if not quick_flag:
-			os.chdir( '..' )
+	os.chdir( '..' )
 
 ###########Code Starts here#############
 
@@ -2021,7 +2022,7 @@ for opt, arg in opts:
 		grey_flag = False
 
 if ifile is None:
-	print "You did not specify one or more of the following required flags: -i(or --input) and -s(or --scenario)"
+	print "You did not specify one or more of the following required flags: -i(or --input)"
 	help_user()
 	sys.exit()
 
@@ -2031,14 +2032,25 @@ if not file_ty :
 	sys.exit(2)
 elif file_ty.group(2) in ("db", "sqlite", "sqlite3", "sqlitedb") :
 	db_dat_flag = 1
+	if scenario is None:
+		quick_flag = True
+		if quick_name is None:
+			quick_name = file_ty.group(1)
+		else:
+			quick_name = file_ty.group(1) + '_' + quick_name
+	else:
+		quick_name = file_ty.group(1)
+		
 elif file_ty.group(2) in ("dat", "txt") :
+	quick_flag = True
 	db_dat_flag = 0
+	if quick_name is None:
+		quick_name = file_ty.group(1)
+	else:
+		quick_name = file_ty.group(1) + '_' + quick_name
 else :
 	print "The input file type %s is not recognized. Please specify a database or a text file." % ifile
 	sys.exit(2)
-	
-if (db_dat_flag == 1 and scenario is None) or db_dat_flag == 0:
-	quick_flag = True
 	
 print "Reading File %s ..." %ifile 
 if quick_flag :
@@ -2059,4 +2071,4 @@ else:
 	else:
 		os.chdir(res_dir)
 	CreateModelDiagrams ()
-	print "Done. Look for results in images_%s folder in %s" %(scenario, res_dir)
+	print "Done. Look for results in %s_%s folder in %s" %(quick_name, scenario, res_dir)
