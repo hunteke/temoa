@@ -1696,7 +1696,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 
 	pwd = abspath( getcwd() )
 	chdir( options.eciu )
-	sStructure = scenario_tree_model.create( filename='ScenarioStructure.dat' )
+	sStructure = scenario_tree_model.create_instance( filename='ScenarioStructure.dat' )
 
 	# Step 1: find the root node.  PySP doesn't make this very easy ...
 
@@ -1832,7 +1832,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		mdata = DataPortal( model=model )
 		for node_name in scen_nodes[ assumed_fs ]:
 			mdata.load( filename=node_name + '.dat' )
-		m = model.create( mdata )
+		m = model.create_instance( mdata )
 
 		# path_so_far includes nodes with CP of 1.
 		past_assumed = ''
@@ -1882,7 +1882,7 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 		# do the preprocess and solve.
 		m.preprocess()
 		results = opt.solve( m )
-		m.load( results )
+		m.solutions.load_from( results )
 
 		if 'infeasible' in str( results['Solver'] ):
 			msg = ('Infeasible solve.  Node: {}, path_so_far {}; my_assumptions: '
