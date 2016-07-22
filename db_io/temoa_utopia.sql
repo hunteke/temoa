@@ -789,6 +789,7 @@ Tables in this section store model outputs
 
 CREATE TABLE Output_VFlow_Out (
    scenario text,
+   sector text,   
    t_periods integer,
    t_season text,
    t_day text,
@@ -798,6 +799,7 @@ CREATE TABLE Output_VFlow_Out (
    output_comm text,
    vflow_out real,
    PRIMARY KEY(scenario, t_periods, t_season, t_day, input_comm, tech, vintage, output_comm),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector), 
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(t_season) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(t_day) REFERENCES time_of_day(t_day),
@@ -810,6 +812,7 @@ CREATE TABLE Output_VFlow_Out (
 
 CREATE TABLE Output_VFlow_In (
    scenario text,
+   sector text,
    t_periods integer,
    t_season text,
    t_day text,
@@ -819,6 +822,7 @@ CREATE TABLE Output_VFlow_In (
    output_comm text,
    vflow_in real,
    PRIMARY KEY(scenario, t_periods, t_season, t_day, input_comm, tech, vintage, output_comm),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector),   
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(t_season) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(t_day) REFERENCES time_of_day(t_day),
@@ -828,43 +832,42 @@ CREATE TABLE Output_VFlow_In (
    FOREIGN KEY(output_comm) REFERENCES commodities(comm_name));
  
 
-CREATE TABLE Output_Capacity (
+CREATE TABLE Output_V_Capacity (
    scenario text,
-   t_periods integer,   
-   tech text,
-   capacity real,
-   PRIMARY KEY(scenario, t_periods, tech),
-   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),   
-   FOREIGN KEY(tech) REFERENCES technologies(tech)); 
-
-CREATE TABLE V_Capacity (
-   scenario text,
+   sector text,
    tech text,
    vintage integer,
    capacity real,
    PRIMARY KEY(scenario, tech, vintage),
-   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods), 
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector), 
+   FOREIGN KEY(tech) REFERENCES technologies(tech),
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
+
+
+
+CREATE TABLE Output_CapacityByPeriodAndTech (
+   scenario text,
+   sector text,
+   t_periods integer,   
+   tech text,
+   capacity real,
+   PRIMARY KEY(scenario, t_periods, tech),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector), 
+   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(tech) REFERENCES technologies(tech)); 
 
-CREATE TABLE V_ActivityByPeriodAndProcess (    
-   scenario text,
-   t_periods integer,
-   tech text,
-   vintage integer,
-   activity real,
-   PRIMARY KEY(scenario, t_periods, tech, vintage),
-   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
-   FOREIGN KEY(tech) REFERENCES technologies(tech)
-   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
+
 
 CREATE TABLE Output_Emissions (    
    scenario text,
+   sector text,
    t_periods integer,
    emissions_comm text,
    tech text,
    vintage integer,
    emissions real,
    PRIMARY KEY(scenario, t_periods, emissions_comm, tech, vintage),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector), 
    FOREIGN KEY(emissions_comm) REFERENCES EmissionActivity(emis_comm),
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech)
@@ -872,17 +875,20 @@ CREATE TABLE Output_Emissions (
 
 CREATE TABLE Output_Costs (
    scenario text,
+   sector text,
    output_name text,
    tech text,
    vintage integer,
    output_cost real,
    PRIMARY KEY(scenario, output_name, tech, vintage),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector), 
    FOREIGN KEY(tech) REFERENCES technologies(tech),   
    FOREIGN KEY(vintage) REFERENCES time_periods(t_periods)); 
 
-CREATE TABLE Output_TotalCost (
+CREATE TABLE Output_Objective (
    scenario text,
-   total_system_cost real);
+   objective_name text,
+   total_system_cost real );
 
 
 COMMIT;
