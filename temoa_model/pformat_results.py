@@ -32,10 +32,12 @@ from collections import defaultdict
 from cStringIO import StringIO
 from sys import stderr as SE, stdout as SO
 from temoa_config import TemoaConfig
+from shutil import rmtree
 import sqlite3
 import os
 import re
 import subprocess
+import sys
 
 from pyomo.core import value
 from IPython import embed as IP
@@ -285,8 +287,23 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		con.close()			
 
 		if options.saveEXCEL :
-			os.system("python db_io"+os.sep+"DB_to_Excel.py -i \
-					  ""+options.output+" \
-					  " -o db_io"+os.sep+options.scenario+" -s "+options.scenario)
+			sys.path.append('db_io')
+			for inpu in options.dot_dat:
+				print inpu
+				file_ty = re.search(r"\b(\w+)\.(\w+)\b", inpu)
+			new_dir = 'db_io'+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+			if os.path.exists( new_dir ):
+				rmtree( new_dir )
+			os.mkdir(new_dir)
+			file_type = re.search(r"(\w+)\.(\w+)\b", options.output)
+			file_n = file_type.group(1)
+			from DB_to_Excel import make_excel
+			temp_scenario = set()
+			temp_scenario.add(options.scenario)
+			#make_excel(options.output, '''"db_io"+os.sep+"model_"+file_n+"_"+options.scenario+os.sep+'''options.scenario, temp_scenario)
+			make_excel(options.output, new_dir+os.sep+options.scenario, temp_scenario)
+			#os.system("python db_io"+os.sep+"DB_to_Excel.py -i \
+			#		  ""+options.output+" \
+			#		  " -o db_io"+os.sep+options.scenario+" -s "+options.scenario)
 	
 	return output

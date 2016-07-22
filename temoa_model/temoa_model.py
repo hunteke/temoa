@@ -21,7 +21,7 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-__all__ = ( 'temoa_create_model', )
+#__all__ = ( 'temoa_create_model', )
 
 from temoa_rules import *
 
@@ -30,7 +30,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     Returns an abstract instance of the TEMOA model -- Abstract because it needs
     to be populated with a "dot dat" file in order to create a specific model
     instantiation.
-	"""
+  """
     M = AbstractModel( name )
     
     # Define Sets---------------------------------------------------------------
@@ -89,7 +89,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.CapacityToActivity = Param( M.tech_all,  default=1 )
     M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
     M.Efficiency = Param( M.commodity_physical, M.tech_all, M.vintage_all, 
-    		              M.commodity_carrier )
+                      M.commodity_carrier )
     M.validate_UsedEfficiencyIndices = BuildAction( rule=CheckEfficiencyIndices )   
     M.CapacityFactor_sdtv = Set( dimen=4, initialize=CapacityFactorProcessIndices )
     M.CapacityFactorProcess = Param( M.CapacityFactor_sdtv )
@@ -113,7 +113,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     
     M.DemandDefaultDistribution  = Param( M.time_season, M.time_of_day )
     M.DemandSpecificDistribution = Param( M.time_season, M.time_of_day, 
-    		                              M.commodity_demand )
+                                      M.commodity_demand )
     M.Demand = Param( M.time_optimize, M.commodity_demand )
     M.initialize_Demands = BuildAction( rule=CreateDemands )
     M.ResourceBound = Param( M.time_optimize,  M.commodity_physical )
@@ -136,10 +136,10 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.LoanAnnualize = Param( M.Loan_tv, initialize=ParamLoanAnnualize_rule )
     M.ModelLoanLife_tv  = Set( dimen=2, initialize=lambda M: M.CostInvest.keys() )
     M.ModelLoanLife     = Param( M.ModelLoanLife_tv,  
-    		                     initialize=ParamModelLoanLife_rule )
+                             initialize=ParamModelLoanLife_rule )
     M.ModelProcessLife_ptv = Set( dimen=3, initialize=ModelProcessLifeIndices )
     M.ModelProcessLife  = Param( M.ModelProcessLife_ptv, 
-    		                     initialize=ParamModelProcessLife_rule )
+                             initialize=ParamModelProcessLife_rule )
     M.LoanLifeFrac_ptv = Set( dimen=3, initialize=LoanLifeFracIndices )
     M.ProcessLifeFrac_ptv = Set( dimen=3, initialize=ModelProcessLifeIndices )
     M.ProcessLifeFrac  = Param( M.ProcessLifeFrac_ptv, 
@@ -176,7 +176,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.CapacityAvailableVar_pt = Set(
       dimen=2, initialize=CapacityAvailableVariableIndices )    
     M.V_CapacityAvailableByPeriodAndTech = Var( M.CapacityAvailableVar_pt,
-    		                                    domain=NonNegativeReals )
+                                            domain=NonNegativeReals )
 
     M.EnergyConsumptionByPeriodInputAndTech_pit = Set(
       dimen=3, initialize=EnergyConsumptionByPeriodInputAndTechVariableIndices )
@@ -251,8 +251,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     #  M.CapacityVar_tv, 
     #  rule=CapacityFixed_Constraint )
 
-	#   Model Constraints
-	#   In driving order, starting with the need to meet end-use demands
+  #   Model Constraints
+  #   In driving order, starting with the need to meet end-use demands
 	
     M.DemandConstraint_psdc = Set( dimen=4, initialize=DemandConstraintIndices )
     M.DemandConstraint           = Constraint( 
@@ -346,21 +346,34 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.TechOutputSplitConstraint_psdtvo, 
       rule=TechOutputSplit_Constraint )
 
+
     return M
 
+#global model
+  #model = temoa_create_model()
+def runModel():
+  
+  #read config
+  
+  model = temoa_create_model()
+  
+  from temoa_lib import temoa_solve
+  temoa_solve( model )
 
-#default temoa_create_model function arg is 'name'
-model = temoa_create_model()
 
 
-if '__main__' == __name__:
-	# This script was apparently invoked directly, rather than through Pyomo.
-	# $ ./model.py  test.dat           # called directly
-	# $ lpython  model.py  test.dat    # called directly
-	# $ pyomo    model.py  test.dat    # through Pyomo
-
-	# Calling this script directly enables a cleaner formatting than Pyomo's
-	# default output, but (currently) forces the choice of solver to GLPK.
-	from temoa_lib import temoa_solve
-	temoa_solve( model )
+#if '__main__' == __name__:
+  ##default temoa_create_model function arg is 'name'
+  #model = temoa_create_model()
+#
+  #
+  ## This script was apparently invoked directly, rather than through Pyomo.
+  ## $ ./model.py  test.dat           # called directly
+  ## $ lpython  model.py  test.dat    # called directly
+  ## $ pyomo    model.py  test.dat    # through Pyomo
+#
+  ## Calling this script directly enables a cleaner formatting than Pyomo's
+  ## default output, but (currently) forces the choice of solver to GLPK.
+  #from temoa_lib import temoa_solve
+  #temoa_solve( model )
 

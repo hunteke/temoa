@@ -119,8 +119,7 @@ def InitializeProcessParameters ():
 
 	  for p in time_optimize
 	  for t in tech_all
-	  if g_processVintages[ p, t ]
-	)
+	  if g_processVintages[ p, t ]1
 
 	
 def calc_intermediates (ifile):
@@ -141,13 +140,13 @@ def calc_intermediates (ifile):
 	
 	for x,y in g_activeCapacity_tv:
 		V_Capacity[x,y] = 0
-		for row in cur.execute("SELECT capacity FROM V_Capacity WHERE tech is '"+x+"' and vintage is '"+str(y)+"'"):
+		for row in cur.execute("SELECT capacity FROM Output_V_Capacity WHERE tech is '"+x+"' and vintage is '"+str(y)+"'"):
 			V_Capacity[x,y] = row[0]
 
 ###########FIXME########################################
 	for x,y in g_activeCapacityAvailable_pt:
 		V_CapacityAvailableByPeriodAndTech[x,y] = 0
-		for row in cur.execute("SELECT capacity FROM Output_Capacity WHERE t_periods is '"+str(x)+"' and tech is '"+y+"'"):
+		for row in cur.execute("SELECT capacity FROM Output_CapacityByPeriodAndTech WHERE t_periods is '"+str(x)+"' and tech is '"+y+"'"):
 			V_CapacityAvailableByPeriodAndTech[x,y] = row[0]
 	
 	for x,y,z in g_activeActivity_ptv:

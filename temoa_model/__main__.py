@@ -19,10 +19,11 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from temoa_model import model
+from temoa_model import runModel
 from temoa_lib import temoa_solve, TemoaError
 
 try:
-	temoa_solve( model )
+	runModel()
+	#temoa_solve( model )
 except TemoaError, e:
 	raise SystemExit( '\n' + str(e) )
