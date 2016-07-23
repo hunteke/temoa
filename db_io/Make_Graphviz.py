@@ -119,7 +119,8 @@ def InitializeProcessParameters ():
 
 	  for p in time_optimize
 	  for t in tech_all
-	  if g_processVintages[ p, t ]1
+	  if g_processVintages[ p, t ]
+	)
 
 	
 def calc_intermediates (ifile):
@@ -148,10 +149,10 @@ def calc_intermediates (ifile):
 		V_CapacityAvailableByPeriodAndTech[x,y] = 0
 		for row in cur.execute("SELECT capacity FROM Output_CapacityByPeriodAndTech WHERE t_periods is '"+str(x)+"' and tech is '"+y+"'"):
 			V_CapacityAvailableByPeriodAndTech[x,y] = row[0]
-	
+
 	for x,y,z in g_activeActivity_ptv:
 		V_ActivityByPeriodAndProcess[x,y,z] = 0
-		for row in cur.execute("SELECT activity FROM V_ActivityByPeriodAndProcess WHERE t_periods is '"+str(x)+"' and tech is '"+y+"' and vintage is '"+str(z)+"'"):
+		for row in cur.execute("SELECT SUM(vflow_out)activity FROM Output_VFlow_Out WHERE t_periods is '"+str(x)+"' and tech is '"+y+"' and vintage is '"+str(z)+"'"):
 			V_ActivityByPeriodAndProcess[x,y,z] = row[0]
 	
 	for a,b,c,d,e,f,g in g_activeFlow_psditvo:
@@ -2071,3 +2072,4 @@ else:
 		os.chdir(res_dir)
 	CreateModelDiagrams ()
 	print "Done. Look for results in %s_%s folder in %s" %(quick_name, scenario, res_dir)
+	
