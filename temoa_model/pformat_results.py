@@ -261,7 +261,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		con = sqlite3.connect(options.output)
 		cur = con.cursor()   # A database cursor enables traversal over DB records
 		con.text_factory = str # This ensures data is explored with UTF-8 encoding
-		
+
 		for table in svars.keys() :
 			if table in tables :
 				cur.execute("SELECT DISTINCT scenario FROM '"+tables[table]+"'")
@@ -269,20 +269,22 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 					if options.scenario == val[0]: # If scenario exists, delete
 						cur.execute("DELETE FROM "+tables[table]+" \
 									WHERE scenario is '"+options.scenario+"'") 
-				for key in svars[table].keys() :
-					key_str = str(key)
-					key_str = key_str[1:-1] # Remove parentheses
 					if table == 'Objective' : # Only table without sector info
+						key_str = str(svars[table].keys()) # only 1 row to write
+						key_str = key_str[1:-1] # Remove parentheses					
 						cur.execute("INSERT INTO "+tables[table]+" \
 									VALUES('"+options.scenario+"',"+key_str+", \
 									"+str(svars[table][key])+");")
 					else : # First add 'NULL' for sector then update
-						cur.execute("INSERT INTO "+tables[table]+ \
-									" VALUES('"+options.scenario+"','NULL', \
-									"+key_str+","+str(svars[table][key])+");")
+						for key in svars[table].keys() : # Need to loop over keys (rows)
+							key_str = str(key)
+							key_str = key_str[1:-1] # Remove parentheses
+							cur.execute("INSERT INTO "+tables[table]+ \
+										" VALUES('"+options.scenario+"','NULL', \
+										"+key_str+","+str(svars[table][key])+");")
 						cur.execute("UPDATE "+tables[table]+" SET sector = \
-									(SELECT sector FROM technologies \
-									WHERE tech = "+tables[table]+".tech);")
+									(SELECT technologies.sector FROM technologies \
+									WHERE "+tables[table]+".tech = technologies.tech);")
 		con.commit()
 		con.close()			
 
