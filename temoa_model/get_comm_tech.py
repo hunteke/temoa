@@ -70,6 +70,7 @@ def get_comm(inp_f, db_dat):
 	
 	comm_list = {}
 	comm_set = set()
+	is_query_empty = False
 	
 	if not db_dat :
 		con = sqlite3.connect(inp_f)
@@ -78,11 +79,21 @@ def get_comm(inp_f, db_dat):
 
 		print inp_f
 		cur.execute("SELECT DISTINCT comm_name FROM commodities")
+				
 		for row in cur:
+			is_query_empty = True
 			if row[0] != 'ethos':
 				x= row[0]
 				comm_list[x] = x
 		
+		if not is_query_empty:
+			cur.execute("SELECT input_comm FROM Output_VFlow_Out UNION SELECT output_comm FROM Output_VFlow_Out")
+
+		for row in cur:
+			if row[0] != 'ethos':
+				x= row[0]
+				comm_list[x] = x
+			
 		cur.close()
 		con.close()
 		
@@ -118,6 +129,7 @@ def get_tech(inp_f, db_dat):
 	
 	tech_list = {}
 	tech_set = set()
+	is_query_empty = False
 	
 	if not db_dat :
 		con = sqlite3.connect(inp_f)
@@ -125,11 +137,20 @@ def get_tech(inp_f, db_dat):
 		con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
 		print inp_f
-		cur.execute("SELECT DISTINCT tech FROM technologies")
+		cur.execute("SELECT DISTINCT tech FROM technologies")				
+		
+		for row in cur:
+			is_query_empty = True
+			x= row[0]
+			tech_list[x] = x
+		
+		if not is_query_empty:
+			cur.execute("SELECT DISTINCT tech FROM Output_VFlow_Out")
+
 		for row in cur:
 			x= row[0]
 			tech_list[x] = x
-			
+		
 		cur.close()
 		con.close()
 		

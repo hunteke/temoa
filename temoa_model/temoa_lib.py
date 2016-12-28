@@ -27,7 +27,7 @@ from operator import itemgetter as iget
 from os import path, close as os_close
 from sys import argv, stderr as SE, stdout as SO
 from signal import signal, SIGINT, default_int_handler
-from shutil import copyfile
+from shutil import copyfile, move
 
 from pyomo.opt import SolverFactory as SF
 from temoa_config import TemoaConfig
@@ -1051,9 +1051,10 @@ output carrier.
 # Miscellaneous routines
 
 
-def version ( ):
+def version ( options ):
 	from sys import stdout as SO
 	from os.path import basename, dirname
+	import os
 
 	bname = basename( dirname( __file__ ))
 
@@ -1093,12 +1094,20 @@ given in good faith to the community (anyone who uses Temoa for any purpose) as
 free software under the terms of the GNU General Public License, version 2.
 """
 
+	try:
+		txt_file = open(options.path_to_logs+os.sep+"OutputLog.log", "w")
+	except BaseException as io_exc:
+		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
+		txt_file = open("OutputLog.log", "w")
+
+	txt_file.write( msg )
 	SO.write( msg.format( *args ))
-	raise SystemExit
+	#raise SystemExit
 
 
-def bibliographicalInformation ( ):
+def bibliographicalInformation ( options ):
 	from sys import stdout as SO
+	import os
 
 	msg = """
 Please cite the following paper if your use of Temoa leads to a publishable
@@ -1135,8 +1144,15 @@ For copy and paste or BibTex use:
 
 """
 
+	try:
+		txt_file = open(options.path_to_logs+os.sep+"OutputLog.log", "w")
+	except BaseException as io_exc:
+		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
+		txt_file = open("OutputLog.log", "w")
+
+	txt_file.write( msg )
 	SO.write( msg )
-	raise SystemExit
+	#raise SystemExit
 
 
 
@@ -1318,20 +1334,25 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	from pyomo.core import DataPortal
 
 	from pformat_results import pformat_results
-
+	
+	try:
+		txt_file = open(options.path_to_logs+os.sep+"OutputLog.log", "w")
+	except BaseException as io_exc:
+		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
+		txt_file = open("OutputLog.log", "w")
+	
 	try:
 	
 		opt = optimizer              # for us lazy programmer types
 		dot_dats = options.dot_dat
-		txt_file = open("result"+os.sep+"db_io"+os.sep+"debug_logs"+os.sep+"OutputLog.log", "w")
 
 		if options.generateSolverLP:
-			opt.options.wlp = path.basename( dot_dats[0] )[:-4] + '.lp'
-			SE.write('\nSolver will write file: {}\n\n'.format( opt.options.wlp ))
-			txt_file.write('\nSolver will write file: {}\n\n'.format( opt.options.wlp ))
+			opt.options.wlp = temp_lp_dest + path.basename( dot_dats[0] )[:-4] + '.lp'
+			SE.write('\nSolver will write file: {}\n\n'.format( os.path.basename(opt.options.wlp )))
+			txt_file.write('\nSolver will write file: {}\n\n'.format( os.path.basename(opt.options.wlp )))
 
 		SE.write( '[        ] Reading data files.'); SE.flush()
-		txt_file.write( '[        ] Reading data files.'); txt_file.flush()
+		txt_file.write( 'Reading data files.')
 		# Recreate the pyomo command's ability to specify multiple "dot dat" files
 		# on the command line
 		begin = clock()
@@ -1343,18 +1364,18 @@ def solve_perfect_foresight ( model, optimizer, options ):
 				msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
 				raise TemoaValidationError( msg.format( fname ))
 			modeldata.load( filename=fname )
-		SE.write( '\r[%8.2f\n' % duration() )
-		txt_file.write( '\r[%8.2f\n' % duration() )
+		SE.write( '\r[%8.2f]\n' % duration() )
+		txt_file.write( '[%8.2f]\n' % duration() )
 
 		SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
-		txt_file.write( '[        ] Creating Temoa model instance.'); txt_file.flush()
+		txt_file.write( 'Creating Temoa model instance.')
 		instance = model.create_instance( modeldata )
 		SE.write( '\r[%8.2f\n' % duration() )
-		txt_file.write( '\r[%8.2f\n' % duration() )
+		txt_file.write( '[%8.2f]\n' % duration() )
 
 		if options.fix_variables:
 			SE.write( '[        ] Fixing supplied variables.'); SE.flush()
-			txt_file.write( '[        ] Fixing supplied variables.'); txt_file.flush()
+			txt_file.write( 'Fixing supplied variables.')
 			import re
 
 			# Assumption: All variables are indexed
@@ -1418,21 +1439,21 @@ def solve_perfect_foresight ( model, optimizer, options ):
 
 			SE.write( '\r[%8.2f\n' % duration() )
 			SE.write( '[        ] Preprocessing fixed variables.'); SE.flush()
-			txt_file.write( '\r[%8.2f\n' % duration() )
-			txt_file.write( '[        ] Preprocessing fixed variables.'); txt_file.flush()
+			txt_file.write( '[%8.2f]\n' % duration() )
+			txt_file.write( 'Preprocessing fixed variables.')
 			instance.preprocess()
 			SE.write( '\r[%8.2f\n' % duration() )
-			txt_file.write( '\r[%8.2f\n' % duration() )
+			txt_file.write( '[%8.2f]\n' % duration() )
 
 		# Now do the solve and ...
 		SE.write( '[        ] Solving.'); SE.flush()
-		txt_file.write( '[        ] Solving.'); txt_file.flush()
+		txt_file.write( 'Solving.')
 		if opt:
 			result = opt.solve( instance , 
 								keepfiles=options.keepPyomoLP, 
 								symbolic_solver_labels=options.keepPyomoLP )
 			SE.write( '\r[%8.2f\n' % duration() )
-			txt_file.write( '\r[%8.2f\n' % duration() )
+			txt_file.write( '[%8.2f]\n' % duration() )
 
 			# return signal handlers to defaults, again
 			signal(SIGINT, default_int_handler)
@@ -1445,11 +1466,11 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		# ... print the easier-to-read/parse format
 		msg = '[        ] Calculating reporting variables and formatting results.'
 		SE.write( msg ); SE.flush()
-		txt_file.write( msg ); txt_file.flush()
+		txt_file.write( 'Calculating reporting variables and formatting results.')
 		instance.solutions.store_to(result)
 		formatted_results = pformat_results( instance, result, options )
 		SE.write( '\r[%8.2f\n' % duration() )
-		txt_file.write( '\r[%8.2f\n' % duration() )
+		txt_file.write( '[%8.2f]\n' % duration() )
 
 		SO.write( formatted_results.getvalue() )
 		txt_file.write( formatted_results.getvalue() )
@@ -1463,12 +1484,23 @@ def solve_perfect_foresight ( model, optimizer, options ):
 
 	if options.saveTEXTFILE:
 		for inpu in options.dot_dat:
-			file_ty = reg_exp.search(r"\b(\w+)\.(\w+)\b", inpu)
+			file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
 		
 		#dirty fix. This used passed as parameter. - TODO - Suyash provide me one
-		new_dir = 'result'+os.sep+'db_io'+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
-		copyfile('result'+os.sep+'db_io'+os.sep+'debug_logs'+os.sep+'OutputLog.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
+		new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+		
+		if path.isfile(options.path_to_logs+os.sep+'OutputLog.log') and path.exists(new_dir):
+			copyfile(options.path_to_logs+os.sep+'OutputLog.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
 
+	if options.generateSolverLP:
+		for inpu in options.dot_dat:
+			file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
+		
+		new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+		
+		if path.isfile(opt.options.wlp) and path.exists(new_dir):
+			copyfile(opt.options.wlp, new_dir+os.sep+os.path.basename(opt.options.wlp[:-3])+'.lp')
+			#move(opt.options.wlp, new_dir+os.sep+opt.options.wlp)
 
 def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	import multiprocessing as MP, os, cPickle as pickle
@@ -2117,12 +2149,14 @@ def parse_args ( ):
 
 	# First, the options that exit or do not perform any "real" computation
 	if options.version:
-		version()
+		version(options)
 		# this function exits
+		return
 
 	if options.how_to_cite:
-		bibliographicalInformation()
+		bibliographicalInformation(options)
 		# this function exits.
+		return
 
 	# It would be nice if this implemented with add_mutually_exclusive_group
 	# but I /also/ want them in separate groups for display.  Bummer.
@@ -2174,13 +2208,30 @@ def parse_args ( ):
 
 
 def temoa_solve_ui ( model, config_filename ):
-    
+	
 	available_solvers, default_solver = get_solvers()
 
 	temoa_config = TemoaConfig(d_solver=default_solver)
 	temoa_config.build(config=config_filename)
 	options = temoa_config
+	
+	#################################################################
+	global temp_lp_dest
+	temp_lp_dest = '/srv/thirdparty/temoa/db_io/'
+	#FIXME: Put logic from parse_args() here that are not covered in
+	#temoa_config.py. Like --how_to_cite & --version options.
+	if options.version:
+		version(options)
+		# this function exits
+		return
 
+	if options.how_to_cite:
+		bibliographicalInformation(options)
+		# this function exits.
+		return
+		
+	##################################################################
+	
 	run_solve(model, options)
 
 
@@ -2190,6 +2241,9 @@ def temoa_solve ( model ):
 
 	options = parse_args()
 
+	global temp_lp_dest
+	temp_lp_dest = ''
+	
 	run_solve(model,options)
 
 	

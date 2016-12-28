@@ -8,7 +8,7 @@
 # Input File (Mandatory). Usage: --input=<your_path_to_input_file>
 # Input can be a .db or .dat file
 # Both relative path and absolute path are accepted
---input=db_io/temoa_utopia.sqlite
+--input=db_io/temoa_utopia.dat
 
 # Output File (Mandatory). Usage: --output=<your_path_to_output_file>
 # The output file must be a existing .db file
@@ -18,10 +18,16 @@
 # This scenario name is used to store results within the output .db file
 --scenario=test_run
 
+--path_to_db_io=E:\NCSU Work\Temoa Stuff\Database_io
+
+--path_to_logs=E:/NCSU Work/Temoa Stuff/Database_io/temoa/db_io/debug_logs
+
 # Spreadsheet Output (Optional). Usage: --saveEXCEL 
 # Direct model output to a spreadsheet
 # Scenario name specified above is used to name the spreadsheet
 --saveEXCEL
+
+--saveTEXTFILE
 
 # Miscellaneous (Optional)
 # --how_to_cite                    # Optional, display citation info and terminate program

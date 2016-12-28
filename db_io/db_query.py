@@ -19,10 +19,11 @@ def send_query(inp_f, query_string):
 		
 		cur.close()
 		con.close()
-		return db_result
+		return "Query Result: %s" % "".join(db_result)
+
 	except sqlite3.Error, e:
-		print "Error in Query %s:" % e.args[0]
-		sys.exit(1)
+		print "Error in Query %s" % e.args[0]
+		return "Query Result: Error in Query %s" % e.args[0]
 		
 		
 def help_user() :

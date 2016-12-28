@@ -76,12 +76,13 @@ def InitializeProcessParameters ():
 			g_processVintages[p, t].add( v )
 			g_processInputs[ pindex ].add( i )
 			g_processOutputs[pindex ].add( o )
-	
+		
 	g_activeFlow_psditvo = set(
 	  (p, s, d, i, t, v, o)
 
 	  for p in time_optimize
 	  for t in tech_all
+	  if (p, t) in g_processVintages.keys()
 	  for v in g_processVintages[ p, t ]
 	  for i in g_processInputs[ p, t, v ]
 	  for o in g_processOutputs[ p, t, v ]
@@ -93,6 +94,7 @@ def InitializeProcessParameters ():
 
 	  for p in time_optimize
 	  for t in tech_all
+	  if (p, t) in g_processVintages.keys()
 	  for v in g_processVintages[ p, t ]
 	)
 	g_activeCapacity_tv = set(
@@ -100,6 +102,7 @@ def InitializeProcessParameters ():
 
 	  for p in time_optimize
 	  for t in tech_all
+	  if (p, t) in g_processVintages.keys()
 	  for v in g_processVintages[ p, t ]
 	)
 	g_activeCapacityAvailable_pt = set(
@@ -107,11 +110,11 @@ def InitializeProcessParameters ():
 
 	  for p in time_optimize
 	  for t in tech_all
-	  if g_processVintages[ p, t ]
+	  if (p, t) in g_processVintages.keys()
 	)
 
 	
-def calc_intermediates (ifile):
+def calc_intermediates (ifile, scenario):
 	global V_EnergyConsumptionByPeriodInputAndTech
 	global V_ActivityByPeriodTechAndOutput
 	global V_EmissionActivityByPeriodAndTech
@@ -129,26 +132,26 @@ def calc_intermediates (ifile):
 	
 	for x,y in g_activeCapacity_tv:
 		V_Capacity[x,y] = 0
-		for row in cur.execute("SELECT capacity FROM Output_V_Capacity WHERE tech is '"+x+"' and vintage is '"+str(y)+"'"):
+		for row in cur.execute("SELECT capacity FROM Output_V_Capacity WHERE tech is '"+x+"' and vintage is '"+str(y)+"' and scenario is '"+scenario+"'"):
 			V_Capacity[x,y] = row[0]
 
 ###########FIXME########################################
 	for x,y in g_activeCapacityAvailable_pt:
 		V_CapacityAvailableByPeriodAndTech[x,y] = 0
-		for row in cur.execute("SELECT capacity FROM Output_CapacityByPeriodAndTech WHERE t_periods is '"+str(x)+"' and tech is '"+y+"'"):
+		for row in cur.execute("SELECT capacity FROM Output_CapacityByPeriodAndTech WHERE t_periods is '"+str(x)+"' and tech is '"+y+"' and scenario is '"+scenario+"'"):
 			V_CapacityAvailableByPeriodAndTech[x,y] = row[0]
 
 	for x,y,z in g_activeActivity_ptv:
 		V_ActivityByPeriodAndProcess[x,y,z] = 0
-		for row in cur.execute("SELECT SUM(vflow_out)activity FROM Output_VFlow_Out WHERE t_periods is '"+str(x)+"' and tech is '"+y+"' and vintage is '"+str(z)+"'"):
+		for row in cur.execute("SELECT SUM(vflow_out)activity FROM Output_VFlow_Out WHERE t_periods is '"+str(x)+"' and tech is '"+y+"' and vintage is '"+str(z)+"' and scenario is '"+scenario+"'"):
 			V_ActivityByPeriodAndProcess[x,y,z] = row[0]
 	
 	for a,b,c,d,e,f,g in g_activeFlow_psditvo:
 		V_FlowIn[a,b,c,d,e,f,g] = 0
 		V_FlowOut[a,b,c,d,e,f,g] = 0
-		for row in cur.execute("SELECT vflow_in FROM Output_VFlow_In WHERE t_periods is '"+str(a)+"' and t_season is '"+b+"' and t_day is '"+c+"' and input_comm is '"+d+"' and tech is '"+e+"' and vintage is '"+str(f)+"' and output_comm is '"+g+"'"):
+		for row in cur.execute("SELECT vflow_in FROM Output_VFlow_In WHERE t_periods is '"+str(a)+"' and t_season is '"+b+"' and t_day is '"+c+"' and input_comm is '"+d+"' and tech is '"+e+"' and vintage is '"+str(f)+"' and output_comm is '"+g+"' and scenario is '"+scenario+"'"):
 			V_FlowIn[a,b,c,d,e,f,g] = row[0]
-		for row in cur.execute("SELECT vflow_out FROM Output_VFlow_Out WHERE t_periods is '"+str(a)+"' and t_season is '"+b+"' and t_day is '"+c+"' and input_comm is '"+d+"' and tech is '"+e+"' and vintage is '"+str(f)+"' and output_comm is '"+g+"'"):
+		for row in cur.execute("SELECT vflow_out FROM Output_VFlow_Out WHERE t_periods is '"+str(a)+"' and t_season is '"+b+"' and t_day is '"+c+"' and input_comm is '"+d+"' and tech is '"+e+"' and vintage is '"+str(f)+"' and output_comm is '"+g+"' and scenario is '"+scenario+"'"):
 			V_FlowOut[a,b,c,d,e,f,g] = row[0]
 ######################################################
 	
@@ -247,12 +250,11 @@ def db_file(ifile) : # Call this function if the input file is a database.
 
 ################FIND Default values when not specified########################
 	for x,y in set( (t, v) for i, t, v, o in Efficiency.iterkeys()):
+		LifetimeProcess[x,y] = 30 # Default no of years
 		for row in cur.execute("SELECT life FROM LifetimeTech WHERE tech is '"+x+"'"):
 			LifetimeProcess[x,y] = row[0]
 		for row in cur.execute("SELECT life_process FROM LifetimeProcess WHERE tech is '"+x+"' and vintage is '"+str(y)+"'"):
 			LifetimeProcess[x,y] = row[0]
-		if row[0] is None:
-			LifetimeProcess[x,y] = 30 # Default no of years
 ####################FIXME########################################
 	
 	for v,w,x,y,z in set(	(e, i, t, v, o) for i, t, v, o in Efficiency.iterkeys() for e in commodity_emissions ):
@@ -1976,96 +1978,13 @@ def help_user() :
 	| -t (or --graph_type) {explicit_vintages,separate_vintages}
 							Choose the type of subgraph depiction desired.
 							[Default: separate_vintages]
-	| -g (or --gray) if specified, prints graph in grayscale
+	| -g (or --grey) if specified, prints graph in grayscale
 	| -s (or --scenario) <required scenario name from database>
 	| -n (or --name) specify the extension you wish to give your quick run
 	| -o (or --output) <Optional output file path(to dump the images folder)>
 	| -b (or --technology) <Cannot be used with '-a'> Commodity to render diagram around
 	| -a (or --commodity) <Cannot be used with '-b'> Technology to render diagram around
-	| -h  (or --help) print help'''
-  
-# try:
-# 	argv = sys.argv[1:]
-# 	opts, args = getopt.getopt(argv, "hf:cvt:i:s:n:go:", ["help", "format=", "show_capacity", "splinevar", "graph_type=", "input=", "scenario=", "name=", "grey", "output="])
-# except getopt.GetoptError:          
-# 	help_user()                          
-# 	sys.exit(2) 
-	
-# for opt, arg in opts:
-# 	if opt in ("-h", "--help"):
-# 		help_user()
-# 		sys.exit()
-# 	elif opt in ("-i", "--input"):
-# 		ifile = arg
-# 	elif opt in ("-f", "--format"):
-# 		graph_format = arg
-# 	elif opt in ("-c", "--show_capacity"):
-# 		show_capacity = True
-# 	elif opt in ("-v", "--splinevar") :
-# 		splinevar = True
-# 	elif opt in ("-t", "--graph_type") :
-# 		graph_type = arg
-# 	elif opt in ("-s", "--scenario") :
-# 		scenario = arg
-# 	elif opt in ("-n", "--name") :
-# 		quick_name = arg
-# 	elif opt in ("-o", "--output") :
-# 		res_dir = arg
-# 	elif opt in ("-g", "--grey") :
-# 		grey_flag = False
-
-# if ifile is None:
-# 	print "You did not specify one or more of the following required flags: -i(or --input)"
-# 	help_user()
-# 	sys.exit()
-
-# file_ty = re.search(r"(\w+)\.(\w+)\b", ifile) # Extract the input filename and extension
-# if not file_ty :
-# 	print "The file type %s is not recognized." % ifile
-# 	sys.exit(2)
-# elif file_ty.group(2) in ("db", "sqlite", "sqlite3", "sqlitedb") :
-# 	db_dat_flag = 1
-# 	if scenario is None:
-# 		quick_flag = True
-# 		if quick_name is None:
-# 			quick_name = file_ty.group(1)
-# 		else:
-# 			quick_name = file_ty.group(1) + '_' + quick_name
-# 	else:
-# 		quick_name = file_ty.group(1)
-		
-# elif file_ty.group(2) in ("dat", "txt") :
-# 	quick_flag = True
-# 	db_dat_flag = 0
-# 	if quick_name is None:
-# 		quick_name = file_ty.group(1)
-# 	else:
-# 		quick_name = file_ty.group(1) + '_' + quick_name
-# else :
-# 	print "The input file type %s is not recognized. Please specify a database or a text file." % ifile
-# 	sys.exit(2)
-	
-# print "Reading File %s ..." %ifile 
-# if quick_flag :
-# 	ifile = os.path.realpath(ifile)
-# 	if res_dir is None:
-# 		res_dir = "current directory"
-# 	else:
-# 		os.chdir(res_dir)
-# 	CreateModelDiagrams ()
-# 	print "Done. Look for results in %s" %res_dir
-# else:
-# 	db_file(ifile)
-# 	InitializeProcessParameters ()
-# 	calc_intermediates(ifile)
-# 	print "Creating Diagrams..."
-# 	if res_dir is None:
-# 		res_dir = "current directory"
-# 	else:
-# 		os.chdir(res_dir)
-# 	CreateModelDiagrams ()
-# 	print "Done. Look for results in %s_%s folder in %s" %(quick_name, scenario, res_dir)
-	
+	| -h  (or --help) print help'''	
 	
 
 	
@@ -2095,7 +2014,10 @@ def createGraphBasedOnInput(inputs):
 	for opt, arg in inputs.iteritems():
 	    
 		print "%s == %s" %(opt, arg)
-	    
+		
+		if opt in ("-h", "--help"):
+			help_user()
+			sys.exit()
 		if opt in ("-i", "--input"):
 			ifile = arg
 		elif opt in ("-f", "--format"):
@@ -2123,7 +2045,7 @@ def createGraphBasedOnInput(inputs):
 			print "You did not specify one or more of the following required flags: -i(or --input)"
 			raise "Input file is missing"
 
-	file_ty = re.search(r"(\w+)\.(\w+)\b", ifile) # Extract the input filename and extension
+	file_ty = re.search(r"([\w-]+)\.(\w+)\b", ifile) # Extract the input filename and extension
 	
 	if not file_ty :
 		raise "The file type %s is not recognized." % ifile
@@ -2171,7 +2093,7 @@ def createGraphBasedOnInput(inputs):
 	else:
 		db_file(ifile)
 		InitializeProcessParameters ()
-		calc_intermediates(ifile)
+		calc_intermediates(ifile, scenario)
 		
 		print "Creating Diagrams..."
 		
