@@ -335,7 +335,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       rule=MinCapacity_Constraint )
 
     M.TechInputSplitConstraint_psditv = Set(
-      dimen=6, initialize=TechInputSplitConstraintIndices )
+      dimen=6, initialize=TechInputSplitConstraintIndices
+ )
     M.TechInputSplitConstraint  = Constraint( 
       M.TechInputSplitConstraint_psditv,  
       rule=TechInputSplit_Constraint )
@@ -349,12 +350,19 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
 
     return M
 
-#global model
-  #model = temoa_create_model()
+
+
+def runModelUI(config_filename):
+  
+  model = temoa_create_model()
+  
+  from temoa_lib import temoa_solve
+  temoa_solve_ui( model , config_filename )
+  
+
 def runModel():
   
   #read config
-  
   model = temoa_create_model()
   
   from temoa_lib import temoa_solve
@@ -363,6 +371,9 @@ def runModel():
 
 
 #if '__main__' == __name__:
+#  runModel('/home/yash/Projects/sam/dapp/uploads/config_temp/config_sample')
+
+  
   ##default temoa_create_model function arg is 'name'
   #model = temoa_create_model()
 #

@@ -19,6 +19,7 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from temoa_common import *
 
 from cStringIO import StringIO
 from itertools import product as cross_product, islice, izip
@@ -26,8 +27,14 @@ from operator import itemgetter as iget
 from os import path, close as os_close
 from sys import argv, stderr as SE, stdout as SO
 from signal import signal, SIGINT, default_int_handler
+from shutil import copyfile
+
+from pyomo.opt import SolverFactory as SF
+from temoa_config import TemoaConfig
+
 
 import errno, warnings
+import re as reg_exp
 
 import pyomo.environ
   # workaround for Coopr's brain dead signal handler
@@ -58,52 +65,7 @@ explicitly use the Pyomo path.
 	raise ImportError( msg )
 
 
-class TemoaError ( Exception ): pass
-class TemoaCommandLineArgumentError ( TemoaError ): pass
-class TemoaKeyError ( TemoaError ): pass
-class TemoaObjectNotFoundError ( TemoaError ): pass
-class TemoaFlowError ( TemoaError ): pass
-class TemoaValidationError ( TemoaError ): pass
-class TemoaNoExecutableError ( TemoaError ): pass
-class TemoaInfeasibleError ( TemoaError ): pass
 
-def get_str_padding ( obj ):
-	return len(str( obj ))
-
-def iter_in_chunks ( iterable, chunk_size ):
-	"""
-Group iterable items into chunks.
-
-Given an iterable, e.g. ('a', 1, 'b', 2, 'c', 3), this function converts this
-length / chunk_size tuples.  The 'length' in the previous sentence is a
-misnomer, however, as this function works with any iterable.
-
-Caveat emptor: with the last example (below), note that incomplete tuples are
-   silently discarded.  This function assumes an there are only "complete"
-   chunks within the iterable; there are no 'partial chunks'.
-
-For example:
-
-    >>> some_tuple = ('a', 1, 'b', 2, 'c', 3)
-    >>> for i in iter_in_chunks( some_tuple, 2 )
-    >>>    print i
-    ('a', 1)
-    ('b', 2)
-    ('c', 3)
-
-    >>> for i in iter_in_chunks( some_tuple, 3 )
-    >>>    print i
-    ('a', 1, 'b')
-    (2, 'c', 3)
-
-    >>> for i in iter_in_chunks( some_tuple, 4 )
-    >>>    print i
-    ('a', 1, 'b', 2)
-
-"""
-
-	return izip( *[islice(iterable, i, None, chunk_size)
-	             for i in xrange(chunk_size)] )
 
 ###############################################################################
 # Temoa rule "partial" functions (excised from indidivual constraints for
@@ -1177,212 +1139,6 @@ For copy and paste or BibTex use:
 	raise SystemExit
 
 
-def parse_args ( ):
-	from temoa_config import TemoaConfig
-	import argparse, platform, sys
-
-	from pyomo.opt import SolverFactory as SF
-	from logging import getLogger
-
-	# used for some error messages below.
-	red_bold = cyan_bold = reset = ''
-	if platform.system() != 'Windows' and SE.isatty():
-		red_bold  = '\x1b[1;31m'
-		cyan_bold = '\x1b[1;36m'
-		reset     = '\x1b[0m'
-
-	logger = getLogger('pyomo.solvers')
-	logger_status = logger.disabled
-	logger.disabled = True  # no need for warnings: it's what we're testing!
-
-	available_solvers = set()
-	for sname in SF.services():   # list of solver interface names
-		# initial underscore ('_'): Coopr's method to mark non-public plugins
-		if '_' == sname[0]: continue
-
-		solver = SF( sname )
-		if not solver: continue
-
-		if 'os' == sname: continue     # Workaround current bug in Coopr
-		if not solver.available( exception_flag=False ): continue
-		available_solvers.add( sname )
-
-	logger.disabled = logger_status  # put back the way it was.
-
-	if available_solvers:
-		if 'cplex' in available_solvers:
-			default_solver = 'cplex'
-		elif 'gurobi' in available_solvers:
-			default_solver = 'gurobi'
-		elif 'cbc' in available_solvers:
-			default_solver = 'cbc'
-		elif 'glpk' in available_solvers:
-			default_solver = 'glpk'
-		else:
-			default_solver = iter(available_solvers).next()
-	else:
-		default_solver = 'NONE'
-		SE.write('\nNOTICE: Pyomo did not find any suitable solvers.  Temoa will '
-		   'not be able to solve any models.  If you need help, ask on the '
-		   'Temoa Project forum: http://temoaproject.org/\n\n' )
-
-	parser = argparse.ArgumentParser()
-	parser.prog = path.basename( argv[0].strip('/') )
-
-	solver      = parser.add_argument_group('Solver Options')
-	stochastic  = parser.add_argument_group('Stochastic Options')
-	postprocess = parser.add_argument_group('Postprocessing Options')
-	mga         = parser.add_argument_group('MGA Options')
-
-	parser.add_argument('dot_dat',
-	  type=str,
-	  nargs='*',
-	  help='AMPL-format data file(s) with which to create a model instance. '
-	       'e.g. "data.dat"'
-	)
-
-
-	parser.add_argument( '--fix_variables',
-	  help='Path to file containing variables to fix.  The file format is the '
-	    'same as the default Temoa output.',
-	  action='store',
-	  dest='fix_variables',
-	  default=None)
-
-	parser.add_argument( '--how_to_cite',
-	  help='Bibliographical information for citation, in the case that Temoa '
-	    'contributes to a project that leads to a scientific publication.',
-	  action='store_true',
-	  dest='how_to_cite',
-	  default=False)
-
-	parser.add_argument( '-V', '--version',
-	  help='Display the Temoa version information, then exit.',
-	  action='store_true',
-	  dest='version',
-	  default=False
-	)
-
-	parser.add_argument( '--config',
-	 help='Path to file containing configuration information.',
-	 action='store',
-	 dest='config',
-	 default=None
-	 )
-
-	solver.add_argument('--solver',
-	  help="Which backend solver to use.  See 'pyomo --help-solvers' for a list "
-	       'of solvers with which Coopr can interface.  The list shown here is '
-	       'what Coopr can currently find on this system.  [Default: {}]'
-	       .format(default_solver),
-	  action='store',
-	  choices=sorted(available_solvers),
-	  dest='solver',
-	  default=default_solver)
-
-	solver.add_argument('--generate_solver_lp_file',
-	  help='Request that solver create an LP representation of the optimization '
-	       'problem.  Mainly used for model debugging purposes.  The file name '
-	       'will have the same base name as the first dot_dat file specified.  '
-	       '[Note: this option currently only works with the GLPK solver.] '
-	       '[Default: do not create solver LP file]',
-	  action='store_true',
-	  dest='generateSolverLP',
-	  default=False)
-
-	solver.add_argument('--keep_pyomo_lp_file',
-	  help='Save the LP file as written by Pyomo.  This is distinct from the '
-	       "solver's generated LP file, but /should/ represent the same model.  "
-	       'Mainly used for debugging purposes.  '
-	       '[Default: remove Pyomo LP file]',
-	  action='store_true',
-	  dest='keepPyomoLP',
-	  default=False)
-
-	stochastic.add_argument('--eciu',
-	  help='"Expected Cost of Ignoring Uncertainty" -- Calculate the costs of '
-	       'ignoring the uncertainty of a stochastic tree.  Specify the path '
-	       'to the stochastic scenario directory.  (i.e., where to find '
-	       'ScenarioStructure.dat)',
-	  metavar='STOCHASTIC_DIRECTORY',
-	  dest='eciu',
-	  default=None)
-
-	#An optional argument with the ability to take a flag (--MGA) and a
-	#numeric slack value
-	mga.add_argument('--mga',
-	  help='Include the flag --MGA and supply a slack-value and recieve a '
-	    'Modeling to generate alternatives solution',
-	  dest='mga',
-	  type=float)
-
-	options = parser.parse_args()
-	# Use the Temoa configuration file to overwrite Kevin's argument parser
-	if options.config:
-		try:
-			temoa_config = TemoaConfig(d_solver=default_solver)
-			temoa_config.build(config=options.config)
-			SE.write(repr(temoa_config))
-			options = temoa_config
-			SE.write('\nPlease press enter to continue or Ctrl+C to quit.\n')
-			raw_input() # Give the user a chance to confirm input
-		except KeyboardInterrupt:
-			SE.write('\n\nUser requested quit.  Exiting Temoa ...\n')
-			raise SystemExit()
-
-	# First, the options that exit or do not perform any "real" computation
-	if options.version:
-		version()
-		# this function exits
-
-	if options.how_to_cite:
-		bibliographicalInformation()
-		# this function exits.
-
-	# It would be nice if this implemented with add_mutually_exclusive_group
-	# but I /also/ want them in separate groups for display.  Bummer.
-	if not (options.dot_dat or options.eciu or options.mga):
-		usage = parser.format_usage()
-		msg = ('Missing a data file to optimize (e.g., test.dat)')
-		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
-		raise TemoaCommandLineArgumentError( msg )
-
-	elif options.dot_dat and options.eciu:
-		usage = parser.format_usage()
-		msg = ('Conflicting option and arguments: --eciu and data files\n\n'
-		       '--eciu is for performing an analysis on a directory of data '
-		       'files, as are used in a stochastic analysis with PySP.  Please '
-		       'remove either of --eciu or the data files from the command '
-		       'line.')
-		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
-		raise TemoaCommandLineArgumentError( msg )
-
-	elif options.eciu:
-		# can this be subsumed directly into the argparse module functionality?
-		from os.path import isdir, isfile, join
-		edir = options.eciu
-
-		if not isdir( options.eciu ):
-			msg = "{}--eciu requires a directory.{}".format( red_bold, reset )
-			msg = "{}\n\nSupplied path: '{}'".format( msg, edir )
-			raise TemoaCommandLineArgumentError( msg )
-
-		structure_file = join( edir, 'ScenarioStructure.dat' )
-		if not isfile( structure_file ):
-			msg = "'{}{}{}' does not appear to contain a PySP stochastic program."
-			msg = '{}{}{}'.format( red_bold, msg, reset )
-			raise TemoaCommandLineArgumentError(
-			   msg.format( reset, edir, red_bold ))
-
-	if options.mga:
-		msg = 'MGA specified (slack value: {})\n'.format( options.mga )
-		SE.write( msg )
-
-	s_choice = str( options.solver ).upper()
-	SE.write('Notice: Using the {} solver interface.\n'.format( s_choice ))
-	SE.flush()
-
-	return options
 
 # End miscellaneous routines
 ###############################################################################
@@ -1554,7 +1310,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	else:
 		SE.write( '\r---------- Not solving: no available solver\n' )
 		return
-
+		
 def solve_perfect_foresight ( model, optimizer, options ):
 	from time import clock
 	import sys, os, gc
@@ -1563,122 +1319,156 @@ def solve_perfect_foresight ( model, optimizer, options ):
 
 	from pformat_results import pformat_results
 
-	opt = optimizer              # for us lazy programmer types
-	dot_dats = options.dot_dat
+	try:
+	
+		opt = optimizer              # for us lazy programmer types
+		dot_dats = options.dot_dat
+		txt_file = open("result"+os.sep+"db_io"+os.sep+"debug_logs"+os.sep+"OutputLog.log", "w")
 
-	if options.generateSolverLP:
-		opt.options.wlp = path.basename( dot_dats[0] )[:-4] + '.lp'
-		SE.write('\nSolver will write file: {}\n\n'.format( opt.options.wlp ))
+		if options.generateSolverLP:
+			opt.options.wlp = path.basename( dot_dats[0] )[:-4] + '.lp'
+			SE.write('\nSolver will write file: {}\n\n'.format( opt.options.wlp ))
+			txt_file.write('\nSolver will write file: {}\n\n'.format( opt.options.wlp ))
 
-	SE.write( '[        ] Reading data files.'); SE.flush()
-	# Recreate the pyomo command's ability to specify multiple "dot dat" files
-	# on the command line
-	begin = clock()
-	duration = lambda: clock() - begin
+		SE.write( '[        ] Reading data files.'); SE.flush()
+		txt_file.write( '[        ] Reading data files.'); txt_file.flush()
+		# Recreate the pyomo command's ability to specify multiple "dot dat" files
+		# on the command line
+		begin = clock()
+		duration = lambda: clock() - begin
 
-	modeldata = DataPortal( model=model )
-	for fname in dot_dats:
-		if fname[-4:] != '.dat':
-			msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
-			raise TemoaValidationError( msg.format( fname ))
-		modeldata.load( filename=fname )
-	SE.write( '\r[%8.2f\n' % duration() )
-
-	SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
-	instance = model.create_instance( modeldata )
-	SE.write( '\r[%8.2f\n' % duration() )
-
-	if options.fix_variables:
-		SE.write( '[        ] Fixing supplied variables.'); SE.flush()
-		import re
-
-		# Assumption: All variables are indexed
-		# We accept \S+ instead of the more precise (\d+(?:\.\d+)?) because we
-		# want to be helpful in case of a user typo.
-		var_data_re = re.compile( r'^ *(\S+) +(V_\w+)\[(\S+)\]$' )
-		int_re = re.compile( r'^\d+$' )
-
-		with open( options.fix_variables, 'rb' ) as f:
-			for lineno, line in enumerate( f, 1 ):    # humans think 1-based
-				match = var_data_re.match( line )
-
-				# We ignore (and thereby allow) lines that don't match the Temoa
-				# value variable[index] per line output.  This enables folks to
-				# comment and uncomment lines if they'd like.
-				if not match: continue
-
-				try:
-					value, vgroup, vindex = match.groups()
-					vindex = vindex.split(',')
-					value = float( value )
-				except ValueError as ve:
-					msg = '\nLine {:d}: Unable to parse value for "{}{}" ({})\n'
-					raise TemoaValidationError( msg.format(
-					  lineno, vgroup, vindex, value ))
-
-				for i, index in enumerate( vindex ):
-					# if index is an integer, convert it so it matches indices
-					# Problem: if modeler has used integer values for indices
-					# other than period or vintage.
-					if int_re.match( index ):
-						vindex[ i ] = int( index )
-
-				try:
-					m_var = getattr( instance, vgroup )[ tuple(vindex) ]
-					m_var.fixed = True
-					m_var.set_value( value )
-
-				except AttributeError as ae:
-					if "'AbstractModel' object has no attribute " in str(ae):
-						# This could be so much cleaner if Coopr had Coopr-specific
-						# error classes.  Sigh.
-
-						msg = 'Line {:d}: Model does not have a variable named "{}".'
-						msg = msg.format( lineno, vgroup )
-						raise TemoaObjectNotFoundError( msg )
-
-					raise
-
-				except KeyError as ke:
-					if 'Error accessing indexed component' in str(ke):
-						# This could be so much cleaner if Coopr had Coopr-specific
-						# error classes.  Sigh.
-
-						msg = 'Line {:d}: Variable "{}" has no index "{}".'
-						vindex = str( tuple(vindex) )
-						msg = msg.format( lineno, vgroup, vindex )
-						raise TemoaKeyError( msg )
-
-					raise
-
+		modeldata = DataPortal( model=model )
+		for fname in dot_dats:
+			if fname[-4:] != '.dat':
+				msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
+				raise TemoaValidationError( msg.format( fname ))
+			modeldata.load( filename=fname )
 		SE.write( '\r[%8.2f\n' % duration() )
-		SE.write( '[        ] Preprocessing fixed variables.'); SE.flush()
-		instance.preprocess()
+		txt_file.write( '\r[%8.2f\n' % duration() )
+
+		SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
+		txt_file.write( '[        ] Creating Temoa model instance.'); txt_file.flush()
+		instance = model.create_instance( modeldata )
 		SE.write( '\r[%8.2f\n' % duration() )
+		txt_file.write( '\r[%8.2f\n' % duration() )
 
-	# Now do the solve and ...
-	SE.write( '[        ] Solving.'); SE.flush()
-	if opt:
-		result = opt.solve( instance , 
-							keepfiles=options.keepPyomoLP, 
-							symbolic_solver_labels=options.keepPyomoLP )
+		if options.fix_variables:
+			SE.write( '[        ] Fixing supplied variables.'); SE.flush()
+			txt_file.write( '[        ] Fixing supplied variables.'); txt_file.flush()
+			import re
+
+			# Assumption: All variables are indexed
+			# We accept \S+ instead of the more precise (\d+(?:\.\d+)?) because we
+			# want to be helpful in case of a user typo.
+			var_data_re = re.compile( r'^ *(\S+) +(V_\w+)\[(\S+)\]$' )
+			int_re = re.compile( r'^\d+$' )
+
+			with open( options.fix_variables, 'rb' ) as f:
+				for lineno, line in enumerate( f, 1 ):    # humans think 1-based
+					match = var_data_re.match( line )
+
+					# We ignore (and thereby allow) lines that don't match the Temoa
+					# value variable[index] per line output.  This enables folks to
+					# comment and uncomment lines if they'd like.
+					if not match: continue
+
+					try:
+						value, vgroup, vindex = match.groups()
+						vindex = vindex.split(',')
+						value = float( value )
+					except ValueError as ve:
+						msg = '\nLine {:d}: Unable to parse value for "{}{}" ({})\n'
+						raise TemoaValidationError( msg.format(
+						  lineno, vgroup, vindex, value ))
+
+					for i, index in enumerate( vindex ):
+						# if index is an integer, convert it so it matches indices
+						# Problem: if modeler has used integer values for indices
+						# other than period or vintage.
+						if int_re.match( index ):
+							vindex[ i ] = int( index )
+
+					try:
+						m_var = getattr( instance, vgroup )[ tuple(vindex) ]
+						m_var.fixed = True
+						m_var.set_value( value )
+
+					except AttributeError as ae:
+						if "'AbstractModel' object has no attribute " in str(ae):
+							# This could be so much cleaner if Coopr had Coopr-specific
+							# error classes.  Sigh.
+
+							msg = 'Line {:d}: Model does not have a variable named "{}".'
+							msg = msg.format( lineno, vgroup )
+							raise TemoaObjectNotFoundError( msg )
+
+						raise
+
+					except KeyError as ke:
+						if 'Error accessing indexed component' in str(ke):
+							# This could be so much cleaner if Coopr had Coopr-specific
+							# error classes.  Sigh.
+
+							msg = 'Line {:d}: Variable "{}" has no index "{}".'
+							vindex = str( tuple(vindex) )
+							msg = msg.format( lineno, vgroup, vindex )
+							raise TemoaKeyError( msg )
+
+						raise
+
+			SE.write( '\r[%8.2f\n' % duration() )
+			SE.write( '[        ] Preprocessing fixed variables.'); SE.flush()
+			txt_file.write( '\r[%8.2f\n' % duration() )
+			txt_file.write( '[        ] Preprocessing fixed variables.'); txt_file.flush()
+			instance.preprocess()
+			SE.write( '\r[%8.2f\n' % duration() )
+			txt_file.write( '\r[%8.2f\n' % duration() )
+
+		# Now do the solve and ...
+		SE.write( '[        ] Solving.'); SE.flush()
+		txt_file.write( '[        ] Solving.'); txt_file.flush()
+		if opt:
+			result = opt.solve( instance , 
+								keepfiles=options.keepPyomoLP, 
+								symbolic_solver_labels=options.keepPyomoLP )
+			SE.write( '\r[%8.2f\n' % duration() )
+			txt_file.write( '\r[%8.2f\n' % duration() )
+
+			# return signal handlers to defaults, again
+			signal(SIGINT, default_int_handler)
+
+		else:
+			SE.write( '\r---------- Not solving: no available solver\n' )
+			txt_file.write( '\r---------- Not solving: no available solver\n' )
+			return
+
+		# ... print the easier-to-read/parse format
+		msg = '[        ] Calculating reporting variables and formatting results.'
+		SE.write( msg ); SE.flush()
+		txt_file.write( msg ); txt_file.flush()
+		instance.solutions.store_to(result)
+		formatted_results = pformat_results( instance, result, options )
 		SE.write( '\r[%8.2f\n' % duration() )
+		txt_file.write( '\r[%8.2f\n' % duration() )
 
-		# return signal handlers to defaults, again
-		signal(SIGINT, default_int_handler)
+		SO.write( formatted_results.getvalue() )
+		txt_file.write( formatted_results.getvalue() )
+		txt_file.close()
+	except BaseException as model_exc:
+		SE.write("exception found in solve_perfect_foresight\n")
+		txt_file.write("exception found in solve_perfect_foresight\n")
+		SE.write(str(model_exc))
+		txt_file.write(str(model_exc))
+		txt_file.close()
 
-	else:
-		SE.write( '\r---------- Not solving: no available solver\n' )
-		return
+	if options.saveTEXTFILE:
+		for inpu in options.dot_dat:
+			file_ty = reg_exp.search(r"\b(\w+)\.(\w+)\b", inpu)
+		
+		#dirty fix. This used passed as parameter. - TODO - Suyash provide me one
+		new_dir = 'result'+os.sep+'db_io'+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+		copyfile('result'+os.sep+'db_io'+os.sep+'debug_logs'+os.sep+'OutputLog.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
 
-	# ... print the easier-to-read/parse format
-	msg = '[        ] Calculating reporting variables and formatting results.'
-	SE.write( msg ); SE.flush()
-	instance.solutions.store_to(result)
-	formatted_results = pformat_results( instance, result, options )
-	SE.write( '\r[%8.2f\n' % duration() )
-
-	SO.write( formatted_results.getvalue() )
 
 def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	import multiprocessing as MP, os, cPickle as pickle
@@ -2157,9 +1947,257 @@ def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	chdir( pwd )
 
 
-def temoa_solve ( model ):
-	from sys import argv, version_info
+# Lets split it and work
 
+def get_solvers():
+	
+	from logging import getLogger
+	
+	logger = getLogger('pyomo.solvers')
+	logger_status = logger.disabled
+	logger.disabled = True  # no need for warnings: it's what we're testing!
+	
+	available_solvers = set()
+	for sname in SF.services():   # list of solver interface names
+		# initial underscore ('_'): Coopr's method to mark non-public plugins
+		if '_' == sname[0]: continue
+
+		solver = SF( sname )
+		if not solver: continue
+
+		if 'os' == sname: continue     # Workaround current bug in Coopr
+		if not solver.available( exception_flag=False ): continue
+		available_solvers.add( sname )
+
+	logger.disabled = logger_status  # put back the way it was.
+
+	if available_solvers:
+		if 'cplex' in available_solvers:
+			default_solver = 'cplex'
+		elif 'gurobi' in available_solvers:
+			default_solver = 'gurobi'
+		elif 'cbc' in available_solvers:
+			default_solver = 'cbc'
+		elif 'glpk' in available_solvers:
+			default_solver = 'glpk'
+		else:
+			default_solver = iter(available_solvers).next()
+	else:
+		default_solver = 'NONE'
+		SE.write('\nNOTICE: Pyomo did not find any suitable solvers.  Temoa will '
+		   'not be able to solve any models.  If you need help, ask on the '
+		   'Temoa Project forum: http://temoaproject.org/\n\n' )
+
+	return (available_solvers, default_solver)
+
+
+
+def parse_args ( ):
+	
+	import argparse, platform, sys
+
+
+	# used for some error messages below.
+	red_bold = cyan_bold = reset = ''
+	if platform.system() != 'Windows' and SE.isatty():
+		red_bold  = '\x1b[1;31m'
+		cyan_bold = '\x1b[1;36m'
+		reset     = '\x1b[0m'
+
+	
+
+	available_solvers, default_solver = get_solvers()
+	
+	parser = argparse.ArgumentParser()
+	parser.prog = path.basename( argv[0].strip('/') )
+
+	solver      = parser.add_argument_group('Solver Options')
+	stochastic  = parser.add_argument_group('Stochastic Options')
+	postprocess = parser.add_argument_group('Postprocessing Options')
+	mga         = parser.add_argument_group('MGA Options')
+
+	parser.add_argument('dot_dat',
+	  type=str,
+	  nargs='*',
+	  help='AMPL-format data file(s) with which to create a model instance. '
+	       'e.g. "data.dat"'
+	)
+
+
+	parser.add_argument( '--fix_variables',
+	  help='Path to file containing variables to fix.  The file format is the '
+	    'same as the default Temoa output.',
+	  action='store',
+	  dest='fix_variables',
+	  default=None)
+
+	parser.add_argument( '--how_to_cite',
+	  help='Bibliographical information for citation, in the case that Temoa '
+	    'contributes to a project that leads to a scientific publication.',
+	  action='store_true',
+	  dest='how_to_cite',
+	  default=False)
+
+	parser.add_argument( '-V', '--version',
+	  help='Display the Temoa version information, then exit.',
+	  action='store_true',
+	  dest='version',
+	  default=False
+	)
+
+	parser.add_argument( '--config',
+	 help='Path to file containing configuration information.',
+	 action='store',
+	 dest='config',
+	 default=None
+	 )
+
+	solver.add_argument('--solver',
+	  help="Which backend solver to use.  See 'pyomo --help-solvers' for a list "
+	       'of solvers with which Coopr can interface.  The list shown here is '
+	       'what Coopr can currently find on this system.  [Default: {}]'
+	       .format(default_solver),
+	  action='store',
+	  choices=sorted(available_solvers),
+	  dest='solver',
+	  default=default_solver)
+
+	solver.add_argument('--generate_solver_lp_file',
+	  help='Request that solver create an LP representation of the optimization '
+	       'problem.  Mainly used for model debugging purposes.  The file name '
+	       'will have the same base name as the first dot_dat file specified.  '
+	       '[Note: this option currently only works with the GLPK solver.] '
+	       '[Default: do not create solver LP file]',
+	  action='store_true',
+	  dest='generateSolverLP',
+	  default=False)
+
+	solver.add_argument('--keep_pyomo_lp_file',
+	  help='Save the LP file as written by Pyomo.  This is distinct from the '
+	       "solver's generated LP file, but /should/ represent the same model.  "
+	       'Mainly used for debugging purposes.  '
+	       '[Default: remove Pyomo LP file]',
+	  action='store_true',
+	  dest='keepPyomoLP',
+	  default=False)
+
+	stochastic.add_argument('--eciu',
+	  help='"Expected Cost of Ignoring Uncertainty" -- Calculate the costs of '
+	       'ignoring the uncertainty of a stochastic tree.  Specify the path '
+	       'to the stochastic scenario directory.  (i.e., where to find '
+	       'ScenarioStructure.dat)',
+	  metavar='STOCHASTIC_DIRECTORY',
+	  dest='eciu',
+	  default=None)
+
+	#An optional argument with the ability to take a flag (--MGA) and a
+	#numeric slack value
+	mga.add_argument('--mga',
+	  help='Include the flag --MGA and supply a slack-value and recieve a '
+	    'Modeling to generate alternatives solution',
+	  dest='mga',
+	  type=float)
+
+	options = parser.parse_args()
+	#print options
+	#Namespace(config='config_sample', dot_dat=[], eciu=None, fix_variables=None, generateSolverLP=False, how_to_cite=False, keepPyomoLP=False, mga=None, solver='mpec_nlp', version=False)
+
+	# Use the Temoa configuration file to overwrite Kevin's argument parser
+	if options.config:
+		try:
+			temoa_config = TemoaConfig(d_solver=default_solver)
+			temoa_config.build(config=options.config)
+			SE.write(repr(temoa_config))
+			options = temoa_config
+			SE.write('\nPlease press enter to continue or Ctrl+C to quit.\n')
+			#raw_input() # Give the user a chance to confirm input
+		except KeyboardInterrupt:
+			SE.write('\n\nUser requested quit.  Exiting Temoa ...\n')
+			raise SystemExit()
+
+	# First, the options that exit or do not perform any "real" computation
+	if options.version:
+		version()
+		# this function exits
+
+	if options.how_to_cite:
+		bibliographicalInformation()
+		# this function exits.
+
+	# It would be nice if this implemented with add_mutually_exclusive_group
+	# but I /also/ want them in separate groups for display.  Bummer.
+	if not (options.dot_dat or options.eciu or options.mga):
+		usage = parser.format_usage()
+		msg = ('Missing a data file to optimize (e.g., test.dat)')
+		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
+		raise TemoaCommandLineArgumentError( msg )
+
+	elif options.dot_dat and options.eciu:
+		usage = parser.format_usage()
+		msg = ('Conflicting option and arguments: --eciu and data files\n\n'
+		       '--eciu is for performing an analysis on a directory of data '
+		       'files, as are used in a stochastic analysis with PySP.  Please '
+		       'remove either of --eciu or the data files from the command '
+		       'line.')
+		msg = '{}\n{}{}{}'.format( usage, red_bold, msg, reset )
+		raise TemoaCommandLineArgumentError( msg )
+
+	elif options.eciu:
+		# can this be subsumed directly into the argparse module functionality?
+		from os.path import isdir, isfile, join
+		edir = options.eciu
+
+		if not isdir( options.eciu ):
+			msg = "{}--eciu requires a directory.{}".format( red_bold, reset )
+			msg = "{}\n\nSupplied path: '{}'".format( msg, edir )
+			raise TemoaCommandLineArgumentError( msg )
+
+		structure_file = join( edir, 'ScenarioStructure.dat' )
+		if not isfile( structure_file ):
+			msg = "'{}{}{}' does not appear to contain a PySP stochastic program."
+			msg = '{}{}{}'.format( red_bold, msg, reset )
+			raise TemoaCommandLineArgumentError(
+			   msg.format( reset, edir, red_bold ))
+
+	if options.mga:
+		msg = 'MGA specified (slack value: {})\n'.format( options.mga )
+		SE.write( msg )
+
+	s_choice = str( options.solver ).upper()
+	SE.write('Notice: Using the {} solver interface.\n'.format( s_choice ))
+	SE.flush()
+	
+	
+	raw_input() # Give the user a chance to confirm input
+
+	return options
+
+
+def temoa_solve_ui ( model, config_filename ):
+    
+	available_solvers, default_solver = get_solvers()
+
+	temoa_config = TemoaConfig(d_solver=default_solver)
+	temoa_config.build(config=config_filename)
+	options = temoa_config
+
+	run_solve(model, options)
+
+
+def temoa_solve ( model ):
+	
+	from argparse import Namespace
+
+	options = parse_args()
+
+	run_solve(model,options)
+
+	
+
+	
+
+def run_solve(model,options):
+	from sys import argv, version_info, exit
 	if version_info < (2, 7):
 		msg = ("Temoa requires Python v2.7 to run.\n\nIf you've "
 		  "installed Coopr with Python 2.6 or less, you'll need to reinstall "
@@ -2167,7 +2205,6 @@ def temoa_solve ( model ):
 		  'executable.')
 		raise SystemExit( msg )
 
-	options = parse_args()
 
 	from pyomo.opt import SolverFactory
 
