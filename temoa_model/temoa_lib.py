@@ -1165,6 +1165,7 @@ For copy and paste or BibTex use:
 def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	from collections import defaultdict
 	from time import clock
+	import sys, os, gc
 
 	from pyomo.environ import DataPortal
 
@@ -1174,6 +1175,9 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	opt = optimizer              # for us lazy programmer types
 	dot_dats = options.dot_dat
 
+	scenario_names = []
+	scenario_names.append(options.scenario)
+	
 	def ActivityObj_rule ( M, prev_act_t ):
 		new_act = 0
 		for t in M.V_ActivityByTech:
@@ -1238,94 +1242,174 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	# step is to remove the original objective function
 	model.del_component( 'TotalCost' )
 
-	SE.write( '[        ] Reading data files.'); SE.flush()
-	begin = clock()
-	duration = lambda: clock() - begin
+	
+	try:
+		txt_file = open(options.path_to_logs+os.sep+"OutputLog.log", "w")
+	except BaseException as io_exc:
+		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
+		txt_file = open("OutputLog.log", "w")
+		txt_file.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
+	
+	try:
+		
+		SE.write( '[        ] Reading data files.'); SE.flush()
+		txt_file.write( 'Reading data files.')
+		begin = clock()
+		duration = lambda: clock() - begin
 
-	mdata = DataPortal( model=model )
-	for fname in dot_dats:
-		if fname[-4:] != '.dat':
-			msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
-			raise TemoaValidationError( msg.format( fname ))
-		mdata.load( filename=fname )
-	SE.write( '\r[%8.2f\n' % duration() )
+		mdata = DataPortal( model=model )
+		for fname in dot_dats:
+			if fname[-4:] != '.dat':
+				msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
+				raise TemoaValidationError( msg.format( fname ))
+			mdata.load( filename=fname )
+		SE.write( '\r[%8.2f\n' % duration() )
+		txt_file.write( '\r[%8.2f]\n' % duration() )
 
-	SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
+		SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
+		txt_file.write( 'Creating Temoa model instance.')
 
-	# Create concrete model
-	instance_1 = model.create_instance( mdata )
+		# Create concrete model
+		instance_1 = model.create_instance( mdata )
 
-	# Now add in and objective function, like we earlier removed; note that name
-	# we choose here (FirstObj) will be copied to the output file.
-	instance_1.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
-	instance_1.preprocess()
-
-	SE.write( '\r[%8.2f\n' % duration() )
-
-	SE.write( '[        ] Solving first model instance.'); SE.flush()
-
-	if opt:
-		result_1 = opt.solve( instance_1, 
-							  load_solutions=False, 
-							  keepfiles=options.keepPyomoLP, 
-							  symbolic_solver_labels = options.keepPyomoLP )
-		instance_1.solutions.load_from(result_1, delete_symbol_map=False)
+		# Now add in and objective function, like we earlier removed; note that name
+		# we choose here (FirstObj) will be copied to the output file.
+		instance_1.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
+		instance_1.preprocess()
 
 		SE.write( '\r[%8.2f\n' % duration() )
+		txt_file.write( '\r[%8.2f]\n' % duration() )
 
-		instance_1.solutions.load_from(result_1)
-		formatted_results = pformat_results( instance_1, result_1, options )  
-		SO.write( formatted_results.getvalue() )
+		SE.write( '[        ] Solving first model instance.'); SE.flush()
+		txt_file.write( 'Solving first model instance.')
 
-
-		# using value() converts the now-load()ed results into a single number,
-		# which we'll use with our slightly unusual SlackedObjective_rule below
-		# (but defined above).
-		Perfect_Foresight_Obj = value( instance_1.FirstObj )
-		
-		# Create a new parameter that stores the MGA objective function weights
-		prev_activity_t = defaultdict( int )		
-		prev_activity_t = PreviousAct_rule( instance_1 )		
-		
-		#Perform 5 MGA iterations
-		while options.next_mga():
-			instance_mga = model.create_instance( mdata )
-
-
-			# Update second instance with the new MGA-specific objective function
-			# and constraint.
-			instance_mga.SecondObj = Objective(
-		  	expr=ActivityObj_rule( instance_mga, prev_activity_t ),
-		  	noruleinit=True,
-		  	sense=minimize
-			)
-			instance_mga.PreviousSlackedObjective = Constraint(
-		  	rule=None,
-		  	expr=SlackedObjective_rule( instance_mga, Perfect_Foresight_Obj ),
-		  	noruleinit=True
-			)
-			instance_mga.preprocess()
-
-			SE.write( '[        ] Solving {}.'.format(options.scenario)); SE.flush()
-			result_mga = opt.solve( instance_mga, 
-									load_solutions=False, 
-									keepfiles=options.keepPyomoLP, 
-									symbolic_solver_labels = options.keepPyomoLP )
+		if opt:
+			result_1 = opt.solve( instance_1, 
+								  load_solutions=False, 
+								  keepfiles=options.keepPyomoLP, 
+								  symbolic_solver_labels = options.keepPyomoLP )
+			instance_1.solutions.load_from(result_1, delete_symbol_map=False)
 
 			SE.write( '\r[%8.2f\n' % duration() )
+			txt_file.write( '\r[%8.2f]\n' % duration() )
 
-			instance_mga.solutions.load_from(result_mga, delete_symbol_map=False)
-			formatted_results = pformat_results( instance_mga, result_mga, options )
+			instance_1.solutions.load_from(result_1)
+			formatted_results = pformat_results( instance_1, result_1, options )  
 			SO.write( formatted_results.getvalue() )
+			txt_file.write( formatted_results.getvalue() )
+			txt_file.flush()
 
-			#Keep adding activity from latest iteration to MGA Obj function
-			prev_activity_t = PreviousAct_rule( instance_mga )
 
-			# return signal handlers to defaults, again
-			signal(SIGINT, default_int_handler)
-	else:
-		SE.write( '\r---------- Not solving: no available solver\n' )
-		return
+			# using value() converts the now-load()ed results into a single number,
+			# which we'll use with our slightly unusual SlackedObjective_rule below
+			# (but defined above).
+			Perfect_Foresight_Obj = value( instance_1.FirstObj )
+			
+			# Create a new parameter that stores the MGA objective function weights
+			prev_activity_t = defaultdict( int )		
+			prev_activity_t = PreviousAct_rule( instance_1 )		
+
+			if options.saveTEXTFILE:
+				for inpu in options.dot_dat:
+					file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
+				
+				new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+				
+				if path.isfile(options.path_to_logs+os.sep+'OutputLog.log') and path.exists(new_dir):
+					copyfile(options.path_to_logs+os.sep+'OutputLog.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
+
+			
+			#Perform 5 MGA iterations
+			while options.next_mga():
+				instance_mga = model.create_instance( mdata )
+
+
+				try:
+					txt_file_mga = open(options.path_to_logs+os.sep+"OutputLog_MGA.log", "w")
+				except BaseException as io_exc:
+					SE.write("MGA Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
+					txt_file_mga = open("OutputLog_MGA.log", "w")
+				
+				scenario_names.append(options.scenario)
+				
+				# Update second instance with the new MGA-specific objective function
+				# and constraint.
+				instance_mga.SecondObj = Objective(
+				expr=ActivityObj_rule( instance_mga, prev_activity_t ),
+				noruleinit=True,
+				sense=minimize
+				)
+				instance_mga.PreviousSlackedObjective = Constraint(
+				rule=None,
+				expr=SlackedObjective_rule( instance_mga, Perfect_Foresight_Obj ),
+				noruleinit=True
+				)
+				instance_mga.preprocess()
+
+				SE.write( '[        ] Solving {}.'.format(options.scenario)); SE.flush()
+				txt_file.write( 'Solving {}.'.format(options.scenario)); SE.flush()
+				txt_file_mga.write( 'Solving {}.'.format(options.scenario)); SE.flush()
+				
+				result_mga = opt.solve( instance_mga, 
+										load_solutions=False, 
+										keepfiles=options.keepPyomoLP, 
+										symbolic_solver_labels = options.keepPyomoLP )
+
+				SE.write( '\r[%8.2f\n' % duration() )
+				txt_file.write( '\r[%8.2f]\n' % duration() )
+				txt_file_mga.write( '\r[%8.2f]\n' % duration() )
+
+
+				instance_mga.solutions.load_from(result_mga, delete_symbol_map=False)
+				formatted_results = pformat_results( instance_mga, result_mga, options )
+				SO.write( formatted_results.getvalue() )
+				txt_file.write( formatted_results.getvalue() )
+				txt_file_mga.write( formatted_results.getvalue() )
+
+				txt_file_mga.flush()
+				
+				#Keep adding activity from latest iteration to MGA Obj function
+				prev_activity_t = PreviousAct_rule( instance_mga )
+
+				# return signal handlers to defaults, again
+				signal(SIGINT, default_int_handler)
+				
+				txt_file_mga.close()
+			
+				if options.saveTEXTFILE:
+					for inpu in options.dot_dat:
+						file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
+					
+					new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+					
+					if path.isfile(options.path_to_logs+os.sep+'OutputLog_MGA.log') and path.exists(new_dir):
+						move(options.path_to_logs+os.sep+'OutputLog_MGA.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
+			
+			txt_file.flush()
+			txt_file.close()
+		else:
+			SE.write( '\r---------- Not solving: no available solver\n' )
+			txt_file.write( '\r---------- Not solving: no available solver\n' )
+			txt_file.close()
+			#return
+			
+	except BaseException as model_exc:
+		SE.write("exception found in MGA()\n")
+		txt_file.write("exception found in MGA()\n")
+		SE.write(str(model_exc))
+		txt_file.write(str(model_exc))
+		txt_file.close()
+		
+	if options.saveTEXTFILE:
+		for inpu in options.dot_dat:
+			file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
+		
+		for sc in scenario_names:
+			new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+sc+'_model'
+			
+			if path.isfile(options.path_to_logs+os.sep+'OutputLog.log') and path.exists(new_dir):
+				copyfile(options.path_to_logs+os.sep+'OutputLog.log', new_dir+os.sep+'Complete_OutputLog.log')
+
 		
 def solve_perfect_foresight ( model, optimizer, options ):
 	from time import clock
@@ -1340,6 +1424,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	except BaseException as io_exc:
 		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
 		txt_file = open("OutputLog.log", "w")
+		txt_file.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
 	
 	try:
 	

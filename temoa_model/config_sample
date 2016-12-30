@@ -8,7 +8,7 @@
 # Input File (Mandatory). Usage: --input=<your_path_to_input_file>
 # Input can be a .db or .dat file
 # Both relative path and absolute path are accepted
---input=db_io/temoa_utopia.dat
+--input=db_io/temoa_utopia.sqlite
 
 # Output File (Mandatory). Usage: --output=<your_path_to_output_file>
 # The output file must be a existing .db file
@@ -18,9 +18,7 @@
 # This scenario name is used to store results within the output .db file
 --scenario=test_run
 
---path_to_db_io=E:\NCSU Work\Temoa Stuff\Database_io
-
---path_to_logs=E:/NCSU Work/Temoa Stuff/Database_io/temoa/db_io/debug_logs
+--path_to_db_io=E:/NCSU Work/Temoa Stuff/Database_io/temoa/db_io
 
 # Spreadsheet Output (Optional). Usage: --saveEXCEL 
 # Direct model output to a spreadsheet
@@ -36,7 +34,7 @@
 
 # Solver-related arguments (Optional)
 # --solver=glpk                    # Optional, indicate the solver
-# --generate_solver_lp_file        # Optional, generate solver-compatible LP file
+ --generate_solver_lp_file        # Optional, generate solver-compatible LP file
 # --keep_pyomo_lp_file             # Optional, generate Pyomo-compatible LP file
 
 # Modeling-to-Generate Alternatives (Optional)
@@ -44,5 +42,5 @@
 #--mga {
 #	slack=0.1                     # Objective function slack value in MGA runs
 #	iteration=4                   # Number of MGA iterations
-#        weight=integer                # MGA objective function weighting method, currently "integer" or "normalized"
+#	weight=integer                # MGA objective function weighting method, currently "integer" or "normalized"
 #}
