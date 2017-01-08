@@ -2235,6 +2235,8 @@ def parse_args ( ):
 			options = temoa_config
 			SE.write('\nPlease press enter to continue or Ctrl+C to quit.\n')
 			#raw_input() # Give the user a chance to confirm input
+			if options.abort_temoa:
+				return
 		except KeyboardInterrupt:
 			SE.write('\n\nUser requested quit.  Exiting Temoa ...\n')
 			raise SystemExit()
@@ -2249,7 +2251,7 @@ def parse_args ( ):
 		bibliographicalInformation(options)
 		# this function exits.
 		return
-
+		
 	# It would be nice if this implemented with add_mutually_exclusive_group
 	# but I /also/ want them in separate groups for display.  Bummer.
 	if not (options.dot_dat or options.eciu or options.mga):
@@ -2323,6 +2325,9 @@ def temoa_solve_ui ( model, config_filename ):
 		# this function exits.
 		return
 	
+	if options.abort_temoa:
+		return
+	
 	run_solve(model, options)
 
 
@@ -2332,6 +2337,9 @@ def temoa_solve ( model ):
 
 	options = parse_args()
 
+	if options is None:
+		return
+	
 	global temp_lp_dest
 	temp_lp_dest = ''
 	

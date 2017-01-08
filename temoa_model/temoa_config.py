@@ -235,6 +235,7 @@ class TemoaConfig( object ):
 		#Introduced during UI Development
 		self.path_to_db_io    = re.sub('temoa_model$', 'db_io', dirname(abspath(__file__)))# Path to where automated excel and text log folder will be save as output.
 		self.path_to_logs     = self.path_to_db_io+sep+"debug_logs" #Path to where debug logs will be generated for each run. By default in debug_logs folder in db_io.
+		self.abort_temoa	  = False
 		
 		if 'd_solver' in kwargs.keys(): 
 			self.solver = kwargs['d_solver']
@@ -405,6 +406,17 @@ class TemoaConfig( object ):
 			msg += '-'*width + '\n'
 			sys.stderr.write(msg)
 		
+			try:
+				txt_file = open(self.path_to_logs+os.sep+"OutputLog.log", "w")
+			except BaseException as io_exc:
+				sys.stderr.write("Log file cannot be opened. Please check path. Trying to find:\n"+self.path_to_logs+" folder\n")
+				txt_file = open("OutputLog.log", "w")
+
+			txt_file.write( msg )
+			txt_file.close()
+			self.abort_temoa = True
+		
+		
 		if not self.dot_dat:
 			raise TemoaConfigError('Input file not specified.')
 		
@@ -416,7 +428,6 @@ class TemoaConfig( object ):
 				db_or_dat = False
 			elif (i_ext == '.db') or (i_ext == '.sqlite') or (i_ext == '.sqlite3') or (i_ext == 'sqlitedb'):
 				db_or_dat = True
-				
 			
 		if not self.output and db_or_dat:
 			raise TemoaConfigError('Output file not specified.')
