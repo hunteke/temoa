@@ -303,48 +303,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 				if tagged_file == options.dot_dat[0]:
 					#If Input_file name matches, add output and check tech/comm
-					tech_existing = set()
-					comm_existing = set()
-					tech_new = set()
-					comm_new = set()
-					
-					cur.execute("SELECT tech FROM technologies;")
-					for row in cur:
-						tech_existing.add(row[0])
-						
-					cur.execute("SELECT comm_name FROM commodities;")
-					for row in cur:
-						comm_existing.add(row[0])
-					
-					
-					comm_new, tech_new = dat_to_db(options.dot_dat[0], con, True)
-					
-					decision_flag = compare_energysystems(tech_existing, tech_new, comm_existing, comm_new)
-					
-					#We assume either something has been added or something has been removed. Not both!
-					if decision_flag == 0: #SAME ENERGYSYSTEMS. DONT DELETE ANYTHING.
-						pass
-						
-					elif decision_flag == 1: #SOMETHING SUBTRACTED. DONT DELETE ANYTHING.
-						pass
-						
-					elif decision_flag == 2: #SOMETHING ADDED. KEEP NEW FILE. DONT DELETE PREV RESULTS.
-						for i in db_tables:
-							cur.execute("DELETE FROM "+i+";")
-							cur.execute("VACUUM;")
-						
-						dat_to_db(options.dot_dat[0], con)
-						
-					elif decision_flag == 3: #NOT VALID USECASE. DELETE OLD RESULTS.
-						for i in db_tables:
-							cur.execute("DELETE FROM "+i+";")
-							cur.execute("VACUUM;")		
-					
-						for i in tables.keys():
-							cur.execute("DELETE FROM "+tables[i]+";")
-							cur.execute("VACUUM;")
-						
-						dat_to_db(options.dot_dat[0], con)
+					dat_to_db(options.dot_dat[0], con)
 				else:
 					#If not a match, delete output tables and update input_file. Call dat_to_db
 					for i in db_tables:
@@ -422,77 +381,6 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 				#		  " -o db_io"+os.sep+options.scenario+" -s "+options.scenario)
 	
 	return output
-
-
-def compare_energysystems(A_old, A_new, B_old, B_new):
-	A_flag = None
-	B_flag = None
-	
-	if len(A_old) == len(A_new):
-		if A_old.issuperset(A_new):
-			#All good
-			A_flag = 0
-		else:
-			return 3
-	
-	elif len(A_old) > len(A_new):
-		if A_old.issuperset(A_new):
-			#All good
-			A_flag = 1
-		else:
-			return 3
-			
-	elif len(A_old) < len(A_new):
-		if A_old.issubset(A_new):
-			#All good
-			A_flag = 2
-		else:
-			return 3
-	
-	if len(B_old) == len(B_new):
-		if B_old.issuperset(B_new):
-			#All good
-			B_flag = 0
-		else:
-			return 3
-	
-	elif len(B_old) > len(B_new):
-		if B_old.issuperset(B_new):
-			#All good
-			B_flag = 1
-		else:
-			return 3
-			
-	elif len(B_old) < len(B_new):
-		if B_old.issubset(B_new):
-			#All good
-			B_flag = 2
-		else:
-			return 3
-	
-	if A_flag == 0:
-		if B_flag == 0:
-			return 0 #SAME FILES
-		if B_flag == 1:
-			return 1 #SUBTRACTION
-		if B_flag == 2:
-			return 2 #ADDITION
-	
-	elif A_flag == 1:
-		if B_flag == 0:
-			return 1 #SUBTRACTION
-		if B_flag == 1:
-			return 1 #SUBTRACTION
-		if B_flag == 2:
-			return 3 #NOT VALID.
-	
-	elif A_flag == 2:
-		if B_flag == 0:
-			return 2 #ADDITION
-		if B_flag == 1:
-			return 3 #NOT VALID
-		if B_flag == 2:
-			return 2 #ADDITION
 	
 def dat_to_db(input_file, output_schema, run_partial=False):
 
@@ -591,33 +479,33 @@ def dat_to_db(input_file, output_schema, run_partial=False):
 	for i in parsed_data['time_exist']:
 		if i is '': 
 			continue
-		output_schema.execute("INSERT INTO time_periods VALUES("+i+", 'e');")
+		output_schema.execute("INSERT OR REPLACE INTO time_periods VALUES("+i+", 'e');")
 	for i in parsed_data['time_future']:
 		if i is '':
 			continue
-		output_schema.execute("INSERT INTO time_periods VALUES("+i+", 'f');")
+		output_schema.execute("INSERT OR REPLACE INTO time_periods VALUES("+i+", 'f');")
 	
 	#Fill time_season
 	for i in parsed_data['time_season']:
 		if i is '':
 			continue
-		output_schema.execute("INSERT INTO time_season VALUES('"+i+"');")
+		output_schema.execute("INSERT OR REPLACE INTO time_season VALUES('"+i+"');")
 	
 	#Fill time_of_day
 	for i in parsed_data['time_of_day']:
 		if i is '':
 			continue
-		output_schema.execute("INSERT INTO time_of_day VALUES('"+i+"');")
+		output_schema.execute("INSERT OR REPLACE INTO time_of_day VALUES('"+i+"');")
 	
 	#Fill technologies
 	for i in parsed_data['tech_baseload']:
 		if i is '':
 			continue
-		output_schema.execute("INSERT INTO technologies VALUES('"+i+"', 'pb', '', '');")
+		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'pb', '', '');")
 	for i in parsed_data['tech_storage']:
 		if i is '':
 			continue
-		output_schema.execute("INSERT INTO technologies VALUES('"+i+"', 'ps', '', '');")
+		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'ps', '', '');")
 	for i in parsed_data['tech_production']:
 		if i is '':
 			continue
@@ -625,25 +513,25 @@ def dat_to_db(input_file, output_schema, run_partial=False):
 			continue
 		if i in parsed_data['tech_baseload']:
 			continue
-		output_schema.execute("INSERT INTO technologies VALUES('"+i+"', 'p', '', '');")
+		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'p', '', '');")
 	for i in parsed_data['tech_resource']:
 		if i is '':
 			continue
-		output_schema.execute("INSERT INTO technologies VALUES('"+i+"', 'r', '', '');")
+		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'r', '', '');")
 	
 	#Fill commodities
 	for i in parsed_data['commodity_demand']:
 		if i is '':
 			continue
-		output_schema.execute("INSERT INTO commodities VALUES('"+i+"', 'd', '');")
+		output_schema.execute("INSERT OR REPLACE INTO commodities VALUES('"+i+"', 'd', '');")
 	for i in parsed_data['commodity_physical']:
 		if i is '':
 			continue
-		output_schema.execute("INSERT INTO commodities VALUES('"+i+"', 'p', '');")
+		output_schema.execute("INSERT OR REPLACE INTO commodities VALUES('"+i+"', 'p', '');")
 	for i in parsed_data['commodity_emissions']:
 		if i is '':
 			continue
-		output_schema.execute("INSERT INTO commodities VALUES('"+i+"', 'e', '');")
+		output_schema.execute("INSERT OR REPLACE INTO commodities VALUES('"+i+"', 'e', '');")
 
 		
 	#Fill ExistingCapacity
@@ -653,7 +541,7 @@ def dat_to_db(input_file, output_schema, run_partial=False):
 		row_data = re.split(" ", i)
 		row_data.append('')
 		row_data.append('')
-		output_schema.execute("INSERT INTO ExistingCapacity VALUES(?, ?, ?, ?, ?);", row_data)
+		output_schema.execute("INSERT OR REPLACE INTO ExistingCapacity VALUES(?, ?, ?, ?, ?);", row_data)
 	
 	#Fill Efficiency
 	for i in parsed_data['Efficiency']:
@@ -661,7 +549,7 @@ def dat_to_db(input_file, output_schema, run_partial=False):
 			continue
 		row_data = re.split(" ", i)
 		row_data.append('')
-		output_schema.execute("INSERT INTO Efficiency VALUES(?, ?, ?, ?, ?, ?);", row_data)		
+		output_schema.execute("INSERT OR REPLACE INTO Efficiency VALUES(?, ?, ?, ?, ?, ?);", row_data)		
 		
 	#Fill LifetimeTech
 	for i in parsed_data['LifetimeTech']:
@@ -669,7 +557,7 @@ def dat_to_db(input_file, output_schema, run_partial=False):
 			continue
 		row_data = re.split(" ", i)
 		row_data.append('')
-		output_schema.execute("INSERT INTO LifetimeTech VALUES(?, ?, ?);", row_data)		
+		output_schema.execute("INSERT OR REPLACE INTO LifetimeTech VALUES(?, ?, ?);", row_data)		
 	
 	#Fill LifetimeProcess
 	for i in parsed_data['LifetimeProcess']:
@@ -677,7 +565,7 @@ def dat_to_db(input_file, output_schema, run_partial=False):
 			continue
 		row_data = re.split(" ", i)
 		row_data.append('')
-		output_schema.execute("INSERT INTO LifetimeProcess VALUES(?, ?, ?, ?);", row_data)		
+		output_schema.execute("INSERT OR REPLACE INTO LifetimeProcess VALUES(?, ?, ?, ?);", row_data)		
 	
 	#Fill EmissionActivity
 	for i in parsed_data['EmissionActivity']:
@@ -687,5 +575,5 @@ def dat_to_db(input_file, output_schema, run_partial=False):
 		row_data.append('')
 		if len(row_data) is 7:
 			row_data.append('')
-		output_schema.execute("INSERT INTO EmissionActivity VALUES(?, ?, ?, ?, ?, ?, ?, ?);", row_data)
+		output_schema.execute("INSERT OR REPLACE INTO EmissionActivity VALUES(?, ?, ?, ?, ?, ?, ?, ?);", row_data)
 			
