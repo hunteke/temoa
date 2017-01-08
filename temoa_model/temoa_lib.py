@@ -1330,7 +1330,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 					SE.write("MGA Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
 					txt_file_mga = open("OutputLog_MGA.log", "w")
 				
-				scenario_names.append(options.scenario)
+				#scenario_names.append(options.scenario)
 				
 				# Update second instance with the new MGA-specific objective function
 				# and constraint.
@@ -2356,7 +2356,7 @@ def run_solve(model,options):
 	opt = SolverFactory( options.solver )
 	if opt:
 		pass
-		# if options.keepPyomoLP:
+		#if options.keepPyomoLP:
 		# 	opt.keepfiles = True
 		# 	opt.symbolic_solver_labels = True
 
