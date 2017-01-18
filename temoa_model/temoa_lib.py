@@ -2343,6 +2343,9 @@ def temoa_solve ( model ):
 	global temp_lp_dest
 	temp_lp_dest = ''
 	
+	from pyutilib.services import TempfileManager
+	#TempfileManager.tempdir = "foobar"
+	
 	run_solve(model,options)
 
 	
@@ -2351,6 +2354,9 @@ def temoa_solve ( model ):
 
 def run_solve(model,options):
 	from sys import argv, version_info, exit
+	from shutil import rmtree
+	import os
+	
 	if version_info < (2, 7):
 		msg = ("Temoa requires Python v2.7 to run.\n\nIf you've "
 		  "installed Coopr with Python 2.6 or less, you'll need to reinstall "
@@ -2385,6 +2391,15 @@ def run_solve(model,options):
 	try:
 		if options.dot_dat:
 			if options.mga:
+				for inpu in options.dot_dat:
+					file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
+			
+				options.path_to_db_io += os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+				
+				if os.path.exists( options.path_to_db_io ):
+					rmtree( options.path_to_db_io )
+				os.mkdir(options.path_to_db_io)
+				
 				MGA( model, opt, options )
 			else:
 				solve_perfect_foresight( model, opt, options )
