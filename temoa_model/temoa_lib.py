@@ -1309,7 +1309,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 			prev_activity_t = defaultdict( int )		
 			prev_activity_t = PreviousAct_rule( instance_1 )		
 
-			if options.saveTEXTFILE:
+			if isinstance(options, TemoaConfig) and options.saveTEXTFILE:
 				for inpu in options.dot_dat:
 					file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
 				
@@ -1318,6 +1318,24 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 				if path.isfile(options.path_to_logs+os.sep+'OutputLog.log') and path.exists(new_dir):
 					copyfile(options.path_to_logs+os.sep+'OutputLog.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
 
+			
+			if isinstance(options, TemoaConfig) and options.keepPyomoLP:
+				for inpu in options.dot_dat:
+					file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
+				
+				new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+				
+				for files in os.listdir(options.path_to_lp_files):
+					if files.endswith(".lp"):
+						lpfile = files
+					else:
+						if files == "README.txt":
+							continue
+						os.remove(options.path_to_lp_files+os.sep+files)
+				
+				if path.exists(new_dir):
+					move(options.path_to_lp_files+os.sep+lpfile, new_dir+os.sep+options.scenario+'.lp')
+			
 			
 			#Perform 5 MGA iterations
 			while options.next_mga():
@@ -1376,15 +1394,34 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 				
 				txt_file_mga.close()
 			
-				if options.saveTEXTFILE:
+				if isinstance(options, TemoaConfig) and options.saveTEXTFILE:
 					for inpu in options.dot_dat:
 						file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
 					
 					new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
 					
 					if path.isfile(options.path_to_logs+os.sep+'OutputLog_MGA.log') and path.exists(new_dir):
-						move(options.path_to_logs+os.sep+'OutputLog_MGA.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
-			
+						copyfile(options.path_to_logs+os.sep+'OutputLog_MGA.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
+
+
+				if isinstance(options, TemoaConfig) and options.keepPyomoLP:
+					for inpu in options.dot_dat:
+						file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
+					
+					new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+					
+					for files in os.listdir(options.path_to_lp_files):
+						if files.endswith(".lp"):
+							lpfile = files
+						else:
+							if files == "README.txt":
+								continue
+							os.remove(options.path_to_lp_files+os.sep+files)
+					
+					if path.exists(new_dir):
+						move(options.path_to_lp_files+os.sep+lpfile, new_dir+os.sep+options.scenario+'.lp')
+
+						
 			txt_file.flush()
 			txt_file.close()
 		else:
@@ -1400,7 +1437,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		txt_file.write(str(model_exc))
 		txt_file.close()
 		
-	if options.saveTEXTFILE:
+	if isinstance(options, TemoaConfig) and options.saveTEXTFILE:
 		for inpu in options.dot_dat:
 			file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
 		
@@ -1576,15 +1613,22 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		if path.isfile(options.path_to_logs+os.sep+'OutputLog.log') and path.exists(new_dir):
 			copyfile(options.path_to_logs+os.sep+'OutputLog.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
 
-	if isinstance(options, TemoaConfig) and options.generateSolverLP:
+	if isinstance(options, TemoaConfig) and options.keepPyomoLP:
 		for inpu in options.dot_dat:
 			file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
 		
 		new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
 		
-		if path.isfile(opt.options.wlp) and path.exists(new_dir):
-			copyfile(opt.options.wlp, new_dir+os.sep+os.path.basename(opt.options.wlp[:-3])+'.lp')
-			#move(opt.options.wlp, new_dir+os.sep+opt.options.wlp)
+		for files in os.listdir(options.path_to_lp_files):
+			if files.endswith(".lp"):
+				lpfile = files
+			else:
+				if files == "README.txt":
+					continue
+				os.remove(options.path_to_lp_files+os.sep+files)
+		
+		if path.exists(new_dir):
+			move(options.path_to_lp_files+os.sep+lpfile, new_dir+os.sep+options.scenario+'.lp')
 
 def solve_true_cost_of_guessing ( optimizer, options, epsilon=1e-6 ):
 	import multiprocessing as MP, os, cPickle as pickle
@@ -2303,6 +2347,7 @@ def parse_args ( ):
 
 
 def temoa_solve_ui ( model, config_filename ):
+	from os import sep
 	
 	available_solvers, default_solver = get_solvers()
 
@@ -2313,6 +2358,10 @@ def temoa_solve_ui ( model, config_filename ):
 	global temp_lp_dest
 	temp_lp_dest = '/srv/thirdparty/temoa/db_io/'
 
+	from pyutilib.services import TempfileManager
+	options.path_to_lp_files = options.path_to_logs + sep + "lp_files"
+	TempfileManager.tempdir = options.path_to_lp_files	
+	
 	#FIXME: Put logic from parse_args() here that are not covered in
 	#temoa_config.py. Like --how_to_cite & --version options.
 	if options.version:
@@ -2334,6 +2383,7 @@ def temoa_solve_ui ( model, config_filename ):
 def temoa_solve ( model ):
 	
 	from argparse import Namespace
+	from os import sep
 
 	options = parse_args()
 
@@ -2344,7 +2394,8 @@ def temoa_solve ( model ):
 	temp_lp_dest = ''
 	
 	from pyutilib.services import TempfileManager
-	#TempfileManager.tempdir = "foobar"
+	options.path_to_lp_files = options.path_to_logs + sep + "lp_files"
+	TempfileManager.tempdir = options.path_to_lp_files
 	
 	run_solve(model,options)
 
