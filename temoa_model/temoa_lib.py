@@ -1252,6 +1252,10 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 	
 	try:
 		
+		if options.keepPyomoLP:
+			SE.write('\nSolver will write file: {}\n\n'.format( options.scenario + '.lp' ))
+			txt_file.write('\nSolver will write file: {}\n\n'.format( options.scenario + '.lp' ))
+
 		SE.write( '[        ] Reading data files.'); SE.flush()
 		txt_file.write( 'Reading data files.')
 		begin = clock()
@@ -1364,6 +1368,10 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 				)
 				instance_mga.preprocess()
 
+				if options.keepPyomoLP:
+					SE.write('\nSolver will write file: {}\n\n'.format( options.scenario + '.lp' ))
+					txt_file.write('\nSolver will write file: {}\n\n'.format( options.scenario + '.lp' ))
+
 				SE.write( '[        ] Solving {}.'.format(options.scenario)); SE.flush()
 				txt_file.write( 'Solving {}.'.format(options.scenario)); SE.flush()
 				txt_file_mga.write( 'Solving {}.'.format(options.scenario)); SE.flush()
@@ -1472,6 +1480,10 @@ def solve_perfect_foresight ( model, optimizer, options ):
 			opt.options.wlp = temp_lp_dest + path.basename( dot_dats[0] )[:-4] + '.lp'
 			SE.write('\nSolver will write file: {}\n\n'.format( os.path.basename(opt.options.wlp )))
 			txt_file.write('\nSolver will write file: {}\n\n'.format( os.path.basename(opt.options.wlp )))
+
+		if options.keepPyomoLP:
+			SE.write('\nSolver will write file: {}\n\n'.format( options.scenario + '.lp' ))
+			txt_file.write('\nSolver will write file: {}\n\n'.format( options.scenario + '.lp' ))
 
 		SE.write( '[        ] Reading data files.'); SE.flush()
 		txt_file.write( 'Reading data files.')
