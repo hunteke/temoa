@@ -1095,10 +1095,10 @@ free software under the terms of the GNU General Public License, version 2.
 """
 
 	try:
-		txt_file = open(options.path_to_logs+os.sep+"OutputLog.log", "w")
+		txt_file = open(options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
 	except BaseException as io_exc:
 		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
-		txt_file = open("OutputLog.log", "w")
+		txt_file = open("Complete_OutputLog.log", "w")
 
 	txt_file.write( msg )
 	SO.write( msg.format( *args ))
@@ -1145,10 +1145,10 @@ For copy and paste or BibTex use:
 """
 
 	try:
-		txt_file = open(options.path_to_logs+os.sep+"OutputLog.log", "w")
+		txt_file = open(options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
 	except BaseException as io_exc:
 		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
-		txt_file = open("OutputLog.log", "w")
+		txt_file = open("Complete_OutputLog.log", "w")
 
 	txt_file.write( msg )
 	SO.write( msg )
@@ -1244,10 +1244,10 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 
 	
 	try:
-		txt_file = open(options.path_to_logs+os.sep+"OutputLog.log", "w")
+		txt_file = open(options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
 	except BaseException as io_exc:
 		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
-		txt_file = open("OutputLog.log", "w")
+		txt_file = open("Complete_OutputLog.log", "w")
 		txt_file.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
 	
 	try:
@@ -1319,8 +1319,8 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 				
 				new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
 				
-				if path.isfile(options.path_to_logs+os.sep+'OutputLog.log') and path.exists(new_dir):
-					copyfile(options.path_to_logs+os.sep+'OutputLog.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
+				if path.isfile(options.path_to_logs+os.sep+'Complete_OutputLog.log') and path.exists(new_dir):
+					copyfile(options.path_to_logs+os.sep+'Complete_OutputLog.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
 
 			
 			if isinstance(options, TemoaConfig) and options.keepPyomoLP:
@@ -1347,10 +1347,10 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 
 
 				try:
-					txt_file_mga = open(options.path_to_logs+os.sep+"OutputLog_MGA.log", "w")
+					txt_file_mga = open(options.path_to_logs+os.sep+"OutputLog_MGA_last.log", "w")
 				except BaseException as io_exc:
 					SE.write("MGA Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
-					txt_file_mga = open("OutputLog_MGA.log", "w")
+					txt_file_mga = open("OutputLog_MGA_last.log", "w")
 				
 				#scenario_names.append(options.scenario)
 				
@@ -1408,8 +1408,8 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 					
 					new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
 					
-					if path.isfile(options.path_to_logs+os.sep+'OutputLog_MGA.log') and path.exists(new_dir):
-						copyfile(options.path_to_logs+os.sep+'OutputLog_MGA.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
+					if path.isfile(options.path_to_logs+os.sep+'OutputLog_MGA_last.log') and path.exists(new_dir):
+						copyfile(options.path_to_logs+os.sep+'OutputLog_MGA_last.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
 
 
 				if isinstance(options, TemoaConfig) and options.keepPyomoLP:
@@ -1452,8 +1452,8 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		for sc in scenario_names:
 			new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+sc+'_model'
 			
-			if path.isfile(options.path_to_logs+os.sep+'OutputLog.log') and path.exists(new_dir):
-				copyfile(options.path_to_logs+os.sep+'OutputLog.log', new_dir+os.sep+'Complete_OutputLog.log')
+			if path.isfile(options.path_to_logs+os.sep+'Complete_OutputLog.log') and path.exists(new_dir):
+				copyfile(options.path_to_logs+os.sep+'Complete_OutputLog.log', new_dir+os.sep+'Complete_OutputLog.log')
 
 		
 def solve_perfect_foresight ( model, optimizer, options ):
@@ -1465,10 +1465,10 @@ def solve_perfect_foresight ( model, optimizer, options ):
 	from pformat_results import pformat_results
 	
 	try:
-		txt_file = open(options.path_to_logs+os.sep+"OutputLog.log", "w")
+		txt_file = open(options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
 	except BaseException as io_exc:
 		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
-		txt_file = open("OutputLog.log", "w")
+		txt_file = open("Complete_OutputLog.log", "w")
 		txt_file.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
 	
 	try:
@@ -1622,8 +1622,8 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		
 		new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
 		
-		if path.isfile(options.path_to_logs+os.sep+'OutputLog.log') and path.exists(new_dir):
-			copyfile(options.path_to_logs+os.sep+'OutputLog.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
+		if path.isfile(options.path_to_logs+os.sep+'Complete_OutputLog.log') and path.exists(new_dir):
+			copyfile(options.path_to_logs+os.sep+'Complete_OutputLog.log', new_dir+os.sep+options.scenario+'_OutputLog.log')
 
 	if isinstance(options, TemoaConfig) and options.keepPyomoLP:
 		for inpu in options.dot_dat:
