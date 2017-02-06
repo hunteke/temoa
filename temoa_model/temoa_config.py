@@ -334,7 +334,7 @@ class TemoaConfig( object ):
 		self.eciu = abspath(t.value.replace('=', ' ').split()[1])
     
 	def t_begin_mga(self, t):
-		r'--mga(\s)*\{'
+		r'--mga(\s+|\=)\{'
 		t.lexer.push_state('mga')
 		t.lexer.level = 1
 	
@@ -408,7 +408,7 @@ class TemoaConfig( object ):
 			sys.stderr.write(msg)
 		
 			try:
-				txt_file = open(self.path_to_logs+os.sep+"OutputLog.log", "w")
+				txt_file = open(self.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
 			except BaseException as io_exc:
 				sys.stderr.write("Log file cannot be opened. Please check path. Trying to find:\n"+self.path_to_logs+" folder\n")
 				txt_file = open("OutputLog.log", "w")
