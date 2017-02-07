@@ -278,15 +278,15 @@ class TemoaConfig( object ):
 		pass
 	
 	def t_dot_dat(self, t):
-		r'--input(\s+|\=)[-\\\/\:\.\~\w]+(\.dat|\.db|\.sqlite)\b'
+		r'--input[\s\=]+[-\\\/\:\.\~\w]+(\.dat|\.db|\.sqlite)\b'
 		self.dot_dat.append(abspath(t.value.replace('=', ' ').split()[1]))
 	
 	def t_output(self, t):
-		r'--output(\s+|\=)[-\\\/\:\.\~\w]+(\.db|\.sqlite)\b'
+		r'--output[\s\=]+[-\\\/\:\.\~\w]+(\.db|\.sqlite)\b'
 		self.output = abspath(t.value.replace('=', ' ').split()[1])
 	
 	def t_scenario(self, t):
-		r'--scenario(\s+|\=)\w+\b'
+		r'--scenario[\s\=]+\w+\b'
 		self.scenario = t.value.replace('=', ' ').split()[1]
 	
 	def t_saveEXCEL(self, t):
@@ -298,11 +298,11 @@ class TemoaConfig( object ):
 		self.saveTEXTFILE = True
 		
 	def t_path_to_db_io(self, t):
-		r'--path_to_db_io(\s+|\=)[-\\\/\:\.\~\w\ ]+\b'
+		r'--path_to_db_io[\s\=]+[-\\\/\:\.\~\w\ ]+\b'
 		self.path_to_db_io = abspath(t.value.replace('=', ',').split(",")[1])
 		
 	def t_path_to_logs(self, t):
-		r'--path_to_logs(\s+|\=)[-\\\/\:\.\~\w\ ]+\b'
+		r'--path_to_logs[\s\=]+[-\\\/\:\.\~\w\ ]+\b'
 		self.path_to_logs = abspath(t.value.replace('=', ',').split(",")[1])
 	
 	def t_how_to_cite(self, t):
@@ -314,11 +314,11 @@ class TemoaConfig( object ):
 		self.version = True
 
 	def t_fix_variables(self, t):
-		r'--fix_variables(\s+|\=)[-\\\/\:\.\~\w]+\b'
+		r'--fix_variables[\s\=]+[-\\\/\:\.\~\w]+\b'
 		self.fix_variables = abspath(t.value.replace('=', ' ').split()[1])
 
 	def t_solver(self, t):
-		r'--solver(\s+|\=)\w+\b'
+		r'--solver[\s\=]+\w+\b'
 		self.solver = t.value.replace('=', ' ').split()[1]
 	
 	def t_generate_solver_lp_file(self, t):
@@ -330,24 +330,24 @@ class TemoaConfig( object ):
 		self.keepPyomoLP = True
 		
 	def t_eciu(self, t):
-		r'--eciu(\s+|\=)[-\\\/\:\.\~\w]+\b'
+		r'--eciu[\s\=]+[-\\\/\:\.\~\w]+\b'
 		self.eciu = abspath(t.value.replace('=', ' ').split()[1])
     
 	def t_begin_mga(self, t):
-		r'--mga(\s+|\=)\{'
+		r'--mga[\s\=]+\{'
 		t.lexer.push_state('mga')
 		t.lexer.level = 1
 	
 	def t_mga_mgaslack(self, t):
-		r'slack(\s+|\=)[\.\d]+'
+		r'slack[\s\=]+[\.\d]+'
 		self.mga = float(t.value.replace('=', ' ').split()[1])
 		
 	def t_mga_mgaiter(self, t):
-		r'iteration(\s+|\=)[\d]+'
+		r'iteration[\s\=]+[\d]+'
 		self.mga_iter = int(t.value.replace('=', ' ').split()[1])
 	
 	def t_mga_mgaweight(self, t):
-		r'weight(\s+|\=)(integer|normalized)\b'
+		r'weight[\s\=]+(integer|normalized)\b'
 		self.mga_weight = t.value.replace('=', ' ').split()[1]
 		
 	def t_mga_end(self, t):
