@@ -19,8 +19,12 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from temoa_lib import TemoaError
-from os.path import abspath, isfile, splitext
+from temoa_common import *
+
+from os.path import abspath, isfile, splitext, dirname
+from os import sep
+
+import re
 
 def db_2_dat(ifile, ofile, options):
 	# Adapted from DB_to_DAT.py
@@ -28,6 +32,8 @@ def db_2_dat(ifile, ofile, options):
 	import sys
 	import re
 	import getopt
+	
+	#print "TEST"
 
 	def write_tech_mga(f):
 		cur.execute("SELECT tech FROM technologies")
@@ -145,6 +151,11 @@ def db_2_dat(ifile, ofile, options):
 
 
 	#create a file to write output
+	#print ifile
+	#print ofile
+	#print options
+	#print "Sooooo"
+	
 	f = open(ofile, 'w')
 	f.write('data ;\n\n')
 	#connect to the database
@@ -182,8 +193,11 @@ class TemoaConfig( object ):
 		'keep_pyomo_lp_file',
 		'eciu',
 		'saveEXCEL',
+		'saveTEXTFILE',
 		'mgaslack',
 		'mgaiter',
+		'path_to_db_io',
+		'path_to_logs',
 		'mgaweight'
 	)
 	
@@ -201,6 +215,7 @@ class TemoaConfig( object ):
 		self.output           = None # May update to a list if multiple output is required.
 		self.scenario         = None
 		self.saveEXCEL        = False
+		self.saveTEXTFILE     = False
 		self.how_to_cite      = None
 		self.version          = False
 		self.fix_variables    = None
@@ -210,13 +225,18 @@ class TemoaConfig( object ):
 		self.mga              = None # mga slack value
 		self.mga_iter         = None
 		self.mga_weight       = None
-		self.generateText	  = None
 
-		# To keep consistent with Kevin's argumetn parser, will be removed in the futre.
+		# To keep consistent with Kevin's argumetn parser, will be removed in the future.
 		self.graph_format     = None
 		self.show_capacity    = False
 		self.graph_type       = 'separate_vintages'
 		self.use_splines      = False
+
+		#Introduced during UI Development
+		self.path_to_db_io    = re.sub('temoa_model$', 'db_io', dirname(abspath(__file__)))# Path to where automated excel and text log folder will be save as output.
+		self.path_to_logs     = self.path_to_db_io+sep+"debug_logs" #Path to where debug logs will be generated for each run. By default in debug_logs folder in db_io.
+		self.path_to_lp_files = None 
+		self.abort_temoa	  = False
 		
 		if 'd_solver' in kwargs.keys(): 
 			self.solver = kwargs['d_solver']
@@ -258,24 +278,32 @@ class TemoaConfig( object ):
 		pass
 	
 	def t_dot_dat(self, t):
-		r'--input(\s+|\=)[-\\\/\:\.\~\w]+(\.dat|\.db|\.sqlite)\b'
+		r'--input[\s\=]+[-\\\/\:\.\~\w]+(\.dat|\.db|\.sqlite)\b'
 		self.dot_dat.append(abspath(t.value.replace('=', ' ').split()[1]))
 	
 	def t_output(self, t):
-		r'--output(\s+|\=)[-\\\/\:\.\~\w]+(\.db|\.sqlite)\b'
+		r'--output[\s\=]+[-\\\/\:\.\~\w]+(\.db|\.sqlite)\b'
 		self.output = abspath(t.value.replace('=', ' ').split()[1])
 	
 	def t_scenario(self, t):
-		r'--scenario(\s+|\=)\w+\b'
+		r'--scenario[\s\=]+\w+\b'
 		self.scenario = t.value.replace('=', ' ').split()[1]
 	
 	def t_saveEXCEL(self, t):
 		r'--saveEXCEL\b'
 		self.saveEXCEL = True
+	
+	def t_saveTEXTFILE(self, t):
+		r'--saveTEXTFILE\b'
+		self.saveTEXTFILE = True
 		
-	def t_generateText(self, t):
-		r'--generateText\b'
-		self.generateText = True
+	def t_path_to_db_io(self, t):
+		r'--path_to_db_io[\s\=]+[-\\\/\:\.\~\w\ ]+\b'
+		self.path_to_db_io = abspath(t.value.replace('=', ',').split(",")[1])
+		
+	def t_path_to_logs(self, t):
+		r'--path_to_logs[\s\=]+[-\\\/\:\.\~\w\ ]+\b'
+		self.path_to_logs = abspath(t.value.replace('=', ',').split(",")[1])
 	
 	def t_how_to_cite(self, t):
 		r'--how_to_cite\b'
@@ -286,11 +314,11 @@ class TemoaConfig( object ):
 		self.version = True
 
 	def t_fix_variables(self, t):
-		r'--fix_variables(\s+|\=)[-\\\/\:\.\~\w]+\b'
+		r'--fix_variables[\s\=]+[-\\\/\:\.\~\w]+\b'
 		self.fix_variables = abspath(t.value.replace('=', ' ').split()[1])
 
 	def t_solver(self, t):
-		r'--solver(\s+|\=)\w+\b'
+		r'--solver[\s\=]+\w+\b'
 		self.solver = t.value.replace('=', ' ').split()[1]
 	
 	def t_generate_solver_lp_file(self, t):
@@ -302,24 +330,24 @@ class TemoaConfig( object ):
 		self.keepPyomoLP = True
 		
 	def t_eciu(self, t):
-		r'--eciu(\s+|\=)[-\\\/\:\.\~\w]+\b'
+		r'--eciu[\s\=]+[-\\\/\:\.\~\w]+\b'
 		self.eciu = abspath(t.value.replace('=', ' ').split()[1])
     
 	def t_begin_mga(self, t):
-		r'--mga(\s)*\{'
+		r'--mga[\s\=]+\{'
 		t.lexer.push_state('mga')
 		t.lexer.level = 1
 	
 	def t_mga_mgaslack(self, t):
-		r'slack(\s+|\=)[\.\d]+'
+		r'slack[\s\=]+[\.\d]+'
 		self.mga = float(t.value.replace('=', ' ').split()[1])
 		
 	def t_mga_mgaiter(self, t):
-		r'iteration(\s+|\=)[\d]+'
+		r'iteration[\s\=]+[\d]+'
 		self.mga_iter = int(t.value.replace('=', ' ').split()[1])
 	
 	def t_mga_mgaweight(self, t):
-		r'weight(\s+|\=)(integer|normalized)\b'
+		r'weight[\s\=]+(integer|normalized)\b'
 		self.mga_weight = t.value.replace('=', ' ').split()[1]
 		
 	def t_mga_end(self, t):
@@ -352,6 +380,9 @@ class TemoaConfig( object ):
 	
 	def build(self,**kwargs):
 		import ply.lex as lex, os, sys
+		
+		db_or_dat = True # True means input file is a db file. False means input is a dat file.
+		
 		if 'config' in kwargs:
 			if isfile(kwargs['config']):
 				self.file_location= abspath(kwargs.pop('config'))
@@ -376,28 +407,47 @@ class TemoaConfig( object ):
 			msg += '-'*width + '\n'
 			sys.stderr.write(msg)
 		
+			try:
+				txt_file = open(self.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
+			except BaseException as io_exc:
+				sys.stderr.write("Log file cannot be opened. Please check path. Trying to find:\n"+self.path_to_logs+" folder\n")
+				txt_file = open("OutputLog.log", "w")
+
+			txt_file.write( msg )
+			txt_file.close()
+			self.abort_temoa = True
+		
+		
 		if not self.dot_dat:
 			raise TemoaConfigError('Input file not specified.')
 		
 		for i in self.dot_dat:
 			if not isfile(i):
 				raise TemoaConfigError('Cannot locate input file: {}'.format(i))
-		
-		if not self.output:
+			i_name, i_ext = splitext(i)
+			if (i_ext == '.dat') or (i_ext == '.txt'):
+				db_or_dat = False
+			elif (i_ext == '.db') or (i_ext == '.sqlite') or (i_ext == '.sqlite3') or (i_ext == 'sqlitedb'):
+				db_or_dat = True
+			
+		if not self.output and db_or_dat:
 			raise TemoaConfigError('Output file not specified.')
 		
-		if not isfile(self.output):
+		if db_or_dat and not isfile(self.output):
 			raise TemoaConfigError('Cannot locate output file: {}.'.format(self.output))
 		
-		if not self.scenario:
+		if not self.scenario and db_or_dat:
 			raise TemoaConfigError('Scenario name not specified.')
 		
 		if self.mga_iter:
 			for i in range(self.mga_iter):
 				self.__mga_todo.put(self.scenario + '_mga_' + str(i))
 
-		f = open(os.devnull, 'w'); sys.stdout = f # Suppress the original DB_to_DAT.py output
+		f = open(os.devnull, 'w'); 
+		sys.stdout = f # Suppress the original DB_to_DAT.py output
+		
 		counter = 0
+		
 		for ifile in self.dot_dat:
 			i_name, i_ext = splitext(ifile)
 			if i_ext != '.dat':
@@ -408,4 +458,4 @@ class TemoaConfig( object ):
 		f.close()
 		sys.stdout = sys.__stdout__
 		if counter > 0:
-			sys.stderr.write("\n{} .db file(s) converted\n".format(counter))
+			sys.stderr.write("\n{} .db DD file(s) converted\n".format(counter))

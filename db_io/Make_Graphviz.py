@@ -8,19 +8,7 @@ import sys
 import getopt
 import re
 
-ifile = None
-graph_format = 'svg'
-show_capacity = False
-graph_type = 'separate_vintages'
-splinevar = False
-quick_flag = False
-quick_name = None
-grey_flag = True
-scenario = None
-res_dir = None
-inp_comm = None
-out_comm = None
-db_dat_flag = None
+
 
 # Global Variables (dictionaries to cache parsing of Efficiency parameter)
 g_processInputs  = dict()
@@ -88,12 +76,13 @@ def InitializeProcessParameters ():
 			g_processVintages[p, t].add( v )
 			g_processInputs[ pindex ].add( i )
 			g_processOutputs[pindex ].add( o )
-	
+		
 	g_activeFlow_psditvo = set(
 	  (p, s, d, i, t, v, o)
 
 	  for p in time_optimize
 	  for t in tech_all
+	  if (p, t) in g_processVintages.keys()
 	  for v in g_processVintages[ p, t ]
 	  for i in g_processInputs[ p, t, v ]
 	  for o in g_processOutputs[ p, t, v ]
@@ -105,6 +94,7 @@ def InitializeProcessParameters ():
 
 	  for p in time_optimize
 	  for t in tech_all
+	  if (p, t) in g_processVintages.keys()
 	  for v in g_processVintages[ p, t ]
 	)
 	g_activeCapacity_tv = set(
@@ -112,6 +102,7 @@ def InitializeProcessParameters ():
 
 	  for p in time_optimize
 	  for t in tech_all
+	  if (p, t) in g_processVintages.keys()
 	  for v in g_processVintages[ p, t ]
 	)
 	g_activeCapacityAvailable_pt = set(
@@ -119,11 +110,11 @@ def InitializeProcessParameters ():
 
 	  for p in time_optimize
 	  for t in tech_all
-	  if g_processVintages[ p, t ]
+	  if (p, t) in g_processVintages.keys()
 	)
 
 	
-def calc_intermediates (ifile):
+def calc_intermediates (ifile, scenario):
 	global V_EnergyConsumptionByPeriodInputAndTech
 	global V_ActivityByPeriodTechAndOutput
 	global V_EmissionActivityByPeriodAndTech
@@ -141,26 +132,26 @@ def calc_intermediates (ifile):
 	
 	for x,y in g_activeCapacity_tv:
 		V_Capacity[x,y] = 0
-		for row in cur.execute("SELECT capacity FROM Output_V_Capacity WHERE tech is '"+x+"' and vintage is '"+str(y)+"'"):
+		for row in cur.execute("SELECT capacity FROM Output_V_Capacity WHERE tech is '"+x+"' and vintage is '"+str(y)+"' and scenario is '"+scenario+"'"):
 			V_Capacity[x,y] = row[0]
 
 ###########FIXME########################################
 	for x,y in g_activeCapacityAvailable_pt:
 		V_CapacityAvailableByPeriodAndTech[x,y] = 0
-		for row in cur.execute("SELECT capacity FROM Output_CapacityByPeriodAndTech WHERE t_periods is '"+str(x)+"' and tech is '"+y+"'"):
+		for row in cur.execute("SELECT capacity FROM Output_CapacityByPeriodAndTech WHERE t_periods is '"+str(x)+"' and tech is '"+y+"' and scenario is '"+scenario+"'"):
 			V_CapacityAvailableByPeriodAndTech[x,y] = row[0]
 
 	for x,y,z in g_activeActivity_ptv:
 		V_ActivityByPeriodAndProcess[x,y,z] = 0
-		for row in cur.execute("SELECT SUM(vflow_out)activity FROM Output_VFlow_Out WHERE t_periods is '"+str(x)+"' and tech is '"+y+"' and vintage is '"+str(z)+"'"):
+		for row in cur.execute("SELECT SUM(vflow_out)activity FROM Output_VFlow_Out WHERE t_periods is '"+str(x)+"' and tech is '"+y+"' and vintage is '"+str(z)+"' and scenario is '"+scenario+"'"):
 			V_ActivityByPeriodAndProcess[x,y,z] = row[0]
 	
 	for a,b,c,d,e,f,g in g_activeFlow_psditvo:
 		V_FlowIn[a,b,c,d,e,f,g] = 0
 		V_FlowOut[a,b,c,d,e,f,g] = 0
-		for row in cur.execute("SELECT vflow_in FROM Output_VFlow_In WHERE t_periods is '"+str(a)+"' and t_season is '"+b+"' and t_day is '"+c+"' and input_comm is '"+d+"' and tech is '"+e+"' and vintage is '"+str(f)+"' and output_comm is '"+g+"'"):
+		for row in cur.execute("SELECT vflow_in FROM Output_VFlow_In WHERE t_periods is '"+str(a)+"' and t_season is '"+b+"' and t_day is '"+c+"' and input_comm is '"+d+"' and tech is '"+e+"' and vintage is '"+str(f)+"' and output_comm is '"+g+"' and scenario is '"+scenario+"'"):
 			V_FlowIn[a,b,c,d,e,f,g] = row[0]
-		for row in cur.execute("SELECT vflow_out FROM Output_VFlow_Out WHERE t_periods is '"+str(a)+"' and t_season is '"+b+"' and t_day is '"+c+"' and input_comm is '"+d+"' and tech is '"+e+"' and vintage is '"+str(f)+"' and output_comm is '"+g+"'"):
+		for row in cur.execute("SELECT vflow_out FROM Output_VFlow_Out WHERE t_periods is '"+str(a)+"' and t_season is '"+b+"' and t_day is '"+c+"' and input_comm is '"+d+"' and tech is '"+e+"' and vintage is '"+str(f)+"' and output_comm is '"+g+"' and scenario is '"+scenario+"'"):
 			V_FlowOut[a,b,c,d,e,f,g] = row[0]
 ######################################################
 	
@@ -259,12 +250,11 @@ def db_file(ifile) : # Call this function if the input file is a database.
 
 ################FIND Default values when not specified########################
 	for x,y in set( (t, v) for i, t, v, o in Efficiency.iterkeys()):
+		LifetimeProcess[x,y] = 30 # Default no of years
 		for row in cur.execute("SELECT life FROM LifetimeTech WHERE tech is '"+x+"'"):
 			LifetimeProcess[x,y] = row[0]
 		for row in cur.execute("SELECT life_process FROM LifetimeProcess WHERE tech is '"+x+"' and vintage is '"+str(y)+"'"):
 			LifetimeProcess[x,y] = row[0]
-		if row[0] is None:
-			LifetimeProcess[x,y] = 30 # Default no of years
 ####################FIXME########################################
 	
 	for v,w,x,y,z in set(	(e, i, t, v, o) for i, t, v, o in Efficiency.iterkeys() for e in commodity_emissions ):
@@ -1742,23 +1732,24 @@ def quick_run( **kwargs ) : # Call this function if the input file is a database
 	usedfont_color     = kwargs.get( 'usedfont_color' )
 	fill_color		   = kwargs.get( 'fill_color' )
 	font_color		   = kwargs.get( 'font_color' )
+	inp_comm		   = kwargs.get( 'inp_commodity' )
+	inp_tech		   = kwargs.get( 'inp_technology' )
 	
-	global inp_comm, out_comm
 	nodes, tech, ltech, to_tech, from_tech = set(), set(), set(), set(), set()
 	if q_flag:
 		# Specify the Input and Output Commodities to choose from. Default puts all commodities in the Graph.
-		if inp_comm is None and out_comm is None :
+		if inp_comm is None and inp_tech is None :
 			inp_comm = "NOT NULL"
-			out_comm = "NOT NULL"
+			inp_tech = "NOT NULL"
 		else :
 			if inp_comm is None :
 				inp_comm = "NULL"
 			else :
 				inp_comm = "'"+inp_comm+"'"
-			if out_comm is None :
-				out_comm = "NULL"
+			if inp_tech is None :
+				inp_tech = "NULL"
 			else :
-				out_comm = "'"+out_comm+"'"
+				inp_tech = "'"+inp_tech+"'"
 		
 		#connect to the database
 		con = sqlite3.connect(inp_file)
@@ -1766,7 +1757,7 @@ def quick_run( **kwargs ) : # Call this function if the input file is a database
 		con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
 		print inp_file
-		cur.execute("SELECT input_comm, tech, output_comm FROM Efficiency WHERE input_comm is "+inp_comm+" or output_comm is "+out_comm)
+		cur.execute("SELECT input_comm, tech, output_comm FROM Efficiency WHERE input_comm is "+inp_comm+" or output_comm is "+inp_comm+" or tech is "+inp_tech)
 		for row in cur:
 			if row[0] != 'ethos':
 				nodes.add(row[0])
@@ -1784,14 +1775,14 @@ def quick_run( **kwargs ) : # Call this function if the input file is a database
 		
 	else:
 		# Specify the Input and Output Commodities to choose from. Default puts all commodities in the Graph.
-		if inp_comm is None and out_comm is None :
+		if inp_comm is None and inp_tech is None :
 			inp_comm = "\w+"
-			out_comm = "\w+"
+			inp_tech = "\w+"
 		else :
 			if inp_comm is None :
 				inp_comm = "\W+"
-			if out_comm is None :
-				out_comm = "\W+"
+			if inp_tech is None :
+				inp_tech = "\W+"
 
 		eff_flag = False
 		#open the text file
@@ -1808,7 +1799,7 @@ def quick_run( **kwargs ) : # Call this function if the input file is a database
 						continue
 					line = re.sub("^\s+|\s+$", "", line)
 					row = re.split("\s+", line)
-					if not re.search(inp_comm, row[0]) and not re.search(out_comm, row[3]) :
+					if not re.search(inp_comm, row[0]) and not re.search(inp_comm, row[3]) and not re.search(inp_tech, row[1]) :
 						continue
 					if row[0] != 'ethos':
 						nodes.add(row[0])
@@ -1931,6 +1922,8 @@ def CreateModelDiagrams ():
 	  home_color         = 'gray75',
 	  font_color	     = 'black' if grey_flag else 'white',
 	  fill_color	     = 'lightsteelblue' if grey_flag else 'white',
+	  inp_commodity		 = inp_comm,
+	  inp_technology 	 = inp_tech,
 
 	  #MODELDETAILED,
 	  md_tech_color      = 'hotpink',
@@ -1985,91 +1978,146 @@ def help_user() :
 	| -t (or --graph_type) {explicit_vintages,separate_vintages}
 							Choose the type of subgraph depiction desired.
 							[Default: separate_vintages]
-	| -g (or --gray) if specified, prints graph in grayscale
+	| -g (or --grey) if specified, prints graph in grayscale
 	| -s (or --scenario) <required scenario name from database>
 	| -n (or --name) specify the extension you wish to give your quick run
 	| -o (or --output) <Optional output file path(to dump the images folder)>
-	| -h  (or --help) print help'''
-  
-try:
-	argv = sys.argv[1:]
-	opts, args = getopt.getopt(argv, "hf:cvt:i:s:n:go:", ["help", "format=", "show_capacity", "splinevar", "graph_type=", "input=", "scenario=", "name=", "grey", "output="])
-except getopt.GetoptError:          
-	help_user()                          
-	sys.exit(2) 
+	| -b (or --technology) <Cannot be used with '-a'> Commodity to render diagram around
+	| -a (or --commodity) <Cannot be used with '-b'> Technology to render diagram around
+	| -h  (or --help) print help'''	
 	
-for opt, arg in opts:
-	if opt in ("-h", "--help"):
-		help_user()
-		sys.exit()
-	elif opt in ("-i", "--input"):
-		ifile = arg
-	elif opt in ("-f", "--format"):
-		graph_format = arg
-	elif opt in ("-c", "--show_capacity"):
-		show_capacity = True
-	elif opt in ("-v", "--splinevar") :
-		splinevar = True
-	elif opt in ("-t", "--graph_type") :
-		graph_type = arg
-	elif opt in ("-s", "--scenario") :
-		scenario = arg
-	elif opt in ("-n", "--name") :
-		quick_name = arg
-	elif opt in ("-o", "--output") :
-		res_dir = arg
-	elif opt in ("-g", "--grey") :
-		grey_flag = False
 
-if ifile is None:
-	print "You did not specify one or more of the following required flags: -i(or --input)"
-	help_user()
-	sys.exit()
+	
+	
+def createGraphBasedOnInput(inputs):
+	
+	global ifile ,  graph_format,  show_capacity,  graph_type,  splinevar,  quick_flag,  quick_name, \
+    grey_flag,  scenario,  res_dir,  inp_comm,  inp_tech,  db_dat_flag
+	
+	ifile = None
+	graph_format = 'svg'
+	show_capacity = False
+	graph_type = 'separate_vintages'
+	splinevar = False
+	quick_flag = False
+	quick_name = None
+	grey_flag = True
+	scenario = None
+	res_dir = None
+	inp_comm = None
+	inp_tech = None
+	db_dat_flag = None
 
-file_ty = re.search(r"(\w+)\.(\w+)\b", ifile) # Extract the input filename and extension
-if not file_ty :
-	print "The file type %s is not recognized." % ifile
-	sys.exit(2)
-elif file_ty.group(2) in ("db", "sqlite", "sqlite3", "sqlitedb") :
-	db_dat_flag = 1
-	if scenario is None:
+	if inputs is None:
+		raise "no arguments found"
+		
+	for opt, arg in inputs.iteritems():
+	    
+		print "%s == %s" %(opt, arg)
+		
+		if opt in ("-h", "--help"):
+			help_user()
+			sys.exit()
+		if opt in ("-i", "--input"):
+			ifile = arg
+		elif opt in ("-f", "--format"):
+			graph_format = arg
+		elif opt in ("-c", "--show_capacity"):
+			show_capacity = True
+		elif opt in ("-v", "--splinevar") :
+			splinevar = True
+		elif opt in ("-t", "--graph_type") :
+			graph_type = arg
+		elif opt in ("-s", "--scenario") :
+			scenario = arg
+		elif opt in ("-n", "--name") :
+			quick_name = arg
+		elif opt in ("-o", "--output") :
+			res_dir = arg
+		elif opt in ("-g", "--grey") :
+			grey_flag = False
+		elif opt in ("-a", "--comm") :
+			inp_comm = arg
+		elif opt in ("-b", "--tech") :
+			inp_tech = arg
+
+	if ifile is None:
+			print "You did not specify one or more of the following required flags: -i(or --input)"
+			raise "Input file is missing"
+
+	file_ty = re.search(r"([\w-]+)\.(\w+)\b", ifile) # Extract the input filename and extension
+	
+	if not file_ty :
+		raise "The file type %s is not recognized." % ifile
+		
+	elif file_ty.group(2) in ("db", "sqlite", "sqlite3", "sqlitedb") :
+		db_dat_flag = 1
+		
+		if scenario is None:
+			quick_flag = True
+			if quick_name is None:
+				quick_name = file_ty.group(1)
+			else:
+				quick_name = file_ty.group(1) + '_' + quick_name
+		
+		else:
+			quick_name = file_ty.group(1)
+			
+	elif file_ty.group(2) in ("dat", "txt") :
 		quick_flag = True
+		db_dat_flag = 0
+	
 		if quick_name is None:
 			quick_name = file_ty.group(1)
 		else:
 			quick_name = file_ty.group(1) + '_' + quick_name
-	else:
-		quick_name = file_ty.group(1)
+	
+	else :
+		print "The input file type %s is not recognized. Please specify a database or a text file." % ifile
+		sys.exit(2)
 		
-elif file_ty.group(2) in ("dat", "txt") :
-	quick_flag = True
-	db_dat_flag = 0
-	if quick_name is None:
-		quick_name = file_ty.group(1)
-	else:
-		quick_name = file_ty.group(1) + '_' + quick_name
-else :
-	print "The input file type %s is not recognized. Please specify a database or a text file." % ifile
-	sys.exit(2)
+	print "Reading File %s ..." %ifile 
 	
-print "Reading File %s ..." %ifile 
-if quick_flag :
-	ifile = os.path.realpath(ifile)
-	if res_dir is None:
-		res_dir = "current directory"
-	else:
-		os.chdir(res_dir)
-	CreateModelDiagrams ()
-	print "Done. Look for results in %s" %res_dir
-else:
-	db_file(ifile)
-	InitializeProcessParameters ()
-	calc_intermediates(ifile)
-	print "Creating Diagrams..."
-	if res_dir is None:
-		res_dir = "current directory"
-	else:
-		os.chdir(res_dir)
-	CreateModelDiagrams ()
-	print "Done. Look for results in %s_%s folder in %s" %(quick_name, scenario, res_dir)
+	if quick_flag :
+		ifile = os.path.realpath(ifile)
+		
+		if res_dir is None:
+			res_dir = "current directory"
+		else:
+			os.chdir(res_dir)
+		
+		CreateModelDiagrams ()
+		
+		print "Done. Look for results in %s" %res_dir
 	
+	else:
+		db_file(ifile)
+		InitializeProcessParameters ()
+		calc_intermediates(ifile, scenario)
+		
+		print "Creating Diagrams..."
+		
+		if res_dir is None:
+			res_dir = "current directory"
+		else:
+			os.chdir(res_dir)
+		
+		
+		CreateModelDiagrams ()
+		
+		print "Done. Look for results in %s_%s folder in %s" %(quick_name, scenario, res_dir)
+
+
+if __name__ == "__main__":	
+	
+	try:
+		argv = sys.argv[1:]
+ 		opts, args = getopt.getopt(argv, "hf:cvt:i:s:n:go:a:b:", ["help", "format=", "show_capacity", "splinevar", "graph_type=", "input=", "scenario=", "name=", "grey", "output=", "commodity=", "technology="])
+		
+		print opts
+		
+ 	except getopt.GetoptError:          
+ 		help_user()                          
+ 		sys.exit(2) 
+	
+	createGraphBasedOnInput( dict(opts) )

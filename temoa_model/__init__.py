@@ -19,6 +19,6 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-__all__ = ('model',)
+#__all__ = ('model',)
 
-from temoa_model import model
+#from temoa_model import model

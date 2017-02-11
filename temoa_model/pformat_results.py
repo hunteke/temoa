@@ -253,15 +253,88 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 			   "V_EmissionActivityByPeriodAndProcess" : "Output_Emissions", \
 			   "Objective"  : "Output_Objective", \
 			   "Costs"      : "Output_Costs" }
+	
+	db_tables = ['time_periods', 'time_season', 'time_of_day', 'technologies', 'commodities',\
+				'LifetimeTech', 'LifetimeProcess', 'Efficiency', 'EmissionActivity', 'ExistingCapacity']
 
+	
 	if isinstance(options, TemoaConfig):	
+		if not options.output:
+			if options.saveTEXTFILE or options.keepPyomoLP:
+				for inpu in options.dot_dat:
+					print inpu
+					file_ty = re.search(r"\b([\w-]+)\.(\w+)\b", inpu)
+				new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+				if os.path.exists( new_dir ):
+					rmtree( new_dir )
+				os.mkdir(new_dir)
+			print "No Output File specified."
+			return output
+	
 		if not os.path.exists(options.output) :
 			print "Please put the "+options.output+" file in the right Directory"
-		
+			return output
+
+
 		con = sqlite3.connect(options.output)
 		cur = con.cursor()   # A database cursor enables traversal over DB records
 		con.text_factory = str # This ensures data is explored with UTF-8 encoding
 
+		### Copy tables from Input File to DB file.
+		# IF output file is empty database.
+		cur.execute("SELECT * FROM technologies")
+		is_db_empty = False #False for empty db file
+		for elem in cur:
+			is_db_empty = True #True for non-empty db file
+			break
+		
+		
+		if is_db_empty: #This file could be schema with populated results from previous run. Or it could be a normal db file.
+			cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='input_file';")
+			does_input_file_table_exist = False
+			for i in cur: # This means that the 'input_file' table exists in db.
+				does_input_file_table_exist = True
+			if does_input_file_table_exist: #This block distinguishes normal database from schema.
+				#This is schema file. 
+				cur.execute("SELECT file FROM input_file WHERE id is '1';")
+				for i in cur:
+					tagged_file = i[0]
+				tagged_file = re.sub('["]', "", tagged_file)
+
+				if tagged_file == options.dot_dat[0]:
+					#If Input_file name matches, add output and check tech/comm
+					dat_to_db(options.dot_dat[0], con)
+				else:
+					#If not a match, delete output tables and update input_file. Call dat_to_db
+					for i in db_tables:
+						cur.execute("DELETE FROM "+i+";")
+						cur.execute("VACUUM;")		
+					
+					for i in tables.keys():
+						cur.execute("DELETE FROM "+tables[i]+";")
+						cur.execute("VACUUM;")
+						
+					for i in options.dot_dat:
+						cur.execute("DELETE FROM input_file WHERE id=1;")
+						cur.execute("INSERT INTO input_file VALUES(1, '"+i+"');")
+						break
+					dat_to_db(i, con)
+			
+		else: #empty schema db file
+			cur.execute("CREATE TABLE IF NOT EXISTS input_file ( id integer PRIMARY KEY, file varchar(30));")
+			
+			for i in tables.keys():
+				cur.execute("DELETE FROM "+tables[i]+";")
+				cur.execute("VACUUM;")
+			
+			for i in options.dot_dat:
+				cur.execute("DELETE FROM input_file WHERE id=1;")
+				cur.execute("INSERT INTO input_file(id, file) VALUES(?, ?);", (1,  '"'+i+'"'))
+				break
+			dat_to_db(i, con)
+		
+
+		
 		for table in svars.keys() :
 			if table in tables :
 				cur.execute("SELECT DISTINCT scenario FROM '"+tables[table]+"'")
@@ -269,43 +342,238 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 					if options.scenario == val[0]: # If scenario exists, delete
 						cur.execute("DELETE FROM "+tables[table]+" \
 									WHERE scenario is '"+options.scenario+"'") 
-					if table == 'Objective' : # Only table without sector info
-						key_str = str(svars[table].keys()) # only 1 row to write
-						key_str = key_str[1:-1] # Remove parentheses					
-						cur.execute("INSERT INTO "+tables[table]+" \
-									VALUES('"+options.scenario+"',"+key_str+", \
-									"+str(svars[table][key])+");")
-					else : # First add 'NULL' for sector then update
-						for key in svars[table].keys() : # Need to loop over keys (rows)
-							key_str = str(key)
-							key_str = key_str[1:-1] # Remove parentheses
-							cur.execute("INSERT INTO "+tables[table]+ \
-										" VALUES('"+options.scenario+"','NULL', \
-										"+key_str+","+str(svars[table][key])+");")
-						cur.execute("UPDATE "+tables[table]+" SET sector = \
-									(SELECT technologies.sector FROM technologies \
-									WHERE "+tables[table]+".tech = technologies.tech);")
+				if table == 'Objective' : # Only table without sector info
+					key_str = str(svars[table].keys()) # only 1 row to write
+					key_str = key_str[1:-1] # Remove parentheses					
+					cur.execute("INSERT INTO "+tables[table]+" \
+								VALUES('"+options.scenario+"',"+key_str+", \
+								"+str(svars[table][key])+");")
+				else : # First add 'NULL' for sector then update
+					for key in svars[table].keys() : # Need to loop over keys (rows)
+						key_str = str(key)
+						key_str = key_str[1:-1] # Remove parentheses
+						cur.execute("INSERT INTO "+tables[table]+ \
+									" VALUES('"+options.scenario+"','NULL', \
+									"+key_str+","+str(svars[table][key])+");")
+					cur.execute("UPDATE "+tables[table]+" SET sector = \
+								(SELECT technologies.sector FROM technologies \
+								WHERE "+tables[table]+".tech = technologies.tech);")
 		con.commit()
 		con.close()			
-
-		if options.saveEXCEL :
-			sys.path.append('db_io')
+		
+		if options.saveEXCEL or options.saveTEXTFILE or options.keepPyomoLP:
 			for inpu in options.dot_dat:
-				print inpu
-				file_ty = re.search(r"\b(\w+)\.(\w+)\b", inpu)
-			new_dir = 'db_io'+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+				file_ty = re.search(r"\b([\w-]+)\.(\w+)\b", inpu)
+			new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
 			if os.path.exists( new_dir ):
 				rmtree( new_dir )
 			os.mkdir(new_dir)
-			file_type = re.search(r"(\w+)\.(\w+)\b", options.output)
-			file_n = file_type.group(1)
-			from DB_to_Excel import make_excel
-			temp_scenario = set()
-			temp_scenario.add(options.scenario)
-			#make_excel(options.output, '''"db_io"+os.sep+"model_"+file_n+"_"+options.scenario+os.sep+'''options.scenario, temp_scenario)
-			make_excel(options.output, new_dir+os.sep+options.scenario, temp_scenario)
-			#os.system("python db_io"+os.sep+"DB_to_Excel.py -i \
-			#		  ""+options.output+" \
-			#		  " -o db_io"+os.sep+options.scenario+" -s "+options.scenario)
+			
+			if options.saveEXCEL:
+				file_type = re.search(r"([\w-]+)\.(\w+)\b", options.output)
+				file_n = file_type.group(1)
+				from DB_to_Excel import make_excel
+				temp_scenario = set()
+				temp_scenario.add(options.scenario)
+				make_excel(options.output, new_dir+os.sep+options.scenario, temp_scenario)
+				#os.system("python db_io"+os.sep+"DB_to_Excel.py -i \
+				#		  ""+options.output+" \
+				#		  " -o db_io"+os.sep+options.scenario+" -s "+options.scenario)
 	
 	return output
+	
+def dat_to_db(input_file, output_schema, run_partial=False):
+
+	def traverse_dat(dat_filename, search_tablename):
+		
+		result_string = ""
+		table_found_flag = False
+		
+		with open(dat_filename) as f:
+			for line in f:
+				line = re.sub("[#].*$", " ", line)
+
+				if table_found_flag:
+					result_string += line
+					if re.search(";\s*$", line):
+						break
+					
+				if re.search(""+search_tablename+"\s*[:][=]", line):
+					result_string += line
+					table_found_flag = True
+					if re.search(";\s*$", line):
+						break
+										
+		return result_string	
+	
+	#####Code Starts here	
+	tables_single_value = [	'time_exist', 'time_future', 'time_season', 'time_of_day', \
+				'tech_baseload', 'tech_resource', 'tech_production', 'tech_storage', \
+				'commodity_physical', 'commodity_demand', 'commodity_emissions']
+	
+	partial_run_tech = ['tech_baseload', 'tech_resource', 'tech_production', 'tech_storage']
+
+	partial_run_comm = ['commodity_physical', 'commodity_demand', 'commodity_emissions']
+	
+	tables_multiple_value = ['ExistingCapacity', 'Efficiency', 'LifetimeTech', \
+								'LifetimeProcess', 'EmissionActivity']
+							
+	parsed_data = {}
+	
+	#if db_or_dat_flag: #This is an input db file
+	#	import pdb; pdb.set_trace()
+	#	output_schema.execute("ATTACH DATABASE ? AS db2;", "'"+input_file+"'")
+	#	for i in db_tables:
+	#		output_schema.execute("INSERT INTO "+i+" SELECT * FROM db2."+i+";")
+	
+	if run_partial:
+		comm_set = set()
+		tech_set = set()
+		for i in partial_run_comm:
+			raw_string = traverse_dat(input_file, i)
+			raw_string = re.sub("\s+", " ", raw_string)
+			raw_string = re.sub("^.*[:][=]", "", raw_string)
+			raw_string = re.sub(";\s*$", "", raw_string)
+			raw_string = re.sub("^\s+|\s+$", "", raw_string)
+			parsed_data[i] = re.split(" ", raw_string)
+			for datas in parsed_data[i]:
+				if datas == '':
+					continue
+				comm_set.add(datas)
+		
+		for i in partial_run_tech:
+			raw_string = traverse_dat(input_file, i)
+			raw_string = re.sub("\s+", " ", raw_string)
+			raw_string = re.sub("^.*[:][=]", "", raw_string)
+			raw_string = re.sub(";\s*$", "", raw_string)
+			raw_string = re.sub("^\s+|\s+$", "", raw_string)
+			parsed_data[i] = re.split(" ", raw_string)
+			for datas in parsed_data[i]:
+				if datas == '':
+					continue
+				tech_set.add(datas)
+				
+		return comm_set, tech_set
+	
+	#This is an input dat file
+	for i in tables_single_value:
+		raw_string = traverse_dat(input_file, i)
+		raw_string = re.sub("\s+", " ", raw_string)
+		raw_string = re.sub("^.*[:][=]", "", raw_string)
+		raw_string = re.sub(";\s*$", "", raw_string)
+		raw_string = re.sub("^\s+|\s+$", "", raw_string)
+		parsed_data[i] = re.split(" ", raw_string)
+
+	for i in tables_multiple_value:
+		raw_string = traverse_dat(input_file, i)
+		raw_string = re.sub("\n", ",", raw_string)
+		raw_string = re.sub("\s+", " ", raw_string)
+		raw_string = re.sub("^.*[:][=]\s*,", "", raw_string)
+		raw_string = re.sub(",?;\s*,?$", "", raw_string)
+		raw_string = re.sub("^\s+|\s+$", "", raw_string)
+		raw_string = re.sub("\s?,\s?", ",", raw_string)
+		raw_string = re.sub(",+", ",", raw_string)
+		parsed_data[i] = re.split(",", raw_string)
+
+	#Fill time_periods
+	for i in parsed_data['time_exist']:
+		if i is '': 
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO time_periods VALUES("+i+", 'e');")
+	for i in parsed_data['time_future']:
+		if i is '':
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO time_periods VALUES("+i+", 'f');")
+	
+	#Fill time_season
+	for i in parsed_data['time_season']:
+		if i is '':
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO time_season VALUES('"+i+"');")
+	
+	#Fill time_of_day
+	for i in parsed_data['time_of_day']:
+		if i is '':
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO time_of_day VALUES('"+i+"');")
+	
+	#Fill technologies
+	for i in parsed_data['tech_baseload']:
+		if i is '':
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'pb', '', '');")
+	for i in parsed_data['tech_storage']:
+		if i is '':
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'ps', '', '');")
+	for i in parsed_data['tech_production']:
+		if i is '':
+			continue
+		if i in parsed_data['tech_storage']:
+			continue
+		if i in parsed_data['tech_baseload']:
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'p', '', '');")
+	for i in parsed_data['tech_resource']:
+		if i is '':
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'r', '', '');")
+	
+	#Fill commodities
+	for i in parsed_data['commodity_demand']:
+		if i is '':
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO commodities VALUES('"+i+"', 'd', '');")
+	for i in parsed_data['commodity_physical']:
+		if i is '':
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO commodities VALUES('"+i+"', 'p', '');")
+	for i in parsed_data['commodity_emissions']:
+		if i is '':
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO commodities VALUES('"+i+"', 'e', '');")
+
+		
+	#Fill ExistingCapacity
+	for i in parsed_data['ExistingCapacity']:
+		if i is '':
+			continue
+		row_data = re.split(" ", i)
+		row_data.append('')
+		row_data.append('')
+		output_schema.execute("INSERT OR REPLACE INTO ExistingCapacity VALUES(?, ?, ?, ?, ?);", row_data)
+	
+	#Fill Efficiency
+	for i in parsed_data['Efficiency']:
+		if i is '':
+			continue
+		row_data = re.split(" ", i)
+		row_data.append('')
+		output_schema.execute("INSERT OR REPLACE INTO Efficiency VALUES(?, ?, ?, ?, ?, ?);", row_data)		
+		
+	#Fill LifetimeTech
+	for i in parsed_data['LifetimeTech']:
+		if i is '':
+			continue
+		row_data = re.split(" ", i)
+		row_data.append('')
+		output_schema.execute("INSERT OR REPLACE INTO LifetimeTech VALUES(?, ?, ?);", row_data)		
+	
+	#Fill LifetimeProcess
+	for i in parsed_data['LifetimeProcess']:
+		if i is '':
+			continue
+		row_data = re.split(" ", i)
+		row_data.append('')
+		output_schema.execute("INSERT OR REPLACE INTO LifetimeProcess VALUES(?, ?, ?, ?);", row_data)		
+	
+	#Fill EmissionActivity
+	for i in parsed_data['EmissionActivity']:
+		if i is '':
+			continue
+		row_data = re.split(" ", i)
+		row_data.append('')
+		if len(row_data) is 7:
+			row_data.append('')
+		output_schema.execute("INSERT OR REPLACE INTO EmissionActivity VALUES(?, ?, ?, ?, ?, ?, ?, ?);", row_data)
+			
