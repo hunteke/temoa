@@ -2242,16 +2242,6 @@ def parse_args ( ):
 	  dest='solver',
 	  default=default_solver)
 
-	solver.add_argument('--generate_solver_lp_file',
-	  help='Request that solver create an LP representation of the optimization '
-	       'problem.  Mainly used for model debugging purposes.  The file name '
-	       'will have the same base name as the first dot_dat file specified.  '
-	       '[Note: this option currently only works with the GLPK solver.] '
-	       '[Default: do not create solver LP file]',
-	  action='store_true',
-	  dest='generateSolverLP',
-	  default=False)
-
 	solver.add_argument('--keep_pyomo_lp_file',
 	  help='Save the LP file as written by Pyomo.  This is distinct from the '
 	       "solver's generated LP file, but /should/ represent the same model.  "

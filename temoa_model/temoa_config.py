@@ -189,7 +189,6 @@ class TemoaConfig( object ):
 		'how_to_cite',
 		'version',
 		'solver',
-		'generate_solver_lp_file',
 		'keep_pyomo_lp_file',
 		'eciu',
 		'saveEXCEL',
@@ -320,10 +319,6 @@ class TemoaConfig( object ):
 	def t_solver(self, t):
 		r'--solver[\s\=]+\w+\b'
 		self.solver = t.value.replace('=', ' ').split()[1]
-	
-	def t_generate_solver_lp_file(self, t):
-		r'--generate_solver_lp_file\b'
-		self.generateSolverLP = True
 	
 	def t_keep_pyomo_lp_file(self, t):
 		r'--keep_pyomo_lp_file\b'
