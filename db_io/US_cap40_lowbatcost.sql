@@ -926,7 +926,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','E10','T_BLND_E10_PHEV10',0.9216,'#as
 INSERT INTO "TechInputSplit" VALUES('2040','E10','T_BLND_E10_PHEV10',0.9216,'#assumed SS has the same share as C and F size classes');
 INSERT INTO "TechInputSplit" VALUES('2045','E10','T_BLND_E10_PHEV10',0.9216,'#assumed SS has the same share as C and F size classes');
 INSERT INTO "TechInputSplit" VALUES('2050','E10','T_BLND_E10_PHEV10',0.9216,'#assumed SS has the same share as C and F size classes');
-INSERT INTO "TechInputSplit" VALUES('2055','E10','T_BLND_E10_PHEV10',0.9216,'#assumed SS has the same share as C and F size classes');
 
 INSERT INTO "TechInputSplit" VALUES('2015','ELC','T_BLND_E10_PHEV10',0.0784,'');
 INSERT INTO "TechInputSplit" VALUES('2020','ELC','T_BLND_E10_PHEV10',0.0784,'');
@@ -936,7 +935,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','ELC','T_BLND_E10_PHEV10',0.0784,'');
 INSERT INTO "TechInputSplit" VALUES('2040','ELC','T_BLND_E10_PHEV10',0.0784,'');
 INSERT INTO "TechInputSplit" VALUES('2045','ELC','T_BLND_E10_PHEV10',0.0784,'');
 INSERT INTO "TechInputSplit" VALUES('2050','ELC','T_BLND_E10_PHEV10',0.0784,'');
-INSERT INTO "TechInputSplit" VALUES('2055','ELC','T_BLND_E10_PHEV10',0.0784,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','E10','T_BLND_E10_PHEV40',0.7939,'');
 INSERT INTO "TechInputSplit" VALUES('2020','E10','T_BLND_E10_PHEV40',0.7939,'');
@@ -946,7 +944,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','E10','T_BLND_E10_PHEV40',0.7939,'');
 INSERT INTO "TechInputSplit" VALUES('2040','E10','T_BLND_E10_PHEV40',0.7939,'');
 INSERT INTO "TechInputSplit" VALUES('2045','E10','T_BLND_E10_PHEV40',0.7939,'');
 INSERT INTO "TechInputSplit" VALUES('2050','E10','T_BLND_E10_PHEV40',0.7939,'');
-INSERT INTO "TechInputSplit" VALUES('2055','E10','T_BLND_E10_PHEV40',0.7939,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','ELC','T_BLND_E10_PHEV40',0.2061,'');
 INSERT INTO "TechInputSplit" VALUES('2020','ELC','T_BLND_E10_PHEV40',0.2061,'');
@@ -956,7 +953,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','ELC','T_BLND_E10_PHEV40',0.2061,'');
 INSERT INTO "TechInputSplit" VALUES('2040','ELC','T_BLND_E10_PHEV40',0.2061,'');
 INSERT INTO "TechInputSplit" VALUES('2045','ELC','T_BLND_E10_PHEV40',0.2061,'');
 INSERT INTO "TechInputSplit" VALUES('2050','ELC','T_BLND_E10_PHEV40',0.2061,'');
-INSERT INTO "TechInputSplit" VALUES('2055','ELC','T_BLND_E10_PHEV40',0.2061,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','E85','T_BLND_E85X_PHEV10',0.9262,'');
 INSERT INTO "TechInputSplit" VALUES('2020','E85','T_BLND_E85X_PHEV10',0.9262,'');
@@ -966,7 +962,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','E85','T_BLND_E85X_PHEV10',0.9262,'')
 INSERT INTO "TechInputSplit" VALUES('2040','E85','T_BLND_E85X_PHEV10',0.9262,'');
 INSERT INTO "TechInputSplit" VALUES('2045','E85','T_BLND_E85X_PHEV10',0.9262,'');
 INSERT INTO "TechInputSplit" VALUES('2050','E85','T_BLND_E85X_PHEV10',0.9262,'');
-INSERT INTO "TechInputSplit" VALUES('2055','E85','T_BLND_E85X_PHEV10',0.9262,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','ELC','T_BLND_E85X_PHEV10',0.0738,'');
 INSERT INTO "TechInputSplit" VALUES('2020','ELC','T_BLND_E85X_PHEV10',0.0738,'');
@@ -976,7 +971,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','ELC','T_BLND_E85X_PHEV10',0.0738,'')
 INSERT INTO "TechInputSplit" VALUES('2040','ELC','T_BLND_E85X_PHEV10',0.0738,'');
 INSERT INTO "TechInputSplit" VALUES('2045','ELC','T_BLND_E85X_PHEV10',0.0738,'');
 INSERT INTO "TechInputSplit" VALUES('2050','ELC','T_BLND_E85X_PHEV10',0.0738,'');
-INSERT INTO "TechInputSplit" VALUES('2055','ELC','T_BLND_E85X_PHEV10',0.0738,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','E85','T_BLND_E85X_PHEV40',0.8042,'');
 INSERT INTO "TechInputSplit" VALUES('2020','E85','T_BLND_E85X_PHEV40',0.8042,'');
@@ -986,7 +980,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','E85','T_BLND_E85X_PHEV40',0.8042,'')
 INSERT INTO "TechInputSplit" VALUES('2040','E85','T_BLND_E85X_PHEV40',0.8042,'');
 INSERT INTO "TechInputSplit" VALUES('2045','E85','T_BLND_E85X_PHEV40',0.8042,'');
 INSERT INTO "TechInputSplit" VALUES('2050','E85','T_BLND_E85X_PHEV40',0.8042,'');
-INSERT INTO "TechInputSplit" VALUES('2055','E85','T_BLND_E85X_PHEV40',0.8042,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','ELC','T_BLND_E85X_PHEV40',0.1958,'');
 INSERT INTO "TechInputSplit" VALUES('2020','ELC','T_BLND_E85X_PHEV40',0.1958,'');
@@ -996,7 +989,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','ELC','T_BLND_E85X_PHEV40',0.1958,'')
 INSERT INTO "TechInputSplit" VALUES('2040','ELC','T_BLND_E85X_PHEV40',0.1958,'');
 INSERT INTO "TechInputSplit" VALUES('2045','ELC','T_BLND_E85X_PHEV40',0.1958,'');
 INSERT INTO "TechInputSplit" VALUES('2050','ELC','T_BLND_E85X_PHEV40',0.1958,'');
-INSERT INTO "TechInputSplit" VALUES('2055','ELC','T_BLND_E85X_PHEV40',0.1958,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','TMDLDV_MC','T_LDV_BLNDDEM',0.03,'');
 INSERT INTO "TechInputSplit" VALUES('2020','TMDLDV_MC','T_LDV_BLNDDEM',0.03,'');
@@ -1006,7 +998,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','TMDLDV_MC','T_LDV_BLNDDEM',0.03,'');
 INSERT INTO "TechInputSplit" VALUES('2040','TMDLDV_MC','T_LDV_BLNDDEM',0.03,'');
 INSERT INTO "TechInputSplit" VALUES('2045','TMDLDV_MC','T_LDV_BLNDDEM',0.03,'');
 INSERT INTO "TechInputSplit" VALUES('2050','TMDLDV_MC','T_LDV_BLNDDEM',0.03,'');
-INSERT INTO "TechInputSplit" VALUES('2055','TMDLDV_MC','T_LDV_BLNDDEM',0.03,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','TMDLDV_C','T_LDV_BLNDDEM',0.32,'');
 INSERT INTO "TechInputSplit" VALUES('2020','TMDLDV_C','T_LDV_BLNDDEM',0.32,'');
@@ -1016,7 +1007,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','TMDLDV_C','T_LDV_BLNDDEM',0.32,'');
 INSERT INTO "TechInputSplit" VALUES('2040','TMDLDV_C','T_LDV_BLNDDEM',0.32,'');
 INSERT INTO "TechInputSplit" VALUES('2045','TMDLDV_C','T_LDV_BLNDDEM',0.32,'');
 INSERT INTO "TechInputSplit" VALUES('2050','TMDLDV_C','T_LDV_BLNDDEM',0.32,'');
-INSERT INTO "TechInputSplit" VALUES('2055','TMDLDV_C','T_LDV_BLNDDEM',0.32,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','TMDLDV_F','T_LDV_BLNDDEM',0.45,'');
 INSERT INTO "TechInputSplit" VALUES('2020','TMDLDV_F','T_LDV_BLNDDEM',0.45,'');
@@ -1026,7 +1016,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','TMDLDV_F','T_LDV_BLNDDEM',0.45,'');
 INSERT INTO "TechInputSplit" VALUES('2040','TMDLDV_F','T_LDV_BLNDDEM',0.45,'');
 INSERT INTO "TechInputSplit" VALUES('2045','TMDLDV_F','T_LDV_BLNDDEM',0.45,'');
 INSERT INTO "TechInputSplit" VALUES('2050','TMDLDV_F','T_LDV_BLNDDEM',0.45,'');
-INSERT INTO "TechInputSplit" VALUES('2055','TMDLDV_F','T_LDV_BLNDDEM',0.45,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','TMDLDV_SS','T_LDV_BLNDDEM',0.2,'#weighted average between 2015 and 2050 in NUSTD');
 INSERT INTO "TechInputSplit" VALUES('2020','TMDLDV_SS','T_LDV_BLNDDEM',0.2,'#weighted average between 2015 and 2050 in NUSTD');
@@ -1036,7 +1025,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','TMDLDV_SS','T_LDV_BLNDDEM',0.2,'#wei
 INSERT INTO "TechInputSplit" VALUES('2040','TMDLDV_SS','T_LDV_BLNDDEM',0.2,'#weighted average between 2015 and 2050 in NUSTD');
 INSERT INTO "TechInputSplit" VALUES('2045','TMDLDV_SS','T_LDV_BLNDDEM',0.2,'#weighted average between 2015 and 2050 in NUSTD');
 INSERT INTO "TechInputSplit" VALUES('2050','TMDLDV_SS','T_LDV_BLNDDEM',0.2,'#weighted average between 2015 and 2050 in NUSTD');
-INSERT INTO "TechInputSplit" VALUES('2055','TMDLDV_SS','T_LDV_BLNDDEM',0.2,'#weighted average between 2015 and 2050 in NUSTD');
 
 INSERT INTO "TechInputSplit" VALUES('2015','COAB','E_BLND_BITSUBLIG',0.43,'');
 INSERT INTO "TechInputSplit" VALUES('2020','COAB','E_BLND_BITSUBLIG',0.43,'');
@@ -1046,7 +1034,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','COAB','E_BLND_BITSUBLIG',0.43,'');
 INSERT INTO "TechInputSplit" VALUES('2040','COAB','E_BLND_BITSUBLIG',0.43,'');
 INSERT INTO "TechInputSplit" VALUES('2045','COAB','E_BLND_BITSUBLIG',0.43,'');
 INSERT INTO "TechInputSplit" VALUES('2050','COAB','E_BLND_BITSUBLIG',0.43,'');
-INSERT INTO "TechInputSplit" VALUES('2055','COAB','E_BLND_BITSUBLIG',0.43,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','COAS','E_BLND_BITSUBLIG',0.52,'');
 INSERT INTO "TechInputSplit" VALUES('2020','COAS','E_BLND_BITSUBLIG',0.52,'');
@@ -1056,7 +1043,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','COAS','E_BLND_BITSUBLIG',0.52,'');
 INSERT INTO "TechInputSplit" VALUES('2040','COAS','E_BLND_BITSUBLIG',0.52,'');
 INSERT INTO "TechInputSplit" VALUES('2045','COAS','E_BLND_BITSUBLIG',0.52,'');
 INSERT INTO "TechInputSplit" VALUES('2050','COAS','E_BLND_BITSUBLIG',0.52,'');
-INSERT INTO "TechInputSplit" VALUES('2055','COAS','E_BLND_BITSUBLIG',0.52,'');
 
 INSERT INTO "TechInputSplit" VALUES('2015','COAL','E_BLND_BITSUBLIG',0.05,'');
 INSERT INTO "TechInputSplit" VALUES('2020','COAL','E_BLND_BITSUBLIG',0.05,'');
@@ -1066,7 +1052,6 @@ INSERT INTO "TechInputSplit" VALUES('2035','COAL','E_BLND_BITSUBLIG',0.05,'');
 INSERT INTO "TechInputSplit" VALUES('2040','COAL','E_BLND_BITSUBLIG',0.05,'');
 INSERT INTO "TechInputSplit" VALUES('2045','COAL','E_BLND_BITSUBLIG',0.05,'');
 INSERT INTO "TechInputSplit" VALUES('2050','COAL','E_BLND_BITSUBLIG',0.05,'');
-INSERT INTO "TechInputSplit" VALUES('2055','COAL','E_BLND_BITSUBLIG',0.05,'');
 
 
 CREATE TABLE TechOutputSplit (
@@ -4707,6 +4692,7 @@ Tables in this section store model outputs
  
 CREATE TABLE Output_VFlow_Out (
    scenario text,
+   sector text,   
    t_periods integer,
    t_season text,
    t_day text,
@@ -4716,6 +4702,7 @@ CREATE TABLE Output_VFlow_Out (
    output_comm text,
    vflow_out real,
    PRIMARY KEY(scenario, t_periods, t_season, t_day, input_comm, tech, vintage, output_comm),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector), 
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(t_season) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(t_day) REFERENCES time_of_day(t_day),
@@ -4724,8 +4711,11 @@ CREATE TABLE Output_VFlow_Out (
    FOREIGN KEY(vintage) REFERENCES time_periods(t_periods), 
    FOREIGN KEY(output_comm) REFERENCES commodities(comm_name));
 
+
+
 CREATE TABLE Output_VFlow_In (
    scenario text,
+   sector text,
    t_periods integer,
    t_season text,
    t_day text,
@@ -4735,6 +4725,7 @@ CREATE TABLE Output_VFlow_In (
    output_comm text,
    vflow_in real,
    PRIMARY KEY(scenario, t_periods, t_season, t_day, input_comm, tech, vintage, output_comm),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector),   
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(t_season) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(t_day) REFERENCES time_of_day(t_day),
@@ -4743,23 +4734,43 @@ CREATE TABLE Output_VFlow_In (
    FOREIGN KEY(vintage) REFERENCES time_periods(t_periods), 
    FOREIGN KEY(output_comm) REFERENCES commodities(comm_name));
  
-CREATE TABLE Output_Capacity (
+
+CREATE TABLE Output_V_Capacity (
    scenario text,
-   t_periods integer,
+   sector text,
+   tech text,
+   vintage integer,
+   capacity real,
+   PRIMARY KEY(scenario, tech, vintage),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector), 
+   FOREIGN KEY(tech) REFERENCES technologies(tech),
+   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
+
+
+
+CREATE TABLE Output_CapacityByPeriodAndTech (
+   scenario text,
+   sector text,
+   t_periods integer,   
    tech text,
    capacity real,
    PRIMARY KEY(scenario, t_periods, tech),
-   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector), 
+   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),   
    FOREIGN KEY(tech) REFERENCES technologies(tech)); 
+
+
 
 CREATE TABLE Output_Emissions (    
    scenario text,
+   sector text,
    t_periods integer,
    emissions_comm text,
    tech text,
    vintage integer,
    emissions real,
    PRIMARY KEY(scenario, t_periods, emissions_comm, tech, vintage),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector), 
    FOREIGN KEY(emissions_comm) REFERENCES EmissionActivity(emis_comm),
    FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
    FOREIGN KEY(tech) REFERENCES technologies(tech)
@@ -4767,37 +4778,20 @@ CREATE TABLE Output_Emissions (
 
 CREATE TABLE Output_Costs (
    scenario text,
+   sector text,
    output_name text,
    tech text,
    vintage integer,
    output_cost real,
    PRIMARY KEY(scenario, output_name, tech, vintage),
+   FOREIGN KEY(sector) REFERENCES sector_labels(sector), 
    FOREIGN KEY(tech) REFERENCES technologies(tech),   
    FOREIGN KEY(vintage) REFERENCES time_periods(t_periods)); 
 
-CREATE TABLE Output_TotalCost (
+CREATE TABLE Output_Objective (
    scenario text,
-   total_system_cost real);
-   
-CREATE TABLE V_Capacity (
-   scenario text,
-   tech text,
-   vintage integer,
-   capacity real,
-   PRIMARY KEY(scenario, tech, vintage),
-   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods), 
-   FOREIGN KEY(tech) REFERENCES technologies(tech)); 
+   objective_name text,
+   total_system_cost real );
 
-CREATE TABLE V_ActivityByPeriodAndProcess (    
-   scenario text,
-   t_periods integer,
-   tech text,
-   vintage integer,
-   activity real,
-   PRIMARY KEY(scenario, t_periods, tech, vintage),
-   FOREIGN KEY(t_periods) REFERENCES time_periods(t_periods),
-   FOREIGN KEY(tech) REFERENCES technologies(tech)
-   FOREIGN KEY(vintage) REFERENCES time_periods(t_periods));
 
- 
 COMMIT;
