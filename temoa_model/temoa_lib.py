@@ -1476,11 +1476,6 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		opt = optimizer              # for us lazy programmer types
 		dot_dats = options.dot_dat
 
-		if options.generateSolverLP:
-			opt.options.wlp = temp_lp_dest + path.basename( dot_dats[0] )[:-4] + '.lp'
-			SE.write('\nSolver will write file: {}\n\n'.format( os.path.basename(opt.options.wlp )))
-			txt_file.write('\nSolver will write file: {}\n\n'.format( os.path.basename(opt.options.wlp )))
-
 		if options.keepPyomoLP:
 			SE.write('\nSolver will write file: {}\n\n'.format( options.scenario + '.lp' ))
 			txt_file.write('\nSolver will write file: {}\n\n'.format( options.scenario + '.lp' ))
