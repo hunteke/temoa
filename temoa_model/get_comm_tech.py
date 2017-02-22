@@ -212,7 +212,7 @@ def is_db_overwritten(db_file, inp_dat_file):
 			cur.close()
 			con.close()			
 			
-			if tagged_file == os.path.basename( inp_dat_file ) + ".dat":
+			if tagged_file == inp_dat_file.split(".")[0] + ".dat":
 				#If Input_file name matches, no overwriting.
 				return False
 			else:
