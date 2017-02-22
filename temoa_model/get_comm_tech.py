@@ -124,7 +124,8 @@ def get_comm(inp_f, db_dat):
 			comm_list[x] = x
 			
 	return dict ( OrderedDict ( sorted(comm_list.items(), key=lambda x: x[1]) ) )
-		
+
+
 def get_tech(inp_f, db_dat):
 	
 	tech_list = {}
@@ -180,6 +181,48 @@ def get_tech(inp_f, db_dat):
 			
 	return dict ( OrderedDict ( sorted(tech_list.items(), key=lambda x: x[1]) ) )
 		
+
+def is_db_overwritten(db_file, inp_dat_file):
+	
+	con = sqlite3.connect(db_file)
+	cur = con.cursor()   # A database cursor enables traversal over DB records
+	con.text_factory = str # This ensures data is explored with UTF-8 encoding
+
+	### Copy tables from Input File to DB file.
+	# IF output file is empty database.
+	cur.execute("SELECT * FROM technologies")
+	is_db_empty = False #False for empty db file
+	for elem in cur:
+		is_db_empty = True #True for non-empty db file
+		break
+		
+		
+	if is_db_empty: #This file could be schema with populated results from previous run. Or it could be a normal db file.
+		cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='input_file';")
+		does_input_file_table_exist = False
+		for i in cur: # This means that the 'input_file' table exists in db.
+			does_input_file_table_exist = True
+		if does_input_file_table_exist: #This block distinguishes normal database from schema.
+			#This is schema file. 
+			cur.execute("SELECT file FROM input_file WHERE id is '1';")
+			for i in cur:
+				tagged_file = i[0]
+			tagged_file = re.sub('["]', "", tagged_file)
+
+			cur.close()
+			con.close()			
+			
+			if tagged_file == os.path.basename( inp_dat_file ) + ".dat":
+				#If Input_file name matches, no overwriting.
+				return False
+			else:
+				#If not a match, delete output tables and update input_file. Return True
+				return True
+	
+	cur.close()
+	con.close()
+	
+	return False
 	
 def help_user() :
 	print '''Use as:
