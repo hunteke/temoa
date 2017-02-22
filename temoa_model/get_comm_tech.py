@@ -184,7 +184,13 @@ def get_tech(inp_f, db_dat):
 
 def is_db_overwritten(db_file, inp_dat_file):
 	
-	con = sqlite3.connect(db_file)
+	if os.path.basename(db_file) == '0':
+		return False
+	
+	try:
+		con = sqlite3.connect(db_file)
+	except:
+		return False
 	cur = con.cursor()   # A database cursor enables traversal over DB records
 	con.text_factory = str # This ensures data is explored with UTF-8 encoding
 
