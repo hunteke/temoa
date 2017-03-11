@@ -149,7 +149,7 @@ def validate_SegFrac ( M ):
 
 	total = sum( i for i in M.SegFrac.itervalues() )
 
-	if abs(float(total) - 1.0) > 1e-15:
+	if abs(float(total) - 1.0) > 1e-6:
 		# We can't explicitly test for "!= 1.0" because of incremental roundoff
 		# errors inherent in float manipulations and representations, so instead
 		# compare against an epsilon value of "close enough".
@@ -328,7 +328,7 @@ def CreateDemands ( M ):
 
 	# Step 3
 	total = sum( i for i in DDD.itervalues() )
-	if abs(float(total) - 1.0) > 1e-15:
+	if abs(float(total) - 1.0) > 1e-6:
 		# We can't explicitly test for "!= 1.0" because of incremental roundoff
 		# errors inherent in float manipulations and representations, so instead
 		# compare against an epsilon value of "close enough".
@@ -373,7 +373,7 @@ def CreateDemands ( M ):
 		keys = (k for k in DSD.sparse_iterkeys() if DSD_dem_getter(k) == dem )
 		total = sum( DSD[ i ] for i in keys )
 
-		if abs(float(total) - 1.0) > 1e-15:
+		if abs(float(total) - 1.0) > 1e-6:
 			# We can't explicitly test for "!= 1.0" because of incremental roundoff
 			# errors inherent in float manipulations and representations, so
 			# instead compare against an epsilon value of "close enough".
@@ -882,6 +882,51 @@ def StorageConstraintIndices ( M ):
 
 	return indices
 
+def RampConstraintDayIndices ( M ):
+	indices = set(
+	  (p, s, d, t, v)
+
+	  for p in M.time_optimize
+	  for s in M.time_season
+	  for d in M.time_of_day
+	  for t in M.tech_ramping
+	  for v in ProcessVintages( p, t )
+	)
+
+	return indices
+
+def RampConstraintSeasonIndices ( M ):
+	indices = set(
+	  (p, s, t, v)
+
+	  for p in M.time_optimize
+	  for s in M.time_season	  
+	  for t in M.tech_ramping
+	  for v in ProcessVintages( p, t )
+	)
+
+	return indices
+
+def RampConstraintPeriodIndices ( M ):
+	indices = set(
+	  (p, t, v)
+
+	  for p in M.time_optimize
+	  for t in M.tech_ramping
+	  for v in ProcessVintages( p, t )
+	)
+
+	return indices
+
+def ReserveMarginIndices ( M ):
+		indices = set(
+			(p, c)
+
+			for p in M.time_optimize
+			for c in M.commodity_demand
+			if M.ReserveMargin[c] >= 1e-3
+			)
+		return indices
 
 def TechInputSplitConstraintIndices ( M ):
 	indices = set(
