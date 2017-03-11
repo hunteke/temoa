@@ -48,8 +48,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     # Perform some basic validation on the time sets as a whole.
     M.validate_time    = BuildAction( rule=validate_time )
     
-    M.time_season     = Set()
-    M.time_of_day     = Set()
+    M.time_season     = Set( ordered=True )
+    M.time_of_day     = Set( ordered=True )
     
     M.tech_resource   = Set()
     M.tech_production = Set()
@@ -57,6 +57,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     
     M.tech_baseload   = Set( within=M.tech_all )
     M.tech_storage    = Set( within=M.tech_all )
+    M.tech_ramping    = Set( within=M.tech_all )
+    M.tech_reserve    = Set( within=M.tech_all )
     
     # Technology sets used for sector-specific MGA weights
     M.tech_mga         = Set( within=M.tech_all )
@@ -155,7 +157,15 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.EmissionActivity = Param( M.EmissionActivity_eitvo )
     M.TechInputSplit  = Param( M.time_optimize, M.commodity_physical, M.tech_all )
     M.TechOutputSplit = Param( M.time_optimize, M.tech_all, M.commodity_carrier )
-    
+
+    #Parameters for Ramping Up and Ramping Down Constraints ARQ 22/07/16
+    M.RampUp   = Param( M.tech_ramping )
+    M.RampDown = Param( M.tech_ramping )
+
+    # Parameters for reserve margin constraints.
+    M.CapacityCredit = Param( M.tech_reserve, default=1 )
+    M.ReserveMargin  = Param( M.commodity_demand, default=0.0 )
+
     # Decision Variables--------------------------------------------------------
     #   Base decision variables
     M.FlowVar_psditvo = Set( dimen=7, initialize=FlowVariableIndices )
@@ -251,8 +261,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     #  M.CapacityVar_tv, 
     #  rule=CapacityFixed_Constraint )
 
-  #   Model Constraints
-  #   In driving order, starting with the need to meet end-use demands
+    #   Model Constraints
+    #   In driving order, starting with the need to meet end-use demands
 	
     M.DemandConstraint_psdc = Set( dimen=4, initialize=DemandConstraintIndices )
     M.DemandConstraint           = Constraint( 
@@ -294,6 +304,48 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.StorageConstraint = Constraint( 
       M.StorageConstraint_psitvo, 
       rule=Storage_Constraint )
+
+    M.RampUpConstraintDay_psdtv = Set( 
+      dimen=5, initialize=RampConstraintDayIndices )
+    M.RampUpConstraintDay = Constraint( 
+      M.RampUpConstraintDay_psdtv, 
+      rule=RampUpDay_Constraint )
+
+    M.RampUpConstraintSeason_pstv = Set( 
+      dimen=4, initialize=RampConstraintSeasonIndices )
+    M.RampUpConstraintSeason = Constraint( 
+      M.RampUpConstraintSeason_pstv, 
+      rule=RampUpSeason_Constraint )
+
+    M.RampUpConstraintPeriod_ptv = Set( 
+      dimen=3, initialize=RampConstraintPeriodIndices )
+    M.RampUpConstraintPeriod = Constraint( 
+      M.RampUpConstraintPeriod_ptv, 
+      rule=RampUpPeriod_Constraint )
+
+    M.RampDownConstraintDay_psdtv = Set( 
+      dimen=5, initialize=RampConstraintDayIndices )
+    M.RampDownConstraintDay = Constraint( 
+      M.RampDownConstraintDay_psdtv, 
+      rule=RampDownDay_Constraint )
+
+    M.RampDownConstraintSeason_pstv = Set( 
+      dimen=4, initialize=RampConstraintSeasonIndices )
+    M.RampDownConstraintSeason = Constraint( 
+      M.RampDownConstraintSeason_pstv, 
+      rule=RampDownSeason_Constraint )
+
+    M.RampDownConstraintPeriod_ptv = Set( 
+      dimen=3, initialize=RampConstraintPeriodIndices )
+    M.RampDownConstraintPeriod = Constraint( 
+      M.RampDownConstraintPeriod_ptv, 
+      rule=RampDownPeriod_Constraint )
+
+    M.ReserveMargin_pc = Set(
+      dimen = 2, initialize=ReserveMarginIndices )
+    M.ReserveMarginConstraint = Constraint(
+      M.ReserveMargin_pc,
+      rule=ReserveMargin_Constraint)
 
     # Constraints for user-defined limits
     M.EmissionLimitConstraint_pe = Set(

@@ -921,7 +921,224 @@ def EmissionActivityByPeriodAndTech_Constraint ( M, e, p, t ):
 	expr = (M.V_EmissionActivityByPeriodAndTech[e, p, t] == emission_total)
 	return expr	
 
+def RampUpDay_Constraint ( M, p, s, d, t, v):
+	r"""
+M.time_of_day is a sorted set, and M.time_of_day.first() returns the first 
+element in the set, similarly, M.time_of_day.last() returns the last element.
+M.time_of_day.prev(d) function will return the previous element before s, and 
+M.time_of_day.next(d) function will return the next element after s.
+Note that this constriant only applies to technologies that can ramp up/down, 
+which is defined by set :math:`\textbf{T}^{ramp}`. The ramp up/down rate for 
+tech t :math:'r_t' shoudl be inputted in %.
+
+.. math::
+   \frac{ 
+       \textbf{ACT}_{p, s, d+1, t, v} 
+       }{
+       SEG_{s,d+1} \cdot C2A_t 
+       }
+   -
+   \frac{ 
+       \textbf{ACT}_{p, s, d, t, v} 
+       }{
+       SEG_{s,d} \cdot C2A_t 
+       }
+   \leq
+   r_t \cdot \textbf{CAPAVL}_{p,t}
+   \\
+   \forall 
+   p \in \textbf{P}^o,
+   s \in \textbf{S},
+   d, d+1 \in \textbf{D},
+   t \in \textbf{T}^{ramp},
+   v \in \textbf{V}
+"""
+	if d != M.time_of_day.first():
+		d_prev = M.time_of_day.prev(d)
+		expr_left  = (
+			M.V_Activity[ p, s, d, t, v ]/value( M.SegFrac[s, d] ) - 
+			M.V_Activity[ p, s, d_prev, t, v ]/value( M.SegFrac[s, d_prev] )
+			)/value( M.CapacityToActivity[ t ] )
+		expr_right = M.V_Capacity[t, v]*value( M.RampUp[t] )
+		expr = (expr_left <= expr_right)
+	else:
+		return Constraint.Skip
+
+	return expr
+
+def RampUpSeason_Constraint ( M, p, s, t, v):
+	if s != M.time_season.first():
+		s_prev  = M.time_season.prev(s)
+		d_first = M.time_of_day.first()
+		d_last  = M.time_of_day.last()
+		expr_left = (
+			M.V_Activity[ p, s, d_first, t, v ]/M.SegFrac[s, d_first] - 
+			M.V_Activity[ p, s_prev, d_last, t, v ]/M.SegFrac[s_prev, d_last]
+			)/value( M.CapacityToActivity[ t ] )
+		expr_right = M.V_Capacity[t, v]*value( M.RampUp[t] )
+		expr = (expr_left <= expr_right)
+	else:
+		return Constraint.Skip
+
+	return expr
+
+def RampUpPeriod_Constraint ( M, p, t, v):
+
+	# if p != M.time_future.first():
+	# 	p_prev  = M.time_future.prev(p)
+	# 	s_first = M.time_season.first()
+	# 	s_last  = M.time_season.last()
+	# 	d_first = M.time_of_day.first()
+	# 	d_last  = M.time_of_day.last()
+	# 	expr_left = (
+	# 		M.V_Activity[ p, s_first, d_first, t, v ] - 
+	# 		M.V_Activity[ p_prev, s_last, d_last, t, v ]
+	# 		)
+	# 	expr_right = (
+	# 		M.V_Capacity[t, v]*
+	# 		value( M.RampUp[t] )*
+	# 		value( M.CapacityToActivity[ t ] )* 
+	# 		value( M.SegFrac[s, d])
+	# 		)
+	# 	expr = (expr_left <= expr_right)
+	# else:
+	# 	return Constraint.Skip
+
+	# return expr
+
+	return Constraint.Skip # We don't need inter-period ramp up/down constraint.
+
+def RampDownDay_Constraint ( M, p, s, d, t, v):
+	r"""
+.. math::
+   \frac{ 
+       \textbf{ACT}_{p, s, d+1, t, v} 
+       }{
+       SEG_{s,d+1} \cdot C2A_t 
+       }
+   -
+   \frac{ 
+       \textbf{ACT}_{p, s, d, t, v} 
+       }{
+       SEG_{s,d} \cdot C2A_t 
+       }
+   \geq
+   -r_t \cdot \textbf{CAPAVL}_{p,t}
+   \\
+   \forall 
+   p \in \textbf{P}^o,
+   s \in \textbf{S},
+   d, d+1 \in \textbf{D},
+   t \in \textbf{T}^{ramp},
+   v \in \textbf{V}
+"""
+
+	if d != M.time_of_day.first():
+		d_prev = M.time_of_day.prev(d)
+		expr_left  = (
+			M.V_Activity[ p, s, d, t, v ]/value( M.SegFrac[s, d]) - 
+			M.V_Activity[ p, s, d_prev, t, v ]/value( M.SegFrac[s, d_prev])
+			)/value( M.CapacityToActivity[ t ] )
+		expr_right = -( M.V_Capacity[t, v]*value( M.RampDown[t] ) )
+		expr = (expr_left >= expr_right)
+	else:
+		return Constraint.Skip
+
+	return expr
+
+def RampDownSeason_Constraint ( M, p, s, t, v):
+	if s != M.time_season.first():
+		s_prev  = M.time_season.prev(s)
+		d_first = M.time_of_day.first()
+		d_last  = M.time_of_day.last()
+		expr_left = (
+			M.V_Activity[ p, s, d_first, t, v ]/
+			value( 
+				M.SegFrac[s, d_first]
+				) - 
+			M.V_Activity[ p, s_prev, d_last, t, v ]/
+			value( 
+				M.SegFrac[s_prev, d_last]
+				)
+			)/value( M.CapacityToActivity[ t ] )
+		expr_right = -( M.V_Capacity[t, v]*value( M.RampDown[t] ) )
+		expr = (expr_left >= expr_right)
+	else:
+		return Constraint.Skip
+
+	return expr
+
+def RampDownPeriod_Constraint ( M, p, t, v):
 	
+	# if p != M.time_future.first():
+	# 	p_prev  = M.time_future.prev(p)
+	# 	s_first = M.time_season.first()
+	# 	s_last  = M.time_season.last()
+	# 	d_first = M.time_of_day.first()
+	# 	d_last  = M.time_of_day.last()
+	# 	expr_left = (
+	# 		M.V_Activity[ p, s_first, d_first, t, v ] - 
+	# 		M.V_Activity[ p_prev, s_last, d_last, t, v ]
+	# 		)
+	# 	expr_right = (
+	# 		-1*
+	# 		M.V_Capacity[t, v]*
+	# 		value( M.RampDown[t] )*
+	# 		value( M.CapacityToActivity[ t ] )* 
+	# 		value( M.SegFrac[s, d])
+	# 		)
+	# 	expr = (expr_left >= expr_right)
+	# else:
+	# 	return Constraint.Skip
+
+	# return expr
+
+	return Constraint.Skip # We don't need inter-period ramp up/down constraint.
+	
+def ReserveMargin_Constraint( M, p, c):
+	r"""
+Reserve margin constraint applies to demand commodity c, which is defined in set
+:math:'\textbf{C}^{res}'. During the time slice with peak load :math:'(s^*, d^*)', 
+the sum of capacity of all technologies providing reserve (set :math:'\textbf{T}^{res}') 
+should exceed the load during that time slice by a certain percentage 
+:math:'\textbf{RES}_c'. 
+
+.. math::
+   \sum_{t \in T^{res}} {
+      \textbf{CC}_t \cdot
+      \textbf{CAPAVL}_{p,t} \cdot
+      SEG_{s^*,d^*} \cdot C2A_t }
+   \geq
+   \textbf{DEM}_{p,c} \cdot
+   \textbf{DSD}_{s^*, d^*, c} \cdot
+   (1 + \textbf{RES}_c)
+   \\
+   \forall
+   p \in \textbf{P}^o,
+   c \in \textbf{C}^{res}
+"""
+	# The season and time-of-day of the slice with the maximum average load. 
+	s_star, d_star, load_star = None, None, 0
+	for s, d, dem in M.DemandSpecificDistribution.iterkeys():
+		load = M.DemandSpecificDistribution[s, d, dem]/M.SegFrac[s, d]
+		if load_star <= load:
+			s_star, d_star, load_star = s, d, load
+
+	expr_left = sum(
+		value( M.CapacityCredit[t] )*
+		M.V_CapacityAvailableByPeriodAndTech[p, t]*
+		value( M.CapacityToActivity[t] )*
+		value( M.SegFrac[s_star, d_star] )
+
+		for t in M.tech_reserve if (p, t) in M.CapacityAvailableVar_pt
+		)
+
+	expr_right = ( 
+		value( M.Demand[p, c] )*
+		value( M.DemandSpecificDistribution[s_star, d_star, c] )*
+		( 1 + value( M.ReserveMargin[c] ) )
+		)
+	return expr_left >= expr_right
 
 # End additional and derived (informational) variable constraints
 ##############################################################################
