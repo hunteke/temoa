@@ -328,10 +328,10 @@ def CreateDemands ( M ):
 
 	# Step 3
 	total = sum( i for i in DDD.itervalues() )
-	if abs(float(total) - 1.0) > 1e-6:
-		# We can't explicitly test for "!= 1.0" because of incremental roundoff
-		# errors inherent in float manipulations and representations, so instead
-		# compare against an epsilon value of "close enough".
+	if abs(float(total) - 1.0) > 0.001:
+		# We can't explicitly test for "!= 1.0" because of incremental rounding
+		# errors associated with the specification of demand shares by time slice, 
+		# but we check to make sure it is within the specified tolerance.
 
 		key_padding = max(map( get_str_padding, DDD.sparse_iterkeys() ))
 
@@ -373,10 +373,10 @@ def CreateDemands ( M ):
 		keys = (k for k in DSD.sparse_iterkeys() if DSD_dem_getter(k) == dem )
 		total = sum( DSD[ i ] for i in keys )
 
-		if abs(float(total) - 1.0) > 1e-6:
-			# We can't explicitly test for "!= 1.0" because of incremental roundoff
-			# errors inherent in float manipulations and representations, so
-			# instead compare against an epsilon value of "close enough".
+		if abs(float(total) - 1.0) > 0.001:
+		# We can't explicitly test for "!= 1.0" because of incremental rounding
+		# errors associated with the specification of demand shares by time slice, 
+		# but we check to make sure it is within the specified tolerance.
 
 			keys = [k for k in DSD.sparse_iterkeys() if DSD_dem_getter(k) == dem ]
 			key_padding = max(map( get_str_padding, keys ))
