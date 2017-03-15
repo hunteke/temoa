@@ -149,10 +149,10 @@ def validate_SegFrac ( M ):
 
 	total = sum( i for i in M.SegFrac.itervalues() )
 
-	if abs(float(total) - 1.0) > 1e-6:
-		# We can't explicitly test for "!= 1.0" because of incremental roundoff
-		# errors inherent in float manipulations and representations, so instead
-		# compare against an epsilon value of "close enough".
+	if abs(float(total) - 1.0) > 0.001:
+		# We can't explicitly test for "!= 1.0" because of incremental rounding
+		# errors associated with the specification of SegFrac by time slice, 
+		# but we check to make sure it is within the specified tolerance.
 
 		key_padding = max(map( get_str_padding, M.SegFrac.sparse_iterkeys() ))
 
