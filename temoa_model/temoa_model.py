@@ -136,6 +136,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.DiscountRate  = Param( M.DiscountRate_tv, default=0.05 )
     M.Loan_tv           = Set( dimen=2, initialize=lambda M: M.CostInvest.keys() )
     M.LoanAnnualize = Param( M.Loan_tv, initialize=ParamLoanAnnualize_rule )
+    M.SalvageRate   = Param( M.Loan_tv, initialize=ParamSalvageRate_rule )
     M.ModelLoanLife_tv  = Set( dimen=2, initialize=lambda M: M.CostInvest.keys() )
     M.ModelLoanLife     = Param( M.ModelLoanLife_tv,  
                              initialize=ParamModelLoanLife_rule )
@@ -242,7 +243,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.CapacityAvailableByPeriodAndTechConstraint = Constraint( 
       M.CapacityAvailableVar_pt, 
       rule=CapacityAvailableByPeriodAndTech_Constraint )
-      	
+
     M.ExistingCapacityConstraint_tv = Set(
       dimen=2, initialize=lambda M: M.ExistingCapacity.sparse_iterkeys() )
     M.ExistingCapacityConstraint = Constraint( 
@@ -263,7 +264,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
 
     #   Model Constraints
     #   In driving order, starting with the need to meet end-use demands
-	
+
     M.DemandConstraint_psdc = Set( dimen=4, initialize=DemandConstraintIndices )
     M.DemandConstraint           = Constraint( 
       M.DemandConstraint_psdc,  

@@ -115,6 +115,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	GDR = value( m.GlobalDiscountRate )
 	MLL = m.ModelLoanLife
 	MPL = m.ModelProcessLife
+	LLN = m.LifetimeLoanProcess
 	x   = 1 + GDR    # convenience variable, nothing more
 
 	# Extract optimal decision variable values related to commodity flow:
@@ -176,12 +177,27 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 		icost *= value( m.LoanAnnualize[t, v] )
 		icost *= (
-		  value( MLL[t, v] ) if not GDR else
-		    (x **(P_0 - v + 1) * (1 - x **(-value( MLL[t, v] ))) / GDR)
+		  value( LLN[t, v] ) if not GDR else
+		    (x **(P_0 - v + 1) * (1 - x **(-value( LLN[t, v] ))) / GDR)
 		)
 
-		svars[	'Costs'	][ 'V_DiscountedInvestmentByProcess', t, v] += icost		
+		svars[	'Costs'	][ 'V_DiscountedInvestmentByProcess', t, v] += icost
 		
+	for t, v in m.CostInvest.sparse_iterkeys():   # Returns only non-zero values
+		svalue = (-1)*value( m.V_Capacity[t, v] )
+		if abs(svalue) < epsilon: continue
+		svalue *= value( m.CostInvest[t, v] )
+		svalue *= value( m.SalvageRate[t, v] )
+		svars[	'Costs'	][ 'V_UndiscountedSalvageByProcess', t, v] += svalue
+
+		svalue /= (
+		  1 if not GDR else
+		    (1 + GDR)**(m.time_future.last() - m.time_future.first() - 1)
+		)
+
+		svars[	'Costs'	][ 'V_DiscountedSalvageByProcess', t, v] += svalue
+
+
 	for p, t, v in m.CostFixed.sparse_iterkeys():
 		fcost = value( m.V_Capacity[t, v] )
 		if abs(fcost) < epsilon: continue
@@ -203,7 +219,10 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		vcost *= value( m.CostVariable[p, t, v] )
 		svars[	'Costs'	][ 'V_UndiscountedVariableCostsByProcess', t, v] += vcost
 
-		vcost *= value( m.PeriodRate[ p ])
+		vcost *= (
+		  value( MPL[p, t, v] ) if not GDR else
+		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, t, v] ))) / GDR)
+		  )
 		svars[	'Costs'	][ 'V_DiscountedVariableCostsByProcess', t, v] += vcost
 
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
@@ -343,11 +362,13 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 						cur.execute("DELETE FROM "+tables[table]+" \
 									WHERE scenario is '"+options.scenario+"'") 
 				if table == 'Objective' : # Only table without sector info
-					key_str = str(svars[table].keys()) # only 1 row to write
-					key_str = key_str[1:-1] # Remove parentheses					
-					cur.execute("INSERT INTO "+tables[table]+" \
-								VALUES('"+options.scenario+"',"+key_str+", \
-								"+str(svars[table][key])+");")
+					for key in svars[table].keys():
+						key_str = str(key) # only 1 row to write
+						key_str = key_str[1:-1] # Remove parentheses
+						cur.execute("INSERT INTO "+tables[table]+" \
+									VALUES('"+options.scenario+"',"+key_str+", \
+									"+str(svars[table][key])+");")
+
 				else : # First add 'NULL' for sector then update
 					for key in svars[table].keys() : # Need to loop over keys (rows)
 						key_str = str(key)
