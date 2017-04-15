@@ -42,10 +42,18 @@ annual discount factor to calculate the discounted cost in year
      \left [
              IC_{t, v}
        \cdot LA_{t, v}
-       \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-{MLL}_{t, v}})}{GDR}
+       \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-{LLN}_{t, v}})}{GDR}
      \right ]
      \cdot \textbf{CAP}_{t, v}
      \right )
+
+..math::
+   C_{salvage}= & = \sum_{t,v \in \Theta_{IC}}
+     \frac{
+       S_{t,v} \cdot IC_{t,v} \cdot \textbf{CAP}_{t, v}
+     }{
+       (1 + GDR)^L
+     }
 
 .. math::
    C_{fixed} & = \sum_{p, t, v \in \Theta_{FC}} \left (
@@ -59,7 +67,12 @@ annual discount factor to calculate the discounted cost in year
 .. math::
    C_{variable} & = \sum_{p, t, v \in \Theta_{VC}} \left (
            MC_{p, t, v}
-     \cdot R_p
+     \cdot
+     \frac{
+       (1 + GDR)^{P_0 - p} \cdot (1 - (1 + GDR)^{-{MPL}_{p,t, v}})
+     }{
+       GDR
+     }
      \cdot \textbf{ACT}_{t, v}
      \right )
 
@@ -89,8 +102,22 @@ def PeriodCost_rule ( M, p ):
 	  * (
 	      value( M.CostInvest[S_t, S_v] )
 	    * value( M.LoanAnnualize[S_t, S_v] )
-	    * ( value( MLL[S_t, S_v] ) if not GDR else
-	        (x **(P_0 - S_v + 1) * (1 - x **(-value( MLL[S_t, S_v] ))) / GDR)
+	    * ( value( M.LifetimeLoanProcess[S_t, S_v] ) if not GDR else
+	        (x **(P_0 - S_v + 1) * (1 - x **(-value( M.LifetimeLoanProcess[S_t, S_v] ))) / GDR)
+	      )
+	  )
+
+	  for S_t, S_v in M.CostInvest.sparse_iterkeys()
+	  if S_v == p
+	)
+
+	salvage_values = (-1)*sum(
+	    M.V_Capacity[S_t, S_v]
+	  * (
+	      value( M.CostInvest[S_t, S_v] )
+	    * value( M.SalvageRate[S_t, S_v] )
+	    / ( 1 if not GDR else
+	        (1 + GDR)**(M.time_future.last() - M.time_future.first() - 1)
 	      )
 	  )
 
@@ -115,14 +142,16 @@ def PeriodCost_rule ( M, p ):
 	    M.V_ActivityByPeriodAndProcess[p, S_t, S_v]
 	  * (
 	      value( M.CostVariable[p, S_t, S_v] )
-	    * value( M.PeriodRate[ p ] )
+	    * ( value( MPL[p, S_t, S_v] ) if not GDR else
+	        (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, S_t, S_v] ))) / GDR)
+	      )
 	  )
 
 	  for S_p, S_t, S_v in M.CostVariable.sparse_iterkeys()
 	  if S_p == p
 	)
 
-	period_costs = (loan_costs + fixed_costs + variable_costs)
+	period_costs = (loan_costs + fixed_costs + variable_costs + salvage_values)
 	return period_costs
 
 
@@ -206,6 +235,17 @@ def ParamLoanAnnualize_rule ( M, t, v ):
 	annualized_rate = ( dr / (1.0 - (1.0 + dr)**(-lln) ))
 
 	return annualized_rate
+
+def ParamSalvageRate_rule( M, t, v ):
+	# Return the salvage rate of process (t, v) at the end of the modeled years
+	P_0  = value( M.time_optimize.first() )
+	n    = value( M.LifetimeProcess[t, v] )
+	L    = value( M.time_future.last() ) - value( M.time_future.first() )
+
+	if P_0 + L - v >= n:
+		return 0
+	else:
+		return 1 - (P_0 + L - v)/n # Linear depreciation
 
 # End initialization rules
 ##############################################################################
