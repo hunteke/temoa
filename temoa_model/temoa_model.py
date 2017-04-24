@@ -404,29 +404,30 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     return M
 
 
+model = temoa_create_model()
 
 def runModelUI(config_filename):
   
-  model = temoa_create_model()
+  global model
   
-  from temoa_lib import temoa_solve
+  from temoa_lib import temoa_solve_ui
   temoa_solve_ui( model , config_filename )
   
 
 def runModel():
   
   #read config
-  model = temoa_create_model()
+  global model
   
   from temoa_lib import temoa_solve
   temoa_solve( model )
 
 
 
-#if '__main__' == __name__:
-#  runModel('/home/yash/Projects/sam/dapp/uploads/config_temp/config_sample')
-
+if '__main__' == __name__:
   
+  from temoa_lib import temoa_solve
+  temoa_solve( model )
   ##default temoa_create_model function arg is 'name'
   #model = temoa_create_model()
 #
@@ -438,6 +439,4 @@ def runModel():
 #
   ## Calling this script directly enables a cleaner formatting than Pyomo's
   ## default output, but (currently) forces the choice of solver to GLPK.
-  #from temoa_lib import temoa_solve
-  #temoa_solve( model )
 
