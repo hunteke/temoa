@@ -190,12 +190,10 @@ class TemoaConfig( object ):
 		'dot_dat',
 		'output',
 		'scenario',
-		'fix_variables',
 		'how_to_cite',
 		'version',
 		'solver',
 		'keep_pyomo_lp_file',
-		'eciu',
 		'saveEXCEL',
 		'saveTEXTFILE',
 		'mgaslack',
@@ -222,10 +220,8 @@ class TemoaConfig( object ):
 		self.saveTEXTFILE     = False
 		self.how_to_cite      = None
 		self.version          = False
-		self.fix_variables    = None
 		self.generateSolverLP = False
 		self.keepPyomoLP      = False
-		self.eciu             = None
 		self.mga              = None # mga slack value
 		self.mga_iter         = None
 		self.mga_weight       = None
@@ -263,7 +259,6 @@ class TemoaConfig( object ):
 		msg += spacer
 		msg += '{:>{}s}: {}\n'.format('Citation output status', width, self.how_to_cite)
 		msg += '{:>{}s}: {}\n'.format('Version output status', width, self.version)
-		msg += '{:>{}s}: {}\n'.format('Fixed variable file', width, self.fix_variables)
 		msg += spacer
 		msg += '{:>{}s}: {}\n'.format('Selected solver status', width, self.solver)
 		msg += '{:>{}s}: {}\n'.format('Solver LP write status', width, self.generateSolverLP)
@@ -273,8 +268,6 @@ class TemoaConfig( object ):
 		msg += '{:>{}s}: {}\n'.format('MGA # of iterations', width, self.mga_iter)
 		msg += '{:>{}s}: {}\n'.format('MGA weighting method', width, self.mga_weight)
 		msg += '**NOTE: If you are performing MGA runs, navigate to the DAT file and make any modifications to the MGA sets before proceeding.'
-		msg += spacer
-		msg += '{:>{}s}: {}\n'.format('Stochastic eciu', width, self.eciu)
 		return msg
 
 	def t_ANY_COMMENT(self, t):
@@ -317,10 +310,6 @@ class TemoaConfig( object ):
 		r'--version\b'
 		self.version = True
 
-	def t_fix_variables(self, t):
-		r'--fix_variables[\s\=]+[-\\\/\:\.\~\w]+\b'
-		self.fix_variables = abspath(t.value.replace('=', ' ').split()[1])
-
 	def t_solver(self, t):
 		r'--solver[\s\=]+\w+\b'
 		self.solver = t.value.replace('=', ' ').split()[1]
@@ -329,10 +318,6 @@ class TemoaConfig( object ):
 		r'--keep_pyomo_lp_file\b'
 		self.keepPyomoLP = True
 		
-	def t_eciu(self, t):
-		r'--eciu[\s\=]+[-\\\/\:\.\~\w]+\b'
-		self.eciu = abspath(t.value.replace('=', ' ').split()[1])
-    
 	def t_begin_mga(self, t):
 		r'--mga[\s\=]+\{'
 		t.lexer.push_state('mga')
