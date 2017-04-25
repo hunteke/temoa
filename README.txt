@@ -1,36 +1,52 @@
-This branch named 'energysystem' is the current "main" branch of the 
+This branch named 'energysystem' is the current main branch of the 
 Temoa Project.  The four subdirectories are:
 
 1. temoa_model/
-This contains the Temoa model code.
+Contains the core Temoa model code.
 
 2. data_files/
-The example input data (DAT) files for Temoa. Note that the file 
+Containd simple input data (DAT) files for Temoa. Note that the file 
 'utopia-15.dat' represents a simple system called 'Utopia', which 
 is packaged with the MARKAL model generator and has been used 
 extensively for benchmarking exercises.
 
-3. stochastic/
-Scripts for generation of PySP event trees.
+3. tools/
+Contains scripts used to conduct sensitivity and uncertainty analysis. 
+See README inside this folder for more information.
 
 4. docs/
-The ReST documentation source of the Temoa project manual.
+Contains the source code for the Temoa project manual, in reStructuredText
+(ReST) format.
 
 ***Running Temoa***
 
 To run Temoa, you have a few options.
 
-Option 1 uses Pyomo's own scripts and provides basic solver output:
+Option 1 (full-featured):
+Invokes python directly, and gives the user access to 
+several model features via a configuration file:
 
-$ pyomo  temoa_model/temoa_model.py  path/to/dat/file
+$ python  temoa_model/  --config=temoa_model/config_sample
 
-Option 2 invokes python directly, and gives the user access to 
-additional capability, including more nicely formatted output:
+Running the model with a config file allows the user to (1) use a sqlite 
+database for storing input and output data, (2) create a formatted Excel 
+output file, (3) return the log file produced during model execution, 
+(4) return the lp file utilized by the solver, and (5) to execute modeling-
+to-generate alternatives (MGA).
 
-$ python  temoa_model/  path/to/dat/file
 
-Option 3 below copies the relevant Temoa model files into an 
-executable archive (this only needs to be done once):
+Option 2 (basic):
+Uses Pyomo's own scripts and provides basic solver output:
+
+$ pyomo solve --solver=<solver> temoa_model/temoa_model.py  path/to/dat/file
+
+This option will only work with a text ('DAT') file as input. 
+Results are placed in a yml file within the top-level 'temoa' directory.
+
+
+Option 3 (basic +): 
+Copies the relevant Temoa model files into an executable archive 
+(this only needs to be done once):
 
 $ python create_archive.py
 
@@ -44,8 +60,5 @@ For general help use --help:
 
 $ python  temoa_model/  --help
 
-And to place the solution information into a file:
-
-$ python  temoa_model data_files/utopia.dat > temoa_utopia.sol
 
 
