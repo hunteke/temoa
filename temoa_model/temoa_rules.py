@@ -20,6 +20,7 @@ received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from temoa_lib import *
+from temoa_initialize import *
 
 ##############################################################################
 # Begin *_rule definitions
