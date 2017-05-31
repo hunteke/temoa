@@ -47,6 +47,9 @@ you are running a version compatible with Temoa.
 # Temoa rule "partial" functions (excised from indidivual constraints for
 #   readability)
 
+def get_str_padding ( obj ):
+	return len(str( obj ))
+
 def CommodityBalanceConstraintErrorCheck ( vflow_out, vflow_in, p, s, d, c ):
 	if int is type(vflow_out):
 		flow_in_expr = StringIO()
@@ -60,7 +63,7 @@ def CommodityBalanceConstraintErrorCheck ( vflow_out, vflow_in, p, s, d, c ):
 		  " - Is there a missing commodity in set 'commodity_physical'?\n"
 		  ' - Are there missing entries in the Efficiency parameter?\n'
 		  ' - Does a process need a longer LifetimeProcess parameter setting?')
-		raise TemoaFlowError( msg.format(
+		raise Exception( msg.format(
 		  c, s, d, p, flow_in_expr.getvalue()
 		))
 
@@ -72,7 +75,7 @@ def DemandConstraintErrorCheck ( supply, p, s, d, dem ):
 		  ' - Is the Efficiency parameter missing an entry for this demand?\n'
 		  ' - Does a tech that satisfies this demand need a longer '
 		  'LifetimeProcess?\n')
-		raise TemoaFlowError( msg.format(dem, p, s, d) )
+		raise Exception( msg.format(dem, p, s, d) )
 
 # End Temoa rule "partials"
 ###############################################################################
@@ -93,14 +96,14 @@ def validate_time ( M ):
 
 		msg = ('Set "time_exist" requires integer-only elements.\n\n  Invalid '
 		  'element: "{}"')
-		raise TemoaValidationError( msg.format( year ))
+		raise Exception( msg.format( year ))
 
 	for year in M.time_future:
 		if isinstance(year, int): continue
 
 		msg = ('Set "time_future" requires integer-only elements.\n\n  Invalid '
 		  'element: "{}"')
-		raise TemoaValidationError( msg.format( year ))
+		raise Exception( msg.format( year ))
 
 	if len( M.time_future ) < 2:
 		msg = ('Set "time_future" needs at least 2 specified years.  Temoa '
@@ -109,7 +112,7 @@ def validate_time ( M ):
 		  '(in years) of each period.  Note that this means that there will be '
 		  'one less optimization period than the number of elements in this set.'
 		)
-		raise TemoaValidationError( msg )
+		raise Exception( msg )
 
 	# Ensure that the time_exist < time_future
 	exist    = len( M.time_exist ) and max( M.time_exist ) or -maxint
@@ -118,7 +121,7 @@ def validate_time ( M ):
 	if not ( exist < horizonl ):
 		msg = ('All items in time_future must be larger than in time_exist.\n'
 		  'time_exist max:   {}\ntime_future min: {}')
-		raise TemoaValidationError( msg.format(exist, horizonl) )
+		raise Exception( msg.format(exist, horizonl) )
 
 
 def validate_SegFrac ( M ):
@@ -142,7 +145,7 @@ def validate_SegFrac ( M ):
 		  'in SegFrac represents a fraction of a year, so they must total to '
 		  '1.  Current values:\n   {}\n\tsum = {}')
 
-		raise TemoaValidationError( msg.format(items, total ))
+		raise Exception( msg.format(items, total ))
 
 
 def CheckEfficiencyIndices ( M ):
@@ -158,7 +161,7 @@ def CheckEfficiencyIndices ( M ):
 		  'the following elements to the Set commodity_physical.'
 		  '\n\n    Element(s): {}')
 		symdiff = (str(i) for i in symdiff)
-		raise TemoaValidationError( msg.format( ', '.join(symdiff) ))
+		raise Exception( msg.format( ', '.join(symdiff) ))
 
 	symdiff = techs.symmetric_difference( M.tech_all )
 	if symdiff:
@@ -166,7 +169,7 @@ def CheckEfficiencyIndices ( M ):
 		  'the following technology(ies) to the tech_resource or '
 		  'tech_production Sets.\n\n    Technology(ies): {}')
 		symdiff = (str(i) for i in symdiff)
-		raise TemoaValidationError( msg.format( ', '.join(symdiff) ))
+		raise Exception( msg.format( ', '.join(symdiff) ))
 
 	diff = M.commodity_demand - c_outputs
 	if diff:
@@ -174,7 +177,7 @@ def CheckEfficiencyIndices ( M ):
 		  'following elements to the commodity_demand Set.'
 		  '\n\n    Element(s): {}')
 		diff = (str(i) for i in diff)
-		raise TemoaValidationError( msg.format( ', '.join(diff) ))
+		raise Exception( msg.format( ', '.join(diff) ))
 
 
 def CreateCapacityFactors ( M ):
@@ -323,7 +326,7 @@ def CreateDemands ( M ):
 		  'time_of_day), so together, the data must total to 1.  Current '
 		  'values:\n   {}\n\tsum = {}')
 
-		raise TemoaValidationError( msg.format(items, total) )
+		raise Exception( msg.format(items, total) )
 
 	# Step 4
 	DSD = M.DemandSpecificDistribution
@@ -370,7 +373,7 @@ def CreateDemands ( M ):
 			  'must total to 1.\n\n   Demand-specific distribution in error: '
 			  ' {}\n\n   {}\n\tsum = {}')
 
-			raise TemoaValidationError( msg.format(dem, items, total) )
+			raise Exception( msg.format(dem, items, total) )
 
 
 def CreateCosts ( M ):

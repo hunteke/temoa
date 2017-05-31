@@ -19,7 +19,7 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from temoa_common import *
+#from temoa_common import *
 
 from os import path, close as os_close
 from sys import argv, stderr as SE, stdout as SO
@@ -258,7 +258,7 @@ def MGA ( model, optimizer, options, epsilon=1e-6 ):
 		for fname in dot_dats:
 			if fname[-4:] != '.dat':
 				msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
-				raise TemoaValidationError( msg.format( fname ))
+				raise Exception( msg.format( fname ))
 			mdata.load( filename=fname )
 		SE.write( '\r[%8.2f\n' % duration() )
 		txt_file.write( '\r[%8.2f]\n' % duration() )
@@ -484,7 +484,7 @@ def solve_perfect_foresight ( model, optimizer, options ):
 		for fname in dot_dats:
 			if fname[-4:] != '.dat':
 				msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
-				raise TemoaValidationError( msg.format( fname ))
+				raise Exception( msg.format( fname ))
 			modeldata.load( filename=fname )
 		SE.write( '\r[%8.2f]\n' % duration() )
 		txt_file.write( '[%8.2f]\n' % duration() )

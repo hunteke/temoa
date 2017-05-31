@@ -179,8 +179,6 @@ def db_2_dat(ifile, ofile, options):
 		cur.close()
 		con.close()
 
-class TemoaConfigError ( TemoaError ): pass
-
 class TemoaConfig( object ):
 	states = (
 	('mga', 'exclusive'),
@@ -372,8 +370,8 @@ class TemoaConfig( object ):
 			if isfile(kwargs['config']):
 				self.file_location= abspath(kwargs.pop('config'))
 			else:
-				msg = 'No such file exist: {}'.format(kwargs.pop('config'))
-				raise TemoaConfigError( msg )
+				msg = 'No such file exists: {}'.format(kwargs.pop('config'))
+				raise Exception( msg )
 
 		self.lexer = lex.lex(module=self, **kwargs)
 		if self.file_location:
@@ -404,11 +402,11 @@ class TemoaConfig( object ):
 		
 		
 		if not self.dot_dat:
-			raise TemoaConfigError('Input file not specified.')
+			raise Exception('Input file not specified.')
 		
 		for i in self.dot_dat:
 			if not isfile(i):
-				raise TemoaConfigError('Cannot locate input file: {}'.format(i))
+				raise Exception('Cannot locate input file: {}'.format(i))
 			i_name, i_ext = splitext(i)
 			if (i_ext == '.dat') or (i_ext == '.txt'):
 				db_or_dat = False
@@ -416,13 +414,13 @@ class TemoaConfig( object ):
 				db_or_dat = True
 			
 		if not self.output and db_or_dat:
-			raise TemoaConfigError('Output file not specified.')
+			raise Exception('Output file not specified.')
 		
 		if db_or_dat and not isfile(self.output):
-			raise TemoaConfigError('Cannot locate output file: {}.'.format(self.output))
+			raise Exception('Cannot locate output file: {}.'.format(self.output))
 		
 		if not self.scenario and db_or_dat:
-			raise TemoaConfigError('Scenario name not specified.')
+			raise Exception('Scenario name not specified.')
 		
 		if self.mga_iter:
 			for i in range(self.mga_iter):
