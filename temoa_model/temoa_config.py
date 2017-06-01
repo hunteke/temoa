@@ -19,8 +19,6 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from temoa_common import *
-
 from os.path import abspath, isfile, splitext, dirname
 from os import sep
 
@@ -33,8 +31,6 @@ def db_2_dat(ifile, ofile, options):
 	import re
 	import getopt
 	
-	#print "TEST"
-
 	def write_tech_mga(f):
 		cur.execute("SELECT tech FROM technologies")
 		f.write("set tech_mga :=\n")

@@ -19,8 +19,6 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-#from temoa_common import *
-
 from os import path, close as os_close
 from sys import argv, stderr as SE, stdout as SO
 from signal import signal, SIGINT, default_int_handler
