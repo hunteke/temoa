@@ -35,121 +35,6 @@ import pyomo.environ
   # workaround for Coopr's brain dead signal handler
 signal(SIGINT, default_int_handler)
 
-TEMOA_GIT_VERSION  = 'HEAD'
-TEMOA_RELEASE_DATE = 'Today'
-
-###############################################################################
-# Miscellaneous routines
-
-
-def version ( options ):
-	from sys import stdout as SO
-	from os.path import basename, dirname
-	import os
-
-	bname = basename( dirname( __file__ ))
-
-	if 'HEAD' == TEMOA_GIT_VERSION:
-		msg = """
-{}: Temoa Model, v"Bleeding Edge"
-
-You are using a development version of Temoa.  Use Git to determine the current
-branch name and number.  Command line hints:
-
-      # from within the code directory
-    $ git branch
-    $ git status    # to remind you of any changes you have made
-    $ git log -1    # -1 is optional, showing only the most recent commit
-"""
-
-		args = (bname,)
-
-	else:
-		msg = """
-{}: Temoa Model, Release Date: {}
-Git Hash: {}
-
-Temoa does not currently have version numbers, but uses the date of release as a
-proxy.  The hexadecimal Git Hash number uniquely identifies the exact
-branch/commit that created '{}'.
-"""
-
-		args = (bname, TEMOA_RELEASE_DATE, TEMOA_GIT_VERSION, bname)
-
-	msg += """
-Copyright (C) 2015 NC State University
-
-We provide Temoa -- the model and associated scripts -- "as-is" with no express
-or implied warranty for accuracy or accessibility.  Temoa is a research tool,
-given in good faith to the community (anyone who uses Temoa for any purpose) as
-free software under the terms of the GNU General Public License, version 2.
-"""
-
-	try:
-		txt_file = open(options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
-	except BaseException as io_exc:
-		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
-		txt_file = open("Complete_OutputLog.log", "w")
-
-	txt_file.write( msg )
-	SO.write( msg.format( *args ))
-	#raise SystemExit
-
-
-def bibliographicalInformation ( options ):
-	from sys import stdout as SO
-	import os
-
-	msg = """
-Please cite the following paper if your use of Temoa leads to a publishable
-result:
-
-  Title:     Modeling for Insight Using Tools for Energy Model Optimization and Analysis (Temoa)
-  Authors:   Kevin Hunter, Sarat Sreepathi, Joseph F. DeCarolis
-  Date:      November, 2013
-  Publisher: Elsevier
-  Journal:   Energy Economics
-  Volume:    40
-  Pages:     339 - 349
-  ISSN:      0140-9883
-  DOI:       http://dx.doi.org/10.1016/j.eneco.2013.07.014
-  URL:       http://www.sciencedirect.com/science/article/pii/S014098831300159X
-
-For copy and paste or BibTex use:
-
-  Kevin Hunter, Sarat Sreepathi, Joseph F. DeCarolis, Modeling for Insight Using Tools for Energy Model Optimization and Analysis (Temoa), Energy Economics, Volume 40, November 2013, Pages 339-349, ISSN 0140-9883, http://dx.doi.org/10.1016/j.eneco.2013.07.014.
-
-  (BibTeX)
-@article{Hunter_etal_2013,
-  title   = "Modeling for {I}nsight {U}sing {T}ools for {E}nergy {M}odel {O}ptimization and {A}nalysis ({T}emoa)",
-  journal = "Energy Economics",
-  volume  = "40",
-  pages   = "339 - 349",
-  month   = "November",
-  year    = "2013",
-  issn    = "0140-9883",
-  doi     = "http://dx.doi.org/10.1016/j.eneco.2013.07.014",
-  url     = "http://www.sciencedirect.com/science/article/pii/S014098831300159X",
-  author  = "Kevin Hunter and Sarat Sreepathi and Joseph F. DeCarolis"
-}
-
-"""
-
-	try:
-		txt_file = open(options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
-	except BaseException as io_exc:
-		SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
-		txt_file = open("Complete_OutputLog.log", "w")
-
-	txt_file.write( msg )
-	SO.write( msg )
-	#raise SystemExit
-
-
-
-# End miscellaneous routines
-###############################################################################
-
 ###############################################################################
 # Direct invocation methods (when modeler runs via "python model.py ..."
 
@@ -619,30 +504,11 @@ def parse_args ( ):
 	parser = argparse.ArgumentParser()
 	parser.prog = path.basename( argv[0].strip('/') )
 
-	solver      = parser.add_argument_group('Solver Options')
-	stochastic  = parser.add_argument_group('Stochastic Options')
-	postprocess = parser.add_argument_group('Postprocessing Options')
-	mga         = parser.add_argument_group('MGA Options')
-
 	parser.add_argument('dot_dat',
 	  type=str,
 	  nargs='*',
 	  help='AMPL-format data file(s) with which to create a model instance. '
 	       'e.g. "data.dat"'
-	)
-
-	parser.add_argument( '--how_to_cite',
-	  help='Bibliographical information for citation, in the case that Temoa '
-	    'contributes to a project that leads to a scientific publication.',
-	  action='store_true',
-	  dest='how_to_cite',
-	  default=False)
-
-	parser.add_argument( '-V', '--version',
-	  help='Display the Temoa version information, then exit.',
-	  action='store_true',
-	  dest='version',
-	  default=False
 	)
 	
 	parser.add_argument( '--path_to_logs',
@@ -659,7 +525,7 @@ def parse_args ( ):
 	 default=None
 	 )
 
-	solver.add_argument('--solver',
+	parser.add_argument('--solver',
 	  help="Which backend solver to use.  See 'pyomo --help-solvers' for a list "
 	       'of solvers with which Coopr can interface.  The list shown here is '
 	       'what Coopr can currently find on this system.  [Default: {}]'
@@ -669,7 +535,7 @@ def parse_args ( ):
 	  dest='solver',
 	  default=default_solver)
 
-	solver.add_argument('--keep_pyomo_lp_file',
+	parser.add_argument('--keep_pyomo_lp_file',
 	  help='Save the LP file as written by Pyomo.  This is distinct from the '
 	       "solver's generated LP file, but /should/ represent the same model.  "
 	       'Mainly used for debugging purposes.  '
@@ -680,7 +546,7 @@ def parse_args ( ):
 
 	#An optional argument with the ability to take a flag (--MGA) and a
 	#numeric slack value
-	mga.add_argument('--mga',
+	parser.add_argument('--mga',
 	  help='Include the flag --MGA and supply a slack-value and recieve a '
 	    'Modeling to generate alternatives solution',
 	  dest='mga',
@@ -704,17 +570,6 @@ def parse_args ( ):
 		except KeyboardInterrupt:
 			SE.write('\n\nUser requested quit.  Exiting Temoa ...\n')
 			raise SystemExit()
-
-	# First, the options that exit or do not perform any "real" computation
-	if options.version:
-		version(options)
-		# this function exits
-		return
-
-	if options.how_to_cite:
-		bibliographicalInformation(options)
-		# this function exits.
-		return
 		
 	if options.mga:
 		msg = 'MGA specified (slack value: {})\n'.format( options.mga )
@@ -747,21 +602,6 @@ def temoa_solve_ui ( model, config_filename ):
 	options.path_to_lp_files = options.path_to_logs + sep + "lp_files"
 	TempfileManager.tempdir = options.path_to_lp_files	
 	
-	#FIXME: Put logic from parse_args() here that are not covered in
-	#temoa_config.py. Like --how_to_cite & --version options.
-	if options.version:
-		version(options)
-		# this function exits
-		return
-
-	if options.how_to_cite:
-		bibliographicalInformation(options)
-		# this function exits.
-		return
-	
-	if options.abort_temoa:
-		return
-	
 	run_solve(model, options)
 
 
@@ -784,9 +624,6 @@ def temoa_solve ( model ):
 	
 	run_solve(model,options)
 
-	
-
-	
 
 def run_solve(model,options):
 	from sys import argv, version_info, exit
