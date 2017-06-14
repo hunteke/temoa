@@ -24,10 +24,7 @@ from cStringIO import StringIO
 from itertools import product as cross_product, islice, izip
 from sys import argv, stderr as SE, stdout as SO
 
-# For diagnostic purposes
-from IPython import embed as IP
 
-###################
 try:
 	from pyomo.core import (
 	  AbstractModel, BuildAction, Constraint, NonNegativeReals, Reals, Objective, Param,
@@ -86,10 +83,10 @@ def DemandConstraintErrorCheck ( supply, p, s, d, dem ):
 def validate_time ( M ):
 	from sys import maxint
 
-	# We check for integer status here, rather then asking Coopr to do this via
+	# We check for integer status here, rather then asking Pyomo to do this via
 	# a 'within=Integers' clause in the definition so that we can have a very
-	# specific error message.  If we instead use Coopr's mechanism, the
-	# coopr_python invocation of Temoa throws an error (including a traceback)
+	# specific error message.  If we instead use Pyomo's mechanism, the
+	# python invocation of Temoa throws an error (including a traceback)
 	# that has proven to be scary and/or impenetrable for the typical modeler.
 	for year in M.time_exist:
 		if isinstance(year, int): continue

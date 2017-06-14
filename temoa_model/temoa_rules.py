@@ -19,7 +19,11 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from temoa_lib import *
+# Import below required in Python 2.7 to avoid integer division 
+# (e.g., 1/2 = 0 instead of 0.5)
+from __future__ import division
+
+from temoa_run import *
 from temoa_initialize import *
 
 ##############################################################################
