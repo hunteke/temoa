@@ -167,8 +167,8 @@ def temoa_create_and_solve ( model, optimizer, options ):
 			if path.exists(new_dir):
 				move(options.path_to_lp_files+os.sep+lpfile, new_dir+os.sep+options.scenario+'.lp')
 
-
-	if hasattr(options, 'mga'):  # check to see if mga attribute specified
+	# Check and see if mga attribute exists and if mga is specified
+	if hasattr(options, 'mga') and options.mga:
 		from collections import defaultdict
 		from temoa_rules import TotalCost_rule
 		from temoa_mga   import ActivityObj_rule, SlackedObjective_rule, PreviousAct_rule
