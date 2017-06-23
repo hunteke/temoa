@@ -10,8 +10,9 @@ import time
 
 class OutputPlotGenerator:
 
-	def __init__(self, path_to_db, super_categories=False):
+	def __init__(self, path_to_db, scenario, super_categories=False):
 		self.db_path = path_to_db
+		self.scenario = scenario
 		self.extractFromDatabase()
 		self.directory = '/srv/result/matplot/'
 		#self.userPrompt(super_categories)
@@ -48,15 +49,15 @@ class OutputPlotGenerator:
 	def extractFromDatabase(self):
 		con = sqlite3.connect(self.db_path)
 		cur = con.cursor()
-		cur.execute("SELECT sector, t_periods, tech, capacity FROM Output_CapacityByPeriodAndTech")
+		cur.execute("SELECT sector, t_periods, tech, capacity FROM Output_CapacityByPeriodAndTech WHERE scenario == '"+self.scenario+"'")
 		self.capacity_output = cur.fetchall()
 		self.capacity_output = [list(elem) for elem in self.capacity_output]
 
-		cur.execute("SELECT sector, t_periods, tech, SUM(vflow_out) FROM Output_VFlow_Out GROUP BY sector, t_periods, tech")	
+		cur.execute("SELECT sector, t_periods, tech, SUM(vflow_out) FROM Output_VFlow_Out WHERE scenario == '"+self.scenario+"' GROUP BY sector, t_periods, tech")	
 		self.output_vflow = cur.fetchall()
 		self.output_vflow = [list(elem) for elem in self.output_vflow]
 
-		cur.execute("SELECT sector, t_periods, emissions_comm, SUM(emissions) FROM Output_Emissions GROUP BY sector, t_periods, emissions_comm")
+		cur.execute("SELECT sector, t_periods, emissions_comm, SUM(emissions) FROM Output_Emissions WHERE scenario == '"+self.scenario+"' GROUP BY sector, t_periods, emissions_comm")
 		self.output_emissions = cur.fetchall()
 		self.output_emissions = [list(elem) for elem in self.output_emissions]
 
