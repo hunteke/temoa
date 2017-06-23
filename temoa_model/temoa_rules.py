@@ -22,7 +22,9 @@ received this license file.  If not, see <http://www.gnu.org/licenses/>.
 # Import below required in Python 2.7 to avoid integer division 
 # (e.g., 1/2 = 0 instead of 0.5)
 from __future__ import division
-from temoa_lib import *
+
+from temoa_run import *
+from temoa_initialize import *
 
 ##############################################################################
 # Begin *_rule definitions

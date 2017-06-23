@@ -21,9 +21,9 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-#__all__ = ( 'temoa_create_model', )
-
 from temoa_rules import *
+from temoa_initialize import *
+from temoa_run import temoa_setup
 
 def temoa_create_model ( name='The Temoa Energy System Model' ):
     """\
@@ -254,14 +254,6 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.EmissionActivityByPeriodAndTech_ept, 
       rule=EmissionActivityByPeriodAndTech_Constraint )
 
-    # M.CapacityInvestConstraint = Constraint( 
-    #  M.CapacityVar_tv, 
-    #  rule=CapacityInvest_Constraint )
-
-    # M.CapacityFixedConstraint  = Constraint( 
-    #  M.CapacityVar_tv, 
-    #  rule=CapacityFixed_Constraint )
-
     #   Model Constraints
     #   In driving order, starting with the need to meet end-use demands
 
@@ -407,36 +399,29 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
 model = temoa_create_model()
 
 def runModelUI(config_filename):
-  
+  """This function launches the model run from the Temoa GUI"""
+
   global model
   
-  from temoa_lib import temoa_solve_ui
-  temoa_solve_ui( model , config_filename )
+  temoa_setup( model , config_filename )
   
 
 def runModel():
+  """This function launches the model run, and is invoked when called from
+  __main__.py"""
   
-  #read config
   global model
   
-  from temoa_lib import temoa_solve
-  temoa_solve( model )
-
+  dummy = ''  # If calling from command line, send empty string  
+  temoa_setup( model , dummy)
 
 
 if '__main__' == __name__:
   
-  from temoa_lib import temoa_solve
-  temoa_solve( model )
-  ##default temoa_create_model function arg is 'name'
-  #model = temoa_create_model()
-#
-  #
-  ## This script was apparently invoked directly, rather than through Pyomo.
-  ## $ ./model.py  test.dat           # called directly
-  ## $ lpython  model.py  test.dat    # called directly
-  ## $ pyomo    model.py  test.dat    # through Pyomo
-#
-  ## Calling this script directly enables a cleaner formatting than Pyomo's
-  ## default output, but (currently) forces the choice of solver to GLPK.
+  dummy = ''  # If calling from command line, send empty string 
+  temoa_setup( model, dummy )
+  # this code only invoked when called this file is invoked directly from the
+  # command line as follows:
+  # $ python temoa_model/temoa_model.py path/to/dat/file
+
 

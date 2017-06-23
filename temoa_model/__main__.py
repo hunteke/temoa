@@ -19,10 +19,13 @@ in LICENSE.txt.  Users uncompressing this from an archive may not have
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from temoa_model import runModel
-from temoa_lib import temoa_solve, TemoaError
+# This script is invoked when either the 'temoa_model' folder or the 'temoa.py'
+# zipped archived is called from the command line:
+# $ python temoa_model/ path/to/dat/file
+# or 
+# $ python temoa.py path/to/dat/file
 
-try:
-	runModel()
-except TemoaError, e:
-	raise SystemExit( '\n' + str(e) )
+from temoa_model import runModel
+
+runModel()
+
