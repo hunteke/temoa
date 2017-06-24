@@ -77,9 +77,11 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 
 	from GraphVizFormats import results_dot_fmt
 
-	tech_attr_fmt = 'label="%%s\\nCapacity: %%.2f", href="results_%%s_%%s.%s"'
-	tech_attr_fmt %= ffmt
-	commodity_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
+	tech_attr_fmt = 'label="%s\\nCapacity: %.2f", href="#", onclick="loadNextGraphvizGraph(\'results\', \'%s\', \'%s\')"'
+	#tech_attr_fmt = 'label="%%s\\nCapacity: %%.2f", href="results_%%s_%%s.%s"'
+	# tech_attr_fmt %= ffmt
+	# commodity_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
+	commodity_fmt = 'href="#", onclick="loadNextGraphvizGraph(\'results\', \'%s\', \'%s\')"'
 	flow_fmt = 'label="%.2f"'
 	
 
@@ -97,6 +99,7 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 	for i in range(len(V_Cap2)):
 		row = V_Cap2.iloc[i]
 		etechs.add( (row['tech'], tech_attr_fmt % (row['tech'], row['capacity'], row['tech'], pp)) )
+		# etechs.add( (row['tech'], tech_attr_fmt % (row['tech'], row['capacity'], row['tech'], pp)) )
 
 	udflows = set()
 	for i in range(len(EI2)):
@@ -198,8 +201,11 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 
 	from GraphVizFormats import tech_results_dot_fmt
 
-	enode_attr_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
-	vnode_attr_fmt = 'href="results_%%s_p%%sv%%s_segments.%s", ' % ffmt
+	# enode_attr_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
+	# vnode_attr_fmt = 'href="results_%%s_p%%sv%%s_segments.%s", ' % ffmt
+	# vnode_attr_fmt += 'label="%s\\nCap: %.2f"'
+	enode_attr_fmt = 'href="#", onclick="loadNextGraphvizGraph(\'results\', \'%s\', \'%s\')"'
+	vnode_attr_fmt = 'href="#", onclick="loadNextGraphvizGraph(\'%s\', \'%s\', \'%s\')"'
 	vnode_attr_fmt += 'label="%s\\nCap: %.2f"'
 
 	con = sqlite3.connect(inp_file)
@@ -237,6 +243,9 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 
 	print flows, total_cap
 
+	#cluster_vintage_url = "results%s.%s" % (per, ffmt)
+	cluster_vintage_url = "#"
+
 	if vnodes:
 		print "Generating graph"
 		enodes = create_text_nodes( enodes, indent=2 )
@@ -247,6 +256,7 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 		fname = 'results_%s_%s.' % (tech, per)
 		with open( fname + 'dot', 'w' ) as f:
 			f.write( tech_results_dot_fmt % dict(
+			  cluster_vintage_url = cluster_vintage_url,
 			  tech            = tech,
 			  period          = per,
 			  ffmt            = ffmt,
@@ -305,10 +315,14 @@ def CreateCommodityPartialResults ( **kwargs ):
 	con.close()
 
 	period_results_url_fmt = '../results/results%%s.%s' % ffmt
-	node_attr_fmt = 'href="../results/results_%%s_%%s.%s"' % ffmt
+	# node_attr_fmt = 'href="../results/results_%%s_%%s.%s"' % ffmt
+	# rc_node_fmt = 'color="%s", href="%s", shape="circle", fillcolor="%s", fontcolor="black"'
+
+	node_attr_fmt = 'href="#", onclick="loadNextGraphvizGraph(\'results\', \'%s\', \'%s\')"'
 	rc_node_fmt = 'color="%s", href="%s", shape="circle", fillcolor="%s", fontcolor="black"'
 
-	url = period_results_url_fmt % per
+	# url = period_results_url_fmt % per
+	url = '#'
 	enodes, dnodes, eedges, dedges = set(), set(), set(), set()
 
 	rcnode = ((comm, rc_node_fmt % (kwargs.get( 'commodity_color' ), url, kwargs.get( 'fill_color' ))),)

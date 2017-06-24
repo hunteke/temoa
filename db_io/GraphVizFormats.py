@@ -118,7 +118,7 @@ strict digraph model {
 	subgraph cluster_vintages {
 		label = "Vintages\\nCapacity: %(total_cap).2f" ;
 
-		href  = "results%(period)s.%(ffmt)s" ;
+		href  = "%(cluster_vintage_url)s" ;
 		style = "filled"
 		color = "%(vintage_cluster_color)s"
 
