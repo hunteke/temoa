@@ -67,29 +67,28 @@ CREATE TABLE technologies (
   flag text,
   sector text,
   tech_desc text,
+  tech_category text,
   FOREIGN KEY(flag) REFERENCES technology_labels(tech_labels),
   FOREIGN KEY(sector) REFERENCES sector_labels(sector));
-INSERT INTO "technologies" VALUES('IMPDSL1','r','supply',' imported diesel');
-INSERT INTO "technologies" VALUES('IMPGSL1','r','supply',' imported gasoline');
-INSERT INTO "technologies" VALUES('IMPHCO1','r','supply',' imported coal');
-INSERT INTO "technologies" VALUES('IMPOIL1','r','supply',' imported crude oil');
-INSERT INTO "technologies" VALUES('IMPURN1','r','supply',' imported uranium');
-INSERT INTO "technologies" VALUES('IMPFEQ','r','supply',' imported fossil equivalent');
-INSERT INTO "technologies" VALUES('IMPHYD','r','supply',' imported water -- doesnt exist in Utopia');
-INSERT INTO "technologies" VALUES('E01','pb','electric',' coal power plant');
-INSERT INTO "technologies" VALUES('E21','pb','electric',' nuclear power plant');
-INSERT INTO "technologies" VALUES('E31','pb','electric',' hydro power');
-INSERT INTO "technologies" VALUES('E51','ps','electric',' electric storage');
-INSERT INTO "technologies" VALUES('E70','p','electric',' diesel power plant');
-INSERT INTO "technologies" VALUES('RHE','p','residential',' electric residential heating');
-INSERT INTO "technologies" VALUES('RHO','p','residential',' diesel residential heating');
-INSERT INTO "technologies" VALUES('RL1','p','residential',' residential lighting');
-INSERT INTO "technologies" VALUES('SRE','p','supply',' crude oil processor');
-INSERT INTO "technologies" VALUES('TXD','p','transport',' diesel powered vehicles');
-INSERT INTO "technologies" VALUES('TXE','p','transport',' electric powered vehicles');
-INSERT INTO "technologies" VALUES('TXG','p','transport',' gasoline powered vehicles');
-
-
+INSERT INTO "technologies" VALUES('IMPDSL1','r','supply',' imported diesel','petroleum');
+INSERT INTO "technologies" VALUES('IMPGSL1','r','supply',' imported gasoline','petroleum');
+INSERT INTO "technologies" VALUES('IMPHCO1','r','supply',' imported coal','coal');
+INSERT INTO "technologies" VALUES('IMPOIL1','r','supply',' imported crude oil','petroleum');
+INSERT INTO "technologies" VALUES('IMPURN1','r','supply',' imported uranium','uranium');
+INSERT INTO "technologies" VALUES('IMPFEQ','r','supply',' imported fossil equivalent','');
+INSERT INTO "technologies" VALUES('IMPHYD','r','supply',' imported water -- doesnt exist in Utopia','water');
+INSERT INTO "technologies" VALUES('E01','pb','electric',' coal power plant','coal');
+INSERT INTO "technologies" VALUES('E21','pb','electric',' nuclear power plant','nuclear');
+INSERT INTO "technologies" VALUES('E31','pb','electric',' hydro power','hydro');
+INSERT INTO "technologies" VALUES('E51','ps','electric',' electric storage','storage');
+INSERT INTO "technologies" VALUES('E70','p','electric',' diesel power plant','diesel');
+INSERT INTO "technologies" VALUES('RHE','p','residential',' electric residential heating','electric');
+INSERT INTO "technologies" VALUES('RHO','p','residential',' diesel residential heating','diesel');
+INSERT INTO "technologies" VALUES('RL1','p','residential',' residential lighting','electric');
+INSERT INTO "technologies" VALUES('SRE','p','supply',' crude oil processor','petroleum');
+INSERT INTO "technologies" VALUES('TXD','p','transport',' diesel powered vehicles','diesel');
+INSERT INTO "technologies" VALUES('TXE','p','transport',' electric powered vehicles','electric');
+INSERT INTO "technologies" VALUES('TXG','p','transport',' gasoline powered vehicles','gasoline');
 
 --can include a column that designates the commodity type (physical, emissions, demand)
 CREATE TABLE commodities (

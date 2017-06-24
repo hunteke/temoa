@@ -58,6 +58,7 @@ CREATE TABLE technologies (
   flag text,
   sector text,
   tech_desc text,
+  tech_category text,
   FOREIGN KEY(flag) REFERENCES technology_labels(tech_labels),
   FOREIGN KEY(sector) REFERENCES sector_labels(sector));
 

@@ -98,96 +98,97 @@ CREATE TABLE technologies (
   flag text,
   sector text,
   tech_desc text,
+  tech_category text,
   FOREIGN KEY(flag) REFERENCES technology_labels(tech_labels),
   FOREIGN KEY(sector) REFERENCES sector_labels(sector));
 
-   INSERT INTO "technologies" VALUES('IMPELCNGAEA',     'r', 'supply',      '# Import NG to combined cycle');
-   INSERT INTO "technologies" VALUES('IMPELCDSLEA',     'r', 'supply',      '# Import diesel');
-   INSERT INTO "technologies" VALUES('IMPURNA',         'r', 'supply',      '# Import uranium');
-   INSERT INTO "technologies" VALUES('IMPELCBIGCCEA',   'r', 'supply',      '# Import biomass to IGCC');
-   INSERT INTO "technologies" VALUES('IMPELCBIOSTM',    'r', 'supply',      '# Import biomass to steam');
-   INSERT INTO "technologies" VALUES('IMPELCGEO',       'r', 'supply',      '# Import geothermal');
-   INSERT INTO "technologies" VALUES('IMPSOL',          'r', 'supply',      '# Import solar');
-   INSERT INTO "technologies" VALUES('IMPWND',          'r', 'supply',      '# Import wind');
-   INSERT INTO "technologies" VALUES('IMPELCHYD',       'r', 'supply',      '# Import hydro');
-   INSERT INTO "technologies" VALUES('IMPLFGICEEA',     'r', 'supply',      '# Import landfill gas to ICE');
-   INSERT INTO "technologies" VALUES('IMPLFGGTREA',     'r', 'supply',      '# Import landfill gas to gas turbines');
+   INSERT INTO "technologies" VALUES('IMPELCNGAEA',     'r', 'supply',      '# Import NG to combined cycle', 'natural gas');
+   INSERT INTO "technologies" VALUES('IMPELCDSLEA',     'r', 'supply',      '# Import diesel', 'diesel');
+   INSERT INTO "technologies" VALUES('IMPURNA',         'r', 'supply',      '# Import uranium','uranium');
+   INSERT INTO "technologies" VALUES('IMPELCBIGCCEA',   'r', 'supply',      '# Import biomass to IGCC','biomass');
+   INSERT INTO "technologies" VALUES('IMPELCBIOSTM',    'r', 'supply',      '# Import biomass to steam','biomass');
+   INSERT INTO "technologies" VALUES('IMPELCGEO',       'r', 'supply',      '# Import geothermal','geothermal');
+   INSERT INTO "technologies" VALUES('IMPSOL',          'r', 'supply',      '# Import solar','solar');
+   INSERT INTO "technologies" VALUES('IMPWND',          'r', 'supply',      '# Import wind','wind');
+   INSERT INTO "technologies" VALUES('IMPELCHYD',       'r', 'supply',      '# Import hydro','hydro');
+   INSERT INTO "technologies" VALUES('IMPLFGICEEA',     'r', 'supply',      '# Import landfill gas to ICE','landfill gas');
+   INSERT INTO "technologies" VALUES('IMPLFGGTREA',     'r', 'supply',      '# Import landfill gas to gas turbines','landfill gas');
    
-   INSERT INTO "technologies" VALUES('ENGACC05',        'p','electric',     '# Natural Gas - Combined-Cycle (Turbine)');
-   INSERT INTO "technologies" VALUES('ENGACT05',        'p', 'electric',    '# Natural Gas - Combustion Turbine');
-   INSERT INTO "technologies" VALUES('ENGAACC',         'p','electric',     '# Natural Gas - Advanced Combined-Cycle (Turbine)');
-   INSERT INTO "technologies" VALUES('ENGAACT',         'p', 'electric',    '# Natural Gas - Advanced Combustion Turbine');
-   INSERT INTO "technologies" VALUES('ENGACCCCS',       'p','electric',     '# Natural Gas Combined Cycle -- CO2 Capture');
-   INSERT INTO "technologies" VALUES('ENGACCR',         'p','electric',     '# Residual natural Gas Combined-Cycle');
-   INSERT INTO "technologies" VALUES('ENGACTR',         'p', 'electric',    '# Residual natural Gas Combustion Turbine');
-   INSERT INTO "technologies" VALUES('ECOALSTM',        'p','electric',     '# Pulverized Coal Steam - 2010');
-   INSERT INTO "technologies" VALUES('ECOALIGCC',       'p','electric',     '# Integrated Coal Gasif. Combined Cycle');
-   INSERT INTO "technologies" VALUES('ECOALIGCCS',      'p','electric',     '# Integrated Coal Gasif. Combined Cycle -- CO2 Capt.');
-   INSERT INTO "technologies" VALUES('ECOASTMR',        'p','electric',     '# Residual Coal Steam');
-   INSERT INTO "technologies" VALUES('ECOALSTM_b',      'pb','electric',    '# Pulverized Coal Steam baseload - 2010');
-   INSERT INTO "technologies" VALUES('ECOALIGCC_b',     'pb','electric',    '# Integrated Coal Gasif. Combined Cycle baseload');
-   INSERT INTO "technologies" VALUES('ECOALIGCCS_b',    'pb','electric',    '# Integrated Coal Gasif. Combined Cycle -- CO2 Capt. baseload');
-   INSERT INTO "technologies" VALUES('ECOASTMR_b',      'pb','electric',    '# Residual Coal Steam baseload');
-   INSERT INTO "technologies" VALUES('EDSLCTR',         'p', 'electric',    '# Residual diesel Oil Combustion Turbine');
-   INSERT INTO "technologies" VALUES('EURNALWR',        'pb','electric',    '# Residual Nuclear LWRs');
-   INSERT INTO "technologies" VALUES('EURNALWR15',      'pb','electric',    '# Nuclear LWRs in 2015');
-   INSERT INTO "technologies" VALUES('EBIOIGCC',        'p', 'electric',    '# Biomass Integrated Gasification Combined-Cycle');
-   INSERT INTO "technologies" VALUES('EBIOSTMR',        'p', 'electric',    '# Residual wood/Biomass Steam');
-   INSERT INTO "technologies" VALUES('EGEOBCFS',        'p', 'electric',    '# Geothermal - Binary Cycle and Flashed Steam');
-   INSERT INTO "technologies" VALUES('ESOLPVCEN',       'p', 'electric',    '# Solar PV Centralized Generation');
-   INSERT INTO "technologies" VALUES('ESOLSTCEN',       'p', 'electric',    '# Solar Thermal Centralized Generation');
-   INSERT INTO "technologies" VALUES('ESOLPVDIS',       'p', 'electric',    '# Solar PV Distributed Generation');
-   INSERT INTO "technologies" VALUES('ESOLPVR',         'p', 'electric',    '# Solar Photovoltaic');
-   INSERT INTO "technologies" VALUES('ESOL',            'p', 'electric',    '# Dummy ELCSOL to ELCRNWB');
-   INSERT INTO "technologies" VALUES('EWNDON',          'p', 'electric',    '# Wind Generation onshore');
-   INSERT INTO "technologies" VALUES('EWNDOFS',         'p', 'electric',    '# Wind Generation offshore');
-   INSERT INTO "technologies" VALUES('EHYDCONR',        'p', 'electric',    '# Residual hydroelectric, Conventional');
-   INSERT INTO "technologies" VALUES('EHYDREVR',        'ps','electric',    '# Residual hydroelectric, Reversible');
-   INSERT INTO "technologies" VALUES('ELFGICER',        'p', 'electric',    '# Redidual landfill gas to electricity: engines');
-   INSERT INTO "technologies" VALUES('ELFGGTR',         'p', 'electric',    '# Redidual landfill gas to electricity: gas turbines');
-   INSERT INTO "technologies" VALUES('EE',              'p', 'electric',  '# Energy Efficiency programs');
+   INSERT INTO "technologies" VALUES('ENGACC05',        'p','electric',     '# Natural Gas - Combined-Cycle (Turbine)','Combined-Cycle');
+   INSERT INTO "technologies" VALUES('ENGACT05',        'p', 'electric',    '# Natural Gas - Combustion Turbine','Combustion Turbine');
+   INSERT INTO "technologies" VALUES('ENGAACC',         'p','electric',     '# Natural Gas - Advanced Combined-Cycle (Turbine)','Combined-Cycle');
+   INSERT INTO "technologies" VALUES('ENGAACT',         'p', 'electric',    '# Natural Gas - Advanced Combustion Turbine','Combustion Turbine');
+   INSERT INTO "technologies" VALUES('ENGACCCCS',       'p','electric',     '# Natural Gas Combined Cycle -- CO2 Capture','Combined-Cycle CCS');
+   INSERT INTO "technologies" VALUES('ENGACCR',         'p','electric',     '# Residual natural Gas Combined-Cycle','Combined-Cycle');
+   INSERT INTO "technologies" VALUES('ENGACTR',         'p', 'electric',    '# Residual natural Gas Combustion Turbine','Combustion Turbine');
+   INSERT INTO "technologies" VALUES('ECOALSTM',        'p','electric',     '# Pulverized Coal Steam - 2010','Coal');
+   INSERT INTO "technologies" VALUES('ECOALIGCC',       'p','electric',     '# Integrated Coal Gasif. Combined Cycle','IGCC');
+   INSERT INTO "technologies" VALUES('ECOALIGCCS',      'p','electric',     '# Integrated Coal Gasif. Combined Cycle -- CO2 Capt.','IGCC-CCS');
+   INSERT INTO "technologies" VALUES('ECOASTMR',        'p','electric',     '# Residual Coal Steam','coal');
+   INSERT INTO "technologies" VALUES('ECOALSTM_b',      'pb','electric',    '# Pulverized Coal Steam baseload - 2010','coal');
+   INSERT INTO "technologies" VALUES('ECOALIGCC_b',     'pb','electric',    '# Integrated Coal Gasif. Combined Cycle baseload','IGCC');
+   INSERT INTO "technologies" VALUES('ECOALIGCCS_b',    'pb','electric',    '# Integrated Coal Gasif. Combined Cycle -- CO2 Capt. baseload','IGCC-CCS');
+   INSERT INTO "technologies" VALUES('ECOASTMR_b',      'pb','electric',    '# Residual Coal Steam baseload','coal');
+   INSERT INTO "technologies" VALUES('EDSLCTR',         'p', 'electric',    '# Residual diesel Oil Combustion Turbine','Petroleum');
+   INSERT INTO "technologies" VALUES('EURNALWR',        'pb','electric',    '# Residual Nuclear LWRs','Nuclear');
+   INSERT INTO "technologies" VALUES('EURNALWR15',      'pb','electric',    '# Nuclear LWRs in 2015','Nuclear');
+   INSERT INTO "technologies" VALUES('EBIOIGCC',        'p', 'electric',    '# Biomass Integrated Gasification Combined-Cycle','Biomass');
+   INSERT INTO "technologies" VALUES('EBIOSTMR',        'p', 'electric',    '# Residual wood/Biomass Steam','Biomass');
+   INSERT INTO "technologies" VALUES('EGEOBCFS',        'p', 'electric',    '# Geothermal - Binary Cycle and Flashed Steam','Geothermal');
+   INSERT INTO "technologies" VALUES('ESOLPVCEN',       'p', 'electric',    '# Solar PV Centralized Generation','Solar PV');
+   INSERT INTO "technologies" VALUES('ESOLSTCEN',       'p', 'electric',    '# Solar Thermal Centralized Generation','Solar Thermal');
+   INSERT INTO "technologies" VALUES('ESOLPVDIS',       'p', 'electric',    '# Solar PV Distributed Generation','Solar PV');
+   INSERT INTO "technologies" VALUES('ESOLPVR',         'p', 'electric',    '# Solar Photovoltaic','Solar PV');
+   INSERT INTO "technologies" VALUES('ESOL',            'p', 'electric',    '# Dummy ELCSOL to ELCRNWB','');
+   INSERT INTO "technologies" VALUES('EWNDON',          'p', 'electric',    '# Wind Generation onshore','Wind');
+   INSERT INTO "technologies" VALUES('EWNDOFS',         'p', 'electric',    '# Wind Generation offshore','Wind');
+   INSERT INTO "technologies" VALUES('EHYDCONR',        'p', 'electric',    '# Residual hydroelectric, Conventional','Hydro');
+   INSERT INTO "technologies" VALUES('EHYDREVR',        'ps','electric',    '# Residual hydroelectric, Reversible','Hydro');
+   INSERT INTO "technologies" VALUES('ELFGICER',        'p', 'electric',    '# Residual landfill gas to electricity: engines','Landfill Gas');
+   INSERT INTO "technologies" VALUES('ELFGGTR',         'p', 'electric',    '# Residual landfill gas to electricity: gas turbines','Landfill Gas');
+   INSERT INTO "technologies" VALUES('EE',              'p', 'electric',  '# Energy Efficiency programs','Energy Efficiency');
    
-   INSERT INTO "technologies" VALUES('ETRANS',          'p', 'residential', '# Transmission in the grid');
-   INSERT INTO "technologies" VALUES('EDISTR',          'p', 'residential', '# Distribution in the grid');
-   INSERT INTO "technologies" VALUES('RENEWABLES',      'p', 'electric', '# Dummy ELCRNWB to ELC');
+   INSERT INTO "technologies" VALUES('ETRANS',          'p', 'residential', '# Transmission in the grid','');
+   INSERT INTO "technologies" VALUES('EDISTR',          'p', 'residential', '# Distribution in the grid','');
+   INSERT INTO "technologies" VALUES('RENEWABLES',      'p', 'electric', '# Dummy ELCRNWB to ELC','');
 
    
 -- Emission control technologies
-   INSERT INTO "technologies" VALUES('E_BLND_BITSUBLIG_COALSTM_R',   'p','electric','#blending tech to collect bit subbit and lig coal for existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_BLND_BIT_COALSTM_R',         'p','electric','#blending tech to collect bit coal for existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_LNBSNCR_COAB_R',             'p','electric','#Existing LNB w/SNCR retrofit for nox removal from BIT before existing coal STM');
-   INSERT INTO "technologies" VALUES('E_LNBSNCR_COAB_N',             'p','electric','#new LNB combined with SNCR retrofit for nox removal from bituminous before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_LNBSCR_COAB_R',              'p','electric','#existing LNB combined with SCR retrofit for nox removal from bituminous before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_LNBSCR_COAB_N',              'p','electric','#new LNB combined with SCR retrofit for nox removal from bituminous before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_PTNOXSCR_COAB',              'p','electric','#nox passthrough tech for bituminous coal after LNB retrofit or passthrough and before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_SNCR_COAB_R',                'p','electric','#existing SNCR retrofit for nox removal from bituminous before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_SNCR_COAB_N',                'p','electric','#new SNCR retrofit for nox removal from bituminous before existing coal steam plant');
--- INSERT INTO "technologies" VALUES('E_SCR_COAB_R',                 'p','electric','#existing SCR retrofit for nox removal from bituminous before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_SCR_COAB_N',                 'p','electric','#new SCR retrofit for nox removal from bituminous before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_PTNOXLNB_COAB',              'p','electric','#nox passthrough tech for bituminous coal after so2 or co2 passthrough and before SCR or SNCR or passthrough');
-   INSERT INTO "technologies" VALUES('E_LNB_COAB_R',                 'p','electric','#existing LNB retrofit tech for nox removal from bituminous before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_LNB_COAB_N',                 'p','electric','#new LNB retrofit tech for nox removal from bituminous before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_CCR_COAB',                   'p','electric','#co2 capture retrofit tech for bituminous coal to existing power plant located after FGD or passthrough and before LNB');
-   INSERT INTO "technologies" VALUES('E_PTCO2_COAB',                 'p','electric','#co2 passthrough tech for bituminous coal after FGD and before LNB');
-   INSERT INTO "technologies" VALUES('E_FGD_COABH_R',                'p','electric','#existing FGD retrofit tech for so2 removal from bit high sulfur before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_FGD_COABH_N',                'p','electric','#new FGD retrofit tech for so2 removal from bit high sulfur before existing coal steam plant');
-   -- INSERT INTO "technologies" VALUES('E_FGD_COABM_R',                'p','electric','#existing FGD retrofit tech for so2 removal from bit medium sulfur before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_FGD_COABM_N',                'p','electric','#new FGD retrofit tech for so2 removal from bit medium sulfur before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_FGD_COABL_R',                'p','electric','#existing FGD retrofit tech for so2 removal from bit low sulfur before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_FGD_COABL_N',                'p','electric','#new FGD retrofit tech for so2 removal from bit low sulfur before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_PTSO2_COABH',                'p','electric','#passthrough tech with no so2 removal from bit high sulfur before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_PTSO2_COABM',                'p','electric','#passthrough tech with no so2 removal from bit medium sulfur before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_PTSO2_COABL',                'p','electric','#passthrough tech with no so2 removal from bit low sulfur before existing coal steam plant');
-   INSERT INTO "technologies" VALUES('E_EA_COAB',                    'p','electric','#co2 emission accounting tech for coal bituminous');
-   INSERT INTO "technologies" VALUES('E_CCR_COALIGCC_N',             'p','electric','#co2 capture retrofit tech before coal IGCC plant');
-   INSERT INTO "technologies" VALUES('E_BLND_BITSUBLIG_COALIGCC_N',  'p','electric','#blending tech to collect bit subbit and lig coal for new coal IGCC plant');
-   INSERT INTO "technologies" VALUES('E_BLND_BITHML_COALIGCC_N',     'p','electric','#blending tech to collect high medium low sulfur bit coal for new coal IGCC plant');
-   INSERT INTO "technologies" VALUES('E_CCR_COALSTM_N',              'p','electric','#co2 capture retrofit tech before new coal steam plant');
-   INSERT INTO "technologies" VALUES('E_BLND_BITSUBLIG_COALSTM_N',   'p','electric','#blending tech to collect bit subbit and lig coal for new coal steam plant');
-   INSERT INTO "technologies" VALUES('E_BLND_BITHML_COALSTM_N',      'p','electric','#blending tech to collect high medium low sulfur bit coal for new coal steam plant');
+   INSERT INTO "technologies" VALUES('E_BLND_BITSUBLIG_COALSTM_R',   'p','electric','#blending tech to collect bit subbit and lig coal for existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_BLND_BIT_COALSTM_R',         'p','electric','#blending tech to collect bit coal for existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_LNBSNCR_COAB_R',             'p','electric','#Existing LNB w/SNCR retrofit for nox removal from BIT before existing coal STM','');
+   INSERT INTO "technologies" VALUES('E_LNBSNCR_COAB_N',             'p','electric','#new LNB combined with SNCR retrofit for nox removal from bituminous before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_LNBSCR_COAB_R',              'p','electric','#existing LNB combined with SCR retrofit for nox removal from bituminous before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_LNBSCR_COAB_N',              'p','electric','#new LNB combined with SCR retrofit for nox removal from bituminous before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_PTNOXSCR_COAB',              'p','electric','#nox passthrough tech for bituminous coal after LNB retrofit or passthrough and before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_SNCR_COAB_R',                'p','electric','#existing SNCR retrofit for nox removal from bituminous before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_SNCR_COAB_N',                'p','electric','#new SNCR retrofit for nox removal from bituminous before existing coal steam plant','');
+-- INSERT INTO "technologies" VALUES('E_SCR_COAB_R',                 'p','electric','#existing SCR retrofit for nox removal from bituminous before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_SCR_COAB_N',                 'p','electric','#new SCR retrofit for nox removal from bituminous before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_PTNOXLNB_COAB',              'p','electric','#nox passthrough tech for bituminous coal after so2 or co2 passthrough and before SCR or SNCR or passthrough','');
+   INSERT INTO "technologies" VALUES('E_LNB_COAB_R',                 'p','electric','#existing LNB retrofit tech for nox removal from bituminous before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_LNB_COAB_N',                 'p','electric','#new LNB retrofit tech for nox removal from bituminous before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_CCR_COAB',                   'p','electric','#co2 capture retrofit tech for bituminous coal to existing power plant located after FGD or passthrough and before LNB','');
+   INSERT INTO "technologies" VALUES('E_PTCO2_COAB',                 'p','electric','#co2 passthrough tech for bituminous coal after FGD and before LNB','');
+   INSERT INTO "technologies" VALUES('E_FGD_COABH_R',                'p','electric','#existing FGD retrofit tech for so2 removal from bit high sulfur before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_FGD_COABH_N',                'p','electric','#new FGD retrofit tech for so2 removal from bit high sulfur before existing coal steam plant','');
+   -- INSERT INTO "technologies" VALUES('E_FGD_COABM_R',                'p','electric','#existing FGD retrofit tech for so2 removal from bit medium sulfur before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_FGD_COABM_N',                'p','electric','#new FGD retrofit tech for so2 removal from bit medium sulfur before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_FGD_COABL_R',                'p','electric','#existing FGD retrofit tech for so2 removal from bit low sulfur before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_FGD_COABL_N',                'p','electric','#new FGD retrofit tech for so2 removal from bit low sulfur before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_PTSO2_COABH',                'p','electric','#passthrough tech with no so2 removal from bit high sulfur before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_PTSO2_COABM',                'p','electric','#passthrough tech with no so2 removal from bit medium sulfur before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_PTSO2_COABL',                'p','electric','#passthrough tech with no so2 removal from bit low sulfur before existing coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_EA_COAB',                    'p','electric','#co2 emission accounting tech for coal bituminous','');
+   INSERT INTO "technologies" VALUES('E_CCR_COALIGCC_N',             'p','electric','#co2 capture retrofit tech before coal IGCC plant','');
+   INSERT INTO "technologies" VALUES('E_BLND_BITSUBLIG_COALIGCC_N',  'p','electric','#blending tech to collect bit subbit and lig coal for new coal IGCC plant','');
+   INSERT INTO "technologies" VALUES('E_BLND_BITHML_COALIGCC_N',     'p','electric','#blending tech to collect high medium low sulfur bit coal for new coal IGCC plant','');
+   INSERT INTO "technologies" VALUES('E_CCR_COALSTM_N',              'p','electric','#co2 capture retrofit tech before new coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_BLND_BITSUBLIG_COALSTM_N',   'p','electric','#blending tech to collect bit subbit and lig coal for new coal steam plant','');
+   INSERT INTO "technologies" VALUES('E_BLND_BITHML_COALSTM_N',      'p','electric','#blending tech to collect high medium low sulfur bit coal for new coal steam plant','');
 
 -- Sammaneh's importing techs
-   INSERT INTO "technologies" VALUES('IMPELCCOAB',                   'r','supply',   '#imported bituminous coal');
+   INSERT INTO "technologies" VALUES('IMPELCCOAB',                   'r','supply',   '#imported bituminous coal','');
 
 -------------------------------------------------
 CREATE TABLE commodity_labels (
