@@ -15,61 +15,38 @@ class OutputPlotGenerator:
 	def __init__(self, path_to_db, scenario, super_categories=False):
 		self.db_path = path_to_db
 		self.scenario = scenario
-		self.extractFromDatabase()
-		#self.userPrompt(super_categories)
+		# self.extractFromDatabase()
 
-	# Only for command line Testing.
-	def userPrompt(self, super_categories):
-		input=raw_input("Please select the plot type:\n1. Capacity\n2. Output Flow\n3. Emissions\n4. Exit\n\n")
-		while (input != '4'):
-			print "Please enter the sector name:"
-			
-			sector_names = self.getSectors(int(input))
-			
-			for i, s in enumerate(sector_names):
-				print str(i+1)+"."+s
-			
-			sector_i = int(raw_input())-1
-			if (sector_i < 0 or sector_i >= len(sector_names)):
-				print "Invalid Input"
-				continue
-
-			sector = sector_names[sector_i]
-
-			if (input == '1'):
-				self.generatePlotForCapacity(sector, super_categories)
-			elif (input == '2'):
-				self.generatePlotForOutputFlow(sector, super_categories)
-			elif (input == '3'):
-				self.generatePlotForEmissions(sector, super_categories)
-			else:
-				print "Invalid Selection"
-			input=raw_input("Please select the plot type:\n1. Capacity\n2. Output Flow\n3. Emissions\n4. Exit\n\n")
-
-
-	def extractFromDatabase(self):
+	def extractFromDatabase(self, type):
+		'''
+		Based on the type of the plot being generated, extract data from the corresponding table from database
+		'''
 		con = sqlite3.connect(self.db_path)
 		cur = con.cursor()
-		cur.execute("SELECT sector, t_periods, tech, capacity FROM Output_CapacityByPeriodAndTech WHERE scenario == '"+self.scenario+"'")
-		self.capacity_output = cur.fetchall()
-		self.capacity_output = [list(elem) for elem in self.capacity_output]
-
-		cur.execute("SELECT sector, t_periods, tech, SUM(vflow_out) FROM Output_VFlow_Out WHERE scenario == '"+self.scenario+"' GROUP BY sector, t_periods, tech")	
-		self.output_vflow = cur.fetchall()
-		self.output_vflow = [list(elem) for elem in self.output_vflow]
-
-		cur.execute("SELECT sector, t_periods, emissions_comm, SUM(emissions) FROM Output_Emissions WHERE scenario == '"+self.scenario+"' GROUP BY sector, t_periods, emissions_comm")
-		self.output_emissions = cur.fetchall()
-		self.output_emissions = [list(elem) for elem in self.output_emissions]
+		if (type == 1):
+			cur.execute("SELECT sector, t_periods, tech, capacity FROM Output_CapacityByPeriodAndTech WHERE scenario == '"+self.scenario+"'")
+			self.capacity_output = cur.fetchall()
+			self.capacity_output = [list(elem) for elem in self.capacity_output]
+		elif (type == 2):
+			cur.execute("SELECT sector, t_periods, tech, SUM(vflow_out) FROM Output_VFlow_Out WHERE scenario == '"+self.scenario+"' GROUP BY sector, t_periods, tech")	
+			self.output_vflow = cur.fetchall()
+			self.output_vflow = [list(elem) for elem in self.output_vflow]
+		elif (type == 3):
+			cur.execute("SELECT sector, t_periods, emissions_comm, SUM(emissions) FROM Output_Emissions WHERE scenario == '"+self.scenario+"' GROUP BY sector, t_periods, emissions_comm")
+			self.output_emissions = cur.fetchall()
+			self.output_emissions = [list(elem) for elem in self.output_emissions]
 
 		cur.execute("SELECT tech, tech_category FROM technologies")
 		self.tech_categories = cur.fetchall()
 		self.tech_categories = [[str(word) for word in tuple] for tuple in self.tech_categories]
-		#self.tech_categories = []
 		con.close()
 
 
 	def getSectors(self, type):
+		'''
+		Based on the type of the plot being generated, returns a list of sectors available in the database
+		'''
+		extractFromDatabase(type)
 		sectors = set()
 
 		data = self.capacity_output
@@ -89,6 +66,9 @@ class OutputPlotGenerator:
 		return res
 
 	def processData(self,inputData, sector, super_categories=False):
+		'''
+		Processes data for a particular sector to make it ready for plotting purposes
+		'''
 		periods = set()
 		techs = set()
 
@@ -127,45 +107,66 @@ class OutputPlotGenerator:
 		return output_values
 
 	def generatePlotForCapacity(self,sector, super_categories=False, output_dir = '.'):
+		'''
+		Generates Plot for Capacity of a given sector
+		'''
 		sectors = self.getSectors(1)
 		if (not (sector in sectors)):
 			return ""
 
 		output_values = self.processData(self.capacity_output, sector, super_categories)
+		
 		outfile = 'capacity_'+sector+'_'+str(int(time.time()*1000))+'.png'
 		self.output_file_name = os.path.join(output_dir, outfile)
 		self.output_file_name = self.output_file_name.replace(" ", "")
+		
 		title = 'Capacity Plot for ' + sector + ' sector'
 		self.makeStackedBarPlot(output_values, "Years", "Capacity (GW)", 'periods', title)
+		
 		return outfile
 
 	def generatePlotForOutputFlow(self, sector, super_categories=False, output_dir = '.'):
+		'''
+		Generates Plot for Output Flow of a given sector
+		'''
 		sectors = self.getSectors(2)
 		if (not (sector in sectors)):
 			return ""
 
 		output_values = self.processData(self.output_vflow, sector, super_categories)
+		
 		outfile = 'output_flow_'+sector+'_'+str(int(time.time()*1000))+'.png'
 		self.output_file_name = os.path.join(output_dir, outfile)
 		self.output_file_name = self.output_file_name.replace(" ", "")
+		
 		title = 'Output Flow Plot for ' + sector + ' sector'
 		self.makeStackedBarPlot(output_values, "Years", "Activity (PJ)", 'periods', title)
+		
 		return outfile;
 
 	def generatePlotForEmissions(self, sector, super_categories=False, output_dir = '.'):
+		'''
+		Generates Plot for Emissions of a given sector
+		'''
 		sectors = self.getSectors(3)
 		if (not (sector in sectors)):
 			return ""
 
 		output_values = self.processData(self.output_emissions, sector, super_categories)
+		
 		outfile ='emissions_'+sector+'_'+str(int(time.time()*1000))+'.png'
 		self.output_file_name = os.path.join(output_dir, outfile)
 		self.output_file_name = self.output_file_name.replace(" ", "")
+		
 		title = 'Emissions Plot for ' + sector + ' sector'
 		self.make_line_plot(output_values.copy(), 'Emissions', title)
+		
 		return outfile;
 	
 
+	'''
+	--------------------------- Plot Generation related functions --------------------------------------
+	'''
 	def get_random_color(self, pastel_factor = 0.5):
 	    return [(x+pastel_factor)/(1.0+pastel_factor) for x in [random.uniform(0,1.0) for i in [1,2,3]]]
 
@@ -265,6 +266,7 @@ class OutputPlotGenerator:
 
 
 
+# Function used for command line purposes. Parses arguments and then calls relevent functions.
 def GeneratePlot(args):
 	parser = argparse.ArgumentParser(description="Generate Output Plot")
 	parser.add_argument('-i', '--input', action="store", dest="input", help="Input Database Filename <path>", required=True)
