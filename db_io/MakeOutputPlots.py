@@ -49,7 +49,7 @@ class OutputPlotGenerator:
 		self.extractFromDatabase(type)
 		sectors = set()
 
-		data = self.capacity_output
+		data = None
 
 		if (type == 1):
 			data = self.capacity_output
