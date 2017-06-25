@@ -6,6 +6,8 @@ from IPython import embed as IP
 import numpy as np
 import random
 import time
+import os
+import argparse
 
 
 class OutputPlotGenerator:
@@ -14,7 +16,6 @@ class OutputPlotGenerator:
 		self.db_path = path_to_db
 		self.scenario = scenario
 		self.extractFromDatabase()
-		self.directory = '/srv/result/matplot/'
 		#self.userPrompt(super_categories)
 
 	# Only for command line Testing.
@@ -83,7 +84,9 @@ class OutputPlotGenerator:
 		for row in data:
 			sectors.add(row[0])
 
-		return list(sectors)
+		res = list(sectors)
+		res.insert(0,'all')
+		return res
 
 	def processData(self,inputData, sector, super_categories=False):
 		periods = set()
@@ -123,28 +126,40 @@ class OutputPlotGenerator:
 		output_values['periods']=periods
 		return output_values
 
-	def generatePlotForCapacity(self,sector, super_categories=False):
+	def generatePlotForCapacity(self,sector, super_categories=False, output_dir = '.'):
+		sectors = self.getSectors(1)
+		if (not (sector in sectors)):
+			return ""
+
 		output_values = self.processData(self.capacity_output, sector, super_categories)
 		outfile = 'capacity_'+sector+'_'+str(int(time.time()*1000))+'.png'
-		self.output_file_name = self.directory + outfile
+		self.output_file_name = os.path.join(output_dir, outfile)
 		self.output_file_name = self.output_file_name.replace(" ", "")
 		title = 'Capacity Plot for ' + sector + ' sector'
 		self.makeStackedBarPlot(output_values, "Years", "Capacity (GW)", 'periods', title)
 		return outfile
 
-	def generatePlotForOutputFlow(self, sector, super_categories=False):
+	def generatePlotForOutputFlow(self, sector, super_categories=False, output_dir = '.'):
+		sectors = self.getSectors(2)
+		if (not (sector in sectors)):
+			return ""
+
 		output_values = self.processData(self.output_vflow, sector, super_categories)
 		outfile = 'output_flow_'+sector+'_'+str(int(time.time()*1000))+'.png'
-		self.output_file_name = self.directory + outfile
+		self.output_file_name = os.path.join(output_dir, outfile)
 		self.output_file_name = self.output_file_name.replace(" ", "")
 		title = 'Output Flow Plot for ' + sector + ' sector'
 		self.makeStackedBarPlot(output_values, "Years", "Activity (PJ)", 'periods', title)
 		return outfile;
 
-	def generatePlotForEmissions(self, sector, super_categories=False):
+	def generatePlotForEmissions(self, sector, super_categories=False, output_dir = '.'):
+		sectors = self.getSectors(3)
+		if (not (sector in sectors)):
+			return ""
+
 		output_values = self.processData(self.output_emissions, sector, super_categories)
 		outfile ='emissions_'+sector+'_'+str(int(time.time()*1000))+'.png'
-		self.output_file_name = self.directory + outfile
+		self.output_file_name = os.path.join(output_dir, outfile)
 		self.output_file_name = self.output_file_name.replace(" ", "")
 		title = 'Emissions Plot for ' + sector + ' sector'
 		self.make_line_plot(output_values.copy(), 'Emissions', title)
@@ -247,3 +262,34 @@ class OutputPlotGenerator:
 		lgd = plt.legend([h[0] for h in handles], techs, bbox_to_anchor = (1.2, 1),fontsize=7.5)
 		#plt.show()
 		plt.savefig(self.output_file_name, bbox_extra_artists=(lgd,), bbox_inches='tight')
+
+
+
+def GeneratePlot(args):
+	parser = argparse.ArgumentParser(description="Generate Output Plot")
+	parser.add_argument('-i', '--input', action="store", dest="input", help="Input Database Filename <path>", required=True)
+	parser.add_argument('-s', '--scenario', action="store", dest="scenario", help="Model run scenario name", required=True)
+	parser.add_argument('-p', '--plot-type', action="store", dest="type", help="Type of Plot to be generated", choices=['capacity', 'flow', 'emissions'], required=True)
+	parser.add_argument('-c', '--sector', action="store", dest="sector", help="Sector for which plot to be generated", required=True)
+	parser.add_argument('-o', '--output', action="store", dest="output_dir", help='Output plot location', default='./')
+	parser.add_argument('--super', action="store_true", dest="super_categories", help="Merge Technologies or not", default=False)
+
+	options = parser.parse_args(args)
+
+	result = OutputPlotGenerator(options.input, options.scenario, options.super_categories)
+	error = ''
+	if (options.type == 'capacity'):
+		error = result.generatePlotForCapacity(options.sector, options.super_categories, options.output_dir)
+	elif (options.type == 'flow'):
+		error = result.generatePlotForOutputFlow(options.sector, options.super_categories, options.output_dir)
+	elif (options.type == 'emissions'):
+		error = result.generatePlotForEmissions(options.sector, options.super_categories, options.output_dir)
+
+	if (error == ''):
+		print "Error: The sector doesn't exist for the selected plot type and database"
+	else:
+		print "Done. Look for output plot images in directory:"+os.path.join(options.output_dir,error)
+
+
+if __name__ == '__main__':
+	GeneratePlot(sys.argv[1:])
