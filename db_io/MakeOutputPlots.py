@@ -46,7 +46,7 @@ class OutputPlotGenerator:
 		'''
 		Based on the type of the plot being generated, returns a list of sectors available in the database
 		'''
-		extractFromDatabase(type)
+		self.extractFromDatabase(type)
 		sectors = set()
 
 		data = self.capacity_output
