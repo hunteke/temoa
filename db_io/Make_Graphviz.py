@@ -13,7 +13,7 @@ from GraphVizUtil import *
 
 
 def CreateMainResultsDiagram ( **kwargs ): #results_main	
-	inp_file		   = kwargs.get( 'inp_file' )
+	ifile		   = kwargs.get( 'ifile' )
 	ffmt               = kwargs.get( 'image_format' )
 	pp				   = kwargs.get( 'inp_period')
 	scenario 		   = kwargs.get( 'scenario_name' )
@@ -27,7 +27,7 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 	Efficiency_Input = set()
 	Efficiency_Output = set()
 
-	con = sqlite3.connect(inp_file)
+	con = sqlite3.connect(ifile)
 	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
@@ -191,7 +191,7 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 # Needs some small fixing - cases where no input but output is there. # Check sample graphs
 def CreateTechResultsDiagrams ( **kwargs ): # tech results
 	
-	inp_file		   = kwargs.get( 'inp_file' )
+	ifile		   = kwargs.get( 'ifile' )
 	ffmt               = kwargs.get( 'image_format' )
 	per 			   = kwargs.get( 'inp_period' )
 	tech 			   = kwargs.get( 'inp_technology' )
@@ -208,7 +208,7 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 	vnode_attr_fmt = 'href="#", onclick="loadNextGraphvizGraph(\'%s\', \'%s\', \'%s\')"'
 	vnode_attr_fmt += 'label="%s\\nCap: %.2f"'
 
-	con = sqlite3.connect(inp_file)
+	con = sqlite3.connect(ifile)
 	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
@@ -283,7 +283,7 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 
 def CreateCommodityPartialResults ( **kwargs ): 
 	
-	inp_file		= kwargs.get( 'inp_file' )
+	ifile		= kwargs.get( 'ifile' )
 	ffmt            = kwargs.get( 'image_format' )
 	per 			= kwargs.get( 'inp_period' )
 	comm 			= kwargs.get( 'inp_commodity' )
@@ -293,7 +293,7 @@ def CreateCommodityPartialResults ( **kwargs ):
 
 	from GraphVizFormats import commodity_dot_fmt
 
-	con = sqlite3.connect(inp_file)
+	con = sqlite3.connect(ifile)
 	cur = con.cursor()
 	con.text_factory = str
 
@@ -374,9 +374,9 @@ def CreateCommodityPartialResults ( **kwargs ):
 	os.chdir( '..' )
 
 def createCompleteInputGraph( **kwargs ) : # Call this function if the input file is a database.
-	inp_file		   = kwargs.get( 'inp_file' )
+	ifile		   = kwargs.get( 'ifile' )
 	q_flag			   = kwargs.get( 'q_flag' )
-	quick_n 		   = kwargs.get( 'quick_n' )
+	quick_name 		   = kwargs.get( 'quick_name' )
 	scenario_name	   = kwargs.get( 'scenario_name' )
 	ffmt               = kwargs.get( 'image_format' )
 	arrowheadin_color  = kwargs.get( 'arrowheadin_color' )
@@ -408,11 +408,11 @@ def createCompleteInputGraph( **kwargs ) : # Call this function if the input fil
 				inp_tech = "'"+inp_tech+"'"
 		
 		#connect to the database
-		con = sqlite3.connect(inp_file)
+		con = sqlite3.connect(ifile)
 		cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 		con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
-		print inp_file, inp_comm, inp_tech
+		print ifile, inp_comm, inp_tech
 
 		cur.execute("SELECT input_comm, tech, output_comm FROM Efficiency WHERE input_comm is "+inp_comm+" or output_comm is "+inp_comm+" or tech is "+inp_tech)
 		for row in cur:
@@ -443,7 +443,7 @@ def createCompleteInputGraph( **kwargs ) : # Call this function if the input fil
 
 		eff_flag = False
 		#open the text file
-		with open (inp_file) as f :
+		with open (ifile) as f :
 			for line in f:
 				if eff_flag is False and re.search("^\s*param\s+efficiency\s*[:][=]", line, flags = re.I) : 
 					#Search for the line param Efficiency := (The script recognizes the commodities specified in this section)
@@ -470,14 +470,14 @@ def createCompleteInputGraph( **kwargs ) : # Call this function if the input fil
 					from_tech.add('"%s"' % row[1] + '\t->\t"%s"' % row[3])
 							
 		if eff_flag is False :	
-			print ("Error: The Efficiency Parameters cannot be found in the specified file - "+inp_file)
+			print ("Error: The Efficiency Parameters cannot be found in the specified file - "+ifile)
 			sys.exit(2)
 	
 	print "Creating Diagrams...\n"
 
 	from GraphVizFormats import quick_run_dot_fmt
 
-	with open( quick_n + '.dot', 'w' ) as f:
+	with open( quick_name + '.dot', 'w' ) as f:
 		f.write( quick_run_dot_fmt % dict(
 		  arrowheadin_color  = arrowheadin_color,
 		  arrowheadout_color = arrowheadout_color,
@@ -492,15 +492,14 @@ def createCompleteInputGraph( **kwargs ) : # Call this function if the input fil
 		  snodes             = ";".join('"%s"' %x for x in ltech),
 		))
 	del nodes, tech, to_tech, from_tech
-	cmd = ('dot', '-T' + ffmt, '-o' + quick_n+'.' + ffmt, quick_n+'.dot')
+	cmd = ('dot', '-T' + ffmt, '-o' + quick_name+'.' + ffmt, quick_name+'.dot')
 	call( cmd )
 
 
 def CreateModelDiagrams (kwargs):
-	print kwargs['quick_flag']
 
 	if not kwargs['quick_flag']:
-		images_dir = kwargs['quick_n'] + "_" + kwargs['scenario_name']
+		images_dir = kwargs['quick_name'] + "_" + kwargs['scenario_name']
 		if os.path.exists( images_dir ):
 			rmtree( images_dir )
 		os.mkdir( images_dir )
@@ -508,26 +507,26 @@ def CreateModelDiagrams (kwargs):
 		os.makedirs( 'commodities' )
 		os.makedirs( 'processes' )
 		os.makedirs( 'results' )
-		print "created result directory - 0"
 	else:
-		images_dir = kwargs['quick_n']
-		print "Handling directories for quick run - ", images_dir
+		images_dir = kwargs['quick_name']
 		if os.path.exists( images_dir ):
-			print "Trying to delete existing image dir at same path"
 			rmtree( images_dir )
-		print images_dir
 		os.mkdir( images_dir )
 		os.chdir( images_dir )
 
-	print "created result directory - 2"
+	print "Created output folders"
 	
 	if (kwargs['quick_flag'] == True):
+		print "Generating createCompleteInputGraph"
 		createCompleteInputGraph(**kwargs)
 	elif (kwargs['inp_technology'] is None and kwargs['inp_commodity'] is None):
+		print "Generating CreateMainResultsDiagram"
 		CreateMainResultsDiagram(**kwargs)
 	elif (kwargs['inp_commodity'] is None):
+		print "Generating CreateTechResultsDiagrams"
 		CreateTechResultsDiagrams(**kwargs)
 	elif (kwargs['inp_technology'] is None):
+		print "Generating CreateCommodityPartialResults"
 		CreateCommodityPartialResults(**kwargs)
 
 	os.chdir( '..' )
@@ -538,15 +537,9 @@ def createGraphBasedOnInput(inputs):
 	grey_flag = inputs['grey_flag']
 
 	kwargs = dict(
-	  inp_file			 = inputs['ifile'],
-	  scenario_name		 = inputs['scenario'],
-	  q_flag			 = True if inputs['db_dat_flag'] else False,
-	  quick_flag		 = inputs['quick_flag'],
-	  quick_n		 	 = inputs['quick_name'],
-	  images_dir         = '%s_%s' % (inputs['quick_name'], inputs['scenario']),
-	  image_format       = inputs['graph_format'].lower(),
+	  images_dir         = '%s_%s' % (inputs['quick_name'], inputs['scenario_name']),
+	  image_format       = inputs['image_format'].lower(),
 
-	  splinevar			 = inputs['splinevar'],
 	  tech_color         = 'darkseagreen' if grey_flag else 'black',
 	  commodity_color    = 'lightsteelblue' if grey_flag else 'black',
 	  unused_color       = 'powderblue' if grey_flag else 'gray75',
@@ -558,14 +551,10 @@ def createGraphBasedOnInput(inputs):
 	  home_color         = 'gray75',
 	  font_color	     = 'black' if grey_flag else 'white',
 	  fill_color	     = 'lightsteelblue' if grey_flag else 'white',
-	  inp_commodity		 = inputs['inp_comm'],
-	  inp_technology 	 = inputs['inp_tech'],
-	  inp_period		 = inputs['inp_year'],
 
 	  #MODELDETAILED,
 	  md_tech_color      = 'hotpink',
 
-	  #SUBGRAPHS (option 1),
 	  sb_incom_color     = 'lightsteelblue' if grey_flag else 'black',
 	  sb_outcom_color    = 'lawngreen' if grey_flag else 'black',
 	  sb_vpbackg_color   = 'lightgrey',
@@ -573,35 +562,29 @@ def createGraphBasedOnInput(inputs):
 	  sb_arrow_color     = 'forestgreen' if grey_flag else 'black',
 
 	  #SUBGRAPH 1 ARROW COLORS
-	    # feel free to add more colors here
 	  color_list = ('red', 'orange', 'gold', 'green', 'blue', 'purple',
 	                'hotpink', 'cyan', 'burlywood', 'coral', 'limegreen',
 	                'black', 'brown') if grey_flag else ('black', 'black'),
 	)
-		
+
+	kwargs.update(inputs)
+
 	print "Reading File %s ..." %inputs['ifile'] 
-	print inputs['quick_flag'], " - ", inputs['res_dir']
 
 	if inputs['res_dir'] is None:
 		inputs['res_dir'] = "current directory"
 	else:
 		os.chdir(inputs['res_dir'])
-	print "About to call CreateModelDiagrams - quick_flag = ", inputs['quick_flag']
+	print "CreateModelDiagrams with quick_flag = ", inputs['quick_flag']
+
 	CreateModelDiagrams (kwargs)
-	
+
 	print "Done. Look for results in %s" %inputs['res_dir']
 
 
 if __name__ == "__main__":	
 	
-	try:
-		argv = sys.argv[1:]
- 		opts, args = getopt.getopt(argv, "hf:cvt:i:s:n:go:a:b:", ["help", "format=", "show_capacity", "splinevar", "graph_type=", "input=", "scenario=", "name=", "grey", "output=", "commodity=", "technology="])
-		
-		print opts
-		
- 	except getopt.GetoptError:          
- 		help_user()                          
- 		sys.exit(2) 
+	argv = sys.argv[1:]
 	
-	createGraphBasedOnInput( dict(opts) )
+	createGraphBasedOnInput(argv)
+
