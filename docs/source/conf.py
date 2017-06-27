@@ -55,7 +55,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Temoa Project'
-copyright = u'2011 - 2013, Kevin Hunter, Joseph DeCarolis, Sarat Sreepathi'
+copyright = u'2011 - 2017, Joseph DeCarolis, Kevin Hunter, Sarat Sreepathi'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -201,7 +201,7 @@ pngmath_latex_preamble = latex_elements['preamble']
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'TemoaProject.tex', u'Temoa Project Documentation',
-   u'Kevin Hunter, Joseph DeCarolis, Sarat Sreepathi', 'manual'),
+   u'Joseph DeCarolis, Kevin Hunter, Sarat Sreepathi', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

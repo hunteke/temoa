@@ -37,13 +37,14 @@ Preface
 =======
 
 This manual, in both `PDF`_ and `HTML`_ form, is the official documentation of
-the Temoa Project.  It describes all functionality of the Temoa model, and
-explains the mathematical underpinnings of the implemented equations.
+Tools for Energy Model Optimization and Analysis (Temoa).  It describes all 
+functionality of the Temoa model, and explains the mathematical underpinnings of 
+the implemented equations.
 
-Besides this documentation, there are a couple other sources for Temoa-oriented
+Besides this documentation, there are a couple other sources for Temoa-oriented 
 information.  The most interactive is the `mailing list`_, and we encourage any
-and all Energy Economy Optimization (EEO) related questions.  Publications are
-good introductory resources, but are not guaranteed to be the most up-to-date as
+and all questions related to energy system modeling.  Publications are good 
+introductory resources, but are not guaranteed to be the most up-to-date as
 information and implementations evolve quickly.  As with many software-oriented
 projects, even before this manual, `the code is the most definitive resource`.
 That said, please let us know (via the `mailing list`_, or other avenue) of any
@@ -52,22 +53,33 @@ discrepancies you find, and we will fix it as soon as possible.
 What is Temoa?
 --------------
 
-Temoa is an energy-economy optimization (EEO) model.  Briefly, EEO models are
-self-consistent frameworks for mathematically optimizing energy flows through a
-user-defined energy-system.\ [#eeo_definition]_ One may think of an EEO model as
-a "right-from-left" network graph, with a set of energy demands on the right
-that must be met by specific energy flows from the system, originating from
-energy-sources on the left.
+Temoa is an energy system optimization model (ESOM).  Briefly, ESOMs optimize the 
+installation and utilization of energy technology capacity over a user-defined 
+time horizon. Optimal decisions are driven by an objective function that minimizes 
+the cost of energy supply. Conceptually, one may think of an ESOM as a "left-to-right" 
+network graph, with a set of energy sources on the lefthand side of the graph that 
+are transformed into consumable energy commodities by a set of energy technologies, 
+which are ultimately used to meet demands on the righthand side of the network graph.
+[#esom_definition]_
 
-Some of Temoa's specific features are:
+Key features of the core Temoa model include:
 
-   * technology explicit
-   * arbitrary model period lengths
-   * designed for High Performance Computing
-   * written in Python
-   * not tied to a particular solver
-   * user extendable
-   * open source (AGPL)\ [#open_source_realities]_
+  * Flexible time slicing by season and time-of-day
+  * Variable length model time periods
+  * Technology vintaging
+  * Separate technology loan periods and lifetimes
+  * Global and technology-specific discount rates
+  * Capability to perform stochastic optimization
+  * Capability to perform modeling-to-generate alternatives (MGA)
+
+
+Temoa design features include:
+
+  * Source code licensed under GPLv2, available through Github [#open_source_realities]_
+  * Open source software stack
+  * Part of a rich Python ecosystem
+  * Data stored in a relational database system (sqlite)
+  * Ability to utilize multi-core and compute cluster environments
 
 The word 'Temoa' is actually an acronym for "Tools for Energy Model Optimization
 and Analysis," currently composed of four (major) pieces of infrastructure:
@@ -84,115 +96,18 @@ with a community oriented around collaboration.
 Why Temoa?
 ----------
 
-In short, because we believe that EEO model analyses should be repeatable by
+In short, because we believe that ESOM-based analyses should be repeatable by
 independent third parties.  The only realistic method to make this happen is to
 have a freely available model, and to create an ecosystem of freely shared data
 and model inputs.
 
-For a longer explanation, please see :cite:`DeCarolis_etal_2010` (available from
-`temoaproject.org/`_).  In summary, EEO model-based analyses are impossible to
-verify, complex enough as to be non-repeatable without electronic access to
-**exact** versions of code *and* data input, hardly address uncertainty, and yet
-are used to inform large-scale public policy.  Especially in light of the last
-two points, we believe that EEO model analyses should be completely open,
+For a longer explanation, please see :cite:`Hunter_etal_2013` (available from
+`temoaproject.org`_).  In summary, ESOM-based analyses are (1) impossible to
+validate, (2) complex enough as to be non-repeatable without electronic access to
+**exact** versions of code *and* data input, and (3) often do a poor job addressing 
+uncertainty. We believe that ESOM-based analyses should be completely open,
 independently reproducible, electronically available, and address uncertainty
 about the future.
-
-
-Conventions
------------
-
- * We use the word 'Temoa' somewhat interchangeably to describe the project as a
-   whole, as well as the optimization model.  When the context does not make it
-   obvious which is meant, we delineate with "Temoa Project" and "Temoa model".
-
- * Though TEMOA is an acronym for 'Tools for Energy Model Optimization and
-   Analysis', we generally use 'Temoa' as a proper noun, and so forgo the need
-   for all-caps.  Regardless, either are acceptable, pursuant to the needs of
-   the situation.
-
- * In the mathematical notation, we use CAPITALIZATION to denote a container,
-   like a set, indexed variable, or indexed parameter.  Sets use only a single
-   letter, so we use the lower case to represent an item from the set.  For
-   example, :math:`T` represents the set of all technologies and :math:`t`
-   represents a single item from :math:`T`.
-
- * Variables are named V\_VarName within the code to aid readability.  However,
-   in the documentation where there is benefit of italics and other font
-   manipulations, we elide the 'V\_' prefix.
-
- * In all equations, we **bold** variables to distinguish them from parameters.
-   Take, for example, this excerpt from the Temoa default objective function:
-
-   .. math::
-      C_{marginal} & = \sum_{p, t, v \in \Theta_{VC}} \left (
-              {VC}_{p, t, v}
-        \cdot R_p
-        \cdot \textbf{ACT}_{t, v}
-        \right )
-
-   Note that :math:`C_{marginal}` is not bold, as it is a temporary variable
-   used for clarity while constructing the objective function.  It is not a
-   structural variable and the solver never sees it.
-
- * Where appropriate, we put the variable on the right side of the coefficient.
-   In other words, this is not a preferred form of the previous equation:
-
-   .. math::
-
-      C_{marginal} & = \sum_{p, t, v \in \Theta_{VC}} \left (
-              \textbf{ACT}_{t, v}
-        \cdot {VC}_{p, t, v}
-        \cdot R_p
-        \right )
-
- * We generally put the limiting or defining aspect of an equation on the right
-   hand side of the relational operator, and the aspect being limited or defined
-   on the left hand side.  For example, equation :eq:`Capacity` defines Temoa's
-   mathematical understanding of a process capacity (:math:`\textbf{CAP}`) in
-   terms of that process' activity (:math:`\textbf{ACT}`):
-
-   .. math::
-
-          \left (
-                  {CF}_{t, v}
-            \cdot {C2A}_{t}
-            \cdot {SEG}_{s, d}
-            \cdot {TLF}_{p, t, v}
-          \right )
-          \cdot \textbf{CAP}_{t, v}
-      \ge
-          \textbf{ACT}_{p, s, d, t, v}
-
-      \\
-      \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
-
- * We use the word 'slice' to refer to the tuple of season and time of day
-   :math:`\tuple{s,d}`. For example, "winter-night".
-
- * We use the word 'process' to refer to the tuple of technology and vintage
-   (:math:`\tuple{t,v}`), when knowing the vintage of a process is not pertinent
-   to the context at hand.
-
-   * In fact, in contrast to most other EEO models, Temoa is "process centric."
-     This is a fairly large conceptual difference that we explain in detail in
-     the rest of the documentation.  However, it is a large enough point that
-     we make it here for even the no-time quick-start modelers: think in terms
-     of "processes" while modeling, not "technologies and start times".
-
- * Mathematical notation:
-
-   * We use the symbol :math:`\mathbb{I}` to represent the unit interval ([0,
-     1]).
-
-   * We use the symbol :math:`\mathbb{Z}` to represent "the set of all
-     integers."
-
-   * We use the symbol :math:`\mathbb{N}` to represent natural numbers (i.e.,
-     integers greater than zero: 1, 2, 3, :math:`\ldots`).
-
-   * We use the symbol :math:`\mathbb{R}` to denote the set of real numbers, and
-     :math:`\mathbb{R}^+_0` to denote non-negative real numbers.
 
 
 Temoa Origin and Pronunciation
@@ -201,13 +116,20 @@ Temoa Origin and Pronunciation
 While we use 'Temoa' as an acronym, it is an actual word in the Nahuatl (Aztec)
 language, meaning "to seek something."
 
-One pronounces the word 'Temoa' as "teh", "moe", "uh".
+.. Figure:: images/temoa_definition.*
+   :align: center
+   :figclass: center
+   :figwidth: 50%
+
+One pronounces the word 'Temoa' as "teh", "moe", "uh". Though TEMOA is an acronym 
+for 'Tools for Energy Model Optimization and Analysis', we generally use 'Temoa' 
+as a proper noun, and so forgo the need for all-caps. 
 
 
 Bug Reporting
 -------------
 
-Temoa strives for correctness.  Unfortunately, as an EEO model and software
+Temoa strives for correctness.  Unfortunately, as an energy system model and software
 project there are plenty of levels and avenues for error.  If you spot a bug,
 inconsistency, or general "that could be improved", we want to hear about it.
 
@@ -220,20 +142,17 @@ to let us know the issue on our `mailing list`_\ .
 Quick Start
 ===========
 
-For those without patience, this section omits many details, giving only the
-bare minimum to get up and running with Temoa.
-
-Temoa is built with Sandia National Laboratories' COOPR project, which is in
-turn built with Python.  Thus, one must first install these projects:
+Temoa is built with Sandia National Laboratories' Pyomo project, which is in
+turn built with Python.  Thus, one must first install these software elements:
 
 #. Python v2.7 (http://python.org/)
 
-   * Temoa requires v2.7.  Temoa will not work with v2.6, and Coopr does not
-     work with v3+.
+   * Temoa requires v2.7. We recommend installing a Python distribution, like 
+     Anaconda (https://www.continuum.io/anaconda-overview)
 
-#. Linear Program Solver
+#. A linear program solver
 
-   * Any solver for which COOPR has a plugin will work.
+   * Any solver for which Pyomo has a plugin will work.
    * For ease of integration, we recommend the `GNU Linear Programming Kit`_,
      with two caveats:
 
@@ -243,35 +162,371 @@ turn built with Python.  Thus, one must first install these projects:
      #. For larger data sets you may need to invest in a commercial
         solver.\ [#glpk_presolve]_
 
-#. COOPR (https://software.sandia.gov/trac/coopr)
+#. Pyomo (http://www.pyomo.org/)
 
-   * COOPR is a set of Python Optimization libraries.  Temoa mainly uses Pyomo.
+   * Pyomo is a set of Python Optimization libraries. 
 
-After the above 3 items are installed and tested, download both the
-`Temoa model`_ and the `example data sets`_.  Then run Temoa from your operating
-system's command line interface.  (In the example, lines beginning with the
+After the above 3 items are installed and tested, download Temoa from our `Github 
+repo`_. You can either install git and clone the repository or just download the 
+current repsitory as a zip file.  Then run Temoa from your operating
+system's command line interface.  (In the examples below, lines beginning with the
 dollar symbol '``$``' canonically represent a Unix command line.  Windows
 prompts will likely end with a right caret '``>``'.)
 
+There are three ways to run the model, each of which is detailed below. Note that 
+the example commands utilize 'temoa_utopia', a commonly used test case for ESOMs.
+
+**Option 1 (basic):**
+Uses Pyomo's own scripts and provides basic solver output:
+
 .. parsed-literal::
+  $ **pyomo solve --solver=<solver> temoa_model/temoa_model.py  data_files/utopia-15.dat**
+  [    0.00] Setting up Pyomo environment
+  [    0.00] Applying Pyomo preprocessing actions
+  [    0.01] Creating model
+  [    0.27] Applying solver
+  [    0.59] Processing results
+    Number of solutions: 1
+    Solution Information
+      Gap: 0.0
+      Status: optimal
+      Function Value: 37048.4102322
+    Solver results file: results.yml
 
-   $ **coopr_python  temoa.py  -h**
-   usage: temoa.py [-h] [--graph_format GRAPH_FORMAT] [--show_capacity]
-                   [--graph_type GRAPH_TYPE] [--use_splines]
-                   dot_dat [dot_dat ...]
+This option will only work with a text ('DAT') file as input. 
+Results are placed in a yaml file within the top-level 'temoa' directory.
+
+
+**Option 2 (basic +):**
+In this case, a Temoa solve is invoked using our own code rather than Pyomo:
+
+.. parsed-literal::
+  $ **python temoa_model/  data_files/utopia-15.dat**
+  Notice: Using the CPLEX solver interface.
+  Continue Operation? [Press enter to continue or CTRL+C to abort]
+
+  [    0.04] Reading data files.
+  [    0.25] Creating Temoa model instance.
+  [    0.19] Solving.
+  [    0.26] Calculating reporting variables and formatting results.
+  Model name: The Temoa Energy System Model
+  Objective function value (TotalCost): 37048.4102322
+  Non-zero variable values:
+     56.75475172950841      Costs[V_DiscountedFixedCostsByProcess,E01,1960]
+    117.72911673378935      Costs[V_DiscountedFixedCostsByProcess,E01,1970]
    [ ... output trimmed for brevity ... ]
 
-   $ **coopr_python  temoa.py  utopia.dat**
-   [    0.08] Reading data files.
-   [    0.96] Creating Temoa model instance.
-   [    1.65] Solving.
-   [    1.77] Formatting results.
-   Model name: Temoa Entire Energy System Economic Optimization Model
-   Objective function value (TotalCost): 35657.0718528
-   Non-zero variable values:
-        0.578040628071     V_Activity(1990,inter,day,E01,1960)
-        0.1445872          V_Activity(1990,inter,day,E31,1980)
-   [ ... output trimmed for brevity ... ]
+This option is similar to invoking :code:`pyomo solve`, except that the shell output 
+follows our own formatting rather than Pyomo's yaml output. As above, it only
+works with a DAT file as input. This is often a convenient option when trying to 
+debug model enhancements or working with small input datasets.
+
+
+**Option 3 (full-featured):**
+Invokes python directly, and gives the user access to 
+several model features via a configuration file:
+
+.. parsed-literal::
+  $ **python  temoa_model/  --config=temoa_model/config_sample**
+  1 .db DD file(s) converted
+  
+  -------------------------
+                Config file: /Users/jdecarolis/temoa/temoa_model/config_sample
+                 Input file: /Users/jdecarolis/temoa/db_io/temoa_utopia.dat
+                Output file: /Users/jdecarolis/temoa/db_io/temoa_utopia.sqlite
+                   Scenario: test_run
+         Spreadsheet output: True
+  
+  -------------------------
+     Citation output status: None
+      Version output status: False
+  
+  -------------------------
+     Selected solver status: cplex
+     Solver LP write status: False
+      Pyomo LP write status: False
+  
+  -------------------------
+            MGA slack value: None
+        MGA # of iterations: None
+       MGA weighting method: None
+  **NOTE: If you are performing MGA runs, navigate to the DAT file and make any modifications to the MGA sets before  proceeding.
+  Please press enter to continue or Ctrl+C to quit.
+  Notice: Using the CPLEX solver interface.
+  Continue Operation? [Press enter to continue or CTRL+C to abort]
+  
+  [    0.04] Reading data files.
+  [    0.24] Creating Temoa model instance.
+  [    0.19] Solving.
+  [    0.39] Calculating reporting variables and formatting results.
+  Model name: The Temoa Energy System Model
+  Objective function value (TotalCost): 37048.4102322
+  Non-zero variable values:
+       56.75475172950841      Costs[V_DiscountedFixedCostsByProcess,E01,1960]
+      117.72911673378935      Costs[V_DiscountedFixedCostsByProcess,E01,1970]
+  
+  
+In this case, Temoa returns a summary of selected options for the model run. 
+Running the model with a config file allows the user to (1) use a sqlite 
+database for storing input and output data, (2) create a formatted Excel 
+output file, (3) return the log file produced during model execution, 
+(4) return the lp file utilized by the solver, and (5) to execute modeling-
+to-generate alternatives (MGA).
+
+**Option 4 (Compact)**
+
+You can also copy the files in the :code:`temoa_model` directory into an 
+executable archive in order to quickly share with others. To create the archive, 
+run the following command from the top-level :code:`temoa` directory (this only 
+needs to be done once):
+
+.. parsed-literal::
+  $ **python create_archive.py**
+
+This makes the model more portable by placing all contents in a single file. Now 
+it is possible to execute the model with the 
+following simply command:
+
+.. parsed-literal::
+  $ **./temoa.py  data_files/temoa_utopia-15.dat**
+
+**For general help, use --help:**
+
+.. parsed-literal::
+  $ **python  temoa_model/  --help**
+  usage: temoa_model [-h] [--path_to_logs PATH_TO_LOGS] [--config CONFIG]
+                     [--solver {bilevel_blp_global,bilevel_blp_local,bilevel_ld,cplex,mpec_minlp,mpec_nlp,openopt,ps} ]
+                     [dot_dat [dot_dat ...]]
+  
+  positional arguments:
+    dot_dat               AMPL-format data file(s) with which to create a model
+                          instance. e.g. "data.dat"
+  
+  optional arguments:
+    -h, --help            show this help message and exit
+    --path_to_logs PATH_TO_LOGS
+                          Path to where debug logs will be generated by default.
+                          See folder debug_logs in db_io.
+    --config CONFIG       Path to file containing configuration information.
+    --solver {bilevel_blp_global,bilevel_blp_local,bilevel_ld,cplex,mpec_minlp,mpec_nlp,openopt,ps}
+                          Which backend solver to use. See 'pyomo --help-
+                          solvers' for a list of solvers with which Pyomo can
+                          interface. The list shown here is what Pyomo can
+                          currently find on this system. [Default: cplex]
+
+====================================
+Database Construction
+====================================
+
+Input datasets in Temoa can be constructed either as text files or relational 
+databases. Input text files are referred to as 'DAT' files and follow a specific 
+format. Take a look at the example DAT files in the :code:`temoa/data_files` 
+directory.
+
+While DAT files work fine for small datasets, relational databases are preferred 
+for larger datasets. To first order, you can think of a database as a collection 
+of tables, where a 'primary key' within each table defines a unique entry (i.e., 
+row) within the table. In addition, a 'foreign key' defines a table element drawn 
+from another table. Foreign keys enforce the defined relationships between 
+different sets and parameters.
+
+Temoa uses `sqlite`_, a widely used, self-contained database 
+system. Building a database first requires constructing a sql file, which is 
+simply a text file that defines the structure of different database tables and 
+includes the input data. The snippet below is from the technology table used to 
+define the 'temoa_utopia' dataset:
+
+.. parsed-literal::
+  CREATE TABLE technologies (
+  tech text primary key,
+  flag text,
+  sector text,
+  tech_desc text,
+  tech_category text,
+  FOREIGN KEY(flag) REFERENCES technology_labels(tech_labels),
+  FOREIGN KEY(sector) REFERENCES sector_labels(sector));
+  INSERT INTO "technologies" VALUES('IMPDSL1','r','supply',' imported diesel','petroleum');
+  INSERT INTO "technologies" VALUES('IMPGSL1','r','supply',' imported gasoline','petroleum');
+  INSERT INTO "technologies" VALUES('IMPHCO1','r','supply',' imported coal','coal');
+
+The first line creates the table. **Lines 2-6** define the columns within this table. 
+Note that the the technology ('tech') name defines the primary key. Therefore, the
+same technology name cannot be entered twice; each technology name must be unique. 
+**Lines 7-8** define foreign keys within the table. For example, each technology 
+should be specified with a label (e.g., 'r' for 'resource'). Those labels must 
+come from the 'technology_labels' table. Likewise, the sector name must be defined 
+in the 'sector_labels' table. This enforcement of names across tables using 
+foreign keys helps immediately catch typos. (As you can imagine, typos happen in 
+plain text files and Excel when defining thousands of rows of data.) Another big 
+advantage of using databases is that the model run outputs are stored in 
+separate database output tables. The outputs by model run are indexed by a scenario name, 
+which makes it possible to perform thousands of runs, programatically store all 
+the results, and execute arbitrary queries that instantaneously return the requested 
+data.
+
+Because some database table elements serve as foreign keys in other tables, we 
+recommend that you populate input tables in the following order:
+
+**Group 1: labels used for internal database processing**
+  * commodity labels: Need to identify which type of commodity. Feel free to change the abbreviations.
+  * technology labels: Need to identify which type of technology. Feel free to change the abbreviations.
+  * time_period_labels: Used to distinguish which time periods are simply used to specify pre-existing vintages and which represent future optimization periods.
+
+**Group 2: sets used within Temoa**
+  * commodities: list of commodities used within the database
+  * technologies: list of technologies used within the database
+  * time_periods: list of both past and future time periods considered in the database
+  * time_season: seasons modeled in the database
+  * time_of_day: time of day segments modeled in the database
+
+**Group 3: parameters used to define processes within Temoa**
+(in no particular order)
+  * GlobalDiscountRate
+  * Demand
+  * DemandSpecificDistribution
+  * Efficiency
+  * ExistingCapacity
+  * CapacityFactor
+  * CapacityFactorProcess (only if CF varies by vintage; overwrites CapacityFactor)
+  * Capacity2Activity
+  * CostFixed
+  * CostInvest
+  * CostVariable
+  * EmissionsActivity
+  * LifetimeLoanTech
+  * LifetimeProcess
+  * LifetimeTech
+
+**Group 4: parameters used to define constraints within Temoa**
+  * GrowthRateSeed
+  * GrowthRateMax
+  * MinCapacity
+  * MaxCapacity
+  * MinActivity
+  * MaxActivity
+  * RampUp
+  * RampDown
+  * TechOutputSplit
+  * TechInputSplit
+
+For help getting started, take a look at how :code:`db_io/temoa_utopia.sql` is 
+constructed. Use :code:`db_io/temoa_schema.sql` (a database file with the requisite 
+structure but no data added) to begin building your own database file. We recommend 
+leaving the database structure intact, and simply adding data to the schema file.
+Once the sql file is complete, you can convert it into a binary sqlite file by 
+installing sqlite3 and executing the following command:
+
+.. parsed-literal::
+  $ sqlite3 my_database.sqlite < my_database.sql
+
+Now you can specify this database as the source for both input and output data 
+in the config file.
+
+
+=============
+Visualization
+=============
+
+Network Diagrams
+----------------
+
+From the definition of the Temoa model as "an algebraic network of linked
+processes," a directed network graph is a natural visualization.  Temoa utilizes
+an open source graphics package called `Graphviz`_ to create a series of data-specific and
+interactive energy-system maps. Currently, the output graphs consist of a full 
+energy system map as well as capacity and activity results per model time period. 
+In addition, users can create subgraphs focused on a particular commodity or technology.
+
+The programmatic interaction with Graphviz is entirely text based.  The input files 
+created by Temoa for Graphviz provide another means to debug the model and create 
+an archive of visualizations for auditing purposes.  In addition, we 
+have taken care to make these intermediate files well-formatted.
+
+To utilize graphviz, make sure it is installed on your local machine. Then 
+navigate to the :code:`db_io` folder, where the graphviz script and database 
+files reside. To review all of the graphviz options, use the :code:`--help` flag:
+
+.. parsed-literal::
+  $ python Make_Graphviz.py --help
+
+The most basic way to use graphviz is to view the full energy system map:
+
+.. parsed-literal::
+  $ python Make_Graphviz.py -i temoa_utopia.sqlite
+
+The resultant system map will look like this:
+
+.. Figure:: images/simple_model.*
+   :align: center
+   :figclass: center
+   :figwidth: 60%
+
+   This is a map of the simple 'Utopia' system, which we often use for testing 
+   purposes. The map shows the possible commodity flows through the system, 
+   providing a comprehensive overview of the system. Creating the simple system 
+   map is useful for debugging purposes in order to make sure that technologies 
+   are linked together properly via commodity flows.
+
+It is also possible to create a system map showing the optimal installed capacity 
+and technology flows in a particular model time period. These results are associated 
+with a specific model run stored in the model database. To view the results, include 
+the scenario flag (:code:`-s`) and a specific model year (:code:`-y`).
+
+.. parsed-literal::
+  $ python Make_Graphviz.py -i temoa_utopia.sqlite -s test_run -y 1990
+
+.. figure:: images/global_results.*
+   :align: center
+   :figclass: center
+   :figwidth: 60%
+
+   This graph shows the optimal installed capacity and commodity flows from the 
+   'utopia' test system in 2010.
+
+The output can also be fine-tuned to show results associated with a specific 
+commodity or technology. For example:
+
+.. parsed-literal::
+  $ python Make_Graphviz.py -i dbs/temoa_utopia.sqlite -s test_run -y 2010 -b E31
+
+.. figure:: images/techvintage_results.*
+   :align: center
+   :figclass: center
+   :figwidth: 60%
+
+   In this case, the graph shows the commodity flow in and out of 
+   technology 'E31' in 2010, which is from the 'test_run' scenario drawn from the 
+   'temoa_utopia' database.
+
+Output Graphs
+-------------
+
+Temoa can also be used to generate output graphs using matplotlib 
+(https://matplotlib.org/). From the command line, navigate to the :code:`db_io` 
+folder and execute the following command:
+
+.. parsed-literal::
+  $ python MakeOutputPlots.py --help
+
+The command above will specify all of the flags required to created a stacked bar 
+or line plot. For example, consider the following command:
+
+.. parsed-literal::
+  $ python MakeOutputPlots.py -i dbs/temoa_utopia.sqlite -s test_run -p capacity -c electric --super
+
+Here is the result:
+
+.. figure:: images/output_flow_example.*
+   :align: center
+   :figclass: center
+   :figwidth: 60%
+
+   This stacked bar plot represents the activity (i.e., output commodity flow) 
+   associated with each technology in the electric sector from the 'test_run' 
+   scenario drawn from the 'temoa_utopia' database. Because the :code:`super` 
+   flag was specified, technologies are grouped together based on user-specified 
+   categories in the 'tech_category' column of the 'technologies' table of the 
+   database.
 
 
 =====================
@@ -281,9 +536,8 @@ The Math Behind Temoa
    To understand this section, the reader will need at least a cursory
    understanding of mathematical optimization.  We omit here that introduction,
    and instead refer the reader to `various`_ `available`_ `online`_ `sources`_.
-   The key piece to note is that Temoa eventually relies on a computer, and thus
-   needs some concrete pieces of information to produce useful results.  These
-   pieces are generally organized into sets, parameters, variables, and equation
+   Temoa is formulated as an algebraic model that requires information organized 
+   into sets, parameters, variables, and equation
    definitions.
 
 The heart of Temoa is a technology explicit energy system optimization model.
@@ -291,7 +545,7 @@ It is an algebraic network of linked processes -- understood by the model as a
 set of engineering characteristics (e.g. capital cost, efficiency, capacity
 factor, emission rates) -- that transform raw energy sources into end-use
 demands.  The model objective function minimizes the present-value cost of
-energy supply through manipulation of capacity use and installation over time.
+energy supply by optimizing installed capacity and its utilization over time.
 
 .. _simple_system:
 
@@ -303,7 +557,7 @@ energy supply through manipulation of capacity use and installation over time.
    :figclass: align-center
    :figwidth: 70%
 
-   A common visualization of EEO models is a directed network graph, with energy
+   A common visualization of energy system models is a directed network graph, with energy
    sources on the left and end-use demands on the right.  The modeler must
    specify the specific end-use demands to be met, the technologies of the
    system (rectangles), and the inputs and outputs of each (red and green
@@ -313,15 +567,12 @@ The most fundamental tenet of the model is the understanding of energy flow,
 treating all processes as black boxes that take inputs and produce outputs.
 Specifically, Temoa does not care about the inner workings of a process, only
 its global input and output characteristics.  In this vein, the above graphic
-can be broken down into per-process segments.  For example, the coal power plant
+can be broken down into process-specific elements.  For example, the coal power plant
 takes as input coal and produces electricity, and is subject to various costs
 (e.g. variable costs) and constraints (e.g. efficiency) along the way.
 
 .. graphviz::
    :alt: A single process, with various engineering characteristics.
-   :caption: The model does not assign any weight to the input or output
-             commodities of a process, just the engineering characteristics for
-             use of the process itself.
 
    digraph coal {
    	rankdir = "LR" ;
@@ -360,6 +611,94 @@ translates these into variables and constraints that an optimizer may then
 solve.
 
 .. _Sets:
+
+
+Conventions
+-----------
+
+ * In the mathematical notation, we use CAPITALIZATION to denote a container,
+   like a set, indexed variable, or indexed parameter.  Sets use only a single
+   letter, so we use the lower case to represent an item from the set.  For
+   example, :math:`T` represents the set of all technologies and :math:`t`
+   represents a single item from :math:`T`.
+
+ * Variables are named V\_VarName within the code to aid readability.  However,
+   in the documentation where there is benefit of italics and other font
+   manipulations, we elide the 'V\_' prefix.
+
+ * In all equations, we **bold** variables to distinguish them from parameters.
+   Take, for example, this excerpt from the Temoa default objective function:
+
+   .. math::
+      C_{variable} & = \sum_{p, t, v \in \Theta_{VC}} \left (
+              {VC}_{p, t, v}
+        \cdot R_p
+        \cdot \textbf{ACT}_{t, v}
+        \right )
+
+   Note that :math:`C_{variable}` is not bold, as it is a temporary variable
+   used for clarity while constructing the objective function.  It is not a
+   structural variable and the solver never sees it.
+
+ * Where appropriate, we put the variable on the right side of the coefficient.
+   In other words, this is not a preferred form of the previous equation:
+
+   .. math::
+
+      C_{variable} & = \sum_{p, t, v \in \Theta_{VC}} \left (
+              \textbf{ACT}_{t, v}
+        \cdot {VC}_{p, t, v}
+        \cdot R_p
+        \right )
+
+ * We generally put the limiting or defining aspect of an equation on the right
+   hand side of the relational operator, and the aspect being limited or defined
+   on the left hand side.  For example, equation :eq:`Capacity` defines Temoa's
+   mathematical understanding of a process capacity (:math:`\textbf{CAP}`) in
+   terms of that process' activity (:math:`\textbf{ACT}`):
+
+   .. math::
+
+          \left (
+                  {CF}_{t, v}
+            \cdot {C2A}_{t}
+            \cdot {SEG}_{s, d}
+            \cdot {TLF}_{p, t, v}
+          \right )
+          \cdot \textbf{CAP}_{t, v}
+      \ge
+          \textbf{ACT}_{p, s, d, t, v}
+
+      \\
+      \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+
+ * We use the word 'slice' to refer to the tuple of season and time of day
+   :math:`\{s,d\}`. For example, "winter-night".
+
+ * We use the word 'process' to refer to the tuple of technology and vintage
+   (:math:`\{t,v\}`), when knowing the vintage of a process is not pertinent
+   to the context at hand.
+
+   * In fact, in contrast to most other ESOMs, Temoa is "process centric."
+     This is a fairly large conceptual difference that we explain in detail in
+     the rest of the documentation.  However, it is a large enough point that
+     we make it here for even the no-time quick-start modelers: think in terms
+     of "processes" while modeling, not "technologies and start times".
+
+ * Mathematical notation:
+
+   * We use the symbol :math:`\mathbb{I}` to represent the unit interval ([0,
+     1]).
+
+   * We use the symbol :math:`\mathbb{Z}` to represent "the set of all
+     integers."
+
+   * We use the symbol :math:`\mathbb{N}` to represent natural numbers (i.e.,
+     integers greater than zero: 1, 2, 3, :math:`\ldots`).
+
+   * We use the symbol :math:`\mathbb{R}` to denote the set of real numbers, and
+     :math:`\mathbb{R}^+_0` to denote non-negative real numbers.
+
 
 Sets
 ----
@@ -414,7 +753,7 @@ Temoa's conceptual model of *time* is broken up into three levels:
 
  * **Periods** - consecutive blocks of years, marked by the first year in the
    period.  For example, a two-period model might consist of :math:`\text{P}^f =
-   \setof{2010, 2015, 2025}`, representing the two periods of years from 2010
+   \{2010, 2015, 2025\}`, representing the two periods of years from 2010
    through 2014, and from 2015 through 2024.
 
  * **Seasonal** - Each year may have multiple seasons.  For example, winter
@@ -439,9 +778,9 @@ within a model.  (To our knowledge, this capability is unique to Temoa.)  Temoa
 "names" each optimization period by the first year, and makes them easily
 accessible via the :code:`time_optimize` set.  This final "period" set is not
 user-specifiable, but is an exact duplicate of :code:`time_future`, less the
-largest element.  In the above example, since :math:`\text{P}^f = \setof{2010,
-2015, 2025}`, :code:`time_optimize` does not contain 2025: :math:`\text{P}^o =
-\setof{2010, 2015}`.
+largest element.  In the above example, since :math:`\text{P}^f = \{2010,
+2015, 2025\}`, :code:`time_optimize` does not contain 2025: :math:`\text{P}^o =
+\{2010, 2015\}`.
 
 One final note on periods: rather than optimizing each year within a period
 individually, Temoa makes a simplifying assumption that each period contains
@@ -468,7 +807,7 @@ graphical explanation of the annual delineation.
    not fall on a period boundary require unique time-value multipliers in the
    objective function.
 
-Many EEO efforts need to model sub-annual variations in demand as well.  Temoa
+Many model-based analyses require sub-annual variations in demand as well.  Temoa
 allows the modeler to subdivide years into slices, comprised of a season and a
 time of day (e.g.  winter evening).  Unlike the periods, there is no restriction
 on what labels the modeler may assign to the :code:`time_season` and
@@ -505,7 +844,7 @@ Specifically, while most optimization programs treat set elements as arbitrary
 labels, Temoa assumes that all elements of the :code:`time_existing` and
 :code:`time_future` sets are integers.  Further, these sets are assumed to be
 ordered, such that the minimum element is "naught".  For example, if
-:math:`\text{P}^f = \setof{2015, 2020, 2030}`, then :math:`P_0 = 2015`.  In
+:math:`\text{P}^f = \{2015, 2020, 2030\}`, then :math:`P_0 = 2015`.  In
 other words, the capital :math:`\text{P}` with the naught subscript indicates
 the first element in the :code:`time_future` set.  We will explain the reason
 for this deviation shortly.
@@ -518,7 +857,7 @@ logical creation here.  Instead, we rely on the readers general understanding of
 the context.  For example, in the sparse creation of the constraints of the
 Demand constraint class (explained in :ref:`NetworkConstraints` and
 :ref:`constraint-anatomy`), we state simply that the constraint is instantiated
-"for all the :math:`\tuple{p, s, d, dem}` tuples in
+"for all the :math:`\{p, s, d, dem\}` tuples in
 :math:`\Theta_{\text{demand}}`".  This means that the constraint is only defined
 for the exact indices for which the modeler specified end-use demands via the
 Demand parameter.
@@ -533,13 +872,13 @@ example (described in :ref:`DecisionVariables`):
    \\
    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 
-It defines the Activity variable for every valid combination of :math:`\tuple{p,
-s, d, t, v}` as the sum over all inputs and outputs of the FlowOut variable.  A
+It defines the Activity variable for every valid combination of :math:`\{p,
+s, d, t, v\}` as the sum over all inputs and outputs of the FlowOut variable.  A
 naive implementation of this equation might include nonsensical items in each
 summation, like perhaps an input of vehicle miles traveled and an output of
 sunlight for a wind powered turbine.  However, in this context, summing over the
 inputs and outputs (:math:`i` and :math:`o`) implicitly includes only the valid
-combinations of :math:`\tuple{p, s, d, i, t, v, o}`.
+combinations of :math:`\{p, s, d, i, t, v, o\}`.
 
 
 Parameters
@@ -838,7 +1177,7 @@ LifetimeLoan
 
 :math:`{LLN}_{t \in T,v \in P}`
 
-Temoa differs from many EEO models by giving the modeler the ability to separate
+Temoa differs from many energy system models by giving the modeler the ability to separate
 the loan lifetime from the useful life of the technology.  This parameter
 specifies the length of the loan associated with investing in a process, in
 years.  If not specified, the default is 30 years.
@@ -967,7 +1306,7 @@ The first line creates a sorted array of the period boundaries, called
 *boundaries*.  The second line defines a function `I` that finds the index of
 period :math:`p` in boundaries. The third line then defines the length of period
 :math:`p` to be the number of years between period :math:`p` and the next
-period.  For example, if :math:`\text{P}^f = \setof{2015, 2020, 2030, 2045}`,
+period.  For example, if :math:`\text{P}^f = \{2015, 2020, 2030, 2045\}`,
 then *boundaries* would be :code:`[2015, 2020, 2030, 2045]`.  For 2020, I(2020)
 would return 2.  Similarly, boundaries[ 3 ] = 2030.  Then,
 
@@ -1029,13 +1368,13 @@ formally defined as:
    p & = max(P | p < v + LTC_{t,v})
 
 Note that this parameter is defined over the same indices as
-:code:`CostVariable` -- the active periods for each process :math:`\tuple{p, t,
-v}`.  As an example, if a model has :math:`P = \setof{2010, 2012,
-2020, 2030}`, and a process :math:`\tuple{t, v} = \tuple{car, 2010}` has a useful
+:code:`CostVariable` -- the active periods for each process :math:`\{p, t,
+v\}`.  As an example, if a model has :math:`P = \{2010, 2012,
+2020, 2030\}`, and a process :math:`\{t, v\} = \{car, 2010\}` has a useful
 lifetime of 5 years, then this parameter would include only the first two
-activity indices for the process.  Namely, :math:`p \in \setof{2010, 2012}` as
-:math:`\tuple{p, t, v} \in \setof{\tuple{2010, car, 2010}, \tuple{2012, car,
-2010}}`.  The values would be :math:`{TLF}_{2010, car, 2010} = 1`, and
+activity indices for the process.  Namely, :math:`p \in \{2010, 2012\}` as
+:math:`\{p, t, v\} \in \{\{2010, car, 2010\}, \{2012, car,
+2010\}\}`.  The values would be :math:`{TLF}_{2010, car, 2010} = 1`, and
 :math:`{TLF}_{2012, car, 2010} = \frac{3}{8}`.
 
 In combination with the :code:`PeriodRate` parameter, this parameter is used to
@@ -1104,7 +1443,7 @@ process in a given time slice (see equation :eq:`Activity`).  At this time, one
 potential "gotcha" is that for a process with multiple inputs or outputs, there
 is no attempt to reconcile energy units: Temoa assumes all inputs are
 comparable, and as no understanding of units.  The onus is on the modeler to
-ensure that all inputs and outputs have similar units.\ [#units_comparison]_
+ensure that all inputs and outputs have similar units.
 
 The Capacity variable is used in the default objective function as the amount of
 capacity of a process to build.  It is indexed for each process, and Temoa
@@ -1189,6 +1528,16 @@ phenomena.
 
 .. autofunction:: temoa_rules.Storage_Constraint
 
+.. autofunction:: temoa_rules.RampUpDay_Constraint
+
+.. autofunction:: temoa_rules.RampUpSeason_Constraint
+
+.. autofunction:: temoa_rules.RampDownDay_Constraint
+
+.. autofunction:: temoa_rules.RampDownSeason_Constraint
+
+.. autofunction:: temoa_rules.ReserveMargin_Constraint
+
 
 Objective Function
 ^^^^^^^^^^^^^^^^^^
@@ -1209,6 +1558,8 @@ operation, but allow the modeler some further degree of system specification.
 .. _MaxCapacity_Constraint:
 
 .. autofunction:: temoa_rules.MaxCapacity_Constraint
+
+.. autofunction:: temoa_rules.MinCapacity_Constraint
 
 .. autofunction:: temoa_rules.ResourceExtraction_Constraint
 
@@ -1278,45 +1629,6 @@ languages is inconsequential in the face of other large resource bottle necks,
 so we omit any discussion of it as an issue.  However, the "boiler-plate" code
 (verbosity) overhead requires some discussion.  We discuss this in the
 :ref:`Anatomy of a Constraint <constraint-anatomy>`.
-
-File Structure
---------------
-
-The Temoa model code is split into 5 main files:
-
- * ``temoa_model.py`` - contains the overall model definition, defining the
-   various sets, parameters, variables, and equations of the Temoa model.
-   Peruse this file for a high-level overview of the model.
-
- * ``temoa_rules.py`` - mainly contains the rule implementations.  That is, this
-   file implements the objective function, internal parameters, and constraint
-   logic.  Where ``temoa_model`` provides the high-level overview, this file
-   provides the actual equation implementations.
-
- * ``temoa_lib.py`` - mainly contains meta functions for the model.  For
-   instance, Temoa makes heavy use of sparse sets, and ``temoa_lib`` contains
-   the functions that create those sparse sets.  This file also contains various
-   error checking routines (so that their logic does not clutter the
-   implementations in ``temoa_rules``) as well as the logic that handles the
-   command line interaction.
-
- * ``temoa_graphviz.py`` - Currently Temoa's sole visualizations are generated
-   through Graphviz.  This file contains the various Graphviz-specific graph
-   generation routines.
-
- * ``temoa_stochastic.py`` - contains the PySP required alterations to the
-   deterministic model for use in a stochastic model.  Specifically, Temoa
-   only needs one additional constraint class in order to partition the
-   calculation of the objective function per period.
-
-If you are working with the release snapshot of the Temoa model, then you will
-only see one file, ``temoa.py``.  This file is actually a compressed archive (in
-ZIP format) containing these 5 files, and may be manipulated with standard
-utilities (e.g. PKZIP, WinZip, Info-ZIP).  (Due to implementation details, be
-careful uncompressing the archive as it is analogous to a "`Tarbomb`_".)
-
-If you are working with a Temoa Git repository, these files are in the
-``temoa_model/`` subdirectory.
 
 
 .. _constraint-anatomy:
@@ -1423,7 +1735,7 @@ Lines 2 and 3 are an indication that this constraint is implemented in a
 non-sparse manner.  That is, Pyomo does not inherently know the valid indices
 for all of a model's contexts.  In ``temoa_model``, the constraint definition
 listed four index sets, so Pyomo will naively call this function for every
-possible combination of tuple :math:`\tuple{p, s, d, dem}`.  However, as there
+possible combination of tuple :math:`\{p, s, d, dem\}`.  However, as there
 may be slices for which a demand does not exist (e.g., the winter season might
 have no cooling demand), there is no need to create a constraint for any tuple
 involving 'winter' and 'cooling'.  Indeed, an attempt to access a demand for
@@ -1497,7 +1809,7 @@ implementation above.
 
 
 As discussed above, the DemandConstraint is only valid for certain
-:math:`\tuple{p, s, d, dem}` tuples.  Since the modeler can specify demand
+:math:`\{p, s, d, dem\}` tuples.  Since the modeler can specify demand
 distribution per commodity (necessary to model demands like heating, that do not
 make sense in the summer), Temoa must ascertain the exact valid tuples. We have
 implemented this logic in the function :code:`DemandConstraintIndices` in
@@ -1553,7 +1865,7 @@ As this constraint is guaranteed to be called only for necessary demand
 constraint indices, there is no need to check for the existence of a tuple in
 the Demand parameter.  The only other change is the error check on line 10.
 This function is defined in ``temoa_lib``, and simply ensures that at least one
-process supplies the demand ``dem`` in time slice :math:`\tuple{p, s, d}`.  If
+process supplies the demand ``dem`` in time slice :math:`\{p, s, d\}`.  If
 no process supplies the demand, then it quits computation immediately (as
 opposed to completing a potentially lengthy model generation and waiting for the
 solver to recognize the infeasibility of the model).  Further, the function
@@ -1601,7 +1913,7 @@ reasons:
    effective measure to reduce the learning curve for new modelers.
 
  * Python has a vibrant community.  Whereas mathematical optimization has a
-   small community, its open-source segment even smaller, and the EEO segment
+   small community, its open-source segment even smaller, and the energy modeling segment
    significantly smaller than that, the Python community is huge, and
    encompasses many disciplines.  This means that where a developer may struggle
    to find an answer, implementation, or workaround to a problem with a more
@@ -1632,318 +1944,42 @@ understanding of what a constraint does requires only the last line of code:
 "Supply must meet demand."
 
 
-Visualization
--------------
+File Structure
+--------------
 
-From the definition of the Temoa model as "an algebraic network of linked
-processes," a directed network graph is a natural visualization.  Temoa utilizes
-a graphic package called Graphviz to create a series of data-specific and
-interactive energy-system maps.  The graphs are available in any format Graphviz
-provides, including scalable vector graphics (SVG), portable network graphics
-(PNG), portable document format (PDF), and (encapsulated) postscript (E/PS).
-Currently, the output graphs consist of a pre-results (possible) energy map, and
-results per model period, including breakdowns of individual technology
-activity.
+The Temoa model code is split into 7 main files:
 
-Here are some examples of the graphical outputs Temoa can dynamically create.
+ * ``temoa_model.py`` - contains the overall model definition, defining the
+   various sets, parameters, variables, and equations of the Temoa model.
+   Peruse this file for a high-level overview of the model.
 
-.. Figure:: images/simple_model.*
-   :align: center
-   :figclass: center
-   :figwidth: 60%
+ * ``temoa_rules.py`` - mainly contains the rule implementations.  That is, this
+   file implements the objective function, internal parameters, and constraint
+   logic.  Where ``temoa_model`` provides the high-level overview, this file
+   provides the actual equation implementations.
 
-   This is a dynamically created image of one of the energy systems supplied
-   with the Temoa example data sets.  It shows the possible flows energy could
-   take in the energy system, providing a good overview of the system.
+ * ``temoa_initialize.py`` - contains the code used to initialize the model, 
+   including sparse matrix indexing and checks on parameter and constraint 
+   specifications.
 
-.. figure:: images/global_results.*
-   :align: center
-   :figclass: center
-   :figwidth: 60%
+ * ``temoa_run.py`` - contains the code required to 
+   execute the model when called with :code:'python' rather than :code:'pyomo solve'.  
 
-   The solved system graph, showing the high-level flow energy actually took in
-   a period of the optimal system configuration.
+ * ``temoa_stochastic.py`` - contains the PySP required alterations to the
+   deterministic model for use in a stochastic model.  Specifically, Temoa
+   only needs one additional constraint class in order to partition the
+   calculation of the objective function per period.
 
-.. figure:: images/tech_results.*
-   :align: center
-   :figclass: center
-   :figwidth: 60%
+ * ``temoa_mga.py`` - contains the functions used to execute the modeling-to-
+   generate altenatives (MGA) algorithm. Use of MGA is specified through the config 
+   file.
 
-   This graphic shows the amount of installed capacity and total flow of energy
-   through each vintage of a technology in a model period.
+ * ``pformat_results.py`` -  formats the results returned by the model; includes 
+   outputting results to the shell, storing them in a database, and if requested, 
+   calling 'DB_to_Excel.py' to create the Excel file outputs. 
 
-.. figure:: images/techvintage_results.*
-   :align: center
-   :figclass: center
-   :figwidth: 60%
-
-   Drilling down even further, this image shows the individual time slice
-   decisions the optimizer chose for a process in a model period.
-
-Contrary to the static nature of other image file formats (e.g. PNG), SVG is a
-text-based format (XML), with a much richer set of information encoding
-possibilities than mere image display.  On top of being infinitely scalable, the
-SVG format allows the inclusion of links and hyperlinks.  Temoa exploits this
-capability to make interactive system and solution graphs.  Currently, this
-means that one can use a web browser to view and interact with the generated SVG
-images.\ [#web_browser_svg]_
-
-Regardless of the final visual format chosen, the programmatic interaction with
-Graphviz is entirely text based.  As RCS systems excel at handling text, the
-input files created by Temoa for Graphviz can simultaneously provide another
-vector for model debugging and a space-efficient archive of visualizations for
-posterity and auditing purposes.  In addition, we have taken care to make these
-intermediate files well-formatted so that a human eye may understand them
-without undue effort.
-
-
-
-======================
-Interacting with Temoa
-======================
-
-The Command Line
-----------------
-
-Notwithstanding the graphical output afforded by Graphviz, interaction with
-Temoa is currently a command line (CLI) venture.  Fortunately, Temoa does not
-have many command line arguments so the cognitive effort required to understand
-the interaction is minimal.
-
-After downloading the ``temoa.py`` file from http://temoaproject.org/, open a
-command line and run it with :code:`coopr_python`:
-
-.. code::
-
-   $ coopr_python  temoa.py
-   usage: temoa.py [-h] [--graph_format GRAPH_FORMAT] [--show_capacity]
-                   [--graph_type GRAPH_TYPE] [--use_splines]
-                   dot_dat [dot_dat ...]
-   temoa.py: error: too few arguments
-
-In a Unix environment, you can make the file executable, and it can be executed
-directly:
-
-.. code::
-
-   $ chmod +x temoa.py
-   $ ./temoa.py
-   usage: temoa.py [-h] [--graph_format GRAPH_FORMAT] [--show_capacity]
-                   [--graph_type GRAPH_TYPE] [--use_splines]
-                   dot_dat [dot_dat ...]
-   temoa.py: error: too few arguments
-
-The :code:`-h` command line argument provides the longer synopsis of the
-available arguments:
-
-.. code::
-
-   $ ./temoa.py -h
-   usage: temoa.py [-h] [--graph_format GRAPH_FORMAT] [--show_capacity]
-                   [--graph_type GRAPH_TYPE] [--use_splines]
-                   dot_dat [dot_dat ...]
-
-   positional arguments:
-     dot_dat               AMPL-format data file(s) with which to create a model
-                           instance. e.g. "data.dat"
-
-   optional arguments:
-     -h, --help            show this help message and exit
-     --graph_format GRAPH_FORMAT
-                           Create a system-wide visual depiction of the model.
-                           The available options are the formats available to
-                           Graphviz. To get a list of available formats, use the
-                           "dot" command: dot -Txxx. [Default: None]
-     --show_capacity       Choose whether or not the capacity shows up in the
-                           subgraphs. [Default: not shown]
-     --graph_type GRAPH_TYPE
-                           Choose the type of subgraph depiction desired. The
-                           available options are "explicit_vintages" and
-                           "separate_vintages". [Default: separate_vintages]
-     --use_splines         Choose whether the subgraph edges needs to be straight
-                           or curved. [Default: use straight lines, not splines]
-
-Solving a model simply requires a data file.  The Temoa Project supplies example
-data files on the website.  One of those data files is called ``test.dat``:
-
-.. code::
-
-   $ ./temoa.py  test.dat
-   [    0.04] Reading data files.
-   [        ] Creating Temoa model instance.Warning: ('t_oil_refinery', 2000) has a
-   Warning: ('t_elccar', 2000) has a specified Efficiency, but does not have any ex
-   Warning: ('t_oil_refinery', 2000) has a specified Efficiency, but does not have
-   [    0.43
-   [    0.80] Solving.
-   [    0.85] Formatting results.
-   Model name: TEMOA Entire Energy System Economic Optimization Model
-   Objective function value (TotalCost): 398469346.331
-   Non-zero variable values:
-        395.535714285714    V_Activity(2010,summer,day,imp,coal,2000)
-          2.480158730159    V_Activity(2010,summer,day,imp,gsl,2000)
-        197.767857142857    V_Activity(2010,summer,day,t,coal,1990)
-         39.553571428571    V_Activity(2010,summer,day,t,elccar,2010)
-          0.446428571429    V_Activity(2010,summer,day,t,gascar,2000)
-   [ ... ]
-
-The model world described by ``test.dat`` is incredibly simple, and so solves
-near instantaneously.  The output is extensive, enumerating the value of all
-variables for the optimal configuration, so we show just the first few lines in
-the documentation.  It is enough to get a sense of it however.
-
-Temoa provides line-by-line output as progresses through each stage of a solve.
-The very first line explains that Temoa took 0.04 *processing* seconds to read
-and parse the supplied model data.  *Processing* seconds are roughly a measure
-of exactly how much time the program spent in the CPU, but are not a measure of
-how long the modeler actually waited: though the output above suggests that the
-whole model took about 0.85 processing seconds to complete, the time the author
-sat waiting for the prompt to return was closer 1.8 seconds.
-
-The next timing slot is empty, but the same line also contains a warning
-message.  The warning message is pointing out that the input file includes some
-inconsistent data that the modeler may want to address.  The timing information
-immediately below the warnings is how long it took Coopr to create the Temoa
-model instance.
-
-Temoa intelligently emits these messages.  If only the results are warranted,
-the modeler can redirect the *stderr* stream to the virtual wastebin:
-
-.. code::
-
-   $ ./temoa.py  test.dat  2>  /dev/null
-   Model name: TEMOA Entire Energy System Economic Optimization Model
-   Objective function value (TotalCost): 398469346.331
-   Non-zero variable values:
-        395.535714285714    V_Activity(2010,summer,day,imp,coal,2000)
-          2.480158730159    V_Activity(2010,summer,day,imp,gsl,2000)
-        197.767857142857    V_Activity(2010,summer,day,t,coal,1990)
-         39.553571428571    V_Activity(2010,summer,day,t,elccar,2010)
-          0.446428571429    V_Activity(2010,summer,day,t,gascar,2000)
-   [ ... ]
-
-Conversely, the modeler can redirect the *stdout* stream to a file, while still
-receiving status information about the solve.  This way, the modeler can view
-the output later, or post-process it as necessary.
-
-.. code::
-
-   $ ./temoa.py  test.dat  >  test.sol
-   [    0.04] Reading data files.
-   [        ] Creating Temoa model instance.Warning: ('t_oil_refinery', 2000) has a
-   Warning: ('t_elccar', 2000) has a specified Efficiency, but does not have any ex
-   Warning: ('t_oil_refinery', 2000) has a specified Efficiency, but does not have
-   [    0.44
-   [    0.81] Solving.
-   [    0.86] Formatting results.
-
-   $ head test.sol
-   Model name: TEMOA Entire Energy System Economic Optimization Model
-   Objective function value (TotalCost): 398469346.331
-   Non-zero variable values:
-        395.535714285714    V_Activity(2010,summer,day,imp,coal,2000)
-          2.480158730159    V_Activity(2010,summer,day,imp,gsl,2000)
-        197.767857142857    V_Activity(2010,summer,day,t,coal,1990)
-         39.553571428571    V_Activity(2010,summer,day,t,elccar,2010)
-          0.446428571429    V_Activity(2010,summer,day,t,gascar,2000)
-         98.883928571429    V_Activity(2010,summer,night,imp,coal,2000)
-          1.240079365079    V_Activity(2010,summer,night,imp,gsl,2000)
-
-The next command line of real interest is :code:`--graph_format`.  If Graphviz
-is installed on the machine, then specifying any output format that Graphviz
-supports will generate set of graphs.  First, test if Graphviz is available,
-then see what output formats it supports:
-
-.. code::
-
-   $ dot -V
-   dot - graphviz version 2.26.3 (20100126.1600)
-
-   $ dot -Txxx
-   Format: "xxx" not recognized. Use one of: canon cmap cmapx cmapx_np dot eps
-     fig gd gd2 gif gv imap imap_np ismap jpe jpeg jpg pdf plain plain-ext png
-     ps ps2 svg svgz tk vml vmlz vrml wbmp x11 xdot xlib
-
-From the list of available outputs, one might be interested in an interactive
-map with SVG, so:
-
-.. code::
-
-   $ ./temoa.py  test.dat  --graph_format  svg  >  test.sol
-   [    0.04] Reading data files.
-   [        ] Creating Temoa model instance.Warning: ('t_oil_refinery', 2000) has a
-   Warning: ('t_elccar', 2000) has a specified Efficiency, but does not have any ex
-   Warning: ('t_oil_refinery', 2000) has a specified Efficiency, but does not have
-   [    0.43
-   [    0.81] Solving.
-   [    0.86] Formatting results.
-   [    0.93] Creating Temoa model diagrams.
-
-The generated image might look like Figure 4.1.
-
-
-Exactly What is Temoa Doing?
-----------------------------
-
-At some point, a modeler may be curious to open up the tiny file that is
-``temoa.py`` to peek under the hood.  Luckily, ``temoa.py`` is merely a standard
-ZIP file with 28 bytes of extra information to interoperate with Python.  This
-means that a standard ZIP manipulation program can view and unpack the contents
-of the archive:
-
-.. code::
-
-   $ unzip -l temoa.py
-   Archive:  temoa.py
-   warning [temoa.py]:  28 extra bytes at beginning or within zipfile
-     (attempting to process anyway)
-     Length      Date    Time    Name
-   ---------  ---------- -----   ----
-          19  2012-06-22 17:21   ReferenceModel.py
-        4125  2012-06-22 17:21   pformat_results.py
-       42167  2012-07-05 03:17   temoa_rules.py
-        1698  2012-06-22 17:21   temoa_stochastic.py
-       44670  2012-07-05 03:22   temoa_graphviz.py
-       13910  2012-07-05 03:18   temoa_model.py
-       30366  2012-07-05 04:29   temoa_lib.py
-          86  2012-06-22 17:21   __main__.py
-          52  2012-06-22 17:21   __init__.py
-   ---------                     -------
-      137093                     9 files
-
-To work with the files, make a directory and unpack the archive:
-
-.. code::
-
-   $ mkdir temoa_model
-   $ cd temoa_model/
-   $ unzip ../temoa.py
-   Archive:  ../temoa.py
-   warning [../temoa.py]:  28 extra bytes at beginning or within zipfile
-     (attempting to process anyway)
-       linking: ReferenceModel.py       -> temoa_stochastic.py
-     inflating: pformat_results.py
-     inflating: temoa_rules.py
-     inflating: temoa_stochastic.py
-     inflating: temoa_graphviz.py
-     inflating: temoa_model.py
-     inflating: temoa_lib.py
-     inflating: __main__.py
-     inflating: __init__.py
-   finishing deferred symbolic links:
-     ReferenceModel.py      -> temoa_stochastic.py
-
-   $ cd ..
-
-If you want to make a change to Temoa, there is no need to repack it into
-temoa.py.  Instead, Python can "execute" the directory directly:
-
-.. code::
-
-   $ coopr_python temoa_model
-   usage: temoa_model [-h] [--graph_format GRAPH_FORMAT] [--show_capacity]
-                      [--graph_type GRAPH_TYPE] [--use_splines]
-                      dot_dat [dot_dat ...]
-   temoa_model: error: too few arguments
+If you are working with a Temoa Git repository, these files are in the
+``temoa_model/`` subdirectory.
 
 
 The Bleeding Edge
@@ -1951,13 +1987,13 @@ The Bleeding Edge
 
 The Temoa Project uses the Git source code management system, and the services
 of Github.com.  If you are inclined to work with the bleeding edge of the Temoa
-Project code base, then take a look at the `Temoa repository`_.  To acquire a
+Project code base, then take a look at the Temoa repository.  To acquire a
 copy, make sure you have Git installed on your local machine, then execute this
 command to clone the repository:
 
 .. code::
 
-   $ git clone git://github.com/hunteke/temoa.git
+   $ git clone git://github.com/TemoaProject/temoa.git
    Cloning into 'temoa'...
    remote: Counting objects: 2386, done.
    remote: Compressing objects: 100% (910/910), done.
@@ -2040,9 +2076,7 @@ repository use the ``diff`` command to ``git``:
                            if 0 == M.ExistingCapacity[ l_process ]:
     [ ... ]
 
-This manual will not discuss the file format layout, or how to explicitly write
-code for Temoa.  For that, please direct questions and discussion to the Temoa
-user forum.
+For a crash course on git, here is a handy `quick start guide`_.
 
 
 ======================
@@ -2425,7 +2459,7 @@ should meet a basic standard of quality:
       energy flow in to all devices so that it can appropriately calculate the
       inter-process commodity balance.
 
-      License: AGPL-3.0+
+      License: GPLv2
 
    If there is any external information that would be helpful, such as a bug
    report, include a "clickable" link to it, such that one reading the patch as
@@ -2445,7 +2479,7 @@ should meet a basic standard of quality:
       72 characters[4].  Bonus points for being aware of the Github Markdown
       syntax[5].
 
-      License: AGPL-3.0+
+      License: GPLv2
 
  * Ensure that each commit contains no more than one *logical* change to the
    code base.  This is very important for later auditing.  If you have not
@@ -2455,21 +2489,21 @@ should meet a basic standard of quality:
  * If you are not a core maintainer of the project, all commits must also
    include a specific reference to the license under which you are giving your
    code to the project.  Note that Temoa will not accept any patches that
-   are not licensed under AGPL-3.0+.  A line like this at the end of your commit
+   are not licensed under GPLv2.  A line like this at the end of your commit
    will suffice::
 
       ... the last line of the commit message.
 
-      License: AGPL-3.0+
+      License: GPLv2
 
    This indicates that you retain all rights to any intellectual property your
    (set of) commit(s) creates, but that you license it to the Temoa Project
-   under the terms of the GNU Affero Public License, version 3, or later.  If
+   under the terms of the GNU Public License, version 2.  If
    the Temoa Project incorporates your commit, then Temoa may not relicense
    your (set of) patch(es), other than to increase the version number of the
-   AGPL license.  In short, the intellectual property remains yours, and the
+   GPL license.  In short, the intellectual property remains yours, and the
    Temoa Project would be but a licensee using your code similarly under the
-   terms of the AGPL.
+   terms of GPLv2.
 
    Executing licensing in this manner -- rather than requesting IP assignment --
    ensures that no one group of code contributers may unilaterally change the
@@ -2479,31 +2513,14 @@ should meet a basic standard of quality:
  * When you are ready to submit your (set of) patch(es) to the Temoa Project,
    we will utilize GitHub's `Pull Request`_ mechanism.
 
-.. _OpenSourceNote:
-
-=======================
-A note on "Open Source"
-=======================
-
-Though Temoa's stature as an open source product is enforced by the AGPL, the
-code is only half the battle.  The other half involves the exact input fed to
-Temoa to create an analysis, and there is no method available to require
-modelers to share the inner workings of their analyses.
-
-Specifically, this means that if a modeling team makes changes to the Temoa
-codebase, and publishes an analysis based on them, their is no legal requirement
-to share either the code or the input data.  To that end, all we can do is plea
-to modeling teams to "do the right thing", and be transparent about all aspects
-of an analysis.
-
 
 .. rubric:: Footnotes
 
 .. [#open_source_realities] The two main goals behind Temoa are transparency and
-   repeatability, hence the AGPL license.  Unfortunately, there are some harsh
-   realities in the current climate of EEO modeling, so this license is not a
+   repeatability, hence the GPLv2 license.  Unfortunately, there are some harsh
+   realities in the current climate of energy modeling, so this license is not a
    guarantee of openness.  This documentation touches on the issues involved in
-   the final section, :ref:`OpenSourceNote`.
+   the final section.
 
 .. [#efficiency_table] The efficiency parameter is often referred to as the
    efficiency table, due to how it looks after even only a few entries in the
@@ -2512,14 +2529,10 @@ of an analysis.
 .. [#glpk_presolve] Circa 2013, GLPK uses more memory than commercial
    alternatives and has vastly weaker presolve capabilities.
 
-.. [#eeo_definition] For a more in-depth description of EEO models and their
-   place in the energy modeling community, as well as references to other papers
-   and sources, see "The TEMOA Project: Tools for Energy Model Optimization and
-   Analysis", by DeCarolis, J. and Hunter, K. and Sreepathi, S. (2010).
-   (Available from `temoaproject.org/`_.)
-
-.. [#units_comparison] There is an open ticket to address the lack of unit
-   awareness in Temoa.  See `issue 5`_ in our issue tracker.
+.. [#esom_definition] For a more in-depth description of energy system 
+   optimization models (ESOMs) and guidance on how to use them, please see: 
+   DeCarolis et al. (2017) "Formalizing best practice for energy system 
+   optimization modelling", Applied Energy, 194: 184-198.
 
 .. [#web_browser_svg] SVG support in web browsers is currently hit or miss.  The
    most recent versions of Chromium, Google Chrome, and Mozilla Firefox support
@@ -2539,9 +2552,10 @@ of an analysis.
 
 .. _GNU Linear Programming Kit: https://www.gnu.org/software/glpk/
 .. _WinGLPK: http://winglpk.sf.net/
+.. _Github repo: https://github.com/TemoaProject/temoa/
 .. _Temoa model: http://temoaproject.org/download/temoa.py
+.. _temoaproject.org: http://temoaproject.org/
 .. _example data sets: http://temoaproject.org/download/example_data_sets.zip
-.. _temoaproject.org/: http://temoaproject.org/
 .. _mailing list: https://groups.google.com/forum/#!forum/temoa-project
 .. _Temoa Forum: https://groups.google.com/forum/#!forum/temoa-project
 .. _various: http://xlinux.nist.gov/dads/HTML/optimization.html
@@ -2552,18 +2566,18 @@ of an analysis.
 .. _AMPL: http://www.ampl.com/
 .. _PDF: http://temoaproject.org/download/TemoaDocumentation.pdf
 .. _HTML: http://temoaproject.org/docs/
-.. _GitHub Issue tracker: https://github.com/hunteke/temoa/issues
+.. _GitHub Issue tracker: https://github.com/TemoaProject/temoa/issues
 .. _HTML version: http://temoaproject.org/docs/
 .. _code smell: https://en.wikipedia.org/wiki/Code_smell
 .. _PEP 8: http://www.python.org/dev/peps/pep-0008/
 .. _PEP 3120: http://www.python.org/dev/peps/pep-3120/
 .. _list comprehension: http://docs.python.org/tutorial/datastructures.html#list-comprehensions
 .. _lambda function: http://docs.python.org/tutorial/controlflow.html#lambda-forms
-.. _Tarbomb: https://en.wikipedia.org/wiki/Tar_(file_format)#Tarbomb
 .. _generally accepted relative rates: http://www.forecasts.org/inflation.htm
-.. _Temoa repository: https://github.com/hunteke/temoa/
-.. _issue 5: https://github.com/hunteke/temoa/issues/5
 .. _Pull Request: https://help.github.com/articles/using-pull-requests
+.. _quick start guide: http://rogerdudler.github.io/git-guide/
+.. _sqlite: https://www.sqlite.org/
+.. _Graphviz: http://www.graphviz.org/
 
 
 .. bibliography:: References.bib

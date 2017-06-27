@@ -8,6 +8,12 @@ $ make
   # to make both the PDF version and a single HTML version of the documentation
 $ make latexpdf singlehtml
 
+In order to generate the formatted source code that is linked to the algebraic equations, run the following:
+
+$ make html
+
+This generates the ‘_modules’ folder, which needs to be placed on the website.
+
 
 If you need to install sphinx, you can use Coopr's virtual instance of
 easy_install:
