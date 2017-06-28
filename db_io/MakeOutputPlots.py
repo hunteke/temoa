@@ -13,8 +13,9 @@ import argparse
 class OutputPlotGenerator:
 
 	def __init__(self, path_to_db, scenario, super_categories=False):
-		self.db_path = path_to_db
+		self.db_path = os.path.abspath(path_to_db)
 		self.scenario = scenario
+		self.folder_name =os.path.splitext(os.path.basename(path_to_db))[0] + "_" + scenario + "_plots"
 		# self.extractFromDatabase()
 
 	def extractFromDatabase(self, type):
@@ -106,62 +107,83 @@ class OutputPlotGenerator:
 		output_values['periods']=periods
 		return output_values
 
+	def handleOutputPath(self, plot_type, sector, super_categories, output_dir):
+		outfile = plot_type+'_'+sector#+'_'+str(int(time.time()*1000))+'.png'
+		if (super_categories):
+			outfile += '_merged'
+		outfile += '.png'
+		outfile2 = os.path.join(self.folder_name, outfile)
+		output_dir = os.path.join(output_dir, self.folder_name)
+		if (not os.path.exists(output_dir)):
+			os.makedirs(output_dir)
+		
+		self.output_file_name = os.path.join(output_dir, outfile)
+		
+		self.output_file_name = self.output_file_name.replace(" ", "")
+		return outfile2
+
+
 	def generatePlotForCapacity(self,sector, super_categories=False, output_dir = '.'):
 		'''
 		Generates Plot for Capacity of a given sector
 		'''
+
+		outfile2 = self.handleOutputPath('capacity', sector, super_categories, output_dir)
+		if (os.path.exists(self.output_file_name)):
+			print "not generating new capacity plot"
+			return outfile2
+
 		sectors = self.getSectors(1)
+		
 		if (not (sector in sectors)):
 			return ""
 
 		output_values = self.processData(self.capacity_output, sector, super_categories)
 		
-		outfile = 'capacity_'+sector+'_'+str(int(time.time()*1000))+'.png'
-		self.output_file_name = os.path.join(output_dir, outfile)
-		self.output_file_name = self.output_file_name.replace(" ", "")
-		
 		title = 'Capacity Plot for ' + sector + ' sector'
 		self.makeStackedBarPlot(output_values, "Years", "Capacity (GW)", 'periods', title)
 		
-		return outfile
+		return outfile2
 
 	def generatePlotForOutputFlow(self, sector, super_categories=False, output_dir = '.'):
 		'''
 		Generates Plot for Output Flow of a given sector
 		'''
+		outfile2 = self.handleOutputPath('flow', sector, super_categories, output_dir)
+		if (os.path.exists(self.output_file_name)):
+			print "not generating new flow plot"
+			return outfile2
+
 		sectors = self.getSectors(2)
 		if (not (sector in sectors)):
 			return ""
 
 		output_values = self.processData(self.output_vflow, sector, super_categories)
 		
-		outfile = 'output_flow_'+sector+'_'+str(int(time.time()*1000))+'.png'
-		self.output_file_name = os.path.join(output_dir, outfile)
-		self.output_file_name = self.output_file_name.replace(" ", "")
-		
 		title = 'Output Flow Plot for ' + sector + ' sector'
 		self.makeStackedBarPlot(output_values, "Years", "Activity (PJ)", 'periods', title)
 		
-		return outfile;
+		return outfile2;
 
 	def generatePlotForEmissions(self, sector, super_categories=False, output_dir = '.'):
 		'''
 		Generates Plot for Emissions of a given sector
 		'''
+		outfile2 = self.handleOutputPath('emissions', sector, super_categories, output_dir)
+		if (os.path.exists(self.output_file_name)):
+			print "not generating new emissions plot"
+			return outfile2
+
 		sectors = self.getSectors(3)
 		if (not (sector in sectors)):
 			return ""
 
 		output_values = self.processData(self.output_emissions, sector, super_categories)
-		
-		outfile ='emissions_'+sector+'_'+str(int(time.time()*1000))+'.png'
-		self.output_file_name = os.path.join(output_dir, outfile)
-		self.output_file_name = self.output_file_name.replace(" ", "")
-		
+				
 		title = 'Emissions Plot for ' + sector + ' sector'
 		self.make_line_plot(output_values.copy(), 'Emissions', title)
 		
-		return outfile;
+		return outfile2;
 	
 
 	'''
