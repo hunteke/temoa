@@ -14,7 +14,7 @@ def processInput(args):
 	parser.add_argument('-v', '--splinevar', action="store_true", dest="splinevar", help="Whether subgraph edges to be straight or curved (Default: Straight)", default=False)
 	parser.add_argument('-t', '--graph_type', action="store", dest="graph_type", help="Type of subgraph (Default: separate_vintages)",
 							choices = ['separate_vintages', 'explicit_vintages'], default='separate_vintages')
-	parser.add_argument('-g', '--gray', action="store_true", dest="grey_flag", help="If specified, generates graph in graycale", default=True)
+	parser.add_argument('-g', '--gray', action="store_true", dest="grey_flag", help="If specified, generates graph in graycale", default=False)
 	parser.add_argument('-n', '--name', action="store", dest="quick_name", help="Specify the extension you wish to give your quick run")
 	parser.add_argument('-o', '--output', action="store", dest="res_dir", help='Optional output file path (to dump the images folder)', default='./')
 
@@ -36,11 +36,12 @@ def processInput(args):
 def processInputArgs(inputs):
 	if (isinstance(inputs, dict)):
 		args = inputs.items()
-		args = [i for a in args for i in a]
+		args = [i for a in args for i in a if i]
 	else:
 		args = inputs
 
 	output = processInput(args)
+	print output
 	output['ifile'] = os.path.abspath(output['ifile'])
 	output['q_flag'] = False
 	output['quick_flag'] = False

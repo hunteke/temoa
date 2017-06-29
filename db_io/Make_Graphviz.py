@@ -12,11 +12,23 @@ import pandas as pd
 from GraphVizUtil import *
 
 
-def CreateMainResultsDiagram ( **kwargs ): #results_main	
+def CreateMainResultsDiagram ( **kwargs ): #results_main
+	folder = 'whole_system'
 	ifile		   = kwargs.get( 'ifile' )
 	ffmt               = kwargs.get( 'image_format' )
 	pp				   = kwargs.get( 'inp_period')
 	scenario 		   = kwargs.get( 'scenario_name' )
+
+	if (not os.path.exists(folder)):
+		os.makedirs( folder )
+	os.chdir( folder )
+	fname = 'results%s.' % pp
+	if (kwargs['grey_flag']):
+		fname += 'grey.'
+
+
+	if (os.path.exists(fname + ffmt)):
+		return os.path.join(folder, fname + ffmt)
 
 	time_exist    = set()
 	time_future = set()
@@ -73,7 +85,6 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 	cur.close()
 	con.close()
 
-	os.chdir( 'results' )
 
 	from GraphVizFormats import results_dot_fmt
 
@@ -157,7 +168,7 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 	eflowsi    = create_text_edges( eflowsi,    indent=3 )
 	eflowso    = create_text_edges( eflowso,    indent=3 )
 
-	fname = 'results%s.' % pp
+	
 	with open( fname + 'dot', 'w' ) as f:
 		f.write( results_dot_fmt % dict(
 		  period             = pp,
@@ -187,17 +198,27 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 	call( cmd )
 
 	os.chdir( '..' )
+	return os.path.join(folder, fname + ffmt)
 
 # Needs some small fixing - cases where no input but output is there. # Check sample graphs
 def CreateTechResultsDiagrams ( **kwargs ): # tech results
-	
+	folder = 'processes'
 	ifile		   = kwargs.get( 'ifile' )
 	ffmt               = kwargs.get( 'image_format' )
 	per 			   = kwargs.get( 'inp_period' )
 	tech 			   = kwargs.get( 'inp_technology' )
 	scenario 		   = kwargs.get( 'scenario_name' )
 	
-	os.chdir( 'results' )
+	if (not os.path.exists(folder)):
+		os.makedirs( folder )
+	os.chdir( folder )
+	fname = 'results_%s_%s.' % (tech, per)
+	if (kwargs['grey_flag']):
+		fname += 'grey.'
+
+	if (os.path.exists(fname + ffmt)):
+		return os.path.join(folder, fname + ffmt)
+
 
 	from GraphVizFormats import tech_results_dot_fmt
 
@@ -253,7 +274,6 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 		iedges = create_text_edges( iedges, indent=2 )
 		oedges = create_text_edges( oedges, indent=2 )
 
-		fname = 'results_%s_%s.' % (tech, per)
 		with open( fname + 'dot', 'w' ) as f:
 			f.write( tech_results_dot_fmt % dict(
 			  cluster_vintage_url = cluster_vintage_url,
@@ -279,17 +299,27 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 		cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
 		call( cmd )
 
+
 	os.chdir( '..' )
+	return os.path.join(folder, fname + ffmt)
 
 def CreateCommodityPartialResults ( **kwargs ): 
-	
+	folder 		= 'commodities'
 	ifile		= kwargs.get( 'ifile' )
 	ffmt            = kwargs.get( 'image_format' )
 	per 			= kwargs.get( 'inp_period' )
 	comm 			= kwargs.get( 'inp_commodity' )
 	scenario 		= kwargs.get( 'scenario_name' )
 	
-	os.chdir( 'commodities' )
+	if (not os.path.exists(folder)):
+		os.makedirs( folder )
+	os.chdir( folder )
+	fname = 'rc_%s_%s.' % (comm, per)
+	if (kwargs['grey_flag']):
+		fname += 'grey.'
+	
+	if (os.path.exists(fname + ffmt)):
+		return os.path.join(folder, fname + ffmt)
 
 	from GraphVizFormats import commodity_dot_fmt
 
@@ -350,7 +380,6 @@ def CreateCommodityPartialResults ( **kwargs ):
 	eedges = create_text_edges( eedges, indent=2 )
 	dedges = create_text_edges( dedges, indent=2 )
 	
-	fname = 'rc_%s_%s.' % (comm, per)
 	with open( fname + 'dot' ,'w') as f:
 		f.write( commodity_dot_fmt % dict(
 		  home_color     = kwargs.get( 'home_color' ),
@@ -372,6 +401,7 @@ def CreateCommodityPartialResults ( **kwargs ):
 	call( cmd )
 
 	os.chdir( '..' )
+	return os.path.join(folder, fname + ffmt)
 
 def createCompleteInputGraph( **kwargs ) : # Call this function if the input file is a database.
 	ifile		   = kwargs.get( 'ifile' )
@@ -494,47 +524,45 @@ def createCompleteInputGraph( **kwargs ) : # Call this function if the input fil
 	del nodes, tech, to_tech, from_tech
 	cmd = ('dot', '-T' + ffmt, '-o' + quick_name+'.' + ffmt, quick_name+'.dot')
 	call( cmd )
+	return quick_name+'.'+ffmt
 
 
 def CreateModelDiagrams (kwargs):
 
 	if not kwargs['quick_flag']:
 		images_dir = kwargs['quick_name'] + "_" + kwargs['scenario_name']
-		if os.path.exists( images_dir ):
-			rmtree( images_dir )
-		os.mkdir( images_dir )
-		os.chdir( images_dir )
-		os.makedirs( 'commodities' )
-		os.makedirs( 'processes' )
-		os.makedirs( 'results' )
 	else:
 		images_dir = kwargs['quick_name']
-		if os.path.exists( images_dir ):
-			rmtree( images_dir )
+
+	images_dir += '_graphviz'
+
+	if (not os.path.exists(images_dir)):
 		os.mkdir( images_dir )
-		os.chdir( images_dir )
+	os.chdir( images_dir )
 
 	print "Created output folders"
 	
+	output_filename = ""
 	if (kwargs['quick_flag'] == True):
 		print "Generating createCompleteInputGraph"
-		createCompleteInputGraph(**kwargs)
+		output_filename = createCompleteInputGraph(**kwargs)
 	elif (kwargs['inp_technology'] is None and kwargs['inp_commodity'] is None):
 		print "Generating CreateMainResultsDiagram"
-		CreateMainResultsDiagram(**kwargs)
+		output_filename = CreateMainResultsDiagram(**kwargs)
 	elif (kwargs['inp_commodity'] is None):
 		print "Generating CreateTechResultsDiagrams"
-		CreateTechResultsDiagrams(**kwargs)
+		output_filename = CreateTechResultsDiagrams(**kwargs)
 	elif (kwargs['inp_technology'] is None):
 		print "Generating CreateCommodityPartialResults"
-		CreateCommodityPartialResults(**kwargs)
+		output_filename = CreateCommodityPartialResults(**kwargs)
 
 	os.chdir( '..' )
+	return os.path.join(images_dir, output_filename)
 	
 def createGraphBasedOnInput(inputs):
 	
 	inputs = processInputArgs(inputs)
-	grey_flag = inputs['grey_flag']
+	grey_flag = not (inputs['grey_flag'])
 
 	kwargs = dict(
 	  images_dir         = '%s_%s' % (inputs['quick_name'], inputs['scenario_name']),
@@ -577,9 +605,10 @@ def createGraphBasedOnInput(inputs):
 		os.chdir(inputs['res_dir'])
 	print "CreateModelDiagrams with quick_flag = ", inputs['quick_flag']
 
-	CreateModelDiagrams (kwargs)
+	result = CreateModelDiagrams (kwargs)
 
 	print "Done. Look for results in %s" %inputs['res_dir']
+	return result
 
 
 if __name__ == "__main__":	
@@ -587,4 +616,6 @@ if __name__ == "__main__":
 	argv = sys.argv[1:]
 	
 	createGraphBasedOnInput(argv)
+
+
 
