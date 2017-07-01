@@ -23,15 +23,53 @@ def processInput(args):
 	group1.add_argument('-a', '--commodity', action="store", dest="inp_commodity", help="Commodity for which graph to be generated")
 
 	parser.add_argument('-s', '--scenario', action="store", dest="scenario_name", help="Model run scenario name")
-	parser.add_argument('-y', '--year', action="store", dest="inp_period", type=int, help="The period for which the graph is to be generated (Used only for output plots)")
+	parser.add_argument('-y', '--year', action="store", dest="period", type=int, help="The period for which the graph is to be generated (Used only for output plots)")
 
 	options = parser.parse_args(args)
 
-	if (bool(options.scenario_name) ^ bool(options.inp_period)):
+	if (bool(options.scenario_name) ^ bool(options.period)):
 		parser.print_help()
 		raise ValueError("Scenario and input year must both be present or not present together")
 
 	return vars(options)
+
+def svgColorConfig(inputs):
+	grey_flag = not (inputs['grey_flag'])
+	print "Reaching here"
+	kwargs = dict(
+	  images_dir         = '%s_%s' % (inputs['quick_name'], inputs['scenario_name']),
+	  image_format       = inputs['image_format'].lower(),
+
+	  tech_color         = 'darkseagreen' if grey_flag else 'black',
+	  commodity_color    = 'lightsteelblue' if grey_flag else 'black',
+	  unused_color       = 'powderblue' if grey_flag else 'gray75',
+	  arrowheadout_color = 'forestgreen' if grey_flag else 'black',
+	  arrowheadin_color  = 'firebrick' if grey_flag else 'black',
+	  usedfont_color     = 'black',
+	  unusedfont_color   = 'chocolate' if grey_flag else 'gray75',
+	  menu_color         = 'hotpink',
+	  home_color         = 'gray75',
+	  font_color	     = 'black' if grey_flag else 'white',
+	  fill_color	     = 'lightsteelblue' if grey_flag else 'white',
+
+	  #MODELDETAILED,
+	  md_tech_color      = 'hotpink',
+
+	  sb_incom_color     = 'lightsteelblue' if grey_flag else 'black',
+	  sb_outcom_color    = 'lawngreen' if grey_flag else 'black',
+	  sb_vpbackg_color   = 'lightgrey',
+	  sb_vp_color        = 'white',
+	  sb_arrow_color     = 'forestgreen' if grey_flag else 'black',
+
+	  #SUBGRAPH 1 ARROW COLORS
+	  color_list = ('red', 'orange', 'gold', 'green', 'blue', 'purple',
+	                'hotpink', 'cyan', 'burlywood', 'coral', 'limegreen',
+	                'black', 'brown') if grey_flag else ('black', 'black'),
+	)
+	print "reaching here 2"
+	kwargs.update(inputs)
+	print "about to return"
+	return kwargs
 
 def processInputArgs(inputs):
 	if (isinstance(inputs, dict)):
@@ -77,7 +115,9 @@ def processInputArgs(inputs):
 		print "The input file type %s is not recognized. Please specify a database or a text file." % output['ifile']
 		sys.exit(2)
 
-	return output
+	return svgColorConfig(output)
+	# return output
+
 
 def _getLen ( key ):
 	def wrapped ( obj ):

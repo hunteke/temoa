@@ -1,22 +1,20 @@
 from subprocess import call
-from sys import argv, stderr as SE, stdout as SO
-from shutil import rmtree
 import argparse
 import sqlite3
 import os
 import sys
-import getopt
 import re
 import pandas as pd
 
 from GraphVizUtil import *
+from DatabaseUtil import *
 
 
 def CreateMainResultsDiagram ( **kwargs ): #results_main
 	folder = 'whole_system'
 	ifile		   = kwargs.get( 'ifile' )
 	ffmt               = kwargs.get( 'image_format' )
-	pp				   = kwargs.get( 'inp_period')
+	pp				   = kwargs.get( 'period')
 	scenario 		   = kwargs.get( 'scenario_name' )
 
 	if (not os.path.exists(folder)):
@@ -26,65 +24,31 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 	if (kwargs['grey_flag']):
 		fname += 'grey.'
 
-
 	if (os.path.exists(fname + ffmt)):
 		return os.path.join(folder, fname + ffmt)
 
-	time_exist    = set()
-	time_future = set()
-	time_optimize   = set()
-	tech_all	= set()
-	commodity_emissions = set()
-	commodity_carrier = set()
-	Efficiency_Input = set()
-	Efficiency_Output = set()
+	dbUtil = DatabaseUtil(ifile, scenario)
 
-	con = sqlite3.connect(ifile)
-	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
-	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
-
-	cur.execute("SELECT t_periods FROM time_periods WHERE flag is 'e'")
-	for row in cur:
-		time_exist.add(int(row[0]))
-	cur.execute("SELECT t_periods FROM time_periods WHERE flag is 'f'")
-	for row in cur:
-		time_future.add(int(row[0]))
+	time_exist = dbUtil.getTimePeridosForFlags(flags=['e'])
+	time_future = dbUtil.getTimePeridosForFlags(flags=['f'])
 	time_optimize = set(sorted( time_future)[:-1])
 	
+	tech_all = dbUtil.getTechnologiesForFlags(flags=['r','p','pb','ps'])
 	
-	for row in cur.execute("SELECT tech FROM technologies WHERE flag='r' OR flag='p' OR flag='pb' OR flag='ps'"):
-		tech_all.add(row[0])	
-	
-	for row in cur.execute("SELECT comm_name FROM commodities WHERE flag is 'd' OR flag is 'p'"):
-		commodity_carrier.add(row[0])
-	for row in cur.execute("SELECT comm_name FROM commodities WHERE flag is 'e'"):
-		commodity_emissions.add(row[0])
+	commodity_carrier = dbUtil.getCommoditiesForFlags(flags=['d','p'])
+	commodity_emissions = dbUtil.getCommoditiesForFlags(flags=['e'])
 
-	for row in cur.execute('SELECT DISTINCT input_comm, tech FROM Efficiency'):
-		Efficiency_Input.add((row[0], row[1]))
-	for row in cur.execute('SELECT DISTINCT tech, output_comm FROM Efficiency'):
-		Efficiency_Output.add((row[0], row[1]))
-	
-	cur.execute("SELECT tech, capacity FROM Output_CapacityByPeriodAndTech WHERE scenario == '"+scenario+"' and t_periods == '"+str(pp)+"'")
-	V_Cap2 = pd.DataFrame(cur.fetchall(), columns=['tech', 'capacity'])
-	
-	cur.execute("SELECT input_comm, tech, SUM(vflow_in) AS flow FROM Output_VFlow_In WHERE scenario == '"+scenario+"' and t_periods == '"+str(pp)+
-		"' GROUP BY input_comm, tech")
-	EI2 = pd.DataFrame(cur.fetchall(), columns = ['input_comm', 'tech', 'consumption'])
-		
-	cur.execute("SELECT tech, output_comm, SUM(vflow_out) AS flow FROM Output_VFlow_Out WHERE scenario == '"+scenario+"' and t_periods == '"+str(pp)+
-		"' GROUP BY output_comm, tech")
-	EO2 = pd.DataFrame(cur.fetchall(), columns=['tech', 'output_comm', 'activity'])
+	Efficiency_Input = dbUtil.getCommoditiesByTechnology(comm_type='input')
+	Efficiency_Output = dbUtil.getCommoditiesByTechnology(comm_type='output')	
 
-	q2 = "SELECT E.emis_comm, E.tech, SUM(E.emis_act*O.vflow_out) FROM EmissionActivity E, Output_VFlow_Out O " + \
-	"WHERE E.input_comm == O.input_comm AND E.tech == O.tech AND E.vintage  == O.vintage AND E.output_comm == O.output_comm AND O.scenario == '"+ scenario +"' " + \
-	"and O.t_periods == '"+str(pp)+"' GROUP BY E.tech, E.emis_comm"
-	cur.execute(q2)
-	EmiO2 = pd.DataFrame(cur.fetchall(), columns=['emis_comm', 'tech', 'emis_activity'])
-		
-	cur.close()
-	con.close()
+	V_Cap2 = dbUtil.getCapacityForTechAndPeriod(period=pp)
+	
+	EI2 = dbUtil.getOutputFlowForPeriod(period=pp, comm_type='input')
+	EO2 = dbUtil.getOutputFlowForPeriod(period=pp, comm_type='output')
 
+	EmiO2 = dbUtil.getEmissionsActivityForPeriod(period=pp)
+
+	dbUtil.close()
 
 	from GraphVizFormats import results_dot_fmt
 
@@ -116,7 +80,7 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 	for i in range(len(EI2)):
 		row = EI2.iloc[i]
 		if (row['input_comm'] != 'ethos'):
-			eflowsi.add((row['input_comm'], row['tech'], flow_fmt % row['consumption']))
+			eflowsi.add((row['input_comm'], row['tech'], flow_fmt % row['flow']))
 			ecarriers.add((row['input_comm'], commodity_fmt % (row['input_comm'], pp)))
 			usedc.add(row['input_comm'])
 		else:
@@ -133,7 +97,7 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 	udflows = set()
 	for i in range(len(EO2)):
 		row = EO2.iloc[i]
-		eflowso.add((row['tech'], row['output_comm'], flow_fmt % row['activity']))
+		eflowso.add((row['tech'], row['output_comm'], flow_fmt % row['flow']))
 		ecarriers.add((row['output_comm'], commodity_fmt % (row['output_comm'], pp)))
 		usedc.add(row['output_comm'])
 		udflows.add((row['tech'], row['output_comm']))
@@ -157,42 +121,21 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 		if ee not in usede:
 			demissions.add((ee, None))
 
-	dtechs     = create_text_nodes( dtechs,     indent=2 )
-	etechs     = create_text_nodes( etechs,     indent=2 )
-	xnodes	   = create_text_nodes( xnodes,		indent=2 )
-	dcarriers  = create_text_nodes( dcarriers,  indent=2 )
-	ecarriers  = create_text_nodes( ecarriers,  indent=2 )
-	demissions = create_text_nodes( demissions, indent=2 )
-	eemissions = create_text_nodes( eemissions, indent=2 )
-	dflows     = create_text_edges( dflows,     indent=2 )
-	eflowsi    = create_text_edges( eflowsi,    indent=3 )
-	eflowso    = create_text_edges( eflowso,    indent=3 )
-
+	args = dict(
+	dtechs     = create_text_nodes( dtechs,     indent=2 ),
+	etechs     = create_text_nodes( etechs,     indent=2 ),
+	xnodes	   = create_text_nodes( xnodes,		indent=2 ),
+	dcarriers  = create_text_nodes( dcarriers,  indent=2 ),
+	ecarriers  = create_text_nodes( ecarriers,  indent=2 ),
+	demissions = create_text_nodes( demissions, indent=2 ),
+	eemissions = create_text_nodes( eemissions, indent=2 ),
+	dflows     = create_text_edges( dflows,     indent=2 ),
+	eflowsi    = create_text_edges( eflowsi,    indent=3 ),
+	eflowso    = create_text_edges( eflowso,    indent=3 ),)
+	args.update(kwargs)
 	
 	with open( fname + 'dot', 'w' ) as f:
-		f.write( results_dot_fmt % dict(
-		  period             = pp,
-		  splinevar          = kwargs.get( 'splinevar' ),
-		  arrowheadin_color  = kwargs.get( 'arrowheadin_color' ),
-		  arrowheadout_color = kwargs.get( 'arrowheadout_color' ),
-		  commodity_color    = kwargs.get( 'commodity_color' ),
-		  tech_color         = kwargs.get( 'tech_color' ),
-		  unused_color       = kwargs.get( 'unused_color' ),
-		  unusedfont_color   = kwargs.get( 'unusedfont_color' ),
-		  usedfont_color     = kwargs.get( 'usedfont_color' ),
-		  fill_color		 = kwargs.get( 'fill_color' ),
-		  font_color		 = kwargs.get( 'font_color' ),
-		  dtechs     = dtechs,
-		  etechs     = etechs,
-		  xnodes	 = xnodes,
-		  dcarriers  = dcarriers,
-		  ecarriers  = ecarriers,
-		  demissions = demissions,
-		  eemissions = eemissions,
-		  dflows     = dflows,
-		  eflowsi    = eflowsi,
-		  eflowso    = eflowso,
-		))
+		f.write( results_dot_fmt % args)
 
 	cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
 	call( cmd )
@@ -205,7 +148,7 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 	folder = 'processes'
 	ifile		   = kwargs.get( 'ifile' )
 	ffmt               = kwargs.get( 'image_format' )
-	per 			   = kwargs.get( 'inp_period' )
+	per 			   = kwargs.get( 'period' )
 	tech 			   = kwargs.get( 'inp_technology' )
 	scenario 		   = kwargs.get( 'scenario_name' )
 	
@@ -307,7 +250,7 @@ def CreateCommodityPartialResults ( **kwargs ):
 	folder 		= 'commodities'
 	ifile		= kwargs.get( 'ifile' )
 	ffmt            = kwargs.get( 'image_format' )
-	per 			= kwargs.get( 'inp_period' )
+	per 			= kwargs.get( 'period' )
 	comm 			= kwargs.get( 'inp_commodity' )
 	scenario 		= kwargs.get( 'scenario_name' )
 	
@@ -525,10 +468,19 @@ def createCompleteInputGraph( **kwargs ) : # Call this function if the input fil
 	cmd = ('dot', '-T' + ffmt, '-o' + quick_name+'.' + ffmt, quick_name+'.dot')
 	call( cmd )
 	return quick_name+'.'+ffmt
+	
+def createGraphBasedOnInput(inputs):
+	kwargs = processInputArgs(inputs)
 
+	print "Reading File %s ..." %kwargs['ifile'] 
 
-def CreateModelDiagrams (kwargs):
+	if kwargs['res_dir'] is None:
+		kwargs['res_dir'] = "current directory"
+	else:
+		os.chdir(kwargs['res_dir'])
+	print "CreateModelDiagrams with quick_flag = ", kwargs['quick_flag']
 
+	# CreateModelDiagrams function stuff
 	if not kwargs['quick_flag']:
 		images_dir = kwargs['quick_name'] + "_" + kwargs['scenario_name']
 	else:
@@ -557,65 +509,12 @@ def CreateModelDiagrams (kwargs):
 		output_filename = CreateCommodityPartialResults(**kwargs)
 
 	os.chdir( '..' )
-	return os.path.join(images_dir, output_filename)
-	
-def createGraphBasedOnInput(inputs):
-	
-	inputs = processInputArgs(inputs)
-	grey_flag = not (inputs['grey_flag'])
+	result = os.path.join(images_dir, output_filename)
 
-	kwargs = dict(
-	  images_dir         = '%s_%s' % (inputs['quick_name'], inputs['scenario_name']),
-	  image_format       = inputs['image_format'].lower(),
-
-	  tech_color         = 'darkseagreen' if grey_flag else 'black',
-	  commodity_color    = 'lightsteelblue' if grey_flag else 'black',
-	  unused_color       = 'powderblue' if grey_flag else 'gray75',
-	  arrowheadout_color = 'forestgreen' if grey_flag else 'black',
-	  arrowheadin_color  = 'firebrick' if grey_flag else 'black',
-	  usedfont_color     = 'black',
-	  unusedfont_color   = 'chocolate' if grey_flag else 'gray75',
-	  menu_color         = 'hotpink',
-	  home_color         = 'gray75',
-	  font_color	     = 'black' if grey_flag else 'white',
-	  fill_color	     = 'lightsteelblue' if grey_flag else 'white',
-
-	  #MODELDETAILED,
-	  md_tech_color      = 'hotpink',
-
-	  sb_incom_color     = 'lightsteelblue' if grey_flag else 'black',
-	  sb_outcom_color    = 'lawngreen' if grey_flag else 'black',
-	  sb_vpbackg_color   = 'lightgrey',
-	  sb_vp_color        = 'white',
-	  sb_arrow_color     = 'forestgreen' if grey_flag else 'black',
-
-	  #SUBGRAPH 1 ARROW COLORS
-	  color_list = ('red', 'orange', 'gold', 'green', 'blue', 'purple',
-	                'hotpink', 'cyan', 'burlywood', 'coral', 'limegreen',
-	                'black', 'brown') if grey_flag else ('black', 'black'),
-	)
-
-	kwargs.update(inputs)
-
-	print "Reading File %s ..." %inputs['ifile'] 
-
-	if inputs['res_dir'] is None:
-		inputs['res_dir'] = "current directory"
-	else:
-		os.chdir(inputs['res_dir'])
-	print "CreateModelDiagrams with quick_flag = ", inputs['quick_flag']
-
-	result = CreateModelDiagrams (kwargs)
-
-	print "Done. Look for results in %s" %inputs['res_dir']
+	print "Done. Look for results in %s" %kwargs['res_dir']
 	return result
 
 
 if __name__ == "__main__":	
-	
 	argv = sys.argv[1:]
-	
 	createGraphBasedOnInput(argv)
-
-
-
