@@ -675,17 +675,15 @@ Demand :eq:`Demand` constraints.
 	vflow_in = sum(
 	  M.V_FlowIn[p, s, d, c, S_t, S_v, S_o]
 
-	  for S_t in M.tech_production
-	  for S_v in M.vintage_all
-	  for S_o in ProcessOutputsByInput( p, S_t, S_v, c )
+	  for S_t, S_v in g_commodityDStreamProcess[p, c]
+	  for S_o in g_ProcessOutputsByInput[ p, S_t, S_v, c ]
 	)
 
 	vflow_out = sum(
 	  M.V_FlowOut[p, s, d, S_i, S_t, S_v, c]
 
-	  for S_t in M.tech_all
-	  for S_v in M.vintage_all
-	  for S_i in ProcessInputsByOutput( p, S_t, S_v, c )
+	  for S_t, S_v in g_commodityUStreamProcess[p, c]
+	  for S_i in g_ProcessInputsByOutput[ (p, S_t, S_v, c) ]
 	)
 
 	CommodityBalanceConstraintErrorCheck( vflow_out, vflow_in, p, s, d, c )
@@ -814,9 +812,8 @@ could be more tightly specified and could have at least one input data anomaly.
 	supply = sum(
 	  M.V_FlowOut[p, s, d, S_i, S_t, S_v, dem]
 
-	  for S_t in M.tech_all
-	  for S_v in M.vintage_all
-	  for S_i in ProcessInputsByOutput( p, S_t, S_v, dem )
+	  for S_t, S_v in g_commodityUStreamProcess[ p, dem ]
+	  for S_i in g_ProcessInputsByOutput[ p, S_t, S_v, dem ]
 	)
 
 	DemandConstraintErrorCheck( supply, p, s, d, dem )

@@ -441,6 +441,11 @@ g_activeActivity_ptv = None
 g_activeCapacity_tv = None
 g_activeCapacityAvailable_pt = None
 
+g_commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
+g_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
+g_ProcessInputsByOutput = dict()
+g_ProcessOutputsByInput = dict()
+
 def InitializeProcessParameters ( M ):
 	global g_processInputs
 	global g_processOutputs
@@ -450,6 +455,11 @@ def InitializeProcessParameters ( M ):
 	global g_activeActivity_ptv
 	global g_activeCapacity_tv
 	global g_activeCapacityAvailable_pt
+
+	global g_commodityDStreamProcess
+	global g_commodityUStreamProcess
+	global g_ProcessInputsByOutput
+	global g_ProcessOutputsByInput
 
 	l_first_period = min( M.time_future )
 	l_exist_indices = M.ExistingCapacity.sparse_keys()
@@ -511,10 +521,22 @@ def InitializeProcessParameters ( M ):
 				g_processOutputs[ pindex ] = set()
 			if (p, t) not in g_processVintages:
 				g_processVintages[p, t] = set()
+			if (p, i) not in g_commodityDStreamProcess:
+				g_commodityDStreamProcess[p, i] = set()
+			if (p, o) not in g_commodityUStreamProcess:
+				g_commodityUStreamProcess[p, o] = set()
+			if (p, t, v, i) not in g_ProcessOutputsByInput:
+				g_ProcessOutputsByInput[p, t, v, i] = set()
+			if (p, t, v, o) not in g_ProcessInputsByOutput:
+				g_ProcessInputsByOutput[p, t, v, o] = set()
 
 			g_processVintages[p, t].add( v )
 			g_processInputs[ pindex ].add( i )
 			g_processOutputs[pindex ].add( o )
+			g_commodityDStreamProcess[p, i].add( (t, v) )
+			g_commodityUStreamProcess[p, o].add( (t, v) )
+			g_ProcessOutputsByInput[p, t, v, i].add( o )
+			g_ProcessInputsByOutput[p, t, v, o].add( i )
 	l_unused_techs = M.tech_all - l_used_techs
 	if l_unused_techs:
 		msg = ("Notice: '{}' specified as technology, but it is not utilized in "
@@ -814,14 +836,16 @@ def BaseloadDiurnalConstraintIndices ( M ):
 
 
 def CommodityBalanceConstraintIndices ( M ):
+	# We only consider those commodities that have both upstream and downstream
+	# processes during a specific period.
+	period_commodity_with_up = set( g_commodityUStreamProcess.keys() )
+	period_commodity_with_dn = set( g_commodityDStreamProcess.keys() )
+	period_commodity = period_commodity_with_up.intersection( period_commodity_with_dn )
 	indices = set(
 	  (p, s, d, o)
 
-	  for p in M.time_optimize
-	  for t in M.tech_all
-	  for v in ProcessVintages( p, t )
-	  for i in ProcessInputs( p, t, v )
-	  for o in ProcessOutputsByInput( p, t, v, i )
+	  for p, o in period_commodity
+	  for t, v in g_commodityUStreamProcess[ p, o ]
 	  for s in M.time_season
 	  for d in M.time_of_day
 	)
@@ -961,7 +985,6 @@ index = (period, tech, vintage)
 	if index in g_processOutputs:
 		return g_processOutputs[ index ]
 	return set()
-
 
 def ProcessInputsByOutput ( p, t, v, o ):
 	"""\
