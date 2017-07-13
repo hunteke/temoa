@@ -1,21 +1,16 @@
 from subprocess import call
-import argparse
-import sqlite3
 import os
 import sys
-import re
-import pandas as pd
 
 from GraphVizUtil import *
 from DatabaseUtil import *
+from GraphVizFormats import *
 
 
 def CreateMainResultsDiagram ( **kwargs ): #results_main
 	folder = 'whole_system'
-	ifile		   = kwargs.get( 'ifile' )
 	ffmt               = kwargs.get( 'image_format' )
 	pp				   = kwargs.get( 'period')
-	scenario 		   = kwargs.get( 'scenario_name' )
 
 	if (not os.path.exists(folder)):
 		os.makedirs( folder )
@@ -27,7 +22,7 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 	if (os.path.exists(fname + ffmt)):
 		return os.path.join(folder, fname + ffmt)
 
-	dbUtil = DatabaseUtil(ifile, scenario)
+	dbUtil = DatabaseUtil(kwargs.get( 'ifile' ), kwargs.get( 'scenario_name' ))
 
 	time_exist = dbUtil.getTimePeridosForFlags(flags=['e'])
 	time_future = dbUtil.getTimePeridosForFlags(flags=['f'])
@@ -50,17 +45,14 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 
 	dbUtil.close()
 
-	from GraphVizFormats import results_dot_fmt
-
 	tech_attr_fmt = 'label="%s\\nCapacity: %.2f", href="#", onclick="loadNextGraphvizGraph(\'results\', \'%s\', \'%s\')"'
 	#tech_attr_fmt = 'label="%%s\\nCapacity: %%.2f", href="results_%%s_%%s.%s"'
 	# tech_attr_fmt %= ffmt
 	# commodity_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
 	commodity_fmt = 'href="#", onclick="loadNextGraphvizGraph(\'results\', \'%s\', \'%s\')"'
 	flow_fmt = 'label="%.2f"'
-	
 
-	epsilon = 0.005  
+	epsilon = 0.005
 
 	etechs, dtechs, ecarriers, xnodes = set(), set(), set(), set()
 	eemissions = set()
@@ -146,11 +138,9 @@ def CreateMainResultsDiagram ( **kwargs ): #results_main
 # Needs some small fixing - cases where no input but output is there. # Check sample graphs
 def CreateTechResultsDiagrams ( **kwargs ): # tech results
 	folder = 'processes'
-	ifile		   = kwargs.get( 'ifile' )
 	ffmt               = kwargs.get( 'image_format' )
 	per 			   = kwargs.get( 'period' )
 	tech 			   = kwargs.get( 'inp_technology' )
-	scenario 		   = kwargs.get( 'scenario_name' )
 	
 	if (not os.path.exists(folder)):
 		os.makedirs( folder )
@@ -162,9 +152,6 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 	if (os.path.exists(fname + ffmt)):
 		return os.path.join(folder, fname + ffmt)
 
-
-	from GraphVizFormats import tech_results_dot_fmt
-
 	# enode_attr_fmt = 'href="../commodities/rc_%%s_%%s.%s"' % ffmt
 	# vnode_attr_fmt = 'href="results_%%s_p%%sv%%s_segments.%s", ' % ffmt
 	# vnode_attr_fmt += 'label="%s\\nCap: %.2f"'
@@ -172,23 +159,10 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 	vnode_attr_fmt = 'href="#", onclick="loadNextGraphvizGraph(\'%s\', \'%s\', \'%s\')"'
 	vnode_attr_fmt += 'label="%s\\nCap: %.2f"'
 
-	con = sqlite3.connect(ifile)
-	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
-	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
-
-	cur.execute("SELECT capacity FROM Output_CapacityByPeriodAndTech WHERE scenario == '"+scenario+"' and tech is '"+tech+"' and t_periods is '"+str(per)+"'" )
-	total_cap = cur.fetchone()[0]
-
-	cur.execute("SELECT OF.input_comm, OF.output_comm, OF.vintage, SUM(vflow_in), SUM(vflow_out), OC.capacity FROM Output_VFlow_In OF, Output_VFlow_Out OFO, Output_V_Capacity OC "+
-		"WHERE OF.t_periods is '"+str(per)+"' and OF.tech is '"+tech+"' and OF.scenario is '"+scenario+"' and OC.scenario == OF.scenario and OC.tech is '"+tech+
-		"' and OFO.t_periods is '"+str(per)+"' and OF.tech is '"+tech+"' and OFO.scenario is '"+scenario+
-		"' and OF.vintage == OC.vintage and OF.input_comm == OFO.input_comm and OF.output_comm == OFO.output_comm and OF.vintage == OFO.vintage and OF.t_day == OFO.t_day"+
-		" and OF.t_season == OFO.t_season GROUP BY OF.input_comm, OF.output_comm, OF.vintage")
-
-	flows = pd.DataFrame(cur.fetchall(), columns=['input_comm', 'output_comm', 'vintage', 'flow_in', 'flow_out', 'capacity'])
-
-	cur.close()
-	con.close()
+	dbUtil = DatabaseUtil(kwargs.get( 'ifile' ), kwargs.get( 'scenario_name' ))
+	total_cap = dbUtil.getCapacityForTechAndPeriod(tech, per)
+	flows = dbUtil.getCommodityWiseInputAndOutputFlow(tech, per)
+	dbUtil.close()
 
 	# energy/vintage nodes, in/out edges
 	enodes, vnodes, iedges, oedges = set(), set(), set(), set()
@@ -212,33 +186,18 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 
 	if vnodes:
 		print "Generating graph"
-		enodes = create_text_nodes( enodes, indent=2 )
-		vnodes = create_text_nodes( vnodes, indent=2 )
-		iedges = create_text_edges( iedges, indent=2 )
-		oedges = create_text_edges( oedges, indent=2 )
+		args = dict(
+		cluster_vintage_url = cluster_vintage_url,
+		total_cap       = total_cap,
+		vnodes          = create_text_nodes( vnodes, indent=2 ),
+		enodes          = create_text_nodes( enodes, indent=2 ),
+		iedges          = create_text_edges( iedges, indent=2 ),
+		oedges          = create_text_edges( oedges, indent=2 ),
+		)
+		args.update(kwargs)
 
 		with open( fname + 'dot', 'w' ) as f:
-			f.write( tech_results_dot_fmt % dict(
-			  cluster_vintage_url = cluster_vintage_url,
-			  tech            = tech,
-			  period          = per,
-			  ffmt            = ffmt,
-			  commodity_color = kwargs.get( 'commodity_color' ),
-			  usedfont_color  = kwargs.get( 'usedfont_color' ),
-			  home_color      = kwargs.get( 'home_color' ),
-			  input_color     = kwargs.get( 'arrowheadin_color' ),
-			  output_color    = kwargs.get( 'arrowheadout_color' ),
-			  vintage_cluster_color = kwargs.get( 'sb_vpbackg_color' ),
-			  font_color	  = kwargs.get( 'font_color' ),
-			  fill_color	  = kwargs.get( 'fill_color' ),
-			  vintage_color   = kwargs.get( 'sb_vp_color' ),
-			  splinevar       = kwargs.get( 'splinevar' ),
-			  total_cap       = total_cap,
-			  vnodes          = vnodes,
-			  enodes          = enodes,
-			  iedges          = iedges,
-			  oedges          = oedges,
-			))
+			f.write( tech_results_dot_fmt % args)
 		cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
 		call( cmd )
 
@@ -247,12 +206,11 @@ def CreateTechResultsDiagrams ( **kwargs ): # tech results
 	return os.path.join(folder, fname + ffmt)
 
 def CreateCommodityPartialResults ( **kwargs ): 
+	print 'Starting commodity partial results'
 	folder 		= 'commodities'
-	ifile		= kwargs.get( 'ifile' )
 	ffmt            = kwargs.get( 'image_format' )
 	per 			= kwargs.get( 'period' )
 	comm 			= kwargs.get( 'inp_commodity' )
-	scenario 		= kwargs.get( 'scenario_name' )
 	
 	if (not os.path.exists(folder)):
 		os.makedirs( folder )
@@ -261,31 +219,24 @@ def CreateCommodityPartialResults ( **kwargs ):
 	if (kwargs['grey_flag']):
 		fname += 'grey.'
 	
+	print 'checked and Generated folders'
+	
 	if (os.path.exists(fname + ffmt)):
 		return os.path.join(folder, fname + ffmt)
 
-	from GraphVizFormats import commodity_dot_fmt
+	print 'Starting database queries'
+	dbUtil = DatabaseUtil(kwargs.get( 'ifile' ), kwargs.get( 'scenario_name' ))
+	input_total = set(dbUtil.getExistingTechnologiesForCommodity(comm, 'output')['tech'])
+	output_total = set(dbUtil.getExistingTechnologiesForCommodity(comm, 'input')['tech'])
+	
+	flow_in = dbUtil.getOutputFlowForPeriod(per, 'input', comm)
+	otechs = set(flow_in['tech'])
 
-	con = sqlite3.connect(ifile)
-	cur = con.cursor()
-	con.text_factory = str
+	flow_out = dbUtil.getOutputFlowForPeriod(per, 'output', comm)
+	itechs = set(flow_out['tech'])
 
-	cur.execute("SELECT DISTINCT tech FROM Efficiency WHERE output_comm is '"+comm+"'")
-	input_total = set(pd.DataFrame(cur.fetchall(), columns=['tech'])['tech'])
-
-	cur.execute("SELECT DISTINCT tech FROM Efficiency WHERE input_comm is '"+comm+"'")
-	output_total = set(pd.DataFrame(cur.fetchall(), columns=['tech'])['tech'])
-
-	cur.execute("SELECT DISTINCT tech, SUM(vflow_in) FROM Output_VFlow_In WHERE input_comm is '"+comm+"' and scenario is '"+scenario+"' and t_periods is '"+str(per)+"' GROUP BY tech")
-	flow_in = pd.DataFrame(cur.fetchall(), columns=['input_techs', 'flow_in'])
-	otechs = set(flow_in['input_techs'])
-
-	cur.execute("SELECT DISTINCT tech, SUM(vflow_out) FROM Output_VFlow_Out WHERE output_comm is '"+comm+"' and scenario is '"+scenario+"' and t_periods is '"+str(per)+"' and input_comm != 'ethos' GROUP BY tech")
-	flow_out = pd.DataFrame(cur.fetchall(), columns=['output_techs', 'flow_out'])
-	itechs = set(flow_out['output_techs'])
-
-	cur.close()
-	con.close()
+	dbUtil.close()
+	print 'done with database queries'
 
 	period_results_url_fmt = '../results/results%%s.%s' % ffmt
 	# node_attr_fmt = 'href="../results/results_%%s_%%s.%s"' % ffmt
@@ -301,169 +252,83 @@ def CreateCommodityPartialResults ( **kwargs ):
 	rcnode = ((comm, rc_node_fmt % (kwargs.get( 'commodity_color' ), url, kwargs.get( 'fill_color' ))),)
 
 	for i in range(len(flow_in)):
-		t = flow_in.iloc[i]['input_techs']
-		f = flow_in.iloc[i]['flow_in']
+		t = flow_in.iloc[i]['tech']
+		f = flow_in.iloc[i]['flow']
 		enodes.add( (t, node_attr_fmt % (t, per)) )
 		eedges.add( (comm, t, 'label="%.2f"' % f) )
 	for t in output_total - otechs:
 		dnodes.add( (t, None) )
 		dedges.add( (comm, t, None) )
 	for i in range(len(flow_out)):
-		t = flow_out.iloc[i]['output_techs']
-		f = flow_out.iloc[i]['flow_out']
+		t = flow_out.iloc[i]['tech']
+		f = flow_out.iloc[i]['flow']
 		enodes.add( (t, node_attr_fmt % (t, per)) )
 		eedges.add( (t, comm, 'label="%.2f"' % f) )
 	for t in input_total - itechs:
 		dnodes.add( (t, None) )
 		dedges.add( (t, comm, None) )
 
-	rcnode = create_text_nodes( rcnode )
-	enodes = create_text_nodes( enodes, indent=2 )
-	dnodes = create_text_nodes( dnodes, indent=2 )
-	eedges = create_text_edges( eedges, indent=2 )
-	dedges = create_text_edges( dedges, indent=2 )
+	print 'Done with nodes and edgs'
+	args = dict(
+	resource_node = create_text_nodes( rcnode ),
+	used_nodes = create_text_nodes( enodes, indent=2 ),
+	unused_nodes = create_text_nodes( dnodes, indent=2 ),
+	used_edges = create_text_edges( eedges, indent=2 ),
+	unused_edges = create_text_edges( dedges, indent=2 ),
+	)
+	args.update(kwargs)
 	
 	with open( fname + 'dot' ,'w') as f:
-		f.write( commodity_dot_fmt % dict(
-		  home_color     = kwargs.get( 'home_color' ),
-		  usedfont_color = kwargs.get( 'usedfont_color' ),
-		  sb_arrow_color = kwargs.get( 'sb_arrow_color' ),
-		  tech_color     = kwargs.get( 'tech_color' ),
-		  commodity      = comm,
-		  period         = per,
-		  unused_color   = kwargs.get( 'unused_color' ),
-		  font_color	 = kwargs.get( 'font_color' ),
-		  resource_node  = rcnode,
-		  used_nodes     = enodes,
-		  unused_nodes   = dnodes,
-		  used_edges     = eedges,
-		  unused_edges   = dedges,
-		))
+		f.write( commodity_dot_fmt % args)
 
 	cmd = ('dot', '-T' + ffmt, '-o' + fname + ffmt, fname + 'dot')
 	call( cmd )
 
 	os.chdir( '..' )
+	print 'Finished commodity partial results. returning'
 	return os.path.join(folder, fname + ffmt)
 
 def createCompleteInputGraph( **kwargs ) : # Call this function if the input file is a database.
-	ifile		   = kwargs.get( 'ifile' )
-	q_flag			   = kwargs.get( 'q_flag' )
 	quick_name 		   = kwargs.get( 'quick_name' )
-	scenario_name	   = kwargs.get( 'scenario_name' )
 	ffmt               = kwargs.get( 'image_format' )
-	arrowheadin_color  = kwargs.get( 'arrowheadin_color' )
-	arrowheadout_color = kwargs.get( 'arrowheadout_color' )
-	commodity_color    = kwargs.get( 'commodity_color' )
-	tech_color         = kwargs.get( 'tech_color' )
-	unused_color       = kwargs.get( 'unused_color' )
-	unusedfont_color   = kwargs.get( 'unusedfont_color' )
-	usedfont_color     = kwargs.get( 'usedfont_color' )
-	fill_color		   = kwargs.get( 'fill_color' )
-	font_color		   = kwargs.get( 'font_color' )
-	inp_comm		   = kwargs.get( 'inp_commodity' )
-	inp_tech		   = kwargs.get( 'inp_technology' )
 	
 	nodes, tech, ltech, to_tech, from_tech = set(), set(), set(), set(), set()
-	if q_flag:
-		# Specify the Input and Output Commodities to choose from. Default puts all commodities in the Graph.
-		if inp_comm is None and inp_tech is None :
-			inp_comm = "NOT NULL"
-			inp_tech = "NOT NULL"
-		else :
-			if inp_comm is None :
-				inp_comm = "NULL"
-			else :
-				inp_comm = "'"+inp_comm+"'"
-			if inp_tech is None :
-				inp_tech = "NULL"
-			else :
-				inp_tech = "'"+inp_tech+"'"
-		
-		#connect to the database
-		con = sqlite3.connect(ifile)
-		cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
-		con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
+	dbUtil = DatabaseUtil(kwargs.get( 'ifile' ))
 
-		print ifile, inp_comm, inp_tech
-
-		cur.execute("SELECT input_comm, tech, output_comm FROM Efficiency WHERE input_comm is "+inp_comm+" or output_comm is "+inp_comm+" or tech is "+inp_tech)
-		for row in cur:
-			if row[0] != 'ethos':
-				nodes.add(row[0])
-			else :
-				ltech.add(row[1])
-			nodes.add(row[2])
-			tech.add(row[1])
-			# Now populate the dot file with the concerned commodities
-			if row[0] != 'ethos':
-				to_tech.add('"%s"' % row[0] + '\t->\t"%s"' % row[1]) 
-			from_tech.add('"%s"' % row[1] + '\t->\t"%s"' % row[2])
-
-		cur.close()
-		con.close()
-		
+	if kwargs.get( 'q_flag' ):
+		res = dbUtil.getCommoditiesAndTech(kwargs.get( 'inp_commodity' ), kwargs.get( 'inp_technology' ))
 	else:
-		# Specify the Input and Output Commodities to choose from. Default puts all commodities in the Graph.
-		if inp_comm is None and inp_tech is None :
-			inp_comm = "\w+"
-			inp_tech = "\w+"
-		else :
-			if inp_comm is None :
-				inp_comm = "\W+"
-			if inp_tech is None :
-				inp_tech = "\W+"
+		res = dbUtil.readFromDatFile(kwargs.get( 'inp_commodity' ), kwargs.get( 'inp_technology' ))
 
-		eff_flag = False
-		#open the text file
-		with open (ifile) as f :
-			for line in f:
-				if eff_flag is False and re.search("^\s*param\s+efficiency\s*[:][=]", line, flags = re.I) : 
-					#Search for the line param Efficiency := (The script recognizes the commodities specified in this section)
-					eff_flag = True
-				elif eff_flag :
-					line = re.sub("[#].*$", " ", line)
-					if re.search("^\s*;\s*$", line)	:
-						break #  Finish searching this section when encounter a ';'
-					if re.search("^\s+$", line)	:
-						continue
-					line = re.sub("^\s+|\s+$", "", line)
-					row = re.split("\s+", line)
-					if not re.search(inp_comm, row[0]) and not re.search(inp_comm, row[3]) and not re.search(inp_tech, row[1]) :
-						continue
-					if row[0] != 'ethos':
-						nodes.add(row[0])
-					else :
-						ltech.add(row[1])
-					nodes.add(row[3])
-					tech.add(row[1])
-					# Now populate the dot file with the concerned commodities
-					if row[0] != 'ethos':
-						to_tech.add('"%s"' % row[0] + '\t->\t"%s"' % row[1])
-					from_tech.add('"%s"' % row[1] + '\t->\t"%s"' % row[3])
-							
-		if eff_flag is False :	
-			print ("Error: The Efficiency Parameters cannot be found in the specified file - "+ifile)
-			sys.exit(2)
+	dbUtil.close()
+		
+	for i in range(len(res)):
+		row = res.iloc[i]
+		if row['input_comm'] != 'ethos':
+			nodes.add(row['input_comm'])
+		else :
+			ltech.add(row['tech'])
+		nodes.add(row['output_comm'])
+		tech.add(row['tech'])
+		# Now populate the dot file with the concerned commodities
+		if row['input_comm'] != 'ethos':
+			to_tech.add('"%s"' % row['input_comm'] + '\t->\t"%s"' % row['tech']) 
+		from_tech.add('"%s"' % row['tech'] + '\t->\t"%s"' % row['output_comm'])
+
 	
 	print "Creating Diagrams...\n"
 
-	from GraphVizFormats import quick_run_dot_fmt
+	args = dict(
+	enodes      = "".join('"%s";\n\t\t' % x for x in nodes),
+	tnodes      = "".join('"%s";\n\t\t' % x for x in tech),
+	iedges      = "".join('%s;\n\t\t' % x for x in to_tech),
+	oedges      = "".join('%s;\n\t\t' % x for x in from_tech),
+	snodes      = ";".join('"%s"' %x for x in ltech),
+	)
+	args.update(kwargs)
 
 	with open( quick_name + '.dot', 'w' ) as f:
-		f.write( quick_run_dot_fmt % dict(
-		  arrowheadin_color  = arrowheadin_color,
-		  arrowheadout_color = arrowheadout_color,
-		  commodity_color    = commodity_color,
-		  tech_color         = tech_color,
-		  font_color         = font_color,
-		  fill_color         = fill_color,
-		  enodes             = "".join('"%s";\n\t\t' % x for x in nodes),
-		  tnodes             = "".join('"%s";\n\t\t' % x for x in tech),
-		  iedges             = "".join('%s;\n\t\t' % x for x in to_tech),
-		  oedges             = "".join('%s;\n\t\t' % x for x in from_tech),
-		  snodes             = ";".join('"%s"' %x for x in ltech),
-		))
+		f.write( quick_run_dot_fmt % args)
 	del nodes, tech, to_tech, from_tech
 	cmd = ('dot', '-T' + ffmt, '-o' + quick_name+'.' + ffmt, quick_name+'.dot')
 	call( cmd )
@@ -471,13 +336,9 @@ def createCompleteInputGraph( **kwargs ) : # Call this function if the input fil
 	
 def createGraphBasedOnInput(inputs):
 	kwargs = processInputArgs(inputs)
+	os.chdir(kwargs['res_dir'])
 
 	print "Reading File %s ..." %kwargs['ifile'] 
-
-	if kwargs['res_dir'] is None:
-		kwargs['res_dir'] = "current directory"
-	else:
-		os.chdir(kwargs['res_dir'])
 	print "CreateModelDiagrams with quick_flag = ", kwargs['quick_flag']
 
 	# CreateModelDiagrams function stuff
