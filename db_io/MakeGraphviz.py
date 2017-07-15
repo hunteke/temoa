@@ -321,6 +321,8 @@ class GraphvizDiagramGenerator(object):
 			outputName += "_"+str(inp_comm)
 
 		outputName = os.path.join(self.outDir, outputName)
+		if (self.greyFlag):
+			outputName += '.grey'
 		if (os.path.exists(outputName + '.' + outputFormat)):
 			self.__log__('createCompleteInputGraph: graph already exists at path, returning')
 			return self.outDir, outputName + '.' + outputFormat
