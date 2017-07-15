@@ -313,8 +313,13 @@ class GraphvizDiagramGenerator(object):
 
 	# Function for generating the Input Graph
 	def createCompleteInputGraph(self, inp_tech=None, inp_comm=None, outputFormat='svg') :
-		self.__log__('createCompleteInputGraph: started')
+		self.__log__('createCompleteInputGraph: started with inp_tech = ' + str(inp_tech)+ ' and inp_comm = ' + str(inp_comm))
 		outputName = self.qName
+		if (not (inp_tech is None)):
+			outputName += "_"+str(inp_tech)
+		if (not (inp_comm is None)):
+			outputName += "_"+str(inp_comm)
+
 		outputName = os.path.join(self.outDir, outputName)
 		if (os.path.exists(outputName + '.' + outputFormat)):
 			self.__log__('createCompleteInputGraph: graph already exists at path, returning')
