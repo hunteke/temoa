@@ -447,12 +447,12 @@ navigate to the :code:`db_io` folder, where the graphviz script and database
 files reside. To review all of the graphviz options, use the :code:`--help` flag:
 
 .. parsed-literal::
-  $ python Make_Graphviz.py --help
+  $ python MakeGraphviz.py --help
 
 The most basic way to use graphviz is to view the full energy system map:
 
 .. parsed-literal::
-  $ python Make_Graphviz.py -i temoa_utopia.sqlite
+  $ python MakeGraphviz.py -i temoa_utopia.sqlite
 
 The resultant system map will look like this:
 
@@ -473,7 +473,7 @@ with a specific model run stored in the model database. To view the results, inc
 the scenario flag (:code:`-s`) and a specific model year (:code:`-y`).
 
 .. parsed-literal::
-  $ python Make_Graphviz.py -i temoa_utopia.sqlite -s test_run -y 1990
+  $ python MakeGraphviz.py -i temoa_utopia.sqlite -s test_run -y 1990
 
 .. figure:: images/global_results.*
    :align: center
@@ -487,7 +487,7 @@ The output can also be fine-tuned to show results associated with a specific
 commodity or technology. For example:
 
 .. parsed-literal::
-  $ python Make_Graphviz.py -i dbs/temoa_utopia.sqlite -s test_run -y 2010 -b E31
+  $ python MakeGraphviz.py -i dbs/temoa_utopia.sqlite -s test_run -y 2010 -b E31
 
 .. figure:: images/techvintage_results.*
    :align: center
