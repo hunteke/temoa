@@ -397,6 +397,24 @@ for these constraints are period and tech_all, not tech and vintage.
 	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] <= max_cap)
 	return expr
 
+def MinCapacitySet_Constraint ( M, p ):
+	r""" See MinCapacity_Constraint """
+	min_cap = value( M.MinCapacitySum[p] )
+	aggcap = sum ( M.V_CapacityAvailableByPeriodAndTech[p, t]
+		for t in M.tech_capacity_min
+	)
+	expr = (aggcap >= min_cap)
+	return expr	
+
+def MaxCapacitySet_Constraint ( M, p ):
+	r""" See MaxCapacity_Constraint """
+	max_cap = value( M.MaxCapacitySum[p] )
+	aggcap = sum ( M.V_CapacityAvailableByPeriodAndTech[p, t]
+		for t in M.tech_capacity_max
+	)
+	expr = (aggcap <= max_cap)
+	return expr			
+	
 def MaxActivity_Constraint ( M, p, t ):
 	r"""
 
@@ -470,7 +488,115 @@ the model. Currently, each slice is completely independent of other slices.
 	expr = ( total_out_in == 0 )
 	return expr
 
+def HourlyStorage_Constraint ( M, p, s, d, t ):
 
+	InitialStorage = 0	#batteries are assumed delivered uncharged
+	
+	#this is the sum of all input=i sent TO storage tech t of vintage v with output=o in P,S,D, (in PJ)
+	charge = sum( M.V_FlowIn[p, s, d, S_i, t, S_v, S_o] * M.Efficiency[S_i, t, S_v, S_o]
+	  for S_v in ProcessVintages( p, t ) 
+	  for S_i in ProcessInputs( p, t, S_v )
+	  for S_o in ProcessOutputsByInput( p, t, S_v, S_i ) 
+	) * value( M.SegFrac[s,d] )
+
+	#this is the sum of all output=o withdrawn FROM storage tech t of vintage v with input=i P,S,D, (in PJ)
+	discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
+	  for S_v in ProcessVintages( p, t ) 
+	  for S_o in ProcessOutputs( p, t, S_v )
+	  for S_i in ProcessInputsByOutput( p, t, S_v, S_o )
+	) * value( M.SegFrac[s,d] )
+	
+	stored_energy = charge - discharge
+	
+# this hourly storage formulation allows stored energy to carry over through time of day and seasons, but must be zeroed out at the end of each period
+
+	if d == M.time_of_day.last() and s == M.time_season.last(): #last time slice of the last season (aka end of period), must zero out
+		d_prev = M.time_of_day.prev(d)
+		expr = ( M.V_HourlyStorage[p, s, d_prev, t] + stored_energy == 0 )
+	
+	elif d == M.time_of_day.first() and s == M.time_season.first(): #first time slice of the first season (aka start of period), starts at zero
+		expr = ( M.V_HourlyStorage[p,s,d,t] == stored_energy )
+	
+	elif d == M.time_of_day.first(): #first time slice of any season that is NOT the first season
+		d_last = M.time_of_day.last()
+		s_prev = M.time_season.prev(s)
+		expr = ( M.V_HourlyStorage[p,s,d,t] == M.V_HourlyStorage[p,s_prev,d_last,t] + stored_energy )
+	
+	else: #so this is any time slice that is NOT covered above (so not the period end time slice; not the period beginning time slice; and not the first time slice of any season)
+		d_prev = M.time_of_day.prev(d)
+		expr = ( M.V_HourlyStorage[p,s,d,t] == M.V_HourlyStorage[p,s,d_prev,t] + stored_energy )
+
+	return expr	
+
+def HourlyStorage_UpperBound ( M, p, s, d, t ):
+	# V_HourlyStorage is in terms of PJ; so in any single time slice, amount of cumulative stored energy cannot exceed capacity (GW) * 8 (hours) = GWh
+	# need to convert GWh capacity to PJ (3600/10^6)
+	
+	energy_capacity = M.V_CapacityAvailableByPeriodAndTech[p,t] * 8 * 3600 / 10**6 
+
+#	energy_capacity = M.V_CapacityAvailableByPeriodAndTech[p,t] * value( M.CapacityToActivity[t] ) * value( M.SegFrac[s,d] ) * 8
+	
+	expr = ( M.V_HourlyStorage[p,s,d,t] <= energy_capacity )
+	
+	return expr
+
+def HourlyStorage_LowerBound ( M, p, s, d, t ):
+	# V_HourlyStorage is in terms of PJ; so in any single time slice, amount of cumulative stored energy cannot dip below some minimum value (zero)
+	# need to convert GWh capacity to PJ (3600/10^6)
+	
+	expr = (M.V_HourlyStorage[p,s,d,t] >= 0)   #no minimum charge, can achieve 100% DOD
+	
+	return expr
+	
+def HourlyStorageCharge_UpperBound ( M, p, s, d, t ):
+	# This must limit the rate that energy (PJ) can flow into the battery - limited by the battery size (capacity in GW)
+	# The battery capacity is defined by GW (GJ/s). Convert GJ/s to PJ/h, and this is the maximum that can flow into the battery in 1 hour
+	
+#	hourly_charge = sum( M.V_FlowIn[p, s, d, S_i, t, S_v, S_o] * M.Efficiency[S_i, t, S_v, S_o]
+#	  for S_v in ProcessVintages( p, t ) 
+#	  for S_i in ProcessInputs( p, t, S_v )
+#	  for S_o in ProcessOutputsByInput( p, t, S_v, S_i ) 
+#	)
+#	
+#	max_charge = M.V_CapacityAvailableByPeriodAndTech[p,t] * 3600/10**6 #converts GWh to PJ, treats each time slice as 1 hour
+
+
+	hourly_charge = sum( M.V_FlowIn[p, s, d, S_i, t, S_v, S_o] * M.Efficiency[S_i, t, S_v, S_o]
+	  for S_v in ProcessVintages( p, t ) 
+	  for S_i in ProcessInputs( p, t, S_v )
+	  for S_o in ProcessOutputsByInput( p, t, S_v, S_i ) 
+	) * value( M.SegFrac[s,d] )
+	
+	max_charge = M.V_CapacityAvailableByPeriodAndTech[p,t] * 3600/10**6	 #converts GWh to PJ, treats each time slice as 92 hours
+
+	expr = ( hourly_charge <= max_charge )  #energy charge rate cannot exceed the capacity of the battery (in GW)
+	
+	return expr
+
+def HourlyStorageCharge_LowerBound ( M, p, s, d, t ):
+	# This must limit the rate that energy (PJ) can flow out of the battery - limited by the battery size (capacity in GW)
+	# The battery capacity is defined by GW (GJ/s). Convert GJ/s to PJ/h, and this is the maximum that can flow out of the battery in 1 hour
+	
+	hourly_discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
+	  for S_v in ProcessVintages( p, t ) 
+	  for S_o in ProcessOutputs( p, t, S_v )
+	  for S_i in ProcessInputsByOutput( p, t, S_v, S_o )
+	) * value( M.SegFrac[s,d] )
+	
+	max_discharge = M.V_CapacityAvailableByPeriodAndTech[p,t] * 3600/10**6 #converts GWh to PJ, treats each time slice as 1 hour
+
+#	hourly_discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
+#	  for S_v in ProcessVintages( p, t ) 
+#	  for S_o in ProcessOutputs( p, t, S_v )
+#	  for S_i in ProcessInputsByOutput( p, t, S_v, S_o )
+#	)
+
+#	max_discharge = M.V_CapacityAvailableByPeriodAndTech[p,t] * (value( M.CapacityToActivity[t] ) * value( M.SegFrac[s,d] )) #converts GWh to PJ, treats each time slice as 92 hours
+	
+	expr = ( hourly_discharge <= max_discharge )   #energy discharge rate cannot exceed the capacity of the battery (in GW)
+	
+	return expr	
+	
 def TechInputSplit_Constraint ( M, p, s, d, i, t, v ):
 	r"""
 
@@ -588,6 +714,10 @@ slice ``<s``,\ ``d>``.
    \\
    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 """
+
+	if t in M.tech_hourlystorage:
+		return Constraint.Skip
+		
 	produceable = (
 	  (   value( M.CapacityFactorProcess[s, d, t, v] )
 	    * value( M.CapacityToActivity[ t ] )

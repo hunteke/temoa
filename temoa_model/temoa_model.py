@@ -57,8 +57,11 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     
     M.tech_baseload   = Set( within=M.tech_all )
     M.tech_storage    = Set( within=M.tech_all )
+    M.tech_hourlystorage = Set( within=M.tech_all) 
     M.tech_ramping    = Set( within=M.tech_all )
     M.tech_reserve    = Set( within=M.tech_all )
+    M.tech_capacity_min   = Set( within=M.tech_all ) 
+    M.tech_capacity_max   = Set( within=M.tech_all ) 
     
     # Technology sets used for sector-specific MGA weights
     M.tech_mga         = Set( within=M.tech_all )
@@ -151,6 +154,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     #Parameters for user-defined constraints
     M.MinCapacity = Param( M.time_optimize, M.tech_all )
     M.MaxCapacity = Param( M.time_optimize, M.tech_all )
+    M.MinCapacitySum = Param( M.time_optimize )   #minimum capacity for all techs within tech_capacity	
+    M.MaxCapacitySum = Param( M.time_optimize )   #maximum capacity for all techs within tech_capacity	
     M.MaxActivity = Param( M.time_optimize, M.tech_all )
     M.MinActivity = Param( M.time_optimize, M.tech_all )
     M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions )
@@ -208,6 +213,9 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     # This derived decision variable is used in MGA objective function:
     M.V_ActivityByTech = Var(M.tech_all, domain=NonNegativeReals )
 
+	# Decision variable for hourly storage
+    M.HourlyStorage_psdt = Set (dimen=4, initialize=HourlyStorageVariableIndices )
+    M.V_HourlyStorage = Var( M.HourlyStorage_psdt, domain=NonNegativeReals )
 
     # Objective Function--------------------------------------------------------
     M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
@@ -298,6 +306,43 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.StorageConstraint_psitvo, 
       rule=Storage_Constraint )
 
+#Hourly Storage 	  
+	  
+# Hourly Storage constraint	  
+    M.HourlyStorageConstraint_psdt = Set( 
+      dimen=4, initialize=HourlyStorageConstraintIndices )
+    M.HourlyStorageConstraint = Constraint( 
+      M.HourlyStorageConstraint_psdt, 
+      rule=HourlyStorage_Constraint )	  
+	  
+# Hourly Storage Upper Bound
+    M.HourlyStorageUpperBoundConstraint_psdt = Set( 
+      dimen=4, initialize=HourlyStorageBoundConstraintIndices )
+    M.HourlyStorageUpperBoundConstraint = Constraint( 
+      M.HourlyStorageUpperBoundConstraint_psdt, 
+      rule=HourlyStorage_UpperBound )	  
+#Hourly Storage Lower Bound
+    M.HourlyStorageLowerBoundConstraint_psdt = Set( 
+      dimen=4, initialize=HourlyStorageBoundConstraintIndices )
+    M.HourlyStorageLowerBoundConstraint = Constraint( 
+      M.HourlyStorageLowerBoundConstraint_psdt, 
+      rule=HourlyStorage_LowerBound )	   	  
+	  
+# Hourly Storage Upper Bound on Charging
+    M.HourlyStorageChargeUpperBoundConstraint_psdt = Set( 
+      dimen=4, initialize=HourlyStorageBoundConstraintIndices )
+    M.HourlyStorageChargeUpperBoundConstraint = Constraint( 
+      M.HourlyStorageChargeUpperBoundConstraint_psdt, 
+      rule=HourlyStorageCharge_UpperBound )	  
+#Hourly Storage Lower Bound on Discharging
+    M.HourlyStorageDischargeLowerBoundConstraint_psdt = Set( 
+      dimen=4, initialize=HourlyStorageBoundConstraintIndices )
+    M.HourlyStorageDischargeLowerBoundConstraint = Constraint( 
+      M.HourlyStorageDischargeLowerBoundConstraint_psdt, 
+      rule=HourlyStorageCharge_LowerBound )	   	  	  
+	  
+#-----------------	  
+
     M.RampUpConstraintDay_psdtv = Set( 
       dimen=5, initialize=RampConstraintDayIndices )
     M.RampUpConstraintDay = Constraint( 
@@ -379,6 +424,18 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.MinCapacityConstraint_pt, 
       rule=MinCapacity_Constraint )
 
+    M.MinCapacitySetConstraint_p = Set(
+      dimen=1, initialize=lambda M: M.MinCapacitySum.sparse_iterkeys() )
+    M.MinCapacitySetConstraint = Constraint( 
+      M.MinCapacitySetConstraint_p, 
+      rule=MinCapacitySet_Constraint ) 	  
+	  
+    M.MaxCapacitySetConstraint_p = Set(
+      dimen=1, initialize=lambda M: M.MaxCapacitySum.sparse_iterkeys() )
+    M.MaxCapacitySetConstraint = Constraint( 
+      M.MaxCapacitySetConstraint_p, 
+      rule=MaxCapacitySet_Constraint ) 		  
+	  
     M.TechInputSplitConstraint_psditv = Set(
       dimen=6, initialize=TechInputSplitConstraintIndices
  )

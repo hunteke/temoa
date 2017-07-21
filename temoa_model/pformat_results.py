@@ -125,6 +125,13 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 		svars['V_Activity'][p, s, d, t, v] = val
 
+		#Added to output storage values
+	for p, s, d, t in m.V_HourlyStorage:
+		val = value( m.V_HourlyStorage[p, s, d, t] )
+		if abs(val) < epsilon: continue
+
+		svars['V_HourlyStorage'][p, s, d, t] = val		
+		
 	for p, t, v in m.V_ActivityByPeriodAndProcess:
 		val = value( m.V_ActivityByPeriodAndProcess[p, t, v] )
 		if abs(val) < epsilon: continue
@@ -271,7 +278,8 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 			   "V_CapacityAvailableByPeriodAndTech"   : "Output_CapacityByPeriodAndTech",  \
 			   "V_EmissionActivityByPeriodAndProcess" : "Output_Emissions", \
 			   "Objective"  : "Output_Objective", \
-			   "Costs"      : "Output_Costs" }
+			   "Costs"      : "Output_Costs", \
+			   "V_HourlyStorage"   :  "Output_HourlyStorage"}
 	
 	db_tables = ['time_periods', 'time_season', 'time_of_day', 'technologies', 'commodities',\
 				'LifetimeTech', 'LifetimeProcess', 'Efficiency', 'EmissionActivity', 'ExistingCapacity']
@@ -429,10 +437,10 @@ def dat_to_db(input_file, output_schema, run_partial=False):
 	
 	#####Code Starts here	
 	tables_single_value = [	'time_exist', 'time_future', 'time_season', 'time_of_day', \
-				'tech_baseload', 'tech_resource', 'tech_production', 'tech_storage', \
+				'tech_baseload', 'tech_resource', 'tech_production', 'tech_storage', 'tech_hourlystorage', \
 				'commodity_physical', 'commodity_demand', 'commodity_emissions']
 	
-	partial_run_tech = ['tech_baseload', 'tech_resource', 'tech_production', 'tech_storage']
+	partial_run_tech = ['tech_baseload', 'tech_resource', 'tech_production', 'tech_storage', 'tech_hourlystorage']
 
 	partial_run_comm = ['commodity_physical', 'commodity_demand', 'commodity_emissions']
 	
@@ -527,11 +535,17 @@ def dat_to_db(input_file, output_schema, run_partial=False):
 		if i is '':
 			continue
 		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'ps', '', '');")
+	for i in parsed_data['tech_hourlystorage']:
+		if i is '':
+			continue
+		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'ph', '', '');")		
 	for i in parsed_data['tech_production']:
 		if i is '':
 			continue
 		if i in parsed_data['tech_storage']:
 			continue
+		if i in parsed_data['tech_hourlystorage']:
+			continue			
 		if i in parsed_data['tech_baseload']:
 			continue
 		output_schema.execute("INSERT OR REPLACE INTO technologies VALUES('"+i+"', 'p', '', '');")

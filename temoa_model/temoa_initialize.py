@@ -846,6 +846,7 @@ def CommodityBalanceConstraintIndices ( M ):
 
 	  for p, o in period_commodity
 	  for t, v in g_commodityUStreamProcess[ p, o ]
+	  if t not in M.tech_hourlystorage
 	  for s in M.time_season
 	  for d in M.time_of_day
 	)
@@ -860,6 +861,7 @@ def ProcessBalanceConstraintIndices ( M ):
 	  for p in M.time_optimize
 	  for t in M.tech_all
 	  if t not in M.tech_storage
+	  if t not in M.tech_hourlystorage #added to remove hourly storage from the process balance constraint	  	  
 	  for v in ProcessVintages( p, t )
 	  for i in ProcessInputs( p, t, v )
 	  for o in ProcessOutputsByInput( p, t, v, i )
@@ -884,6 +886,41 @@ def StorageConstraintIndices ( M ):
 
 	return indices
 
+# Indices for hourly storage constraint and decision variables	
+def HourlyStorageConstraintIndices ( M ):
+	indices = set(
+	  (p, s, d, t)
+
+	  for p in M.time_optimize
+	  for s in M.time_season
+	  for d in M.time_of_day	  
+	  for t in M.tech_hourlystorage
+	)
+
+	return indices	
+	
+def HourlyStorageVariableIndices ( M ):
+	indices = set(
+		(p, s, d, t)
+		
+		for p in M.time_optimize
+		for s in M.time_season
+		for d in M.time_of_day
+		for t in M.tech_hourlystorage
+	)
+	return indices
+	
+def HourlyStorageBoundConstraintIndices ( M ):
+	indices = set(
+		(p, s, d, t)
+		
+		for p in M.time_optimize
+		for s in M.time_season
+		for d in M.time_of_day
+		for t in M.tech_hourlystorage
+	)
+	return indices	
+	
 def RampConstraintDayIndices ( M ):
 	indices = set(
 	  (p, s, d, t, v)
