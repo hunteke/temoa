@@ -22,7 +22,7 @@ def processInput(args):
 	group1.add_argument('-b', '--technology', action="store", dest="inp_technology", help="Technology for which graph to be generated")
 	group1.add_argument('-a', '--commodity', action="store", dest="inp_commodity", help="Commodity for which graph to be generated")
 
-	parser.add_argument('-s', '--scenario', action="store", dest="scenario_name", help="Model run scenario name")
+	parser.add_argument('-s', '--scenario', action="store", dest="scenario_name", help="Model run scenario name", default=None)
 	parser.add_argument('-y', '--year', action="store", dest="period", type=int, help="The period for which the graph is to be generated (Used only for output plots)")
 
 	options = parser.parse_args(args)
@@ -33,13 +33,9 @@ def processInput(args):
 
 	return vars(options)
 
-def svgColorConfig(inputs):
-	grey_flag = not (inputs['grey_flag'])
-	print "Reaching here"
+def getColorConfig(grey_flag):
+	grey_flag = not (grey_flag)
 	kwargs = dict(
-	  images_dir         = '%s_%s' % (inputs['quick_name'], inputs['scenario_name']),
-	  image_format       = inputs['image_format'].lower(),
-
 	  tech_color         = 'darkseagreen' if grey_flag else 'black',
 	  commodity_color    = 'lightsteelblue' if grey_flag else 'black',
 	  unused_color       = 'powderblue' if grey_flag else 'gray75',
@@ -66,58 +62,7 @@ def svgColorConfig(inputs):
 	                'hotpink', 'cyan', 'burlywood', 'coral', 'limegreen',
 	                'black', 'brown') if grey_flag else ('black', 'black'),
 	)
-	print "reaching here 2"
-	kwargs.update(inputs)
-	print "about to return"
 	return kwargs
-
-def processInputArgs(inputs):
-	if (isinstance(inputs, dict)):
-		args = inputs.items()
-		args = [i for a in args for i in a if i]
-	else:
-		args = inputs
-
-	output = processInput(args)
-	print output
-	output['ifile'] = os.path.abspath(output['ifile'])
-	output['q_flag'] = False
-	output['quick_flag'] = False
-
-	file_ty = re.search(r"([\w-]+)\.(\w+)\b", output['ifile']) # Extract the input filename and extension
-	
-	if not file_ty :
-		raise "The file type %s is not recognized." % output['ifile']
-		
-	elif file_ty.group(2) in ("db", "sqlite", "sqlite3", "sqlitedb") :
-		output['q_flag'] = True
-		
-		if output['scenario_name'] is None:
-			output['quick_flag'] = True
-			if output['quick_name'] is None:
-				output['quick_name'] = file_ty.group(1)
-			else:
-				output['quick_name'] = file_ty.group(1) + '_' + output['quick_name']
-		
-		else:
-			output['quick_name'] = file_ty.group(1)
-			
-	elif file_ty.group(2) in ("dat", "txt") :
-		output['quick_flag'] = True
-		output['q_flag'] = False
-	
-		if output['quick_name'] is None:
-			output['quick_name'] = file_ty.group(1)
-		else:
-			output['quick_name'] = file_ty.group(1) + '_' + output['quick_name']
-	
-	else :
-		print "The input file type %s is not recognized. Please specify a database or a text file." % output['ifile']
-		sys.exit(2)
-
-	return svgColorConfig(output)
-	# return output
-
 
 def _getLen ( key ):
 	def wrapped ( obj ):

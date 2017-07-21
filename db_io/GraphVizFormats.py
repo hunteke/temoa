@@ -105,7 +105,7 @@ strict digraph model {
 
 tech_results_dot_fmt = """\
 strict digraph model {
-	label = "Results for %(tech)s in %(period)s" ;
+	label = "Results for %(inp_technology)s in %(period)s" ;
 
 	compound    = "True" ;
 	concentrate = "True";
@@ -120,9 +120,9 @@ strict digraph model {
 
 		href  = "%(cluster_vintage_url)s" ;
 		style = "filled"
-		color = "%(vintage_cluster_color)s"
+		color = "%(sb_vpbackg_color)s"
 
-		node [ color="%(vintage_color)s", shape="box", fontcolor="%(usedfont_color)s" ] ;
+		node [ color="%(sb_vp_color)s", shape="box", fontcolor="%(usedfont_color)s" ] ;
 
 		%(vnodes)s
 	}
@@ -139,13 +139,13 @@ strict digraph model {
 	}
 
 	subgraph inputs {
-		edge [ color="%(input_color)s" ] ;
+		edge [ color="%(arrowheadin_color)s" ] ;
 
 		%(iedges)s
 	}
 
 	subgraph outputs {
-		edge [ color="%(output_color)s" ] ;
+		edge [ color="%(arrowheadout_color)s" ] ;
 
 		%(oedges)s
 	}
@@ -154,7 +154,7 @@ strict digraph model {
 
 slice_dot_fmt = """\
 strict digraph model {
-	label = "Activity split of process %(tech)s, %(vintage)s in year %(period)s" ;
+	label = "Activity split of process %(inp_technology)s, %(vintage)s in year %(period)s" ;
 
 	compound    = "True" ;
 	concentrate = "True";
@@ -202,8 +202,8 @@ strict digraph model {
 """
 
 commodity_dot_fmt = """\
-strict digraph result_commodity_%(commodity)s {
-	label       = "%(commodity)s - %(period)s" ;
+strict digraph result_commodity_%(inp_commodity)s {
+	label       = "%(inp_commodity)s - %(period)s" ;
 
 	compound    = "True" ;
 	concentrate = "True" ;
