@@ -32,10 +32,101 @@ from temoa_config import TemoaConfig
 import errno, warnings
 import re as reg_exp
 
+from argparse import Namespace
+from os import sep
+
+from pyutilib.services import TempfileManager
+from pyutilib.services import TempfileManager
+
+from sys import version_info, exit
+
+from time import clock
+import sys, os, gc
+
+from pyomo.environ import DataPortal
+
+from pformat_results import pformat_results
+
+from pyomo.opt import SolverFactory
+
+from collections import defaultdict
+from temoa_rules import TotalCost_rule
+from temoa_mga   import ActivityObj_rule, SlackedObjective_rule, PreviousAct_rule
+
+
 signal(SIGINT, default_int_handler)
 
 
-def temoa_create_and_solve ( model, optimizer, options ):
+class TemoaSolver(object):
+	def __init__(self, model, config_filename):
+		self.model = model
+		self.config_filename = config_filename
+		self.temoa_setup()
+		self.temoa_checks()
+
+	def temoa_setup (self):
+		"""This function prepares the model to be solved. 
+
+		Inputs:
+		model -- the model object
+		config_filename -- config filename, non-blank if called from the UI
+		There are three possible ways to call the model:
+		1. python temoa_model/ /path/to/data_files
+		2. python temoa_model/ --config=/path/to/config/file
+		3. function call from the UI
+		This function discerns which way the model was called and process the 
+		inputs accordingly.
+		"""
+		
+		if self.config_filename == '':  # Called from the command line
+			options, config_flag = parse_args()
+			if config_flag == 1:   # Option 2 (using config file)
+				options.path_to_lp_files = options.path_to_logs + sep + "lp_files"
+				TempfileManager.tempdir = options.path_to_lp_files	
+			else:  # Must be Option 1 (no config file)
+				pass	
+
+		else:   # Config file already specified, so must be an interface call
+			available_solvers, default_solver = get_solvers()
+			temoa_config = TemoaConfig(d_solver=default_solver)
+			temoa_config.build(config=self.config_filename)
+			self.options = temoa_config
+		
+			self.temp_lp_dest = '/srv/thirdparty/temoa/db_io/'
+
+			self.options.path_to_lp_files = self.options.path_to_logs + sep + "lp_files"
+			TempfileManager.tempdir = self.options.path_to_lp_files	
+
+
+	def temoa_checks(self):
+		"""Make sure Python 2.7 is used and that a suitable solver is available."""
+		
+		if version_info < (2, 7):
+			msg = ("Temoa requires Python v2.7 to run.\n\n The model may not solve"
+				"properly with another version.")
+			raise SystemExit( msg )
+		
+		self.optimizer = SolverFactory( self.options.solver )
+		if self.optimizer:
+			pass
+		elif self.options.solver != 'NONE':
+			SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
+				.format( self.options.solver ))
+			if SE.isatty():
+				SE.write( "Please press enter to continue or Ctrl+C to quit." )
+				raw_input()
+
+	def createAndSolve(self):
+		try:
+			for k in self.temoa_create_and_solve():
+				yield k
+		except KeyboardInterrupt as e:
+			SE.write( '\n\nUser requested quit.  Exiting Temoa ...\n' )
+			SE.flush()
+		except SystemExit as e:
+			SE.write( '\n\nTemoa exit requested.  Exiting ...\n' )
+			SE.flush()
+
 	"""Create and solve an instance of the model.
 
 	Input arguments:
@@ -43,191 +134,215 @@ def temoa_create_and_solve ( model, optimizer, options ):
 	optimizer -- pyomo object used to perform optimization
 	options -- objects that contains user-specified run options
 	"""
+	def temoa_create_and_solve(self):
+		try:
+			self.txt_file = open(self.options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
 
-	from time import clock
-	import sys, os, gc
+		except BaseException as io_exc:
+			SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n")
+			self.txt_file = open("Complete_OutputLog.log", "w")
+			self.txt_file.write("Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n")
 
-	from pyomo.environ import DataPortal
+		# Check and see if mga attribute exists and if mga is specified
+		if hasattr(self.options, 'mga') and self.options.mga:
 
-	from pformat_results import pformat_results
+			scenario_names = []
+			scenario_names.append( self.options.scenario )
 
-	def create_temoa_instance ( model, options ):
+			# The MGA algorithm uses different objectives per iteration, so the first
+			# step is to remove the original objective function
+			self.model.del_component( 'TotalCost' )
+			# Create concrete model
+			temoaInstance1 = TemoaInstance(self.model, self.optimizer, self.options, self.txt_file)
+			for k in temoaInstance1.create_temoa_instance():
+				yield k
+			# Now add back the objective function that we earlier removed; note that name
+			# we choose here (FirstObj) will be copied to the output file.
+			temoaInstance1.instance.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
+			temoaInstance1.instance.preprocess()
+
+			for k in temoaInstance1.solve_temoa_instance():
+				yield k
+
+			temoaInstance1.handle_files(log_name='Complete_OutputLog.log' )
+			temoaInstance1.instance.solutions.load_from( temoaInstance1.result, delete_symbol_map=False )
+			temoaInstance1.instance.solutions.load_from( temoaInstance1.result )
+			# using value() converts the now-loaded results into a single number,
+			# which we'll use with our slightly unusual SlackedObjective_rule below
+			# (but defined above).
+			Perfect_Foresight_Obj = value( temoaInstance1.instance.FirstObj )
+				
+			# Create a new parameter that stores the MGA objective function weights
+			prev_activity_t = defaultdict( int )		
+			prev_activity_t = PreviousAct_rule( temoaInstance1.instance, self.options.mga_weight, prev_activity_t )		
+			
+			# Perform MGA iterations
+			while self.options.next_mga():
+				temoaMGAInstance = TemoaInstance(self.model, self.optimizer, self.options, self.txt_file)
+				for k in temoaMGAInstance.create_temoa_instance():
+					yield k
+				
+				try:
+					txt_file_mga = open(self.options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
+				except BaseException as io_exc:
+					SE.write("MGA Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n")
+					txt_file_mga = open("OutputLog_MGA_last.log", "w")
+				
+				# Update second instance with the new MGA-specific objective function
+				# and constraint.
+				temoaMGAInstance.instance.SecondObj = Objective(
+				expr=ActivityObj_rule( temoaMGAInstance.instance, prev_activity_t ),
+				noruleinit=True,
+				sense=minimize
+				)
+				temoaMGAInstance.instance.PreviousSlackedObjective = Constraint(
+				rule=None,
+				expr=SlackedObjective_rule( temoaMGAInstance.instance, Perfect_Foresight_Obj, self.options.mga ),
+				noruleinit=True
+				)
+				temoaMGAInstance.instance.preprocess()
+				for k in temoaMGAInstance.solve_temoa_instance():
+					yield k
+				temoaMGAInstance.handle_files(log_name='Complete_OutputLog.log' )
+
+		else:  #  User requested a single run
+			temoaInstance1 = TemoaInstance(self.model, self.optimizer, self.options, self.txt_file)
+			for k in temoaInstance1.create_temoa_instance():
+				yield k
+			for k in temoaInstance1.solve_temoa_instance():
+				yield k
+			temoaInstance1.handle_files(log_name='Complete_OutputLog.log')
+
+		self.txt_file.close()
+
+
+
+
+class TemoaInstance(object):
+	def __init__(self, model, optimizer, options, txt_file):
+		self.model = model
+		self.options = options
+		self.optimizer = optimizer
+		self.txt_file = txt_file
+
+	def create_temoa_instance (self):
 		"""Create a single instance of Temoa."""
 		
 		try:
-			txt_file = open(options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
+			if self.options.keepPyomoLP:
+				yield '\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' )
+				SE.write('\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' ))
+				self.txt_file.write('\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' ))
 
-		except BaseException as io_exc:
-			SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
-			txt_file = open("Complete_OutputLog.log", "w")
-			txt_file.write("Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
-
-		try:
-			if options.keepPyomoLP:
-				SE.write('\nSolver will write file: {}\n\n'.format( options.scenario + '.lp' ))
-				txt_file.write('\nSolver will write file: {}\n\n'.format( options.scenario + '.lp' ))
-
+			yield '[        ] Reading data files.\n'
 			SE.write( '[        ] Reading data files.'); SE.flush()
-			txt_file.write( 'Reading data files.')
+			self.txt_file.write( 'Reading data files.')
 			begin = clock()
 			duration = lambda: clock() - begin
 
-			modeldata = DataPortal( model=model )
+			modeldata = DataPortal( model=self.model )
 			# Recreate the pyomo command's ability to specify multiple "dot dat" files
 			# on the command lin			
-			for fname in options.dot_dat:
+			for fname in self.options.dot_dat:
 				if fname[-4:] != '.dat':
 					msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
+					yield msg
 					raise Exception( msg.format( fname ))
 				modeldata.load( filename=fname )
 			SE.write( '\r[%8.2f]\n' % duration() )
-			txt_file.write( '[%8.2f]\n' % duration() )
+			self.txt_file.write( '[%8.2f]\n' % duration() )
 
+			yield '[        ] Creating Temoa model instance.\n'
 			SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
-			txt_file.write( 'Creating Temoa model instance.')
+			self.txt_file.write( 'Creating Temoa model instance.')
 			
-			instance = model.create_instance( modeldata )
-			SE.write( '\r[%8.2f\n' % duration() )
-			txt_file.write( '[%8.2f]\n' % duration() )
+			self.instance = self.model.create_instance( modeldata )
+			yield '\r[%8.2f]\n' % duration()
+			SE.write( '\r[%8.2f]\n' % duration() )
+			self.txt_file.write( '[%8.2f]\n' % duration() )
 
 		except BaseException as model_exc:
+			yield "exception found in create_temoa_instance\n"
 			SE.write("exception found in create_temoa_instance\n")
-			txt_file.write("exception found in create_temoa_instance\n")
+			self.txt_file.write("exception found in create_temoa_instance\n")
+			yield str(model_exc)
 			SE.write(str(model_exc))
-			txt_file.write(str(model_exc))
-			txt_file.close()
+			self.txt_file.write(str(model_exc))
+			self.txt_file.close()
 
-		return instance, txt_file	
 
-	def solve_temoa_instance ( instance, optimizer, options, txt_file ):
+	def solve_temoa_instance (self):
 		'''Solve a Temoa instance.'''	
 		
 		begin = clock()
 		duration = lambda: clock() - begin
 		try:
+			yield '[        ] Solving.\n'
 			SE.write( '[        ] Solving.'); SE.flush()
-			txt_file.write( 'Solving.')
-			if optimizer:	
-				result = optimizer.solve( instance, 
-								keepfiles=options.keepPyomoLP, 
-								symbolic_solver_labels=options.keepPyomoLP )
-				SE.write( '\r[%8.2f\n' % duration() )
-				txt_file.write( '[%8.2f]\n' % duration() )
+			self.txt_file.write( 'Solving.')
+			if self.optimizer:	
+				self.result = self.optimizer.solve( self.instance, 
+								keepfiles=self.options.keepPyomoLP, 
+								symbolic_solver_labels=self.options.keepPyomoLP )
+				yield '\r[%8.2f]\n' % duration()
+				SE.write( '\r[%8.2f]\n' % duration() )
+				self.txt_file.write( '[%8.2f]\n' % duration() )
 				# return signal handlers to defaults, again
 				signal(SIGINT, default_int_handler)
+
+				# ... print the easier-to-read/parse format
+				msg = '[        ] Calculating reporting variables and formatting results.'
+				yield msg+'\n'
+				SE.write( msg ); SE.flush()
+				self.txt_file.write( 'Calculating reporting variables and formatting results.')
+				self.instance.solutions.store_to(self.result)
+				formatted_results = pformat_results( self.instance, self.result, self.options )
+				yield '\r[%8.2f]\n' % duration()
+				SE.write( '\r[%8.2f\n' % duration() )
+				self.txt_file.write( '[%8.2f]\n' % duration() )
+				yield formatted_results.getvalue() + '\n'
+				SO.write( formatted_results.getvalue() )
+				self.txt_file.write( formatted_results.getvalue() )
+				self.txt_file.close()
 			else:
+				yield '\r---------- Not solving: no available solver\n'
 				SE.write( '\r---------- Not solving: no available solver\n' )
-				txt_file.write( '\r---------- Not solving: no available solver\n' )
-				return
-	
-			# ... print the easier-to-read/parse format
-			msg = '[        ] Calculating reporting variables and formatting results.'
-			SE.write( msg ); SE.flush()
-			txt_file.write( 'Calculating reporting variables and formatting results.')
-			instance.solutions.store_to(result)
-			formatted_results = pformat_results( instance, result, options )
-			SE.write( '\r[%8.2f\n' % duration() )
-			txt_file.write( '[%8.2f]\n' % duration() )
-			SO.write( formatted_results.getvalue() )
-			txt_file.write( formatted_results.getvalue() )
-			txt_file.close()
+				self.txt_file.write( '\r---------- Not solving: no available solver\n' )
 		
 		except BaseException as model_exc:
+			yield "\nexception found in solve_temoa_instance\n"
 			SE.write("\nexception found in solve_temoa_instance\n")
-			txt_file.write("\nexception found in solve_temoa_instance\n")
+			self.txt_file.write("\nexception found in solve_temoa_instance\n")
+			yield str(model_exc)+'\n'
 			SE.write(str(model_exc))
-			txt_file.write(str(model_exc))
-			txt_file.close()
+			self.txt_file.write(str(model_exc))
+			self.txt_file.close()
 
-		return result
-
-	def handle_files( options, TemoaConfig, log_name):
+	def handle_files(self, log_name):
 		"""Handle log and LP file assuming user called with config file or from interface."""
-		if isinstance(options, TemoaConfig) and options.saveTEXTFILE:
-			for inpu in options.dot_dat:
+		if isinstance(self.options, TemoaConfig) and self.options.saveTEXTFILE:
+			for inpu in self.options.dot_dat:
 				file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
-			new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
-			if path.isfile(options.path_to_logs+os.sep+log_name) and path.exists(new_dir):
-				copyfile(options.path_to_logs+os.sep+log_name, new_dir+os.sep+options.scenario+'_OutputLog.log')
+			new_dir = self.options.path_to_db_io+os.sep+file_ty.group(1)+'_'+self.options.scenario+'_model'
+			if path.isfile(self.options.path_to_logs+os.sep+log_name) and path.exists(new_dir):
+				copyfile(self.options.path_to_logs+os.sep+log_name, new_dir+os.sep+self.options.scenario+'_OutputLog.log')
 										
-		if isinstance(options, TemoaConfig) and options.keepPyomoLP:
-			for inpu in options.dot_dat:
+		if isinstance(self.options, TemoaConfig) and self.options.keepPyomoLP:
+			for inpu in self.options.dot_dat:
 				file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
 		
-			new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+			new_dir = self.options.path_to_db_io+os.sep+file_ty.group(1)+'_'+self.options.scenario+'_model'
 		
-			for files in os.listdir(options.path_to_lp_files):
+			for files in os.listdir(self.options.path_to_lp_files):
 				if files.endswith(".lp"):
 					lpfile = files
 				else:
 					if files == "README.txt":
 						continue
-					os.remove(options.path_to_lp_files+os.sep+files)
+					os.remove(self.options.path_to_lp_files+os.sep+files)
 		
 			if path.exists(new_dir):
-				move(options.path_to_lp_files+os.sep+lpfile, new_dir+os.sep+options.scenario+'.lp')
-
-	# Check and see if mga attribute exists and if mga is specified
-	if hasattr(options, 'mga') and options.mga:
-		from collections import defaultdict
-		from temoa_rules import TotalCost_rule
-		from temoa_mga   import ActivityObj_rule, SlackedObjective_rule, PreviousAct_rule
-
-		scenario_names = []
-		scenario_names.append( options.scenario )
-
-		# The MGA algorithm uses different objectives per iteration, so the first
-		# step is to remove the original objective function
-		model.del_component( 'TotalCost' )
-		# Create concrete model
-		instance_1, txt_file = create_temoa_instance( model, options )
-		# Now add back the objective function that we earlier removed; note that name
-		# we choose here (FirstObj) will be copied to the output file.
-		instance_1.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
-		instance_1.preprocess()
-
-		result_1 = solve_temoa_instance( instance_1, optimizer, options, txt_file )
-		handle_files( options, TemoaConfig, log_name='Complete_OutputLog.log' )
-		instance_1.solutions.load_from( result_1, delete_symbol_map=False )
-		instance_1.solutions.load_from( result_1 )
-		# using value() converts the now-loaded results into a single number,
-		# which we'll use with our slightly unusual SlackedObjective_rule below
-		# (but defined above).
-		Perfect_Foresight_Obj = value( instance_1.FirstObj )
-			
-		# Create a new parameter that stores the MGA objective function weights
-		prev_activity_t = defaultdict( int )		
-		prev_activity_t = PreviousAct_rule( instance_1, options.mga_weight, prev_activity_t )		
-		
-		# Perform MGA iterations
-		while options.next_mga():
-			instance_mga, txt_file = create_temoa_instance( model, options )
-			try:
-				txt_file_mga = open(options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
-			except BaseException as io_exc:
-				SE.write("MGA Log file cannot be opened. Please check path. Trying to find:\n"+options.path_to_logs+" folder\n")
-				txt_file_mga = open("OutputLog_MGA_last.log", "w")
-			
-			# Update second instance with the new MGA-specific objective function
-			# and constraint.
-			instance_mga.SecondObj = Objective(
-			expr=ActivityObj_rule( instance_mga, prev_activity_t ),
-			noruleinit=True,
-			sense=minimize
-			)
-			instance_mga.PreviousSlackedObjective = Constraint(
-			rule=None,
-			expr=SlackedObjective_rule( instance_mga, Perfect_Foresight_Obj, options.mga ),
-			noruleinit=True
-			)
-			instance_mga.preprocess()
-			solve_temoa_instance( instance_mga, optimizer, options, txt_file )
-			handle_files( options, TemoaConfig, log_name='Complete_OutputLog.log' )
-
-	else:  #  User requested a single run
-		instance_1, txt_file = create_temoa_instance( model, options )
-		solve_temoa_instance( instance_1, optimizer, options, txt_file )
-		handle_files( options, TemoaConfig, log_name='Complete_OutputLog.log')
+				move(self.options.path_to_lp_files+os.sep+lpfile, new_dir+os.sep+self.options.scenario+'.lp')
 
 					
 def get_solvers():
@@ -349,79 +464,4 @@ def parse_args ( ):
 	raw_input() # Give the user a chance to confirm input
 
 	return options, config_flag
-
-
-def temoa_setup ( model, config_filename ):
-	"""This function prepares the model to be solved. 
-
-	Inputs:
-	model -- the model object
-	config_filename -- config filename, non-blank if called from the UI
-	There are three possible ways to call the model:
-	1. python temoa_model/ /path/to/data_files
-	2. python temoa_model/ --config=/path/to/config/file
-	3. function call from the UI
-	This function discerns which way the model was called and process the 
-	inputs accordingly.
-	"""
-
-	from argparse import Namespace
-	from os import sep
-	
-	if config_filename == '':  # Called from the command line
-		options, config_flag = parse_args()
-		if config_flag == 1:   # Option 2 (using config file)
-			from pyutilib.services import TempfileManager
-			options.path_to_lp_files = options.path_to_logs + sep + "lp_files"
-			TempfileManager.tempdir = options.path_to_lp_files	
-		else:  # Must be Option 1 (no config file)
-			pass	
-
-	else:   # Config file already specified, so must be an interface call
-		available_solvers, default_solver = get_solvers()
-		temoa_config = TemoaConfig(d_solver=default_solver)
-		temoa_config.build(config=config_filename)
-		options = temoa_config
-	
-		global temp_lp_dest
-		temp_lp_dest = '/srv/thirdparty/temoa/db_io/'
-
-		from pyutilib.services import TempfileManager
-		options.path_to_lp_files = options.path_to_logs + sep + "lp_files"
-		TempfileManager.tempdir = options.path_to_lp_files	
-	
-	opt = temoa_checks( options )
-	
-	# Now let's try to solve the model
-	try:
-		temoa_create_and_solve( model, opt, options )
-	except KeyboardInterrupt as e:
-		SE.write( '\n\nUser requested quit.  Exiting Temoa ...\n' )
-		SE.flush()
-	except SystemExit as e:
-		SE.write( '\n\nTemoa exit requested.  Exiting ...\n' )
-		SE.flush()	
-
-
-def temoa_checks( options ):
-	"""Make sure Python 2.7 is used and that a suitable solver is available."""
-
-	from sys import version_info, exit
-	
-	if version_info < (2, 7):
-		msg = ("Temoa requires Python v2.7 to run.\n\n The model may not solve"
-			"properly with another version.")
-		raise SystemExit( msg )
-
-	from pyomo.opt import SolverFactory
-	opt = SolverFactory( options.solver )
-	if opt:
-		pass
-	elif options.solver != 'NONE':
-		SE.write( "\nWarning: Unable to initialize solver interface for '{}'\n\n"
-			.format( options.solver ))
-		if SE.isatty():
-			SE.write( "Please press enter to continue or Ctrl+C to quit." )
-			raw_input()
-	return opt
 
