@@ -77,8 +77,6 @@ class TemoaSolver(object):
 		This function discerns which way the model was called and process the 
 		inputs accordingly.
 		"""
-		print "Hahah"
-		print self.config_filename
 		if self.config_filename == '':  # Called from the command line
 			self.options, config_flag = parse_args()
 			if config_flag == 1:   # Option 2 (using config file)
