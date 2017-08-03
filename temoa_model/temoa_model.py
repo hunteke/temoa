@@ -474,7 +474,7 @@ def runModel():
   dummy = ''  # If calling from command line, send empty string  
   solver = TemoaSolver(model, dummy)
   for k in solver.createAndSolve():
-    yield k
+    pass
 
 
 if '__main__' == __name__:
