@@ -11,7 +11,7 @@ class DatabaseUtil(object):
 		if (not os.path.exists(self.database)):
 			raise ValueError("The database file path doesn't exist")
 		
-		if self.database.endswith('.sqlite') or self.database.endswith('.sqlite3'):
+		if self.database.endswith('.db') or self.database.endswith('.sqlite') or self.database.endswith('.sqlite3'):
 			try:
 				self.con = sqlite3.connect(self.database)
 				self.cur = self.con.cursor()
