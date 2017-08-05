@@ -11,7 +11,7 @@ class DatabaseUtil(object):
 		if (not os.path.exists(self.database)):
 			raise ValueError("The database file path doesn't exist")
 		
-		if self.database.endswith('.db') or self.database.endswith('.sqlite') or self.database.endswith('.sqlite3'):
+		if self.isDataBaseFile(self.database):
 			try:
 				self.con = sqlite3.connect(self.database)
 				self.cur = self.con.cursor()
@@ -29,9 +29,16 @@ class DatabaseUtil(object):
 		if (self.con):
 			self.con.close()
 
+	@staticmethod
+	def isDataBaseFile(file):
+		if file.endswith('.db') or file.endswith('.sqlite') or file.endswith('.sqlite3'):
+			return True
+		else:
+			return False
+
 	def readFromDatFile(self, inp_comm, inp_tech):
 		if (not self.cur is None):
-			raise ValueError("Invalid Operation For sqlite file")
+			raise ValueError("Invalid Operation For Database file")
 		if inp_comm is None and inp_tech is None :
 			inp_comm = "\w+"
 			inp_tech = "\w+"

@@ -329,7 +329,7 @@ class GraphvizDiagramGenerator(object):
 		
 		nodes, tech, ltech, to_tech, from_tech = set(), set(), set(), set(), set()
 
-		if self.dbFile.endswith(('.sqlite', '.sqlite3', '.db')):
+		if DatabaseUtil.isDataBaseFile(self.dbFile):
 			res = self.dbUtil.getCommoditiesAndTech(inp_comm, inp_tech)
 		else:
 			res = self.dbUtil.readFromDatFile(inp_comm, inp_tech)
