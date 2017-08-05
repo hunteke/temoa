@@ -115,16 +115,74 @@ class TemoaSolver(object):
 				SE.write( "Please press enter to continue or Ctrl+C to quit." )
 				raw_input()
 
-	def createAndSolve(self):
-		try:
-			for k in self.temoa_create_and_solve():
+
+	def solveWithMGA(self):
+		scenario_names = []
+		scenario_names.append( self.options.scenario )
+
+		# The MGA algorithm uses different objectives per iteration, so the first
+		# step is to remove the original objective function
+		self.model.del_component( 'TotalCost' )
+		# Create concrete model
+		temoaInstance1 = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
+		for k in temoaInstance1.create_temoa_instance():
+			yield k
+		# Now add back the objective function that we earlier removed; note that name
+		# we choose here (FirstObj) will be copied to the output file.
+		temoaInstance1.instance.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
+		temoaInstance1.instance.preprocess()
+
+		for k in temoaInstance1.solve_temoa_instance():
+			yield k
+
+		temoaInstance1.handle_files(log_name='Complete_OutputLog.log' )
+		temoaInstance1.instance.solutions.load_from( temoaInstance1.result, delete_symbol_map=False )
+		temoaInstance1.instance.solutions.load_from( temoaInstance1.result )
+		# using value() converts the now-loaded results into a single number,
+		# which we'll use with our slightly unusual SlackedObjective_rule below
+		# (but defined above).
+		Perfect_Foresight_Obj = value( temoaInstance1.instance.FirstObj )
+
+		# Create a new parameter that stores the MGA objective function weights
+		prev_activity_t = defaultdict( int )
+		prev_activity_t = PreviousAct_rule( temoaInstance1.instance, self.options.mga_weight, prev_activity_t )
+
+		# Perform MGA iterations
+		while self.options.next_mga():
+			temoaMGAInstance = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
+			for k in temoaMGAInstance.create_temoa_instance():
 				yield k
-		except KeyboardInterrupt as e:
-			SE.write( '\n\nUser requested quit.  Exiting Temoa ...\n' )
-			SE.flush()
-		except SystemExit as e:
-			SE.write( '\n\nTemoa exit requested.  Exiting ...\n' )
-			SE.flush()
+
+			try:
+				txt_file_mga = open(self.options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
+			except BaseException as io_exc:
+				SE.write("MGA Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n")
+				txt_file_mga = open("OutputLog_MGA_last.log", "w")
+
+			# Update second instance with the new MGA-specific objective function
+			# and constraint.
+			temoaMGAInstance.instance.SecondObj = Objective(
+			expr=ActivityObj_rule( temoaMGAInstance.instance, prev_activity_t ),
+			noruleinit=True,
+			sense=minimize
+			)
+			temoaMGAInstance.instance.PreviousSlackedObjective = Constraint(
+			rule=None,
+			expr=SlackedObjective_rule( temoaMGAInstance.instance, Perfect_Foresight_Obj, self.options.mga ),
+			noruleinit=True
+			)
+			temoaMGAInstance.instance.preprocess()
+			for k in temoaMGAInstance.solve_temoa_instance():
+				yield k
+			temoaMGAInstance.handle_files(log_name='Complete_OutputLog.log' )
+
+	def solveWithoutMGA(self):
+		temoaInstance1 = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
+		for k in temoaInstance1.create_temoa_instance():
+			yield k
+		for k in temoaInstance1.solve_temoa_instance():
+			yield k
+		temoaInstance1.handle_files(log_name='Complete_OutputLog.log')
 
 	"""Create and solve an instance of the model.
 
@@ -133,91 +191,41 @@ class TemoaSolver(object):
 	optimizer -- pyomo object used to perform optimization
 	options -- objects that contains user-specified run options
 	"""
-	def temoa_create_and_solve(self):
+	def createAndSolve(self):
 		try:
 			self.txt_file = open(self.options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
 
 		except BaseException as io_exc:
+			yield "Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n"
 			SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n")
 			self.txt_file = open("Complete_OutputLog.log", "w")
 			self.txt_file.write("Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n")
 
 		# Check and see if mga attribute exists and if mga is specified
-		if hasattr(self.options, 'mga') and self.options.mga:
-
-			scenario_names = []
-			scenario_names.append( self.options.scenario )
-
-			# The MGA algorithm uses different objectives per iteration, so the first
-			# step is to remove the original objective function
-			self.model.del_component( 'TotalCost' )
-			# Create concrete model
-			temoaInstance1 = TemoaInstance(self.model, self.optimizer, self.options, self.txt_file)
-			for k in temoaInstance1.create_temoa_instance():
-				yield k
-			# Now add back the objective function that we earlier removed; note that name
-			# we choose here (FirstObj) will be copied to the output file.
-			temoaInstance1.instance.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
-			temoaInstance1.instance.preprocess()
-
-			for k in temoaInstance1.solve_temoa_instance():
-				yield k
-
-			temoaInstance1.handle_files(log_name='Complete_OutputLog.log' )
-			temoaInstance1.instance.solutions.load_from( temoaInstance1.result, delete_symbol_map=False )
-			temoaInstance1.instance.solutions.load_from( temoaInstance1.result )
-			# using value() converts the now-loaded results into a single number,
-			# which we'll use with our slightly unusual SlackedObjective_rule below
-			# (but defined above).
-			Perfect_Foresight_Obj = value( temoaInstance1.instance.FirstObj )
-				
-			# Create a new parameter that stores the MGA objective function weights
-			prev_activity_t = defaultdict( int )		
-			prev_activity_t = PreviousAct_rule( temoaInstance1.instance, self.options.mga_weight, prev_activity_t )		
-			
-			# Perform MGA iterations
-			while self.options.next_mga():
-				temoaMGAInstance = TemoaInstance(self.model, self.optimizer, self.options, self.txt_file)
-				for k in temoaMGAInstance.create_temoa_instance():
+		try:
+			if hasattr(self.options, 'mga') and self.options.mga:
+				for k in self.solveWithMGA():
 					yield k
-				
-				try:
-					txt_file_mga = open(self.options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
-				except BaseException as io_exc:
-					SE.write("MGA Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n")
-					txt_file_mga = open("OutputLog_MGA_last.log", "w")
-				
-				# Update second instance with the new MGA-specific objective function
-				# and constraint.
-				temoaMGAInstance.instance.SecondObj = Objective(
-				expr=ActivityObj_rule( temoaMGAInstance.instance, prev_activity_t ),
-				noruleinit=True,
-				sense=minimize
-				)
-				temoaMGAInstance.instance.PreviousSlackedObjective = Constraint(
-				rule=None,
-				expr=SlackedObjective_rule( temoaMGAInstance.instance, Perfect_Foresight_Obj, self.options.mga ),
-				noruleinit=True
-				)
-				temoaMGAInstance.instance.preprocess()
-				for k in temoaMGAInstance.solve_temoa_instance():
+			else:  #  User requested a single run
+				for k in self.solveWithoutMGA():
 					yield k
-				temoaMGAInstance.handle_files(log_name='Complete_OutputLog.log' )
 
-		else:  #  User requested a single run
-			temoaInstance1 = TemoaInstance(self.model, self.optimizer, self.options, self.txt_file)
-			for k in temoaInstance1.create_temoa_instance():
-				yield k
-			for k in temoaInstance1.solve_temoa_instance():
-				yield k
-			temoaInstance1.handle_files(log_name='Complete_OutputLog.log')
+		except KeyboardInterrupt as e:
+			self.txt_file.close()
+			SE.write( 'User requested quit.  Exiting Temoa ...\n' )
+			SE.flush()
+		except SystemExit as e:
+			self.txt_file.close()
+			SE.write( 'Temoa exit requested.  Exiting ...\n' )
+			SE.flush()
+		except Exception as e:
+			self.txt_file.close()
+			SE.write( 'Exiting Temoa ...\n' )
+			SE.flush()
 
-		self.txt_file.close()
 
 
-
-
-class TemoaInstance(object):
+class TemoaSolverInstance(object):
 	def __init__(self, model, optimizer, options, txt_file):
 		self.model = model
 		self.options = options
@@ -234,8 +242,8 @@ class TemoaInstance(object):
 				self.txt_file.write('\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' ))
 
 			yield '[        ] Reading data files.\n'
-			SE.write( '[        ] Reading data files.'); SE.flush()
-			self.txt_file.write( 'Reading data files.')
+			SE.write( '[        ] Reading data files.\n'); SE.flush()
+			self.txt_file.write( 'Reading data files.\n')
 			begin = clock()
 			duration = lambda: clock() - begin
 
@@ -244,8 +252,7 @@ class TemoaInstance(object):
 			# on the command lin			
 			for fname in self.options.dot_dat:
 				if fname[-4:] != '.dat':
-					msg = "\n\nExpecting a dot dat (e.g., data.dat) file, found '{}'\n"
-					yield msg
+					msg = "InputError: expecting a dot dat (e.g., data.dat) file, found '{}'\n"
 					raise Exception( msg.format( fname ))
 				modeldata.load( filename=fname )
 			SE.write( '\r[%8.2f]\n' % duration() )
@@ -260,14 +267,14 @@ class TemoaInstance(object):
 			SE.write( '\r[%8.2f]\n' % duration() )
 			self.txt_file.write( '[%8.2f]\n' % duration() )
 
-		except BaseException as model_exc:
-			yield "exception found in create_temoa_instance\n"
-			SE.write("exception found in create_temoa_instance\n")
-			self.txt_file.write("exception found in create_temoa_instance\n")
+		except Exception as model_exc:
+			yield "Exception found in create_temoa_instance\n"
+			SE.write("Exeception found in create_temoa_instance\n")
+			self.txt_file.write("Exception found in create_temoa_instance\n")
 			yield str(model_exc)
 			SE.write(str(model_exc))
 			self.txt_file.write(str(model_exc))
-			self.txt_file.close()
+			raise model_exc
 
 
 	def solve_temoa_instance (self):
@@ -302,20 +309,19 @@ class TemoaInstance(object):
 				yield formatted_results.getvalue() + '\n'
 				SO.write( formatted_results.getvalue() )
 				self.txt_file.write( formatted_results.getvalue() )
-				self.txt_file.close()
 			else:
 				yield '\r---------- Not solving: no available solver\n'
 				SE.write( '\r---------- Not solving: no available solver\n' )
 				self.txt_file.write( '\r---------- Not solving: no available solver\n' )
 		
 		except BaseException as model_exc:
-			yield "\nexception found in solve_temoa_instance\n"
-			SE.write("\nexception found in solve_temoa_instance\n")
-			self.txt_file.write("\nexception found in solve_temoa_instance\n")
+			yield "Exception found in solve_temoa_instance\n"
+			SE.write("Exception found in solve_temoa_instance\n")
+			self.txt_file.write("Exception found in solve_temoa_instance\n")
 			yield str(model_exc)+'\n'
 			SE.write(str(model_exc))
 			self.txt_file.write(str(model_exc))
-			self.txt_file.close()
+			raise model_exc
 
 	def handle_files(self, log_name):
 		"""Handle log and LP file assuming user called with config file or from interface."""
