@@ -57,6 +57,26 @@ from temoa_mga   import ActivityObj_rule, SlackedObjective_rule, PreviousAct_rul
 signal(SIGINT, default_int_handler)
 
 
+'''
+This is the main solver class.
+This takes in input an Abstract Model after parameters initialization,
+and a config_filename (which contains the input parameters)
+If config_filename is empty, it assumes parameters from command line.
+
+The yield statements in this file are used for sending output of this file to UI as it happens,
+instead of waiting for it to finish and then sending it finally. yield statements are used by
+StreamingHttpResponse of Django to render output as it happens.
+any function that uses yield statements can't have return clause.
+If it is needed, instead use a class global variable to store the return value.
+If any new function is added and its output is also needed to be printed to UI,
+then use yield statements along with yield and then at the time of calling that function
+yield the output of the function. like:
+for statement in function_call():
+	yield statement
+This will yield each statement being yielded by function_call().
+This is followed all the way through to the first function_call of the UI where it is returned
+as a StreamingHttpResponse().
+'''
 class TemoaSolver(object):
 	def __init__(self, model, config_filename):
 		self.model = model
@@ -116,6 +136,10 @@ class TemoaSolver(object):
 				raw_input()
 
 
+	'''
+	This function is called when MGA option is specified.
+	It uses the self.model, self.optimzer, and self.options parameters of the class object
+	'''
 	def solveWithMGA(self):
 		scenario_names = []
 		scenario_names.append( self.options.scenario )
@@ -176,6 +200,9 @@ class TemoaSolver(object):
 				yield k
 			temoaMGAInstance.handle_files(log_name='Complete_OutputLog.log' )
 
+	'''
+	This function is called when MGA option is not specified.
+	'''
 	def solveWithoutMGA(self):
 		temoaInstance1 = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
 		for k in temoaInstance1.create_temoa_instance():
@@ -184,13 +211,10 @@ class TemoaSolver(object):
 			yield k
 		temoaInstance1.handle_files(log_name='Complete_OutputLog.log')
 
-	"""Create and solve an instance of the model.
-
-	Input arguments:
-	model -- the model object
-	optimizer -- pyomo object used to perform optimization
-	options -- objects that contains user-specified run options
-	"""
+	'''
+	This funciton creates and solves TemoaSolverInstance.
+	This is the function that should be called from outside this class after __init__
+	'''
 	def createAndSolve(self):
 		try:
 			self.txt_file = open(self.options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
@@ -225,6 +249,10 @@ class TemoaSolver(object):
 
 
 
+'''
+This class is for creating one temoa solver instance. It is used by TemoaSolver.
+(Multiple instances are created for MGA/non-MGA options).
+'''
 class TemoaSolverInstance(object):
 	def __init__(self, model, optimizer, options, txt_file):
 		self.model = model
