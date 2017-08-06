@@ -23,7 +23,7 @@ received this license file.  If not, see <http://www.gnu.org/licenses/>.
 
 from temoa_rules import *
 from temoa_initialize import *
-from temoa_run import temoa_setup
+from temoa_run import *
 
 def temoa_create_model ( name='The Temoa Energy System Model' ):
     """\
@@ -460,7 +460,9 @@ def runModelUI(config_filename):
 
   global model
   
-  temoa_setup( model , config_filename )
+  solver = TemoaSolver(model, config_filename)
+  for k in solver.createAndSolve():
+    yield k
   
 
 def runModel():
@@ -470,13 +472,16 @@ def runModel():
   global model
   
   dummy = ''  # If calling from command line, send empty string  
-  temoa_setup( model , dummy)
+  solver = TemoaSolver(model, dummy)
+  for k in solver.createAndSolve():
+    pass
 
 
 if '__main__' == __name__:
   
   dummy = ''  # If calling from command line, send empty string 
-  temoa_setup( model, dummy )
+  solver = TemoaSolver(model, dummy)
+  solver.createAndSolve()
   # this code only invoked when called this file is invoked directly from the
   # command line as follows:
   # $ python temoa_model/temoa_model.py path/to/dat/file
