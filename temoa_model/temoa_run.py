@@ -150,14 +150,16 @@ class TemoaSolver(object):
 		# Create concrete model
 		temoaInstance1 = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
 		for k in temoaInstance1.create_temoa_instance():
-			yield k
+			yield "<div>" + k + "</div>"
+			yield " " * 1024
 		# Now add back the objective function that we earlier removed; note that name
 		# we choose here (FirstObj) will be copied to the output file.
 		temoaInstance1.instance.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
 		temoaInstance1.instance.preprocess()
 
 		for k in temoaInstance1.solve_temoa_instance():
-			yield k
+			yield "<div>" + k + "</div>"
+			yield " " * 1024
 
 		temoaInstance1.handle_files(log_name='Complete_OutputLog.log' )
 		temoaInstance1.instance.solutions.load_from( temoaInstance1.result, delete_symbol_map=False )
@@ -175,7 +177,8 @@ class TemoaSolver(object):
 		while self.options.next_mga():
 			temoaMGAInstance = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
 			for k in temoaMGAInstance.create_temoa_instance():
-				yield k
+				yield "<div>" + k + "</div>"
+				yield " " * 1024
 
 			try:
 				txt_file_mga = open(self.options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
@@ -197,7 +200,8 @@ class TemoaSolver(object):
 			)
 			temoaMGAInstance.instance.preprocess()
 			for k in temoaMGAInstance.solve_temoa_instance():
-				yield k
+				yield "<div>" + k + "</div>"
+				yield " " * 1024
 			temoaMGAInstance.handle_files(log_name='Complete_OutputLog.log' )
 
 	'''
@@ -206,9 +210,11 @@ class TemoaSolver(object):
 	def solveWithoutMGA(self):
 		temoaInstance1 = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
 		for k in temoaInstance1.create_temoa_instance():
-			yield k
+			yield "<div>" + k + "</div>"
+			yield " " * 1024
 		for k in temoaInstance1.solve_temoa_instance():
-			yield k
+			yield "<div>" + k + "</div>"
+			yield " " * 1024
 		temoaInstance1.handle_files(log_name='Complete_OutputLog.log')
 
 	'''
@@ -220,7 +226,7 @@ class TemoaSolver(object):
 			self.txt_file = open(self.options.path_to_logs+os.sep+"Complete_OutputLog.log", "w")
 
 		except BaseException as io_exc:
-			yield "Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n"
+			yield "Log file cannot be opened. Please check path. Trying to find:<br/>"+self.options.path_to_logs+" folder<br/>"
 			SE.write("Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n")
 			self.txt_file = open("Complete_OutputLog.log", "w")
 			self.txt_file.write("Log file cannot be opened. Please check path. Trying to find:\n"+self.options.path_to_logs+" folder\n")
@@ -229,10 +235,12 @@ class TemoaSolver(object):
 		try:
 			if hasattr(self.options, 'mga') and self.options.mga:
 				for k in self.solveWithMGA():
-					yield k
+					yield "<div>" + k + "</div>"
+					yield " " * 1024
 			else:  #  User requested a single run
 				for k in self.solveWithoutMGA():
-					yield k
+					yield "<div>" + k + "</div>"
+					yield " " * 1024
 
 		except KeyboardInterrupt as e:
 			self.txt_file.close()
@@ -265,11 +273,11 @@ class TemoaSolverInstance(object):
 		
 		try:
 			if self.options.keepPyomoLP:
-				yield '\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' )
+				yield '<br/> Solver will write file: {}<br/><br/>'.format( self.options.scenario + '.lp' )
 				SE.write('\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' ))
 				self.txt_file.write('\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' ))
 
-			yield '[        ] Reading data files.\n'
+			yield '[        ] Reading data files.<br/>'
 			SE.write( '[        ] Reading data files.\n'); SE.flush()
 			self.txt_file.write( 'Reading data files.\n')
 			begin = clock()
@@ -286,17 +294,17 @@ class TemoaSolverInstance(object):
 			SE.write( '\r[%8.2f]\n' % duration() )
 			self.txt_file.write( '[%8.2f]\n' % duration() )
 
-			yield '[        ] Creating Temoa model instance.\n'
+			yield '[        ] Creating Temoa model instance.<br/>'
 			SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
 			self.txt_file.write( 'Creating Temoa model instance.')
 			
 			self.instance = self.model.create_instance( modeldata )
-			yield '\r[%8.2f]\n' % duration()
+			yield '\r[%8.2f]<br/>' % duration()
 			SE.write( '\r[%8.2f]\n' % duration() )
 			self.txt_file.write( '[%8.2f]\n' % duration() )
 
 		except Exception as model_exc:
-			yield "Exception found in create_temoa_instance\n"
+			yield "Exception found in create_temoa_instance<br/>"
 			SE.write("Exeception found in create_temoa_instance\n")
 			self.txt_file.write("Exception found in create_temoa_instance\n")
 			yield str(model_exc)
@@ -311,14 +319,14 @@ class TemoaSolverInstance(object):
 		begin = clock()
 		duration = lambda: clock() - begin
 		try:
-			yield '[        ] Solving.\n'
+			yield '[        ] Solving.<br/>'
 			SE.write( '[        ] Solving.'); SE.flush()
 			self.txt_file.write( 'Solving.')
 			if self.optimizer:	
 				self.result = self.optimizer.solve( self.instance, 
 								keepfiles=self.options.keepPyomoLP, 
 								symbolic_solver_labels=self.options.keepPyomoLP )
-				yield '\r[%8.2f]\n' % duration()
+				yield '\r[%8.2f]<br/>' % duration()
 				SE.write( '\r[%8.2f]\n' % duration() )
 				self.txt_file.write( '[%8.2f]\n' % duration() )
 				# return signal handlers to defaults, again
@@ -326,27 +334,27 @@ class TemoaSolverInstance(object):
 
 				# ... print the easier-to-read/parse format
 				msg = '[        ] Calculating reporting variables and formatting results.'
-				yield msg+'\n'
+				yield msg+'<br/>'
 				SE.write( msg ); SE.flush()
 				self.txt_file.write( 'Calculating reporting variables and formatting results.')
 				self.instance.solutions.store_to(self.result)
 				formatted_results = pformat_results( self.instance, self.result, self.options )
-				yield '\r[%8.2f]\n' % duration()
+				yield '\r[%8.2f]<br/>' % duration()
 				SE.write( '\r[%8.2f\n' % duration() )
 				self.txt_file.write( '[%8.2f]\n' % duration() )
-				yield formatted_results.getvalue() + '\n'
+				yield formatted_results.getvalue() + '<br/>'
 				SO.write( formatted_results.getvalue() )
 				self.txt_file.write( formatted_results.getvalue() )
 			else:
-				yield '\r---------- Not solving: no available solver\n'
+				yield '\r---------- Not solving: no available solver<br/>'
 				SE.write( '\r---------- Not solving: no available solver\n' )
 				self.txt_file.write( '\r---------- Not solving: no available solver\n' )
 		
 		except BaseException as model_exc:
-			yield "Exception found in solve_temoa_instance\n"
+			yield "Exception found in solve_temoa_instance<br/>"
 			SE.write("Exception found in solve_temoa_instance\n")
 			self.txt_file.write("Exception found in solve_temoa_instance\n")
-			yield str(model_exc)+'\n'
+			yield str(model_exc)+'<br/>'
 			SE.write(str(model_exc))
 			self.txt_file.write(str(model_exc))
 			raise model_exc
