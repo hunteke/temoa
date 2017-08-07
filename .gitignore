@@ -1,1 +1,2 @@
 *.pyc
+db_io/debug_logs/*.log
