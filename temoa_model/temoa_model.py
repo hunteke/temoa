@@ -463,7 +463,7 @@ def runModelUI(config_filename):
   solver = TemoaSolver(model, config_filename)
   for k in solver.createAndSolve():
     yield "<div>"+k+"</div>"
-    yield " " * 1024
+    #yield " " * 1024
   
 
 def runModel():
