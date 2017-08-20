@@ -40,7 +40,7 @@ from pyutilib.services import TempfileManager
 
 from sys import version_info, exit
 
-from time import clock
+from time import time
 import sys, os, gc
 
 from pyomo.environ import DataPortal
@@ -294,8 +294,8 @@ class TemoaSolverInstance(object):
 			yield '[        ] Reading data files.\n'
 			SE.write( '[        ] Reading data files.\n'); SE.flush()
 			self.txt_file.write( 'Reading data files.\n')
-			begin = clock()
-			duration = lambda: clock() - begin
+			begin = time()
+			duration = lambda: time() - begin
 
 			modeldata = DataPortal( model=self.model )
 			# Recreate the pyomo command's ability to specify multiple "dot dat" files
@@ -331,8 +331,8 @@ class TemoaSolverInstance(object):
 	def solve_temoa_instance (self):
 		'''Solve a Temoa instance.'''	
 		
-		begin = clock()
-		duration = lambda: clock() - begin
+		begin = time()
+		duration = lambda: time() - begin
 		try:
 			yield '[        ] Solving.\n'
 			SE.write( '[        ] Solving.'); SE.flush()
