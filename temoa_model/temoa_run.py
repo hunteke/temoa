@@ -292,8 +292,8 @@ class TemoaSolverInstance(object):
 				self.txt_file.write('\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' ))
 
 			yield '[        ] Reading data files.\n'
-			SE.write( '[        ] Reading data files.\n'); SE.flush()
-			self.txt_file.write( 'Reading data files.\n')
+			SE.write( '[        ] Reading data files.'); SE.flush()
+			self.txt_file.write( 'Reading data files.')
 			begin = time()
 			duration = lambda: time() - begin
 
