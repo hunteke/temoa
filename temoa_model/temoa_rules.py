@@ -30,55 +30,73 @@ from temoa_initialize import *
 
 def TotalCost_rule ( M ):
 	r"""
-
 Using the :code:`Activity` and :code:`Capacity` variables, the Temoa objective
 function calculates the costs associated with supplying the system with energy,
 under the assumption that all costs are paid for through loans (rather than with
 lump-sum sales).  This implementation sums up all the costs incurred by the
-solution, and is defined as :math:`C_{tot} = \text{C}_\text{loans} +
-\text{C}_\text{fixed} + \text{C}_\text{variable}`.  Similarly, each term on the
-right-hand side is merely a summation of the costs incurred, multiplied by an
-annual discount factor to calculate the discounted cost in year
+solution, and is defined as :math:`C_{tot} = C_{loans} + C_{fixed} + C_{variable} 
+- C_{salvage}`. Similarly, each term on the right-hand side is merely a 
+summation of the costs incurred, multiplied by an annual discount factor to 
+calculate the discounted cost in year
 :math:`\text{P}_0`.
 
 .. math::
-   C_{loans} & = \sum_{t, v \in \Theta_{IC}} \left (
+   C_{loans} = \sum_{t, v \in \Theta_{IC}} \left (
      \left [
              IC_{t, v}
        \cdot LA_{t, v}
        \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-{LLN}_{t, v}})}{GDR}
      \right ]
      \cdot \textbf{CAP}_{t, v}
-     \right )
+     \right ) 
 
-..math::
-   C_{salvage}= & = \sum_{t,v \in \Theta_{IC}}
+.. math::
+   C_{salvage} = \sum_{t,v \in \Theta_{IC}}
      \frac{
-       S_{t,v} \cdot IC_{t,v} \cdot \textbf{CAP}_{t, v}
+       SR_{t,v} \cdot IC_{t,v} \cdot \textbf{CAP}_{t, v}
      }{
        (1 + GDR)^L
-     }
+     } 
 
 .. math::
-   C_{fixed} & = \sum_{p, t, v \in \Theta_{FC}} \left (
+   C_{fixed} = \sum_{p, t, v \in \Theta_{FC}} \left (
      \left [
              FC_{p, t, v}
-       \cdot \frac{(1 + GDR)^{P_0 - p +1} \cdot (1 - (1 + GDR)^{-{MLL}_{t, v}})}{GDR}
+       \cdot \frac{(1 + GDR)^{P_0 - p +1} \cdot (1 - (1 + GDR)^{-{MPL}_{t, v}})}{GDR}
      \right ]
      \cdot \textbf{CAP}_{t, v}
-     \right )
+     \right ) 
 
 .. math::
-   C_{variable} & = \sum_{p, t, v \in \Theta_{VC}} \left (
+   C_{variable} = \sum_{p, t, v \in \Theta_{VC}} \left (
            MC_{p, t, v}
      \cdot
      \frac{
-       (1 + GDR)^{P_0 - p} \cdot (1 - (1 + GDR)^{-{MPL}_{p,t, v}})
+       (1 + GDR)^{P_0 - p + 1} \cdot (1 - (1 + GDR)^{-{MPL}_{p,t, v}})
      }{
        GDR
      }
      \cdot \textbf{ACT}_{t, v}
-     \right )
+     \right ) 
+
+Linear depreciation is used to calculate the salvage values. For a process 
+:math:`(t,v)`, when it retires after model horizon terminates 
+(:math:`v + LP_{t,v} > P_0 + L`), a salvage value will be assigned to it, 
+otherwise (:math:`v + LP_{t,v} \leq P_0 + L`) its salvage value will be 0. 
+Salvage rate :math:`SR_{t,v}` is used to denote fraction of the value of 
+depreciated asset at the end of model horizon to its initial investment.
+:math:`L` denotes the length of model horizon, and
+:math:`L = \text{max} \{ \textbf{P}^f \} - \text{min} \{ \textbf{P}^f \}`.
+
+.. math::
+   SR_{t,v}=
+   \left\{
+   \begin{array}{cl}
+      0                                & \text{if } v + LP_{t,v} \leq P_0 + L \\
+      1 - \frac{P_0 + L - v}{LP_{t,v}} & \text{if } v + LP_{t,v} > P_0 + L \\
+   \end{array}
+   \right.
+
 
 In the last sub-equation, :math:`R_p` is the equivalent operation to the inner
 summation of the other two sub-equations.  The difference is that where the
@@ -1093,26 +1111,43 @@ def EmissionActivityByPeriodAndTech_Constraint ( M, e, p, t ):
 	return expr	
 
 def RampUpDay_Constraint ( M, p, s, d, t, v):
+# M.time_of_day is a sorted set, and M.time_of_day.first() returns the first 
+# element in the set, similarly, M.time_of_day.last() returns the last element.
+# M.time_of_day.prev(d) function will return the previous element before s, and 
+# M.time_of_day.next(d) function will return the next element after s.
+
 	r"""
-M.time_of_day is a sorted set, and M.time_of_day.first() returns the first 
-element in the set, similarly, M.time_of_day.last() returns the last element.
-M.time_of_day.prev(d) function will return the previous element before s, and 
-M.time_of_day.next(d) function will return the next element after s.
-Note that this constriant only applies to technologies that can ramp up/down, 
-which is defined by set :math:`\textbf{T}^{ramp}`. The ramp up/down rate for 
-tech t :math:'r_t' shoudl be inputted in %.
+The ramp rate constraint is utilized to limit the rate of electricity generation 
+increase and decrease between two adjacent time slices in order to account for 
+physical limits associated with thermal power plants. Note that this constriant 
+only applies to technologies with ramp capability, which is defined in set 
+:math:`\textbf{T}^{ramp}`. We assume for simplicity the rate limits for both 
+ramp up and down are equal and they do not vary with technology vintage. The 
+ramp rate limits (:math:`r_t`) for technology :math:`t` should be expressed in 
+percentage of its rated capacity.
+
+Note that when :math:`d_{nd}` is the last time-of-day, :math:`d_{nd + 1} \not \in 
+\textbf{D}`, i.e., if one time slice is the last time-of-day in a season and the 
+other time slice is the first time-of-day in the next season, the ramp rate 
+limits between these two time slices can not be expressed by :eq:`ramp_up_day`. 
+Therefore, the ramp rate constraints between two adjacent seasons are 
+represented in :eq:`ramp_up_season`. 
+
+In Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we assume 
+:math:`\textbf{S} = \{s_i, i = 1, 2, \cdots, ns\}` and 
+:math:`\textbf{D} = \{d_i, i=1, 2, \cdots, nd\}`.
 
 .. math::
    \frac{ 
-       \textbf{ACT}_{p, s, d+1, t, v} 
+       \textbf{ACT}_{p, s, d_{i + 1}, t, v} 
        }{
-       SEG_{s,d+1} \cdot C2A_t 
+       SEG_{s, d_{i + 1}} \cdot C2A_t 
        }
    -
    \frac{ 
-       \textbf{ACT}_{p, s, d, t, v} 
+       \textbf{ACT}_{p, s, d_i, t, v} 
        }{
-       SEG_{s,d} \cdot C2A_t 
+       SEG_{s, d_i} \cdot C2A_t 
        }
    \leq
    r_t \cdot \textbf{CAPAVL}_{p,t}
@@ -1120,9 +1155,10 @@ tech t :math:'r_t' shoudl be inputted in %.
    \forall 
    p \in \textbf{P}^o,
    s \in \textbf{S},
-   d, d+1 \in \textbf{D},
+   d_i, d_{i + 1} \in \textbf{D},
    t \in \textbf{T}^{ramp},
    v \in \textbf{V}
+   :label: ramp_up_day
 """
 	if d != M.time_of_day.first():
 		d_prev = M.time_of_day.prev(d)
@@ -1138,6 +1174,33 @@ tech t :math:'r_t' shoudl be inputted in %.
 	return expr
 
 def RampUpSeason_Constraint ( M, p, s, t, v):
+	r"""
+Note that :math:`d_1` and :math:`d_{nd}` represent the first and last time-of-day, 
+respectively.
+
+.. math::
+   \frac{ 
+       \textbf{ACT}_{p, s_{i + 1}, d_1, t, v} 
+       }{
+       SEG_{s_{i + 1}, d_1} \cdot C2A_t 
+       }
+   -
+   \frac{ 
+       \textbf{ACT}_{p, s_i, d_{nd}, t, v} 
+       }{
+       SEG_{s_i, d_{nd}} \cdot C2A_t 
+       }
+   \leq
+   r_t \cdot \textbf{CAPAVL}_{p,t}
+   \\
+   \forall 
+   p \in \textbf{P}^o,
+   s_i, s_{i + 1} \in \textbf{S},
+   d_1, d_{nd} \in \textbf{D},
+   t \in \textbf{T}^{ramp},
+   v \in \textbf{V}
+   :label: ramp_up_season
+"""
 	if s != M.time_season.first():
 		s_prev  = M.time_season.prev(s)
 		d_first = M.time_of_day.first()
@@ -1181,17 +1244,21 @@ def RampUpPeriod_Constraint ( M, p, t, v):
 
 def RampDownDay_Constraint ( M, p, s, d, t, v):
 	r"""
+Similar to Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we use Equation
+:eq:`ramp_down_day` and :eq:`ramp_down_season` to limit ramp down rates between 
+any two adjacent time slices.
+
 .. math::
    \frac{ 
-       \textbf{ACT}_{p, s, d+1, t, v} 
+       \textbf{ACT}_{p, s, d_{i + 1}, t, v} 
        }{
-       SEG_{s,d+1} \cdot C2A_t 
+       SEG_{s, d_{i + 1}} \cdot C2A_t 
        }
    -
    \frac{ 
-       \textbf{ACT}_{p, s, d, t, v} 
+       \textbf{ACT}_{p, s, d_i, t, v} 
        }{
-       SEG_{s,d} \cdot C2A_t 
+       SEG_{s, d_i} \cdot C2A_t 
        }
    \geq
    -r_t \cdot \textbf{CAPAVL}_{p,t}
@@ -1199,9 +1266,10 @@ def RampDownDay_Constraint ( M, p, s, d, t, v):
    \forall 
    p \in \textbf{P}^o,
    s \in \textbf{S},
-   d, d+1 \in \textbf{D},
+   d_i, d_{i + 1} \in \textbf{D},
    t \in \textbf{T}^{ramp},
    v \in \textbf{V}
+   :label: ramp_down_day
 """
 
 	if d != M.time_of_day.first():
@@ -1218,6 +1286,30 @@ def RampDownDay_Constraint ( M, p, s, d, t, v):
 	return expr
 
 def RampDownSeason_Constraint ( M, p, s, t, v):
+	r"""
+.. math::
+   \frac{ 
+       \textbf{ACT}_{p, s_{i + 1}, d_1, t, v} 
+       }{
+       SEG_{s_{i + 1}, d_1} \cdot C2A_t 
+       }
+   -
+   \frac{ 
+       \textbf{ACT}_{p, s_i, d_{nd}, t, v} 
+       }{
+       SEG_{s_i, d_{nd}} \cdot C2A_t 
+       }
+   \geq
+   -r_t \cdot \textbf{CAPAVL}_{p,t}
+   \\
+   \forall 
+   p \in \textbf{P}^o,
+   s_i, s_{i + 1} \in \textbf{S},
+   d_1, d_{nd} \in \textbf{D},
+   t \in \textbf{T}^{ramp},
+   v \in \textbf{V}
+   :label: ramp_down_season
+"""
 	if s != M.time_season.first():
 		s_prev  = M.time_season.prev(s)
 		d_first = M.time_of_day.first()
@@ -1268,25 +1360,28 @@ def RampDownPeriod_Constraint ( M, p, t, v):
 	
 def ReserveMargin_Constraint( M, p, c):
 	r"""
-Reserve margin constraint applies to demand commodity c, which is defined in set
-:math:'\textbf{C}^{res}'. During the time slice with peak load :math:'(s^*, d^*)', 
-the sum of capacity of all technologies providing reserve (set :math:'\textbf{T}^{res}') 
-should exceed the load during that time slice by a certain percentage 
-:math:'\textbf{RES}_c'. 
+During each period :math:`p`, the sum of the available capacity of all reserve 
+technologies :math:`\sum_{t \in T^{res}} \textbf{CAPAVL}_{p,t}`, which are 
+defined in the set :math:`\textbf{T}^{res}`, should exceed the peak load by 
+:math:`RES_c`, the reserve margin for commodity :math:`c`. Note the reservr 
+margin is expressed in percentage of the peak load. In Equation 
+:eq:`reserve_margin`, we use :math:`(s^*,d^*)` to represent the peak-load time 
+slice.
 
 .. math::
    \sum_{t \in T^{res}} {
-      \textbf{CC}_t \cdot
+      CC_t \cdot
       \textbf{CAPAVL}_{p,t} \cdot
       SEG_{s^*,d^*} \cdot C2A_t }
    \geq
-   \textbf{DEM}_{p,c} \cdot
-   \textbf{DSD}_{s^*, d^*, c} \cdot
-   (1 + \textbf{RES}_c)
+   DEM_{p,c} \cdot
+   DSD_{s^*, d^*, c} \cdot
+   (1 + RES_c)
    \\
    \forall
    p \in \textbf{P}^o,
    c \in \textbf{C}^{res}
+   :label: reserve_margin
 """
 	# The season and time-of-day of the slice with the maximum average load. 
 	s_star, d_star, load_star = None, None, 0

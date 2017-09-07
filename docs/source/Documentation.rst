@@ -630,7 +630,7 @@ Conventions
    Take, for example, this excerpt from the Temoa default objective function:
 
    .. math::
-      C_{variable} & = \sum_{p, t, v \in \Theta_{VC}} \left (
+      C_{variable} = \sum_{p, t, v \in \Theta_{VC}} \left (
               {VC}_{p, t, v}
         \cdot R_p
         \cdot \textbf{ACT}_{t, v}
@@ -645,7 +645,7 @@ Conventions
 
    .. math::
 
-      C_{variable} & = \sum_{p, t, v \in \Theta_{VC}} \left (
+      C_{variable} = \sum_{p, t, v \in \Theta_{VC}} \left (
               \textbf{ACT}_{t, v}
         \cdot {VC}_{p, t, v}
         \cdot R_p
@@ -909,7 +909,7 @@ Parameters
    ":math:`\text{GDR}`","GlobalDiscountRate",":math:`\mathbb{R}`","Global rate used to calculate present cost"
    ":math:`\text{GRM}`","GrowthRateMax",":math:`\mathbb{R}`","Global rate used to calculate present cost"
    ":math:`\text{GRS}`","GrowthRateSeed",":math:`\mathbb{R}`","Global rate used to calculate present cost"
-   ":math:`\text{LLN}_{t,v}`","LifetimeLoan",":math:`\mathbb{N}`","Tech- and vintage-specific loan term"
+   ":math:`\text{LLN}_{t,v}`","LifetimeLoanProcess",":math:`\mathbb{N}`","Tech- and vintage-specific loan term"
    ":math:`\text{LTC}_{p,t,v}`","LifetimeTech",":math:`\mathbb{N}`","Tech- and vintage-specific lifetime"
    ":math:`\text{MAX}_{p,t}`","MaxCapacity",":math:`\mathbb{R}^+_0`","maximum tech-specific capacity by period"
    ":math:`\text{MIN}_{p,t}`","MinCapacity",":math:`\mathbb{R}^+_0`","minimum tech-specific capacity by period"
@@ -919,7 +919,7 @@ Parameters
    ":math:`\text{TOS}_{t,o}`","TechOutputSplit",":math:`\mathbb{I}`","Technology output fuel ratio"
    ":math:`{}^*\text{LA}_{t,v}`","LoanAnnualize",":math:`\mathbb{R}^+_0`","Loan amortization by tech and vintage; based on :math:`DR_t`"
    ":math:`{}^*\text{MLL}_{t,v}`","ModelLoanLife",":math:`\mathbb{N}`","Smaller of model horizon or process loan life"
-   ":math:`{}^*\text{MTL}_{p,t,v}`","ModelTechLife",":math:`\mathbb{N}`","Smaller of model horizon or process tech life"
+   ":math:`{}^*\text{MPL}_{p,t,v}`","ModelTechLife",":math:`\mathbb{N}`","Smaller of model horizon or process tech life"
    ":math:`{}^*\text{LEN}_p`","PeriodLength",":math:`\mathbb{N}`","Number of years in period :math:`p`"
    ":math:`{}^*\text{R}_p`","PeriodRate",":math:`\mathbb{R}`","Converts future annual cost to discounted period cost"
    ":math:`{}^*\text{TLF}_{p,t,v}`","TechLifetimeFrac",":math:`\mathbb{I}`","Fraction of last time period that tech is active"
@@ -1107,8 +1107,7 @@ DiscountRate
 :math:`{DR}_{t \in T}`
 
 In addition to the :code:`GlobalDiscountRate`, a modeler may also specify a
-technology-specific discount rate.  If not specified, this rate defaults to the
-GDR to represent a social discount rate.
+technology-specific discount rate.  If not specified, this rate defaults to 0.05.
 
 
 EmissionActivity
@@ -1180,7 +1179,7 @@ LifetimeLoan
 Temoa differs from many energy system models by giving the modeler the ability to separate
 the loan lifetime from the useful life of the technology.  This parameter
 specifies the length of the loan associated with investing in a process, in
-years.  If not specified, the default is 30 years.
+years.  If not specified, the default is 10 years.
 
 
 LifetimeTech
@@ -1189,7 +1188,7 @@ LifetimeTech
 :math:`{LTC}_{p \in P,t \in T,v \in V}`
 
 Similar to LifetimeLoan, this parameter specifies the total useful life of
-technology, years.  If not specified, the default is 10 years.
+technology, years.  If not specified, the default is 30 years.
 
 
 .. _ParamMaxCapacity:
@@ -1881,7 +1880,7 @@ Implementing this same constraint in AMPL, GAMS, or MathProg would require only
 a single source-line (in a single file).  Using MathProg as an example, it might
 look like:
 
-.. code-block:: mathprog
+.. code-block:: ampl
 
    s.t. DemandConstraint{(p, s, d, dem) in sDemand_psd_dem} :
        sum{(p, s, d, Si, St, Sv, dem) in sFlowVar_psditvo}
