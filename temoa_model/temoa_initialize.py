@@ -461,6 +461,21 @@ def InitializeProcessParameters ( M ):
 	global g_ProcessInputsByOutput
 	global g_ProcessOutputsByInput
 
+	# Global Variables (dictionaries to cache parsing of Efficiency parameter)
+	g_processInputs  = dict()
+	g_processOutputs = dict()
+	g_processVintages = dict()
+	g_processLoans = dict()
+	g_activeFlow_psditvo = None
+	g_activeActivity_ptv = None
+	g_activeCapacity_tv = None
+	g_activeCapacityAvailable_pt = None
+
+	g_commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
+	g_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
+	g_ProcessInputsByOutput = dict()
+	g_ProcessOutputsByInput = dict()
+
 	l_first_period = min( M.time_future )
 	l_exist_indices = M.ExistingCapacity.sparse_keys()
 	l_used_techs = set()
@@ -1128,4 +1143,4 @@ output carrier.
 
 
 # End helper functions
-##############################################################################
+###############################################################################
