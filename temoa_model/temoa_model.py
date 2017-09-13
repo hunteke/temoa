@@ -33,6 +33,20 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
   """
     M = AbstractModel( name )
 
+    global g_processInputs
+    global g_processOutputs
+    global g_processVintages
+    global g_processLoans
+    global g_activeFlow_psditvo
+    global g_activeActivity_ptv
+    global g_activeCapacity_tv
+    global g_activeCapacityAvailable_pt
+
+    global g_commodityDStreamProcess
+    global g_commodityUStreamProcess
+    global g_ProcessInputsByOutput
+    global g_ProcessOutputsByInput
+
     g_processInputs  = dict()
     g_processOutputs = dict()
     g_processVintages = dict()
