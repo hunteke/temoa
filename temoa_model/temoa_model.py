@@ -32,7 +32,21 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     instantiation.
   """
     M = AbstractModel( name )
+
+    g_processInputs  = dict()
+    g_processOutputs = dict()
+    g_processVintages = dict()
+    g_processLoans = dict()
+    g_activeFlow_psditvo = None
+    g_activeActivity_ptv = None
+    g_activeCapacity_tv = None
+    g_activeCapacityAvailable_pt = None
     
+    g_commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
+    g_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
+    g_ProcessInputsByOutput = dict()
+    g_ProcessOutputsByInput = dict()
+ 
     # Define Sets---------------------------------------------------------------
     M.time_exist    = Set( ordered=True )  # check for integerness performed
     M.time_future   = Set( ordered=True )  # (with reasoning) in temoa_lib

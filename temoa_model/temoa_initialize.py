@@ -462,7 +462,7 @@ def InitializeProcessParameters ( M ):
 	global g_ProcessOutputsByInput
 
 	# Global Variables (dictionaries to cache parsing of Efficiency parameter)
-	g_processInputs  = dict()
+'''	g_processInputs  = dict()
 	g_processOutputs = dict()
 	g_processVintages = dict()
 	g_processLoans = dict()
@@ -475,7 +475,7 @@ def InitializeProcessParameters ( M ):
 	g_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
 	g_ProcessInputsByOutput = dict()
 	g_ProcessOutputsByInput = dict()
-
+'''
 	l_first_period = min( M.time_future )
 	l_exist_indices = M.ExistingCapacity.sparse_keys()
 	l_used_techs = set()
