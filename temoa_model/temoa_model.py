@@ -25,6 +25,12 @@ from temoa_rules import *
 from temoa_initialize import *
 from temoa_run import *
 
+def clear_g_variables(): 
+   for key in globals().keys(): 
+       if key.startswith("g_"):
+           globals().pop(key)
+   print 'Global variables cleared'
+
 def temoa_create_model ( name='The Temoa Energy System Model' ):
     """\
     Returns an abstract instance of the TEMOA model -- Abstract because it needs
@@ -490,6 +496,7 @@ def runModelUI(config_filename):
   for k in solver.createAndSolve():
     yield "<div>"+k+"</div>"
     #yield " " * 1024
+  clear_g_variables()
   
 
 def runModel():
