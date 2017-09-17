@@ -25,48 +25,14 @@ from temoa_rules import *
 from temoa_initialize import *
 from temoa_run import *
 
-def clear_g_variables(): 
-   for key in globals().keys(): 
-       if key.startswith("g_"):
-           globals().pop(key)
-   print 'Global variables cleared'
-
 def temoa_create_model ( name='The Temoa Energy System Model' ):
     """\
     Returns an abstract instance of the TEMOA model -- Abstract because it needs
     to be populated with a "dot dat" file in order to create a specific model
     instantiation.
   """
-    M = AbstractModel( name )
-
-    global g_processInputs
-    global g_processOutputs
-    global g_processVintages
-    global g_processLoans
-    global g_activeFlow_psditvo
-    global g_activeActivity_ptv
-    global g_activeCapacity_tv
-    global g_activeCapacityAvailable_pt
-
-    global g_commodityDStreamProcess
-    global g_commodityUStreamProcess
-    global g_ProcessInputsByOutput
-    global g_ProcessOutputsByInput
-
-    g_processInputs  = dict()
-    g_processOutputs = dict()
-    g_processVintages = dict()
-    g_processLoans = dict()
-    g_activeFlow_psditvo = None
-    g_activeActivity_ptv = None
-    g_activeCapacity_tv = None
-    g_activeCapacityAvailable_pt = None
+    M = TemoaModel( name )
     
-    g_commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
-    g_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
-    g_ProcessInputsByOutput = dict()
-    g_ProcessOutputsByInput = dict()
- 
     # Define Sets---------------------------------------------------------------
     M.time_exist    = Set( ordered=True )  # check for integerness performed
     M.time_future   = Set( ordered=True )  # (with reasoning) in temoa_lib
@@ -188,8 +154,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     #Parameters for user-defined constraints
     M.MinCapacity = Param( M.time_optimize, M.tech_all )
     M.MaxCapacity = Param( M.time_optimize, M.tech_all )
-    M.MinCapacitySum = Param( M.time_optimize )   #minimum capacity for all techs within tech_capacity	
-    M.MaxCapacitySum = Param( M.time_optimize )   #maximum capacity for all techs within tech_capacity	
+    M.MinCapacitySum = Param( M.time_optimize )   #minimum capacity for all techs within tech_capacity  
+    M.MaxCapacitySum = Param( M.time_optimize )   #maximum capacity for all techs within tech_capacity  
     M.MaxActivity = Param( M.time_optimize, M.tech_all )
     M.MinActivity = Param( M.time_optimize, M.tech_all )
     M.EmissionLimit    = Param( M.time_optimize, M.commodity_emissions )
@@ -247,7 +213,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     # This derived decision variable is used in MGA objective function:
     M.V_ActivityByTech = Var(M.tech_all, domain=NonNegativeReals )
 
-	# Decision variable for hourly storage
+  # Decision variable for hourly storage
     M.HourlyStorage_psdt = Set (dimen=4, initialize=HourlyStorageVariableIndices )
     M.V_HourlyStorage = Var( M.HourlyStorage_psdt, domain=NonNegativeReals )
 
@@ -340,42 +306,42 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.StorageConstraint_psitvo, 
       rule=Storage_Constraint )
 
-#Hourly Storage 	  
-	  
-# Hourly Storage constraint	  
+#Hourly Storage     
+    
+# Hourly Storage constraint   
     M.HourlyStorageConstraint_psdt = Set( 
       dimen=4, initialize=HourlyStorageConstraintIndices )
     M.HourlyStorageConstraint = Constraint( 
       M.HourlyStorageConstraint_psdt, 
-      rule=HourlyStorage_Constraint )	  
-	  
+      rule=HourlyStorage_Constraint )   
+    
 # Hourly Storage Upper Bound
     M.HourlyStorageUpperBoundConstraint_psdt = Set( 
       dimen=4, initialize=HourlyStorageBoundConstraintIndices )
     M.HourlyStorageUpperBoundConstraint = Constraint( 
       M.HourlyStorageUpperBoundConstraint_psdt, 
-      rule=HourlyStorage_UpperBound )	  
+      rule=HourlyStorage_UpperBound )   
 #Hourly Storage Lower Bound
     M.HourlyStorageLowerBoundConstraint_psdt = Set( 
       dimen=4, initialize=HourlyStorageBoundConstraintIndices )
     M.HourlyStorageLowerBoundConstraint = Constraint( 
       M.HourlyStorageLowerBoundConstraint_psdt, 
-      rule=HourlyStorage_LowerBound )	   	  
-	  
+      rule=HourlyStorage_LowerBound )       
+    
 # Hourly Storage Upper Bound on Charging
     M.HourlyStorageChargeUpperBoundConstraint_psdt = Set( 
       dimen=4, initialize=HourlyStorageBoundConstraintIndices )
     M.HourlyStorageChargeUpperBoundConstraint = Constraint( 
       M.HourlyStorageChargeUpperBoundConstraint_psdt, 
-      rule=HourlyStorageCharge_UpperBound )	  
+      rule=HourlyStorageCharge_UpperBound )   
 #Hourly Storage Lower Bound on Discharging
     M.HourlyStorageDischargeLowerBoundConstraint_psdt = Set( 
       dimen=4, initialize=HourlyStorageBoundConstraintIndices )
     M.HourlyStorageDischargeLowerBoundConstraint = Constraint( 
       M.HourlyStorageDischargeLowerBoundConstraint_psdt, 
-      rule=HourlyStorageCharge_LowerBound )	   	  	  
-	  
-#-----------------	  
+      rule=HourlyStorageCharge_LowerBound )           
+    
+#-----------------    
 
     M.RampUpConstraintDay_psdtv = Set( 
       dimen=5, initialize=RampConstraintDayIndices )
@@ -462,14 +428,14 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       dimen=1, initialize=lambda M: M.MinCapacitySum.sparse_iterkeys() )
     M.MinCapacitySetConstraint = Constraint( 
       M.MinCapacitySetConstraint_p, 
-      rule=MinCapacitySet_Constraint ) 	  
-	  
+      rule=MinCapacitySet_Constraint )    
+    
     M.MaxCapacitySetConstraint_p = Set(
       dimen=1, initialize=lambda M: M.MaxCapacitySum.sparse_iterkeys() )
     M.MaxCapacitySetConstraint = Constraint( 
       M.MaxCapacitySetConstraint_p, 
-      rule=MaxCapacitySet_Constraint ) 		  
-	  
+      rule=MaxCapacitySet_Constraint )      
+    
     M.TechInputSplitConstraint_psditv = Set(
       dimen=6, initialize=TechInputSplitConstraintIndices
  )
@@ -496,7 +462,6 @@ def runModelUI(config_filename):
   for k in solver.createAndSolve():
     yield "<div>"+k+"</div>"
     #yield " " * 1024
-  clear_g_variables()
   
 
 def runModel():
