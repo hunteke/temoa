@@ -24,7 +24,6 @@ from cStringIO import StringIO
 from itertools import product as cross_product, islice, izip
 from sys import argv, stderr as SE, stdout as SO
 
-
 try:
 	from pyomo.core import (
 	  AbstractModel, BuildAction, Constraint, NonNegativeReals, Reals, Objective, Param,
@@ -81,7 +80,8 @@ class TemoaModel( AbstractModel ):
 		index = (p, t, v)
 		if index in self.helper_processOutputs:
 			if o in self.helper_processOutputs[ index ]:
-				return self.helper_processInputs[ index ]
+				# return self.helper_processInputs[ index ]
+				return self.helper_ProcessInputsByOutput[ p, t, v, o ]
 	
 		return set()
 	
@@ -94,7 +94,8 @@ class TemoaModel( AbstractModel ):
 		index = (p, t, v)
 		if index in self.helper_processInputs:
 			if i in self.helper_processInputs[ index ]:
-				return self.helper_processOutputs[ index ]
+				# return self.helper_processOutputs[ index ]
+				return self.helper_ProcessOutputsByInput[ p, t, v, i ]
 	
 		return set()
 	
@@ -687,7 +688,8 @@ def InitializeProcessParameters ( M ):
 	  for t in M.tech_all
 	  for v in M.ProcessVintages( p, t )
 	  for i in M.ProcessInputs( p, t, v )
-	  for o in M.ProcessOutputs( p, t, v )
+	  # for o in M.ProcessOutputs( p, t, v )
+	  for o in M.ProcessOutputsByInput( p, t, v, i )
 	  for s in M.time_season
 	  for d in M.time_of_day
 	)
