@@ -40,27 +40,27 @@ you are running a version compatible with Temoa.
 	raise ImportError( msg )
 
 
-class TemoaModel( AbstractModel):
+class TemoaModel( AbstractModel ):
 	def __init__( self, *args, **kwds ):
 		AbstractModel.__init__( self, *args, **kwds )
-		self.g_processInputs  = dict()
-		self.g_processOutputs = dict()
-		self.g_processVintages = dict()
-		self.g_processLoans = dict()
-		self.g_activeFlow_psditvo = None
-		self.g_activeActivity_ptv = None
-		self.g_activeCapacity_tv = None
-		self.g_activeCapacityAvailable_pt = None
+		self.helper_processInputs  = dict()
+		self.helper_processOutputs = dict()
+		self.helper_processVintages = dict()
+		self.helper_processLoans = dict()
+		self.helper_activeFlow_psditvo = None
+		self.helper_activeActivity_ptv = None
+		self.helper_activeCapacity_tv = None
+		self.helper_activeCapacityAvailable_pt = None
 
-		self.g_commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
-		self.g_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
-		self.g_ProcessInputsByOutput = dict()
-		self.g_ProcessOutputsByInput = dict()
+		self.helper_commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
+		self.helper_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
+		self.helper_ProcessInputsByOutput = dict()
+		self.helper_ProcessOutputsByInput = dict()
 
 	def ProcessInputs ( self, p, t, v ):
 		index = (p, t, v)
-		if index in self.g_processInputs:
-			return self.g_processInputs[ index ]
+		if index in self.helper_processInputs:
+			return self.helper_processInputs[ index ]
 		return set()
 
 
@@ -69,8 +69,8 @@ class TemoaModel( AbstractModel):
 	index = (period, tech, vintage)
 		"""
 		index = (p, t, v)
-		if index in self.g_processOutputs:
-			return self.g_processOutputs[ index ]
+		if index in self.helper_processOutputs:
+			return self.helper_processOutputs[ index ]
 		return set()
 	
 	def ProcessInputsByOutput ( self, p, t, v, o ):
@@ -79,9 +79,9 @@ class TemoaModel( AbstractModel):
 	to produce a given output carrier (o).
 	"""
 		index = (p, t, v)
-		if index in self.g_processOutputs:
-			if o in self.g_processOutputs[ index ]:
-				return self.g_processInputs[ index ]
+		if index in self.helper_processOutputs:
+			if o in self.helper_processOutputs[ index ]:
+				return self.helper_processInputs[ index ]
 	
 		return set()
 	
@@ -92,9 +92,9 @@ class TemoaModel( AbstractModel):
 	to produce a given input carrier (o).
 	"""
 		index = (p, t, v)
-		if index in self.g_processInputs:
-			if i in self.g_processInputs[ index ]:
-				return self.g_processOutputs[ index ]
+		if index in self.helper_processInputs:
+			if i in self.helper_processInputs[ index ]:
+				return self.helper_processOutputs[ index ]
 	
 		return set()
 	
@@ -107,8 +107,8 @@ class TemoaModel( AbstractModel):
 		processes = set(
 		  (t, v)
 	
-		  for p, t, v in self.g_processInputs
-		  if i in self.g_processInputs[p, t, v]
+		  for p, t, v in self.helper_processInputs
+		  if i in self.helper_processInputs[p, t, v]
 		)
 	
 		return processes
@@ -122,8 +122,8 @@ class TemoaModel( AbstractModel):
 		processes = set(
 		  (t, v)
 	
-		  for p, t, v in self.g_processOutputs
-		  if o in self.g_processOutputs[p, t, v]
+		  for p, t, v in self.helper_processOutputs
+		  if o in self.helper_processOutputs[p, t, v]
 		)
 	
 		return processes
@@ -137,9 +137,9 @@ class TemoaModel( AbstractModel):
 		processes = set(
 		  (t, v)
 	
-		  for Tp, t, v in self.g_processOutputs
+		  for Tp, t, v in self.helper_processOutputs
 		  if Tp == p
-		  if o in self.g_processOutputs[p, t, v]
+		  if o in self.helper_processOutputs[p, t, v]
 		)
 	
 		return processes
@@ -147,18 +147,18 @@ class TemoaModel( AbstractModel):
 	
 	def ProcessVintages ( self, p, t ):
 		index = (p, t)
-		if index in self.g_processVintages:
-			return self.g_processVintages[ index ]
+		if index in self.helper_processVintages:
+			return self.helper_processVintages[ index ]
 	
 		return set()
 	
 	
 	def ValidActivity ( self, p, t, v ):
-		return (p, t, v) in self.g_activeActivity_ptv
+		return (p, t, v) in self.helper_activeActivity_ptv
 	
 	
 	def ValidCapacity ( self, t, v ):
-		return (t, v) in self.g_activeCapacity_tv
+		return (t, v) in self.helper_activeCapacity_tv
 	
 	
 	def isValidProcess ( self, p, i, t, v, o ):
@@ -168,9 +168,9 @@ class TemoaModel( AbstractModel):
 	output carrier.
 	"""
 		index = (p, t, v)
-		if index in self.g_processInputs and index in self.g_processOutputs:
-			if i in self.g_processInputs[ index ]:
-				if o in self.g_processOutputs[ index ]:
+		if index in self.helper_processInputs and index in self.helper_processOutputs:
+			if i in self.helper_processInputs[ index ]:
+				if o in self.helper_processOutputs[ index ]:
 					return True
 	
 		return False
@@ -568,34 +568,34 @@ def init_set_vintage_optimize ( M ):
 
 # Begin helper functions
 # Global Variables (dictionaries to cache parsing of Efficiency parameter)
-# g_processInputs  = dict()
-# g_processOutputs = dict()
-# g_processVintages = dict()
-# g_processLoans = dict()
-# g_activeFlow_psditvo = None
-# g_activeActivity_ptv = None
-# g_activeCapacity_tv = None
-# g_activeCapacityAvailable_pt = None
+# helper_processInputs  = dict()
+# helper_processOutputs = dict()
+# helper_processVintages = dict()
+# helper_processLoans = dict()
+# helper_activeFlow_psditvo = None
+# helper_activeActivity_ptv = None
+# helper_activeCapacity_tv = None
+# helper_activeCapacityAvailable_pt = None
 
-# g_commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
-# g_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
-# g_ProcessInputsByOutput = dict()
-# g_ProcessOutputsByInput = dict()
+# helper_commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
+# helper_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
+# helper_ProcessInputsByOutput = dict()
+# helper_ProcessOutputsByInput = dict()
 
 def InitializeProcessParameters ( M ):
-	# global g_processInputs
-	# global g_processOutputs
-	# global g_processVintages
-	# global g_processLoans
-	# global g_activeFlow_psditvo
-	# global g_activeActivity_ptv
-	# global g_activeCapacity_tv
-	# global g_activeCapacityAvailable_pt
+	# global helper_processInputs
+	# global helper_processOutputs
+	# global helper_processVintages
+	# global helper_processLoans
+	# global helper_activeFlow_psditvo
+	# global helper_activeActivity_ptv
+	# global helper_activeCapacity_tv
+	# global helper_activeCapacityAvailable_pt
 
-	# global g_commodityDStreamProcess
-	# global g_commodityUStreamProcess
-	# global g_ProcessInputsByOutput
-	# global g_ProcessOutputsByInput
+	# global helper_commodityDStreamProcess
+	# global helper_commodityUStreamProcess
+	# global helper_ProcessInputsByOutput
+	# global helper_ProcessOutputsByInput
 
 	l_first_period = min( M.time_future )
 	l_exist_indices = M.ExistingCapacity.sparse_keys()
@@ -647,32 +647,32 @@ def InitializeProcessParameters ( M ):
 			if v in M.time_optimize:
 				l_loan_life = value(M.LifetimeLoanProcess[ l_process ])
 				if v + l_loan_life >= p:
-					M.g_processLoans[ pindex ] = True
+					M.helper_processLoans[ pindex ] = True
 
 			# if tech is no longer "alive", don't include it
 			if v + l_lifetime <= p: continue
 
-			if pindex not in M.g_processInputs:
-				M.g_processInputs[  pindex ] = set()
-				M.g_processOutputs[ pindex ] = set()
-			if (p, t) not in M.g_processVintages:
-				M.g_processVintages[p, t] = set()
-			if (p, i) not in M.g_commodityDStreamProcess:
-				M.g_commodityDStreamProcess[p, i] = set()
-			if (p, o) not in M.g_commodityUStreamProcess:
-				M.g_commodityUStreamProcess[p, o] = set()
-			if (p, t, v, i) not in M.g_ProcessOutputsByInput:
-				M.g_ProcessOutputsByInput[p, t, v, i] = set()
-			if (p, t, v, o) not in M.g_ProcessInputsByOutput:
-				M.g_ProcessInputsByOutput[p, t, v, o] = set()
+			if pindex not in M.helper_processInputs:
+				M.helper_processInputs[  pindex ] = set()
+				M.helper_processOutputs[ pindex ] = set()
+			if (p, t) not in M.helper_processVintages:
+				M.helper_processVintages[p, t] = set()
+			if (p, i) not in M.helper_commodityDStreamProcess:
+				M.helper_commodityDStreamProcess[p, i] = set()
+			if (p, o) not in M.helper_commodityUStreamProcess:
+				M.helper_commodityUStreamProcess[p, o] = set()
+			if (p, t, v, i) not in M.helper_ProcessOutputsByInput:
+				M.helper_ProcessOutputsByInput[p, t, v, i] = set()
+			if (p, t, v, o) not in M.helper_ProcessInputsByOutput:
+				M.helper_ProcessInputsByOutput[p, t, v, o] = set()
 
-			M.g_processVintages[p, t].add( v )
-			M.g_processInputs[ pindex ].add( i )
-			M.g_processOutputs[pindex ].add( o )
-			M.g_commodityDStreamProcess[p, i].add( (t, v) )
-			M.g_commodityUStreamProcess[p, o].add( (t, v) )
-			M.g_ProcessOutputsByInput[p, t, v, i].add( o )
-			M.g_ProcessInputsByOutput[p, t, v, o].add( i )
+			M.helper_processVintages[p, t].add( v )
+			M.helper_processInputs[ pindex ].add( i )
+			M.helper_processOutputs[pindex ].add( o )
+			M.helper_commodityDStreamProcess[p, i].add( (t, v) )
+			M.helper_commodityUStreamProcess[p, o].add( (t, v) )
+			M.helper_ProcessOutputsByInput[p, t, v, i].add( o )
+			M.helper_ProcessInputsByOutput[p, t, v, o].add( i )
 	l_unused_techs = M.tech_all - l_used_techs
 	if l_unused_techs:
 		msg = ("Notice: '{}' specified as technology, but it is not utilized in "
@@ -680,7 +680,7 @@ def InitializeProcessParameters ( M ):
 		for i in sorted( l_unused_techs ):
 			SE.write( msg.format( i ))
 
-	M.g_activeFlow_psditvo = set(
+	M.helper_activeFlow_psditvo = set(
 	  (p, s, d, i, t, v, o)
 
 	  for p in M.time_optimize
@@ -692,21 +692,21 @@ def InitializeProcessParameters ( M ):
 	  for d in M.time_of_day
 	)
 
-	M.g_activeActivity_ptv = set(
+	M.helper_activeActivity_ptv = set(
 	  (p, t, v)
 
 	  for p in M.time_optimize
 	  for t in M.tech_all
 	  for v in M.ProcessVintages( p, t )
 	)
-	M.g_activeCapacity_tv = set(
+	M.helper_activeCapacity_tv = set(
 	  (t, v)
 
 	  for p in M.time_optimize
 	  for t in M.tech_all
 	  for v in M.ProcessVintages( p, t )
 	)
-	M.g_activeCapacityAvailable_pt = set(
+	M.helper_activeCapacityAvailable_pt = set(
 	  (p, t)
 
 	  for p in M.time_optimize
@@ -749,18 +749,18 @@ def CapacityFactorTechIndices ( M ):
 
 
 def CostFixedIndices ( M ):
-	return M.g_activeActivity_ptv
+	return M.helper_activeActivity_ptv
 
 
 def CostVariableIndices ( M ):
-	return M.g_activeActivity_ptv
+	return M.helper_activeActivity_ptv
 
 
 def CostInvestIndices ( M ):
 	indices = set(
 	  (t, v)
 
-	  for p, t, v in M.g_processLoans
+	  for p, t, v in M.helper_processLoans
 	)
 
 	return indices
@@ -835,7 +835,7 @@ Returns the set of sensical (period, tech, vintage) tuples.  The tuple indicates
 the periods in which a process is active, distinct from TechLifeFracIndices that
 returns indices only for processes that EOL mid-period.
 """
-	return M.g_activeActivity_ptv
+	return M.helper_activeActivity_ptv
 
 
 def LifetimeProcessIndices ( M ):
@@ -877,20 +877,20 @@ CostInvest parameter.
 # Variables
 
 def CapacityVariableIndices ( M ):
-	return M.g_activeCapacity_tv
+	return M.helper_activeCapacity_tv
 
 def CapacityAvailableVariableIndices ( M ):
-	return M.g_activeCapacityAvailable_pt
+	return M.helper_activeCapacityAvailable_pt
 
 def FlowVariableIndices ( M ):
-	return M.g_activeFlow_psditvo
+	return M.helper_activeFlow_psditvo
 
 
 def ActivityVariableIndices ( M ):
 	activity_indices = set(
 	  (p, s, d, t, v)
 
-	  for p, t, v in M.g_activeActivity_ptv
+	  for p, t, v in M.helper_activeActivity_ptv
 	  for s in M.time_season
 	  for d in M.time_of_day
 	)
@@ -899,7 +899,7 @@ def ActivityVariableIndices ( M ):
 
 
 def ActivityByPeriodAndProcessVarIndices ( M ):
-	return M.g_activeActivity_ptv
+	return M.helper_activeActivity_ptv
 
 
 # End variables
@@ -974,14 +974,14 @@ def BaseloadDiurnalConstraintIndices ( M ):
 def CommodityBalanceConstraintIndices ( M ):
 	# We only consider those commodities that have both upstream and downstream
 	# processes during a specific period.
-	period_commodity_with_up = set( M.g_commodityUStreamProcess.keys() )
-	period_commodity_with_dn = set( M.g_commodityDStreamProcess.keys() )
+	period_commodity_with_up = set( M.helper_commodityUStreamProcess.keys() )
+	period_commodity_with_dn = set( M.helper_commodityDStreamProcess.keys() )
 	period_commodity = period_commodity_with_up.intersection( period_commodity_with_dn )
 	indices = set(
 	  (p, s, d, o)
 
 	  for p, o in period_commodity
-	  for t, v in M.g_commodityUStreamProcess[ p, o ]
+	  for t, v in M.helper_commodityUStreamProcess[ p, o ]
 	  if t not in M.tech_hourlystorage
 	  for s in M.time_season
 	  for d in M.time_of_day

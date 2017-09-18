@@ -213,7 +213,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     # This derived decision variable is used in MGA objective function:
     M.V_ActivityByTech = Var(M.tech_all, domain=NonNegativeReals )
 
-  # Decision variable for hourly storage
+    # Decision variable for hourly storage
     M.HourlyStorage_psdt = Set (dimen=4, initialize=HourlyStorageVariableIndices )
     M.V_HourlyStorage = Var( M.HourlyStorage_psdt, domain=NonNegativeReals )
 
@@ -306,42 +306,42 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.StorageConstraint_psitvo, 
       rule=Storage_Constraint )
 
-#Hourly Storage     
+    #Hourly Storage     
     
-# Hourly Storage constraint   
+    # Hourly Storage constraint   
     M.HourlyStorageConstraint_psdt = Set( 
       dimen=4, initialize=HourlyStorageConstraintIndices )
     M.HourlyStorageConstraint = Constraint( 
       M.HourlyStorageConstraint_psdt, 
       rule=HourlyStorage_Constraint )   
     
-# Hourly Storage Upper Bound
+    # Hourly Storage Upper Bound
     M.HourlyStorageUpperBoundConstraint_psdt = Set( 
       dimen=4, initialize=HourlyStorageBoundConstraintIndices )
     M.HourlyStorageUpperBoundConstraint = Constraint( 
       M.HourlyStorageUpperBoundConstraint_psdt, 
       rule=HourlyStorage_UpperBound )   
-#Hourly Storage Lower Bound
+    # Hourly Storage Lower Bound
     M.HourlyStorageLowerBoundConstraint_psdt = Set( 
       dimen=4, initialize=HourlyStorageBoundConstraintIndices )
     M.HourlyStorageLowerBoundConstraint = Constraint( 
       M.HourlyStorageLowerBoundConstraint_psdt, 
       rule=HourlyStorage_LowerBound )       
     
-# Hourly Storage Upper Bound on Charging
+    # Hourly Storage Upper Bound on Charging
     M.HourlyStorageChargeUpperBoundConstraint_psdt = Set( 
       dimen=4, initialize=HourlyStorageBoundConstraintIndices )
     M.HourlyStorageChargeUpperBoundConstraint = Constraint( 
       M.HourlyStorageChargeUpperBoundConstraint_psdt, 
       rule=HourlyStorageCharge_UpperBound )   
-#Hourly Storage Lower Bound on Discharging
+    # Hourly Storage Lower Bound on Discharging
     M.HourlyStorageDischargeLowerBoundConstraint_psdt = Set( 
       dimen=4, initialize=HourlyStorageBoundConstraintIndices )
     M.HourlyStorageDischargeLowerBoundConstraint = Constraint( 
       M.HourlyStorageDischargeLowerBoundConstraint_psdt, 
       rule=HourlyStorageCharge_LowerBound )           
     
-#-----------------    
+    #-----------------    
 
     M.RampUpConstraintDay_psdtv = Set( 
       dimen=5, initialize=RampConstraintDayIndices )
@@ -438,7 +438,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     
     M.TechInputSplitConstraint_psditv = Set(
       dimen=6, initialize=TechInputSplitConstraintIndices
- )
+      )
     M.TechInputSplitConstraint  = Constraint( 
       M.TechInputSplitConstraint_psditv,  
       rule=TechInputSplit_Constraint )
@@ -455,34 +455,34 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
 
 
 def runModelUI(config_filename):
-  """This function launches the model run from the Temoa GUI"""
+    """This function launches the model run from the Temoa GUI"""
 
-  model = temoa_create_model()
-  solver = TemoaSolver(model, config_filename)
-  for k in solver.createAndSolve():
-    yield "<div>"+k+"</div>"
-    #yield " " * 1024
-  
+    model = temoa_create_model()
+    solver = TemoaSolver(model, config_filename)
+    for k in solver.createAndSolve():
+        yield "<div>"+k+"</div>"
+        #yield " " * 1024
+
 
 def runModel():
-  """This function launches the model run, and is invoked when called from
-  __main__.py"""
-  
-  model = temoa_create_model()
-  dummy = ''  # If calling from command line, send empty string  
-  solver = TemoaSolver(model, dummy)
-  for k in solver.createAndSolve():
-    pass
+    """This function launches the model run, and is invoked when called from
+    __main__.py"""
+
+    model = temoa_create_model()
+    dummy = ''  # If calling from command line, send empty string  
+    solver = TemoaSolver(model, dummy)
+    for k in solver.createAndSolve():
+        pass
 
 
 if '__main__' == __name__:
-  
-  dummy = ''  # If calling from command line, send empty string 
-  model = temoa_create_model()
-  solver = TemoaSolver(model, dummy)
-  solver.createAndSolve()
-  # this code only invoked when called this file is invoked directly from the
-  # command line as follows:
-  # $ python temoa_model/temoa_model.py path/to/dat/file
+
+    dummy = ''  # If calling from command line, send empty string 
+    model = temoa_create_model()
+    solver = TemoaSolver(model, dummy)
+    solver.createAndSolve()
+    # this code only invoked when called this file is invoked directly from the
+    # command line as follows:
+    # $ python temoa_model/temoa_model.py path/to/dat/file
 
 
