@@ -56,6 +56,15 @@ class TemoaModel( AbstractModel ):
 		self.helper_ProcessInputsByOutput = dict()
 		self.helper_ProcessOutputsByInput = dict()
 
+	##########################################################################
+	# Helper functions
+
+	# These methods utilize instance variables that are initialized in
+	# InitializeProcessParameters, to aid in creation of sparse index sets, 
+	# and to increase readability of Coopr's often programmer-centric syntax.
+	# However, these methods involve intense if-statements and consume plenty
+	# of time. Should remove them in future development.
+
 	def ProcessInputs ( self, p, t, v ):
 		index = (p, t, v)
 		if index in self.helper_processInputs:
@@ -80,7 +89,6 @@ class TemoaModel( AbstractModel ):
 		index = (p, t, v)
 		if index in self.helper_processOutputs:
 			if o in self.helper_processOutputs[ index ]:
-				# return self.helper_processInputs[ index ]
 				return self.helper_ProcessInputsByOutput[ p, t, v, o ]
 	
 		return set()
@@ -94,7 +102,6 @@ class TemoaModel( AbstractModel ):
 		index = (p, t, v)
 		if index in self.helper_processInputs:
 			if i in self.helper_processInputs[ index ]:
-				# return self.helper_processOutputs[ index ]
 				return self.helper_ProcessOutputsByInput[ p, t, v, i ]
 	
 		return set()
@@ -176,6 +183,8 @@ class TemoaModel( AbstractModel ):
 	
 		return False
 
+	# End helper functions
+	##########################################################################
 
 ###############################################################################
 # Temoa rule "partial" functions (excised from indidivual constraints for
@@ -568,35 +577,8 @@ def init_set_vintage_optimize ( M ):
 ##############################################################################
 
 # Begin helper functions
-# Global Variables (dictionaries to cache parsing of Efficiency parameter)
-# helper_processInputs  = dict()
-# helper_processOutputs = dict()
-# helper_processVintages = dict()
-# helper_processLoans = dict()
-# helper_activeFlow_psditvo = None
-# helper_activeActivity_ptv = None
-# helper_activeCapacity_tv = None
-# helper_activeCapacityAvailable_pt = None
-
-# helper_commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
-# helper_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
-# helper_ProcessInputsByOutput = dict()
-# helper_ProcessOutputsByInput = dict()
 
 def InitializeProcessParameters ( M ):
-	# global helper_processInputs
-	# global helper_processOutputs
-	# global helper_processVintages
-	# global helper_processLoans
-	# global helper_activeFlow_psditvo
-	# global helper_activeActivity_ptv
-	# global helper_activeCapacity_tv
-	# global helper_activeCapacityAvailable_pt
-
-	# global helper_commodityDStreamProcess
-	# global helper_commodityUStreamProcess
-	# global helper_ProcessInputsByOutput
-	# global helper_ProcessOutputsByInput
 
 	l_first_period = min( M.time_future )
 	l_exist_indices = M.ExistingCapacity.sparse_keys()
@@ -688,7 +670,6 @@ def InitializeProcessParameters ( M ):
 	  for t in M.tech_all
 	  for v in M.ProcessVintages( p, t )
 	  for i in M.ProcessInputs( p, t, v )
-	  # for o in M.ProcessOutputs( p, t, v )
 	  for o in M.ProcessOutputsByInput( p, t, v, i )
 	  for s in M.time_season
 	  for d in M.time_of_day
@@ -1138,15 +1119,3 @@ def TechOutputSplitConstraintIndices ( M ):
 # End sparse index creation functions
 ##############################################################################
 
-##############################################################################
-# Helper functions
-
-# These functions utilize global variables that are created in
-# InitializeProcessParameters, to aid in creation of sparse index sets, and
-# to increase readability of Coopr's often programmer-centric syntax.
-
-
-
-
-# End helper functions
-##############################################################################
