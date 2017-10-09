@@ -151,7 +151,8 @@ class TemoaSolver(object):
 		# Create concrete model
 		temoaInstance1 = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
 		for k in temoaInstance1.create_temoa_instance():
-			yield "<div>" + k + "</div>"
+			# yield "<div>" + k + "</div>"
+			yield k
 			#yield " " * 1024
 		# Now add back the objective function that we earlier removed; note that name
 		# we choose here (FirstObj) will be copied to the output file.
@@ -159,7 +160,8 @@ class TemoaSolver(object):
 		temoaInstance1.instance.preprocess()
 
 		for k in temoaInstance1.solve_temoa_instance():
-			yield "<div>" + k + "</div>"
+			# yield "<div>" + k + "</div>"
+			yield k
 			#yield " " * 1024
 
 		temoaInstance1.handle_files(log_name='Complete_OutputLog.log' )
@@ -178,7 +180,8 @@ class TemoaSolver(object):
 		while self.options.next_mga():
 			temoaMGAInstance = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
 			for k in temoaMGAInstance.create_temoa_instance():
-				yield "<div>" + k + "</div>"
+				# yield "<div>" + k + "</div>"
+				yield k
 				#yield " " * 1024
 
 			try:
@@ -202,7 +205,8 @@ class TemoaSolver(object):
 			)
 			temoaMGAInstance.instance.preprocess()
 			for k in temoaMGAInstance.solve_temoa_instance():
-				yield "<div>" + k + "</div>"
+				# yield "<div>" + k + "</div>"
+				yield k
 				#yield " " * 1024
 			temoaMGAInstance.handle_files(log_name='Complete_OutputLog.log' )
 
@@ -212,10 +216,12 @@ class TemoaSolver(object):
 	def solveWithoutMGA(self):
 		temoaInstance1 = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
 		for k in temoaInstance1.create_temoa_instance():
-			yield "<div>" + k + "</div>"
+			# yield "<div>" + k + "</div>"
+			yield k
 			#yield " " * 1024
 		for k in temoaInstance1.solve_temoa_instance():
-			yield "<div>" + k + "</div>"
+			# yield "<div>" + k + "</div>"
+			yield k
 			#yield " " * 1024
 		temoaInstance1.handle_files(log_name='Complete_OutputLog.log')
 
@@ -237,11 +243,13 @@ class TemoaSolver(object):
 		try:
 			if hasattr(self.options, 'mga') and self.options.mga:
 				for k in self.solveWithMGA():
-					yield "<div>" + k + "</div>"
+					#yield "<div>" + k + "</div>"
+					yield k
 					#yield " " * 1024
 			else:  #  User requested a single run
 				for k in self.solveWithoutMGA():
-					yield "<div>" + k + "</div>"
+					#yield "<div>" + k + "</div>"
+					yield k
 					#yield " " * 1024
 
 		except KeyboardInterrupt as e:
@@ -287,11 +295,11 @@ class TemoaSolverInstance(object):
 		
 		try:
 			if self.options.keepPyomoLP:
-				yield '\n Solver will write file: {}\n\n'.format( self.options.scenario + '.lp' )
+				yield '\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' )
 				SE.write('\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' ))
 				self.txt_file.write('\nSolver will write file: {}\n\n'.format( self.options.scenario + '.lp' ))
 
-			yield '[        ] Reading data files.\n'
+			yield 'Reading data files.'
 			SE.write( '[        ] Reading data files.'); SE.flush()
 			self.txt_file.write( 'Reading data files.')
 			begin = time()
@@ -305,16 +313,16 @@ class TemoaSolverInstance(object):
 					msg = "InputError: expecting a dot dat (e.g., data.dat) file, found '{}'\n"
 					raise Exception( msg.format( fname ))
 				modeldata.load( filename=fname )
-			yield '\r[%8.2f]\n' % duration()
+			yield '\t\t\t\t\t[%8.2f]\n' % duration()
 			SE.write( '\r[%8.2f]\n' % duration() )
 			self.txt_file.write( '[%8.2f]\n' % duration() )
 
-			yield '[        ] Creating Temoa model instance.\n'
+			yield 'Creating Temoa model instance.'
 			SE.write( '[        ] Creating Temoa model instance.'); SE.flush()
 			self.txt_file.write( 'Creating Temoa model instance.')
 			
 			self.instance = self.model.create_instance( modeldata )
-			yield '\r[%8.2f]\n' % duration()
+			yield '\t\t\t\t[%8.2f]\n' % duration()
 			SE.write( '\r[%8.2f]\n' % duration() )
 			self.txt_file.write( '[%8.2f]\n' % duration() )
 
@@ -334,14 +342,14 @@ class TemoaSolverInstance(object):
 		begin = time()
 		duration = lambda: time() - begin
 		try:
-			yield '[        ] Solving.\n'
+			yield 'Solving.'
 			SE.write( '[        ] Solving.'); SE.flush()
 			self.txt_file.write( 'Solving.')
 			if self.optimizer:	
 				self.result = self.optimizer.solve( self.instance, 
 								keepfiles=self.options.keepPyomoLP, 
 								symbolic_solver_labels=self.options.keepPyomoLP )
-				yield '\r[%8.2f]\n' % duration()
+				yield '\t\t\t\t\t\t[%8.2f]\n' % duration()
 				SE.write( '\r[%8.2f]\n' % duration() )
 				self.txt_file.write( '[%8.2f]\n' % duration() )
 				# return signal handlers to defaults, again
@@ -349,12 +357,12 @@ class TemoaSolverInstance(object):
 
 				# ... print the easier-to-read/parse format
 				msg = '[        ] Calculating reporting variables and formatting results.'
-				yield msg+'\n'
+				yield 'Calculating reporting variables and formatting results.'
 				SE.write( msg ); SE.flush()
 				self.txt_file.write( 'Calculating reporting variables and formatting results.')
 				self.instance.solutions.store_to(self.result)
 				formatted_results = pformat_results( self.instance, self.result, self.options )
-				yield '\r[%8.2f]\n' % duration()
+				yield '\t[%8.2f]\n' % duration()
 				SE.write( '\r[%8.2f\n' % duration() )
 				self.txt_file.write( '[%8.2f]\n' % duration() )
 				yield formatted_results.getvalue() + '\n'
