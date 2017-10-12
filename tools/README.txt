@@ -16,6 +16,12 @@ python temoa_model/temoa_model.py data_files/utopia15.dat --solver=glpk
 Stochastic Optimization
 #############################
 
+(Solve a stochastic run and store results into a database using config file)
+$ python temoa_model/temoa_stochastic.py --config=temoa_model/config_sample
+# Note that to invoke the stochastic run, the "--input" flag must be the path
+# to ScenarioStructure.dat, and "--output" flag is the path to the target 
+# database file, where the results will be stored.
+
 (Extensive Formulation or Deterministic Equivalent)
 runef -m ../../temoa_model/ -i ./ --solver=glpk --solve >> out.txt 
 
