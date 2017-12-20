@@ -480,7 +480,7 @@ def MinActivityGroup_Constraint ( M, p , g ):
       for  t  in g_techs
       for S_s in M.time_season
       for S_d in M.time_of_day
-      for S_v in ProcessVintages( p, t )       
+      for S_v in M.ProcessVintages( p, t )       
     )
        min_act = value( M.MinGenGroupOfTechnologies_Data[p,g] )
        expr = (activity_p >= min_act)
@@ -1406,35 +1406,35 @@ slice.
    :label: reserve_margin
 """
 	# The season and time-of-day of the slice with the maximum average load. 
-   PowerTechs=set()  #all the power generation technologies
-   PowerCommodities=set()  #it consists of all the commodities coming out of powerplants: ELCP, ELCP_Renewables, ELCP_SOL
-   for i in M.ReserveMargin.sparse_keys():
-           if i[1]==g:
-                   PowerCommodities.add(i[0])
+	PowerTechs=set()  #all the power generation technologies
+	PowerCommodities=set()  #it consists of all the commodities coming out of powerplants: ELCP, ELCP_Renewables, ELCP_SOL
+	for i in M.ReserveMargin.sparse_keys():
+	        if i[1]==g:
+	                PowerCommodities.add(i[0])
 
-   if not PowerCommodities:
-           return Constraint.Skip
+	if not PowerCommodities:
+	        return Constraint.Skip
 
-   for i,t,v,o in M.Efficiency:
-           if o in PowerCommodities:
-                   PowerTechs.add(t)
+	for i,t,v,o in M.Efficiency:
+	        if o in PowerCommodities:
+	                PowerTechs.add(t)
 
-   expr_left = sum (value( M.CapacityCredit[t] )*
-                                   M.V_CapacityAvailableByPeriodAndTech[p, t]*
-                                   value( M.CapacityToActivity[t] )*
-                                   value( M.SegFrac[s, d] )
-                                   for t in PowerTechs if (p, t) in M.CapacityAvailableVar_pt  ) #M.CapacityAvailableVar_pt check if all the possible consistent combinations of t and p
-
-
-
-   total_generation = sum( M.V_Activity[p, s, d, t, S_v]
-                           for  t  in PowerTechs
-                           for S_v in ProcessVintages( p, t ))
-
-   expr_right = total_generation*(1 +  M.ReserveMargin[PowerCommodities.pop(),g] ) 
+	expr_left = sum (value( M.CapacityCredit[t] )*
+	                                M.V_CapacityAvailableByPeriodAndTech[p, t]*
+	                                value( M.CapacityToActivity[t] )*
+	                                value( M.SegFrac[s, d] )
+	                                for t in PowerTechs if (p, t) in M.CapacityAvailableVar_pt  ) #M.CapacityAvailableVar_pt check if all the possible consistent combinations of t and p
 
 
-   return (expr_left >= expr_right)
+
+	total_generation = sum( M.V_Activity[p, s, d, t, S_v]
+	                        for  t  in PowerTechs
+	                        for S_v in M.ProcessVintages( p, t ))
+
+	expr_right = total_generation*(1 +  M.ReserveMargin[PowerCommodities.pop(),g] ) 
+
+
+	return (expr_left >= expr_right)
 
 
 # End additional and derived (informational) variable constraints

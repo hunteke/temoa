@@ -1078,23 +1078,22 @@ def RampConstraintPeriodIndices ( M ):
 
 def ReserveMarginIndices ( M ):
 		indices = set(
-			(p, c)
+			(p , g , s , d )
 
 			for p in M.time_optimize
-			for c in M.commodity_demand
-			if M.ReserveMargin[c] >= 1e-3
+			for s in M.time_season
+			for d in M.time_of_day
+			for g in M.Zones
 			)
 		return indices
 
 def TechInputSplitConstraintIndices ( M ):
 	indices = set(
-	  (p, s, d, i, t, v)
+	  (p, s, i, t, v)
 
 	  for p, i, t in M.TechInputSplit.sparse_iterkeys()
-	  for p in M.time_optimize
 	  for v in M.ProcessVintages( p, t )
 	  for s in M.time_season
-	  for d in M.time_of_day
 	)
 
 	return indices
@@ -1113,6 +1112,21 @@ def TechOutputSplitConstraintIndices ( M ):
 
 	return indices
 
+def MinGenGroups (M):
+
+	indices = set(
+		(g[1])
+		for g in M.GroupOfTechnologies.value
+		)
+
+	return indices
+
+def MinActivityGroup ( M ):
+		indices = set(
+		  (p,g)
+		  for p , g in M.MinGenGroupOfTechnologies_Data.sparse_iterkeys()
+		)
+		return indices
 # End constraints
 ##############################################################################
 

@@ -112,6 +112,7 @@ def db_2_dat(ifile, ofile, options):
 		['set',  'time_periods',              'time_future',         'f',            0],
 		['set',  'time_season',               '',                    '',             0],
 		['set',  'time_of_day',               '',                    '',             0],
+		['set',  'Zones',                         '',                    '',         0],
 		['set',  'technologies',              'tech_resource',       'r',            0],
 		['set',  'technologies',              'tech_production',    ['p','pb','ps','ph'], 0],
 		['set',  'technologies',              'tech_baseload',       'pb',           0],
@@ -124,6 +125,7 @@ def db_2_dat(ifile, ofile, options):
 		['set',  'commodities',               'commodity_demand',    'd',            0],
 		['set',  'tech_capacity_min',		  '',					 '',    		 0],  #set of technologies that must sum to satisfy a minimum aggregate capacity
 		['set',  'tech_capacity_max',		  '',					 '',    		 0],  #set of technologies that must sum to satisfy a maximum aggregate capacity		
+		['param','MinGenGroupOfTechnologies_Data', '',                    '',        2],
 		['param','SegFrac',                   '',                    '',             2],
 		['param','DemandSpecificDistribution','',                    '',             3],
 		['param','CapacityToActivity',        '',                    '',             1],
@@ -152,7 +154,7 @@ def db_2_dat(ifile, ofile, options):
 		['param','CostInvest',                '',                    '',             2],
 		['param','CostFixed',                 '',                    '',             3],
 		['param','CostVariable',              '',                    '',             3],
-		['param','ReserveMargin',             '',                    '',             1],
+		['param','ReserveMargin',             '',                    '',             2],
 		['param','CapacityCredit',            '',                    '',             1],
 		['param','RampUp',                    '',                    '',             1],
 		['param','RampDown',                  '',                    '',             1]
@@ -176,7 +178,16 @@ def db_2_dat(ifile, ofile, options):
 			write_tech_mga(f)
 		if options.mga_weight == 'normalized':
 			write_tech_sector(f)
-	
+		
+		if "MinGenGroupOfTechnologies" in table_exist:
+			cur.execute("SELECT * FROM MinGenGroupOfTechnologies")
+			A=cur.fetchall()
+			if len(A)!=0:
+				f.write("set " +"GroupOfTechnologies" + " := \n")
+				for row in A:
+					f.write(row[0]+"   "+row[1]+" \n")
+				f.write(";\n\n")
+				
 		cur.close()
 		con.close()
 
