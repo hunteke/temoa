@@ -173,7 +173,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
 
     # Parameters for reserve margin constraints.
     M.CapacityCredit = Param( M.tech_all, default=1 )
-    M.ReserveMargin  = Param( M.commodity_demand, M.Zones , default=0.0 )
+    M.ReserveMargin  = Param( M.commodity_all, M.Zones , default=0.0 )
 
     # Decision Variables--------------------------------------------------------
     #   Base decision variables
