@@ -468,6 +468,24 @@ for these constraints are period and tech_all, not tech and vintage.
 	expr = (activity_pt >= min_act)
 	return expr
 
+def MinActivityGroup_Constraint ( M, p , g ):
+
+
+       g_techs=set()
+       for i in M.GroupOfTechnologies.value:
+               if i[1]==g:
+                       g_techs.add(i[0])
+       activity_p = sum( M.V_Activity[p, S_s, S_d, t, S_v]
+             
+      for  t  in g_techs
+      for S_s in M.time_season
+      for S_d in M.time_of_day
+      for S_v in ProcessVintages( p, t )       
+    )
+       min_act = value( M.MinGenGroupOfTechnologies_Data[p,g] )
+       expr = (activity_p >= min_act)
+       return expr
+
 
 def Storage_Constraint ( M, p, s, i, t, v, o ):
 	r"""
@@ -614,7 +632,7 @@ def HourlyStorageCharge_LowerBound ( M, p, s, d, t ):
 	
 	return expr	
 	
-def TechInputSplit_Constraint ( M, p, s, d, i, t, v ):
+def TechInputSplit_Constraint ( M, p, s, i, t, v ):
 	r"""
 
 Allows users to specify fixed or minimum shares of commodity inputs to a process 
@@ -622,11 +640,15 @@ producing a single output. These shares can vary by model time period. See
 TechOutputSplit_Constraint for an analogous explanation.
 """
 	inp = sum( M.V_FlowIn[p, s, d, i, t, v, S_o]
-	  for S_o in M.ProcessOutputsByInput( p, t, v, i ) )
+	  for S_o in M.ProcessOutputsByInput( p, t, v, i )
+	  for d in M.time_of_day
+
+	)
 
 	total_inp = sum( M.V_FlowIn[p, s, d, S_i, t, v, S_o]
 	  for S_i in M.ProcessInputs( p, t, v )
 	  for S_o in M.ProcessOutputsByInput( p, t, v, i )
+	  for d in M.time_of_day
 	)
 
 	expr = ( inp >= M.TechInputSplit[p, i, t] * total_inp )
@@ -871,7 +893,7 @@ one input data anomaly.
 """
 	expr = (
 	    M.V_FlowOut[p, s, d, i, t, v, o]
-	      <=
+	      ==
 	    M.V_FlowIn[p, s, d, i, t, v, o]
 	  * value( M.Efficiency[i, t, v, o] )
 	)
@@ -1358,7 +1380,7 @@ def RampDownPeriod_Constraint ( M, p, t, v):
 
 	return Constraint.Skip # We don't need inter-period ramp up/down constraint.
 	
-def ReserveMargin_Constraint( M, p, c):
+def ReserveMargin_Constraint( M, p, g, s, d):
 	r"""
 During each period :math:`p`, the sum of the available capacity of all reserve 
 technologies :math:`\sum_{t \in T^{res}} \textbf{CAPAVL}_{p,t}`, which are 
@@ -1384,27 +1406,36 @@ slice.
    :label: reserve_margin
 """
 	# The season and time-of-day of the slice with the maximum average load. 
-	s_star, d_star, load_star = None, None, 0
-	for s, d, dem in M.DemandSpecificDistribution.iterkeys():
-		load = M.DemandSpecificDistribution[s, d, dem]/M.SegFrac[s, d]
-		if load_star <= load:
-			s_star, d_star, load_star = s, d, load
+   PowerTechs=set()  #all the power generation technologies
+   PowerCommodities=set()  #it consists of all the commodities coming out of powerplants: ELCP, ELCP_Renewables, ELCP_SOL
+   for i in M.ReserveMargin.sparse_keys():
+           if i[1]==g:
+                   PowerCommodities.add(i[0])
 
-	expr_left = sum(
-		value( M.CapacityCredit[t] )*
-		M.V_CapacityAvailableByPeriodAndTech[p, t]*
-		value( M.CapacityToActivity[t] )*
-		value( M.SegFrac[s_star, d_star] )
+   if not PowerCommodities:
+           return Constraint.Skip
 
-		for t in M.tech_reserve if (p, t) in M.CapacityAvailableVar_pt
-		)
+   for i,t,v,o in M.Efficiency:
+           if o in PowerCommodities:
+                   PowerTechs.add(t)
 
-	expr_right = ( 
-		value( M.Demand[p, c] )*
-		value( M.DemandSpecificDistribution[s_star, d_star, c] )*
-		( 1 + value( M.ReserveMargin[c] ) )
-		)
-	return expr_left >= expr_right
+   expr_left = sum (value( M.CapacityCredit[t] )*
+                                   M.V_CapacityAvailableByPeriodAndTech[p, t]*
+                                   value( M.CapacityToActivity[t] )*
+                                   value( M.SegFrac[s, d] )
+                                   for t in PowerTechs if (p, t) in M.CapacityAvailableVar_pt  ) #M.CapacityAvailableVar_pt check if all the possible consistent combinations of t and p
+
+
+
+   total_generation = sum( M.V_Activity[p, s, d, t, S_v]
+                           for  t  in PowerTechs
+                           for S_v in ProcessVintages( p, t ))
+
+   expr_right = total_generation*(1 +  M.ReserveMargin[PowerCommodities.pop(),g] ) 
+
+
+   return (expr_left >= expr_right)
+
 
 # End additional and derived (informational) variable constraints
 ##############################################################################
