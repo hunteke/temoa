@@ -57,9 +57,9 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     
     M.tech_baseload   = Set( within=M.tech_all )
     M.tech_storage    = Set( within=M.tech_all )
-    M.tech_hourlystorage = Set( within=M.tech_all) 
+    M.tech_hourlystorage = Set( within=M.tech_all)
+    M.GroupOfTechnologies   = Set(dimen=2) #Set of technologies to have a minium level of activity, primarily aimed at transport sector 
     M.tech_ramping    = Set( within=M.tech_all )
-    M.tech_reserve    = Set( within=M.tech_all )
     M.tech_capacity_min   = Set( within=M.tech_all ) 
     M.tech_capacity_max   = Set( within=M.tech_all ) 
     
@@ -78,6 +78,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.commodity_carrier = M.commodity_physical | M.commodity_demand
     M.commodity_all     = M.commodity_carrier | M.commodity_emissions
     
+    M.Zones = Set()
     # Define Parameters---------------------------------------------------------
     
     # Note: In order to increase model efficiency, we use sparse indexing of 
@@ -164,13 +165,15 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.TechInputSplit  = Param( M.time_optimize, M.commodity_physical, M.tech_all )
     M.TechOutputSplit = Param( M.time_optimize, M.tech_all, M.commodity_carrier )
 
+    M.MinGenGroupOfTechnologies_Data = Param( M.time_optimize, Set(dimen=1,initialize=MinGenGroups)) #
+
     #Parameters for Ramping Up and Ramping Down Constraints ARQ 22/07/16
     M.RampUp   = Param( M.tech_ramping )
     M.RampDown = Param( M.tech_ramping )
 
     # Parameters for reserve margin constraints.
-    M.CapacityCredit = Param( M.tech_reserve, default=1 )
-    M.ReserveMargin  = Param( M.commodity_demand, default=0.0 )
+    M.CapacityCredit = Param( M.tech_all, default=1 )
+    M.ReserveMargin  = Param( M.commodity_demand, M.Zones , default=0.0 )
 
     # Decision Variables--------------------------------------------------------
     #   Base decision variables
@@ -379,10 +382,10 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.RampDownConstraintPeriod_ptv, 
       rule=RampDownPeriod_Constraint )
 
-    M.ReserveMargin_pc = Set(
-      dimen = 2, initialize=ReserveMarginIndices )
+    M.ReserveMargin_psdg = Set(
+      dimen = 4, initialize=ReserveMarginIndices )
     M.ReserveMarginConstraint = Constraint(
-      M.ReserveMargin_pc,
+      M.ReserveMargin_psdg,
       rule=ReserveMargin_Constraint)
 
     # Constraints for user-defined limits
@@ -436,11 +439,11 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.MaxCapacitySetConstraint_p, 
       rule=MaxCapacitySet_Constraint )      
     
-    M.TechInputSplitConstraint_psditv = Set(
-      dimen=6, initialize=TechInputSplitConstraintIndices
+    M.TechInputSplitConstraint_psitv = Set(
+      dimen=5, initialize=TechInputSplitConstraintIndices
       )
     M.TechInputSplitConstraint  = Constraint( 
-      M.TechInputSplitConstraint_psditv,  
+      M.TechInputSplitConstraint_psitv,  
       rule=TechInputSplit_Constraint )
 
     M.TechOutputSplitConstraint_psdtvo = Set(
@@ -450,6 +453,12 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       rule=TechOutputSplit_Constraint )
 
 
+    M.MinActivityGroup_pg = Set(
+      dimen=2, initialize=MinActivityGroup )
+    M.MinActivityGroup = Constraint( 
+      M.MinActivityGroup_pg, 
+      rule=MinActivityGroup_Constraint )
+    
     return M
 
 
