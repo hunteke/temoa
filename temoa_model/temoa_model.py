@@ -461,12 +461,11 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     
     return M
 
-
+model = temoa_create_model()
 
 def runModelUI(config_filename):
     """This function launches the model run from the Temoa GUI"""
 
-    model = temoa_create_model()
     solver = TemoaSolver(model, config_filename)
     for k in solver.createAndSolve():
         yield k
@@ -477,7 +476,6 @@ def runModel():
     """This function launches the model run, and is invoked when called from
     __main__.py"""
 
-    model = temoa_create_model()
     dummy = ''  # If calling from command line, send empty string  
     solver = TemoaSolver(model, dummy)
     for k in solver.createAndSolve():
@@ -487,9 +485,7 @@ def runModel():
 if '__main__' == __name__:
 
     dummy = ''  # If calling from command line, send empty string 
-    model = temoa_create_model()
-    solver = TemoaSolver(model, dummy)
-    solver.createAndSolve()
+    model = runModel()
     # this code only invoked when called this file is invoked directly from the
     # command line as follows:
     # $ python temoa_model/temoa_model.py path/to/dat/file
