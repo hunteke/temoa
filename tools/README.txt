@@ -107,7 +107,9 @@ python Make_Graphviz.py -i temoa_utopia.sqlite -s test_run
 
 
 (Method of Morris)
-
+ 
+ For an instruction about implementing Method of Morris sensitivity analysis, please see the link below: 
+ https://groups.google.com/forum/#!topic/temoa-project/SEqlvJOpnb0
 
 (MGA)
 
