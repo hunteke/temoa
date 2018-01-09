@@ -44,9 +44,7 @@ def SlackedObjective_rule ( M, prev_cost, mga_slack ):
 def PreviousAct_rule ( instance, mga_weight, prev_activity_t ):
 	#   The version below weights each technology by its previous cumulative
 	#   activity. However, different sectors may be tracked in different units and 
-	#   have activities of very different magnitudes. Can also modify the code 
-	#   changing 'val' to 1 to implement a integer-based weight to address this non-uniform
-	#   weighting issue.
+	#   have activities of very different magnitudes. 
 
 	epsilon=1e-6
 
@@ -55,7 +53,7 @@ def PreviousAct_rule ( instance, mga_weight, prev_activity_t ):
 			if t in instance.tech_mga:
 				val = value( instance.V_ActivityByTech[t] )
 				if abs(val) < epsilon: continue
-				prev_activity_t[ t ] += 1.0   #val
+				prev_activity_t[ t ] += 1.0
                	return prev_activity_t
                
 	#   The version below calculates activity by sector and normalized technology-
@@ -76,7 +74,7 @@ def PreviousAct_rule ( instance, mga_weight, prev_activity_t ):
 		  		for S_t in techs[s]
 				)
       	
-		for t in instance_1.V_ActivityByTech:
+		for t in instance.V_ActivityByTech:
 			for s in sectors:
 				if t in techs[s]:
 					val = value( instance.V_ActivityByTech[t] )
