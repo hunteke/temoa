@@ -140,7 +140,6 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.DiscountRate  = Param( M.DiscountRate_tv, default=0.05 )
     M.Loan_tv           = Set( dimen=2, initialize=lambda M: M.CostInvest.keys() )
     M.LoanAnnualize = Param( M.Loan_tv, initialize=ParamLoanAnnualize_rule )
-    M.SalvageRate   = Param( M.Loan_tv, initialize=ParamSalvageRate_rule )
     M.ModelLoanLife_tv  = Set( dimen=2, initialize=lambda M: M.CostInvest.keys() )
     M.ModelLoanLife     = Param( M.ModelLoanLife_tv,  
                              initialize=ParamModelLoanLife_rule )

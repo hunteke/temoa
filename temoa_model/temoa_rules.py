@@ -34,40 +34,40 @@ Using the :code:`Activity` and :code:`Capacity` variables, the Temoa objective
 function calculates the costs associated with supplying the system with energy,
 under the assumption that all costs are paid for through loans (rather than with
 lump-sum sales).  This implementation sums up all the costs incurred by the
-solution, and is defined as :math:`C_{tot} = C_{loans} + C_{fixed} + C_{variable} 
-- C_{salvage}`. Similarly, each term on the right-hand side is merely a 
-summation of the costs incurred, multiplied by an annual discount factor to 
-calculate the discounted cost in year
-:math:`\text{P}_0`.
+solution, and is defined as :math:`C_{tot} = C_{loans} + C_{fixed} + C_{variable}`.
+Similarly, each term on the right-hand side is merely a summation of the costs
+incurred, multiplied by an annual discount factor to calculate the discounted
+cost in year :math:`\text{P}_0`.
 
 .. math::
+   :label: obj_loan
+
    C_{loans} = \sum_{t, v \in \Theta_{IC}} \left (
      \left [
              IC_{t, v}
        \cdot LA_{t, v}
        \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-{LLN}_{t, v}})}{GDR}
+       \cdot \frac{ 1-(1+GDR)^{-LPA_{t,v}} }{ 1-(1+GDR)^{-LP_{t,v}} }
      \right ]
      \cdot \textbf{CAP}_{t, v}
-     \right ) 
+     \right )
+
+Note that we calculate loan costs by using depreciation. If a technology is decommissioned after end of model horizon, then only the amount of the asset cost that is depreciated before end of model horizon will be included in the objective function. We use :math:`\frac{ 1-(1+GDR)^{-LPA_{t,v}} }{ 1-(1+GDR)^{-LP_{t,v}} }` to calculate the depreciation expense, where :math:`LPA_{t,v}` represents active life time of a process :math:`(t,v)` before end of model horizon.
 
 .. math::
-   C_{salvage} = \sum_{t,v \in \Theta_{IC}}
-     \frac{
-       SR_{t,v} \cdot IC_{t,v} \cdot \textbf{CAP}_{t, v}
-     }{
-       (1 + GDR)^L
-     } 
+   :label: obj_fixed
 
-.. math::
    C_{fixed} = \sum_{p, t, v \in \Theta_{FC}} \left (
      \left [
              FC_{p, t, v}
        \cdot \frac{(1 + GDR)^{P_0 - p +1} \cdot (1 - (1 + GDR)^{-{MPL}_{t, v}})}{GDR}
      \right ]
      \cdot \textbf{CAP}_{t, v}
-     \right ) 
+     \right )
 
 .. math::
+   :label: obj_variable
+
    C_{variable} = \sum_{p, t, v \in \Theta_{VC}} \left (
            MC_{p, t, v}
      \cdot
@@ -77,36 +77,7 @@ calculate the discounted cost in year
        GDR
      }
      \cdot \textbf{ACT}_{t, v}
-     \right ) 
-
-Linear depreciation is used to calculate the salvage values. For a process 
-:math:`(t,v)`, when it retires after model horizon terminates 
-(:math:`v + LP_{t,v} > P_0 + L`), a salvage value will be assigned to it, 
-otherwise (:math:`v + LP_{t,v} \leq P_0 + L`) its salvage value will be 0. 
-Salvage rate :math:`SR_{t,v}` is used to denote fraction of the value of 
-depreciated asset at the end of model horizon to its initial investment.
-:math:`L` denotes the length of model horizon, and
-:math:`L = \text{max} \{ \textbf{P}^f \} - \text{min} \{ \textbf{P}^f \}`.
-
-.. math::
-   SR_{t,v}=
-   \left\{
-   \begin{array}{cl}
-      0                                & \text{if } v + LP_{t,v} \leq P_0 + L \\
-      1 - \frac{P_0 + L - v}{LP_{t,v}} & \text{if } v + LP_{t,v} > P_0 + L \\
-   \end{array}
-   \right.
-
-
-In the last sub-equation, :math:`R_p` is the equivalent operation to the inner
-summation of the other two sub-equations.  The difference is that where the
-inner summations specifically account for the fixed and loan costs of
-partial-period processes, the activity is constant for all years within a
-period.  There is thus no need to calculate the time-value of money factor for
-each process, and instead, :math:`R_p` is calculated once for each period, as a
-pseudo-parameter.  While this amounts to little more than an efficiency of model
-generation, it is pedagogically significant in that it highlights the fact that
-Temoa optimizes only a single characteristic year within each period.
+     \right )
 
 """
 	return sum( PeriodCost_rule(M, p) for p in M.time_optimize )
@@ -114,6 +85,7 @@ Temoa optimizes only a single characteristic year within each period.
 
 def PeriodCost_rule ( M, p ):
 	P_0 = min( M.time_optimize )
+	P_e = M.time_future.last() # End point of modeled horizon
 	GDR = value( M.GlobalDiscountRate )
 	MLL = M.ModelLoanLife
 	MPL = M.ModelProcessLife
@@ -128,19 +100,13 @@ def PeriodCost_rule ( M, p ):
 	        (x **(P_0 - S_v + 1) * (1 - x **(-value( M.LifetimeLoanProcess[S_t, S_v] ))) / GDR)
 	      )
 	  )
-
-	  for S_t, S_v in M.CostInvest.sparse_iterkeys()
-	  if S_v == p
-	)
-
-	salvage_values = (-1)*sum(
-	    M.V_Capacity[S_t, S_v]
 	  * (
-	      value( M.CostInvest[S_t, S_v] )
-	    * value( M.SalvageRate[S_t, S_v] )
-	    / ( 1 if not GDR else
-	        (1 + GDR)**(M.time_future.last() - M.time_future.first() - 1)
-	      )
+		  (
+			  1 -  x**( -min( value(M.LifetimeProcess[S_t, S_v]), P_e - S_v ) )
+		  )
+		  /(
+			  1 -  x**( -value( M.LifetimeProcess[S_t, S_v] ) ) 
+		  )
 	  )
 
 	  for S_t, S_v in M.CostInvest.sparse_iterkeys()
@@ -173,7 +139,7 @@ def PeriodCost_rule ( M, p ):
 	  if S_p == p
 	)
 
-	period_costs = (loan_costs + fixed_costs + variable_costs + salvage_values)
+	period_costs = (loan_costs + fixed_costs + variable_costs)
 	return period_costs
 
 
@@ -257,17 +223,6 @@ def ParamLoanAnnualize_rule ( M, t, v ):
 	annualized_rate = ( dr / (1.0 - (1.0 + dr)**(-lln) ))
 
 	return annualized_rate
-
-def ParamSalvageRate_rule( M, t, v ):
-	# Return the salvage rate of process (t, v) at the end of the modeled years
-	P_0  = value( M.time_optimize.first() )
-	n    = value( M.LifetimeProcess[t, v] )
-	L    = value( M.time_future.last() ) - value( M.time_future.first() )
-
-	if P_0 + L - v >= n:
-		return 0
-	else:
-		return 1 - (P_0 + L - v)/n # Linear depreciation
 
 # End initialization rules
 ##############################################################################
@@ -1382,13 +1337,12 @@ def RampDownPeriod_Constraint ( M, p, t, v):
 	
 def ReserveMargin_Constraint( M, p, g, s, d):
 	r"""
-During each period :math:`p`, the sum of the available capacity of all reserve 
-technologies :math:`\sum_{t \in T^{res}} \textbf{CAPAVL}_{p,t}`, which are 
-defined in the set :math:`\textbf{T}^{res}`, should exceed the peak load by 
-:math:`RES_c`, the reserve margin for commodity :math:`c`. Note the reservr 
-margin is expressed in percentage of the peak load. In Equation 
-:eq:`reserve_margin`, we use :math:`(s^*,d^*)` to represent the peak-load time 
-slice.
+To assure system reliability of power grid, during each period :math:`p`, the
+sum of available capacity of all reserve technologies (defined by set :math:`\textbf{T}^{res}`)
+:math:`\sum_{t \in T^{res}} \textbf{CAPAVL}_{p,t}`, should not exceed the peak
+load plus a reserve margin :math:`RES_c`. Note reserve margin is typically
+expressed in the form of percentage. In Equation :eq:`reserve_margin`, we use 
+:math:`(s^*,d^*)` to represent the peak-load time slice.
 
 .. math::
    \sum_{t \in T^{res}} {

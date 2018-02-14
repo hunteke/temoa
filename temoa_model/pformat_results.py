@@ -112,6 +112,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	for e, i, t, v, o in m.EmissionActivity:
 		emission_keys[(i, t, v, o)].add(e)
 	P_0 = min( m.time_optimize )
+	P_e = m.time_future.last()
 	GDR = value( m.GlobalDiscountRate )
 	MLL = m.ModelLoanLife
 	MPL = m.ModelProcessLife
@@ -179,8 +180,14 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	
 		icost = value( m.V_Capacity[t, v] )
 		if abs(icost) < epsilon: continue
-		icost *= value( m.CostInvest[t, v] )
-		svars[	'Costs'	][ 'V_UndiscountedInvestmentByProcess', t, v] += icost 
+		icost *= value( m.CostInvest[t, v] )*(
+			(
+				1 -  x**( -min( value(m.LifetimeProcess[t, v]), P_e - v ) )
+			)/(
+				1 -  x**( -value( m.LifetimeProcess[t, v] ) ) 
+			)
+		)
+		svars[	'Costs'	][ 'V_UndiscountedInvestmentByProcess', t, v] += icost
 
 		icost *= value( m.LoanAnnualize[t, v] )
 		icost *= (
@@ -189,21 +196,6 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		)
 
 		svars[	'Costs'	][ 'V_DiscountedInvestmentByProcess', t, v] += icost
-		
-	for t, v in m.CostInvest.sparse_iterkeys():   # Returns only non-zero values
-		svalue = (-1)*value( m.V_Capacity[t, v] )
-		if abs(svalue) < epsilon: continue
-		svalue *= value( m.CostInvest[t, v] )
-		svalue *= value( m.SalvageRate[t, v] )
-		svars[	'Costs'	][ 'V_UndiscountedSalvageByProcess', t, v] += svalue
-
-		svalue /= (
-		  1 if not GDR else
-		    (1 + GDR)**(m.time_future.last() - m.time_future.first() - 1)
-		)
-
-		svars[	'Costs'	][ 'V_DiscountedSalvageByProcess', t, v] += svalue
-
 
 	for p, t, v in m.CostFixed.sparse_iterkeys():
 		fcost = value( m.V_Capacity[t, v] )
