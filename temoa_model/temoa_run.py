@@ -172,8 +172,9 @@ class TemoaSolver(object):
 		# (but defined above).
 		Perfect_Foresight_Obj = value( temoaInstance1.instance.FirstObj )
 
-		# Create a new parameter that stores the MGA objective function weights
+		# Create a new dictionary that stores the MGA objective function weights
 		prev_activity_t = defaultdict( int )
+		# Store first set of MGA objective weights drawn from base solution
 		prev_activity_t = PreviousAct_rule( temoaInstance1.instance, self.options.mga_weight, prev_activity_t )
 
 		# Perform MGA iterations
@@ -209,6 +210,9 @@ class TemoaSolver(object):
 				yield k
 				#yield " " * 1024
 			temoaMGAInstance.handle_files(log_name='Complete_OutputLog.log' )
+			#Update MGA objective function weights for use in the next iteration
+			prev_activity_t = PreviousAct_rule( temoaMGAInstance.instance, self.options.mga_weight, prev_activity_t )
+
 
 	'''
 	This function is called when MGA option is not specified.
