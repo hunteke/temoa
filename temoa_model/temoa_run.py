@@ -165,8 +165,6 @@ class TemoaSolver(object):
 			#yield " " * 1024
 
 		temoaInstance1.handle_files(log_name='Complete_OutputLog.log' )
-		temoaInstance1.instance.solutions.load_from( temoaInstance1.result, delete_symbol_map=False )
-		temoaInstance1.instance.solutions.load_from( temoaInstance1.result )
 		# using value() converts the now-loaded results into a single number,
 		# which we'll use with our slightly unusual SlackedObjective_rule below
 		# (but defined above).
