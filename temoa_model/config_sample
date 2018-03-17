@@ -8,11 +8,11 @@
 # Input File (Mandatory) 
 # Input can be a .sqlite or .dat file
 # Both relative path and absolute path are accepted
---input=db_io/dbs/temoa_utopia.sqlite
+--input=data_files/temoa_utopia.sqlite
 
 # Output File (Mandatory)
 # The output file must be a existing .sqlite file
---output=db_io/dbs/temoa_utopia.sqlite
+--output=data_files/temoa_utopia.sqlite
 
 # Scenario Name (Mandatory) 
 # This scenario name is used to store results within the output .sqlite file
@@ -20,7 +20,7 @@
 
 # Path to the “db_io” folder (Mandatory) 
 # This is the location where database files reside
---path_to_db_io=db_io
+--path_to_db_io=data_files
 
 # Spreadsheet Output (Optional) 
 # Direct model output to a spreadsheet

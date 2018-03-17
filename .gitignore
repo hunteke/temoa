@@ -1,4 +1,3 @@
 *.pyc
-db_io/debug_logs/*.log
-db_io/debug_logs/lp_files/*
-db_io/dbs/
+data_files/debug_logs/*.log
+data_files/debug_logs/lp_files/*

@@ -397,9 +397,9 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 				temp_scenario = set()
 				temp_scenario.add(options.scenario)
 				make_excel(options.output, new_dir+os.sep+options.scenario, temp_scenario)
-				#os.system("python db_io"+os.sep+"DB_to_Excel.py -i \
+				#os.system("python data_processing"+os.sep+"DB_to_Excel.py -i \
 				#		  ""+options.output+" \
-				#		  " -o db_io"+os.sep+options.scenario+" -s "+options.scenario)
+				#		  " -o data_files"+os.sep+options.scenario+" -s "+options.scenario)
 	
 	return output
 	
