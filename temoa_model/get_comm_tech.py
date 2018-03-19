@@ -123,7 +123,7 @@ def get_comm(inp_f, db_dat):
 		for x in comm_set:
 			comm_list[x] = x
 			
-	return dict ( OrderedDict ( sorted(comm_list.items(), key=lambda x: x[1]) ) )
+	return OrderedDict ( sorted(comm_list.items(), key=lambda x: x[1]) )
 
 
 def get_tech(inp_f, db_dat):
@@ -179,7 +179,7 @@ def get_tech(inp_f, db_dat):
 		for x in tech_set:
 			tech_list[x] = x
 			
-	return dict ( OrderedDict ( sorted(tech_list.items(), key=lambda x: x[1]) ) )
+	return OrderedDict ( sorted(tech_list.items(), key=lambda x: x[1]) )
 		
 
 def is_db_overwritten(db_file, inp_dat_file):
