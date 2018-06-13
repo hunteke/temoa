@@ -98,16 +98,16 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
                       M.commodity_carrier )
     M.validate_UsedEfficiencyIndices = BuildAction( rule=CheckEfficiencyIndices )   
     M.CapacityFactor_sdtv = Set( dimen=4, initialize=CapacityFactorProcessIndices )
-    M.CapacityFactorProcess = Param( M.CapacityFactor_sdtv )
+    M.CapacityFactorProcess = Param( M.CapacityFactor_sdtv, mutable=True )
     M.CapacityFactor_sdt  = Set( dimen=3, initialize=CapacityFactorTechIndices )
     M.CapacityFactorTech    = Param( M.CapacityFactor_sdt, default=1 )
     M.initialize_CapacityFactors = BuildAction( rule=CreateCapacityFactors )
     M.LifetimeTech           = Param( M.tech_all, default=30 )    # in years
     M.LifetimeLoanTech       = Param( M.tech_all, default=10 )    # in years
     M.LifetimeProcess_tv     = Set( dimen=2, initialize=LifetimeProcessIndices )
-    M.LifetimeProcess        = Param( M.LifetimeProcess_tv )      # in years
+    M.LifetimeProcess        = Param( M.LifetimeProcess_tv, mutable=True )      # in years
     M.LifetimeLoanProcess_tv = Set( dimen=2, initialize=LifetimeLoanProcessIndices )
-    M.LifetimeLoanProcess    = Param( M.LifetimeLoanProcess_tv )  # in years
+    M.LifetimeLoanProcess    = Param( M.LifetimeLoanProcess_tv, mutable=True )  # in years
     M.initialize_Lifetimes = BuildAction( rule=CreateLifetimes )
     M.GrowthRateMax = Param( M.tech_all )
     M.GrowthRateSeed = Param( M.tech_all )
@@ -117,21 +117,21 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     # placed before the Var, Objectives, and Constraints.
     M.initialize_ProcessParameters = BuildAction( rule=InitializeProcessParameters )
     
-    M.DemandDefaultDistribution  = Param( M.time_season, M.time_of_day )
+    M.DemandDefaultDistribution  = Param( M.time_season, M.time_of_day, mutable=True )
     M.DemandSpecificDistribution = Param( M.time_season, M.time_of_day, 
-                                      M.commodity_demand )
+                                      M.commodity_demand, mutable=True )
     M.Demand = Param( M.time_optimize, M.commodity_demand )
     M.initialize_Demands = BuildAction( rule=CreateDemands )
     M.ResourceBound = Param( M.time_optimize,  M.commodity_physical )
     M.CostFixed_ptv    = Set( dimen=3, initialize=CostFixedIndices )
-    M.CostFixed    = Param( M.CostFixed_ptv )
+    M.CostFixed    = Param( M.CostFixed_ptv, mutable=True )
     M.CostFixedVintageDefault_tv = Set( dimen=2, 
        initialize=lambda M: set((t, v) for p, t, v in M.CostFixed_ptv ) )
     M.CostFixedVintageDefault    = Param( M.CostFixedVintageDefault_tv )
     M.CostInvest_tv    = Set( dimen=2, initialize=CostInvestIndices )
     M.CostInvest   = Param( M.CostInvest_tv )  
     M.CostVariable_ptv = Set( dimen=3, initialize=CostVariableIndices )
-    M.CostVariable = Param( M.CostVariable_ptv ) 
+    M.CostVariable = Param( M.CostVariable_ptv, mutable=True ) 
     M.CostVariableVintageDefault_tv = Set( dimen=2,
        initialize=lambda M: set((t, v) for p, t, v in M.CostVariable_ptv ) )
     M.CostVariableVintageDefault = Param( M.CostVariableVintageDefault_tv )

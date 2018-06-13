@@ -356,10 +356,10 @@ def CreateCapacityFactors ( M ):
 	# constructed, that we know are valid, and that we will need.
 
 	if unspecified_cfs:
-		CFP._constructed = False
+		# CFP._constructed = False
 		for s, d, t, v in unspecified_cfs:
 			CFP[s, d, t, v] = M.CapacityFactorTech[s, d, t]
-		CFP._constructed = True
+		# CFP._constructed = True
 
 
 def CreateLifetimes ( M ):
@@ -390,16 +390,16 @@ def CreateLifetimes ( M ):
 	# constructed, that we know are valid, and that we will need.
 
 	if unspecified_loan_lives:
-		LLN._constructed = False
+		# LLN._constructed = False
 		for t, v in unspecified_loan_lives:
 			LLN[t, v] = M.LifetimeLoanTech[ t ]
-		LLN._constructed = True
+		# LLN._constructed = True
 
 	if unspecified_tech_lives:
-		LPR._constructed = False
+		# LPR._constructed = False
 		for t, v in unspecified_tech_lives:
 			LPR[t, v] = M.LifetimeTech[ t ]
-		LPR._constructed = True
+		# LPR._constructed = True
 
 
 def CreateDemands ( M ):
@@ -443,14 +443,14 @@ def CreateDemands ( M ):
 		# However, in our view, it is not yet, because we're specifically
 		# targeting values that have not yet been constructed, that we know are
 		# valid, and that we will need.
-		DDD._constructed = False
+		# DDD._constructed = False
 		for tslice in unset_defaults:
 			DDD[ tslice ] = M.SegFrac[ tslice ]
-		DDD._constructed = True
+		# DDD._constructed = True
 
 	# Step 3
 	total = sum( i for i in DDD.itervalues() )
-	if abs(float(total) - 1.0) > 0.001:
+	if abs(value(total) - 1.0) > 0.001:
 		# We can't explicitly test for "!= 1.0" because of incremental rounding
 		# errors associated with the specification of demand shares by time slice, 
 		# but we check to make sure it is within the specified tolerance.
@@ -485,17 +485,17 @@ def CreateDemands ( M ):
 		# However, in our view, it is not yet, because we're specifically
 		# targeting values that have not yet been constructed, that we know are
 		# valid, and that we will need.
-		DSD._constructed = False
+		# DSD._constructed = False
 		for s, d, dem in unset_distributions:
 			DSD[s, d, dem] = DDD[s, d]
-		DSD._constructed = True
+		# DSD._constructed = True
 
 	# Step 5
 	for dem in used_dems:
 		keys = (k for k in DSD.sparse_iterkeys() if DSD_dem_getter(k) == dem )
 		total = sum( DSD[ i ] for i in keys )
 
-		if abs(float(total) - 1.0) > 0.001:
+		if abs(value(total) - 1.0) > 0.001:
 		# We can't explicitly test for "!= 1.0" because of incremental rounding
 		# errors associated with the specification of demand shares by time slice, 
 		# but we check to make sure it is within the specified tolerance.
@@ -545,18 +545,18 @@ def CreateCosts ( M ):
 	# constructed, that we know are valid, and that we will need.
 
 	if unspecified_fixed_prices:
-		CF._constructed = False
+		# CF._constructed = False
 		for p, t, v in unspecified_fixed_prices:
 			if (t, v) in M.CostFixedVintageDefault:
 				CF[p, t, v] = M.CostFixedVintageDefault[t, v]
-		CF._constructed = True
+		# CF._constructed = True
 
 	if unspecified_var_prices:
-		CV._constructed = False
+		# CV._constructed = False
 		for p, t, v in unspecified_var_prices:
 			if (t, v) in M.CostVariableVintageDefault:
 				CV[p, t, v] = M.CostVariableVintageDefault[t, v]
-		CV._constructed = True
+		# CV._constructed = True
 
 
 def init_set_time_optimize ( M ):
