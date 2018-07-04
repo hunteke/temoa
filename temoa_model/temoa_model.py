@@ -216,6 +216,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.V_ActivityByTech = Var(M.tech_all, domain=NonNegativeReals )
 
     # Decision variable for hourly storage
+    # Storage level at the END of each time slice
     M.HourlyStorage_psdt = Set (dimen=4, initialize=HourlyStorageVariableIndices )
     M.V_HourlyStorage = Var( M.HourlyStorage_psdt, domain=NonNegativeReals )
 
@@ -312,20 +313,20 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     
     # Hourly Storage constraint   
     M.HourlyStorageConstraint_psdt = Set( 
-      dimen=4, initialize=HourlyStorageConstraintIndices )
+      dimen=4, initialize=HourlyStorageVariableIndices )
     M.HourlyStorageConstraint = Constraint( 
       M.HourlyStorageConstraint_psdt, 
       rule=HourlyStorage_Constraint )   
     
     # Hourly Storage Upper Bound
     M.HourlyStorageUpperBoundConstraint_psdt = Set( 
-      dimen=4, initialize=HourlyStorageBoundConstraintIndices )
+      dimen=4, initialize=HourlyStorageVariableIndices )
     M.HourlyStorageUpperBoundConstraint = Constraint( 
       M.HourlyStorageUpperBoundConstraint_psdt, 
       rule=HourlyStorage_UpperBound )   
     # Hourly Storage Lower Bound
     M.HourlyStorageLowerBoundConstraint_psdt = Set( 
-      dimen=4, initialize=HourlyStorageBoundConstraintIndices )
+      dimen=4, initialize=HourlyStorageVariableIndices )
     M.HourlyStorageLowerBoundConstraint = Constraint( 
       M.HourlyStorageLowerBoundConstraint_psdt, 
       rule=HourlyStorage_LowerBound )       
@@ -341,7 +342,14 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       dimen=4, initialize=HourlyStorageBoundConstraintIndices )
     M.HourlyStorageDischargeLowerBoundConstraint = Constraint( 
       M.HourlyStorageDischargeLowerBoundConstraint_psdt, 
-      rule=HourlyStorageCharge_LowerBound )           
+      rule=HourlyStorageCharge_LowerBound )
+
+    # Hourly Storage throughput constraint
+    M.HourlyStorageThroughputConstraint_psdt = Set( 
+      dimen=4, initialize=HourlyStorageBoundConstraintIndices )
+    M.HourlyStorageThroughputConstraint = Constraint(
+      M.HourlyStorageThroughputConstraint_psdt,
+      rule=HourlyStorageThroughput_Constraint )
     
     #-----------------    
 

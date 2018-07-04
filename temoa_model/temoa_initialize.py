@@ -1006,17 +1006,17 @@ def StorageConstraintIndices ( M ):
 	return indices
 
 # Indices for hourly storage constraint and decision variables	
-def HourlyStorageConstraintIndices ( M ):
-	indices = set(
-	  (p, s, d, t)
+# def HourlyStorageConstraintIndices ( M ):
+# 	indices = set(
+# 	  (p, s, d, t)
 
-	  for p in M.time_optimize
-	  for s in M.time_season
-	  for d in M.time_of_day	  
-	  for t in M.tech_hourlystorage
-	)
+# 	  for p in M.time_optimize
+# 	  for s in M.time_season
+# 	  for d in M.time_of_day	  
+# 	  for t in M.tech_hourlystorage
+# 	)
 
-	return indices	
+# 	return indices	
 	
 def HourlyStorageVariableIndices ( M ):
 	indices = set(
