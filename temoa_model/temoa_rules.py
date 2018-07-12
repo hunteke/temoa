@@ -31,13 +31,12 @@ from temoa_initialize import *
 def TotalCost_rule ( M ):
 	r"""
 Using the :code:`Activity` and :code:`Capacity` variables, the Temoa objective
-function calculates the costs associated with supplying the system with energy,
-under the assumption that all costs are paid for through loans (rather than with
-lump-sum sales).  This implementation sums up all the costs incurred by the
-solution, and is defined as :math:`C_{tot} = C_{loans} + C_{fixed} + C_{variable}`.
-Similarly, each term on the right-hand side is merely a summation of the costs
-incurred, multiplied by an annual discount factor to calculate the discounted
-cost in year :math:`\text{P}_0`.
+function calculates the cost of energy supply, under the assumption that capital 
+costs are paid through loans. This implementation sums up all the costs incurred, 
+and is defined as :math:`C_{tot} = C_{loans} + C_{fixed} + C_{variable}`. Each 
+term on the right-hand side represents the cost incurred over the model 
+time horizon and discounted to the initial year in the horizon (:math:`{P}_0`). 
+The calculation of each term is given below.
 
 .. math::
    :label: obj_loan
@@ -52,7 +51,22 @@ cost in year :math:`\text{P}_0`.
      \cdot \textbf{CAP}_{t, v}
      \right )
 
-Note that we calculate loan costs by using depreciation. If a technology is decommissioned after end of model horizon, then only the amount of the asset cost that is depreciated before end of model horizon will be included in the objective function. We use :math:`\frac{ 1-(1+GDR)^{-LPA_{t,v}} }{ 1-(1+GDR)^{-LP_{t,v}} }` to calculate the depreciation expense, where :math:`LPA_{t,v}` represents active life time of a process :math:`(t,v)` before end of model horizon.
+Note that capital costs (:math:`{IC}_{t,v}`) are handled in several steps. First, each capital cost 
+is amortized using the loan rate (i.e., technology-specific discount rate) and loan 
+period. Second, the annual stream of payments is converted into a lump sum using 
+the global discount rate and loan period. Third, the new lump sum is amortized 
+at the global discount rate and technology lifetime. Fourth, loan payments beyond 
+the model time horizon are removed and the lump sum recalculated. The terms used 
+in Steps 3-4 are :math:`\frac{ GDR }{ 1-(1+GDR)^{-LP_{t,v} } }\cdot
+\frac{ 1-(1+GDR)^{-LPA_{t,v}} }{ GDR }`. The product simplifies to 
+:math:`\frac{ 1-(1+GDR)^{-LPA_{t,v}} }{ 1-(1+GDR)^{-LP_{t,v}} }`, where 
+:math:`LPA_{t,v}` represents the active lifetime of a process :math:`(t,v)` 
+before the end of the model horizon, and :math:`LP_{t,v}` represents the full 
+lifetime of a process :math:`(t,v)`. Fifth, the lump sum is discounted back to the 
+beginning of the horizon (:math:`P_0`) using the global discount rate. While an 
+explicit salvage term is not included, this approach properly captures the capital 
+costs incurred within the model time horizon, accounting for technology-specific 
+loan rates and periods.
 
 .. math::
    :label: obj_fixed
