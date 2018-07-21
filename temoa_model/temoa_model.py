@@ -103,7 +103,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.CapacityFactor_sdt  = Set( dimen=3, initialize=CapacityFactorTechIndices )
     M.CapacityFactorTech    = Param( M.CapacityFactor_sdt, default=1 )
     M.initialize_CapacityFactors = BuildAction( rule=CreateCapacityFactors )
-    M.LifetimeTech           = Param( M.tech_all, default=30 )    # in years
+    M.LifetimeTech           = Param( M.tech_all, default=40 )    # in years
     M.LifetimeLoanTech       = Param( M.tech_all, default=10 )    # in years
     M.LifetimeProcess_tv     = Set( dimen=2, initialize=LifetimeProcessIndices )
     M.LifetimeProcess        = Param( M.LifetimeProcess_tv, mutable=True )      # in years
