@@ -14,11 +14,11 @@ from SALib.sample.morris import sample
 from SALib.util import read_param_file, compute_groups_matrix
 import numpy as np
 
-def evaluate(param_names, param_values,k):
+def evaluate(param_names, param_values,k): 
 
 	m=len(param_values)
 	for j in range(0,m):
-		Newdbpath=os.getcwd()+'/db_io/dbs/Method_of_Morris'+str(k)+'.db'
+		Newdbpath=os.getcwd()+'/data_files/Method_of_Morris'+str(k)+'.db'
 		con=sqlite3.connect(Newdbpath)
 		cur = con.cursor()
 		filter1=param_names[j][1]
@@ -52,13 +52,13 @@ def evaluate(param_names, param_values,k):
 	copyfile(os.getcwd()+'/temoa_model/config_sample',NewConfigfilePath)
 	with open(os.getcwd()+'/temoa_model/config_sample', 'r') as file:
 		data = file.readlines()
-	data[13]='--input=db_io/dbs/Method_of_Morris'+str(k)+'.db'
-	data[20]='--output=db_io/dbs/Method_of_Morris'+str(k)+'.db'
+	data[10]='--input=data_files/Method_of_Morris'+str(k)+'.db'  #10th line in the config file referring to input database
+	data[14]='--output=data_files/Method_of_Morris'+str(k)+'.db' #14th line in the config file referring to output database
 	with open(NewConfigfilePath, 'w') as file:
 		file.writelines(data)
 	os.system('python temoa_model/ --config=temoa_model/config_sample'+str(k))
 
-	Newdbpath=os.getcwd()+'/db_io/dbs/Method_of_Morris'+str(k)+'.db'
+	Newdbpath=os.getcwd()+'/data_files/Method_of_Morris'+str(k)+'.db'
 	con=sqlite3.connect(Newdbpath)
 	cur = con.cursor()
 	cur.execute("SELECT * FROM Output_Objective")
@@ -76,23 +76,11 @@ def evaluate(param_names, param_values,k):
 	return Morris_Objectives
 
 
-#param_names = {     #the first element is the name of the table, followed by fisrt, second ... filters. The name of the column which is to change comes at the end
-#0:['CostVariable',1990,'IMPGSL1',1990,'cost_variable'],
-#1:['CostVariable',2000,'IMPGSL1',1990,'cost_variable'],
-#2:['CostVariable',2010,'IMPGSL1',1990,'cost_variable'],
-#3:['CostVariable',1990,'IMPDSL1',1990,'cost_variable'],
-#4:['CostVariable',2000,'IMPDSL1',1990,'cost_variable'],
-#5:['CostVariable',2010,'IMPDSL1',1990,'cost_variable'],
-#6:['CostInvest','TXE',1990,'cost_invest'],
-#7:['CostInvest','TXE',2000,'cost_invest'],
-#8:['CostInvest','TXE',2010,'cost_invest'],
-#9:['CostInvest','SRE',1990,'cost_invest'],
-#  }
-perturbation_coefficient=0.1 #minus plus 10% of the baseline values
+perturbation_coefficient=0.2 #minus plus 10% of the baseline values
 f= open(os.getcwd()+"/Method_of_Morris.txt","w+")
 f.close()
 param_names={}
-con=sqlite3.connect('db_io/dbs/Method_of_Morris.db')
+con=sqlite3.connect('data_files/Method_of_Morris.db')
 cur = con.cursor()
 cur.execute("SELECT * FROM CostVariable WHERE MMAnalysis is not NULL")
 output_query = cur.fetchall()
@@ -142,8 +130,8 @@ param_values = sample(problem, N=3, num_levels=4, grid_jump=2, \
                       optimal_trajectories=False, local_optimization=False)
 n=len(param_values)
 for k in range(0,n):
-	Newdbpath=os.getcwd()+'/db_io/dbs/Method_of_Morris'+str(k)+'.db'
-	copyfile(os.getcwd()+'/db_io/dbs/Method_of_Morris.db',Newdbpath)
+	Newdbpath=os.getcwd()+'/data_files/Method_of_Morris'+str(k)+'.db'
+	copyfile(os.getcwd()+'/data_files/Method_of_Morris.db',Newdbpath)
 num_cores = multiprocessing.cpu_count()
 Morris_Objectives = Parallel(n_jobs=num_cores)(delayed(evaluate)(param_names, param_values[i,:],i) for i in range(0,n))
 Morris_Objectives=array(Morris_Objectives)
