@@ -1391,14 +1391,15 @@ def RampDownPeriod_Constraint ( M, p, t, v):
 
 	return Constraint.Skip # We don't need inter-period ramp up/down constraint.
 	
-def ReserveMargin_Constraint( M, p, g, s, d):
+def ReserveMargin_Constraint( M, p, z, s, d):
 	r"""
-To assure system reliability of power grid, during each period :math:`p`, the
-sum of available capacity of all reserve technologies (defined by set :math:`\textbf{T}^{res}`)
-:math:`\sum_{t \in T^{res}} \textbf{CAPAVL}_{p,t}`, should not exceed the peak
-load plus a reserve margin :math:`RES_c`. Note reserve margin is typically
-expressed in the form of percentage. In Equation :eq:`reserve_margin`, we use 
-:math:`(s^*,d^*)` to represent the peak-load time slice.
+During each period :math:`p`, the sum of the available capacity of all reserve 
+technologies :math:`\sum_{t \in T^{res}} \textbf{CAPAVL}_{p,t}`, which are 
+defined in the set :math:`\textbf{T}^{res}`, should exceed the peak load by 
+:math:`RES_z`, the regional reserve margin. Note that the reserve 
+margin is expressed in percentage of the peak load. Generally speaking, in 
+a database we may not know the peak demand before running the model, therefore, 
+we write this equation for all the time-slices defined in the database in each region.
 
 .. math::
    \sum_{t \in T^{res}} {
@@ -1406,42 +1407,36 @@ expressed in the form of percentage. In Equation :eq:`reserve_margin`, we use
       \textbf{CAPAVL}_{p,t} \cdot
       SEG_{s^*,d^*} \cdot C2A_t }
    \geq
-   DEM_{p,c} \cdot
-   DSD_{s^*, d^*, c} \cdot
-   (1 + RES_c)
+   \sum_{t \in T^{res}} { 
+      \sum_{t \in v^{vintage}} {\textbf{ACT}_{p, s, d, t, v  \cdot
+   (1 + RES_z)
    \\
    \forall
    p \in \textbf{P}^o,
-   c \in \textbf{C}^{res}
+   z \in \textbf{C}^{zone}
    :label: reserve_margin
 """
-	# The season and time-of-day of the slice with the maximum average load. 
+	
 	PowerTechs=set()  #all the power generation technologies
-	PowerCommodities=set()  #it consists of all the commodities coming out of powerplants: ELCP, ELCP_Renewables, ELCP_SOL
-	for i in M.ReserveMargin.sparse_keys():
-	        if i[1]==g:
-	                PowerCommodities.add(i[0])
 
-	if not PowerCommodities:
-	        return Constraint.Skip
+	for i in M.ReserveMargin:
+		if i[1]==z:
+			PowerTechs.add(i[0])
 
-	for i,t,v,o in M.Efficiency:
-	        if o in PowerCommodities:
-	                PowerTechs.add(t)
 
 	expr_left = sum (value( M.CapacityCredit[t] )*
-	                                M.V_CapacityAvailableByPeriodAndTech[p, t]*
-	                                value( M.CapacityToActivity[t] )*
-	                                value( M.SegFrac[s, d] )
-	                                for t in PowerTechs if (p, t) in M.CapacityAvailableVar_pt  ) #M.CapacityAvailableVar_pt check if all the possible consistent combinations of t and p
+					M.V_CapacityAvailableByPeriodAndTech[p, t]*
+					value( M.CapacityToActivity[t] )*
+					value( M.SegFrac[s, d] )
+					for t in PowerTechs if (p, t) in M.CapacityAvailableVar_pt  ) #M.CapacityAvailableVar_pt check if all the possible consistent combinations of t and p
 
 
 
 	total_generation = sum( M.V_Activity[p, s, d, t, S_v]
-	                        for  t  in PowerTechs
-	                        for S_v in M.ProcessVintages( p, t ))
+	                for  t  in PowerTechs
+	                for S_v in M.ProcessVintages( p, t ))
 
-	expr_right = total_generation*(1 +  M.ReserveMargin[PowerCommodities.pop(),g] ) 
+	expr_right = total_generation*(1+value(M.PlanningReserveMargin [z]))  
 
 
 	return (expr_left >= expr_right)

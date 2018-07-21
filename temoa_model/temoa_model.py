@@ -79,6 +79,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.commodity_all     = M.commodity_carrier | M.commodity_emissions
     
     M.Zones = Set()
+    M.ReserveMargin   = Set(within=M.tech_all*M.Zones)
     # Define Parameters---------------------------------------------------------
     
     # Note: In order to increase model efficiency, we use sparse indexing of 
@@ -172,7 +173,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
 
     # Parameters for reserve margin constraints.
     M.CapacityCredit = Param( M.tech_all, default=1 )
-    M.ReserveMargin  = Param( M.commodity_all, M.Zones , default=0.0 )
+    M.PlanningReserveMargin = Param (M.Zones, default=0.2)
 
     # Decision Variables--------------------------------------------------------
     #   Base decision variables
@@ -389,10 +390,10 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.RampDownConstraintPeriod_ptv, 
       rule=RampDownPeriod_Constraint )
 
-    M.ReserveMargin_psdg = Set(
+    M.ReserveMargin_pzsd = Set(
       dimen = 4, initialize=ReserveMarginIndices )
     M.ReserveMarginConstraint = Constraint(
-      M.ReserveMargin_psdg,
+      M.ReserveMargin_pzsd,
       rule=ReserveMargin_Constraint)
 
     # Constraints for user-defined limits

@@ -18,7 +18,6 @@ A complete copy of the GNU General Public License v2 (GPLv2) is available
 in LICENSE.txt.  Users uncompressing this from an archive may not have 
 received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
-
 from os.path import abspath, isfile, splitext, dirname
 from os import sep
 
@@ -57,7 +56,7 @@ def db_2_dat(ifile, ofile, options):
 		t_flag = t_properties[3]   #table flag, if any
 		t_index = t_properties[4]  #table column index after which '#' should be specified
 		if type(t_flag) is list:   #tech production table has a list for flags; this is currently hard-wired
-			db_query = "SELECT * FROM " + t_name + " WHERE flag=='p' OR flag=='pb' OR flag=='ps' OR flag=='ph'"
+			db_query = "SELECT * FROM " + t_name + " WHERE flag=='p' OR flag=='pb' OR flag=='ps'"
 			cur.execute(db_query)
 			if cur.fetchone() is None:
 				return
@@ -112,23 +111,20 @@ def db_2_dat(ifile, ofile, options):
 		['set',  'time_periods',              'time_future',         'f',            0],
 		['set',  'time_season',               '',                    '',             0],
 		['set',  'time_of_day',               '',                    '',             0],
-		['set',  'Zones',                         '',                    '',         0],
+		['set',  'Zones',        	          '',                    '',             0],
 		['set',  'technologies',              'tech_resource',       'r',            0],
-		['set',  'technologies',              'tech_production',    ['p','pb','ps','ph'], 0],
+		['set',  'technologies',              'tech_production',    ['p','pb','ps'], 0],
 		['set',  'technologies',              'tech_baseload',       'pb',           0],
 		['set',  'technologies',              'tech_storage',        'ps',           0],
-		['set',  'technologies',			  'tech_hourlystorage',	 'ph',			 0],  #set of technologies within hourly storage		
-		['set',  'tech_reserve',              '',                    '',             0],
 		['set',  'tech_ramping',              '',                    '',             0],
 		['set',  'commodities',               'commodity_physical',  'p',            0],
 		['set',  'commodities',               'commodity_emissions', 'e',            0],
 		['set',  'commodities',               'commodity_demand',    'd',            0],
-		['set',  'tech_capacity_min',		  '',					 '',    		 0],  #set of technologies that must sum to satisfy a minimum aggregate capacity
-		['set',  'tech_capacity_max',		  '',					 '',    		 0],  #set of technologies that must sum to satisfy a maximum aggregate capacity		
-		['param','MinGenGroupOfTechnologies_Data', '',                    '',        2],
+		['param','MinGenGroupOfTechnologies_Data', '',                    '',             2], \
 		['param','SegFrac',                   '',                    '',             2],
 		['param','DemandSpecificDistribution','',                    '',             3],
 		['param','CapacityToActivity',        '',                    '',             1],
+		['param','PlanningReserveMargin',     '',                    '',             1],
 		['param','GlobalDiscountRate',        '',                    '',             0],
 		['param','DiscountRate',              '',                    '',             2],
 		['param','EmissionActivity',          '',                    '',             5],
@@ -140,8 +136,6 @@ def db_2_dat(ifile, ofile, options):
 		['param','MaxCapacity',               '',                    '',             2],
 		['param','MaxActivity',               '',                    '',             2],
 		['param','MinActivity',               '',                    '',             2],
-		['param','MinCapacitySum',			  '', 				     '',			 1], #minimum aggregate capacity of techs within tech_capacity
-		['param','MaxCapacitySum',			  '', 				     '',			 1], #maximum aggregate capacity of techs within tech_capacity
 		['param','GrowthRateMax',             '',                    '',             1],
 		['param','GrowthRateSeed',            '',                    '',             1],
 		['param','LifetimeTech',              '',                    '',             1],
@@ -154,7 +148,6 @@ def db_2_dat(ifile, ofile, options):
 		['param','CostInvest',                '',                    '',             2],
 		['param','CostFixed',                 '',                    '',             3],
 		['param','CostVariable',              '',                    '',             3],
-		['param','ReserveMargin',             '',                    '',             2],
 		['param','CapacityCredit',            '',                    '',             1],
 		['param','RampUp',                    '',                    '',             1],
 		['param','RampDown',                  '',                    '',             1]
@@ -178,7 +171,10 @@ def db_2_dat(ifile, ofile, options):
 			write_tech_mga(f)
 		if options.mga_weight == 'normalized':
 			write_tech_sector(f)
-		
+			
+		# Added by Hadi, The following 3 bloack, append the techs groups to the .dat file. 
+
+
 		if "MinGenGroupOfTechnologies" in table_exist:
 			cur.execute("SELECT * FROM MinGenGroupOfTechnologies")
 			A=cur.fetchall()
@@ -187,7 +183,20 @@ def db_2_dat(ifile, ofile, options):
 				for row in A:
 					f.write(row[0]+"   "+row[1]+" \n")
 				f.write(";\n\n")
-				
+		
+
+
+		if "ReserveMargin" in table_exist:
+			cur.execute("SELECT * FROM ReserveMargin")
+			A=cur.fetchall()
+			if len(A)!=0:
+				f.write("set " +"ReserveMargin" + " := \n")
+				for row in A:
+					f.write(row[0]+"   "+row[1]+" \n")
+				f.write(";\n\n")
+
+		
+
 		cur.close()
 		con.close()
 
@@ -243,7 +252,7 @@ class TemoaConfig( object ):
 		self.use_splines      = False
 
 		#Introduced during UI Development
-		self.path_to_db_io    = re.sub('temoa_model$', 'data_files', dirname(abspath(__file__)))# Path to where automated excel and text log folder will be save as output.
+		self.path_to_db_io    = re.sub('temoa_model$', 'db_io', dirname(abspath(__file__)))# Path to where automated excel and text log folder will be save as output.
 		self.path_to_logs     = self.path_to_db_io+sep+"debug_logs" #Path to where debug logs will be generated for each run. By default in debug_logs folder in db_io.
 		self.path_to_lp_files = None 
 		self.abort_temoa	  = False

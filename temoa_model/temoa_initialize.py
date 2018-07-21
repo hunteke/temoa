@@ -1077,15 +1077,15 @@ def RampConstraintPeriodIndices ( M ):
 	return indices
 
 def ReserveMarginIndices ( M ):
-		indices = set(
-			(p , g , s , d )
+	indices = set(
+		(p , z , s , d )
 
-			for p in M.time_optimize
-			for s in M.time_season
-			for d in M.time_of_day
-			for g in M.Zones
-			)
-		return indices
+	   for p in M.time_optimize
+	   for z in M.Zones
+	   for s in M.time_season
+	   for d in M.time_of_day
+	)
+	return indices
 
 def TechInputSplitConstraintIndices ( M ):
 	indices = set(
