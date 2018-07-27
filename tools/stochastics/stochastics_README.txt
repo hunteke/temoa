@@ -1,20 +1,6 @@
-The intent of this file is to provide general guidance about
-running Temoa under different settings
-@teamTEMOA - 04/04/2017
-
-#############################
-Linear Programming
-#############################
-
-(Run Temoa with config_sample file)
-python temoa_model/ --config=temoa_model/config_sample 
-
-(Single Temoa run)
-python temoa_model/temoa_model.py data_files/utopia15.dat --solver=glpk
-
-#############################
-Stochastic Optimization
-#############################
+------------------------------
+Stochastic Optimization README
+------------------------------
 
 (Solve a stochastic run and store results into a database using config file)
 $ python temoa_model/temoa_stochastic.py --config=temoa_model/config_sample
@@ -31,9 +17,9 @@ runph -m ../../temoa_model/ -i ./ --solver=ipopt --default-rho=1.0
 (Solve a particular path in the tree as a linear program)
 python ../../temoa_model/ R.dat Rs0.dat Rs0s2.dat  
 
-#############################
+-----------------------------
 Stochastic Optimization Tools
-#############################
+-----------------------------
                                                         
 (EVPI computation)
 python test_EVPI.py                                     
@@ -85,38 +71,3 @@ python generate_scenario_tree.py options/uc_tl_unlim.py
 
 (Script for Parallel runs of runph) (to be used on Neer super computer)
 qsub jobTemoa.pbs
-
-(OpenMP script for Temoa)
-
-
-(Monte Carlo Simulation)
-
-
-(Latin-hypercube Simulation)
-
-
-#############################
-Additional Tools and Options
-#############################
-
-(Graphviz)
-python Make_Graphviz.py -i  utopia15.dat
-python Make_Graphviz.py -i temoa_utopia.sqlite -s test_run
-
-(Cluster Analysis)
-
-
-(Method of Morris)
- 
- For an instruction about implementing Method of Morris sensitivity analysis, please see the link below: 
- https://groups.google.com/forum/#!topic/temoa-project/SEqlvJOpnb0
-
-(MGA)
-
-
-(Matlplot lib) (Plot Results)
-python plot_result.py <your_db.db>
-
-(Options to provide solver outputs to the screen)
---output-solver-log
---profile 1000 (will output the time required at each portion of the run)
