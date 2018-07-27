@@ -14,6 +14,13 @@ $ make html
 
 This generates the ‘_modules’ folder, which needs to be placed on the website.
 
+Notes
+* Cover page info appears in conf.py
+* TemoaDocumentation.pdf goes in temoaproject.org/download folder
+* After running ‘make singlehtml’, place resultant ‘index.html’ file in ‘temoaproject.org/docs' folder
+* After running ‘make html’, place ‘_modules’ folder in ‘temoaproject.org/docs' folder
+
+
 
 If you need to install sphinx, you can use Coopr's virtual instance of
 easy_install:
