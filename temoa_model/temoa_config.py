@@ -252,7 +252,7 @@ class TemoaConfig( object ):
 		self.use_splines      = False
 
 		#Introduced during UI Development
-		self.path_to_db_io    = re.sub('temoa_model$', 'db_io', dirname(abspath(__file__)))# Path to where automated excel and text log folder will be save as output.
+		self.path_to_db_io    = re.sub('temoa_model$', 'data_files', dirname(abspath(__file__)))# Path to where automated excel and text log folder will be save as output.
 		self.path_to_logs     = self.path_to_db_io+sep+"debug_logs" #Path to where debug logs will be generated for each run. By default in debug_logs folder in db_io.
 		self.path_to_lp_files = None 
 		self.abort_temoa	  = False
