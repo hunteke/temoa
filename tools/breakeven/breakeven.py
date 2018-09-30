@@ -9,19 +9,6 @@ from time import time
 import pandas as pd
 from IPython import embed as IP
 
-if platform.system() == 'Linux':
-    sys.path.append("/afs/unity.ncsu.edu/users/b/bli6/temoa/temoa_model")
-    sys.path.append('/opt/ibm/ILOG/CPLEX_Studio1263/cplex/python/2.6/x86-64_linux')
-elif platform.system() == 'Windows':
-    sys.path.append('C:\\Users\\bli\\GitHub\\Temoa\\temoa_model')
-    sys.path.append('D:\\software\\cplex\\python\\2.7\\x64_win64')
-elif platform.system() == 'Darwin':
-    sys.path.append('/Users/bli/git/temoa/temoa_model')
-    sys.path.append('/Users/bli/Applications/IBM/ILOG/CPLEX_Studio1263/cplex/python/2.7/x86-64_osx')
-else:
-    print 'Unrecognized system! Exiting...'
-    sys.exit(0)
-
 def return_Temoa_model():
     from temoa_model import temoa_create_model
     model = temoa_create_model()
@@ -79,9 +66,8 @@ def return_c_vector(block, unfixed):
         break
     return c_rhs
 
-def validate_coef(c0, instance, target_tech, target_year):
-    # This function validates if c0 equals the correct coefficient of process
-    # (target_tech, target_year)
+def coef_IC(instance, target_tech, target_year):
+    # This function returns coefficient associated with IC given t, v
     t = target_tech
     v = target_year
     P_0 = min( instance.time_optimize )
@@ -111,6 +97,23 @@ def validate_coef(c0, instance, target_tech, target_year):
 			  1 -  x**( -value( instance.LifetimeProcess[t, v] ) ) 
 		  )
     )
+    return value(c_i)
+
+def coef_FC(instance, target_tech, target_year):
+    # This function returns coefficient associated with FC given t, v
+    t = target_tech
+    v = target_year
+    P_0 = min( instance.time_optimize )
+    P_e = instance.time_future.last()
+    GDR = value( instance.GlobalDiscountRate )
+    MLL = instance.ModelLoanLife
+    MPL = instance.ModelProcessLife
+    LLN = instance.LifetimeLoanProcess
+    x   = 1 + GDR    # convenience variable, nothing more.
+    period_available = set()
+    for p in instance.time_future:
+        if (p, t, v) in instance.CostFixed.keys():
+            period_available.add(p)
 
     c_f = sum( 
         instance.CostFixed[p, t, v]
@@ -121,9 +124,15 @@ def validate_coef(c0, instance, target_tech, target_year):
             )
         for p in period_available 
     ) 
-    c = c_i + c_f
+    return value(c_f)
 
-    if (c - c0) <= 1E-5:
+def validate_coef(c0, instance, target_tech, target_year):
+    # This function validates if c0 equals the correct coefficient of process
+    # (target_tech, target_year)
+    c_i = coef_IC(instance, target_tech, target_year)
+    c_f = coef_FC(instance, target_tech, target_year)
+    c = c_i + c_f
+    if value(c - c0) <= 1E-5: # Compatible with Pyomo 5.5
         return True
     else:
         return False
@@ -233,7 +242,6 @@ def sensitivity(dat, techs):
             value(instance.V_Capacity[t, v])
             )
 
-    IP()
     print 'Dual and slack variables for emission caps:'
     for e in instance.commodity_emissions:
         for p in instance.time_optimize:
@@ -254,7 +262,7 @@ def sensitivity_api(instance, techs, algorithm=None):
     # solver is CPLEX. I also updated the returned value and now it is a pandas 
     # DataFramework, which supports fast csv creation.
     import cplex
-    instance.write('tmp.lp')
+    instance.write('tmp.lp', io_options={'symbolic_solver_labels':True})
     c = cplex.Cplex('tmp.lp')
     os.remove('tmp.lp')
     c.set_results_stream(None) # Turn screen output off
@@ -309,22 +317,29 @@ def sensitivity_api(instance, techs, algorithm=None):
             if cub > 1E5:
                 cub = 0 # Infinity
             clb_s[t, v], cub_s[t, v] = clb, cub
+            c_i = coef_IC(instance, t, v)
+            c_f = coef_FC(instance, t, v)
             if not validate_coef(c0, instance, t, v):
-                print 'Error!'
+                print 'Error: Check coefficients!'
                 sys.exit(0)
             coef_CAP[t, v] = c0
-            scal_CAP[t, v] = clb/c0 # Must reduce TO this percentage
-            bic_s[t].append(scal_CAP[t, v]*instance.CostInvest[t, v])
-            ic_s[t].append(instance.CostInvest[t, v])
+            scal_CAP[t, v] = clb/c0 # Break-even cost 1: Scaling both IC and FC
+            alpha = c_i/value(instance.CostInvest[t, v])
+            bic   = (clb - c_f)/alpha # Break-even cost 2: Only decrease IC
+            bic_s[t].append(bic)
+            ic_s[t].append(value(instance.CostInvest[t, v]))
             cap_s[t].append( c.solution.get_values(target_var) )
 
-        print "{:>10s}\t{:>7s}\t{:>6s}\t{:>4s}\t{:>6s}\t{:>5s}\t{:>7s}\t{:>7s}\t{:>5s}\t{:>3s}\t{:>5s}".format('Tech','Vintage', 'L. CB', 'Coef', 'U. CB', 'Scale', 'BE IC', 'BE FC', 'IC', 'FC', 'Cap')
-        msg += "{:>10s}\t{:>7s}\t{:>6s}\t{:>4s}\t{:>6s}\t{:>5s}\t{:>7s}\t{:>7s}\t{:>5s}\t{:>3s}\t{:>5s}".format('Tech','Vintage', 'L. CB', 'Coef', 'U. CB', 'Scale', 'BE IC', 'BE FC', 'IC', 'FC', 'Cap')
+        print "{:>10s}\t{:>7s}\t{:>6s}\t{:>4s}\t{:>6s}\t{:>5s}\t{:>7s}\t{:>5s}\t{:>5s}".format(
+            'Tech','Vintage', 'L. CB', 'Coef', 'U. CB', 'Scale', 'BE IC', 'IC', 'Cap',
+        )
+        msg += "{:>10s}\t{:>7s}\t{:>6s}\t{:>4s}\t{:>6s}\t{:>5s}\t{:>7s}\t{:>5s}\t{:>5s}".format(
+            'Tech','Vintage', 'L. CB', 'Coef', 'U. CB', 'Scale', 'BE IC', 'IC', 'Cap',
+        )
         msg == '\n'
         for v in vintages:
             deployed = abs(cap_s[t][vintages.index(v)]) >= 1E-3
-            tmp_beic_cs = instance.CostInvest[t, v] if deployed else scal_CAP[t, v]*instance.CostInvest[t, v]
-            tmp_befc_cs = instance.CostFixed[v, t, v] if deployed else scal_CAP[t, v]*instance.CostFixed[v, t, v]
+            tmp_beic_cs = value(instance.CostInvest[t, v]) if deployed else bic_s[t][vintages.index(v)]
             tmp_bes_cs  = 1 if deployed else scal_CAP[t, v]
             row = {
                 'algorithm':         algorithm,
@@ -335,41 +350,34 @@ def sensitivity_api(instance, techs, algorithm=None):
                 'coefficient':       coef_CAP[t, v],
                 'coef upper bound':  cub_s[t, v],
                 'scale':             scal_CAP[t, v],
-                'BE IC':             scal_CAP[t, v]*instance.CostInvest[t, v], 
-                'BE FC':             scal_CAP[t, v]*instance.CostFixed[v, t, v],
-                'IC':                instance.CostInvest[t,v],
-                'FC':                instance.CostFixed[v, t, v],
+                'BE IC':             bic_s[t][vintages.index(v)],
+                'IC':                value(instance.CostInvest[t,v]),
                 'capacity':          cap_s[t][vintages.index(v)],
                 'BE IC (CS)':        tmp_beic_cs, 
-                'BE FC (CS)':        tmp_befc_cs,
                 'scale (CS)':        tmp_bes_cs,
             }
             results.append(row)
-            print "{:>10s}\t{:>7g}\t{:>6.0f}\t{:>4.0f}\t{:>6.0f}\t{:>5.3f}\t{:>7.1f}\t{:>7.1f}\t{:>5.0f}\t{:>3.0f}\t{:>5.3f}".format(
+            print "{:>10s}\t{:>7g}\t{:>6.0f}\t{:>4.0f}\t{:>6.0f}\t{:>5.3f}\t{:>7.1f}\t{:>5.0f}\t{:>5.3f}".format(
             t,
             v, 
             clb_s[t, v],
             coef_CAP[t, v],
             cub_s[t, v],
             scal_CAP[t, v],
-            scal_CAP[t, v]*instance.CostInvest[t, v], 
-            scal_CAP[t, v]*instance.CostFixed[v, t, v], # Use the FC of the first period
-            instance.CostInvest[t,v],
-            instance.CostFixed[v, t, v],
+            bic_s[t][vintages.index(v)],
+            value(instance.CostInvest[t,v]),
             cap_s[t][vintages.index(v)]
             )
 
-            msg += "{:>10s}\t{:>7g}\t{:>6.0f}\t{:>4.0f}\t{:>6.0f}\t{:>5.3f}\t{:>7.1f}\t{:>7.1f}\t{:>5.0f}\t{:>3.0f}\t{:>5.3f}".format(
+            msg += "{:>10s}\t{:>7g}\t{:>6.0f}\t{:>4.0f}\t{:>6.0f}\t{:>5.3f}\t{:>7.1f}\t{:>5.0f}\t{:>5.3f}".format(
             t,
             v, 
             clb_s[t, v],
             coef_CAP[t, v],
             cub_s[t, v],
             scal_CAP[t, v],
-            scal_CAP[t, v]*instance.CostInvest[t, v], 
-            scal_CAP[t, v]*instance.CostFixed[v, t, v], # Use the FC of the first period
-            instance.CostInvest[t,v],
-            instance.CostFixed[v, t, v],
+            bic_s[t][vintages.index(v)],
+            value(instance.CostInvest[t,v]),
             cap_s[t][vintages.index(v)]
             )
             msg += '\n'
