@@ -440,11 +440,11 @@ for these constraints are period and tech_all, not tech and vintage.
 def MinActivityGroup_Constraint ( M, p , g ):
 
 
-       g_techs=set()
+       g_techs={}
        for i in M.GroupOfTechnologies.value:
-               if i[1]==g:
-                       g_techs.add(i[0])
-       activity_p = sum( M.V_Activity[p, S_s, S_d, t, S_v]
+       	if i[1]==g:
+       		g_techs[i[0]]=i[2]
+       activity_p = sum( M.V_Activity[p, S_s, S_d, t, S_v]*g_techs[t]
              
       for  t  in g_techs
       for S_s in M.time_season
