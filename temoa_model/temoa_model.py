@@ -58,7 +58,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.tech_baseload   = Set( within=M.tech_all )
     M.tech_storage    = Set( within=M.tech_all )
     M.tech_hourlystorage = Set( within=M.tech_all)
-    M.GroupOfTechnologies   = Set(dimen=2) #Set of technologies to have a minium level of activity, primarily aimed at transport sector 
+    M.GroupOfTechnologies   = Set(dimen=3) #Set of technologies to have a minium level of activity, primarily aimed at transport sector 
     M.tech_ramping    = Set( within=M.tech_all )
     M.tech_capacity_min   = Set( within=M.tech_all ) 
     M.tech_capacity_max   = Set( within=M.tech_all ) 
