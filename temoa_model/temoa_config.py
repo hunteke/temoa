@@ -181,7 +181,7 @@ def db_2_dat(ifile, ofile, options):
 			if len(A)!=0:
 				f.write("set " +"GroupOfTechnologies" + " := \n")
 				for row in A:
-					f.write(row[0]+"   "+row[1]+" \n")
+					f.write(row[0]+"   "+row[1]+"   "+str(row[2])+" \n")
 				f.write(";\n\n")
 		
 
