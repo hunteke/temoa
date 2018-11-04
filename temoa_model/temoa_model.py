@@ -197,21 +197,21 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.V_CapacityAvailableByPeriodAndTech = Var( M.CapacityAvailableVar_pt,
                                             domain=NonNegativeReals )
 
-    M.EnergyConsumptionByPeriodInputAndTech_pit = Set(
-      dimen=3, initialize=EnergyConsumptionByPeriodInputAndTechVariableIndices )
-    M.V_EnergyConsumptionByPeriodInputAndTech = Var(
-      M.EnergyConsumptionByPeriodInputAndTech_pit, 
-      domain=NonNegativeReals )
+    #M.EnergyConsumptionByPeriodInputAndTech_pit = Set(
+    #  dimen=3, initialize=EnergyConsumptionByPeriodInputAndTechVariableIndices )
+    #M.V_EnergyConsumptionByPeriodInputAndTech = Var(
+    #  M.EnergyConsumptionByPeriodInputAndTech_pit, 
+    #  domain=NonNegativeReals )
 
-    M.ActivityByPeriodTechAndOutput_pto = Set(
-      dimen=3, initialize=ActivityByPeriodTechAndOutputVariableIndices )
-    M.V_ActivityByPeriodTechAndOutput = Var( M.ActivityByPeriodTechAndOutput_pto, 
-                                             domain=NonNegativeReals )
+    #M.ActivityByPeriodTechAndOutput_pto = Set(
+    #  dimen=3, initialize=ActivityByPeriodTechAndOutputVariableIndices )
+    #M.V_ActivityByPeriodTechAndOutput = Var( M.ActivityByPeriodTechAndOutput_pto, 
+    #                                         domain=NonNegativeReals )
 
-    M.EmissionActivityByPeriodAndTech_ept = Set(
-      dimen=3, initialize=EmissionActivityByPeriodAndTechVariableIndices )    
-    M.V_EmissionActivityByPeriodAndTech = Var( 
-      M.EmissionActivityByPeriodAndTech_ept, domain=Reals )
+    #M.EmissionActivityByPeriodAndTech_ept = Set(
+    #  dimen=3, initialize=EmissionActivityByPeriodAndTechVariableIndices )    
+    #M.V_EmissionActivityByPeriodAndTech = Var( 
+    #  M.EmissionActivityByPeriodAndTech_ept, domain=Reals )
 
     # This derived decision variable is used in MGA objective function:
     M.V_ActivityByTech = Var(M.tech_all, domain=NonNegativeReals )
@@ -236,13 +236,13 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.ActivityByPeriodAndProcessVar_ptv, 
       rule=ActivityByPeriodAndProcess_Constraint )
 
-    M.EnergyConsumptionByPeriodInputAndTechConstraint = Constraint( 
-      M.EnergyConsumptionByPeriodInputAndTech_pit, 
-      rule=EnergyConsumptionByPeriodInputAndTech_Constraint )
+    #M.EnergyConsumptionByPeriodInputAndTechConstraint = Constraint( 
+    #  M.EnergyConsumptionByPeriodInputAndTech_pit, 
+    #  rule=EnergyConsumptionByPeriodInputAndTech_Constraint )
     
-    M.ActivityByPeriodTechAndOutputConstraint = Constraint( 
-      M.ActivityByPeriodTechAndOutput_pto, 
-      rule=ActivityByPeriodTechAndOutput_Constraint )
+    #M.ActivityByPeriodTechAndOutputConstraint = Constraint( 
+    #  M.ActivityByPeriodTechAndOutput_pto, 
+    #  rule=ActivityByPeriodTechAndOutput_Constraint )
 
     M.ActivityByTechConstraint = Constraint(
       M.tech_all, 
@@ -262,9 +262,9 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.ExistingCapacityConstraint_tv, 
       rule=ExistingCapacity_Constraint )
 
-    M.EmissionActivityByPeriodAndTechConstraint = Constraint( 
-      M.EmissionActivityByPeriodAndTech_ept, 
-      rule=EmissionActivityByPeriodAndTech_Constraint )
+    #M.EmissionActivityByPeriodAndTechConstraint = Constraint( 
+    #  M.EmissionActivityByPeriodAndTech_ept, 
+    #  rule=EmissionActivityByPeriodAndTech_Constraint )
 
     #   Model Constraints
     #   In driving order, starting with the need to meet end-use demands
