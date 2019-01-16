@@ -494,7 +494,7 @@ the model. Currently, each slice is completely independent of other slices.
 
 def HourlyStorage_Constraint ( M, p, s, d, t ):
 
-	InitialStorage = 0.0	# Batteries are assumed delivered uncharged
+	InitialStorage = 0.0	# Storage units initiated with zero charge
 	
 	# This is the sum of all input=i sent TO storage tech t of vintage v with 
 	# output=o in P,S,D, (in PJ)
@@ -516,7 +516,6 @@ def HourlyStorage_Constraint ( M, p, s, d, t ):
 	
 	# This hourly storage formulation allows stored energy to carry over through
 	# time of day and seasons, but must be zeroed out at the end of each period
-
 	# Last time slice of the last season (aka end of period), must zero out
 	if d == M.time_of_day.last() and s == M.time_season.last():
 		d_prev = M.time_of_day.prev(d)
@@ -549,10 +548,10 @@ def HourlyStorage_Constraint ( M, p, s, d, t ):
 
 def HourlyStorage_UpperBound ( M, p, s, d, t ):
 	# V_HourlyStorage is in terms of PJ; so in any single time slice, amount of
-	# cumulative stored energy cannot exceed capacity (GW) * 8 (hours) = GWh
+	# cumulative stored energy cannot exceed capacity (GW) * duration (hours) = GWh
 	# need to convert GWh capacity to PJ (3600/10^6)
 	
-	energy_capacity = M.V_CapacityAvailableByPeriodAndTech[p,t] * 8 * 3600 / 10**6 	
+	energy_capacity = M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * 3600 / 10**6
 	expr = ( M.V_HourlyStorage[p,s,d,t] <= energy_capacity )
 	
 	return expr
@@ -567,10 +566,10 @@ def HourlyStorage_LowerBound ( M, p, s, d, t ):
 	return expr
 	
 def HourlyStorageCharge_UpperBound ( M, p, s, d, t ):
-	# This must limit the rate that energy (PJ) can flow into the battery
-	# - limited by the battery size (capacity in GW).
-	# The battery capacity is defined by GW (GJ/s). Convert GJ/s to PJ/h, and
-	# this is the maximum that can flow into the battery in 1 hour
+	# This limits the rate at which energy (PJ) can flow into the storage unit
+	# - limited by the unit size (capacity in GW).
+	# The storage output capacity is defined by GW (GJ/s). Convert GJ/s to PJ/h, and
+	# this is the maximum that can flow into the unit in 1 hour
 
 	# Calculate energy charge in each time slice in PJ
 	slice_charge = sum( M.V_FlowIn[p, s, d, S_i, t, S_v, S_o] * M.Efficiency[S_i, t, S_v, S_o]
@@ -586,16 +585,16 @@ def HourlyStorageCharge_UpperBound ( M, p, s, d, t ):
 		*M.SegFrac[s, d]
 	)
 
-	# Energy charge cannot exceed the capacity of the battery (in PJ)
+	# Energy charge cannot exceed the capacity of the storage unit (in PJ)
 	expr = ( slice_charge <= max_charge )
 	
 	return expr
 
 def HourlyStorageCharge_LowerBound ( M, p, s, d, t ):
-	# This must limit the rate that energy (PJ) can flow out of the battery
-	# - limited by the battery size (capacity in GW).
-	# The battery capacity is defined by GW (GJ/s). Convert GJ/s to PJ/h, and
-	# this is the maximum that can flow out of the battery in 1 hour
+	# This must limit the rate that energy (PJ) can flow out of the storage unit
+	# - limited by the unit size (capacity in GW).
+	# The storage output capacity is defined by GW (GJ/s). Convert GJ/s to PJ/h, and
+	# this is the maximum that can flow out of the unit in 1 hour
 	
 	# Calculate energy discharge in each time slice in PJ
 	slice_discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
@@ -611,15 +610,15 @@ def HourlyStorageCharge_LowerBound ( M, p, s, d, t ):
 		*M.SegFrac[s, d]
 	)
 	
-	# Energy discharge cannot exceed the capacity of the battery (in PJ)
+	# Energy discharge cannot exceed the capacity of the storage unit (in PJ)
 	expr = ( slice_discharge <= max_discharge )
 	
 	return expr	
 
 def HourlyStorageThroughput_Constraint ( M, p, s, d, t ):
-	# It is not enough to limit charge and discharge rate only, since a battery
+	# It is not enough to limit charge and discharge rate only, since a storage unit
 	# cannot both charge and discharge at the maximum rate at the same time, and
-	# we should limit the throughtput of a battery during each time slice.
+	# we should limit the throughtput of the unit during each time slice.
 
 	discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
 	  for S_v in M.ProcessVintages( p, t ) 

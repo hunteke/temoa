@@ -175,6 +175,9 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.CapacityCredit = Param( M.tech_all, default=1 )
     M.PlanningReserveMargin = Param (M.Zones, default=0.2)
 
+    # Parameter representing storage duration when using hourly timeslices
+    M.StorageDuration = Param( M.tech_hourlystorage, default=8.0 )
+
     # Decision Variables--------------------------------------------------------
     #   Base decision variables
     M.FlowVar_psditvo = Set( dimen=7, initialize=FlowVariableIndices )
