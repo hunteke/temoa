@@ -450,11 +450,11 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.MaxCapacitySetConstraint_p, 
       rule=MaxCapacitySet_Constraint )      
     
-    M.TechInputSplitConstraint_psitv = Set(
-      dimen=5, initialize=TechInputSplitConstraintIndices
+    M.TechInputSplitConstraint_psditv = Set(
+      dimen=6, initialize=TechInputSplitConstraintIndices
       )
     M.TechInputSplitConstraint  = Constraint( 
-      M.TechInputSplitConstraint_psitv,  
+      M.TechInputSplitConstraint_psditv,  
       rule=TechInputSplit_Constraint )
 
     M.TechOutputSplitConstraint_psdtvo = Set(

@@ -642,7 +642,7 @@ def HourlyStorageThroughput_Constraint ( M, p, s, d, t ):
 	return expr
 
 
-def TechInputSplit_Constraint ( M, p, s, i, t, v ):
+def TechInputSplit_Constraint ( M, p, s, d, i, t, v ):
 	r"""
 
 Allows users to specify fixed or minimum shares of commodity inputs to a process 
@@ -651,14 +651,12 @@ TechOutputSplit_Constraint for an analogous explanation.
 """
 	inp = sum( M.V_FlowIn[p, s, d, i, t, v, S_o]
 	  for S_o in M.ProcessOutputsByInput( p, t, v, i )
-	  for d in M.time_of_day
 
 	)
 
 	total_inp = sum( M.V_FlowIn[p, s, d, S_i, t, v, S_o]
 	  for S_i in M.ProcessInputs( p, t, v )
 	  for S_o in M.ProcessOutputsByInput( p, t, v, i )
-	  for d in M.time_of_day
 	)
 
 	expr = ( inp >= M.TechInputSplit[p, i, t] * total_inp )

@@ -1089,11 +1089,12 @@ def ReserveMarginIndices ( M ):
 
 def TechInputSplitConstraintIndices ( M ):
 	indices = set(
-	  (p, s, i, t, v)
+	  (p, s, d, i, t, v)
 
 	  for p, i, t in M.TechInputSplit.sparse_iterkeys()
 	  for v in M.ProcessVintages( p, t )
 	  for s in M.time_season
+	  for d in M.time_of_day
 	)
 
 	return indices
