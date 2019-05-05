@@ -1421,7 +1421,7 @@ we write this equation for all the time-slices defined in the database in each r
 			PowerTechs.add(i[0])
 
 
-	expr_left = sum (value( M.CapacityCredit[t] )*
+	expr_left = sum (value( M.CapacityCredit[p, t] )*
 					M.V_CapacityAvailableByPeriodAndTech[p, t]*
 					value( M.CapacityToActivity[t] )*
 					value( M.SegFrac[s, d] )
