@@ -77,6 +77,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     
     M.commodity_carrier = M.commodity_physical | M.commodity_demand
     M.commodity_all     = M.commodity_carrier | M.commodity_emissions
+    M.commodity_SNG     = M.commodity_physical | M.commodity_emissions
     
     M.Zones = Set()
     M.ReserveMargin   = Set(within=M.tech_all*M.Zones)
@@ -95,7 +96,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.validate_SegFrac = BuildAction( rule=validate_SegFrac )
     M.CapacityToActivity = Param( M.tech_all,  default=1 )
     M.ExistingCapacity = Param( M.tech_all, M.vintage_exist )
-    M.Efficiency = Param( M.commodity_physical, M.tech_all, M.vintage_all, 
+    M.Efficiency = Param( M.commodity_SNG, M.tech_all, M.vintage_all, 
                       M.commodity_carrier )
     M.validate_UsedEfficiencyIndices = BuildAction( rule=CheckEfficiencyIndices )   
     M.CapacityFactor_sdtv = Set( dimen=4, initialize=CapacityFactorProcessIndices )
