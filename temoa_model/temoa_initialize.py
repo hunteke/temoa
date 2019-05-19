@@ -1029,7 +1029,7 @@ def HourlyStorageVariableIndices ( M ):
 		for p in M.time_optimize
 		for s in M.time_season
 		for d in M.time_of_day
-		for t in M.tech_hourlystorage
+		for t in M.tech_hourlystorage if (p, t) in M.CapacityAvailableVar_pt
 	)
 	return indices
 	
@@ -1040,7 +1040,7 @@ def HourlyStorageBoundConstraintIndices ( M ):
 		for p in M.time_optimize
 		for s in M.time_season
 		for d in M.time_of_day
-		for t in M.tech_hourlystorage
+		for t in M.tech_hourlystorage if (p, t) in M.CapacityAvailableVar_pt
 	)
 	return indices	
 	
