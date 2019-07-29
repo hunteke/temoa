@@ -24,11 +24,16 @@ received this license file.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import sys
 
-from cStringIO import StringIO
 from itertools import product
 from pprint import pformat
 from shutil import copy as copyfile, rmtree
 from textwrap import TextWrapper
+
+# Ensure compatibility with Python 2.7 and 3
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from pyomo.core.base.sets import _SetProduct, _SetContainer
 

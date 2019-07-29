@@ -29,7 +29,6 @@ received this license file.  If not, see <http://www.gnu.org/licenses/>.
 __all__ = ('pformat_results', 'stringify_data')
 
 from collections import defaultdict
-from cStringIO import StringIO
 from sys import stderr as SE, stdout as SO
 from temoa_config import TemoaConfig
 from shutil import rmtree
@@ -39,8 +38,14 @@ import re
 import subprocess
 import sys
 
-#Need line below to import DB_to_Excel.py
+# Need line below to import DB_to_Excel.py
 sys.path.append('./data_processing')
+
+# Ensure compatibility with Python 2.7 and 3
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from pyomo.core import value
 from IPython import embed as IP

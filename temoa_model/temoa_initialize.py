@@ -20,9 +20,14 @@ received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from operator import itemgetter as iget
-from cStringIO import StringIO
 from itertools import product as cross_product, islice, izip
 from sys import argv, stderr as SE, stdout as SO
+
+# Ensure compatibility with Python 2.7 and 3
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 try:
 	from pyomo.core import (
