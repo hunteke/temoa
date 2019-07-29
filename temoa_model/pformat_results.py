@@ -270,8 +270,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 			   "V_CapacityAvailableByPeriodAndTech"   : "Output_CapacityByPeriodAndTech",  \
 			   "V_EmissionActivityByPeriodAndProcess" : "Output_Emissions", \
 			   "Objective"  : "Output_Objective", \
-			   "Costs"      : "Output_Costs", \
-			   "V_HourlyStorage"   :  "Output_HourlyStorage"}
+			   "Costs"      : "Output_Costs" }
 	
 	db_tables = ['time_periods', 'time_season', 'time_of_day', 'technologies', 'commodities',\
 				'LifetimeTech', 'LifetimeProcess', 'Efficiency', 'EmissionActivity', 'ExistingCapacity']
