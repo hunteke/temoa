@@ -400,7 +400,7 @@ class TemoaConfig( object ):
 
 		self.lexer = lex.lex(module=self, **kwargs)
 		if self.file_location:
-			with open(self.file_location, 'rb') as f:
+			with open(self.file_location, 'r') as f:
 				self.lexer.input(f.read())
 			while True:
 				tok = self.lexer.token()
