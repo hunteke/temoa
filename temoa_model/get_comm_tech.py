@@ -251,7 +251,7 @@ def get_info(inputs):
 	if inputs is None:
 		raise "no arguments found"
 		
-	for opt, arg in inputs.iteritems():
+	for opt, arg in inputs.items():
 	    
 		print "%s == %s" %(opt, arg)
 	    

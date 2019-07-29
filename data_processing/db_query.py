@@ -40,7 +40,7 @@ def get_flags(inputs):
 	if inputs is None:
 		raise TypeError("no arguments found")
 		
-	for opt, arg in inputs.iteritems():
+	for opt, arg in inputs.items():
 	    
 		print "%s == %s" %(opt, arg)
 	    

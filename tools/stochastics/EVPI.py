@@ -174,7 +174,7 @@ def solve_pf(p_model, p_data):
     root_node = (set( ctpTree.values() ) - set( ctpTree.keys() )).pop()
     
     # ptcTree = defaultdict( list ) # Parent to child node, one to multiple mapping
-    # for c, p in ctpTree.iteritems():
+    # for c, p in ctpTree.items():
     #         ptcTree[ p ].append( c )
     # ptcTree = dict( ptcTree )   # be slightly defensive; catch any additions
     

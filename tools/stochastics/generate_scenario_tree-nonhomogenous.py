@@ -222,7 +222,7 @@ class TreeNode ( object ):
 		params = rates.keys()
 		myparams = dict()
 		if self.name != 'HedgingStrategy':
-			for key, decisions in rates.iteritems():
+			for key, decisions in rates.items():
 				paramkwargs = {
 				  'param'  : key,
 				  'rates'  : (),

@@ -102,7 +102,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		# clist = "Component list"; i.e., where to store the data
 		# epsilon = absolute value below which to ignore a result
 		results = defaultdict(list)
-		for name, data in cgroup.iteritems():
+		for name, data in cgroup.items():
 			if not (abs( data['Value'] ) > epsilon ): continue
 
 			# name looks like "Something[some,index]"

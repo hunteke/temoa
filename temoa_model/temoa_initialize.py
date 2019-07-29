@@ -910,7 +910,7 @@ def DemandActivityConstraintIndices ( M ):
 			dem_slices[p, dem] = set()
 		dem_slices[p, dem].add( (s, d) )
 
-	for (p, dem), slices in dem_slices.iteritems():
+	for (p, dem), slices in dem_slices.items():
 		# No need for this constraint if demand is only in one slice.
 		if not len( slices ) > 1: continue
 		slices = sorted( slices )

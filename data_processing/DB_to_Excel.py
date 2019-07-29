@@ -206,7 +206,7 @@ def get_data(inputs):
 	if inputs is None:
 		raise "no arguments found"
 		
-	for opt, arg in inputs.iteritems():
+	for opt, arg in inputs.items():
 		if opt in ("-i", "--input"):
 			ifile = arg
 		elif opt in ("-o", "--output"):

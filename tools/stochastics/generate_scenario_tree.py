@@ -223,7 +223,7 @@ class TreeNode ( object ):
 
 		params = rates.keys()
 		myparams = dict()
-		for key, decisions in rates.iteritems():
+		for key, decisions in rates.items():
 			paramkwargs = {
 			  'param'  : key,
 			  'rates'  : (),
