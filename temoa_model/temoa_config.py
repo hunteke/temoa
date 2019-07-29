@@ -225,11 +225,15 @@ class TemoaConfig( object ):
 	t_ANY_ignore  = '[ \t]'
 	
 	def __init__(self, **kwargs):
-		from Queue import Queue
-		
+		# Make compatible with Python 2.7 and 3
+		try: 
+			import queue
+		except:
+			import Queue as queue		
+
 		self.__error          = list()
-		self.__mga_todo       = Queue()
-		self.__mga_done       = Queue()
+		self.__mga_todo       = queue.Queue()
+		self.__mga_done       = queue.Queue()
 		
 		self.file_location    = None
 		self.dot_dat          = list() # Use Kevin's name.
