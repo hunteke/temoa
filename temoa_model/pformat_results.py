@@ -39,6 +39,9 @@ import re
 import subprocess
 import sys
 
+#Need line below to import DB_to_Excel.py
+sys.path.append('./data_processing')
+
 from pyomo.core import value
 from IPython import embed as IP
 
