@@ -20,7 +20,7 @@ received this license file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from operator import itemgetter as iget
-from itertools import product as cross_product, islice, izip
+from itertools import product as cross_product
 from sys import argv, stderr as SE, stdout as SO
 
 # Ensure compatibility with Python 2.7 and 3
