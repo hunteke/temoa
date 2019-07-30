@@ -149,7 +149,7 @@ class GraphvizDiagramGenerator(object):
 
 		for i in range(len(EmiO2)):
 			row = EmiO2.iloc[i]
-			if (row['emis_comm'] >= epsilon):
+			if (row['emis_activity'] >= epsilon):
 				eflowso.add((row['tech'], row['emis_comm'], flow_fmt % row['emis_activity']))
 				eemissions.add((row['emis_comm'], None))
 				usede.add(row['emis_comm'])
