@@ -232,8 +232,6 @@ def DemandConstraintErrorCheck ( supply, p, s, d, dem ):
 # Begin validation and initialization routines
 
 def validate_time ( M ):
-	from sys import maxint
-
 	# We check for integer status here, rather then asking Pyomo to do this via
 	# a 'within=Integers' clause in the definition so that we can have a very
 	# specific error message.  If we instead use Pyomo's mechanism, the
@@ -263,13 +261,13 @@ def validate_time ( M ):
 		raise Exception( msg )
 
 	# Ensure that the time_exist < time_future
-	exist    = len( M.time_exist ) and max( M.time_exist ) or -maxint
-	horizonl = min( M.time_future )  # horizon "low"
+	max_exist    = max( M.time_exist )
+	min_horizon = min( M.time_future )
 
-	if not ( exist < horizonl ):
+	if not ( max_exist < min_horizon ):
 		msg = ('All items in time_future must be larger than in time_exist.\n'
 		  'time_exist max:   {}\ntime_future min: {}')
-		raise Exception( msg.format(exist, horizonl) )
+		raise Exception( msg.format(max_exist, min_horizon) )
 
 
 def validate_SegFrac ( M ):
