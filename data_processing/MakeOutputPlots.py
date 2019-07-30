@@ -91,7 +91,7 @@ class OutputPlotGenerator:
 
 		periods = list(periods)
 		techs = list(techs)
- 		periods.sort()
+		periods.sort()
 
 		output_values = dict()   # Each row in a dictionary is a list
 		for tech in techs:
@@ -227,11 +227,11 @@ class OutputPlotGenerator:
 		data.pop(xvar,0)
 		stackedBars = data.keys()
 		colorMapForBars=dict()
-	  	colors = []
-	  	plt.figure()
+		colors = []
+		plt.figure()
 
-	  	cmap = self.get_cmap( len(stackedBars) )
-	  	for i in range(0,len(stackedBars)):
+		cmap = self.get_cmap( len(stackedBars) )
+		for i in range(0,len(stackedBars)):
 	  		# colors.append(self.generate_new_color(colors,pastel_factor = 0.9))
 			# colorMapForBars[data.keys()[i]]=colors[i]
 			colorMapForBars[data.keys()[i]]=cmap(i)
@@ -262,12 +262,12 @@ class OutputPlotGenerator:
 		techs = plot_var.keys()
 		random.seed(10)
 		color_map=dict()
-	  	colors = []
-	  	width = 1.5
-	  	plt.figure()
+		colors = []
+		width = 1.5
+		plt.figure()
 	  	
-	  	cmap = self.get_cmap( len(techs) )
-	  	for i in range(0,len(techs)):
+		cmap = self.get_cmap( len(techs) )
+		for i in range(0,len(techs)):
 	    		# colors.append(self.generate_new_color(colors,pastel_factor = 0.9))
 			# color_map[plot_var.keys()[i]]=colors[i]
 			color_map[plot_var.keys()[i]]=cmap(i)

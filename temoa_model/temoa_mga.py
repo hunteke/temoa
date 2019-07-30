@@ -54,7 +54,7 @@ def PreviousAct_rule ( instance, mga_weight, prev_activity_t ):
 				val = value( instance.V_ActivityByTech[t] )
 				if abs(val) < epsilon: continue
 				prev_activity_t[ t ] += 1.0
-               	return prev_activity_t
+		return prev_activity_t
                
 	#   The version below calculates activity by sector and normalized technology-
 	#   specific activity by the total activity for the sector. Currently accounts
@@ -80,4 +80,4 @@ def PreviousAct_rule ( instance, mga_weight, prev_activity_t ):
 					val = value( instance.V_ActivityByTech[t] )
 					if abs(val) < epsilon: continue
 					prev_activity_t[ t ] += val / act[s]
-               	return prev_activity_t
+				return prev_activity_t

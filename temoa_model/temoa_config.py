@@ -73,7 +73,7 @@ def db_2_dat(ifile, ofile, options):
 				f.write("set " + t_dtname + " := \n")
 			else:
 				f.write("param " + t_dtname + " := \n")
-	 	else:    #Only other possible case is empty flag, then 1-to-1 correspodence between DB and DAT table names
+		else:    #Only other possible case is empty flag, then 1-to-1 correspodence between DB and DAT table names
 			db_query = "SELECT * FROM " + t_name
 			cur.execute(db_query)
 			if cur.fetchone() is None:
