@@ -5,22 +5,48 @@ Temoa Project.  The four subdirectories are:
 Contains the core Temoa model code.
 
 2. data_files/
-Containd simple input data (DAT) files for Temoa. Note that the file 
+Contains simple input data (DAT) files for Temoa. Note that the file 
 'utopia-15.dat' represents a simple system called 'Utopia', which 
 is packaged with the MARKAL model generator and has been used 
 extensively for benchmarking exercises.
 
+3. data_processing/
+Contains several modules to make output graphs, network diagrams, and 
+results spreadsheets.
+
 3. tools/
 Contains scripts used to conduct sensitivity and uncertainty analysis. 
-See README inside this folder for more information.
+See the READMEs inside each subfolder for more information.
 
 4. docs/
 Contains the source code for the Temoa project manual, in reStructuredText
 (ReST) format.
 
+***Creating a Temoa Environment***
+
+Temoa requires several software elements, and it is most convenient to create 
+a conda environment in which to run the model. To begin, you need to have conda 
+installed either via miniconda or anaconda. Next, download the environment.yml file, 
+and  place in a new directory named 'temoa-py3.' Create this new directory in 
+a location where you wish to store the environment. From the command line:
+
+$ conda env create
+
+Then activate the environment as follows:
+
+$ source activate temoa-py3
+
+This new conda environment contains several elements, including Python 3, a 
+compatible version of Pyomo, matplotlib, numpy, scipy, and two free solvers 
+(GLPK and CBC).
+
+To download the Temoa source code, either clone the repository or download from GitHub 
+as a zip file.
+
 ***Running Temoa***
 
-To run Temoa, you have a few options.
+To run Temoa, you have a few options. All commands below should be executed from the 
+top-level 'temoa' directory.
 
 Option 1 (full-featured):
 Invokes python directly, and gives the user access to 
@@ -51,10 +77,10 @@ Copies the relevant Temoa model files into an executable archive
 $ python create_archive.py
 
 This makes the model more portable by placing all contents in a 
-single file. Now it is possible to execute the model with the 
+single zipped file. Now it is possible to execute the model with the 
 following simply command:
 
-$ ./temoa.py  path/to/dat/file
+$ python temoa.py  path/to/dat/file
 
 For general help use --help:
 
