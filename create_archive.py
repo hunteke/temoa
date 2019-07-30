@@ -24,25 +24,25 @@ received this license file.  If not, see <http://www.gnu.org/licenses/>.
 # This script creates the 'temoa.py' zip archive/executable using Python's
 # PyZipFile interface.  It accepts no arguments.
 
-import os
+import os, stat
 
 from zipfile import PyZipFile, ZIP_DEFLATED
 
 # Ensure compatibility with Python 2.7 and 3
 try:
     from cStringIO import StringIO
+    temoa_pkg = StringIO()
 except ImportError:
-    from io import StringIO
+    from io import BytesIO
+    temoa_pkg = BytesIO()
 
-temoa_pkg = StringIO()
-temoa_pkg.write( '#!/usr/bin/env python\n' )
 with PyZipFile( temoa_pkg, mode='w', compression=ZIP_DEFLATED ) as zf:
 	zf.debug = 3
-	zf.writepy( './temoa_model/' )
+	zf.writepy( 'temoa_model/' )
 
 fname = 'temoa.py'
 with open( fname, 'wb' ) as f:
 	f.write( temoa_pkg.getvalue() )
 
-os.chmod( fname, 0755 )
+os.chmod( fname, stat.S_IRWXU )
 
