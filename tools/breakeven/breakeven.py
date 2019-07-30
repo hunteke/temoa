@@ -226,35 +226,35 @@ def sensitivity(dat, techs):
             ic_s[t].append(instance.CostInvest[t, v])
             cap_s[t].append( value( instance.V_Capacity[t, v] ) )
 
-        # print "Tech\tVintage\tL. RC\tCoef\tU .RC\tScale\tBE IC\tBE FC\tIC\tFC\tCap"
-        print "{:>10s}\t{:>7s}\t{:>6s}\t{:>4s}\t{:>6s}\t{:>5s}\t{:>7s}\t{:>7s}\t{:>5s}\t{:>3s}\t{:>5s}".format('Tech','Vintage', 'L. RC', 'Coef', 'U. RC', 'Scale', 'BE IC', 'BE FC', 'IC', 'FC', 'Cap')
+        # print("Tech\tVintage\tL. RC\tCoef\tU .RC\tScale\tBE IC\tBE FC\tIC\tFC\tCap")
+        print("{:>10s}\t{:>7s}\t{:>6s}\t{:>4s}\t{:>6s}\t{:>5s}\t{:>7s}\t{:>7s}\t{:>5s}\t{:>3s}\t{:>5s}".format('Tech','Vintage', 'L. RC', 'Coef', 'U. RC', 'Scale', 'BE IC', 'BE FC', 'IC', 'FC', 'Cap'))
         for v in vintages:
             lrc = instance.lrc[instance.V_Capacity[t, v]]
             urc = instance.urc[instance.V_Capacity[t, v]]
 
-            # print "{:>s}\t{:>g}\t{:>.0f}\t{:>.0f}\t{:>.0f}\t{:>.3f}\t{:>.1f}\t{:>.1f}\t{:>.0f}\t{:>.0f}\t{:>.3f}".format(
-            print "{:>10s}\t{:>7g}\t{:>6.0f}\t{:>4.0f}\t{:>6.0f}\t{:>5.3f}\t{:>7.1f}\t{:>7.1f}\t{:>5.0f}\t{:>3.0f}\t{:>5.3f}".format(
+            # print("{:>s}\t{:>g}\t{:>.0f}\t{:>.0f}\t{:>.0f}\t{:>.3f}\t{:>.1f}\t{:>.1f}\t{:>.0f}\t{:>.0f}\t{:>.3f}".format()
+            print("{:>10s}\t{:>7g}\t{:>6.0f}\t{:>4.0f}\t{:>6.0f}\t{:>5.3f}\t{:>7.1f}\t{:>7.1f}\t{:>5.0f}\t{:>3.0f}\t{:>5.3f}".format(
             t, v, lrc, coef_CAP[t, v], urc, scal_CAP[t, v], 
             scal_CAP[t, v]*instance.CostInvest[t, v], 
             scal_CAP[t, v]*instance.CostFixed[v, t, v], # Use the FC of the first period
             instance.CostInvest[t,v],
             instance.CostFixed[v, t, v],
             value(instance.V_Capacity[t, v])
-            )
+            ))
 
-    print 'Dual and slack variables for emission caps:'
+    print('Dual and slack variables for emission caps:')
     for e in instance.commodity_emissions:
         for p in instance.time_optimize:
             if (p, e) in instance.EmissionLimitConstraint:
-                print p, e, instance.dual[instance.EmissionLimitConstraint[p, e]], '\t', instance.slack[instance.EmissionLimitConstraint[p, e]]
+                print(p, e, instance.dual[instance.EmissionLimitConstraint[p, e]], '\t', instance.slack[instance.EmissionLimitConstraint[p, e]])
     return years, bic_s, ic_s
 
-    print 'Dual and slack variables for Commodity Demand Constraints'
+    print('Dual and slack variables for Commodity Demand Constraints')
     for c in instance.commodity_demand:
         for p in instance.time_optimize:
             for s in instance.time_season:
                 for tod in instance.time_of_day:
-                    print p, s, tod, instance.dual[instance.DemandConstraint[p,s,tod,c]], instance.slack[instance.DemandConstraint[p,s,tod,c]]
+                    print(p, s, tod, instance.dual[instance.DemandConstraint[p,s,tod,c]], instance.slack[instance.DemandConstraint[p,s,tod,c]])
 
 def sensitivity_api(instance, techs, algorithm=None):
     # This code block realizes the same function as sensitivity(), however 
@@ -320,7 +320,7 @@ def sensitivity_api(instance, techs, algorithm=None):
             c_i = coef_IC(instance, t, v)
             c_f = coef_FC(instance, t, v)
             if not validate_coef(c0, instance, t, v):
-                print 'Error: Check coefficients!'
+                print('Error: Check coefficients!')
                 sys.exit(0)
             coef_CAP[t, v] = c0
             scal_CAP[t, v] = clb/c0 # Break-even cost 1: Scaling both IC and FC
@@ -330,9 +330,9 @@ def sensitivity_api(instance, techs, algorithm=None):
             ic_s[t].append(value(instance.CostInvest[t, v]))
             cap_s[t].append( c.solution.get_values(target_var) )
 
-        print "{:>10s}\t{:>7s}\t{:>6s}\t{:>4s}\t{:>6s}\t{:>5s}\t{:>7s}\t{:>5s}\t{:>5s}".format(
+        print("{:>10s}\t{:>7s}\t{:>6s}\t{:>4s}\t{:>6s}\t{:>5s}\t{:>7s}\t{:>5s}\t{:>5s}".format(
             'Tech','Vintage', 'L. CB', 'Coef', 'U. CB', 'Scale', 'BE IC', 'IC', 'Cap',
-        )
+        ))
         msg += "{:>10s}\t{:>7s}\t{:>6s}\t{:>4s}\t{:>6s}\t{:>5s}\t{:>7s}\t{:>5s}\t{:>5s}".format(
             'Tech','Vintage', 'L. CB', 'Coef', 'U. CB', 'Scale', 'BE IC', 'IC', 'Cap',
         )
@@ -357,7 +357,7 @@ def sensitivity_api(instance, techs, algorithm=None):
                 'scale (CS)':        tmp_bes_cs,
             }
             results.append(row)
-            print "{:>10s}\t{:>7g}\t{:>6.0f}\t{:>4.0f}\t{:>6.0f}\t{:>5.3f}\t{:>7.1f}\t{:>5.0f}\t{:>5.3f}".format(
+            print("{:>10s}\t{:>7g}\t{:>6.0f}\t{:>4.0f}\t{:>6.0f}\t{:>5.3f}\t{:>7.1f}\t{:>5.0f}\t{:>5.3f}".format(
             t,
             v, 
             clb_s[t, v],
@@ -367,7 +367,7 @@ def sensitivity_api(instance, techs, algorithm=None):
             bic_s[t][vintages.index(v)],
             value(instance.CostInvest[t,v]),
             cap_s[t][vintages.index(v)]
-            )
+            ))
 
             msg += "{:>10s}\t{:>7g}\t{:>6.0f}\t{:>4.0f}\t{:>6.0f}\t{:>5.3f}\t{:>7.1f}\t{:>5.0f}\t{:>5.3f}".format(
             t,
@@ -440,18 +440,18 @@ def bin_search(tech, vintage, dat, eps = 0.01, all_v = False):
     counter = 0
     scale_this = scale_u # Starting scale
 
-    print 'Iteration # {} starts at {} s'.format( counter, time_mark() )
+    print('Iteration # {} starts at {} s'.format( counter, time_mark() ))
     instance = model.create_instance(data)
     instance.preprocess()
     results = optimizer.solve(instance, suffixes=['dual', 'urc', 'slack', 'lrc'])
     instance.solutions.load_from(results)
     cap_target = value( instance.V_Capacity[monitor_tech, monitor_year] )
-    print 'Iteration # {} solved at {} s'.format( counter, time_mark() )
-    print 'Iteration # {}, scale: {:1.2f}, capacity: {} GW'.format( 
+    print('Iteration # {} solved at {} s'.format( counter, time_mark() ))
+    print('Iteration # {}, scale: {:1.2f}, capacity: {} GW'.format( 
         counter,
         scale_this,
         cap_target
-    )
+    ))
     if 1.0 - scale_this <= eps and cap_target > 0:
         return scale_this
 
@@ -470,17 +470,17 @@ def bin_search(tech, vintage, dat, eps = 0.01, all_v = False):
         for k in fc0:
             data['CostFixed'][k] = scale_this*fc0[k]
 
-        print 'Iteration # {} starts at {} s'.format( counter, time_mark() )
+        print('Iteration # {} starts at {} s'.format( counter, time_mark() ))
         instance = model.create_instance(data)
         instance.preprocess()
         results = optimizer.solve(instance, suffixes=['dual', 'urc', 'slack', 'lrc'])
         instance.solutions.load_from(results)
         cap_target = value( instance.V_Capacity[monitor_tech, monitor_year] )
-        print 'Iteration # {} solved at {} s'.format( counter, time_mark() )
-        print 'Iteration # {}, scale: {:1.2f}, capacity: {} GW'.format( 
+        print('Iteration # {} solved at {} s'.format( counter, time_mark() ))
+        print('Iteration # {}, scale: {:1.2f}, capacity: {} GW'.format( 
             counter,
             scale_this,
-            cap_target)
+            cap_target))
     return (scale_u + scale_l)/2.0
 
 def cplex_search(t, v, cplex_instance, eps = 0.01, all_v=False):
@@ -544,7 +544,7 @@ def cplex_search(t, v, cplex_instance, eps = 0.01, all_v=False):
     counter = 0
     scale_this = scale_u # Starting scale
 
-    print 'Iteration # {} starts at {} s'.format( counter, time_mark() )
+    print('Iteration # {} starts at {} s'.format( counter, time_mark() ))
     msg += 'Iteration # {} starts at {} s\n'.format( counter, time_mark() )
     try:
         cplex_instance.solve()
@@ -553,13 +553,13 @@ def cplex_search(t, v, cplex_instance, eps = 0.01, all_v=False):
         msg += "Exception raised during solve\n"
         return msg, None
     cap_target0 = cplex_instance.solution.get_values(target_var0)
-    print 'Iteration # {} solved at {} s'.format( counter, time_mark() )
+    print('Iteration # {} solved at {} s'.format( counter, time_mark() ))
     msg += 'Iteration # {} solved at {} s\n'.format( counter, time_mark() )
-    print 'Iteration # {}, scale: {:1.2f}, capacity: {} GW'.format( 
+    print('Iteration # {}, scale: {:1.2f}, capacity: {} GW'.format( 
         counter,
         scale_this,
         cap_target0
-    )
+    ))
     if 1.0 - scale_this <= eps and cap_target0 > 0:
         row = return_row(c0, scale_this, cap_target0)
         return msg, pd.DataFrame([row])
@@ -577,7 +577,7 @@ def cplex_search(t, v, cplex_instance, eps = 0.01, all_v=False):
         scale_this = (scale_u + scale_l)*0.5
         cplex_instance.objective.set_linear(target_var0, scale_this*c0)
 
-        print 'Iteration # {} starts at {} s'.format( counter, time_mark() )
+        print('Iteration # {} starts at {} s'.format( counter, time_mark() ))
         msg += 'Iteration # {} starts at {} s'.format( counter, time_mark() )
         try:
             cplex_instance.solve()
@@ -586,12 +586,12 @@ def cplex_search(t, v, cplex_instance, eps = 0.01, all_v=False):
             msg += "Exception raised during solve\n"
             return msg, None
         cap_target = cplex_instance.solution.get_values(target_var0)
-        print 'Iteration # {} solved at {} s'.format( counter, time_mark() )
+        print('Iteration # {} solved at {} s'.format( counter, time_mark() ))
         msg += 'Iteration # {} solved at {} s\n'.format( counter, time_mark() )
-        print 'Iteration # {}, scale: {:1.2f}, capacity: {} GW'.format( 
+        print('Iteration # {}, scale: {:1.2f}, capacity: {} GW'.format( 
             counter,
             scale_this,
-            cap_target)
+            cap_target))
     row = return_row(c0, scale_this, cap_target0)
     return msg, pd.DataFrame([row])
 
@@ -637,16 +637,16 @@ def sen_range_api(tech, vintage, scales, list_dat):
     rc   = dict() # Reduced cost
 
     for algorithm in ['barrier', 'dual simplex', 'primal simplex']:
-        print 'Algorithm: {}'.format( algorithm )
+        print('Algorithm: {}'.format( algorithm ))
         instance.write('tmp.lp', io_options={'symbolic_solver_labels':True})
         c = cplex.Cplex('tmp.lp')
         os.remove('tmp.lp')
         c.set_results_stream(None) # Turn screen output off
         c0 = c.objective.get_linear(target_var0)
         if not validate_coef(c0, instance, target_tech, target_year):
-            print 'Error!'
+            print('Error!')
             sys.exit(0)
-        print '[{:>9.2f}] CPLEX model loaded.'.format( time_mark() )
+        print('[{:>9.2f}] CPLEX model loaded.'.format( time_mark() ))
 
         if algmap[algorithm] == "o":
             c.parameters.lpmethod.set(c.parameters.lpmethod.values.auto)
@@ -679,7 +679,7 @@ def sen_range_api(tech, vintage, scales, list_dat):
         cub_alg  = defaultdict(list)
         rc_alg   = defaultdict(list)
         for s in scales:
-            print '[{:>9.2f}] Scale: {:>.3f} starts'.format(time_mark(), s)
+            print('[{:>9.2f}] Scale: {:>.3f} starts'.format(time_mark(), s))
             c.objective.set_linear(target_var0, s*c0)
 
             try:
@@ -695,7 +695,7 @@ def sen_range_api(tech, vintage, scales, list_dat):
                 coefficient  = c.objective.get_linear(target_var)
                 if y != target_year:
                     if not validate_coef(coefficient, instance, target_tech, y):
-                        print 'Error!'
+                        print('Error!')
                         sys.exit(0)
                 capacity = c.solution.get_values(target_var)
                 try:
@@ -738,7 +738,7 @@ def sen_range_api(tech, vintage, scales, list_dat):
         rc[algorithm]   = rc_alg
 
         # Write to Excel spreadsheet
-        print '[{:>9.2f}] Saving to Excel spreadsheet'.format( time_mark() )
+        print('[{:>9.2f}] Saving to Excel spreadsheet'.format( time_mark() ))
         row_title = [
             'scale',       'obj',       'cap', 'clb', 'coef', 
             'cub',   'bic (clb)', 'bfc (clb)',  'ic',   'fc',
@@ -818,7 +818,7 @@ def sen_range(tech, vintage, scales, dat):
 
     for algorithm in ['barrier', 'dual simplex', 'primal simplex']:
         optimizer.options['lpmethod'] = algmap[algorithm]
-        print 'Algorithm: {}'.format( algorithm )
+        print('Algorithm: {}'.format( algorithm ))
 
         obj_alg  = list()
         cap_alg  = defaultdict(list)
@@ -830,7 +830,7 @@ def sen_range(tech, vintage, scales, dat):
         ic_alg   = defaultdict(list)
         fc_alg   = defaultdict(list)
         for s in scales:
-            print '[{:>9.2f}] Scale: {:>.3f} starts'.format(time_mark(), s)
+            print('[{:>9.2f}] Scale: {:>.3f} starts'.format(time_mark(), s))
             data['CostInvest'][target_tech, target_year] = s*ic0
             for y in data['time_future']:
                 if (y, target_tech, target_year) in data['CostFixed']:
@@ -876,7 +876,7 @@ def sen_range(tech, vintage, scales, dat):
         fc[algorithm]   = fc_alg
 
         # Write to Excel spreadsheet
-        print '[{:>9.2f}] Saving to Excel spreadsheet'.format( time_mark() )
+        print('[{:>9.2f}] Saving to Excel spreadsheet'.format( time_mark() ))
         row_title = [
             'scale', 'obj', 'cap', 'lrc', 'coef', 
             'urc',   'bic', 'bfc', 'ic',  'fc'
@@ -944,18 +944,18 @@ def explore_Cost_marginal(dat):
         )
     instance.solutions.load_from(results)
 
-    print 'Dual and slack variables for emission caps:'
+    print('Dual and slack variables for emission caps:')
     for e in instance.commodity_emissions:
         for p in instance.time_optimize:
             if (p, e) in instance.EmissionLimitConstraint:
-                print p, e, instance.dual[instance.EmissionLimitConstraint[p, e]], '\t', instance.slack[instance.EmissionLimitConstraint[p, e]]
+                print(p, e, instance.dual[instance.EmissionLimitConstraint[p, e]], '\t', instance.slack[instance.EmissionLimitConstraint[p, e]])
 
-    # print 'Dual and slack variables for Commodity Demand Constraints'
+    # print('Dual and slack variables for Commodity Demand Constraints')
     # for c in instance.commodity_demand:
     #     for p in instance.time_optimize:
     #         for s in instance.time_season:
     #             for tod in instance.time_of_day:
-    #                 print p, s, tod, instance.dual[instance.DemandConstraint[p,s,tod,c]], instance.slack[instance.DemandConstraint[p,s,tod,c]]
+    #                 print(p, s, tod, instance.dual[instance.DemandConstraint[p,s,tod,c]], instance.slack[instance.DemandConstraint[p,s,tod,c]])
 
 def plot_breakeven(years, bic, ic):
     # bic is a dictionary, ic is a list of the raw investment costs

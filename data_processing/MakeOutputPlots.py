@@ -130,7 +130,7 @@ class OutputPlotGenerator:
 
 		outfile2 = self.handleOutputPath('capacity', sector, super_categories, output_dir)
 		if (os.path.exists(self.output_file_name)):
-			print "not generating new capacity plot"
+			print("not generating new capacity plot")
 			return outfile2
 
 		sectors = self.getSectors(1)
@@ -151,7 +151,7 @@ class OutputPlotGenerator:
 		'''
 		outfile2 = self.handleOutputPath('flow', sector, super_categories, output_dir)
 		if (os.path.exists(self.output_file_name)):
-			print "not generating new flow plot"
+			print("not generating new flow plot")
 			return outfile2
 
 		sectors = self.getSectors(2)
@@ -171,7 +171,7 @@ class OutputPlotGenerator:
 		'''
 		outfile2 = self.handleOutputPath('emissions', sector, super_categories, output_dir)
 		if (os.path.exists(self.output_file_name)):
-			print "not generating new emissions plot"
+			print("not generating new emissions plot")
 			return outfile2
 
 		sectors = self.getSectors(3)
@@ -310,9 +310,9 @@ def GeneratePlot(args):
 		error = result.generatePlotForEmissions(options.sector, options.super_categories, options.output_dir)
 
 	if (error == ''):
-		print "Error: The sector doesn't exist for the selected plot type and database"
+		print("Error: The sector doesn't exist for the selected plot type and database")
 	else:
-		print "Done. Look for output plot images in directory:"+os.path.join(options.output_dir,error)
+		print("Done. Look for output plot images in directory:"+os.path.join(options.output_dir,error))
 
 
 if __name__ == '__main__':

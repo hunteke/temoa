@@ -87,7 +87,7 @@ def db_2_dat(ifile, ofile, options):
 			for line in cur:
 				str_row = str(line[0]) + "\n"
 				f.write(str_row)
-				print str_row
+				print(str_row)
 		else:
 			for line in cur:
 				before_comments = line[:t_index+1]    
@@ -102,7 +102,7 @@ def db_2_dat(ifile, ofile, options):
 				else :
 						str_row = before_comments + "\n"
 				f.write(str_row)
-				print str_row
+				print(str_row)
 		f.write(';\n\n')
 
 	#[set or param, table_name, DAT fieldname, flag (if any), index (where to insert '#')

@@ -22,7 +22,7 @@ def get_tperiods(inp_f):
 	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
-	print inp_f
+	print(inp_f)
 	cur.execute("SELECT DISTINCT scenario FROM Output_VFlow_Out")
 	x = []
 	for row in cur:
@@ -55,7 +55,7 @@ def get_scenario(inp_f):
 	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
-	print inp_f
+	print(inp_f)
 	cur.execute("SELECT DISTINCT scenario FROM Output_VFlow_Out")
 	for row in cur:
 		x = row[0]
@@ -77,7 +77,7 @@ def get_comm(inp_f, db_dat):
 		cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 		con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
-		print inp_f
+		print(inp_f)
 		cur.execute("SELECT DISTINCT comm_name FROM commodities")
 				
 		for row in cur:
@@ -117,7 +117,7 @@ def get_comm(inp_f, db_dat):
 					comm_set.add(row[3])
 							
 		if eff_flag is False :	
-			print ("Error: The Efficiency Parameters cannot be found in the specified file - "+inp_f)
+			print("Error: The Efficiency Parameters cannot be found in the specified file - "+inp_f)
 			sys.exit(2)
 			
 		for x in comm_set:
@@ -137,7 +137,7 @@ def get_tech(inp_f, db_dat):
 		cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 		con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
-		print inp_f
+		print(inp_f)
 		cur.execute("SELECT DISTINCT tech FROM technologies")				
 		
 		for row in cur:
@@ -173,7 +173,7 @@ def get_tech(inp_f, db_dat):
 					tech_set.add(row[1])
 							
 		if eff_flag is False :	
-			print ("Error: The Efficiency Parameters cannot be found in the specified file - "+inp_f)
+			print("Error: The Efficiency Parameters cannot be found in the specified file - "+inp_f)
 			sys.exit(2)
 			
 		for x in tech_set:
@@ -231,13 +231,13 @@ def is_db_overwritten(db_file, inp_dat_file):
 	return False
 	
 def help_user() :
-	print '''Use as:
+	print('''Use as:
 	python get_comm_tech.py -i (or --input) <input filename>
 	| -c (or --comm) To get a dict of commodities
 	| -t (or --tech) To get a dict of commodities
 	| -s (or --scenario) To get a dict of scenarios
 	| -p (or --period) To get a dict of time periods
-	| -h (or --help) '''
+	| -h (or --help) ''')
 	
 def get_info(inputs):
 
@@ -253,7 +253,7 @@ def get_info(inputs):
 		
 	for opt, arg in inputs.items():
 	    
-		print "%s == %s" %(opt, arg)
+		print("%s == %s" %(opt, arg))
 	    
 		if opt in ("-i", "--input"):
 			inp_file = arg
@@ -294,7 +294,7 @@ def get_info(inputs):
 		db_or_dat = True
 		
 	else :
-		print "The input file type %s is not recognized. Please specify a database or a text file." % inp_f
+		print("The input file type %s is not recognized. Please specify a database or a text file." % inp_f)
 		sys.exit(2)
 
 		
@@ -318,10 +318,10 @@ if __name__ == "__main__":
 		argv = sys.argv[1:]
 		opts, args = getopt.getopt(argv, "hctsi:p", ["help", "comm", "tech", "scenario","input=", "period"])
 		
-		print opts
+		print(opts)
 		
  	except getopt.GetoptError:          
  		help_user()                          
  		sys.exit(2)
 		
-	print get_info( dict(opts) )
+	print(get_info( dict(opts) ))

@@ -202,5 +202,5 @@ if __name__ == "__main__":
     temoa_options, config_flag = parse_args()
     p_dot_dat = temoa_options.dot_dat[0] # must be ScenarioStructure.dat
     p_data = os.path.dirname(p_dot_dat)
-    print p_model, p_data
-    print solve_ef(p_model, p_data, temoa_options)
+    print(p_model, p_data)
+    print(solve_ef(p_model, p_data, temoa_options))

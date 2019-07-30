@@ -11,7 +11,7 @@ def send_query(inp_f, query_string):
 		cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 		con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 
-		print inp_f
+		print(inp_f)
 		cur.execute(query_string)
 		
 		for row in cur:
@@ -22,15 +22,15 @@ def send_query(inp_f, query_string):
 		return "Query Result: %s" % "".join(db_result)
 
 	except sqlite3.Error, e:
-		print "Error in Query %s" % e.args[0]
+		print("Error in Query %s" % e.args[0])
 		return "Query Result: Error in Query %s" % e.args[0]
 		
 		
 def help_user() :
-	print '''Use as:
+	print('''Use as:
 	python db_query.py -i (or --input) <input database name>
 	| -q (or --query) <sqlite query>
-	| -h (or --help) '''
+	| -h (or --help) ''')
 
 def get_flags(inputs):
 
@@ -42,7 +42,7 @@ def get_flags(inputs):
 		
 	for opt, arg in inputs.items():
 	    
-		print "%s == %s" %(opt, arg)
+		print("%s == %s" %(opt, arg))
 	    
 		if opt in ("-i", "--input"):
 			inp_file = arg
@@ -64,7 +64,7 @@ def get_flags(inputs):
 		raise "The file type %s is not recognized. Please specify a database file." % inp_f
 	
 	if query_string is None:
-		print "No query specified."
+		print("No query specified.")
 		return None
 	
 	return send_query(inp_file, query_string)
@@ -74,10 +74,10 @@ if __name__ == "__main__":
 		argv = sys.argv[1:]
 		opts, args = getopt.getopt(argv, "hi:q:", ["help", "input=", "query="])
 		
-		print opts
+		print(opts)
 		
  	except getopt.GetoptError:          
  		help_user()                          
  		sys.exit(2)
 	
-	print get_flags( dict(opts) )
+	print(get_flags( dict(opts) ))

@@ -29,16 +29,16 @@ def make_excel(ifile, ofile, scenario):
 	
 	if ifile is None :
 		raise "You did not specify the input file, remember to use '-i' option"
-		print "Use as :\n	python DB_to_Excel.py -i <input_file> (Optional -o <output_excel_file_name_only>)\n	Use -h for help."                          
+		print("Use as :\n	python DB_to_Excel.py -i <input_file> (Optional -o <output_excel_file_name_only>)\n	Use -h for help.")                          
 		sys.exit(2)
 	else :
 		file_type = re.search(r"(\w+)\.(\w+)\b", ifile) # Extract the input filename and extension
 	if not file_type :
-		print "The file type %s is not recognized. Use a db file." % ifile
+		print("The file type %s is not recognized. Use a db file." % ifile)
 		sys.exit(2)
 	if ofile is None :
 		ofile = file_type.group(1)
-		print "Look for output in %s_*.xls" % ofile
+		print("Look for output in %s_*.xls" % ofile)
 		
 		
 	con = sqlite3.connect(ifile)
@@ -214,7 +214,7 @@ def get_data(inputs):
 		elif opt in ("-s", "--scenario"):
 			scenario.add(arg)
 		elif opt in ("-h", "--help") :
-			print "Use as :\n	python DB_to_Excel.py -i <input_file> (Optional -o <output_excel_file_name_only>)\n	Use -h for help."                          
+			print("Use as :\n	python DB_to_Excel.py -i <input_file> (Optional -o <output_excel_file_name_only>)\n	Use -h for help.")                         
 			sys.exit()
 		
 	make_excel(ifile, ofile, scenario)
@@ -225,9 +225,9 @@ if __name__ == "__main__":
 		argv = sys.argv[1:]
 		opts, args = getopt.getopt(argv, "hi:o:s:", ["help", "input=", "output=", "scenario="])
 	except getopt.GetoptError:          
-		print "Something's Wrong. Use as :\n	python DB_to_Excel.py -i <input_file> (Optional -o <output_excel_file_name_only>)\n	Use -h for help."                          
+		print("Something's Wrong. Use as :\n	python DB_to_Excel.py -i <input_file> (Optional -o <output_excel_file_name_only>)\n	Use -h for help.")                          
 		sys.exit(2) 
 		
-	print opts
+	print(opts)
 		
 	get_data( dict(opts) )

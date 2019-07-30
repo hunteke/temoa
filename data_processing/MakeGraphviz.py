@@ -42,7 +42,7 @@ class GraphvizDiagramGenerator(object):
 
 	def __log__(self, msg):
 		if (self.verbose == 1):
-			print msg
+			print(msg)
 		self.logger.write(msg + '\n')
 
 	def __generateGraph__(self, dotFormat, dotArgs, outputName, outputFormat):
@@ -377,4 +377,4 @@ if __name__ == '__main__':
 	elif (input['inp_technology'] is None):
 		res = graphGen.CreateCommodityPartialResults(input['period'], input['inp_commodity'])
 	graphGen.close()
-	print 'Check graph generated at ', res[1], ' and all results at ', res[0]
+	print('Check graph generated at ', res[1], ' and all results at ', res[0])

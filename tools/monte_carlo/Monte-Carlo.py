@@ -524,7 +524,7 @@ def evaluate(param_values,k):
 	with open(NewConfigfilePath, 'w') as file:
 		file.writelines(data)
 	os.system('python temoa_model/ --config=temoa_model/config_sample'+str(k))
-	print k
+	print(k)
 	
 	MonteCarlo_Objectives=[]
 	
