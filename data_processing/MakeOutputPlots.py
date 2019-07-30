@@ -234,7 +234,7 @@ class OutputPlotGenerator:
 		for i in range(0,len(stackedBars)):
 	  		# colors.append(self.generate_new_color(colors,pastel_factor = 0.9))
 			# colorMapForBars[data.keys()[i]]=colors[i]
-			colorMapForBars[data.keys()[i]]=cmap(i)
+			colorMapForBars[list(data.keys())[i]]=cmap(i)
 		
 		width = min([xaxis[i+1] - xaxis[i] for i in range(0, len(xaxis)-1)])/2.0
 		b = [0]*len(xaxis)
