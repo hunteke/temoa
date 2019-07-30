@@ -242,8 +242,8 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 	def make_var_list ( variables ):
 		var_list = []
-		for vgroup, values in sorted( variables.iteritems() ):
-			for vindex, val in sorted( values.iteritems() ):
+		for vgroup, values in sorted( variables.items() ):
+			for vindex, val in sorted( values.items() ):
 				if isinstance( vindex, tuple ):
 					vindex = ','.join( str(i) for i in vindex )
 				var_list.append(( '{}[{}]'.format(vgroup, vindex), val ))
