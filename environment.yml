@@ -1,4 +1,4 @@
-name: temoa-py3-2
+name: temoa-py3
 channels:
     - defaults
     - conda-forge
