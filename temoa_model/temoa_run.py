@@ -37,6 +37,7 @@ from os import sep
 
 from pyutilib.services import TempfileManager
 from pyutilib.services import TempfileManager
+from pyutilib.common import ApplicationError
 
 from sys import version_info, exit
 
@@ -418,12 +419,21 @@ def get_solvers():
 	logger.disabled = True  # no need for warnings: it's what we're testing!
 	
 	available_solvers = set()
-	for sname in ['glpk', 'cplex', 'gurobi', 'cbc']:   # list of solver interface names
+	try:
+		services = SF.services() # pyutilib version <= 5.6.3
+	except RuntimeError as e:
+		services = SF # pyutilib version >= 5.6.4
+
+	for sname in services:
 		# initial underscore ('_'): Pyomo's method to mark non-public plugins
 		if '_' == sname[0]: continue
 
 		solver = SF( sname )
-		if not solver: continue
+
+		try:
+			if not solver: continue
+		except ApplicationError as e:
+			continue
 
 		if 'os' == sname: continue     # Workaround current bug in Coopr
 		if not solver.available( exception_flag=False ): continue
@@ -438,8 +448,10 @@ def get_solvers():
 			default_solver = 'gurobi'
 		elif 'cbc' in available_solvers:
 			default_solver = 'cbc'
-		else:
+		elif 'glpk' in available_solvers:
 			default_solver = 'glpk'
+		else:
+			default_solver = iter(available_solvers).next()
 	else:
 		default_solver = 'NONE'
 		SE.write('\nNOTICE: Pyomo did not find any suitable solvers.  Temoa will '
@@ -529,4 +541,3 @@ def parse_args ( ):
 		input()
 		
 	return options, config_flag
-
