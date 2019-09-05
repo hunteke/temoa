@@ -1430,7 +1430,7 @@ we write this equation for all the time-slices defined in the database in each r
 
 
 	total_generation = sum( M.V_Activity[p, s, d, t, S_v]
-	                for  t  in PowerTechs
+	                for  t  in PowerTechs if t not in M.tech_hourlystorage
 	                for S_v in M.ProcessVintages( p, t ))
 
 	expr_right = total_generation*(1+value(M.PlanningReserveMargin [z]))  
