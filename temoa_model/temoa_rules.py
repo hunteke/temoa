@@ -872,27 +872,19 @@ Demand :eq:`Demand` constraints.
 def ProcessBalance_Constraint ( M, p, s, d, i, t, v, o ):
 	r"""
 
-The ProcessBalance constraint is one of the most fundamental constraints in the
-Temoa model.  It defines the basic relationship between the energy entering a
-process (:math:`\textbf{FI}`) and the energy leaving a processing
-(:math:`\textbf{FO}`). This constraint sets the :code:`FlowOut` variable, upon
-which all other constraints rely.
+The ProcessBalance constraint is one of the most fundamental constraints in Temoa model.  
+It defines the basic relationship between the energy entering a process 
+(:math:`\textbf{FI}`) and the energy leaving a processing(:math:`\textbf{FO}`). This 
+constraint sets the :code:`FlowOut` variable, upon which all other constraints rely.
 
-Conceptually, this constraint treats every process as a "black box," caring only
-about the process efficiency. In other words, the amount of energy leaving a
-process cannot exceed the amount coming in.
-
-Note that this constraint is an inequality -- not a strict equality.  In most
-sane cases, the optimal solution should make this constraint and supply should
-exactly meet demand.  If this constraint is not binding, it is likely a clue
-that the model under inspection could be more tightly specified and has at least
-one input data anomaly.
+This constraint requires that the output energy of a given process is equal to 
+the product of input energy and conversion efficiency.
 
 .. math::
    :label: ProcessBalance
 
           \textbf{FO}_{p, s, d, i, t, v, o}
-   \le
+   =
           EFF_{i, t, v, o}
     \cdot \textbf{FI}_{p, s, d, i, t, v, o}
 
