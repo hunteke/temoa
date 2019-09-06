@@ -865,7 +865,7 @@ Demand :eq:`Demand` constraints.
 
 	CommodityBalanceConstraintErrorCheck( vflow_out, vflow_in, p, s, d, c )
 
-	expr = (vflow_out == vflow_in)
+	expr = (vflow_out >= vflow_in)
 	return expr
 
 
