@@ -523,7 +523,7 @@ def HourlyStorage_Constraint ( M, p, s, d, t ):
 
 	# First time slice of the first season (aka start of period), starts at zero
 	elif d == M.time_of_day.first() and s == M.time_season.first():
-		expr = ( M.V_HourlyStorage[p,s,d,t] == stored_energy )
+		expr = ( M.V_HourlyStorage[p,s,d,t] == M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * 3600 / 10**6 + stored_energy )
 
 	# First time slice of any season that is NOT the first season
 	elif d == M.time_of_day.first():
