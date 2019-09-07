@@ -493,11 +493,17 @@ the model. Currently, each slice is completely independent of other slices.
 	return expr
 
 def HourlyStorage_Constraint ( M, p, s, d, t ):
-
+	r"""
+This constraint tracks the amount of storage assuming ordered time slices.
+The storage unit is initialized at an arbitrary value in the first time slice, 
+and then the charge level is updated each time slice based on the amount of energy 
+stored or discharged. At the end of the last time slice associated with each 
+period, the charge level must be zeroed out.
+"""
 	InitialStorage = 0.0	# Storage units initiated with zero charge
 	
 	# This is the sum of all input=i sent TO storage tech t of vintage v with 
-	# output=o in P,S,D, (in PJ)
+	# output=o in p,s,d
 	charge = sum( M.V_FlowIn[p, s, d, S_i, t, S_v, S_o] * M.Efficiency[S_i, t, S_v, S_o]
 	  for S_v in M.ProcessVintages( p, t ) 
 	  for S_i in M.ProcessInputs( p, t, S_v )
@@ -505,7 +511,7 @@ def HourlyStorage_Constraint ( M, p, s, d, t ):
 	)
 
 	# This is the sum of all output=o withdrawn FROM storage tech t of vintage v
-	# with input=i P,S,D, (in PJ)
+	# with input=i in p,s,d
 	discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
 	  for S_v in M.ProcessVintages( p, t ) 
 	  for S_o in M.ProcessOutputs( p, t, S_v )
@@ -515,13 +521,13 @@ def HourlyStorage_Constraint ( M, p, s, d, t ):
 	stored_energy = charge - discharge
 	
 	# This hourly storage formulation allows stored energy to carry over through
-	# time of day and seasons, but must be zeroed out at the end of each period
-	# Last time slice of the last season (aka end of period), must zero out
+	# time of day and seasons, but must be zeroed out at the end of each period, i.e.,
+	# the last time slice of the last season must zero out
 	if d == M.time_of_day.last() and s == M.time_season.last():
 		d_prev = M.time_of_day.prev(d)
 		expr = ( M.V_HourlyStorage[p, s, d_prev, t] + stored_energy == 0 )
 
-	# First time slice of the first season (aka start of period), starts at zero
+	# First time slice of the first season (i.e., start of period), starts at an initial value
 	elif d == M.time_of_day.first() and s == M.time_season.first():
 		expr = ( M.V_HourlyStorage[p,s,d,t] == M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * 3600 / 10**6 + stored_energy )
 
@@ -534,9 +540,8 @@ def HourlyStorage_Constraint ( M, p, s, d, t ):
 			== M.V_HourlyStorage[p,s_prev,d_last,t] + stored_energy
 		)
 
-	# So this is any time slice that is NOT covered above (so not the period end
-	# time slice; not the period beginning time slice; and not the first time
-	# slice of any season)
+	# Any time slice that is NOT covered above (i.e., not the time slice ending the period, 
+	# or the first time slice of any season)
 	else:
 		d_prev = M.time_of_day.prev(d)
 		expr = (
@@ -547,9 +552,10 @@ def HourlyStorage_Constraint ( M, p, s, d, t ):
 	return expr	
 
 def HourlyStorage_UpperBound ( M, p, s, d, t ):
-	# V_HourlyStorage is in terms of PJ; so in any single time slice, amount of
-	# cumulative stored energy cannot exceed capacity (GW) * duration (hours) = GWh
-	# need to convert GWh capacity to PJ (3600/10^6)
+	r"""
+This constraint ensures that the amount of energy stored does not exceed 
+the upper bound set by the energy capacity of the storage device.
+"""
 	
 	energy_capacity = M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * 3600 / 10**6
 	expr = ( M.V_HourlyStorage[p,s,d,t] <= energy_capacity )
@@ -557,68 +563,71 @@ def HourlyStorage_UpperBound ( M, p, s, d, t ):
 	return expr
 
 def HourlyStorage_LowerBound ( M, p, s, d, t ):
-	# V_HourlyStorage is in terms of PJ; so in any single time slice, amount of
-	# cumulative stored energy cannot dip below some minimum value (zero)
-	# need to convert GWh capacity to PJ (3600/10^6)
+		r"""
+This constraint ensures that the amount of energy stored does not drop below zero.
+"""
 	
 	expr = (M.V_HourlyStorage[p,s,d,t] >= 0)   #no minimum charge, can achieve 100% DOD
 	
 	return expr
 	
 def HourlyStorageCharge_UpperBound ( M, p, s, d, t ):
-	# This limits the rate at which energy (PJ) can flow into the storage unit
-	# - limited by the unit size (capacity in GW).
-	# The storage output capacity is defined by GW (GJ/s). Convert GJ/s to PJ/h, and
-	# this is the maximum that can flow into the unit in 1 hour
+	r"""
+	This constraint ensures that the charge rate of the storage unit
+	is limited by the power capacity (typically GW) of the storage unit.
+"""
 
-	# Calculate energy charge in each time slice in PJ
+	# Calculate energy charge in each time slice
 	slice_charge = sum( M.V_FlowIn[p, s, d, S_i, t, S_v, S_o] * M.Efficiency[S_i, t, S_v, S_o]
 	  for S_v in M.ProcessVintages( p, t ) 
 	  for S_i in M.ProcessInputs( p, t, S_v )
 	  for S_o in M.ProcessOutputsByInput( p, t, S_v, S_i ) 
 	)
 
-	# Maximum energy charge in each time slice in PJ
+	# Maximum energy charge in each time slice
 	max_charge = (
 		M.V_CapacityAvailableByPeriodAndTech[p, t]
 		*M.CapacityToActivity[t]
 		*M.SegFrac[s, d]
 	)
 
-	# Energy charge cannot exceed the capacity of the storage unit (in PJ)
+	# Energy charge cannot exceed the power capacity of the storage unit
 	expr = ( slice_charge <= max_charge )
 	
 	return expr
 
 def HourlyStorageCharge_LowerBound ( M, p, s, d, t ):
-	# This must limit the rate that energy (PJ) can flow out of the storage unit
-	# - limited by the unit size (capacity in GW).
-	# The storage output capacity is defined by GW (GJ/s). Convert GJ/s to PJ/h, and
-	# this is the maximum that can flow out of the unit in 1 hour
+	r"""
+	This constraint ensures that the discharge rate of the storage unit
+	is limited by the power capacity (typically GW) of the storage unit.
+"""
 	
-	# Calculate energy discharge in each time slice in PJ
+	# Calculate energy discharge in each time slice
 	slice_discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
 	  for S_v in M.ProcessVintages( p, t ) 
 	  for S_o in M.ProcessOutputs( p, t, S_v )
 	  for S_i in M.ProcessInputsByOutput( p, t, S_v, S_o )
 	)
 
-	# Maximum energy discharge in each time slice in PJ
+	# Maximum energy discharge in each time slice
 	max_discharge = (
 		M.V_CapacityAvailableByPeriodAndTech[p, t]
 		*M.CapacityToActivity[t]
 		*M.SegFrac[s, d]
 	)
 	
-	# Energy discharge cannot exceed the capacity of the storage unit (in PJ)
+	# Energy discharge cannot exceed the capacity of the storage unit
 	expr = ( slice_discharge <= max_discharge )
 	
 	return expr	
 
 def HourlyStorageThroughput_Constraint ( M, p, s, d, t ):
-	# It is not enough to limit charge and discharge rate only, since a storage unit
-	# cannot both charge and discharge at the maximum rate at the same time, and
-	# we should limit the throughtput of the unit during each time slice.
+	r"""
+It is not enough to only limit the charge and discharge rate separately. We also 
+need to ensure that the maximum throughput (charge + discharge) does not exceed 
+the capacity (typically GW) of the storage unit.
+"""
+
 
 	discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
 	  for S_v in M.ProcessVintages( p, t ) 
