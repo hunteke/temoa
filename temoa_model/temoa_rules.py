@@ -455,43 +455,6 @@ def MinActivityGroup_Constraint ( M, p , g ):
        expr = (activity_p >= min_act)
        return expr
 
-
-def Storage_Constraint ( M, p, s, i, t, v, o ):
-	r"""
-
-Temoa's algorithm for storage is to ensure that the amount of energy entering
-and leaving a storage technology is balanced over the course of a day,
-accounting for the conversion efficiency of the storage process.  This
-
-constraint relies on the assumption that the total amount of storage-related
-energy is small compared to the amount of energy required by the system over a
-season.  If it were not, the algorithm would have to account for
-season-to-season transitions, which would require an ordering of seasons within
-the model. Currently, each slice is completely independent of other slices.
-
-.. math::
-   :label: Storage
-
-   \sum_{D} \left (
-            EFF_{i, t, v, o}
-      \cdot \textbf{FI}_{p, s, d, i, t, v, o}
-      -     \textbf{FO}_{p, s, d, i, t, v, o}
-   \right )
-   = 0
-
-   \forall \{p, s, i, t, v, o\} \in \Theta_{\text{storage}}
-"""
-	total_out_in = sum(
-	    M.Efficiency[i, t, v, o]
-	  * M.V_FlowIn[p, s, S_d, i, t, v, o]
-	  - M.V_FlowOut[p, s, S_d, i, t, v, o]
-
-	  for S_d in M.time_of_day
-	)
-
-	expr = ( total_out_in == 0 )
-	return expr
-
 def HourlyStorage_Constraint ( M, p, s, d, t ):
 	r"""
 This constraint tracks the amount of storage assuming ordered time slices.

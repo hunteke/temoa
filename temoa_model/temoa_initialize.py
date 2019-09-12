@@ -986,7 +986,6 @@ def ProcessBalanceConstraintIndices ( M ):
 
 	  for p in M.time_optimize
 	  for t in M.tech_all
-	  if t not in M.tech_storage
 	  if t not in M.tech_hourlystorage #added to remove hourly storage from the process balance constraint	  	  
 	  for v in M.ProcessVintages( p, t )
 	  for i in M.ProcessInputs( p, t, v )
@@ -997,20 +996,6 @@ def ProcessBalanceConstraintIndices ( M ):
 
 	return indices
 
-
-def StorageConstraintIndices ( M ):
-	indices = set(
-	  (p, s, i, t, v, o)
-
-	  for p in M.time_optimize
-	  for t in M.tech_storage
-	  for v in M.ProcessVintages( p, t )
-	  for i in M.ProcessInputs( p, t, v )
-	  for o in M.ProcessOutputsByInput( p, t, v, i )
-	  for s in M.time_season
-	)
-
-	return indices
 
 # Indices for hourly storage constraint and decision variables	
 # def HourlyStorageConstraintIndices ( M ):
