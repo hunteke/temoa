@@ -176,8 +176,9 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.CapacityCredit = Param(M.time_optimize, M.tech_all, default=1 )
     M.PlanningReserveMargin = Param (M.Zones, default=0.2)
 
-    # Parameter representing storage duration when using hourly timeslices
-    M.StorageDuration = Param( M.tech_hourlystorage, default=8.0 )
+    # Parameter representing storage duration, expressed as fraction of a year.
+    # The default value represents 8 hours of duration.
+    M.StorageDuration = Param( M.tech_hourlystorage, default=0.00091324200913242009 )
 
     # Decision Variables--------------------------------------------------------
     #   Base decision variables

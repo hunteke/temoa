@@ -495,12 +495,11 @@ the model. Currently, each slice is completely independent of other slices.
 def HourlyStorage_Constraint ( M, p, s, d, t ):
 	r"""
 This constraint tracks the amount of storage assuming ordered time slices.
-The storage unit is initialized at an arbitrary value in the first time slice, 
+The storage unit is initialized at full charge in the first time slice of each period, 
 and then the charge level is updated each time slice based on the amount of energy 
 stored or discharged. At the end of the last time slice associated with each 
 period, the charge level must be zeroed out.
 """
-	InitialStorage = 0.0	# Storage units initiated with zero charge
 	
 	# This is the sum of all input=i sent TO storage tech t of vintage v with 
 	# output=o in p,s,d
@@ -527,9 +526,10 @@ period, the charge level must be zeroed out.
 		d_prev = M.time_of_day.prev(d)
 		expr = ( M.V_HourlyStorage[p, s, d_prev, t] + stored_energy == 0 )
 
-	# First time slice of the first season (i.e., start of period), starts at an initial value
+	# First time slice of the first season (i.e., start of period), starts at full charge
 	elif d == M.time_of_day.first() and s == M.time_season.first():
-		expr = ( M.V_HourlyStorage[p,s,d,t] == M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * 3600 / 10**6 + stored_energy )
+		initial_storage = M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * M.CapacityToActivity[t]
+		expr = ( M.V_HourlyStorage[p,s,d,t] ==  initial_storage + stored_energy )
 
 	# First time slice of any season that is NOT the first season
 	elif d == M.time_of_day.first():
@@ -556,14 +556,13 @@ def HourlyStorage_UpperBound ( M, p, s, d, t ):
 This constraint ensures that the amount of energy stored does not exceed 
 the upper bound set by the energy capacity of the storage device.
 """
-	
-	energy_capacity = M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * 3600 / 10**6
+	energy_capacity = M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * M.CapacityToActivity[t]
 	expr = ( M.V_HourlyStorage[p,s,d,t] <= energy_capacity )
 	
 	return expr
 
 def HourlyStorage_LowerBound ( M, p, s, d, t ):
-		r"""
+	r"""
 This constraint ensures that the amount of energy stored does not drop below zero.
 """
 	
@@ -653,7 +652,6 @@ the capacity (typically GW) of the storage unit.
 
 def TechInputSplit_Constraint ( M, p, s, d, i, t, v ):
 	r"""
-
 Allows users to specify fixed or minimum shares of commodity inputs to a process 
 producing a single output. These shares can vary by model time period. See 
 TechOutputSplit_Constraint for an analogous explanation.
@@ -674,7 +672,6 @@ TechOutputSplit_Constraint for an analogous explanation.
 
 def TechOutputSplit_Constraint ( M, p, s, d, t, v, o ):
 	r"""
-
 Some processes take a single input and make multiple outputs, and the user would like to 
 specify either a constant or time-varying ratio of outputs per unit input.  The most 
 canonical example is an oil refinery.  Crude oil is used to produce many different refined 
