@@ -972,7 +972,7 @@ def CommodityBalanceConstraintIndices ( M ):
 
 	  for p, o in period_commodity
 	  for t, v in M.helper_commodityUStreamProcess[ p, o ]
-	  if t not in M.tech_hourlystorage
+	  if t not in M.tech_storage
 	  for s in M.time_season
 	  for d in M.time_of_day
 	)
@@ -986,7 +986,7 @@ def ProcessBalanceConstraintIndices ( M ):
 
 	  for p in M.time_optimize
 	  for t in M.tech_all
-	  if t not in M.tech_hourlystorage #added to remove hourly storage from the process balance constraint	  	  
+	  if t not in M.tech_storage
 	  for v in M.ProcessVintages( p, t )
 	  for i in M.ProcessInputs( p, t, v )
 	  for o in M.ProcessOutputsByInput( p, t, v, i )
@@ -1010,25 +1010,25 @@ def ProcessBalanceConstraintIndices ( M ):
 
 # 	return indices	
 	
-def HourlyStorageVariableIndices ( M ):
+def StorageVariableIndices ( M ):
 	indices = set(
 		(p, s, d, t)
 		
 		for p in M.time_optimize
 		for s in M.time_season
 		for d in M.time_of_day
-		for t in M.tech_hourlystorage if (p, t) in M.CapacityAvailableVar_pt
+		for t in M.tech_storage if (p, t) in M.CapacityAvailableVar_pt
 	)
 	return indices
 	
-def HourlyStorageBoundConstraintIndices ( M ):
+def StorageBoundConstraintIndices ( M ):
 	indices = set(
 		(p, s, d, t)
 		
 		for p in M.time_optimize
 		for s in M.time_season
 		for d in M.time_of_day
-		for t in M.tech_hourlystorage if (p, t) in M.CapacityAvailableVar_pt
+		for t in M.tech_storage if (p, t) in M.CapacityAvailableVar_pt
 	)
 	return indices	
 	

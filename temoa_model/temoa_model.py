@@ -56,7 +56,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.tech_all = M.tech_resource | M.tech_production  # '|' = union operator
     
     M.tech_baseload   = Set( within=M.tech_all )
-    M.tech_hourlystorage = Set( within=M.tech_all)
+    M.tech_storage = Set( within=M.tech_all)
     M.GroupOfTechnologies   = Set(dimen=3) #Set of technologies to have a minium level of activity, primarily aimed at transport sector 
     M.tech_ramping    = Set( within=M.tech_all )
     M.tech_capacity_min   = Set( within=M.tech_all ) 
@@ -177,7 +177,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
 
     # Parameter representing storage duration, expressed as fraction of a year.
     # The default value represents 8 hours of duration.
-    M.StorageDuration = Param( M.tech_hourlystorage, default=0.00091324200913242009 )
+    M.StorageDuration = Param( M.tech_storage, default=0.00091324200913242009 )
 
     # Decision Variables--------------------------------------------------------
     #   Base decision variables
@@ -220,10 +220,10 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     # This derived decision variable is used in MGA objective function:
     M.V_ActivityByTech = Var(M.tech_all, domain=NonNegativeReals )
 
-    # Decision variable for hourly storage
+    # Decision variable for storage energy level
     # Storage level at the END of each time slice
-    M.HourlyStorage_psdt = Set (dimen=4, initialize=HourlyStorageVariableIndices )
-    M.V_HourlyStorage = Var( M.HourlyStorage_psdt, domain=NonNegativeReals )
+    M.StorageLevel_psdt = Set (dimen=4, initialize=StorageVariableIndices )
+    M.V_StorageLevel = Var( M.StorageLevel_psdt, domain=NonNegativeReals )
 
     # Objective Function--------------------------------------------------------
     M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
@@ -308,47 +308,46 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
       M.BaseloadDiurnalConstraint_psdtv,  
       rule=BaseloadDiurnal_Constraint )
 
-    #Hourly Storage     
     
-    # Hourly Storage constraint   
-    M.HourlyStorageConstraint_psdt = Set( 
-      dimen=4, initialize=HourlyStorageVariableIndices )
-    M.HourlyStorageConstraint = Constraint( 
-      M.HourlyStorageConstraint_psdt, 
-      rule=HourlyStorage_Constraint )   
+    # Storage constraint
+    M.StorageEnergyConstraint_psdt = Set(
+      dimen=4, initialize=StorageVariableIndices )
+    M.StorageEnergyConstraint = Constraint(
+      M.StorageEnergyConstraint_psdt,
+      rule=StorageEnergy_Constraint )
     
-    # Hourly Storage Upper Bound
-    M.HourlyStorageUpperBoundConstraint_psdt = Set( 
-      dimen=4, initialize=HourlyStorageVariableIndices )
-    M.HourlyStorageUpperBoundConstraint = Constraint( 
-      M.HourlyStorageUpperBoundConstraint_psdt, 
-      rule=HourlyStorage_UpperBound )   
-    # Hourly Storage Lower Bound
-    M.HourlyStorageLowerBoundConstraint_psdt = Set( 
-      dimen=4, initialize=HourlyStorageVariableIndices )
-    M.HourlyStorageLowerBoundConstraint = Constraint( 
-      M.HourlyStorageLowerBoundConstraint_psdt, 
-      rule=HourlyStorage_LowerBound )       
+    # Upper bound on amount of energy to be stored:
+    M.StorageEnergyUpperBoundConstraint_psdt = Set(
+      dimen=4, initialize=StorageVariableIndices )
+    M.StorageEnergyUpperBoundConstraint = Constraint(
+      M.StorageEnergyUpperBoundConstraint_psdt,
+      rule=StorageEnergyUpperBound_Constraint )
+    # Lower bound on amount of energy to be stored:
+    M.StorageEnergyLowerBoundConstraint_psdt = Set(
+      dimen=4, initialize=StorageVariableIndices )
+    M.StorageEnergyLowerBoundConstraint = Constraint(
+      M.StorageEnergyLowerBoundConstraint_psdt,
+      rule=StorageEnergyLowerBound_Constraint )
     
-    # Hourly Storage Upper Bound on Charging
-    M.HourlyStorageChargeUpperBoundConstraint_psdt = Set( 
-      dimen=4, initialize=HourlyStorageBoundConstraintIndices )
-    M.HourlyStorageChargeUpperBoundConstraint = Constraint( 
-      M.HourlyStorageChargeUpperBoundConstraint_psdt, 
-      rule=HourlyStorageCharge_UpperBound )   
-    # Hourly Storage Lower Bound on Discharging
-    M.HourlyStorageDischargeLowerBoundConstraint_psdt = Set( 
-      dimen=4, initialize=HourlyStorageBoundConstraintIndices )
-    M.HourlyStorageDischargeLowerBoundConstraint = Constraint( 
-      M.HourlyStorageDischargeLowerBoundConstraint_psdt, 
-      rule=HourlyStorageCharge_LowerBound )
+    # Upper bound on charging rate for storage
+    M.StorageChargeRateConstraint_psdt = Set(
+      dimen=4, initialize=StorageBoundConstraintIndices )
+    M.StorageChargeRateConstraint = Constraint(
+      M.StorageChargeRateConstraint_psdt,
+      rule=StorageChargeRate_Constraint )
+    # Lower bound on charging rate for storage
+    M.StorageDischargeRateConstraint_psdt = Set(
+      dimen=4, initialize=StorageBoundConstraintIndices )
+    M.StorageDischargeRateConstraint = Constraint(
+      M.StorageDischargeRateConstraint_psdt,
+      rule=StorageDischargeRate_Constraint )
 
-    # Hourly Storage throughput constraint
-    M.HourlyStorageThroughputConstraint_psdt = Set( 
-      dimen=4, initialize=HourlyStorageBoundConstraintIndices )
-    M.HourlyStorageThroughputConstraint = Constraint(
-      M.HourlyStorageThroughputConstraint_psdt,
-      rule=HourlyStorageThroughput_Constraint )
+    # Storage throughput constraint
+    M.StorageThroughputConstraint_psdt = Set(
+      dimen=4, initialize=StorageBoundConstraintIndices )
+    M.StorageThroughputConstraint = Constraint(
+      M.StorageThroughputConstraint_psdt,
+      rule=StorageThroughput_Constraint )
     
     #-----------------    
 

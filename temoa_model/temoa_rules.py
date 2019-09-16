@@ -455,7 +455,7 @@ def MinActivityGroup_Constraint ( M, p , g ):
        expr = (activity_p >= min_act)
        return expr
 
-def HourlyStorage_Constraint ( M, p, s, d, t ):
+def StorageEnergy_Constraint ( M, p, s, d, t ):
 	r"""
 This constraint tracks the amount of storage assuming ordered time slices.
 The storage unit is initialized at full charge in the first time slice of each period, 
@@ -482,25 +482,25 @@ period, the charge level must be zeroed out.
 	
 	stored_energy = charge - discharge
 	
-	# This hourly storage formulation allows stored energy to carry over through
+	# This storage formulation allows stored energy to carry over through
 	# time of day and seasons, but must be zeroed out at the end of each period, i.e.,
 	# the last time slice of the last season must zero out
 	if d == M.time_of_day.last() and s == M.time_season.last():
 		d_prev = M.time_of_day.prev(d)
-		expr = ( M.V_HourlyStorage[p, s, d_prev, t] + stored_energy == 0 )
+		expr = ( M.V_StorageLevel[p, s, d_prev, t] + stored_energy == 0 )
 
 	# First time slice of the first season (i.e., start of period), starts at full charge
 	elif d == M.time_of_day.first() and s == M.time_season.first():
 		initial_storage = M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * M.CapacityToActivity[t]
-		expr = ( M.V_HourlyStorage[p,s,d,t] ==  initial_storage + stored_energy )
+		expr = ( M.V_StorageLevel[p,s,d,t] ==  initial_storage + stored_energy )
 
 	# First time slice of any season that is NOT the first season
 	elif d == M.time_of_day.first():
 		d_last = M.time_of_day.last()
 		s_prev = M.time_season.prev(s)
 		expr = (
-			M.V_HourlyStorage[p,s,d,t]
-			== M.V_HourlyStorage[p,s_prev,d_last,t] + stored_energy
+			M.V_StorageLevel[p,s,d,t]
+			== M.V_StorageLevel[p,s_prev,d_last,t] + stored_energy
 		)
 
 	# Any time slice that is NOT covered above (i.e., not the time slice ending the period, 
@@ -508,32 +508,32 @@ period, the charge level must be zeroed out.
 	else:
 		d_prev = M.time_of_day.prev(d)
 		expr = (
-			M.V_HourlyStorage[p,s,d,t]
-			== M.V_HourlyStorage[p,s,d_prev,t] + stored_energy
+			M.V_StorageLevel[p,s,d,t]
+			== M.V_StorageLevel[p,s,d_prev,t] + stored_energy
 		)
 
 	return expr	
 
-def HourlyStorage_UpperBound ( M, p, s, d, t ):
+def StorageEnergyUpperBound_Constraint ( M, p, s, d, t ):
 	r"""
 This constraint ensures that the amount of energy stored does not exceed 
 the upper bound set by the energy capacity of the storage device.
 """
 	energy_capacity = M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * M.CapacityToActivity[t]
-	expr = ( M.V_HourlyStorage[p,s,d,t] <= energy_capacity )
+	expr = ( M.V_StorageLevel[p,s,d,t] <= energy_capacity )
 	
 	return expr
 
-def HourlyStorage_LowerBound ( M, p, s, d, t ):
+def StorageEnergyLowerBound_Constraint ( M, p, s, d, t ):
 	r"""
 This constraint ensures that the amount of energy stored does not drop below zero.
 """
 	
-	expr = (M.V_HourlyStorage[p,s,d,t] >= 0)   #no minimum charge, can achieve 100% DOD
+	expr = (M.V_StorageLevel[p,s,d,t] >= 0)   #no minimum charge, can achieve 100% DOD
 	
 	return expr
 	
-def HourlyStorageCharge_UpperBound ( M, p, s, d, t ):
+def StorageChargeRate_Constraint ( M, p, s, d, t ):
 	r"""
 	This constraint ensures that the charge rate of the storage unit
 	is limited by the power capacity (typically GW) of the storage unit.
@@ -551,6 +551,7 @@ def HourlyStorageCharge_UpperBound ( M, p, s, d, t ):
 		M.V_CapacityAvailableByPeriodAndTech[p, t]
 		*M.CapacityToActivity[t]
 		*M.SegFrac[s, d]
+		#Do we need FractionalLife parameter here?
 	)
 
 	# Energy charge cannot exceed the power capacity of the storage unit
@@ -558,7 +559,7 @@ def HourlyStorageCharge_UpperBound ( M, p, s, d, t ):
 	
 	return expr
 
-def HourlyStorageCharge_LowerBound ( M, p, s, d, t ):
+def StorageDischargeRate_Constraint ( M, p, s, d, t ):
 	r"""
 	This constraint ensures that the discharge rate of the storage unit
 	is limited by the power capacity (typically GW) of the storage unit.
@@ -583,7 +584,7 @@ def HourlyStorageCharge_LowerBound ( M, p, s, d, t ):
 	
 	return expr	
 
-def HourlyStorageThroughput_Constraint ( M, p, s, d, t ):
+def StorageThroughput_Constraint ( M, p, s, d, t ):
 	r"""
 It is not enough to only limit the charge and discharge rate separately. We also 
 need to ensure that the maximum throughput (charge + discharge) does not exceed 
@@ -731,7 +732,7 @@ slice ``<s``,\ ``d>``.
    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 """
 
-	if t in M.tech_hourlystorage:
+	if t in M.tech_storage:
 		return Constraint.Skip
 		
 	produceable = (
@@ -1391,7 +1392,7 @@ we write this equation for all the time-slices defined in the database in each r
 
 
 	total_generation = sum( M.V_Activity[p, s, d, t, S_v]
-	                for  t  in PowerTechs if t not in M.tech_hourlystorage
+	                for  t  in PowerTechs if t not in M.tech_storage
 	                for S_v in M.ProcessVintages( p, t ))
 
 	expr_right = total_generation*(1+value(M.PlanningReserveMargin [z]))  
