@@ -523,15 +523,6 @@ the upper bound set by the energy capacity of the storage device.
 	expr = ( M.V_StorageLevel[p,s,d,t] <= energy_capacity )
 	
 	return expr
-
-def StorageEnergyLowerBound_Constraint ( M, p, s, d, t ):
-	r"""
-This constraint ensures that the amount of energy stored does not drop below zero.
-"""
-	
-	expr = (M.V_StorageLevel[p,s,d,t] >= 0)   #no minimum charge, can achieve 100% DOD
-	
-	return expr
 	
 def StorageChargeRate_Constraint ( M, p, s, d, t ):
 	r"""

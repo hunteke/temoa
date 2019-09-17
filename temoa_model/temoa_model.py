@@ -322,12 +322,6 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.StorageEnergyUpperBoundConstraint = Constraint(
       M.StorageEnergyUpperBoundConstraint_psdt,
       rule=StorageEnergyUpperBound_Constraint )
-    # Lower bound on amount of energy to be stored:
-    M.StorageEnergyLowerBoundConstraint_psdt = Set(
-      dimen=4, initialize=StorageVariableIndices )
-    M.StorageEnergyLowerBoundConstraint = Constraint(
-      M.StorageEnergyLowerBoundConstraint_psdt,
-      rule=StorageEnergyLowerBound_Constraint )
     
     # Upper bound on charging rate for storage
     M.StorageChargeRateConstraint_psdt = Set(
