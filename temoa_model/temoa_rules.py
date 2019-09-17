@@ -489,7 +489,7 @@ period, the charge level must be zeroed out.
 
 	# First time slice of the first season (i.e., start of period), starts at full charge
 	elif d == M.time_of_day.first() and s == M.time_season.first():
-		initial_storage = M.V_Capacity[t, v] * M.StorageDuration[t] * M.CapacityToActivity[t]
+		initial_storage = M.V_Capacity[t, v] * M.StorageDuration[t] * M.CapacityToActivity[t]*value( M.ProcessLifeFrac[p, t, v] )
 		expr = ( M.V_StorageLevel[p, s, d, t, v] ==  initial_storage + stored_energy )
 
 	# First time slice of any season that is NOT the first season
@@ -517,7 +517,7 @@ def StorageEnergyUpperBound_Constraint ( M, p, s, d, t, v ):
 This constraint ensures that the amount of energy stored does not exceed 
 the upper bound set by the energy capacity of the storage device.
 """
-	energy_capacity = M.V_Capacity[t, v] * M.StorageDuration[t] * M.CapacityToActivity[t]
+	energy_capacity = M.V_Capacity[t, v] * M.StorageDuration[t] * M.CapacityToActivity[t]*value( M.ProcessLifeFrac[p, t, v] )
 	expr = ( M.V_StorageLevel[p, s, d, t, v] <= energy_capacity )
 	
 	return expr
@@ -539,7 +539,7 @@ def StorageChargeRate_Constraint ( M, p, s, d, t, v ):
 		M.V_Capacity[t, v]
 		*M.CapacityToActivity[t]
 		*M.SegFrac[s, d]
-		#Do we need FractionalLife parameter here?
+		*value( M.ProcessLifeFrac[p, t, v] )
 	)
 
 	# Energy charge cannot exceed the power capacity of the storage unit
@@ -564,6 +564,7 @@ def StorageDischargeRate_Constraint ( M, p, s, d, t, v ):
 		M.V_Capacity[t, v]
 		*M.CapacityToActivity[t]
 		*M.SegFrac[s, d]
+		*value( M.ProcessLifeFrac[p, t, v] )
 	)
 	
 	# Energy discharge cannot exceed the capacity of the storage unit
@@ -594,6 +595,7 @@ the capacity (typically GW) of the storage unit.
 		M.V_Capacity[t, v]
 		*M.CapacityToActivity[t]
 		*M.SegFrac[s, d]
+		*value( M.ProcessLifeFrac[p, t, v] )
 	)
 	expr = ( throughput <= max_throughput )
 	return expr
