@@ -997,40 +997,22 @@ def ProcessBalanceConstraintIndices ( M ):
 	return indices
 
 
-# Indices for hourly storage constraint and decision variables	
-# def HourlyStorageConstraintIndices ( M ):
-# 	indices = set(
-# 	  (p, s, d, t)
 
-# 	  for p in M.time_optimize
-# 	  for s in M.time_season
-# 	  for d in M.time_of_day	  
-# 	  for t in M.tech_hourlystorage
-# 	)
-
-# 	return indices	
 	
 def StorageVariableIndices ( M ):
 	indices = set(
-		(p, s, d, t)
+		(p, s, d, t, v)
 		
 		for p in M.time_optimize
 		for s in M.time_season
-		for d in M.time_of_day
-		for t in M.tech_storage if (p, t) in M.CapacityAvailableVar_pt
+		for d in M.time_of_day		
+		for t in M.tech_storage
+		for v in M.ProcessVintages( p, t )
+
 	)
 	return indices
 	
-def StorageBoundConstraintIndices ( M ):
-	indices = set(
-		(p, s, d, t)
-		
-		for p in M.time_optimize
-		for s in M.time_season
-		for d in M.time_of_day
-		for t in M.tech_storage if (p, t) in M.CapacityAvailableVar_pt
-	)
-	return indices	
+
 	
 def RampConstraintDayIndices ( M ):
 	indices = set(

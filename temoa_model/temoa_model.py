@@ -222,8 +222,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
 
     # Decision variable for storage energy level
     # Storage level at the END of each time slice
-    M.StorageLevel_psdt = Set (dimen=4, initialize=StorageVariableIndices )
-    M.V_StorageLevel = Var( M.StorageLevel_psdt, domain=NonNegativeReals )
+    M.StorageLevel_psdtv = Set (dimen=5, initialize=StorageVariableIndices )
+    M.V_StorageLevel = Var( M.StorageLevel_psdtv, domain=NonNegativeReals )
 
     # Objective Function--------------------------------------------------------
     M.TotalCost = Objective(rule=TotalCost_rule, sense=minimize)
@@ -310,35 +310,35 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
 
     
     # Storage constraint
-    M.StorageEnergyConstraint_psdt = Set(
-      dimen=4, initialize=StorageVariableIndices )
+    M.StorageEnergyConstraint_psdtv = Set(
+      dimen=5, initialize=StorageVariableIndices )
     M.StorageEnergyConstraint = Constraint(
-      M.StorageEnergyConstraint_psdt,
+      M.StorageEnergyConstraint_psdtv,
       rule=StorageEnergy_Constraint )
     
-    # Upper bound on amount of energy to be stored:
-    M.StorageEnergyUpperBoundConstraint_psdt = Set(
-      dimen=4, initialize=StorageVariableIndices )
+     #Upper bound on amount of energy to be stored:
+    M.StorageEnergyUpperBoundConstraint_psdtv = Set(
+      dimen=5, initialize=StorageVariableIndices )
     M.StorageEnergyUpperBoundConstraint = Constraint(
-      M.StorageEnergyUpperBoundConstraint_psdt,
+      M.StorageEnergyUpperBoundConstraint_psdtv,
       rule=StorageEnergyUpperBound_Constraint )
     
     # Upper bound on charging rate for storage
-    M.StorageChargeRateConstraint_psdt = Set(
-      dimen=4, initialize=StorageBoundConstraintIndices )
+    M.StorageChargeRateConstraint_psdtv = Set(
+      dimen=5, initialize=StorageVariableIndices )
     M.StorageChargeRateConstraint = Constraint(
-      M.StorageChargeRateConstraint_psdt,
+      M.StorageChargeRateConstraint_psdtv,
       rule=StorageChargeRate_Constraint )
     # Lower bound on charging rate for storage
-    M.StorageDischargeRateConstraint_psdt = Set(
-      dimen=4, initialize=StorageBoundConstraintIndices )
+    M.StorageDischargeRateConstraint_psdtv = Set(
+      dimen=5, initialize=StorageVariableIndices )
     M.StorageDischargeRateConstraint = Constraint(
-      M.StorageDischargeRateConstraint_psdt,
+      M.StorageDischargeRateConstraint_psdtv,
       rule=StorageDischargeRate_Constraint )
 
     # Storage throughput constraint
     M.StorageThroughputConstraint_psdt = Set(
-      dimen=4, initialize=StorageBoundConstraintIndices )
+      dimen=5, initialize=StorageVariableIndices )
     M.StorageThroughputConstraint = Constraint(
       M.StorageThroughputConstraint_psdt,
       rule=StorageThroughput_Constraint )

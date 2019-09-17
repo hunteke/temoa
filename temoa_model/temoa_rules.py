@@ -455,7 +455,7 @@ def MinActivityGroup_Constraint ( M, p , g ):
        expr = (activity_p >= min_act)
        return expr
 
-def StorageEnergy_Constraint ( M, p, s, d, t ):
+def StorageEnergy_Constraint ( M, p, s, d, t, v ):
 	r"""
 This constraint tracks the amount of storage assuming ordered time slices.
 The storage unit is initialized at full charge in the first time slice of each period, 
@@ -466,18 +466,16 @@ period, the charge level must be zeroed out.
 	
 	# This is the sum of all input=i sent TO storage tech t of vintage v with 
 	# output=o in p,s,d
-	charge = sum( M.V_FlowIn[p, s, d, S_i, t, S_v, S_o] * M.Efficiency[S_i, t, S_v, S_o]
-	  for S_v in M.ProcessVintages( p, t ) 
-	  for S_i in M.ProcessInputs( p, t, S_v )
-	  for S_o in M.ProcessOutputsByInput( p, t, S_v, S_i ) 
+	charge = sum( M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
+	  for S_i in M.ProcessInputs( p, t, v )
+	  for S_o in M.ProcessOutputsByInput( p, t, v, S_i ) 
 	)
 
 	# This is the sum of all output=o withdrawn FROM storage tech t of vintage v
 	# with input=i in p,s,d
-	discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
-	  for S_v in M.ProcessVintages( p, t ) 
-	  for S_o in M.ProcessOutputs( p, t, S_v )
-	  for S_i in M.ProcessInputsByOutput( p, t, S_v, S_o )
+	discharge = sum( M.V_FlowOut[p, s, d, S_i, t, v, S_o]
+	  for S_o in M.ProcessOutputs( p, t, v )
+	  for S_i in M.ProcessInputsByOutput( p, t, v, S_o )
 	)
 	
 	stored_energy = charge - discharge
@@ -487,20 +485,20 @@ period, the charge level must be zeroed out.
 	# the last time slice of the last season must zero out
 	if d == M.time_of_day.last() and s == M.time_season.last():
 		d_prev = M.time_of_day.prev(d)
-		expr = ( M.V_StorageLevel[p, s, d_prev, t] + stored_energy == 0 )
+		expr = ( M.V_StorageLevel[p, s, d_prev, t, v] + stored_energy == 0 )
 
 	# First time slice of the first season (i.e., start of period), starts at full charge
 	elif d == M.time_of_day.first() and s == M.time_season.first():
-		initial_storage = M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * M.CapacityToActivity[t]
-		expr = ( M.V_StorageLevel[p,s,d,t] ==  initial_storage + stored_energy )
+		initial_storage = M.V_Capacity[t, v] * M.StorageDuration[t] * M.CapacityToActivity[t]
+		expr = ( M.V_StorageLevel[p, s, d, t, v] ==  initial_storage + stored_energy )
 
 	# First time slice of any season that is NOT the first season
 	elif d == M.time_of_day.first():
 		d_last = M.time_of_day.last()
 		s_prev = M.time_season.prev(s)
 		expr = (
-			M.V_StorageLevel[p,s,d,t]
-			== M.V_StorageLevel[p,s_prev,d_last,t] + stored_energy
+			M.V_StorageLevel[p, s, d, t, v]
+			== M.V_StorageLevel[p, s_prev, d_last, t, v] + stored_energy
 		)
 
 	# Any time slice that is NOT covered above (i.e., not the time slice ending the period, 
@@ -508,38 +506,37 @@ period, the charge level must be zeroed out.
 	else:
 		d_prev = M.time_of_day.prev(d)
 		expr = (
-			M.V_StorageLevel[p,s,d,t]
-			== M.V_StorageLevel[p,s,d_prev,t] + stored_energy
+			M.V_StorageLevel[p, s, d, t, v]
+			== M.V_StorageLevel[p, s, d_prev, t, v] + stored_energy
 		)
 
 	return expr	
 
-def StorageEnergyUpperBound_Constraint ( M, p, s, d, t ):
+def StorageEnergyUpperBound_Constraint ( M, p, s, d, t, v ):
 	r"""
 This constraint ensures that the amount of energy stored does not exceed 
 the upper bound set by the energy capacity of the storage device.
 """
-	energy_capacity = M.V_CapacityAvailableByPeriodAndTech[p,t] * M.StorageDuration[t] * M.CapacityToActivity[t]
-	expr = ( M.V_StorageLevel[p,s,d,t] <= energy_capacity )
+	energy_capacity = M.V_Capacity[t, v] * M.StorageDuration[t] * M.CapacityToActivity[t]
+	expr = ( M.V_StorageLevel[p, s, d, t, v] <= energy_capacity )
 	
 	return expr
 	
-def StorageChargeRate_Constraint ( M, p, s, d, t ):
+def StorageChargeRate_Constraint ( M, p, s, d, t, v ):
 	r"""
 	This constraint ensures that the charge rate of the storage unit
 	is limited by the power capacity (typically GW) of the storage unit.
 """
 
 	# Calculate energy charge in each time slice
-	slice_charge = sum( M.V_FlowIn[p, s, d, S_i, t, S_v, S_o] * M.Efficiency[S_i, t, S_v, S_o]
-	  for S_v in M.ProcessVintages( p, t ) 
-	  for S_i in M.ProcessInputs( p, t, S_v )
-	  for S_o in M.ProcessOutputsByInput( p, t, S_v, S_i ) 
+	slice_charge = sum( M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
+	  for S_i in M.ProcessInputs( p, t, v )
+	  for S_o in M.ProcessOutputsByInput( p, t, v, S_i ) 
 	)
 
 	# Maximum energy charge in each time slice
 	max_charge = (
-		M.V_CapacityAvailableByPeriodAndTech[p, t]
+		M.V_Capacity[t, v]
 		*M.CapacityToActivity[t]
 		*M.SegFrac[s, d]
 		#Do we need FractionalLife parameter here?
@@ -550,22 +547,21 @@ def StorageChargeRate_Constraint ( M, p, s, d, t ):
 	
 	return expr
 
-def StorageDischargeRate_Constraint ( M, p, s, d, t ):
+def StorageDischargeRate_Constraint ( M, p, s, d, t, v ):
 	r"""
 	This constraint ensures that the discharge rate of the storage unit
 	is limited by the power capacity (typically GW) of the storage unit.
 """
 	
 	# Calculate energy discharge in each time slice
-	slice_discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
-	  for S_v in M.ProcessVintages( p, t ) 
-	  for S_o in M.ProcessOutputs( p, t, S_v )
-	  for S_i in M.ProcessInputsByOutput( p, t, S_v, S_o )
+	slice_discharge = sum( M.V_FlowOut[p, s, d, S_i, t, v, S_o]
+	  for S_o in M.ProcessOutputs( p, t, v )
+	  for S_i in M.ProcessInputsByOutput( p, t, v, S_o )
 	)
 
 	# Maximum energy discharge in each time slice
 	max_discharge = (
-		M.V_CapacityAvailableByPeriodAndTech[p, t]
+		M.V_Capacity[t, v]
 		*M.CapacityToActivity[t]
 		*M.SegFrac[s, d]
 	)
@@ -575,7 +571,7 @@ def StorageDischargeRate_Constraint ( M, p, s, d, t ):
 	
 	return expr	
 
-def StorageThroughput_Constraint ( M, p, s, d, t ):
+def StorageThroughput_Constraint ( M, p, s, d, t, v ):
 	r"""
 It is not enough to only limit the charge and discharge rate separately. We also 
 need to ensure that the maximum throughput (charge + discharge) does not exceed 
@@ -583,21 +579,19 @@ the capacity (typically GW) of the storage unit.
 """
 
 
-	discharge = sum( M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
-	  for S_v in M.ProcessVintages( p, t ) 
-	  for S_o in M.ProcessOutputs( p, t, S_v )
-	  for S_i in M.ProcessInputsByOutput( p, t, S_v, S_o )
+	discharge = sum( M.V_FlowOut[p, s, d, S_i, t, v, S_o]
+	  for S_o in M.ProcessOutputs( p, t, v )
+	  for S_i in M.ProcessInputsByOutput( p, t, v, S_o )
 	)
 
-	charge = sum( M.V_FlowIn[p, s, d, S_i, t, S_v, S_o] * M.Efficiency[S_i, t, S_v, S_o]
-	  for S_v in M.ProcessVintages( p, t ) 
-	  for S_i in M.ProcessInputs( p, t, S_v )
-	  for S_o in M.ProcessOutputsByInput( p, t, S_v, S_i ) 
+	charge = sum( M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
+	  for S_i in M.ProcessInputs( p, t, v )
+	  for S_o in M.ProcessOutputsByInput( p, t, v, S_i ) 
 	)
 
 	throughput = charge + discharge
 	max_throughput = (
-		M.V_CapacityAvailableByPeriodAndTech[p, t]
+		M.V_Capacity[t, v]
 		*M.CapacityToActivity[t]
 		*M.SegFrac[s, d]
 	)

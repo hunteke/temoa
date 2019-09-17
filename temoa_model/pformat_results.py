@@ -134,11 +134,11 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 		svars['V_Activity'][p, s, d, t, v] = val
 
-	for p, s, d, t in m.V_StorageLevel:
-		val = value( m.V_StorageLevel[p, s, d, t] )
+	for p, s, d, t, v in m.V_StorageLevel:
+		val = value( m.V_StorageLevel[p, s, d, t, v] )
 		if abs(val) < epsilon: continue
 
-		svars['V_StorageLevel'][p, s, d, t] = val
+		svars['V_StorageLevel'][p, s, d, t, v] = val
 		
 	for p, t, v in m.V_ActivityByPeriodAndProcess:
 		val = value( m.V_ActivityByPeriodAndProcess[p, t, v] )
