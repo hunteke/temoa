@@ -489,7 +489,13 @@ period, the charge level must be zeroed out.
 
 	# First time slice of the first season (i.e., start of period), starts at full charge
 	elif d == M.time_of_day.first() and s == M.time_season.first():
-		initial_storage = M.V_Capacity[t, v] * M.StorageDuration[t] * M.CapacityToActivity[t]*value( M.ProcessLifeFrac[p, t, v] )
+		initial_storage =  (
+			M.StorageInit[t]
+			* M.V_Capacity[t, v]
+			* M.StorageDuration[t]
+			* M.CapacityToActivity[t]
+			* value( M.ProcessLifeFrac[p, t, v] )
+		)
 		expr = ( M.V_StorageLevel[p, s, d, t, v] ==  initial_storage + stored_energy )
 
 	# First time slice of any season that is NOT the first season
