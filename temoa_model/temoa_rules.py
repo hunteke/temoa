@@ -729,11 +729,11 @@ slice ``<s``,\ ``d>``.
 		return Constraint.Skip
 		
 	produceable = (
-	  (   value( M.CapacityFactorProcess[s, d, t, v] )
+	      value( M.CapacityFactorProcess[s, d, t, v] )
 	    * value( M.CapacityToActivity[ t ] )
-	    * value( M.SegFrac[s, d]) )
+	    * value( M.SegFrac[s, d] )
 	    * value( M.ProcessLifeFrac[p, t, v] )
-	  * M.V_Capacity[t, v]
+	    * M.V_Capacity[t, v]
 	)
 
 	expr = (produceable >= M.V_Activity[p, s, d, t, v])
