@@ -151,6 +151,7 @@ def db_2_dat(ifile, ofile, options):
 		['param','CapacityCredit',            '',                    '',             2],
 		['param','RampUp',                    '',                    '',             1],
 		['param','RampDown',                  '',                    '',             1],
+		['param','StorageInit',      	      '',                    '',             1],
 		['param','StorageDuration',           '',                    '',             1]]
 
 	with open(ofile, 'w') as f:
