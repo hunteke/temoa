@@ -158,12 +158,18 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 		svars['V_FlowOut'][p, s, d, i, t, v, o] = val
 
+
 		if (i, t, v, o) not in emission_keys: continue
 
 		emissions = emission_keys[i, t, v, o]
 		for e in emissions:
 			evalue = val * m.EmissionActivity[e, i, t, v, o]
 			svars[ 'V_EmissionActivityByPeriodAndProcess' ][p, e, t, v] += evalue
+
+	for p, s, d, i, t, v, o in m.V_Curtailment:		
+		val = value( m.V_Curtailment[p, s, d, i, t, v, o] )
+		if abs(val) < epsilon: continue
+		svars['V_Curtailment'][p, s, d, i, t, v, o] = val
 
 	# Extract optimal decision variable values related to capacity:
 	for t, v in m.V_Capacity:
@@ -273,6 +279,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	# Table dictionary below maps variable names to database table names
 	tables = { "V_FlowIn"   : "Output_VFlow_In",  \
 			   "V_FlowOut"  : "Output_VFlow_Out", \
+			   "V_Curtailment"  : "Output_Curtailment", \
 			   "V_Capacity" : "Output_V_Capacity",       \
 			   "V_CapacityAvailableByPeriodAndTech"   : "Output_CapacityByPeriodAndTech",  \
 			   "V_EmissionActivityByPeriodAndProcess" : "Output_Emissions", \

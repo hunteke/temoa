@@ -52,6 +52,7 @@ class TemoaModel( AbstractModel ):
 		self.helper_processVintages = dict()
 		self.helper_processLoans = dict()
 		self.helper_activeFlow_psditvo = None
+		self.helper_activeCurtailment_psditvo = None
 		self.helper_activeActivity_ptv = None
 		self.helper_activeCapacity_tv = None
 		self.helper_activeCapacityAvailable_pt = None
@@ -682,6 +683,19 @@ def InitializeProcessParameters ( M ):
 	  for d in M.time_of_day
 	)
 
+	M.helper_activeCurtailment_psditvo = set(
+	   (p, s, d, i, t, v, o)
+
+	  for p in M.time_optimize
+	  for t in M.tech_curtailment
+	  for v in M.ProcessVintages( p, t )
+	  for i in M.ProcessInputs( p, t, v )
+	  for o in M.ProcessOutputsByInput( p, t, v, i )
+	  for s in M.time_season
+	  for d in M.time_of_day
+	)
+
+
 	M.helper_activeActivity_ptv = set(
 	  (p, t, v)
 
@@ -874,6 +888,9 @@ def CapacityAvailableVariableIndices ( M ):
 
 def FlowVariableIndices ( M ):
 	return M.helper_activeFlow_psditvo
+
+def CurtailmentVariableIndices ( M ):
+	return M.helper_activeCurtailment_psditvo
 
 
 def ActivityVariableIndices ( M ):

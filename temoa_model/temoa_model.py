@@ -60,7 +60,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.GroupOfTechnologies   = Set(dimen=3) #Set of technologies to have a minium level of activity, primarily aimed at transport sector 
     M.tech_ramping    = Set( within=M.tech_all )
     M.tech_capacity_min   = Set( within=M.tech_all ) 
-    M.tech_capacity_max   = Set( within=M.tech_all ) 
+    M.tech_capacity_max   = Set( within=M.tech_all )
+    M.tech_curtailment = Set( within=M.tech_all ) 
     
     # Technology sets used for sector-specific MGA weights
     M.tech_mga         = Set( within=M.tech_all )
@@ -69,6 +70,7 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.tech_industrial  = Set( within=M.tech_all )
     M.tech_commercial  = Set( within=M.tech_all )
     M.tech_residential = Set( within=M.tech_all )
+    M.tech_PowerPlants = Set( within=M.tech_all)
     
     M.commodity_demand    = Set()
     M.commodity_emissions = Set()
@@ -186,6 +188,8 @@ def temoa_create_model ( name='The Temoa Energy System Model' ):
     M.FlowVar_psditvo = Set( dimen=7, initialize=FlowVariableIndices )
     M.V_FlowIn  = Var( M.FlowVar_psditvo, domain=NonNegativeReals )
     M.V_FlowOut = Var( M.FlowVar_psditvo, domain=NonNegativeReals )
+    M.CurtailmentVar_psditvo = Set( dimen=7, initialize=CurtailmentVariableIndices )
+    M.V_Curtailment = Var( M.CurtailmentVar_psditvo, domain=NonNegativeReals )
     
     # Derived decision variables
     M.ActivityVar_psdtv = Set( dimen=5, initialize=ActivityVariableIndices )

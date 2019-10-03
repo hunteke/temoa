@@ -112,6 +112,7 @@ def db_2_dat(ifile, ofile, options):
 		['set',  'time_season',               '',                    '',             0],
 		['set',  'time_of_day',               '',                    '',             0],
 		['set',  'Zones',        	          '',                    '',             0],
+		['set',  'tech_curtailment',          '',                    '',             0],
 		['set',  'technologies',              'tech_resource',       'r',            0],
 		['set',  'technologies',              'tech_production',    ['p','pb','ps'], 0],
 		['set',  'technologies',              'tech_baseload',       'pb',           0],
