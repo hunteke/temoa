@@ -736,7 +736,20 @@ slice ``<s``,\ ``d>``.
 	    * M.V_Capacity[t, v]
 	)
 
-	expr = (produceable >= M.V_Activity[p, s, d, t, v])
+	
+	if t in M.tech_curtailment:
+
+		curtailment = sum(
+		  M.V_Curtailment[p, s, d, S_i, t, v, S_o]
+	
+		  for S_i in M.ProcessInputs( p, t, v )
+		  for S_o in M.ProcessOutputsByInput( p, t, v, S_i )
+		)
+
+		expr = (produceable == M.V_Activity[p, s, d, t, v] + curtailment)
+	else:
+		expr = (produceable >= M.V_Activity[p, s, d, t, v])
+
 	return expr
 
 
@@ -828,7 +841,7 @@ Demand :eq:`Demand` constraints.
 
 	CommodityBalanceConstraintErrorCheck( vflow_out, vflow_in, p, s, d, c )
 
-	expr = (vflow_out >= vflow_in)
+	expr = (vflow_out == vflow_in)
 	return expr
 
 
@@ -854,8 +867,12 @@ the product of input energy and conversion efficiency.
    \\
    \forall \{p, s, d, i, t, v, o\} \in \Theta_{\text{valid process flows}}
 """
+	curtailment = 0
+	if t in M.tech_curtailment:
+		curtailment = M.V_Curtailment[p, s, d, i, t, v, o]
+
 	expr = (
-	    M.V_FlowOut[p, s, d, i, t, v, o]
+	    M.V_FlowOut[p, s, d, i, t, v, o] + curtailment
 	      ==
 	    M.V_FlowIn[p, s, d, i, t, v, o]
 	  * value( M.Efficiency[i, t, v, o] )
@@ -950,7 +967,7 @@ could be more tightly specified and could have at least one input data anomaly.
 
 	DemandConstraintErrorCheck( supply, p, s, d, dem )
 
-	expr = (supply >= M.Demand[p, dem] * M.DemandSpecificDistribution[s, d, dem])
+	expr = (supply == M.Demand[p, dem] * M.DemandSpecificDistribution[s, d, dem])
 
 	return expr
 
