@@ -186,7 +186,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	# Calculate model costs:	
 	# This is a generic workaround.  Not sure how else to automatically discover 
     # the objective name
-	obj_name, obj_value = objs[0].cname(True), value( objs[0] )	
+	obj_name, obj_value = objs[0].getname(True), value( objs[0] )	
 	svars[ 'Objective' ]["('"+obj_name+"')"] = obj_value
 
 	for t, v in m.CostInvest.sparse_iterkeys():   # Returns only non-zero values
