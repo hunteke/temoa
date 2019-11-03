@@ -32,7 +32,8 @@
 --saveTEXTFILE
 
 # Solver-related arguments (Optional)
-#--solver=glpk                    # Optional, indicate the solver
+#--neos                            # Optional, specify if you want to use NEOS server to solve
+#--solver=cplex                    # Optional, indicate the solver
 #--keep_pyomo_lp_file             # Optional, generate Pyomo-compatible LP file
 
 # Modeling-to-Generate Alternatives (Optional)

@@ -25,6 +25,7 @@ from signal import signal, SIGINT, default_int_handler
 from shutil import copyfile, move
 
 from pyomo.opt import SolverFactory as SF
+from pyomo.opt import SolverManagerFactory
 from pyomo.environ import *
 
 from temoa_config import TemoaConfig
@@ -124,8 +125,13 @@ class TemoaSolver(object):
 			msg = ("Temoa requires Python v2.7 to run.\n\n The model may not solve"
 				"properly with another version.")
 			raise SystemExit( msg )
-		
-		self.optimizer = SolverFactory( self.options.solver )
+
+		if self.options.neos is True:
+		    # Invoke NEOS solver manager if flag is specified in config file
+			self.optimizer = pyomo.opt.SolverManagerFactory('neos')
+		else:
+			self.optimizer = SolverFactory( self.options.solver )
+
 		if self.optimizer:
 			pass
 		elif self.options.solver != 'NONE':
@@ -347,7 +353,10 @@ class TemoaSolverInstance(object):
 			SE.write( '[        ] Solving.'); SE.flush()
 			self.txt_file.write( 'Solving.')
 			if self.optimizer:	
-				self.result = self.optimizer.solve( self.instance, 
+				if self.options.neos:
+				    self.result = self.optimizer.solve(self.instance, opt=self.options.solver)
+				else:
+				    self.result = self.optimizer.solve( self.instance, 
 								keepfiles=self.options.keepPyomoLP, 
 								symbolic_solver_labels=self.options.keepPyomoLP )
 				yield '\t\t\t\t\t\t[%8.2f]\n' % duration()

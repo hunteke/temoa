@@ -214,6 +214,7 @@ class TemoaConfig( object ):
 		'how_to_cite',
 		'version',
 		'solver',
+		'neos',
 		'keep_pyomo_lp_file',
 		'saveEXCEL',
 		'saveTEXTFILE',
@@ -245,6 +246,7 @@ class TemoaConfig( object ):
 		self.saveTEXTFILE     = False
 		self.how_to_cite      = None
 		self.version          = False
+		self.neos             = False
 		self.generateSolverLP = False
 		self.keepPyomoLP      = False
 		self.mga              = None # mga slack value
@@ -283,6 +285,7 @@ class TemoaConfig( object ):
 		msg += '{:>{}s}: {}\n'.format('Spreadsheet output', width, self.saveEXCEL)
 		msg += spacer
 		msg += '{:>{}s}: {}\n'.format('Citation output status', width, self.how_to_cite)
+		msg += '{:>{}s}: {}\n'.format('NEOS status', width, self.neos)
 		msg += '{:>{}s}: {}\n'.format('Version output status', width, self.version)
 		msg += spacer
 		msg += '{:>{}s}: {}\n'.format('Selected solver status', width, self.solver)
@@ -334,6 +337,10 @@ class TemoaConfig( object ):
 	def t_version(self, t):
 		r'--version\b'
 		self.version = True
+
+	def t_neos(self, t):
+		r'--neos\b'
+		self.neos = True
 
 	def t_solver(self, t):
 		r'--solver[\s\=]+\w+\b'
