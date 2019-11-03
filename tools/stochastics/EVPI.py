@@ -1,121 +1,45 @@
-import pyomo.environ
+# This version is compatible with Pyomo 5.2
+
+import os
+import sys
+from pyomo.environ import *
+from pyomo.pysp.scenariotree.manager import \
+    ScenarioTreeManagerClientSerial
+from pyomo.pysp.ef import create_ef_instance
 from pyomo.opt import SolverFactory
-from pyomo.core import DataPortal
-from pyomo.pysp.ef_writer_script_old import *
-from IPython import embed as II
+from time import time
 
-def organize_csv():
-    from csv import reader, writer
-    from collections import OrderedDict
-    rows = list()
-    tech = list()
-    node = list()
-    empty_row = ['']*7
-    with open('V_ActivityByPeriodAndTech.csv', 'rb') as f:
-        csv_reader = reader(f, dialect='excel')
-        for row in csv_reader:
-            rows.append(row + [''])
+from IPython import embed as IP
 
-    organized_rows = OrderedDict()
-    for row in rows:
-        this_tech = row[4]
-        if row[1] not in node:
-            node.append(row[1])
-        if this_tech not in tech:
-            tech.append(this_tech)
-            organized_rows[this_tech] = [row]
-        else:
-            organized_rows[this_tech].append(row)
 
-    for this_tech in tech:
-        for i in range(0, len(organized_rows[this_tech])):
-            if organized_rows[this_tech][i][1] != node[i]:
-                organized_rows[this_tech].insert(i, empty_row)
+# To see detailed information about options
+#for name in options.keys():
+#    print(options.about(name))
 
-    # tech.sort()
-    with open('V_ActivityByPeriodAndTech_org.csv', 'wb') as f:
-        csv_writer = writer(f, dialect='excel')
-        for this_tech in organized_rows:
-            row = list()
-            for i in organized_rows[this_tech]:
-                row += i
-            csv_writer.writerow(row)
-            
+# To see a more compact display of options
+#options.display()
 
-def my_ef_writer(scenario_tree):
-    from csv import writer 
-    from collections import OrderedDict
-    rows = dict() # Key is the variable's name
-    for stage in scenario_tree._stages:
-        stage_name = stage._name
-        for tree_node in stage._tree_nodes:
-            tree_node_name = tree_node._name
-            for var_id in sorted(tree_node._variable_ids):
-                var_name, index = tree_node._variable_ids[var_id]
-                row = [str(stage_name), str(tree_node_name), str(var_name)]
-                if isinstance(index, str):
-                    row += [index]
-                else:
-                    for i in index:
-                        row += [str(i)]
-                row += [str(tree_node._solution[var_id])]
-                if var_name not in rows:
-                    rows[var_name] = [row]
-                else:
-                    rows[var_name].append(row)
+# options.model_location = \
+#     os.path.join(farmer_example_dir, 'models')
+# options.scenario_tree_location = \
+#     os.path.join(farmer_example_dir, 'scenariodata')
 
-            stage_cost_vardata = tree_node._cost_variable_datas[0][0]
-            obj = str(stage_cost_vardata.parent_component().name)
-            row = [str(stage_name), str(tree_node_name), str(obj), str(stage_cost_vardata.index()), str(stage_cost_vardata())]
-            if obj not in rows:
-                rows[obj] = [row]
-            else:
-                rows[obj].append(row)
+class DummyTemoaConfig():
+    pass
 
-    for ofile in rows.keys():
-        with open(ofile + '.csv', 'wb') as f:
-           csv_writer = writer(f, dialect = 'excel')
-           csv_writer.writerows(rows[ofile])
-    
-    # To calculate V_Activity[p,t]
-    if 'V_ActivityByPeriodAndProcess' in rows:
-        V_Activity_ptv = rows['V_ActivityByPeriodAndProcess']
-        V_Activity_pt  = OrderedDict()
-        for row in V_Activity_ptv:
-            key = (row[0], row[1], row[2], row[3], row[4]) # (Stage, Node, var_name, p, t)
-            if key not in V_Activity_pt:
-                V_Activity_pt[key] = float(row[6])
-            else:
-                V_Activity_pt[key] += float(row[6])
-
-        with open('V_ActivityByPeriodAndTech.csv', 'wb') as f:
-            csv_writer = writer(f, dialect = 'excel')
-            for key in V_Activity_pt.keys():
-                row = list(key) + [V_Activity_pt[key]]
-                csv_writer.writerow(row)
-
-def solve_ef(ef_options):
-    import os, sys
-    sif = ScenarioTreeInstanceFactory(ef_options.model_directory, ef_options.instance_directory, ef_options.verbose)
-    scenario_tree = GenerateScenarioTreeForEF(ef_options, sif)
-    ef = EFAlgorithmBuilder(ef_options, scenario_tree)
-    f = open(os.devnull, 'w'); sys.stdout = f
-    ef.solve()
-    # ef.save_solution() # This line saves the results into two csv files
-    sys.stdout = sys.__stdout__; f.close(); sys.stderr.write('\nrunef output suppressed\n') 
-    my_ef_writer(ef._scenario_tree)
-    root_node = ef._scenario_tree._stages[0]._tree_nodes[0]
-    return root_node.computeExpectedNodeCost()
+def compute_evpi(ef_result, pf_result):
+    pf = 0
+    for i in range( 0, len(pf_result['cost']) ):
+        pf += pf_result['cd'][i]*pf_result['cost'][i]
+    return ef_result - pf
 
 def solve_pf(p_model, p_data):
     """
     solve_pf(p_model, p_data) -> dict()
-
     Solves the model in perfect sight mode. 
     p_model -> string, the path to the model file. 
     p_data -> string, the path to the directory of data for the stochastic
-    mdoel, where ScenarioStructure.dat should resides.
-
+    model, where ScenarioStructure.dat should resides.
     Returns a dictionary including the value of objective function for each
     scenario and its conditional probability.
     """
@@ -174,7 +98,7 @@ def solve_pf(p_model, p_data):
     root_node = (set( ctpTree.values() ) - set( ctpTree.keys() )).pop()
     
     # ptcTree = defaultdict( list ) # Parent to child node, one to multiple mapping
-    # for c, p in ctpTree.items():
+    # for c, p in ctpTree.iteritems():
     #         ptcTree[ p ].append( c )
     # ptcTree = dict( ptcTree )   # be slightly defensive; catch any additions
     
@@ -204,7 +128,7 @@ def solve_pf(p_model, p_data):
     if sStructure.ScenarioBasedData.value:
         for s in sStructure.Scenarios:
             s2fp_dict[s].append(s + '.dat')
-
+    #IP()
     model_module = __import__(tail[:-3], globals(), locals())
     model = model_module.model
     pf_result = {'cost': list(), 'cd': list()}
@@ -223,128 +147,113 @@ def solve_pf(p_model, p_data):
         pf_result['cost'].append(obj_val)
         sys.stdout.write('\nSolved .dat(s) {}\n'.format(s2fp_dict[s]))
         sys.stdout.write('    Total cost: {}\n'.format(obj_val))
-		# instance.load does not work for Pyomo 4.1
-        # if instance.load(results): 
-        #     obj_val = return_obj(instance)
-        #     pf_result['cost'].append(obj_val)
-        #     sys.stdout.write('\nSolved .dat(s) {}\n'.format(s2fp_dict[s]))
-        #     sys.stdout.write('    Total cost: {}\n'.format(obj_val))
-        # else:
-        #     pf_result['cost'].append(None)
-        #     sys.stdout.write('\nSolved .dat(s) {}\n'.format(s2fp_dict[s]))
-        #     sys.stdout.write('    This scenario has no feasible solution.\n')
     os.chdir(pwd)
     return pf_result
 
-def compute_evpi(ef_result, pf_result):
-    pf = 0
-    for i in range(0, len(pf_result['cost'])):
-        pf += pf_result['cd'][i]*pf_result['cost'][i]
-    return ef_result - pf
+def solve_ef(p_model, p_data, dummy_temoa_options = None):
+    """
+    solve_ef(p_model, p_data) -> objective value of the extensive form
+    Solves the model in stochastic mode. 
+    p_model -> string, the path to the model file (ReferenceModel.py). 
+    p_data -> string, the path to the directory of data for the stochastic
+    mdoel, where ScenarioStructure.dat should resides.
+    Returns a float point number of the value of objective function for the
+    stochastic program model.
+    """
 
-def test_sudan():
+    options = ScenarioTreeManagerClientSerial.register_options()
+
+    if os.path.basename(p_model) == 'ReferenceModel.py':
+        options.model_location = os.path.dirname(p_model)
+    else:
+        sys.stderr.write('\nModel file should be ReferenceModel.py. Exiting...\n')
+        sys.exit(1)
+    options.scenario_tree_location = p_data
+
+    # using the 'with' block will automatically call
+    # manager.close() and gracefully shutdown
+    with ScenarioTreeManagerClientSerial(options) as manager:
+        manager.initialize()
+    
+        ef_instance = create_ef_instance(manager.scenario_tree,
+                                         verbose_output=options.verbose)
+    
+        ef_instance.dual = Suffix(direction=Suffix.IMPORT)
+    
+        with SolverFactory('cplex') as opt:
+    
+            ef_result = opt.solve(ef_instance)
+
+        # Write to database
+        if dummy_temoa_options:
+            sys.path.append(options.model_location)
+            from pformat_results import pformat_results
+            from temoa_config import TemoaConfig
+            temoa_options = TemoaConfig()
+            temoa_options.config = dummy_temoa_options.config
+            temoa_options.keepPyomoLP = dummy_temoa_options.keepPyomoLP
+            temoa_options.saveTEXTFILE = dummy_temoa_options.saveTEXTFILE
+            temoa_options.path_to_db_io = dummy_temoa_options.path_to_db_io
+            temoa_options.saveEXCEL = dummy_temoa_options.saveEXCEL
+            ef_result.solution.Status = 'feasible' # Assume it is feasible
+            for s in manager.scenario_tree.scenarios:
+                ins = s._instance
+                temoa_options.scenario = s.name
+                temoa_options.dot_dat = [ 
+                os.path.join(options.scenario_tree_location, s.name + '.dat') 
+                ]
+                temoa_options.output = os.path.join(
+                    options.scenario_tree_location, 
+                    dummy_temoa_options.output
+                    )
+                msg = '\nStoring results from scenario {} to database.\n'.format(s.name)
+                sys.stderr.write(msg)
+                formatted_results = pformat_results( ins, ef_result, temoa_options )
+
+    ef_instance.solutions.store_to( ef_result )
+    ef_obj = value( ef_instance.EF_EXPECTED_COST.values()[0] )
+    return ef_obj
+
+def do_test(p_model, p_data, temoa_config = None):
     from time import time
-    import sys
-    sys.stderr.write('\nSolving Sudan problem\n')
-    sys.stderr.write('-'*25 + '\n')
-    p_model = '/afs/unity.ncsu.edu/users/n/nspatank/temoa/temoa_stoch_original_cap_cost/temoa_model/temoa_stochastic.py'
-    p_data  = '/afs/unity.ncsu.edu/users/n/nspatank/temoa/temoa_stoch_original_cap_cost/stochastic/S_Sudan_small'
-    sys.stderr.write('\nSolving perfect sight mode\n')
-    pf_result = solve_pf(p_model, p_data)
-    ef_args = ['-m', p_model, '-i', p_data, '--solver', 'cplex', '--solve', '--solution-writer', 'pyomo.pysp.plugins.csvsolutionwriter']
-    ef_option_parser = construct_ef_writer_options_parser('runef [options]')
-    start_time = time()
-    (ef_options, args) = ef_option_parser.parse_args(args=ef_args)
-    sys.stderr.write('\nSolving extensive form\n')
-    ef_result = solve_ef(ef_options)
-    msg = '\nrunef time: {} s\n'.format(time() - start_time)
-    msg += 'runef objective value: {}\n'.format(ef_result)
-    msg += 'EVPI: {}\n'.format(compute_evpi(ef_result, pf_result))
-    sys.stderr.write(msg)
+    t0 = time()
+    timeit = lambda: time() - t0
 
-def test_sudan_VSS():
-    from time import time
-    import sys
-    sys.stderr.write('\nSolving Sudan problem\n')
-    sys.stderr.write('-'*25 + '\n')
-    p_model = '/home/arqueiroz/SSudan/S1_2_H/temoa_model/temoa_stochastic.py'
-    p_data  = '/home/arqueiroz/SSudan/S1_2_H/stochastic/S_Sudan_original_stoch_cap_cost_11'
-    sys.stderr.write('\nSolving perfect sight mode\n')
-    pf_result = solve_pf(p_model, p_data)
-    ef_args = ['-m', p_model, '-i', p_data, '--solver', 'cplex', '--solve', '--solution-writer', 'pyomo.pysp.plugins.csvsolutionwriter']
-    ef_option_parser = construct_ef_writer_options_parser('runef [options]')
-    start_time = time()
-    (ef_options, args) = ef_option_parser.parse_args(args=ef_args)
-    sys.stderr.write('\nSolving extensive form\n')
-    ef_result = solve_ef(ef_options)
-    msg = '\nrunef time: {} s\n'.format(time() - start_time)
-    msg += 'runef objective value: {}\n'.format(ef_result)
-    msg += 'EVPI: {}\n'.format(compute_evpi(ef_result, pf_result))
-    sys.stderr.write(msg)
-    return compute_evpi(ef_result, pf_result) # Adding to return a value
+    if not isinstance(p_data, list):
+        p_data = [p_data]
+    for this_data in p_data:
+        sys.stderr.write('\nSolving perfect sight mode\n')
+        sys.stdout.write('-'*25 + '\n')
+        pf_result = solve_pf(p_model, this_data)
+        msg = 'Time: {} s\n'.format( timeit() )
+        sys.stderr.write(msg)
+    
+        sys.stderr.write('\nSolving extensive form\n')
+        sys.stdout.write('-'*25 + '\n')
+        ef_result = solve_ef(p_model, this_data, temoa_config)
+    
+        msg = '\nTime: {} s\n'.format( timeit() )
+        msg += 'runef objective value: {}\n'.format(ef_result)
+        msg += 'EVPI: {}\n'.format( compute_evpi(ef_result, pf_result) )
+        sys.stderr.write(msg)
 
-def test_two_tech():
-    from time import time
-    import sys
-    sys.stderr.write('\nSolving temoa problem: two tech\n')
-    sys.stderr.write('-'*25 + '\n')
-    p_model = 'D:\\temoa\\temoa\\temoa_model\\temoa_stochastic.py'
-    p_data  = 'D:\\temoa\\temoa\\stochastic\\test_twotechs_1'
-    sys.stderr.write('\nSolving perfect sight mode\n')
-    pf_result = solve_pf(p_model, p_data)
-    ef_args = ['-m', p_model, '-i', p_data, '--solver', 'cplex', '--solve', '--solution-writer', 'pyomo.pysp.plugins.csvsolutionwriter']
-    ef_option_parser = construct_ef_writer_options_parser('runef [options]')
-    start_time = time()
-    (ef_options, args) = ef_option_parser.parse_args(args=ef_args)
-    sys.stderr.write('\nSolving extensive form\n')
-    ef_result = solve_ef(ef_options)
-    msg = '\nrunef time: {} s\n'.format(time() - start_time)
-    msg += 'runef objective value: {}\n'.format(ef_result)
-    msg += 'EVPI: {}\n'.format(compute_evpi(ef_result, pf_result))
-    sys.stderr.write(msg)
+if __name__ == "__main__":
+    # p_model = "/afs/unity.ncsu.edu/users/b/bli6/temoa/temoa_model"
+    # p_data = [
+    # "/afs/unity.ncsu.edu/users/b/bli6/TEMOA_stochastic/NC/noIGCC-CP",
+    # "/afs/unity.ncsu.edu/users/b/bli6/TEMOA_stochastic/NC/noIGCC-noCP",
+    # "/afs/unity.ncsu.edu/users/b/bli6/TEMOA_stochastic/NC/IGCC-CP",
+    # "/afs/unity.ncsu.edu/users/b/bli6/TEMOA_stochastic/NC/IGCC-noCP",
+    # ]
+    # dummy_temoa_options = DummyTemoaConfig()
+    # dummy_temoa_options.config = None
+    # dummy_temoa_options.keepPyomoLP = False
+    # dummy_temoa_options.saveTEXTFILE = False
+    # dummy_temoa_options.path_to_db_io = None
+    # dummy_temoa_options.saveEXCEL = False
+    # dummy_temoa_options.output = "NCreference.db"
+    # do_test(p_model, p_data, dummy_temoa_options)
 
-def test_utopia():
-    from time import time
-    import sys
-    sys.stderr.write('\nSolving temoa problem: utopia\n')
-    sys.stderr.write('-'*25 + '\n')
-    p_model = 'D:/temoa/temoa_stoch_original_cap_cost/temoa_model/temoa_stochastic.py'
-    p_data  = 'D:/temoa/temoa_stoch_original_cap_cost/stochastic/utopia_demand'
-    sys.stderr.write('\nSolving perfect sight mode\n')
-    pf_result = solve_pf(p_model, p_data)
-    ef_args = ['-m', p_model, '-i', p_data, '--solver', 'glpk', '--solve']
-    ef_option_parser = construct_ef_writer_options_parser('runef [options]')
-    start_time = time()
-    (ef_options, args) = ef_option_parser.parse_args(args=ef_args)
-    sys.stderr.write('\nSolving extensive form\n')
-    ef_result = solve_ef(ef_options)
-    msg = '\nrunef time: {} s\n'.format(time() - start_time)
-    msg += 'runef objective value: {}\n'.format(ef_result)
-    msg += 'EVPI: {}\n'.format(compute_evpi(ef_result, pf_result))
-    sys.stderr.write(msg)
-
-def test_USND():
-    from time import time
-    import sys
-    sys.stderr.write('\nSolving temoa problem: USND\n')
-    sys.stderr.write('-'*25 + '\n')
-    p_model = '/home/bli/Temoa_git/temoa/temoa_model/temoa_stochastic.py'
-    p_data  = '/home/bli/TEMOA/Stochastic/USND'
-    sys.stderr.write('\nSolving perfect sight mode\n')
-    pf_result = solve_pf(p_model, p_data)
-    ef_args = ['-m', p_model, '-i', p_data, '--solver', 'glpk', '--solve', '--solution-writer', 'pyomo.pysp.plugins.csvsolutionwriter']
-    ef_option_parser = construct_ef_writer_options_parser('runef [options]')
-    (ef_options, args) = ef_option_parser.parse_args(args=ef_args)
-    start_time = time()
-    sys.stderr.write('\nSolving extensive form\n')
-    ef_result = solve_ef(ef_options)
-    msg = '\nrunef time: {} s\n'.format(time() - start_time)
-    msg += 'runef objective value: {}\n'.format(ef_result)
-    msg += 'EVPI: {}\n'.format(compute_evpi(ef_result, pf_result))
-    sys.stderr.write(msg)
-
-if __name__ == '__main__':
-    test_sudan_VSS()
-    # test_two_tech()
-    # test_utopia()
-    # test_USND()
+    p_model = "/mnt/disk2/nspatank/SS_2_H/For_Jeff/temoa_ssudan/temoa_model/ReferenceModel.py"
+    p_data = "/mnt/disk2/nspatank/SS_2_H/For_Jeff/temoa_ssudan/tools/S_Sudan"
+    do_test(p_model, p_data)
