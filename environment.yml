@@ -16,5 +16,5 @@ dependencies:
     - salib
     - pydoe
     - pyutilib
+    - glpk
     - coincbc
-    - glpk=4.59

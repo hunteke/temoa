@@ -40,7 +40,7 @@ Then activate the environment as follows:
 
 This new conda environment contains several elements, including Python 3, a 
 compatible version of Pyomo, matplotlib, numpy, scipy, and two free solvers 
-(GLPK and CBC).
+(GLPK and CBC). A note for Windows users: the CBC solver is not available for Windows through conda. Thus, in order to install the environment properly, the last line of the 'environment.yml' file specifying 'coincbc' should be deleted.
 
 To download the Temoa source code, either clone the repository or download from GitHub 
 as a zip file.
@@ -58,9 +58,7 @@ several model features via a configuration file:
 
 Running the model with a config file allows the user to (1) use a sqlite 
 database for storing input and output data, (2) create a formatted Excel 
-output file, (3) return the log file produced during model execution, 
-(4) return the lp file utilized by the solver, and (5) to execute modeling-
-to-generate alternatives (MGA).
+output file, (2) specify the solver to use, (3) return the log file produced during model execution, (4) return the lp file utilized by the solver, and (5) to execute modeling-to-generate alternatives (MGA). Note that if you do not have access to a commercial solver, it may be faster run cplex on the NEOS server. To do so, simply specify cplex as the solver and uncomment the '--neos' flag.
 
 
 **Option 2 (basic):**
