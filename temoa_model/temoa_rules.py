@@ -25,9 +25,224 @@ from __future__ import division
 
 from temoa_initialize import *
 
-##############################################################################
-# Begin *_rule definitions
+# ---------------------------------------------------------------
+# Define the derived variables used in the objective function 
+# and constraints below.
+# ---------------------------------------------------------------
 
+def Activity_Constraint ( M, p, s, d, t, v ):
+	r"""
+The Activity constraint defines the Activity convenience variable.  The Activity
+variable is mainly used in the objective function to calculate the cost
+associated with use of a technology.  In English, this constraint states that
+"the activity of a process is the sum of its outputs."
+
+There is one caveat to keep in mind in regards to the Activity variable: if
+there is more than one output, there is currently no attempt by Temoa to convert
+to a common unit of measurement.  For example, common measurements for heat
+include mass of steam at a given temperature, or total BTUs, while electricity
+is generally measured in a variant of watt-hours.  Reconciling these units of
+measurement, as for example with a cogeneration plant, is currently left as an
+accounting exercise for the modeler.
+
+.. math::
+   :label: Activity
+
+   \textbf{ACT}_{p, s, d, t, v} = \sum_{I, O} \textbf{FO}_{p,s,d,i,t,v,o}
+
+   \\
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+"""
+	activity = sum(
+	  M.V_FlowOut[p, s, d, S_i, t, v, S_o]
+
+	  for S_i in M.ProcessInputs( p, t, v )
+	  for S_o in M.ProcessOutputsByInput( p, t, v, S_i )
+	)
+
+	expr = ( M.V_Activity[p, s, d, t, v] == activity )
+	return expr
+
+
+def Capacity_Constraint ( M, p, s, d, t, v ):
+	r"""
+Temoa's definition of a process' capacity is the total size of installation
+required to meet all of that process' demands.  The Activity convenience
+variable represents exactly that, so the calculation on the left hand side of
+the inequality is the maximum amount of energy a process can produce in the time
+slice ``<s``,\ ``d>``.
+
+.. math::
+   :label: Capacity
+
+       \left (
+               \text{CFP}_{t, v}
+         \cdot \text{C2A}_{t}
+         \cdot \text{SEG}_{s, d}
+         \cdot \text{TLF}_{p, t, v}
+       \right )
+       \cdot \textbf{CAP}_{t, v}
+   \ge
+       \textbf{ACT}_{p, s, d, t, v}
+
+   \\
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+"""
+	if t in M.tech_storage:
+		return Constraint.Skip
+		
+	produceable = (
+	      value( M.CapacityFactorProcess[s, d, t, v] )
+	    * value( M.CapacityToActivity[ t ] )
+	    * value( M.SegFrac[s, d] )
+	    * value( M.ProcessLifeFrac[p, t, v] )
+	    * M.V_Capacity[t, v]
+	)
+	if t in M.tech_curtailment:
+
+		curtailment = sum(
+		  M.V_Curtailment[p, s, d, S_i, t, v, S_o]
+	
+		  for S_i in M.ProcessInputs( p, t, v )
+		  for S_o in M.ProcessOutputsByInput( p, t, v, S_i )
+		)
+
+		expr = (produceable == M.V_Activity[p, s, d, t, v] + curtailment)
+	else:
+		expr = (produceable >= M.V_Activity[p, s, d, t, v])
+
+	return expr
+
+def ActivityByPeriodAndProcess_Constraint ( M, p, t, v ):
+	r"""This constraint creates a derived variable in which the activty variable 
+	is summed over the intra-annual (i.e., season and time-of-day) time slices:
+
+    .. math::
+    :label: ActivityByPeriodAndProcess
+
+    \textbf{ACT}_{p, t, v} = \sum_{I, O} \textbf{ACT}_{p,s,d,t,v}
+
+    \\
+    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+	"""
+	if p < v or v not in M.ProcessVintages( p, t ):
+		return Constraint.Skip
+
+	activity = sum(
+	  M.V_Activity[p, S_s, S_d, t, v]
+
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
+	)
+
+	if int is type( activity ):
+		return Constraint.Skip
+
+	expr = (M.V_ActivityByPeriodAndProcess[p, t, v] == activity)
+	return expr
+
+#This is required for MGA objective function
+def ActivityByTech_Constraint ( M, t ):
+	r"""This constraint is utilized by the MGA objective function and sums 
+	activity by each technology over all time elements and vintages:
+
+    .. math::
+    :label: ActivityByTech
+
+    \textbf{ACT}_{t} = \sum_{I, O} \textbf{ACT}_{p,s,d,t,v}
+
+    \\
+    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+	"""
+
+	activity = sum(
+	  M.V_Activity[S_p, S_s, S_d, t, S_v]
+
+	  for S_p in M.time_optimize
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
+	  for S_v in M.ProcessVintages( S_p, t )
+	)
+
+	if int is type( activity ):
+		return Constraint.Skip
+
+	expr = (M.V_ActivityByTech[t] == activity)
+	return expr
+
+def CapacityAvailableByPeriodAndTech_Constraint ( M, p, t ):
+	r"""
+The :math:`\textbf{CAPAVL}` variable is nominally for reporting solution values,
+but is also used in the Max and Min constraint calculations.  For any process
+with an end-of-life (EOL) on a period boundary, all of its capacity is available
+for use in all periods in which it is active (the process' TLF is 1). However,
+for any process with an EOL that falls between periods, Temoa makes the
+simplifying assumption that the available capacity from the expiring technology
+is available through the whole period, but only as much percentage as its
+lifespan through the period.  For example, if a process expires 3 years into an
+8 year period, then only :math:`\frac{3}{8}` of the installed capacity is
+available for use throughout the period.
+
+.. math::
+   :label: CapacityAvailable
+
+   \textbf{CAPAVL}_{p, t} = \sum_{V} {TLF}_{p, t, v} \cdot \textbf{CAP}
+
+   \\
+   \forall p \in \text{P}^o, t \in T
+"""
+	cap_avail = sum(
+	    value( M.ProcessLifeFrac[p, t, S_v] )
+	  * M.V_Capacity[t, S_v]
+
+	  for S_v in M.ProcessVintages( p, t )
+	)
+
+	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] == cap_avail)
+	return expr
+
+def ExistingCapacity_Constraint ( M, t, v ):
+	r"""
+
+Temoa treats residual capacity from before the model's optimization horizon as
+regular processes, that require the same parameter specification in the data
+file as do new vintage technologies (e.g. entries in the efficiency table),
+except the :code:`CostInvest` parameter.  This constraint sets the capacity of
+processes for model periods that exist prior to the optimization horizon to
+user-specified values.
+
+.. math::
+   :label: ExistingCapacity
+
+   \textbf{CAP}_{t, v} = ECAP_{t, v}
+
+   \forall \{t, v\} \in \Theta_{\text{existing}}
+"""
+	expr = ( M.V_Capacity[t, v] == M.ExistingCapacity[t, v] )
+	return expr
+
+def EmissionActivityByPeriodAndTech_Constraint ( M, e, p, t ):
+	emission_total = sum(
+	   M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, S_o]
+	   * M.EmissionActivity[e, S_i, t, S_v, S_o]
+
+	   for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
+	   if tmp_e == e and S_t == t
+	   if M.ValidActivity( p, S_t, S_v )
+	   for S_s in M.time_season
+	   for S_d in M.time_of_day
+	)
+
+	if type( emission_total ) is int:
+		return Constraint.Skip
+
+	expr = (M.V_EmissionActivityByPeriodAndTech[e, p, t] == emission_total)
+	return expr	
+
+
+# ---------------------------------------------------------------
+# Define the Objective Function
+# ---------------------------------------------------------------
 def TotalCost_rule ( M ):
 	r"""
 Using the :code:`Activity` and :code:`Capacity` variables, the Temoa objective
@@ -156,93 +371,199 @@ def PeriodCost_rule ( M, p ):
 	period_costs = (loan_costs + fixed_costs + variable_costs)
 	return period_costs
 
+# ---------------------------------------------------------------
+# Define the Model Constraints.
+# The order of constraint definitions follows the same order as the
+# declarations in temoa_model.py.
+# ---------------------------------------------------------------
 
-##############################################################################
-#   Initializaton rules
+def Demand_Constraint ( M, p, s, d, dem ):
+	r"""
+The Demand constraint drives the model.  This constraint ensures that supply at
+least meets the demand specified by the Demand parameter in all periods and
+slices, by ensuring that the sum of all the demand output commodity (:math:`c`)
+generated by :math:`\textbf{FO}` must meet the modeler-specified demand, in
+each time slice.
 
+.. math::
+   :label: Demand
 
-def ParamModelLoanLife_rule ( M, t, v ):
-	loan_length = value( M.LifetimeLoanProcess[t, v] )
-	mll = min( loan_length, max(M.time_future) - v )
+   \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, dem}
+   \ge
+   {DEM}_{p, dem} \cdot {DSD}_{s, d, dem}
 
-	return mll
+   \\
+   \forall \{p, s, d, dem\} \in \Theta_{\text{demand}}
 
+Note that the validity of this constraint relies on the fact that the
+:math:`C^d` set is distinct from both :math:`C^e` and :math:`C^p`. In other
+words, an end-use demand must only be an end-use demand.  Note that if an output
+could satisfy both an end-use and internal system demand, then the output from
+:math:`\textbf{FO}` would be double counted.
 
-def ParamModelProcessLife_rule ( M, p, t, v ):
-	life_length = value( M.LifetimeProcess[t, v] )
-	tpl = min( v + life_length - p, value(M.PeriodLength[ p ]) )
+Note also that this constraint is an inequality, not a strict equality.  "Supply
+must meet or exceed demand."  Like with the ProcessBalance constraint, if this
+constraint is not binding, it may be a clue that the model under inspection
+could be more tightly specified and could have at least one input data anomaly.
 
-	return tpl
-
-
-def ParamPeriodLength ( M, p ):
-	# This specifically does not use time_optimize because this function is
-	# called /over/ time_optimize.
-	periods = sorted( M.time_future )
-
-	i = periods.index( p )
-
-	# The +1 won't fail, because this rule is called over time_optimize, which
-	# lacks the last period in time_future.
-	length = periods[i +1] - periods[ i ]
-
-	return length
-
-
-def ParamPeriodRate ( M, p ):
-	"""\
-The "Period Rate" is a multiplier against the costs incurred within a period to
-bring the time-value back to the base year.  The parameter PeriodRate is not
-directly specified by the modeler, but is a convenience calculation based on the
-GlobalDiscountRate and the length of each period.  One may refer to this
-(pseudo) parameter via M.PeriodRate[ a_period ]
 """
-	rate_multiplier = sum(
-	  (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - p - y)
+	supply = sum(
+	  M.V_FlowOut[p, s, d, S_i, S_t, S_v, dem]
 
-	  for y in range(0, M.PeriodLength[ p ])
+	  for S_t, S_v in M.helper_commodityUStreamProcess[ p, dem ]
+	  for S_i in M.helper_ProcessInputsByOutput[ p, S_t, S_v, dem ]
 	)
 
-	return value(rate_multiplier)
+	DemandConstraintErrorCheck( supply, p, s, d, dem )
 
+	expr = (supply == M.Demand[p, dem] * M.DemandSpecificDistribution[s, d, dem])
 
-def ParamProcessLifeFraction_rule ( M, p, t, v ):
-	"""\
+	return expr
 
-Calculate the fraction of period p that process <t, v> operates.
+def DemandActivity_Constraint ( M, p, s, d, t, v, dem, s_0, d_0 ):
+	r"""
 
-For most processes and periods, this will likely be one, but for any process
-that will cease operation (rust out, be decommissioned, etc.) between periods,
-calculate the fraction of the period that the technology is able to
-create useful output.
+For end-use demands, it is unreasonable to let the optimizer only allow use in a
+single time slice.  For instance, if household A buys a natural gas furnace
+while household B buys an electric furnace, then both units should be used
+throughout the year.  Without this constraint, the model might choose to only
+use the electric furnace during the day, and the natural gas furnace during the
+night.
+
+This constraint ensures that the ratio of a process activity to demand is
+constant for all time slices.  Note that if a demand is not specified in a given
+time slice, or is zero, then this constraint will not be considered for that
+slice and demand.  This is transparently handled by the :math:`\Theta` superset.
+
+.. math::
+   :label: DemandActivity
+
+      DEM_{p, s, d, dem} \cdot \sum_{I} \textbf{FO}_{p, s_0, d_0, i, t, v, dem}
+   =
+      DEM_{p, s_0, d_0, dem} \cdot \sum_{I} \textbf{FO}_{p, s, d, i, t, v, dem}
+
+   \\
+   \forall \{p, s, d, t, v, dem, s_0, d_0\} \in \Theta_{\text{demand activity}}
 """
-	eol_year = v + value( M.LifetimeProcess[t, v] )
-	frac  = eol_year - p
-	period_length = value( M.PeriodLength[ p ] )
-	if frac >= period_length:
-		# try to avoid floating point round-off errors for the common case.
-		return 1
+	DSD = M.DemandSpecificDistribution   # lazy programmer
+	act_a = sum(
+	  M.V_FlowOut[p, s_0, d_0, S_i, t, v, dem]
 
-	  # number of years into final period loan is complete
+	  for S_i in M.ProcessInputsByOutput( p, t, v, dem )
+	)
+	act_b = sum(
+	  M.V_FlowOut[p, s, d, S_i, t, v, dem]
 
-	frac /= float( period_length )
-	return frac
+	  for S_i in M.ProcessInputsByOutput( p, t, v, dem )
+	)
 
+	expr = (
+	  act_a * DSD[s, d, dem]
+	     ==
+	  act_b * DSD[s_0, d_0, dem]
+	)
+	return expr
 
-def ParamLoanAnnualize_rule ( M, t, v ):
-	dr = value( M.DiscountRate[t, v] )
-	lln = value( M.LifetimeLoanProcess[t, v] )
-	if not dr:
-		return 1.0 / lln
-	annualized_rate = ( dr / (1.0 - (1.0 + dr)**(-lln) ))
+def CommodityBalance_Constraint ( M, p, s, d, c ):
+	r"""
+Where the Demand constraint :eq:`Demand` ensures that end-use demands are met,
+the CommodityBalance constraint ensures that the internal system demands are
+met.  That is, this is the constraint that ties the output of one process to the
+input of another.  At the same time, this constraint also conserves energy
+between process.  (But it does not account for transmission loss.)  In this
+manner, it is a corollary to both the ProcessBalance :eq:`ProcessBalance` and
+Demand :eq:`Demand` constraints.
 
-	return annualized_rate
+.. math::
+   :label: CommodityBalance
 
-# End initialization rules
-##############################################################################
+   \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, c}
+   =
+   \sum_{T, V, O} \textbf{FI}_{p, s, d, c, t, v, o}
 
-##############################################################################
-#   Constraint rules
+   \\
+   \forall \{p, s, d, c\} \in \Theta_{\text{commodity balance}}
+"""
+	if c in M.commodity_demand:
+		return Constraint.Skip
+
+	vflow_in = sum(
+	  M.V_FlowIn[p, s, d, c, S_t, S_v, S_o]
+
+	  for S_t, S_v in M.helper_commodityDStreamProcess[p, c]
+	  for S_o in M.helper_ProcessOutputsByInput[ p, S_t, S_v, c ]
+	)
+
+	vflow_out = sum(
+	  M.V_FlowOut[p, s, d, S_i, S_t, S_v, c]
+
+	  for S_t, S_v in M.helper_commodityUStreamProcess[p, c]
+	  for S_i in M.helper_ProcessInputsByOutput[ (p, S_t, S_v, c) ]
+	)
+
+	CommodityBalanceConstraintErrorCheck( vflow_out, vflow_in, p, s, d, c )
+
+	expr = (vflow_out == vflow_in)
+	return expr
+
+def ProcessBalance_Constraint ( M, p, s, d, i, t, v, o ):
+	r"""
+The ProcessBalance constraint is one of the most fundamental constraints in Temoa model.  
+It defines the basic relationship between the energy entering a process 
+(:math:`\textbf{FI}`) and the energy leaving a processing(:math:`\textbf{FO}`). This 
+constraint sets the :code:`FlowOut` variable, upon which all other constraints rely.
+
+This constraint requires that the output energy of a given process is equal to 
+the product of input energy and conversion efficiency.
+
+.. math::
+   :label: ProcessBalance
+
+          \textbf{FO}_{p, s, d, i, t, v, o}
+   =
+          EFF_{i, t, v, o}
+    \cdot \textbf{FI}_{p, s, d, i, t, v, o}
+
+   \\
+   \forall \{p, s, d, i, t, v, o\} \in \Theta_{\text{valid process flows}}
+"""
+	curtailment = 0
+	if t in M.tech_curtailment:
+		curtailment = M.V_Curtailment[p, s, d, i, t, v, o]
+
+	expr = (
+	    M.V_FlowOut[p, s, d, i, t, v, o] + curtailment
+	      ==
+	    M.V_FlowIn[p, s, d, i, t, v, o]
+	  * value( M.Efficiency[i, t, v, o] )
+	)
+
+	return expr
+
+def ResourceExtraction_Constraint ( M, p, r ):
+	r"""
+The ResourceExtraction constraint allows a modeler to specify an annual limit on
+the amount of a particular resource Temoa may use in a period.
+
+.. math::
+   :label: ResourceExtraction
+
+   \sum_{S, D, I, t \in T^r, V} \textbf{FO}_{p, s, d, i, t, v, c} \le RSC_{p, c}
+
+   \forall \{p, c\} \in \Theta_{\text{resource bound parameter}}
+"""
+	collected = sum(
+	  M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, r]
+
+	  for S_t, S_v in M.ProcessesByPeriodAndOutput( p, r )
+	  if S_t in M.tech_resource
+	  for S_i in M.ProcessInputsByOutput( p, S_t, S_v, r )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
+	)
+
+	expr = (collected <= M.ResourceBound[p, r])
+	return expr
 
 def BaseloadDiurnal_Constraint ( M, p, s, d, t, v ):
 	r"""
@@ -305,156 +626,6 @@ functionality is currently on the Temoa TODO list.
 	)
 	return expr
 
-
-def EmissionLimit_Constraint ( M, p, e ):
-	r"""
-
-A modeler can track emissions through use of the :code:`commodity_emissions`
-set and :code:`EmissionActivity` parameter.  The :math:`EAC` parameter is
-analogous to the efficiency table, tying emissions to a unit of activity.  The
-EmissionLimit constraint allows the modeler to assign an upper bound per period
-to each emission commodity.
-
-.. math::
-   :label: EmissionLimit
-
-   \sum_{I,T,V,O|{e,i,t,v,o} \in EAC_{ind}} \left (
-       EAC_{e, i, t, v, o} \cdot \textbf{FO}_{p, s, d, i, t, v, o}
-     \right )
-     \le
-     ELM_{p, e}
-
-   \\
-   \forall \{p, e\} \in ELM_{ind}
-"""
-	emission_limit = M.EmissionLimit[p, e]
-
-	actual_emissions = sum(
-	    M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, S_o]
-	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o]
-
-	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
-	  if tmp_e == e
-	  if M.ValidActivity( p, S_t, S_v )
-	  for S_s in M.time_season
-	  for S_d in M.time_of_day
-	)
-
-	if int is type( actual_emissions ):
-		msg = ("Warning: No technology produces emission '%s', though limit was "
-		  'specified as %s.\n')
-		SE.write( msg % (e, emission_limit) )
-		return Constraint.Skip
-
-	expr = (actual_emissions <= emission_limit)
-	return expr
-
-
-def MinCapacity_Constraint ( M, p, t ):
-	r""" See MaxCapacity_Constraint """
-
-	min_cap = value( M.MinCapacity[p, t] )
-	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] >= min_cap)
-	return expr
-
-
-def MaxCapacity_Constraint ( M, p, t ):
-	r"""
-
-The MinCapacity and MaxCapacity constraints set limits on the what the model is
-allowed to (not) have available of a certain technology.  Note that the indices
-for these constraints are period and tech_all, not tech and vintage.
-
-.. math::
-   :label: MinCapacityCapacityAvailableByPeriodAndTech
-
-   \textbf{CAPAVL}_{p, t} \ge MIN_{p, t}
-
-   \forall \{p, t\} \in \Theta_{\text{MinCapacity parameter}}
-
-.. math::
-   :label: MaxCapacity
-
-   \textbf{CAPAVL}_{p, t} \le MAX_{p, t}
-
-   \forall \{p, t\} \in \Theta_{\text{MaxCapacity parameter}}
-"""
-	max_cap = value( M.MaxCapacity[p, t] )
-	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] <= max_cap)
-	return expr
-
-def MinCapacitySet_Constraint ( M, p ):
-	r""" See MinCapacity_Constraint """
-	min_cap = value( M.MinCapacitySum[p] )
-	aggcap = sum ( M.V_CapacityAvailableByPeriodAndTech[p, t]
-		for t in M.tech_capacity_min
-	)
-	expr = (aggcap >= min_cap)
-	return expr	
-
-def MaxCapacitySet_Constraint ( M, p ):
-	r""" See MaxCapacity_Constraint """
-	max_cap = value( M.MaxCapacitySum[p] )
-	aggcap = sum ( M.V_CapacityAvailableByPeriodAndTech[p, t]
-		for t in M.tech_capacity_max
-	)
-	expr = (aggcap <= max_cap)
-	return expr			
-	
-def MaxActivity_Constraint ( M, p, t ):
-	r"""
-
-The MaxActivity sets an upper bound on the activity from a specific technology.  Note that the indices
-for these constraints are period and tech_all, not tech and vintage.
-
-"""
-  
-	activity_pt = sum( M.V_Activity[p, S_s, S_d, t, S_v]
-        
-      for S_s in M.time_season
-      for S_d in M.time_of_day
-      for S_v in M.ProcessVintages( p, t )       
-    )
-	max_act = value( M.MaxActivity[p, t] )
-	expr = (activity_pt <= max_act)
-	return expr
-
-def MinActivity_Constraint ( M, p, t ):
-	r"""
-
-The MinActivity sets a lower bound on the activity from a specific technology.  Note that the indices
-for these constraints are period and tech_all, not tech and vintage.
-
-"""
-  
-	activity_pt = sum( M.V_Activity[p, S_s, S_d, t, S_v]
-        
-      for S_s in M.time_season
-      for S_d in M.time_of_day
-      for S_v in M.ProcessVintages( p, t )       
-    )
-	min_act = value( M.MinActivity[p, t] )
-	expr = (activity_pt >= min_act)
-	return expr
-
-def MinActivityGroup_Constraint ( M, p , g ):
-
-
-       g_techs={}
-       for i in M.GroupOfTechnologies.value:
-       	if i[1]==g:
-       		g_techs[i[0]]=i[2]
-       activity_p = sum( M.V_Activity[p, S_s, S_d, t, S_v]*g_techs[t]
-             
-      for  t  in g_techs
-      for S_s in M.time_season
-      for S_d in M.time_of_day
-      for S_v in M.ProcessVintages( p, t )       
-    )
-       min_act = value( M.MinGenGroupOfTechnologies_Data[p,g] )
-       expr = (activity_p >= min_act)
-       return expr
-
 def StorageEnergy_Constraint ( M, p, s, d, t, v ):
 	r"""
 This constraint tracks the amount of storage assuming ordered time slices.
@@ -463,7 +634,6 @@ and then the charge level is updated each time slice based on the amount of ener
 stored or discharged. At the end of the last time slice associated with each 
 period, the charge level must be zeroed out.
 """
-	
 	# This is the sum of all input=i sent TO storage tech t of vintage v with 
 	# output=o in p,s,d
 	charge = sum( M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
@@ -533,7 +703,6 @@ def StorageChargeRate_Constraint ( M, p, s, d, t, v ):
 	This constraint ensures that the charge rate of the storage unit
 	is limited by the power capacity (typically GW) of the storage unit.
 """
-
 	# Calculate energy charge in each time slice
 	slice_charge = sum( M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
 	  for S_i in M.ProcessInputs( p, t, v )
@@ -558,7 +727,6 @@ def StorageDischargeRate_Constraint ( M, p, s, d, t, v ):
 	This constraint ensures that the discharge rate of the storage unit
 	is limited by the power capacity (typically GW) of the storage unit.
 """
-	
 	# Calculate energy discharge in each time slice
 	slice_discharge = sum( M.V_FlowOut[p, s, d, S_i, t, v, S_o]
 	  for S_o in M.ProcessOutputs( p, t, v )
@@ -584,8 +752,6 @@ It is not enough to only limit the charge and discharge rate separately. We also
 need to ensure that the maximum throughput (charge + discharge) does not exceed 
 the capacity (typically GW) of the storage unit.
 """
-
-
 	discharge = sum( M.V_FlowOut[p, s, d, S_i, t, v, S_o]
 	  for S_o in M.ProcessOutputs( p, t, v )
 	  for S_i in M.ProcessInputsByOutput( p, t, v, S_o )
@@ -606,6 +772,459 @@ the capacity (typically GW) of the storage unit.
 	expr = ( throughput <= max_throughput )
 	return expr
 
+def RampUpDay_Constraint ( M, p, s, d, t, v):
+# M.time_of_day is a sorted set, and M.time_of_day.first() returns the first 
+# element in the set, similarly, M.time_of_day.last() returns the last element.
+# M.time_of_day.prev(d) function will return the previous element before s, and 
+# M.time_of_day.next(d) function will return the next element after s.
+
+	r"""
+The ramp rate constraint is utilized to limit the rate of electricity generation 
+increase and decrease between two adjacent time slices in order to account for 
+physical limits associated with thermal power plants. Note that this constriant 
+only applies to technologies with ramp capability, which is defined in set 
+:math:`\textbf{T}^{ramp}`. We assume for simplicity the rate limits for both 
+ramp up and down are equal and they do not vary with technology vintage. The 
+ramp rate limits (:math:`r_t`) for technology :math:`t` should be expressed in 
+percentage of its rated capacity.
+
+Note that when :math:`d_{nd}` is the last time-of-day, :math:`d_{nd + 1} \not \in 
+\textbf{D}`, i.e., if one time slice is the last time-of-day in a season and the 
+other time slice is the first time-of-day in the next season, the ramp rate 
+limits between these two time slices can not be expressed by :eq:`ramp_up_day`. 
+Therefore, the ramp rate constraints between two adjacent seasons are 
+represented in :eq:`ramp_up_season`. 
+
+In Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we assume 
+:math:`\textbf{S} = \{s_i, i = 1, 2, \cdots, ns\}` and 
+:math:`\textbf{D} = \{d_i, i=1, 2, \cdots, nd\}`.
+
+.. math::
+   \frac{ 
+       \textbf{ACT}_{p, s, d_{i + 1}, t, v} 
+       }{
+       SEG_{s, d_{i + 1}} \cdot C2A_t 
+       }
+   -
+   \frac{ 
+       \textbf{ACT}_{p, s, d_i, t, v} 
+       }{
+       SEG_{s, d_i} \cdot C2A_t 
+       }
+   \leq
+   r_t \cdot \textbf{CAPAVL}_{p,t}
+   \\
+   \forall 
+   p \in \textbf{P}^o,
+   s \in \textbf{S},
+   d_i, d_{i + 1} \in \textbf{D},
+   t \in \textbf{T}^{ramp},
+   v \in \textbf{V}
+   :label: ramp_up_day
+"""
+
+	if d != M.time_of_day.first():
+		d_prev = M.time_of_day.prev(d)
+		expr_left  = (
+			M.V_Activity[ p, s, d, t, v ]/value( M.SegFrac[s, d] ) - 
+			M.V_Activity[ p, s, d_prev, t, v ]/value( M.SegFrac[s, d_prev] )
+			)/value( M.CapacityToActivity[ t ] )
+		expr_right = M.V_Capacity[t, v]*value( M.RampUp[t] )
+		expr = (expr_left <= expr_right)
+	else:
+		return Constraint.Skip
+
+	return expr
+
+def RampDownDay_Constraint ( M, p, s, d, t, v):
+	r"""
+Similar to Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we use Equation
+:eq:`ramp_down_day` and :eq:`ramp_down_season` to limit ramp down rates between 
+any two adjacent time slices.
+
+.. math::
+   \frac{ 
+       \textbf{ACT}_{p, s, d_{i + 1}, t, v} 
+       }{
+       SEG_{s, d_{i + 1}} \cdot C2A_t 
+       }
+   -
+   \frac{ 
+       \textbf{ACT}_{p, s, d_i, t, v} 
+       }{
+       SEG_{s, d_i} \cdot C2A_t 
+       }
+   \geq
+   -r_t \cdot \textbf{CAPAVL}_{p,t}
+   \\
+   \forall 
+   p \in \textbf{P}^o,
+   s \in \textbf{S},
+   d_i, d_{i + 1} \in \textbf{D},
+   t \in \textbf{T}^{ramp},
+   v \in \textbf{V}
+   :label: ramp_down_day
+"""
+	if d != M.time_of_day.first():
+		d_prev = M.time_of_day.prev(d)
+		expr_left  = (
+			M.V_Activity[ p, s, d, t, v ]/value( M.SegFrac[s, d]) - 
+			M.V_Activity[ p, s, d_prev, t, v ]/value( M.SegFrac[s, d_prev])
+			)/value( M.CapacityToActivity[ t ] )
+		expr_right = -( M.V_Capacity[t, v]*value( M.RampDown[t] ) )
+		expr = (expr_left >= expr_right)
+	else:
+		return Constraint.Skip
+
+	return expr
+
+def RampUpSeason_Constraint ( M, p, s, t, v):
+	r"""
+Note that :math:`d_1` and :math:`d_{nd}` represent the first and last time-of-day, 
+respectively.
+
+.. math::
+   \frac{ 
+       \textbf{ACT}_{p, s_{i + 1}, d_1, t, v} 
+       }{
+       SEG_{s_{i + 1}, d_1} \cdot C2A_t 
+       }
+   -
+   \frac{ 
+       \textbf{ACT}_{p, s_i, d_{nd}, t, v} 
+       }{
+       SEG_{s_i, d_{nd}} \cdot C2A_t 
+       }
+   \leq
+   r_t \cdot \textbf{CAPAVL}_{p,t}
+   \\
+   \forall 
+   p \in \textbf{P}^o,
+   s_i, s_{i + 1} \in \textbf{S},
+   d_1, d_{nd} \in \textbf{D},
+   t \in \textbf{T}^{ramp},
+   v \in \textbf{V}
+   :label: ramp_up_season
+"""
+	if s != M.time_season.first():
+		s_prev  = M.time_season.prev(s)
+		d_first = M.time_of_day.first()
+		d_last  = M.time_of_day.last()
+		expr_left = (
+			M.V_Activity[ p, s, d_first, t, v ]/M.SegFrac[s, d_first] - 
+			M.V_Activity[ p, s_prev, d_last, t, v ]/M.SegFrac[s_prev, d_last]
+			)/value( M.CapacityToActivity[ t ] )
+		expr_right = M.V_Capacity[t, v]*value( M.RampUp[t] )
+		expr = (expr_left <= expr_right)
+	else:
+		return Constraint.Skip
+
+	return expr
+
+def RampDownSeason_Constraint ( M, p, s, t, v):
+	r"""
+.. math::
+   \frac{ 
+       \textbf{ACT}_{p, s_{i + 1}, d_1, t, v} 
+       }{
+       SEG_{s_{i + 1}, d_1} \cdot C2A_t 
+       }
+   -
+   \frac{ 
+       \textbf{ACT}_{p, s_i, d_{nd}, t, v} 
+       }{
+       SEG_{s_i, d_{nd}} \cdot C2A_t 
+       }
+   \geq
+   -r_t \cdot \textbf{CAPAVL}_{p,t}
+   \\
+   \forall 
+   p \in \textbf{P}^o,
+   s_i, s_{i + 1} \in \textbf{S},
+   d_1, d_{nd} \in \textbf{D},
+   t \in \textbf{T}^{ramp},
+   v \in \textbf{V}
+   :label: ramp_down_season
+"""
+	if s != M.time_season.first():
+		s_prev  = M.time_season.prev(s)
+		d_first = M.time_of_day.first()
+		d_last  = M.time_of_day.last()
+		expr_left = (
+			M.V_Activity[ p, s, d_first, t, v ]/
+			value( 
+				M.SegFrac[s, d_first]
+				) - 
+			M.V_Activity[ p, s_prev, d_last, t, v ]/
+			value( 
+				M.SegFrac[s_prev, d_last]
+				)
+			)/value( M.CapacityToActivity[ t ] )
+		expr_right = -( M.V_Capacity[t, v]*value( M.RampDown[t] ) )
+		expr = (expr_left >= expr_right)
+	else:
+		return Constraint.Skip
+
+	return expr
+
+def RampUpPeriod_Constraint ( M, p, t, v):
+
+	# if p != M.time_future.first():
+	# 	p_prev  = M.time_future.prev(p)
+	# 	s_first = M.time_season.first()
+	# 	s_last  = M.time_season.last()
+	# 	d_first = M.time_of_day.first()
+	# 	d_last  = M.time_of_day.last()
+	# 	expr_left = (
+	# 		M.V_Activity[ p, s_first, d_first, t, v ] - 
+	# 		M.V_Activity[ p_prev, s_last, d_last, t, v ]
+	# 		)
+	# 	expr_right = (
+	# 		M.V_Capacity[t, v]*
+	# 		value( M.RampUp[t] )*
+	# 		value( M.CapacityToActivity[ t ] )* 
+	# 		value( M.SegFrac[s, d])
+	# 		)
+	# 	expr = (expr_left <= expr_right)
+	# else:
+	# 	return Constraint.Skip
+
+	# return expr
+
+	return Constraint.Skip # We don't need inter-period ramp up/down constraint.
+
+def RampDownPeriod_Constraint ( M, p, t, v):
+	
+	# if p != M.time_future.first():
+	# 	p_prev  = M.time_future.prev(p)
+	# 	s_first = M.time_season.first()
+	# 	s_last  = M.time_season.last()
+	# 	d_first = M.time_of_day.first()
+	# 	d_last  = M.time_of_day.last()
+	# 	expr_left = (
+	# 		M.V_Activity[ p, s_first, d_first, t, v ] - 
+	# 		M.V_Activity[ p_prev, s_last, d_last, t, v ]
+	# 		)
+	# 	expr_right = (
+	# 		-1*
+	# 		M.V_Capacity[t, v]*
+	# 		value( M.RampDown[t] )*
+	# 		value( M.CapacityToActivity[ t ] )* 
+	# 		value( M.SegFrac[s, d])
+	# 		)
+	# 	expr = (expr_left >= expr_right)
+	# else:
+	# 	return Constraint.Skip
+
+	# return expr
+
+	return Constraint.Skip # We don't need inter-period ramp up/down constraint.
+
+def ReserveMargin_Constraint( M, p, z, s, d):
+	r"""
+During each period :math:`p`, the sum of the available capacity of all reserve 
+technologies :math:`\sum_{t \in T^{res}} \textbf{CAPAVL}_{p,t}`, which are 
+defined in the set :math:`\textbf{T}^{res}`, should exceed the peak load by 
+:math:`RES_z`, the regional reserve margin. Note that the reserve 
+margin is expressed in percentage of the peak load. Generally speaking, in 
+a database we may not know the peak demand before running the model, therefore, 
+we write this equation for all the time-slices defined in the database in each region.
+
+.. math::
+   \sum_{t \in T^{res}} {
+      CC_t \cdot
+      \textbf{CAPAVL}_{p,t} \cdot
+      SEG_{s^*,d^*} \cdot C2A_t }
+   \geq
+   \sum_{t \in T^{res}} { 
+      \sum_{t \in v^{vintage}} {\textbf{ACT}_{p, s, d, t, v  \cdot
+   (1 + RES_z)
+   \\
+   \forall
+   p \in \textbf{P}^o,
+   z \in \textbf{C}^{zone}
+   :label: reserve_margin
+"""
+	PowerTechs=set()  #all the power generation technologies
+
+	for i in M.ReserveMargin:
+		if i[1]==z:
+			PowerTechs.add(i[0])
+
+	expr_left = sum (value( M.CapacityCredit[p, t] )*
+					M.V_CapacityAvailableByPeriodAndTech[p, t]*
+					value( M.CapacityToActivity[t] )*
+					value( M.SegFrac[s, d] )
+					for t in PowerTechs if (p, t) in M.CapacityAvailableVar_pt  ) #M.CapacityAvailableVar_pt check if all the possible consistent combinations of t and p
+
+
+
+	total_generation = sum( M.V_Activity[p, s, d, t, S_v]
+	                for  t  in PowerTechs if t not in M.tech_storage
+	                for S_v in M.ProcessVintages( p, t ))
+
+	expr_right = total_generation*(1+value(M.PlanningReserveMargin [z]))  
+
+
+	return (expr_left >= expr_right)
+
+def EmissionLimit_Constraint ( M, p, e ):
+	r"""
+A modeler can track emissions through use of the :code:`commodity_emissions`
+set and :code:`EmissionActivity` parameter.  The :math:`EAC` parameter is
+analogous to the efficiency table, tying emissions to a unit of activity.  The
+EmissionLimit constraint allows the modeler to assign an upper bound per period
+to each emission commodity.
+
+.. math::
+   :label: EmissionLimit
+
+   \sum_{I,T,V,O|{e,i,t,v,o} \in EAC_{ind}} \left (
+       EAC_{e, i, t, v, o} \cdot \textbf{FO}_{p, s, d, i, t, v, o}
+     \right )
+     \le
+     ELM_{p, e}
+
+   \\
+   \forall \{p, e\} \in ELM_{ind}
+"""
+	emission_limit = M.EmissionLimit[p, e]
+
+	actual_emissions = sum(
+	    M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, S_o]
+	  * M.EmissionActivity[e, S_i, S_t, S_v, S_o]
+
+	  for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
+	  if tmp_e == e
+	  if M.ValidActivity( p, S_t, S_v )
+	  for S_s in M.time_season
+	  for S_d in M.time_of_day
+	)
+
+	if int is type( actual_emissions ):
+		msg = ("Warning: No technology produces emission '%s', though limit was "
+		  'specified as %s.\n')
+		SE.write( msg % (e, emission_limit) )
+		return Constraint.Skip
+
+	expr = (actual_emissions <= emission_limit)
+	return expr
+
+def GrowthRateConstraint_rule ( M, p, t ):
+	GRS = value( M.GrowthRateSeed[ t ] )
+	GRM = value( M.GrowthRateMax[ t ] )
+	CapPT = M.V_CapacityAvailableByPeriodAndTech
+
+	periods = sorted(set(p_ for p_, t_ in CapPT if t_ == t) )
+
+	if p not in periods:
+		return Constraint.Skip
+
+	if p == periods[0]:
+		expr = ( CapPT[p, t] <= GRS )
+
+	else:
+		p_prev = periods.index( p )
+		p_prev = periods[ p_prev -1]
+
+		expr = ( CapPT[p, t] <= GRM * CapPT[p_prev, t] + GRS )
+
+	return expr
+
+def MaxActivity_Constraint ( M, p, t ):
+	r"""
+The MaxActivity sets an upper bound on the activity from a specific technology.  Note that the indices
+for these constraints are period and tech_all, not tech and vintage.
+"""
+	activity_pt = sum( M.V_Activity[p, S_s, S_d, t, S_v]
+        
+      for S_s in M.time_season
+      for S_d in M.time_of_day
+      for S_v in M.ProcessVintages( p, t )       
+    )
+	max_act = value( M.MaxActivity[p, t] )
+	expr = (activity_pt <= max_act)
+	return expr
+
+def MinActivity_Constraint ( M, p, t ):
+	r"""
+The MinActivity sets a lower bound on the activity from a specific technology.  Note that the indices
+for these constraints are period and tech_all, not tech and vintage.
+"""
+	activity_pt = sum( M.V_Activity[p, S_s, S_d, t, S_v]
+        
+      for S_s in M.time_season
+      for S_d in M.time_of_day
+      for S_v in M.ProcessVintages( p, t )       
+    )
+	min_act = value( M.MinActivity[p, t] )
+	expr = (activity_pt >= min_act)
+	return expr
+
+def MinActivityGroup_Constraint ( M, p , g ):
+
+       g_techs={}
+       for i in M.GroupOfTechnologies.value:
+       	if i[1]==g:
+       		g_techs[i[0]]=i[2]
+       activity_p = sum( M.V_Activity[p, S_s, S_d, t, S_v]*g_techs[t]
+             
+      for  t  in g_techs
+      for S_s in M.time_season
+      for S_d in M.time_of_day
+      for S_v in M.ProcessVintages( p, t )       
+    )
+       min_act = value( M.MinGenGroupOfTechnologies_Data[p,g] )
+       expr = (activity_p >= min_act)
+       return expr
+
+def MaxCapacity_Constraint ( M, p, t ):
+	r"""
+The MinCapacity and MaxCapacity constraints set limits on the what the model is
+allowed to (not) have available of a certain technology.  Note that the indices
+for these constraints are period and tech_all, not tech and vintage.
+
+.. math::
+   :label: MinCapacityCapacityAvailableByPeriodAndTech
+
+   \textbf{CAPAVL}_{p, t} \ge MIN_{p, t}
+
+   \forall \{p, t\} \in \Theta_{\text{MinCapacity parameter}}
+
+.. math::
+   :label: MaxCapacity
+
+   \textbf{CAPAVL}_{p, t} \le MAX_{p, t}
+
+   \forall \{p, t\} \in \Theta_{\text{MaxCapacity parameter}}
+"""
+	max_cap = value( M.MaxCapacity[p, t] )
+	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] <= max_cap)
+	return expr
+
+def MaxCapacitySet_Constraint ( M, p ):
+	r""" See MaxCapacity_Constraint """
+	max_cap = value( M.MaxCapacitySum[p] )
+	aggcap = sum ( M.V_CapacityAvailableByPeriodAndTech[p, t]
+		for t in M.tech_capacity_max
+	)
+	expr = (aggcap <= max_cap)
+	return expr	
+
+def MinCapacity_Constraint ( M, p, t ):
+	r""" See MaxCapacity_Constraint """
+	min_cap = value( M.MinCapacity[p, t] )
+	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] >= min_cap)
+	return expr
+
+def MinCapacitySet_Constraint ( M, p ):
+	r""" See MinCapacity_Constraint """
+	min_cap = value( M.MinCapacitySum[p] )
+	aggcap = sum ( M.V_CapacityAvailableByPeriodAndTech[p, t]
+		for t in M.tech_capacity_min
+	)
+	expr = (aggcap >= min_cap)
+	return expr	
 
 def TechInputSplit_Constraint ( M, p, s, d, i, t, v ):
 	r"""
@@ -664,756 +1283,78 @@ specified shares by model time period. The constraint is formulated as follows:
 	expr = ( out >= M.TechOutputSplit[p, t, o] * M.V_Activity[p, s, d, t, v] )
 	return expr
 
+# ---------------------------------------------------------------
+# Define initialization rules
+# ---------------------------------------------------------------
+def ParamModelLoanLife_rule ( M, t, v ):
+	loan_length = value( M.LifetimeLoanProcess[t, v] )
+	mll = min( loan_length, max(M.time_future) - v )
 
-def Activity_Constraint ( M, p, s, d, t, v ):
-	r"""
-The Activity constraint defines the Activity convenience variable.  The Activity
-variable is mainly used in the objective function to calculate the cost
-associated with use of a technology.  In English, this constraint states that
-"the activity of a process is the sum of its outputs."
+	return mll
 
-There is one caveat to keep in mind in regards to the Activity variable: if
-there is more than one output, there is currently no attempt by Temoa to convert
-to a common unit of measurement.  For example, common measurements for heat
-include mass of steam at a given temperature, or total BTUs, while electricity
-is generally measured in a variant of watt-hours.  Reconciling these units of
-measurement, as for example with a cogeneration plant, is currently left as an
-accounting exercise for the modeler.
+def ParamModelProcessLife_rule ( M, p, t, v ):
+	life_length = value( M.LifetimeProcess[t, v] )
+	tpl = min( v + life_length - p, value(M.PeriodLength[ p ]) )
 
-.. math::
-   :label: Activity
+	return tpl
 
-   \textbf{ACT}_{p, s, d, t, v} = \sum_{I, O} \textbf{FO}_{p,s,d,i,t,v,o}
+def ParamPeriodLength ( M, p ):
+	# This specifically does not use time_optimize because this function is
+	# called /over/ time_optimize.
+	periods = sorted( M.time_future )
 
-   \\
-   \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+	i = periods.index( p )
+
+	# The +1 won't fail, because this rule is called over time_optimize, which
+	# lacks the last period in time_future.
+	length = periods[i +1] - periods[ i ]
+
+	return length
+
+def ParamPeriodRate ( M, p ):
+	"""\
+The "Period Rate" is a multiplier against the costs incurred within a period to
+bring the time-value back to the base year.  The parameter PeriodRate is not
+directly specified by the modeler, but is a convenience calculation based on the
+GlobalDiscountRate and the length of each period.  One may refer to this
+(pseudo) parameter via M.PeriodRate[ a_period ]
 """
-	activity = sum(
-	  M.V_FlowOut[p, s, d, S_i, t, v, S_o]
+	rate_multiplier = sum(
+	  (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - p - y)
 
-	  for S_i in M.ProcessInputs( p, t, v )
-	  for S_o in M.ProcessOutputsByInput( p, t, v, S_i )
+	  for y in range(0, M.PeriodLength[ p ])
 	)
 
-	expr = ( M.V_Activity[p, s, d, t, v] == activity )
-	return expr
+	return value(rate_multiplier)
 
+def ParamProcessLifeFraction_rule ( M, p, t, v ):
+	"""\
 
-def Capacity_Constraint ( M, p, s, d, t, v ):
-	r"""
+Calculate the fraction of period p that process <t, v> operates.
 
-Temoa's definition of a process' capacity is the total size of installation
-required to meet all of that process' demands.  The Activity convenience
-variable represents exactly that, so the calculation on the left hand side of
-the inequality is the maximum amount of energy a process can produce in the time
-slice ``<s``,\ ``d>``.
-
-.. math::
-   :label: Capacity
-
-       \left (
-               \text{CFP}_{t, v}
-         \cdot \text{C2A}_{t}
-         \cdot \text{SEG}_{s, d}
-         \cdot \text{TLF}_{p, t, v}
-       \right )
-       \cdot \textbf{CAP}_{t, v}
-   \ge
-       \textbf{ACT}_{p, s, d, t, v}
-
-   \\
-   \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+For most processes and periods, this will likely be one, but for any process
+that will cease operation (rust out, be decommissioned, etc.) between periods,
+calculate the fraction of the period that the technology is able to
+create useful output.
 """
-
-	if t in M.tech_storage:
-		return Constraint.Skip
-		
-	produceable = (
-	      value( M.CapacityFactorProcess[s, d, t, v] )
-	    * value( M.CapacityToActivity[ t ] )
-	    * value( M.SegFrac[s, d] )
-	    * value( M.ProcessLifeFrac[p, t, v] )
-	    * M.V_Capacity[t, v]
-	)
-
-	
-	if t in M.tech_curtailment:
-
-		curtailment = sum(
-		  M.V_Curtailment[p, s, d, S_i, t, v, S_o]
-	
-		  for S_i in M.ProcessInputs( p, t, v )
-		  for S_o in M.ProcessOutputsByInput( p, t, v, S_i )
-		)
-
-		expr = (produceable == M.V_Activity[p, s, d, t, v] + curtailment)
-	else:
-		expr = (produceable >= M.V_Activity[p, s, d, t, v])
-
-	return expr
-
-
-def ExistingCapacity_Constraint ( M, t, v ):
-	r"""
-
-Temoa treats residual capacity from before the model's optimization horizon as
-regular processes, that require the same parameter specification in the data
-file as do new vintage technologies (e.g. entries in the efficiency table),
-except the :code:`CostInvest` parameter.  This constraint sets the capacity of
-processes for model periods that exist prior to the optimization horizon to
-user-specified values.
-
-.. math::
-   :label: ExistingCapacity
-
-   \textbf{CAP}_{t, v} = ECAP_{t, v}
-
-   \forall \{t, v\} \in \Theta_{\text{existing}}
-"""
-	expr = ( M.V_Capacity[t, v] == M.ExistingCapacity[t, v] )
-	return expr
-
-
-def ResourceExtraction_Constraint ( M, p, r ):
-	r"""
-
-The ResourceExtraction constraint allows a modeler to specify an annual limit on
-the amount of a particular resource Temoa may use in a period.
-
-.. math::
-   :label: ResourceExtraction
-
-   \sum_{S, D, I, t \in T^r, V} \textbf{FO}_{p, s, d, i, t, v, c} \le RSC_{p, c}
-
-   \forall \{p, c\} \in \Theta_{\text{resource bound parameter}}
-"""
-	collected = sum(
-	  M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, r]
-
-	  for S_t, S_v in M.ProcessesByPeriodAndOutput( p, r )
-	  if S_t in M.tech_resource
-	  for S_i in M.ProcessInputsByOutput( p, S_t, S_v, r )
-	  for S_s in M.time_season
-	  for S_d in M.time_of_day
-	)
-
-	expr = (collected <= M.ResourceBound[p, r])
-	return expr
-
-
-def CommodityBalance_Constraint ( M, p, s, d, c ):
-	r"""
-
-Where the Demand constraint :eq:`Demand` ensures that end-use demands are met,
-the CommodityBalance constraint ensures that the internal system demands are
-met.  That is, this is the constraint that ties the output of one process to the
-input of another.  At the same time, this constraint also conserves energy
-between process.  (But it does not account for transmission loss.)  In this
-manner, it is a corollary to both the ProcessBalance :eq:`ProcessBalance` and
-Demand :eq:`Demand` constraints.
-
-.. math::
-   :label: CommodityBalance
-
-   \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, c}
-   =
-   \sum_{T, V, O} \textbf{FI}_{p, s, d, c, t, v, o}
-
-   \\
-   \forall \{p, s, d, c\} \in \Theta_{\text{commodity balance}}
-"""
-	if c in M.commodity_demand:
-		return Constraint.Skip
-
-	vflow_in = sum(
-	  M.V_FlowIn[p, s, d, c, S_t, S_v, S_o]
-
-	  for S_t, S_v in M.helper_commodityDStreamProcess[p, c]
-	  for S_o in M.helper_ProcessOutputsByInput[ p, S_t, S_v, c ]
-	)
-
-	vflow_out = sum(
-	  M.V_FlowOut[p, s, d, S_i, S_t, S_v, c]
-
-	  for S_t, S_v in M.helper_commodityUStreamProcess[p, c]
-	  for S_i in M.helper_ProcessInputsByOutput[ (p, S_t, S_v, c) ]
-	)
-
-	CommodityBalanceConstraintErrorCheck( vflow_out, vflow_in, p, s, d, c )
-
-	expr = (vflow_out == vflow_in)
-	return expr
-
-
-def ProcessBalance_Constraint ( M, p, s, d, i, t, v, o ):
-	r"""
-
-The ProcessBalance constraint is one of the most fundamental constraints in Temoa model.  
-It defines the basic relationship between the energy entering a process 
-(:math:`\textbf{FI}`) and the energy leaving a processing(:math:`\textbf{FO}`). This 
-constraint sets the :code:`FlowOut` variable, upon which all other constraints rely.
-
-This constraint requires that the output energy of a given process is equal to 
-the product of input energy and conversion efficiency.
-
-.. math::
-   :label: ProcessBalance
-
-          \textbf{FO}_{p, s, d, i, t, v, o}
-   =
-          EFF_{i, t, v, o}
-    \cdot \textbf{FI}_{p, s, d, i, t, v, o}
-
-   \\
-   \forall \{p, s, d, i, t, v, o\} \in \Theta_{\text{valid process flows}}
-"""
-	curtailment = 0
-	if t in M.tech_curtailment:
-		curtailment = M.V_Curtailment[p, s, d, i, t, v, o]
-
-	expr = (
-	    M.V_FlowOut[p, s, d, i, t, v, o] + curtailment
-	      ==
-	    M.V_FlowIn[p, s, d, i, t, v, o]
-	  * value( M.Efficiency[i, t, v, o] )
-	)
-
-	return expr
-
-
-def DemandActivity_Constraint ( M, p, s, d, t, v, dem, s_0, d_0 ):
-	r"""
-
-For end-use demands, it is unreasonable to let the optimizer only allow use in a
-single time slice.  For instance, if household A buys a natural gas furnace
-while household B buys an electric furnace, then both units should be used
-throughout the year.  Without this constraint, the model might choose to only
-use the electric furnace during the day, and the natural gas furnace during the
-night.
-
-This constraint ensures that the ratio of a process activity to demand is
-constant for all time slices.  Note that if a demand is not specified in a given
-time slice, or is zero, then this constraint will not be considered for that
-slice and demand.  This is transparently handled by the :math:`\Theta` superset.
-
-.. math::
-   :label: DemandActivity
-
-      DEM_{p, s, d, dem} \cdot \sum_{I} \textbf{FO}_{p, s_0, d_0, i, t, v, dem}
-   =
-      DEM_{p, s_0, d_0, dem} \cdot \sum_{I} \textbf{FO}_{p, s, d, i, t, v, dem}
-
-   \\
-   \forall \{p, s, d, t, v, dem, s_0, d_0\} \in \Theta_{\text{demand activity}}
-"""
-
-	DSD = M.DemandSpecificDistribution   # lazy programmer
-	act_a = sum(
-	  M.V_FlowOut[p, s_0, d_0, S_i, t, v, dem]
-
-	  for S_i in M.ProcessInputsByOutput( p, t, v, dem )
-	)
-	act_b = sum(
-	  M.V_FlowOut[p, s, d, S_i, t, v, dem]
-
-	  for S_i in M.ProcessInputsByOutput( p, t, v, dem )
-	)
-
-	expr = (
-	  act_a * DSD[s, d, dem]
-	     ==
-	  act_b * DSD[s_0, d_0, dem]
-	)
-	return expr
-
-
-def Demand_Constraint ( M, p, s, d, dem ):
-	r"""
-
-The Demand constraint drives the model.  This constraint ensures that supply at
-least meets the demand specified by the Demand parameter in all periods and
-slices, by ensuring that the sum of all the demand output commodity (:math:`c`)
-generated by :math:`\textbf{FO}` must meet the modeler-specified demand, in
-each time slice.
-
-.. math::
-   :label: Demand
-
-   \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, dem}
-   \ge
-   {DEM}_{p, dem} \cdot {DSD}_{s, d, dem}
-
-   \\
-   \forall \{p, s, d, dem\} \in \Theta_{\text{demand}}
-
-Note that the validity of this constraint relies on the fact that the
-:math:`C^d` set is distinct from both :math:`C^e` and :math:`C^p`. In other
-words, an end-use demand must only be an end-use demand.  Note that if an output
-could satisfy both an end-use and internal system demand, then the output from
-:math:`\textbf{FO}` would be double counted.
-
-Note also that this constraint is an inequality, not a strict equality.  "Supply
-must meet or exceed demand."  Like with the ProcessBalance constraint, if this
-constraint is not binding, it may be a clue that the model under inspection
-could be more tightly specified and could have at least one input data anomaly.
-
-"""
-	supply = sum(
-	  M.V_FlowOut[p, s, d, S_i, S_t, S_v, dem]
-
-	  for S_t, S_v in M.helper_commodityUStreamProcess[ p, dem ]
-	  for S_i in M.helper_ProcessInputsByOutput[ p, S_t, S_v, dem ]
-	)
-
-	DemandConstraintErrorCheck( supply, p, s, d, dem )
-
-	expr = (supply == M.Demand[p, dem] * M.DemandSpecificDistribution[s, d, dem])
-
-	return expr
-
-
-def GrowthRateConstraint_rule ( M, p, t ):
-	GRS = value( M.GrowthRateSeed[ t ] )
-	GRM = value( M.GrowthRateMax[ t ] )
-	CapPT = M.V_CapacityAvailableByPeriodAndTech
-
-	periods = sorted(set(p_ for p_, t_ in CapPT if t_ == t) )
-
-	if p not in periods:
-		return Constraint.Skip
-
-	if p == periods[0]:
-		expr = ( CapPT[p, t] <= GRS )
-
-	else:
-		p_prev = periods.index( p )
-		p_prev = periods[ p_prev -1]
-
-		expr = ( CapPT[p, t] <= GRM * CapPT[p_prev, t] + GRS )
-
-	return expr
-
-
-##############################################################################
-# Additional and derived (informational) variable constraints
-
-
-def ActivityByPeriodAndProcess_Constraint ( M, p, t, v ):
-	if p < v or v not in M.ProcessVintages( p, t ):
-		return Constraint.Skip
-
-	activity = sum(
-	  M.V_Activity[p, S_s, S_d, t, v]
-
-	  for S_s in M.time_season
-	  for S_d in M.time_of_day
-	)
-
-	if int is type( activity ):
-		return Constraint.Skip
-
-	expr = (M.V_ActivityByPeriodAndProcess[p, t, v] == activity)
-	return expr
-
-#This is required for MGA objective function
-def ActivityByTech_Constraint ( M, t ):
-
-	activity = sum(
-	  M.V_Activity[S_p, S_s, S_d, t, S_v]
-
-	  for S_p in M.time_optimize
-	  for S_s in M.time_season
-	  for S_d in M.time_of_day
-	  for S_v in M.ProcessVintages( S_p, t )
-	)
-
-	if int is type( activity ):
-		return Constraint.Skip
-
-	expr = (M.V_ActivityByTech[t] == activity)
-	return expr
-
-
-def CapacityAvailableByPeriodAndTech_Constraint ( M, p, t ):
-	r"""
-The :math:`\textbf{CAPAVL}` variable is nominally for reporting solution values,
-but is also used in the Max and Min constraint calculations.  For any process
-with an end-of-life (EOL) on a period boundary, all of its capacity is available
-for use in all periods in which it is active (the process' TLF is 1). However,
-for any process with an EOL that falls between periods, Temoa makes the
-simplifying assumption that the available capacity from the expiring technology
-is available through the whole period, but only as much percentage as its
-lifespan through the period.  For example, if a process expires 3 years into an
-8 year period, then only :math:`\frac{3}{8}` of the installed capacity is
-available for use throughout the period.
-
-.. math::
-   :label: CapacityAvailable
-
-   \textbf{CAPAVL}_{p, t} = \sum_{V} {TLF}_{p, t, v} \cdot \textbf{CAP}
-
-   \\
-   \forall p \in \text{P}^o, t \in T
-"""
-	cap_avail = sum(
-	    value( M.ProcessLifeFrac[p, t, S_v] )
-	  * M.V_Capacity[t, S_v]
-
-	  for S_v in M.ProcessVintages( p, t )
-	)
-
-	expr = (M.V_CapacityAvailableByPeriodAndTech[p, t] == cap_avail)
-	return expr
-
-def EnergyConsumptionByPeriodInputAndTech_Constraint ( M, p, i, t ):
-	energy_used = sum(
-	   M.V_FlowIn[p, S_s, S_d, i, t, S_v, S_o]
-
-	   for S_v in M.ProcessVintages( p, t )
-	   for S_o in M.ProcessOutputsByInput( p, t, S_v, i )
-	   for S_s in M.time_season
-	   for S_d in M.time_of_day
-	)
-
-	expr = (M.V_EnergyConsumptionByPeriodInputAndTech[p, i, t] == energy_used)
-	return expr
-	
-def ActivityByPeriodTechAndOutput_Constraint ( M, p, t, o ):
-	activity = sum(
-	   M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, o]
-
-	   for S_v in M.ProcessVintages( p, t )
-	   for S_i in M.ProcessInputsByOutput( p, t, S_v, o )
-	   for S_s in M.time_season
-	   for S_d in M.time_of_day
-	)
-
-	if int is type( activity ):
-		return Constraint.Skip
-
-	expr = (M.V_ActivityByPeriodTechAndOutput[p, t, o] == activity)
-	return expr
-	
-def EmissionActivityByPeriodAndTech_Constraint ( M, e, p, t ):
-	emission_total = sum(
-	   M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, S_o]
-	   * M.EmissionActivity[e, S_i, t, S_v, S_o]
-
-	   for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
-	   if tmp_e == e and S_t == t
-	   if M.ValidActivity( p, S_t, S_v )
-	   for S_s in M.time_season
-	   for S_d in M.time_of_day
-	)
-
-	if type( emission_total ) is int:
-		return Constraint.Skip
-
-	expr = (M.V_EmissionActivityByPeriodAndTech[e, p, t] == emission_total)
-	return expr	
-
-def RampUpDay_Constraint ( M, p, s, d, t, v):
-# M.time_of_day is a sorted set, and M.time_of_day.first() returns the first 
-# element in the set, similarly, M.time_of_day.last() returns the last element.
-# M.time_of_day.prev(d) function will return the previous element before s, and 
-# M.time_of_day.next(d) function will return the next element after s.
-
-	r"""
-The ramp rate constraint is utilized to limit the rate of electricity generation 
-increase and decrease between two adjacent time slices in order to account for 
-physical limits associated with thermal power plants. Note that this constriant 
-only applies to technologies with ramp capability, which is defined in set 
-:math:`\textbf{T}^{ramp}`. We assume for simplicity the rate limits for both 
-ramp up and down are equal and they do not vary with technology vintage. The 
-ramp rate limits (:math:`r_t`) for technology :math:`t` should be expressed in 
-percentage of its rated capacity.
-
-Note that when :math:`d_{nd}` is the last time-of-day, :math:`d_{nd + 1} \not \in 
-\textbf{D}`, i.e., if one time slice is the last time-of-day in a season and the 
-other time slice is the first time-of-day in the next season, the ramp rate 
-limits between these two time slices can not be expressed by :eq:`ramp_up_day`. 
-Therefore, the ramp rate constraints between two adjacent seasons are 
-represented in :eq:`ramp_up_season`. 
-
-In Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we assume 
-:math:`\textbf{S} = \{s_i, i = 1, 2, \cdots, ns\}` and 
-:math:`\textbf{D} = \{d_i, i=1, 2, \cdots, nd\}`.
-
-.. math::
-   \frac{ 
-       \textbf{ACT}_{p, s, d_{i + 1}, t, v} 
-       }{
-       SEG_{s, d_{i + 1}} \cdot C2A_t 
-       }
-   -
-   \frac{ 
-       \textbf{ACT}_{p, s, d_i, t, v} 
-       }{
-       SEG_{s, d_i} \cdot C2A_t 
-       }
-   \leq
-   r_t \cdot \textbf{CAPAVL}_{p,t}
-   \\
-   \forall 
-   p \in \textbf{P}^o,
-   s \in \textbf{S},
-   d_i, d_{i + 1} \in \textbf{D},
-   t \in \textbf{T}^{ramp},
-   v \in \textbf{V}
-   :label: ramp_up_day
-"""
-	if d != M.time_of_day.first():
-		d_prev = M.time_of_day.prev(d)
-		expr_left  = (
-			M.V_Activity[ p, s, d, t, v ]/value( M.SegFrac[s, d] ) - 
-			M.V_Activity[ p, s, d_prev, t, v ]/value( M.SegFrac[s, d_prev] )
-			)/value( M.CapacityToActivity[ t ] )
-		expr_right = M.V_Capacity[t, v]*value( M.RampUp[t] )
-		expr = (expr_left <= expr_right)
-	else:
-		return Constraint.Skip
-
-	return expr
-
-def RampUpSeason_Constraint ( M, p, s, t, v):
-	r"""
-Note that :math:`d_1` and :math:`d_{nd}` represent the first and last time-of-day, 
-respectively.
-
-.. math::
-   \frac{ 
-       \textbf{ACT}_{p, s_{i + 1}, d_1, t, v} 
-       }{
-       SEG_{s_{i + 1}, d_1} \cdot C2A_t 
-       }
-   -
-   \frac{ 
-       \textbf{ACT}_{p, s_i, d_{nd}, t, v} 
-       }{
-       SEG_{s_i, d_{nd}} \cdot C2A_t 
-       }
-   \leq
-   r_t \cdot \textbf{CAPAVL}_{p,t}
-   \\
-   \forall 
-   p \in \textbf{P}^o,
-   s_i, s_{i + 1} \in \textbf{S},
-   d_1, d_{nd} \in \textbf{D},
-   t \in \textbf{T}^{ramp},
-   v \in \textbf{V}
-   :label: ramp_up_season
-"""
-	if s != M.time_season.first():
-		s_prev  = M.time_season.prev(s)
-		d_first = M.time_of_day.first()
-		d_last  = M.time_of_day.last()
-		expr_left = (
-			M.V_Activity[ p, s, d_first, t, v ]/M.SegFrac[s, d_first] - 
-			M.V_Activity[ p, s_prev, d_last, t, v ]/M.SegFrac[s_prev, d_last]
-			)/value( M.CapacityToActivity[ t ] )
-		expr_right = M.V_Capacity[t, v]*value( M.RampUp[t] )
-		expr = (expr_left <= expr_right)
-	else:
-		return Constraint.Skip
-
-	return expr
-
-def RampUpPeriod_Constraint ( M, p, t, v):
-
-	# if p != M.time_future.first():
-	# 	p_prev  = M.time_future.prev(p)
-	# 	s_first = M.time_season.first()
-	# 	s_last  = M.time_season.last()
-	# 	d_first = M.time_of_day.first()
-	# 	d_last  = M.time_of_day.last()
-	# 	expr_left = (
-	# 		M.V_Activity[ p, s_first, d_first, t, v ] - 
-	# 		M.V_Activity[ p_prev, s_last, d_last, t, v ]
-	# 		)
-	# 	expr_right = (
-	# 		M.V_Capacity[t, v]*
-	# 		value( M.RampUp[t] )*
-	# 		value( M.CapacityToActivity[ t ] )* 
-	# 		value( M.SegFrac[s, d])
-	# 		)
-	# 	expr = (expr_left <= expr_right)
-	# else:
-	# 	return Constraint.Skip
-
-	# return expr
-
-	return Constraint.Skip # We don't need inter-period ramp up/down constraint.
-
-def RampDownDay_Constraint ( M, p, s, d, t, v):
-	r"""
-Similar to Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we use Equation
-:eq:`ramp_down_day` and :eq:`ramp_down_season` to limit ramp down rates between 
-any two adjacent time slices.
-
-.. math::
-   \frac{ 
-       \textbf{ACT}_{p, s, d_{i + 1}, t, v} 
-       }{
-       SEG_{s, d_{i + 1}} \cdot C2A_t 
-       }
-   -
-   \frac{ 
-       \textbf{ACT}_{p, s, d_i, t, v} 
-       }{
-       SEG_{s, d_i} \cdot C2A_t 
-       }
-   \geq
-   -r_t \cdot \textbf{CAPAVL}_{p,t}
-   \\
-   \forall 
-   p \in \textbf{P}^o,
-   s \in \textbf{S},
-   d_i, d_{i + 1} \in \textbf{D},
-   t \in \textbf{T}^{ramp},
-   v \in \textbf{V}
-   :label: ramp_down_day
-"""
-
-	if d != M.time_of_day.first():
-		d_prev = M.time_of_day.prev(d)
-		expr_left  = (
-			M.V_Activity[ p, s, d, t, v ]/value( M.SegFrac[s, d]) - 
-			M.V_Activity[ p, s, d_prev, t, v ]/value( M.SegFrac[s, d_prev])
-			)/value( M.CapacityToActivity[ t ] )
-		expr_right = -( M.V_Capacity[t, v]*value( M.RampDown[t] ) )
-		expr = (expr_left >= expr_right)
-	else:
-		return Constraint.Skip
-
-	return expr
-
-def RampDownSeason_Constraint ( M, p, s, t, v):
-	r"""
-.. math::
-   \frac{ 
-       \textbf{ACT}_{p, s_{i + 1}, d_1, t, v} 
-       }{
-       SEG_{s_{i + 1}, d_1} \cdot C2A_t 
-       }
-   -
-   \frac{ 
-       \textbf{ACT}_{p, s_i, d_{nd}, t, v} 
-       }{
-       SEG_{s_i, d_{nd}} \cdot C2A_t 
-       }
-   \geq
-   -r_t \cdot \textbf{CAPAVL}_{p,t}
-   \\
-   \forall 
-   p \in \textbf{P}^o,
-   s_i, s_{i + 1} \in \textbf{S},
-   d_1, d_{nd} \in \textbf{D},
-   t \in \textbf{T}^{ramp},
-   v \in \textbf{V}
-   :label: ramp_down_season
-"""
-	if s != M.time_season.first():
-		s_prev  = M.time_season.prev(s)
-		d_first = M.time_of_day.first()
-		d_last  = M.time_of_day.last()
-		expr_left = (
-			M.V_Activity[ p, s, d_first, t, v ]/
-			value( 
-				M.SegFrac[s, d_first]
-				) - 
-			M.V_Activity[ p, s_prev, d_last, t, v ]/
-			value( 
-				M.SegFrac[s_prev, d_last]
-				)
-			)/value( M.CapacityToActivity[ t ] )
-		expr_right = -( M.V_Capacity[t, v]*value( M.RampDown[t] ) )
-		expr = (expr_left >= expr_right)
-	else:
-		return Constraint.Skip
-
-	return expr
-
-def RampDownPeriod_Constraint ( M, p, t, v):
-	
-	# if p != M.time_future.first():
-	# 	p_prev  = M.time_future.prev(p)
-	# 	s_first = M.time_season.first()
-	# 	s_last  = M.time_season.last()
-	# 	d_first = M.time_of_day.first()
-	# 	d_last  = M.time_of_day.last()
-	# 	expr_left = (
-	# 		M.V_Activity[ p, s_first, d_first, t, v ] - 
-	# 		M.V_Activity[ p_prev, s_last, d_last, t, v ]
-	# 		)
-	# 	expr_right = (
-	# 		-1*
-	# 		M.V_Capacity[t, v]*
-	# 		value( M.RampDown[t] )*
-	# 		value( M.CapacityToActivity[ t ] )* 
-	# 		value( M.SegFrac[s, d])
-	# 		)
-	# 	expr = (expr_left >= expr_right)
-	# else:
-	# 	return Constraint.Skip
-
-	# return expr
-
-	return Constraint.Skip # We don't need inter-period ramp up/down constraint.
-	
-def ReserveMargin_Constraint( M, p, z, s, d):
-	r"""
-During each period :math:`p`, the sum of the available capacity of all reserve 
-technologies :math:`\sum_{t \in T^{res}} \textbf{CAPAVL}_{p,t}`, which are 
-defined in the set :math:`\textbf{T}^{res}`, should exceed the peak load by 
-:math:`RES_z`, the regional reserve margin. Note that the reserve 
-margin is expressed in percentage of the peak load. Generally speaking, in 
-a database we may not know the peak demand before running the model, therefore, 
-we write this equation for all the time-slices defined in the database in each region.
-
-.. math::
-   \sum_{t \in T^{res}} {
-      CC_t \cdot
-      \textbf{CAPAVL}_{p,t} \cdot
-      SEG_{s^*,d^*} \cdot C2A_t }
-   \geq
-   \sum_{t \in T^{res}} { 
-      \sum_{t \in v^{vintage}} {\textbf{ACT}_{p, s, d, t, v  \cdot
-   (1 + RES_z)
-   \\
-   \forall
-   p \in \textbf{P}^o,
-   z \in \textbf{C}^{zone}
-   :label: reserve_margin
-"""
-	
-	PowerTechs=set()  #all the power generation technologies
-
-	for i in M.ReserveMargin:
-		if i[1]==z:
-			PowerTechs.add(i[0])
-
-
-	expr_left = sum (value( M.CapacityCredit[p, t] )*
-					M.V_CapacityAvailableByPeriodAndTech[p, t]*
-					value( M.CapacityToActivity[t] )*
-					value( M.SegFrac[s, d] )
-					for t in PowerTechs if (p, t) in M.CapacityAvailableVar_pt  ) #M.CapacityAvailableVar_pt check if all the possible consistent combinations of t and p
-
-
-
-	total_generation = sum( M.V_Activity[p, s, d, t, S_v]
-	                for  t  in PowerTechs if t not in M.tech_storage
-	                for S_v in M.ProcessVintages( p, t ))
-
-	expr_right = total_generation*(1+value(M.PlanningReserveMargin [z]))  
-
-
-	return (expr_left >= expr_right)
-
-
-# End additional and derived (informational) variable constraints
-##############################################################################
-
-# End *_rule definitions
-##############################################################################
+	eol_year = v + value( M.LifetimeProcess[t, v] )
+	frac  = eol_year - p
+	period_length = value( M.PeriodLength[ p ] )
+	if frac >= period_length:
+		# try to avoid floating point round-off errors for the common case.
+		return 1
+
+	  # number of years into final period loan is complete
+
+	frac /= float( period_length )
+	return frac
+
+def ParamLoanAnnualize_rule ( M, t, v ):
+	dr = value( M.DiscountRate[t, v] )
+	lln = value( M.LifetimeLoanProcess[t, v] )
+	if not dr:
+		return 1.0 / lln
+	annualized_rate = ( dr / (1.0 - (1.0 + dr)**(-lln) ))
+
+	return annualized_rate
 
