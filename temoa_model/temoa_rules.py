@@ -55,15 +55,13 @@ accounting exercise for the modeler.
    \\
    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 """
-    activity = sum(
-        M.V_FlowOut[p, s, d, S_i, t, v, S_o]
-        for S_i in M.ProcessInputs(p, t, v)
-        for S_o in M.ProcessOutputsByInput(p, t, v, S_i)
-    )
-
-    expr = M.V_Activity[p, s, d, t, v] == activity
-    return expr
-
+    return sum( \
+        M.V_FlowOut[p, s, d, S_i, t, v, S_o] \
+        for S_i in M.ProcessInputs(p, t, v) \
+        for S_o in M.ProcessOutputsByInput(p, t, v, S_i) \
+    ) \
+        == M.V_Activity[p, s, d, t, v]
+ #   return expr
 
 def Capacity_Constraint(M, p, s, d, t, v):
     r"""
@@ -92,28 +90,24 @@ slice ``<s``,\ ``d>``.
 """
     if t in M.tech_storage:
         return Constraint.Skip
-
-    produceable = (
-        value(M.CapacityFactorProcess[s, d, t, v])
-        * value(M.CapacityToActivity[t])
-        * value(M.SegFrac[s, d])
-        * value(M.ProcessLifeFrac[p, t, v])
-        * M.V_Capacity[t, v]
-    )
+    # The expressions below are defined in-line to minimize the amount of
+    # expression cloning taking place with Pyomo.
     if t in M.tech_curtailment:
-
-        curtailment = sum(
-            M.V_Curtailment[p, s, d, S_i, t, v, S_o]
-            for S_i in M.ProcessInputs(p, t, v)
-            for S_o in M.ProcessOutputsByInput(p, t, v, S_i)
-        )
-
-        expr = produceable == M.V_Activity[p, s, d, t, v] + curtailment
+        # If technologies are present in the curtailment set, then enough
+        # capacity must be available to cover both activity and curtailment.
+        return value(M.CapacityFactorProcess[s, d, t, v]) \
+            * value(M.CapacityToActivity[t]) * value(M.SegFrac[s, d]) \
+            * value(M.ProcessLifeFrac[p, t, v]) \
+            * M.V_Capacity[t, v] == M.V_Activity[p, s, d, t, v] + sum( \
+            M.V_Curtailment[p, s, d, S_i, t, v, S_o] \
+            for S_i in M.ProcessInputs(p, t, v) \
+            for S_o in M.ProcessOutputsByInput(p, t, v, S_i))
     else:
-        expr = produceable >= M.V_Activity[p, s, d, t, v]
-
-    return expr
-
+        return value(M.CapacityFactorProcess[s, d, t, v]) \
+        * value(M.CapacityToActivity[t]) \
+        * value(M.SegFrac[s, d]) \
+        * value(M.ProcessLifeFrac[p, t, v]) \
+        * M.V_Capacity[t, v] >= M.V_Activity[p, s, d, t, v]
 
 def ActivityByPeriodAndProcess_Constraint(M, p, t, v):
     r"""
@@ -434,7 +428,6 @@ could be more tightly specified and could have at least one input data anomaly.
 
     return expr
 
-
 def DemandActivity_Constraint(M, p, s, d, t, v, dem, s_0, d_0):
     r"""
 
@@ -463,6 +456,7 @@ slice and demand.  This is transparently handled by the :math:`\Theta` superset.
     if (s,d,dem) not in M.DemandSpecificDistribution.sparse_keys():
         return Constraint.Skip
     DSD = M.DemandSpecificDistribution  # lazy programmer
+
     act_a = sum(
         M.V_FlowOut[p, s_0, d_0, S_i, t, v, dem]
         for S_i in M.ProcessInputsByOutput(p, t, v, dem)
@@ -540,15 +534,17 @@ the product of input energy and conversion efficiency.
    \\
    \forall \{p, s, d, i, t, v, o\} \in \Theta_{\text{valid process flows}}
 """
-    curtailment = 0
+
     if t in M.tech_curtailment:
-        curtailment = M.V_Curtailment[p, s, d, i, t, v, o]
+        return M.V_FlowOut[p, s, d, i, t, v, o] + \
+            M.V_Curtailment[p, s, d, i, t, v, o] == \
+            M.V_FlowIn[p, s, d, i, t, v, o] * \
+            value(M.Efficiency[i, t, v, o])
 
-    expr = M.V_FlowOut[p, s, d, i, t, v, o] + curtailment == M.V_FlowIn[
-        p, s, d, i, t, v, o
-    ] * value(M.Efficiency[i, t, v, o])
-
-    return expr
+    else:
+        return M.V_FlowOut[p, s, d, i, t, v, o] == \
+            M.V_FlowIn[p, s, d, i, t, v, o] * \
+            value(M.Efficiency[i, t, v, o])
 
 
 def ResourceExtraction_Constraint(M, p, r):
