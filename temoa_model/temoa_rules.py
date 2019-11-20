@@ -420,6 +420,8 @@ constraint is not binding, it may be a clue that the model under inspection
 could be more tightly specified and could have at least one input data anomaly.
 
 """
+    if (s,d,dem) not in M.DemandSpecificDistribution.sparse_keys():
+        return Constraint.Skip
     supply = sum(
         M.V_FlowOut[p, s, d, S_i, S_t, S_v, dem]
         for S_t, S_v in M.helper_commodityUStreamProcess[p, dem]
@@ -458,6 +460,8 @@ slice and demand.  This is transparently handled by the :math:`\Theta` superset.
    \\
    \forall \{p, s, d, t, v, dem, s_0, d_0\} \in \Theta_{\text{demand activity}}
 """
+    if (s,d,dem) not in M.DemandSpecificDistribution.sparse_keys():
+        return Constraint.Skip
     DSD = M.DemandSpecificDistribution  # lazy programmer
     act_a = sum(
         M.V_FlowOut[p, s_0, d_0, S_i, t, v, dem]

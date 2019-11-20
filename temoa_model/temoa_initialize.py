@@ -917,30 +917,21 @@ def ActivityByPeriodAndProcessVarIndices ( M ):
 
 
 def DemandActivityConstraintIndices ( M ):
-	indices = set()
-
-	dem_slices = dict()
-	for p, s, d, dem in M.DemandConstraint_psdc:
-		if (p, dem) not in dem_slices:
-			dem_slices[p, dem] = set()
-		dem_slices[p, dem].add( (s, d) )
-
-	for (p, dem), slices in dem_slices.items():
-		# No need for this constraint if demand is only in one slice.
-		if not len( slices ) > 1: continue
-		slices = sorted( slices )
-		first = slices[0]
-		tmp = set(
-		  (p, s, d, t, v, dem, first[0], first[1])
-
-		  for Fp, Fs, Fd, i, t, v, Fo in M.V_FlowOut.iterkeys()
-		  if Fp == p and Fo == dem
-		  for s, d in slices[1:]
-		  if Fs == s and Fd == d
-		)
-		indices.update( tmp )
-
-	return indices
+	"""\
+This function returns a set of sparse indices that are used in the
+DemandActivity constraint. It returns a tuple of the form:
+(p,s,d,t,v,dem,first_s,first_d) where "dem" is a demand commodity, and "first_s"
+and "first_d" are the reference season and time-of-day, respectively used to
+ensure demand activity remains consistent across time slices.
+"""
+	first_s = M.time_season.first()
+	first_d = M.time_of_day.first()
+	for p,t,v,dem in M.helper_ProcessInputsByOutput.keys():
+		if dem in M.commodity_demand:
+			for s in M.time_season:
+				for d in M.time_of_day:
+					if s != first_s or d != first_d:
+						yield (p,s,d,t,v,dem,first_s,first_d)
 
 
 def DemandConstraintIndices ( M ):
