@@ -25,6 +25,7 @@ from temoa_rules import *
 from temoa_initialize import *
 from temoa_run import *
 
+import IPython
 
 def temoa_create_model(name="Temoa"):
     """\
@@ -144,6 +145,9 @@ def temoa_create_model(name="Temoa"):
     M.LifetimeLoanProcess = Param(M.LifetimeLoanProcess_tv, mutable=True)
     M.initialize_Lifetimes = BuildAction(rule=CreateLifetimes)
 
+    M.TechInputSplit = Param(M.time_optimize, M.commodity_physical, M.tech_all)
+    M.TechOutputSplit = Param(M.time_optimize, M.tech_all, M.commodity_carrier)
+
     # The method below creates a series of helper functions that are used to
     # perform the sparse matrix of indexing for the parameters, variables, and
     # equations below.
@@ -204,8 +208,6 @@ def temoa_create_model(name="Temoa"):
     M.EmissionLimit = Param(M.time_optimize, M.commodity_emissions)
     M.EmissionActivity_eitvo = Set(dimen=5, initialize=EmissionActivityIndices)
     M.EmissionActivity = Param(M.EmissionActivity_eitvo)
-    M.TechInputSplit = Param(M.time_optimize, M.commodity_physical, M.tech_all)
-    M.TechOutputSplit = Param(M.time_optimize, M.tech_all, M.commodity_carrier)
     M.MinGenGroupOfTechnologies_Data = Param(
         M.time_optimize, Set(dimen=1, initialize=MinGenGroups)
     )
