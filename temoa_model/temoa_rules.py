@@ -123,7 +123,7 @@ def ActivityByPeriodAndProcess_Constraint(M, p, t, v):
     \\
     \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 	"""
-    if p < v or v not in M.ProcessVintages(p, t):
+    if p < v or v not in M.helper_processVintages[p, t]:
         return Constraint.Skip
 
     activity = sum(
@@ -1178,7 +1178,7 @@ and vintage.
         M.V_Activity[p, S_s, S_d, t, S_v]
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.ProcessVintages(p, t)
+        for S_v in M.helper_processVintages[p, t]
     )
     max_act = value(M.MaxActivity[p, t])
     expr = activity_pt <= max_act
@@ -1195,7 +1195,7 @@ for these constraints are period and tech_all, not tech and vintage.
         M.V_Activity[p, S_s, S_d, t, S_v]
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.ProcessVintages(p, t)
+        for S_v in M.helper_processVintages[p, t]
     )
     min_act = value(M.MinActivity[p, t])
     expr = activity_pt >= min_act
@@ -1213,7 +1213,7 @@ def MinActivityGroup_Constraint(M, p, g):
         for t in g_techs
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.ProcessVintages(p, t)
+        for S_v in M.helper_processVintages[p, t]
     )
     min_act = value(M.MinGenGroupOfTechnologies_Data[p, g])
     expr = activity_p >= min_act
@@ -1281,13 +1281,14 @@ producing a single output. These shares can vary by model time period. See
 TechOutputSplit_Constraint for an analogous explanation.
 """
     inp = sum(
-        M.V_FlowIn[p, s, d, i, t, v, S_o] for S_o in M.ProcessOutputsByInput(p, t, v, i)
+        M.V_FlowIn[p, s, d, i, t, v, S_o] 
+        for S_o in M.helper_ProcessOutputsByInput[p, t, v, i]
     )
 
     total_inp = sum(
         M.V_FlowIn[p, s, d, S_i, t, v, S_o]
-        for S_i in M.ProcessInputs(p, t, v)
-        for S_o in M.ProcessOutputsByInput(p, t, v, i)
+        for S_i in M.helper_processInputs[p, t, v]
+        for S_o in M.helper_ProcessOutputsByInput[p, t, v, i]
     )
 
     expr = inp >= M.TechInputSplit[p, i, t] * total_inp
