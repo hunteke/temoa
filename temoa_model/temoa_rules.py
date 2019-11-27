@@ -686,7 +686,7 @@ period, the charge level must be zeroed out.
             == M.V_StorageLevel[p, s_prev, d_last, t, v] + stored_energy
         )
 
-    # Any time slice that is NOT covered above (i.e., not the time slice ending 
+    # Any time slice that is NOT covered above (i.e., not the time slice ending
     # the period, or the first time slice of any season)
     else:
         d_prev = M.time_of_day.prev(d)
@@ -1077,29 +1077,27 @@ we write this equation for all the time-slices defined in the database in each r
    z \in \textbf{C}^{zone}
    :label: reserve_margin
 """
-    PowerTechs = set()  # all the power generation technologies
 
-    for i in M.ReserveMargin:
-        if i[1] == z:
-            PowerTechs.add(i[0])
-
-    expr_left = sum(
+    cap_avail = sum(
         value(M.CapacityCredit[p, t])
         * M.V_CapacityAvailableByPeriodAndTech[p, t]
         * value(M.CapacityToActivity[t])
         * value(M.SegFrac[s, d])
-        for t in PowerTechs
-        if (p, t) in M.CapacityAvailableVar_pt
-    )  # M.CapacityAvailableVar_pt check if all the possible consistent combinations of t and p
+        for t in M.tech_reserve
+        # Make sure (p,t) combinations are defined
+        if (p,t) in M.helper_activeCapacityAvailable_pt
+    )
 
+    # In most Temoa input databases, demand is endogenous, so we use electricity
+    # generation instead.
     total_generation = sum(
         M.V_Activity[p, s, d, t, S_v]
-        for t in PowerTechs
-        for S_v in M.ProcessVintages(p,t)
+        for (t,S_v) in M.helper_processReservePeriods[p]
     )
-    expr_right = total_generation * (1 + value(M.PlanningReserveMargin[z]))
 
-    return expr_left >= expr_right
+    cap_target = total_generation * (1 + value(M.PlanningReserveMargin[z]))
+
+    return cap_avail >= cap_target
 
 
 def EmissionLimit_Constraint(M, p, e):

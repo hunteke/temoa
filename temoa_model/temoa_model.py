@@ -61,6 +61,7 @@ def temoa_create_model(name="Temoa"):
     M.tech_all = M.tech_resource | M.tech_production
     M.tech_baseload = Set(within=M.tech_all)
     M.tech_storage = Set(within=M.tech_all)
+    M.tech_reserve = Set(within=M.tech_all)
     M.GroupOfTechnologies = Set(dimen=3)
     M.tech_ramping = Set(within=M.tech_all)
     M.tech_capacity_min = Set(within=M.tech_all)
@@ -75,9 +76,8 @@ def temoa_create_model(name="Temoa"):
     M.commodity_all = M.commodity_carrier | M.commodity_emissions
     M.commodity_SNG = M.commodity_physical | M.commodity_emissions
 
-    # Define sets related to zones (regions)
+    # Define zones (regions), currently used for ReserveMarginConstraint
     M.Zones = Set()
-    M.ReserveMargin = Set(within=M.tech_all * M.Zones)
 
     # Define sets for MGA weighting
     M.tech_mga = Set(within=M.tech_all)
@@ -342,36 +342,26 @@ def temoa_create_model(name="Temoa"):
         M.BaseloadDiurnalConstraint_psdtv, rule=BaseloadDiurnal_Constraint
     )
 
-    M.StorageEnergyConstraint_psdtv = Set(dimen=5, initialize=StorageVariableIndices)
+    # This set works for all the storage-related constraints
+    M.StorageConstraints_psdtv = Set(dimen=5, initialize=StorageVariableIndices)
     M.StorageEnergyConstraint = Constraint(
-        M.StorageEnergyConstraint_psdtv, rule=StorageEnergy_Constraint
+        M.StorageConstraints_psdtv, rule=StorageEnergy_Constraint
     )
 
-    M.StorageEnergyUpperBoundConstraint_psdtv = Set(
-        dimen=5, initialize=StorageVariableIndices
-    )
     M.StorageEnergyUpperBoundConstraint = Constraint(
-        M.StorageEnergyUpperBoundConstraint_psdtv,
-        rule=StorageEnergyUpperBound_Constraint,
+        M.StorageConstraints_psdtv, rule=StorageEnergyUpperBound_Constraint
     )
 
-    M.StorageChargeRateConstraint_psdtv = Set(
-        dimen=5, initialize=StorageVariableIndices
-    )
     M.StorageChargeRateConstraint = Constraint(
-        M.StorageChargeRateConstraint_psdtv, rule=StorageChargeRate_Constraint
+        M.StorageConstraints_psdtv, rule=StorageChargeRate_Constraint
     )
 
-    M.StorageDischargeRateConstraint_psdtv = Set(
-        dimen=5, initialize=StorageVariableIndices
-    )
     M.StorageDischargeRateConstraint = Constraint(
-        M.StorageDischargeRateConstraint_psdtv, rule=StorageDischargeRate_Constraint
+        M.StorageConstraints_psdtv, rule=StorageDischargeRate_Constraint
     )
 
-    M.StorageThroughputConstraint_psdt = Set(dimen=5, initialize=StorageVariableIndices)
     M.StorageThroughputConstraint = Constraint(
-        M.StorageThroughputConstraint_psdt, rule=StorageThroughput_Constraint
+        M.StorageConstraints_psdtv, rule=StorageThroughput_Constraint
     )
 
     M.RampUpConstraintDay_psdtv = Set(dimen=5, initialize=RampConstraintDayIndices)

@@ -63,6 +63,7 @@ class TemoaModel( AbstractModel ):
 		self.helper_ProcessInputsByOutput = dict()
 		self.helper_ProcessOutputsByInput = dict()
 		self.helper_processTechs = dict()
+		self.helper_processReservePeriods = dict()
 		self.helper_processVintages = dict()
 		self.helper_baseloadVintages = dict()
 		self.helper_curtailmentVintages = dict()
@@ -697,6 +698,8 @@ pairs are defined as appropriate for each dictionary.
 				M.helper_outputsplitVintages[p,t,o] = set()
 			if t in M.tech_resource and (p,o) not in M.helper_ProcessByPeriodAndOutput:
 				M.helper_ProcessByPeriodAndOutput[p,o] = set()
+			if t in M.tech_reserve and p not in M.helper_processReservePeriods:
+					M.helper_processReservePeriods[p] = set()
 
 			# Now that all of the keys have been defined, and values initialized
 			# to empty sets, we fill in the appropriate values for each
@@ -723,6 +726,9 @@ pairs are defined as appropriate for each dictionary.
 				M.helper_outputsplitVintages[p,t,o].add( v )
 			if t in M.tech_resource:
 				M.helper_ProcessByPeriodAndOutput[p,o].add(( i,t,v ))
+			if t in M.tech_reserve:
+				M.helper_processReservePeriods[p].add( (t,v) )
+
 
 	l_unused_techs = M.tech_all - l_used_techs
 	if l_unused_techs:
