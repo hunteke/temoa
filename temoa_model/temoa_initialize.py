@@ -62,6 +62,7 @@ class TemoaModel( AbstractModel ):
 		self.helper_commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
 		self.helper_ProcessInputsByOutput = dict()
 		self.helper_ProcessOutputsByInput = dict()
+		self.helper_processTechs = dict()
 		self.helper_processVintages = dict()
 		self.helper_baseloadVintages = dict()
 		self.helper_curtailmentVintages = dict()
@@ -69,7 +70,7 @@ class TemoaModel( AbstractModel ):
 		self.helper_rampVintages = dict()
 		self.helper_inputsplitVintages = dict()
 		self.helper_outputsplitVintages = dict()
-
+		self.helper_ProcessByPeriodAndOutput = dict()
 
 	##########################################################################
 	# Helper functions
@@ -613,7 +614,6 @@ pairs are defined as appropriate for each dictionary.
 	for i, t, v, o in M.Efficiency.sparse_iterkeys():
 		l_process = (t, v)
 		l_lifetime = value(M.LifetimeProcess[ l_process ])
-
 		# Do some error checking for the user.
 		if v in M.vintage_exist:
 			if l_process not in l_exist_indices:
@@ -676,6 +676,8 @@ pairs are defined as appropriate for each dictionary.
 				M.helper_ProcessOutputsByInput[p, t, v, i] = set()
 			if (p, t, v, o) not in M.helper_ProcessInputsByOutput:
 				M.helper_ProcessInputsByOutput[p, t, v, o] = set()
+			if t not in M.helper_processTechs:
+					M.helper_processTechs[t] = set()
 			# While the dictionary just above indentifies the vintage (v) associated 
 			# with each (p,t) we need to do the same below for various technology
 			# subsets.
@@ -693,6 +695,8 @@ pairs are defined as appropriate for each dictionary.
 				M.helper_inputsplitVintages[p,i,t] = set()
 			if (p, t, o) in M.TechOutputSplit.sparse_iterkeys() and (p, t, o) not in M.helper_outputsplitVintages:
 				M.helper_outputsplitVintages[p,t,o] = set()
+			if t in M.tech_resource and (p,o) not in M.helper_ProcessByPeriodAndOutput:
+				M.helper_ProcessByPeriodAndOutput[p,o] = set()
 
 			# Now that all of the keys have been defined, and values initialized
 			# to empty sets, we fill in the appropriate values for each
@@ -703,6 +707,7 @@ pairs are defined as appropriate for each dictionary.
 			M.helper_commodityUStreamProcess[p, o].add( (t, v) )
 			M.helper_ProcessOutputsByInput[p, t, v, i].add( o )
 			M.helper_ProcessInputsByOutput[p, t, v, o].add( i )
+			M.helper_processTechs[t].add( (p, v) )
 			M.helper_processVintages[p, t].add( v )
 			if t in M.tech_curtailment:
 				M.helper_curtailmentVintages[p, t].add( v )
@@ -716,6 +721,8 @@ pairs are defined as appropriate for each dictionary.
 				M.helper_inputsplitVintages[p,i,t].add( v )
 			if (p, t, o) in M.TechOutputSplit.sparse_iterkeys():
 				M.helper_outputsplitVintages[p,t,o].add( v )
+			if t in M.tech_resource:
+				M.helper_ProcessByPeriodAndOutput[p,o].add(( i,t,v ))
 
 	l_unused_techs = M.tech_all - l_used_techs
 	if l_unused_techs:
