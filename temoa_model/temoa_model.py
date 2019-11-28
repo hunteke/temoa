@@ -95,7 +95,12 @@ def temoa_create_model(name="Temoa"):
     # creation of indices for which no data exists. While basic model sets
     # are defined above, sparse index sets are defined below adjacent to the
     # appropriate parameter, variable, or constraint and all are initialized
-    # in temoa_initialze.py.
+    # in temoa_initialize.py.
+    # Because the function calls that define the sparse index sets obscure the
+    # sets utilized, we use a suffix that includes a one character name for each
+    # set. Example: "_tv" indicates a set defined over "technology" and "vintage".
+    # The complete index set is: psditvo, where p=period, s=season, d=day,
+    # i=input commodity, t=technology, v=vintage, o=output commodity.
     # ---------------------------------------------------------------
 
     M.GlobalDiscountRate = Param()
