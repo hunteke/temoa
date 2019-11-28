@@ -364,38 +364,28 @@ def temoa_create_model(name="Temoa"):
         M.StorageConstraints_psdtv, rule=StorageThroughput_Constraint
     )
 
-    M.RampUpConstraintDay_psdtv = Set(dimen=5, initialize=RampConstraintDayIndices)
+    M.RampConstraintDay_psdtv = Set(dimen=5, initialize=RampConstraintDayIndices)
     M.RampUpConstraintDay = Constraint(
-        M.RampUpConstraintDay_psdtv, rule=RampUpDay_Constraint
+        M.RampConstraintDay_psdtv, rule=RampUpDay_Constraint
     )
-
-    M.RampDownConstraintDay_psdtv = Set(dimen=5, initialize=RampConstraintDayIndices)
     M.RampDownConstraintDay = Constraint(
-        M.RampDownConstraintDay_psdtv, rule=RampDownDay_Constraint
+        M.RampConstraintDay_psdtv, rule=RampDownDay_Constraint
     )
 
-    M.RampUpConstraintSeason_pstv = Set(dimen=4, initialize=RampConstraintSeasonIndices)
+    M.RampConstraintSeason_pstv = Set(dimen=4, initialize=RampConstraintSeasonIndices)
     M.RampUpConstraintSeason = Constraint(
-        M.RampUpConstraintSeason_pstv, rule=RampUpSeason_Constraint
-    )
-
-    M.RampDownConstraintSeason_pstv = Set(
-        dimen=4, initialize=RampConstraintSeasonIndices
+        M.RampConstraintSeason_pstv, rule=RampUpSeason_Constraint
     )
     M.RampDownConstraintSeason = Constraint(
-        M.RampDownConstraintSeason_pstv, rule=RampDownSeason_Constraint
+        M.RampConstraintSeason_pstv, rule=RampDownSeason_Constraint
     )
 
-    M.RampUpConstraintPeriod_ptv = Set(dimen=3, initialize=RampConstraintPeriodIndices)
+    M.RampConstraintPeriod_ptv = Set(dimen=3, initialize=RampConstraintPeriodIndices)
     M.RampUpConstraintPeriod = Constraint(
-        M.RampUpConstraintPeriod_ptv, rule=RampUpPeriod_Constraint
-    )
-
-    M.RampDownConstraintPeriod_ptv = Set(
-        dimen=3, initialize=RampConstraintPeriodIndices
+        M.RampConstraintPeriod_ptv, rule=RampUpPeriod_Constraint
     )
     M.RampDownConstraintPeriod = Constraint(
-        M.RampDownConstraintPeriod_ptv, rule=RampDownPeriod_Constraint
+        M.RampConstraintPeriod_ptv, rule=RampDownPeriod_Constraint
     )
 
     M.ReserveMargin_pzsd = Set(dimen=4, initialize=ReserveMarginIndices)
