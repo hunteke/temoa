@@ -151,7 +151,7 @@ def temoa_create_model(name="Temoa"):
     # The method below creates a series of helper functions that are used to
     # perform the sparse matrix of indexing for the parameters, variables, and
     # equations below.
-    M.initialize_ProcessParameters = BuildAction(rule=InitializeProcessParameters)
+    M.Create_SparseDicts = BuildAction(rule=CreateSparseDicts)
 
     # Define technology cost parameters
     M.CostFixed_ptv = Set(dimen=3, initialize=CostFixedIndices)

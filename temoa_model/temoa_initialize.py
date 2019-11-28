@@ -73,139 +73,33 @@ class TemoaModel( AbstractModel ):
 		self.helper_outputsplitVintages = dict()
 		self.helper_ProcessByPeriodAndOutput = dict()
 
-	##########################################################################
-	# Helper functions
-
-	# These methods utilize instance variables that are initialized in
-	# InitializeProcessParameters, to aid in creation of sparse index sets, 
-	# and to increase readability of Coopr's often programmer-centric syntax.
-	# However, these methods involve intense if-statements and consume plenty
-	# of time. Should remove them in future development.
-
-	def ProcessInputs ( self, p, t, v ):
-		index = (p, t, v)
-		if index in self.helper_processInputs:
-			return self.helper_processInputs[ index ]
-		return set()
+# ---------------------------------------------------------------
+# Validation and initialization routines.
+# There are a variety of functions in this section that do the following:
+# Check valid indices, validate parameter specifications, and set default
+# parameter values.
+# ---------------------------------------------------------------
+def ValidActivity ( self, p, t, v ):
+	return (p, t, v) in self.helper_activeActivity_ptv
 
 
-	def ProcessOutputs ( self, p, t, v ):
-		"""\
-	index = (period, tech, vintage)
-		"""
-		index = (p, t, v)
-		if index in self.helper_processOutputs:
-			return self.helper_processOutputs[ index ]
-		return set()
-	
-	def ProcessInputsByOutput ( self, p, t, v, o ):
-		"""\
-	Return the set of input energy carriers used by a process (t, v) in period (p)
-	to produce a given output carrier (o).
-	"""
-		index = (p, t, v)
-		if index in self.helper_processOutputs:
+def ValidCapacity ( self, t, v ):
+	return (t, v) in self.helper_activeCapacity_tv
+
+
+def isValidProcess ( self, p, i, t, v, o ):
+	"""\
+Returns a boolean (True or False) indicating whether, in any given period, a
+technology can take a specified input carrier and convert it to and specified
+output carrier.
+"""
+	index = (p, t, v)
+	if index in self.helper_processInputs and index in self.helper_processOutputs:
+		if i in self.helper_processInputs[ index ]:
 			if o in self.helper_processOutputs[ index ]:
-				return self.helper_ProcessInputsByOutput[ p, t, v, o ]
-	
-		return set()
-	
-	
-	def ProcessOutputsByInput ( self, p, t, v, i ):
-		"""\
-	Return the set of output energy carriers used by a process (t, v) in period (p)
-	to produce a given input carrier (o).
-	"""
-		index = (p, t, v)
-		if index in self.helper_processInputs:
-			if i in self.helper_processInputs[ index ]:
-				return self.helper_ProcessOutputsByInput[ p, t, v, i ]
-	
-		return set()
-	
-	
-	def ProcessesByInput ( self, i ):
-		"""\
-	Returns the set of processes that take 'input'.  Note that a process is
-	conceptually a vintage of a technology.
-	"""
-		processes = set(
-		  (t, v)
-	
-		  for p, t, v in self.helper_processInputs
-		  if i in self.helper_processInputs[p, t, v]
-		)
-	
-		return processes
-	
-	
-	def ProcessesByOutput ( self, o ):
-		"""\
-	Returns the set of processes that take 'output'.  Note that a process is
-	conceptually a vintage of a technology.
-	"""
-		processes = set(
-		  (t, v)
-	
-		  for p, t, v in self.helper_processOutputs
-		  if o in self.helper_processOutputs[p, t, v]
-		)
-	
-		return processes
-	
-	
-	def ProcessesByPeriodAndOutput ( self, p, o ):
-		"""\
-	Returns the set of processes that operate in 'period' and take 'output'.  Note
-	that a process is a conceptually a vintage of a technology.
-	"""
-		processes = set(
-		  (t, v)
-	
-		  for Tp, t, v in self.helper_processOutputs
-		  if Tp == p
-		  if o in self.helper_processOutputs[p, t, v]
-		)
-	
-		return processes
-	
-	
-	def ProcessVintages ( self, p, t ):
-		index = (p, t)
-		if index in self.helper_processVintages:
-			return self.helper_processVintages[ index ]
-	
-		return set()
-	
-	
-	def ValidActivity ( self, p, t, v ):
-		return (p, t, v) in self.helper_activeActivity_ptv
-	
-	
-	def ValidCapacity ( self, t, v ):
-		return (t, v) in self.helper_activeCapacity_tv
-	
-	
-	def isValidProcess ( self, p, i, t, v, o ):
-		"""\
-	Returns a boolean (True or False) indicating whether, in any given period, a
-	technology can take a specified input carrier and convert it to and specified
-	output carrier.
-	"""
-		index = (p, t, v)
-		if index in self.helper_processInputs and index in self.helper_processOutputs:
-			if i in self.helper_processInputs[ index ]:
-				if o in self.helper_processOutputs[ index ]:
-					return True
-	
-		return False
+				return True
 
-	# End helper functions
-	##########################################################################
-
-###############################################################################
-# Temoa rule "partial" functions (excised from indidivual constraints for
-#   readability)
+	return False
 
 def get_str_padding ( obj ):
 	return len(str( obj ))
@@ -227,7 +121,6 @@ def CommodityBalanceConstraintErrorCheck ( vflow_out, vflow_in, p, s, d, c ):
 		  c, s, d, p, flow_in_expr.getvalue()
 		))
 
-
 def DemandConstraintErrorCheck ( supply, p, s, d, dem ):
 	if int is type( supply ):
 		msg = ("Error: Demand '{}' for ({}, {}, {}) unable to be met by any "
@@ -237,18 +130,14 @@ def DemandConstraintErrorCheck ( supply, p, s, d, dem ):
 		  'LifetimeProcess?\n')
 		raise Exception( msg.format(dem, p, s, d) )
 
-# End Temoa rule "partials"
-###############################################################################
-
-##############################################################################
-# Begin validation and initialization routines
-
 def validate_time ( M ):
-	# We check for integer status here, rather then asking Pyomo to do this via
-	# a 'within=Integers' clause in the definition so that we can have a very
-	# specific error message.  If we instead use Pyomo's mechanism, the
-	# python invocation of Temoa throws an error (including a traceback)
-	# that has proven to be scary and/or impenetrable for the typical modeler.
+	"""
+	We check for integer status here, rather then asking Pyomo to do this via
+	a 'within=Integers' clause in the definition so that we can have a very
+	specific error message.  If we instead use Pyomo's mechanism, the
+	python invocation of Temoa throws an error (including a traceback)
+	that has proven to be scary and/or impenetrable for the typical modeler.
+	"""
 	for year in M.time_exist:
 		if isinstance(year, int): continue
 
@@ -307,7 +196,9 @@ def validate_SegFrac ( M ):
 
 
 def CheckEfficiencyIndices ( M ):
-	"Ensure that there are no unused items in any of the Efficiency index sets."
+	"""
+	Ensure that there are no unused items in any of the Efficiency index sets.
+	"""
 
 	c_physical = set( i for i, t, v, o in M.Efficiency.sparse_iterkeys() )
 	techs      = set( t for i, t, v, o in M.Efficiency.sparse_iterkeys() )
@@ -343,11 +234,12 @@ def CheckEfficiencyIndices ( M ):
 
 
 def CreateCapacityFactors ( M ):
-	# Steps
-	#  1. Collect all possible processes
-	#  2. Find the ones _not_ specified in CapacityFactorProcess
-	#  3. Set them, based on CapacityFactorTech.
-
+	"""
+	Steps to creating capacity factors:
+	1. Collect all possible processes
+	2. Find the ones _not_ specified in CapacityFactorProcess
+	3. Set them, based on CapacityFactorTech.
+	"""
 	# Shorter names, for us lazy programmer types
 	CFP = M.CapacityFactorProcess
 
@@ -382,11 +274,12 @@ def CreateCapacityFactors ( M ):
 
 
 def CreateLifetimes ( M ):
-	# Steps
-	#  1. Collect all possible processes
-	#  2. Find the ones _not_ specified in LifetimeProcess and
-	#     LifetimeLoanProcess
-	#  3. Set them, based on Lifetime*Tech.
+	"""
+	Steps to creating lifetimes:
+	1. Collect all possible processes
+	2. Find the ones _not_ specified in LifetimeProcess and LifetimeLoanProcess
+	3. Set them, based on Lifetime*Tech.
+	"""
 
 	# Shorter names, for us lazy programmer types
 	LLN = M.LifetimeLoanProcess
@@ -422,21 +315,19 @@ def CreateLifetimes ( M ):
 
 
 def CreateDemands ( M ):
-	# Steps to create the demand distributions
-	# 1. Use Demand keys to ensure that all demands in commodity_demand are used
-	#
-	# 2. Find any slices not set in DemandDefaultDistribution, and set them
-	#    based on the associated SegFrac slice.
-	#
-	# 3. Validate that the DemandDefaultDistribution sums to 1.
-	#
-	# 4. Find any per-demand DemandSpecificDistribution values not set, and set
-	#    set them from DemandDefaultDistribution.  Note that this only sets a
-	#    distribution for an end-use demand if the user has *not* specified _any_
-	#    anything for that end-use demand.  Thus, it is up to the user to fully
-	#    specify the distribution, or not.  No in-between.
-	#
-	# 5. Validate that the per-demand distributions sum to 1.
+	"""
+	Steps to create the demand distributions
+	1. Use Demand keys to ensure that all demands in commodity_demand are used
+	2. Find any slices not set in DemandDefaultDistribution, and set them based
+	on the associated SegFrac slice.
+	3. Validate that the DemandDefaultDistribution sums to 1.
+	4. Find any per-demand DemandSpecificDistribution values not set, and set
+	set them from DemandDefaultDistribution.  Note that this only sets a
+	distribution for an end-use demand if the user has *not* specified _any_
+	anything for that end-use demand.  Thus, it is up to the user to fully
+	specify the distribution, or not.  No in-between.
+	 5. Validate that the per-demand distributions sum to 1.
+	"""
 
 	# Step 0: some setup for a couple of reusable items
 
@@ -539,10 +430,12 @@ def CreateDemands ( M ):
 
 
 def CreateCosts ( M ):
-	# Steps
-	#  1. Collect all possible cost indices (CostFixed, CostVariable)
-	#  2. Find the ones _not_ specified in CostFixed and CostVariable
-	#  3. Set them, based on Cost*VintageDefault
+	"""
+	Steps to creating fixed and variable costs:
+	1. Collect all possible cost indices (CostFixed, CostVariable)
+	2. Find the ones _not_ specified in CostFixed and CostVariable
+	3. Set them, based on Cost*VintageDefault
+	"""
 
 	# Shorter names, for us lazy programmer types
 	CF = M.CostFixed
@@ -589,22 +482,24 @@ def init_set_vintage_exist ( M ):
 def init_set_vintage_optimize ( M ):
 	return sorted( M.time_optimize )
 
+# ---------------------------------------------------------------
+# The functions below perform the sparse matrix indexing, allowing Pyomo to only
+# create the necessary parameter, variable, and constraint indices.  This
+#  cuts down *tremendously* on memory usage, which decreases time and increases
+# the maximum specifiable problem size.
+#
+# It begins below in CreateSparseDicts, which creates a set of
+# dictionaries that serve as the basis of the sparse indices.
+# ---------------------------------------------------------------
 
-# end validation and initialization routines
-##############################################################################
-
-##############################################################################
-
-# Begin helper functions
-
-def InitializeProcessParameters ( M ):
+def CreateSparseDicts ( M ):
 	"""
-This function creates customized dictionaries with only the key / value pairs
-defined in the associated datafile. The dictionaries defined here are used to
-do the sparse matrix indexing for all parameters, variables, and constraints in
-the model. The function works by looping over the sparse indices in the
-Efficiency table. For each iteration of the loop, the appropriate key / value
-pairs are defined as appropriate for each dictionary.
+	This function creates customized dictionaries with only the key / value pairs
+	defined in the associated datafile. The dictionaries defined here are used to
+	do the sparse matrix indexing for all parameters, variables, and constraints
+	in the model. The function works by looping over the sparse indices in the
+	Efficiency table. For each iteration of the loop, the appropriate key / value
+	pairs are defined as appropriate for each dictionary.
 	"""
 	l_first_period = min( M.time_future )
 	l_exist_indices = M.ExistingCapacity.sparse_keys()
@@ -679,9 +574,9 @@ pairs are defined as appropriate for each dictionary.
 				M.helper_ProcessInputsByOutput[p, t, v, o] = set()
 			if t not in M.helper_processTechs:
 					M.helper_processTechs[t] = set()
-			# While the dictionary just above indentifies the vintage (v) associated 
-			# with each (p,t) we need to do the same below for various technology
-			# subsets.
+			# While the dictionary just above indentifies the vintage (v)
+			# associated with each (p,t) we need to do the same below for various
+			# technology subsets.
 			if (p, t) not in M.helper_processVintages:
 				M.helper_processVintages[p, t] = set()
 			if t in M.tech_curtailment and (p, t) not in M.helper_curtailmentVintages:
@@ -780,16 +675,11 @@ pairs are defined as appropriate for each dictionary.
 	  if M.helper_processVintages[ p, t ]
 	)
 
-##############################################################################
-# Sparse index creation functions
-
-# These functions serve to create sparse index sets, so that Coopr need only
-# create the parameter, variable, and constraint indices with which it will
-# actually operate.  This *tremendously* cuts down on memory usage, which
-# decreases time and increases the maximum specifiable problem size.
-
-##############################################################################
-# Parameters
+# ---------------------------------------------------------------
+# Create sparse parameter indices.
+# These functions are called from temoa_model.py and use the sparse keys 
+# associated with specific parameters.
+# ---------------------------------------------------------------
 
 def CapacityFactorProcessIndices ( M ):
 	indices = set(
@@ -802,7 +692,6 @@ def CapacityFactorProcessIndices ( M ):
 
 	return indices
 
-
 def CapacityFactorTechIndices ( M ):
 	indices = set(
 	  (s, d, t)
@@ -812,14 +701,11 @@ def CapacityFactorTechIndices ( M ):
 
 	return indices
 
-
 def CostFixedIndices ( M ):
 	return M.helper_activeActivity_ptv
 
-
 def CostVariableIndices ( M ):
 	return M.helper_activeActivity_ptv
-
 
 def CostInvestIndices ( M ):
 	indices = set(
@@ -829,7 +715,6 @@ def CostInvestIndices ( M ):
 	)
 
 	return indices
-
 
 def EmissionActivityIndices ( M ):
 	indices = set(
@@ -841,7 +726,6 @@ def EmissionActivityIndices ( M ):
 
 	return indices
 
-
 def EnergyConsumptionByPeriodInputAndTechVariableIndices ( M ):
 	indices = set(
 	  (p, i, t)
@@ -852,7 +736,6 @@ def EnergyConsumptionByPeriodInputAndTechVariableIndices ( M ):
 
 	return indices
 	
-	
 def ActivityByPeriodTechAndOutputVariableIndices ( M ):
 	indices = set(
 	  (p, t, o)
@@ -862,8 +745,7 @@ def ActivityByPeriodTechAndOutputVariableIndices ( M ):
 	)
 
 	return indices	
-	
-	
+
 def EmissionActivityByPeriodAndTechVariableIndices ( M ):
 	indices = set(
 	  (e, p, t)
@@ -874,7 +756,6 @@ def EmissionActivityByPeriodAndTechVariableIndices ( M ):
 
 	return indices	
 	
-
 def LoanLifeFracIndices ( M ):
 	"""\
 Returns the set of (period, tech, vintage) tuples of process loans that die
@@ -893,7 +774,6 @@ process is active.
 
 	return indices
 
-
 def ModelProcessLifeIndices ( M ):
 	"""\
 Returns the set of sensical (period, tech, vintage) tuples.  The tuple indicates
@@ -901,7 +781,6 @@ the periods in which a process is active, distinct from TechLifeFracIndices that
 returns indices only for processes that EOL mid-period.
 """
 	return M.helper_activeActivity_ptv
-
 
 def LifetimeProcessIndices ( M ):
 	"""\
@@ -915,7 +794,6 @@ process indices that may be specified in the LifetimeProcess parameter.
 	)
 
 	return indices
-
 
 def LifetimeLoanProcessIndices ( M ):
 	"""\
@@ -934,12 +812,11 @@ CostInvest parameter.
 
 	return indices
 
-
-# End parameters
-##############################################################################
-
-##############################################################################
-# Variables
+# ---------------------------------------------------------------
+# Create sparse indices for decision variables.
+# These functions are called from temoa_model.py and use the dictionaries
+# created above in CreateSparseDicts()
+# ---------------------------------------------------------------
 
 def CapacityVariableIndices ( M ):
 	return M.helper_activeCapacity_tv
@@ -953,7 +830,6 @@ def FlowVariableIndices ( M ):
 def CurtailmentVariableIndices ( M ):
 	return M.helper_activeCurtailment_psditvo
 
-
 def ActivityVariableIndices ( M ):
 	activity_indices = set(
 	  (p, s, d, t, v)
@@ -965,17 +841,14 @@ def ActivityVariableIndices ( M ):
 
 	return activity_indices
 
-
 def ActivityByPeriodAndProcessVarIndices ( M ):
 	return M.helper_activeActivity_ptv
 
-
-# End variables
-##############################################################################
-
-##############################################################################
-# Constraints
-
+# ---------------------------------------------------------------
+# Create sparse indices for constraints.
+# These functions are called from temoa_model.py and use the dictionaries
+# created above in CreateSparseDicts()
+# ---------------------------------------------------------------
 
 def DemandActivityConstraintIndices ( M ):
 	"""\
@@ -993,7 +866,6 @@ ensure demand activity remains consistent across time slices.
 				for d in M.time_of_day:
 					if s != first_s or d != first_d:
 						yield (p,s,d,t,v,dem,first_s,first_d)
-
 
 def DemandConstraintIndices ( M ):
 	used_dems = set(dem for p, dem in M.Demand.sparse_iterkeys())
@@ -1015,7 +887,6 @@ def DemandConstraintIndices ( M ):
 
 	return indices
 
-
 def BaseloadDiurnalConstraintIndices ( M ):
 	indices = set(
 	  (p, s, d, t, v)
@@ -1027,7 +898,6 @@ def BaseloadDiurnalConstraintIndices ( M ):
 	)
 
 	return indices
-
 
 def CommodityBalanceConstraintIndices ( M ):
 	# We only consider those commodities that have both upstream and downstream
@@ -1129,7 +999,6 @@ def TechInputSplitConstraintIndices ( M ):
 
 	return indices
 
-
 def TechOutputSplitConstraintIndices ( M ):
 	indices = set(
 	  (p, s, d, t, v, o)
@@ -1143,7 +1012,6 @@ def TechOutputSplitConstraintIndices ( M ):
 	return indices
 
 def MinGenGroups (M):
-
 	indices = set(
 		(g[1])
 		for g in M.GroupOfTechnologies.value
@@ -1157,9 +1025,3 @@ def MinActivityGroup ( M ):
 		  for p , g in M.MinGenGroupOfTechnologies_Data.sparse_iterkeys()
 		)
 		return indices
-# End constraints
-##############################################################################
-
-# End sparse index creation functions
-##############################################################################
-

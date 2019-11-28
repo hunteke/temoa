@@ -30,7 +30,6 @@ from temoa_initialize import *
 # and constraints below.
 # ---------------------------------------------------------------
 
-
 def Activity_Constraint(M, p, s, d, t, v):
     r"""
 
@@ -1337,7 +1336,7 @@ specified shares by model time period. The constraint is formulated as follows:
 
 
 # ---------------------------------------------------------------
-# Define initialization rules
+# Define rule-based parameters
 # ---------------------------------------------------------------
 def ParamModelLoanLife_rule(M, t, v):
     loan_length = value(M.LifetimeLoanProcess[t, v])
