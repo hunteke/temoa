@@ -56,8 +56,8 @@ accounting exercise for the modeler.
 """
     return sum( \
         M.V_FlowOut[p, s, d, S_i, t, v, S_o] \
-        for S_i in M.helper_processInputs[p, t, v] \
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, S_i] \
+        for S_i in M.processInputs[p, t, v] \
+        for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
     ) \
         == M.V_Activity[p, s, d, t, v]
  #   return expr
@@ -99,8 +99,8 @@ slice ``<s``,\ ``d>``.
             * value(M.ProcessLifeFrac[p, t, v]) \
             * M.V_Capacity[t, v] == M.V_Activity[p, s, d, t, v] + sum( \
             M.V_Curtailment[p, s, d, S_i, t, v, S_o] \
-            for S_i in M.helper_processInputs[p, t, v] \
-            for S_o in M.helper_ProcessOutputsByInput[p, t, v, S_i])
+            for S_i in M.processInputs[p, t, v] \
+            for S_o in M.ProcessOutputsByInput[p, t, v, S_i])
     else:
         return value(M.CapacityFactorProcess[s, d, t, v]) \
         * value(M.CapacityToActivity[t]) \
@@ -122,7 +122,7 @@ def ActivityByPeriodAndProcess_Constraint(M, p, t, v):
     \\
     \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 	"""
-    if p < v or v not in M.helper_processVintages[p, t]:
+    if p < v or v not in M.processVintages[p, t]:
         return Constraint.Skip
 
     activity = sum(
@@ -156,7 +156,7 @@ def ActivityByTech_Constraint(M, t):
 
     activity = sum(
         M.V_Activity[S_p, S_s, S_d, t, S_v]
-        for S_p, S_v in M.helper_processTechs[t]
+        for S_p, S_v in M.processTechs[t]
         for S_s in M.time_season
         for S_d in M.time_of_day
     )
@@ -192,7 +192,7 @@ available for use throughout the period.
 """
     cap_avail = sum(
         value(M.ProcessLifeFrac[p, t, S_v]) * M.V_Capacity[t, S_v]
-        for S_v in M.helper_processVintages[p, t]
+        for S_v in M.processVintages[p, t]
     )
 
     expr = M.V_CapacityAvailableByPeriodAndTech[p, t] == cap_avail
@@ -416,8 +416,8 @@ could be more tightly specified and could have at least one input data anomaly.
         return Constraint.Skip
     supply = sum(
         M.V_FlowOut[p, s, d, S_i, S_t, S_v, dem]
-        for S_t, S_v in M.helper_commodityUStreamProcess[p, dem]
-        for S_i in M.helper_ProcessInputsByOutput[p, S_t, S_v, dem]
+        for S_t, S_v in M.commodityUStreamProcess[p, dem]
+        for S_i in M.ProcessInputsByOutput[p, S_t, S_v, dem]
     )
 
     DemandConstraintErrorCheck(supply, p, s, d, dem)
@@ -457,11 +457,11 @@ slice and demand.  This is transparently handled by the :math:`\Theta` superset.
 
     act_a = sum(
         M.V_FlowOut[p, s_0, d_0, S_i, t, v, dem]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, dem]
+        for S_i in M.ProcessInputsByOutput[p, t, v, dem]
     )
     act_b = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, dem]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, dem]
+        for S_i in M.ProcessInputsByOutput[p, t, v, dem]
     )
 
     expr = act_a * DSD[s, d, dem] == act_b * DSD[s_0, d_0, dem]
@@ -494,14 +494,14 @@ Demand :eq:`Demand` constraints.
 
     vflow_in = sum(
         M.V_FlowIn[p, s, d, c, S_t, S_v, S_o]
-        for S_t, S_v in M.helper_commodityDStreamProcess[p, c]
-        for S_o in M.helper_ProcessOutputsByInput[p, S_t, S_v, c]
+        for S_t, S_v in M.commodityDStreamProcess[p, c]
+        for S_o in M.ProcessOutputsByInput[p, S_t, S_v, c]
     )
 
     vflow_out = sum(
         M.V_FlowOut[p, s, d, S_i, S_t, S_v, c]
-        for S_t, S_v in M.helper_commodityUStreamProcess[p, c]
-        for S_i in M.helper_ProcessInputsByOutput[p, S_t, S_v, c]
+        for S_t, S_v in M.commodityUStreamProcess[p, c]
+        for S_i in M.ProcessInputsByOutput[p, S_t, S_v, c]
     )
 
     CommodityBalanceConstraintErrorCheck(vflow_out, vflow_in, p, s, d, c)
@@ -560,7 +560,7 @@ the amount of a particular resource Temoa may use in a period.
 """
     collected = sum(
         M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, r]
-        for S_i, S_t, S_v in M.helper_ProcessByPeriodAndOutput.keys()
+        for S_i, S_t, S_v in M.ProcessByPeriodAndOutput.keys()
         for S_s in M.time_season
         for S_d in M.time_of_day
     )
@@ -644,16 +644,16 @@ period, the charge level must be zeroed out.
     # output=o in p,s,d
     charge = sum(
         M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
-        for S_i in M.helper_processInputs[p, t, v]
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, S_i]
+        for S_i in M.processInputs[p, t, v]
+        for S_o in M.ProcessOutputsByInput[p, t, v, S_i]
     )
 
     # This is the sum of all output=o withdrawn FROM storage tech t of vintage v
     # with input=i in p,s,d
     discharge = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, S_o]
-        for S_o in M.helper_processOutputs[p, t, v]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, S_o]
+        for S_o in M.processOutputs[p, t, v]
+        for S_i in M.ProcessInputsByOutput[p, t, v, S_o]
     )
 
     stored_energy = charge - discharge
@@ -723,8 +723,8 @@ def StorageChargeRate_Constraint(M, p, s, d, t, v):
     # Calculate energy charge in each time slice
     slice_charge = sum(
         M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
-        for S_i in M.helper_processInputs[p, t, v]
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, S_i]
+        for S_i in M.processInputs[p, t, v]
+        for S_o in M.ProcessOutputsByInput[p, t, v, S_i]
     )
 
     # Maximum energy charge in each time slice
@@ -750,8 +750,8 @@ def StorageDischargeRate_Constraint(M, p, s, d, t, v):
     # Calculate energy discharge in each time slice
     slice_discharge = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, S_o]
-        for S_o in M.helper_processOutputs[p, t, v]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, S_o]
+        for S_o in M.processOutputs[p, t, v]
+        for S_i in M.ProcessInputsByOutput[p, t, v, S_o]
     )
 
     # Maximum energy discharge in each time slice
@@ -777,14 +777,14 @@ the capacity (typically GW) of the storage unit.
 """
     discharge = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, S_o]
-        for S_o in M.helper_processOutputs[p, t, v]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, S_o]
+        for S_o in M.processOutputs[p, t, v]
+        for S_i in M.ProcessInputsByOutput[p, t, v, S_o]
     )
 
     charge = sum(
         M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
-        for S_i in M.helper_processInputs[p, t, v]
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, S_i]
+        for S_i in M.processInputs[p, t, v]
+        for S_o in M.ProcessOutputsByInput[p, t, v, S_i]
     )
 
     throughput = charge + discharge
@@ -1084,14 +1084,14 @@ we write this equation for all the time-slices defined in the database in each r
         * value(M.SegFrac[s, d])
         for t in M.tech_reserve
         # Make sure (p,t) combinations are defined
-        if (p,t) in M.helper_activeCapacityAvailable_pt
+        if (p,t) in M.activeCapacityAvailable_pt
     )
 
     # In most Temoa input databases, demand is endogenous, so we use electricity
     # generation instead.
     total_generation = sum(
         M.V_Activity[p, s, d, t, S_v]
-        for (t,S_v) in M.helper_processReservePeriods[p]
+        for (t,S_v) in M.processReservePeriods[p]
     )
 
     cap_target = total_generation * (1 + value(M.PlanningReserveMargin[z]))
@@ -1177,7 +1177,7 @@ and vintage.
         M.V_Activity[p, S_s, S_d, t, S_v]
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.helper_processVintages[p, t]
+        for S_v in M.processVintages[p, t]
     )
     max_act = value(M.MaxActivity[p, t])
     expr = activity_pt <= max_act
@@ -1194,7 +1194,7 @@ for these constraints are period and tech_all, not tech and vintage.
         M.V_Activity[p, S_s, S_d, t, S_v]
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.helper_processVintages[p, t]
+        for S_v in M.processVintages[p, t]
     )
     min_act = value(M.MinActivity[p, t])
     expr = activity_pt >= min_act
@@ -1212,7 +1212,7 @@ def MinActivityGroup_Constraint(M, p, g):
         for t in g_techs
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.helper_processVintages[p, t]
+        for S_v in M.processVintages[p, t]
     )
     min_act = value(M.MinGenGroupOfTechnologies_Data[p, g])
     expr = activity_p >= min_act
@@ -1281,13 +1281,13 @@ TechOutputSplit_Constraint for an analogous explanation.
 """
     inp = sum(
         M.V_FlowIn[p, s, d, i, t, v, S_o] 
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, i]
+        for S_o in M.ProcessOutputsByInput[p, t, v, i]
     )
 
     total_inp = sum(
         M.V_FlowIn[p, s, d, S_i, t, v, S_o]
-        for S_i in M.helper_processInputs[p, t, v]
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, i]
+        for S_i in M.processInputs[p, t, v]
+        for S_o in M.ProcessOutputsByInput[p, t, v, i]
     )
 
     expr = inp >= M.TechInputSplit[p, i, t] * total_inp
@@ -1328,7 +1328,7 @@ specified shares by model time period. The constraint is formulated as follows:
 """
     out = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, o]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, o]
+        for S_i in M.ProcessInputsByOutput[p, t, v, o]
     )
 
     expr = out >= M.TechOutputSplit[p, t, o] * M.V_Activity[p, s, d, t, v]
