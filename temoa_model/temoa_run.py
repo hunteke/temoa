@@ -514,6 +514,7 @@ def parse_args ( ):
 	  default=default_solver)
 
 	options = parser.parse_args()
+	options.neos = False
 
 	# Can't specify keeping the LP file without config file, so set this 
 	# attribute to false
