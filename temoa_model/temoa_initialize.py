@@ -79,19 +79,12 @@ class TemoaModel( AbstractModel ):
 # Check valid indices, validate parameter specifications, and set default
 # parameter values.
 # ---------------------------------------------------------------
-def ValidActivity ( self, p, t, v ):
-	return (p, t, v) in self.activeActivity_ptv
-
-
-def ValidCapacity ( self, t, v ):
-	return (t, v) in self.activeCapacity_tv
-
 
 def isValidProcess ( self, p, i, t, v, o ):
 	"""\
 Returns a boolean (True or False) indicating whether, in any given period, a
 technology can take a specified input carrier and convert it to and specified
-output carrier.
+output carrier. Not currently used.
 """
 	index = (p, t, v)
 	if index in self.processInputs and index in self.processOutputs:

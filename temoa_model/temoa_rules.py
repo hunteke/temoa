@@ -226,7 +226,7 @@ def EmissionActivityByPeriodAndTech_Constraint(M, e, p, t):
         * M.EmissionActivity[e, S_i, t, S_v, S_o]
         for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
         if tmp_e == e and S_t == t
-        if M.ValidActivity(p, S_t, S_v)
+        if (p, S_t, S_v) in M.processInputs.keys()
         for S_s in M.time_season
         for S_d in M.time_of_day
     )
@@ -1127,7 +1127,8 @@ to each emission commodity.
         * M.EmissionActivity[e, S_i, S_t, S_v, S_o]
         for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
         if tmp_e == e
-        if M.ValidActivity(p, S_t, S_v)
+        # EmissionsActivity not indexed by p, so make sure (p,t,v) combos valid
+        if (p, S_t, S_v) in M.processInputs.keys()
         for S_s in M.time_season
         for S_d in M.time_of_day
     )
