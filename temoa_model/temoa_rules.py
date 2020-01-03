@@ -1050,7 +1050,7 @@ def RampDownPeriod_Constraint(M, p, t, v):
     return Constraint.Skip  # We don't need inter-period ramp up/down constraint.
 
 
-def ReserveMargin_Constraint(M, p, z, s, d):
+def ReserveMargin_Constraint(M, p, s, d):
     r"""
 
 During each period :math:`p`, the sum of the available capacity of all reserve 
@@ -1094,7 +1094,7 @@ we write this equation for all the time-slices defined in the database in each r
         for (t,S_v) in M.processReservePeriods[p]
     )
 
-    cap_target = total_generation * (1 + value(M.PlanningReserveMargin[z]))
+    cap_target = total_generation * (1 + value(M.PlanningReserveMargin))
 
     return cap_avail >= cap_target
 

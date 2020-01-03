@@ -77,9 +77,6 @@ def temoa_create_model(name="Temoa"):
     M.commodity_all = M.commodity_carrier | M.commodity_emissions
     M.commodity_SNG = M.commodity_physical | M.commodity_emissions
 
-    # Define zones (regions), currently used for ReserveMarginConstraint
-    M.Zones = Set()
-
     # Define sets for MGA weighting
     M.tech_mga = Set(within=M.tech_all)
     M.tech_electric = Set(within=M.tech_all)
@@ -221,7 +218,7 @@ def temoa_create_model(name="Temoa"):
     M.RampUp = Param(M.tech_ramping)
     M.RampDown = Param(M.tech_ramping)
     M.CapacityCredit = Param(M.time_optimize, M.tech_all, default=1)
-    M.PlanningReserveMargin = Param(M.Zones, default=0.2)
+    M.PlanningReserveMargin = Param(default=0.2)
     # Storage duration is expressed as fraction of a year (default = 8hrs).
     M.StorageDuration = Param(M.tech_storage, default=0.00091324200913242009)
     # Initial storage charge level, expressed as fraction of full energy capacity
@@ -393,9 +390,9 @@ def temoa_create_model(name="Temoa"):
         M.RampConstraintPeriod_ptv, rule=RampDownPeriod_Constraint
     )
 
-    M.ReserveMargin_pzsd = Set(dimen=4, initialize=ReserveMarginIndices)
+    M.ReserveMargin_psd = Set(dimen=3, initialize=ReserveMarginIndices)
     M.ReserveMarginConstraint = Constraint(
-        M.ReserveMargin_pzsd, rule=ReserveMargin_Constraint
+        M.ReserveMargin_psd, rule=ReserveMargin_Constraint
     )
 
     M.EmissionLimitConstraint_pe = Set(

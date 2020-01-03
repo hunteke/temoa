@@ -971,10 +971,9 @@ def RampConstraintPeriodIndices ( M ):
 
 def ReserveMarginIndices ( M ):
 	indices = set(
-		(p , z , s , d )
+		(p , s , d )
 
 	   for p in M.time_optimize
-	   for z in M.Zones
 	   for s in M.time_season
 	   for d in M.time_of_day
 	)
