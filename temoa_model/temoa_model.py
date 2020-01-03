@@ -62,11 +62,12 @@ def temoa_create_model(name="Temoa"):
     M.tech_baseload = Set(within=M.tech_all)
     M.tech_storage = Set(within=M.tech_all)
     M.tech_reserve = Set(within=M.tech_all)
-    M.GroupOfTechnologies = Set(dimen=3)
     M.tech_ramping = Set(within=M.tech_all)
     M.tech_capacity_min = Set(within=M.tech_all)
     M.tech_capacity_max = Set(within=M.tech_all)
     M.tech_curtailment = Set(within=M.tech_all)
+    M.groups = Set(dimen=1) # Define groups for technologies
+    M.tech_groups = Set(within=M.tech_all) # Define techs used in groups
 
     # Define commodity-related sets
     M.commodity_demand = Set()
@@ -213,9 +214,8 @@ def temoa_create_model(name="Temoa"):
     M.EmissionLimit = Param(M.time_optimize, M.commodity_emissions)
     M.EmissionActivity_eitvo = Set(dimen=5, initialize=EmissionActivityIndices)
     M.EmissionActivity = Param(M.EmissionActivity_eitvo)
-    M.MinGenGroupOfTechnologies_Data = Param(
-        M.time_optimize, Set(dimen=1, initialize=MinGenGroups)
-    )
+    M.MinGenGroupWeight = Param(M.tech_groups, M.groups)
+    M.MinGenGroupTarget = Param(M.time_optimize, M.groups)
 
     # Define parameters associated with electric sector operation
     M.RampUp = Param(M.tech_ramping)
@@ -431,7 +431,9 @@ def temoa_create_model(name="Temoa"):
         M.MinActivityConstraint_pt, rule=MinActivity_Constraint
     )
 
-    M.MinActivityGroup_pg = Set(dimen=2, initialize=MinActivityGroup)
+    M.MinActivityGroup_pg = Set(
+        dimen=2, initialize=lambda M: M.MinGenGroupTarget.sparse_iterkeys()
+    )
     M.MinActivityGroup = Constraint(
         M.MinActivityGroup_pg, rule=MinActivityGroup_Constraint
     )

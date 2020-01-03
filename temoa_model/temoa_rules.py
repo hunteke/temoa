@@ -1203,19 +1203,22 @@ for these constraints are period and tech_all, not tech and vintage.
 
 
 def MinActivityGroup_Constraint(M, p, g):
+    r"""
 
-    g_techs = {}
-    for i in M.GroupOfTechnologies.value:
-        if i[1] == g:
-            g_techs[i[0]] = i[2]
+The MinActivityGroup constraint sets a minimum activity limit for a user-defined
+set of technology groups. Each technology within each group is multiplied by a
+weighting function, which determines what technology activity share can count
+towards the constraint.
+"""
     activity_p = sum(
-        M.V_Activity[p, S_s, S_d, t, S_v] * g_techs[t]
-        for t in g_techs
+        M.V_Activity[p, S_s, S_d, S_t, S_v]
+        * M.MinGenGroupWeight[S_t, g]
+        for S_t in M.tech_groups
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.processVintages[p, t]
+        for S_v in M.processVintages[p, S_t]
     )
-    min_act = value(M.MinGenGroupOfTechnologies_Data[p, g])
+    min_act = value(M.MinGenGroupTarget[p, g])
     expr = activity_p >= min_act
     return expr
 

@@ -1003,18 +1003,3 @@ def TechOutputSplitConstraintIndices ( M ):
 	)
 
 	return indices
-
-def MinGenGroups (M):
-	indices = set(
-		(g[1])
-		for g in M.GroupOfTechnologies.value
-		)
-
-	return indices
-
-def MinActivityGroup ( M ):
-		indices = set(
-		  (p,g)
-		  for p , g in M.MinGenGroupOfTechnologies_Data.sparse_iterkeys()
-		)
-		return indices
