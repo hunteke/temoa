@@ -1076,6 +1076,8 @@ we write this equation for all the time-slices defined in the database in each r
    z \in \textbf{C}^{zone}
    :label: reserve_margin
 """
+    if not M.tech_reserve:  # If reserve set empty, skip the constraint
+        return Constraint.Skip
 
     cap_avail = sum(
         value(M.CapacityCredit[p, t])
