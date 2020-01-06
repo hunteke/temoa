@@ -35,8 +35,8 @@ def Activity_Constraint(M, p, s, d, t, v):
 
 The Activity constraint defines the Activity convenience variable.  The Activity
 variable is mainly used in the objective function to calculate the cost
-associated with use of a technology.  In English, this constraint states that
-"the activity of a process is the sum of its outputs."
+associated with use of a technology.  This constraint sums the 
+:math:`\textbf{FO}_{p,s,d,i,t,v,o}` over all input and output commodities.
 
 There is one caveat to keep in mind in regards to the Activity variable: if
 there is more than one output, there is currently no attempt by Temoa to convert
@@ -56,20 +56,24 @@ accounting exercise for the modeler.
 """
     return sum( \
         M.V_FlowOut[p, s, d, S_i, t, v, S_o] \
-        for S_i in M.helper_processInputs[p, t, v] \
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, S_i] \
+        for S_i in M.processInputs[p, t, v] \
+        for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
     ) \
         == M.V_Activity[p, s, d, t, v]
- #   return expr
 
 def Capacity_Constraint(M, p, s, d, t, v):
     r"""
 
-Temoa's definition of a process' capacity is the total size of installation
-required to meet all of that process' demands.  The Activity convenience
-variable represents exactly that, so the calculation on the left hand side of
-the inequality is the maximum amount of energy a process can produce in the time
-slice ``<s``,\ ``d>``.
+This constraint ensures that the capacity of a given process is sufficient
+to support its activity across all time periods and time slices. The calculation
+on the left hand side of the equality is the maximum amount of energy a process
+can produce in the timeslice ``<s``,\ ``d>``. Note that the curtailment variable
+shown below only applies to technologies are members of the curtailment set.
+Curtailment is necessary to track explicitly in scenarios that include a high
+renewable target. Without it, the model can generate more activity than is used
+to meet demand, and have all activity (including the portion curtailed) count
+towards the target. Tracking activity and curtailment separately prevents this
+possibility.
 
 .. math::
    :label: Capacity
@@ -81,11 +85,16 @@ slice ``<s``,\ ``d>``.
          \cdot \text{TLF}_{p, t, v}
        \right )
        \cdot \textbf{CAP}_{t, v}
-   \ge
+   =
        \textbf{ACT}_{p, s, d, t, v}
+       +
+       \sum_{I, O} \textbf{CUR}_{p,s,d,i,t,v,o}
 
    \\
    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+
+
+
 """
     if t in M.tech_storage:
         return Constraint.Skip
@@ -99,8 +108,8 @@ slice ``<s``,\ ``d>``.
             * value(M.ProcessLifeFrac[p, t, v]) \
             * M.V_Capacity[t, v] == M.V_Activity[p, s, d, t, v] + sum( \
             M.V_Curtailment[p, s, d, S_i, t, v, S_o] \
-            for S_i in M.helper_processInputs[p, t, v] \
-            for S_o in M.helper_ProcessOutputsByInput[p, t, v, S_i])
+            for S_i in M.processInputs[p, t, v] \
+            for S_o in M.ProcessOutputsByInput[p, t, v, S_i])
     else:
         return value(M.CapacityFactorProcess[s, d, t, v]) \
         * value(M.CapacityToActivity[t]) \
@@ -111,8 +120,8 @@ slice ``<s``,\ ``d>``.
 def ActivityByPeriodAndProcess_Constraint(M, p, t, v):
     r"""
     
-    This constraint creates a derived variable in which the activty variable 
-	is summed over the intra-annual (i.e., season and time-of-day) time slices:
+    This constraint creates a derived variable in which the activity variable 
+	is summed over the season and time-of-day time slices:
 
     .. math::
     :label: ActivityByPeriodAndProcess
@@ -122,7 +131,7 @@ def ActivityByPeriodAndProcess_Constraint(M, p, t, v):
     \\
     \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
 	"""
-    if p < v or v not in M.helper_processVintages[p, t]:
+    if p < v or v not in M.processVintages[p, t]:
         return Constraint.Skip
 
     activity = sum(
@@ -156,7 +165,7 @@ def ActivityByTech_Constraint(M, t):
 
     activity = sum(
         M.V_Activity[S_p, S_s, S_d, t, S_v]
-        for S_p, S_v in M.helper_processTechs[t]
+        for S_p, S_v in M.processTechs[t]
         for S_s in M.time_season
         for S_d in M.time_of_day
     )
@@ -192,7 +201,7 @@ available for use throughout the period.
 """
     cap_avail = sum(
         value(M.ProcessLifeFrac[p, t, S_v]) * M.V_Capacity[t, S_v]
-        for S_v in M.helper_processVintages[p, t]
+        for S_v in M.processVintages[p, t]
     )
 
     expr = M.V_CapacityAvailableByPeriodAndTech[p, t] == cap_avail
@@ -202,12 +211,11 @@ available for use throughout the period.
 def ExistingCapacity_Constraint(M, t, v):
     r"""
 
-Temoa treats residual capacity from before the model's optimization horizon as
-regular processes, that require the same parameter specification in the data
-file as do new vintage technologies (e.g. entries in the efficiency table),
-except the :code:`CostInvest` parameter.  This constraint sets the capacity of
-processes for model periods that exist prior to the optimization horizon to
-user-specified values.
+Temoa treats existing capacity installed prior to the beginning of the model's
+optimization horizon as regular processes that require the same parameter
+specification as do new vintage technologies, except for the :code:`CostInvest`
+parameter.  This constraint sets the capacity of processes for model periods
+that exist prior to the optimization horizon to user-specified values.
 
 .. math::
    :label: ExistingCapacity
@@ -221,12 +229,17 @@ user-specified values.
 
 
 def EmissionActivityByPeriodAndTech_Constraint(M, e, p, t):
+    r"""
+
+This constraint creates a derived variable that tracks the total emissions by
+pollutant, model time period, and technology.
+"""
     emission_total = sum(
         M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, S_o]
         * M.EmissionActivity[e, S_i, t, S_v, S_o]
         for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
         if tmp_e == e and S_t == t
-        if M.ValidActivity(p, S_t, S_v)
+        if (p, S_t, S_v) in M.processInputs.keys()
         for S_s in M.time_season
         for S_d in M.time_of_day
     )
@@ -394,7 +407,7 @@ each time slice.
    :label: Demand
 
    \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, dem}
-   \ge
+   =
    {DEM}_{p, dem} \cdot {DSD}_{s, d, dem}
 
    \\
@@ -406,18 +419,13 @@ words, an end-use demand must only be an end-use demand.  Note that if an output
 could satisfy both an end-use and internal system demand, then the output from
 :math:`\textbf{FO}` would be double counted.
 
-Note also that this constraint is an inequality, not a strict equality.  "Supply
-must meet or exceed demand."  Like with the ProcessBalance constraint, if this
-constraint is not binding, it may be a clue that the model under inspection
-could be more tightly specified and could have at least one input data anomaly.
-
 """
     if (s,d,dem) not in M.DemandSpecificDistribution.sparse_keys():
         return Constraint.Skip
     supply = sum(
         M.V_FlowOut[p, s, d, S_i, S_t, S_v, dem]
-        for S_t, S_v in M.helper_commodityUStreamProcess[p, dem]
-        for S_i in M.helper_ProcessInputsByOutput[p, S_t, S_v, dem]
+        for S_t, S_v in M.commodityUStreamProcess[p, dem]
+        for S_i in M.ProcessInputsByOutput[p, S_t, S_v, dem]
     )
 
     DemandConstraintErrorCheck(supply, p, s, d, dem)
@@ -457,11 +465,11 @@ slice and demand.  This is transparently handled by the :math:`\Theta` superset.
 
     act_a = sum(
         M.V_FlowOut[p, s_0, d_0, S_i, t, v, dem]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, dem]
+        for S_i in M.ProcessInputsByOutput[p, t, v, dem]
     )
     act_b = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, dem]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, dem]
+        for S_i in M.ProcessInputsByOutput[p, t, v, dem]
     )
 
     expr = act_a * DSD[s, d, dem] == act_b * DSD[s_0, d_0, dem]
@@ -472,12 +480,10 @@ def CommodityBalance_Constraint(M, p, s, d, c):
     r"""
 
 Where the Demand constraint :eq:`Demand` ensures that end-use demands are met,
-the CommodityBalance constraint ensures that the internal system demands are
-met.  That is, this is the constraint that ties the output of one process to the
-input of another.  At the same time, this constraint also conserves energy
-between process.  (But it does not account for transmission loss.)  In this
-manner, it is a corollary to both the ProcessBalance :eq:`ProcessBalance` and
-Demand :eq:`Demand` constraints.
+the CommodityBalance constraint ensures that the endogenous system demands are
+met.  This constraint requires the total production of a given commodity
+to equal the amount consumed, thus ensuring an energy balance at the system
+level.  
 
 .. math::
    :label: CommodityBalance
@@ -494,14 +500,14 @@ Demand :eq:`Demand` constraints.
 
     vflow_in = sum(
         M.V_FlowIn[p, s, d, c, S_t, S_v, S_o]
-        for S_t, S_v in M.helper_commodityDStreamProcess[p, c]
-        for S_o in M.helper_ProcessOutputsByInput[p, S_t, S_v, c]
+        for S_t, S_v in M.commodityDStreamProcess[p, c]
+        for S_o in M.ProcessOutputsByInput[p, S_t, S_v, c]
     )
 
     vflow_out = sum(
         M.V_FlowOut[p, s, d, S_i, S_t, S_v, c]
-        for S_t, S_v in M.helper_commodityUStreamProcess[p, c]
-        for S_i in M.helper_ProcessInputsByOutput[p, S_t, S_v, c]
+        for S_t, S_v in M.commodityUStreamProcess[p, c]
+        for S_i in M.ProcessInputsByOutput[p, S_t, S_v, c]
     )
 
     CommodityBalanceConstraintErrorCheck(vflow_out, vflow_in, p, s, d, c)
@@ -513,18 +519,24 @@ Demand :eq:`Demand` constraints.
 def ProcessBalance_Constraint(M, p, s, d, i, t, v, o):
     r"""
 
-The ProcessBalance constraint is one of the most fundamental constraints in Temoa model.  
+The ProcessBalance constraint is one of the most fundamental constraints in Temoa.  
 It defines the basic relationship between the energy entering a process 
-(:math:`\textbf{FI}`) and the energy leaving a processing(:math:`\textbf{FO}`). This 
+(:math:`\textbf{FI}`) and the energy leaving a process (:math:`\textbf{FO}`). This 
 constraint sets the :code:`FlowOut` variable, upon which all other constraints rely.
 
 This constraint requires that the output energy of a given process is equal to 
-the product of input energy and conversion efficiency.
+the product of its input energy and conversion efficiency. Note that the
+curtailment variable shown below only applies to technologies are members of the
+curtailment set. As noted in the :code:`Capacity_Constraint`, curtailment is
+necessary to track explicitly in scenarios that include a high renewable target. 
+
 
 .. math::
    :label: ProcessBalance
 
           \textbf{FO}_{p, s, d, i, t, v, o}
+          +
+          \textbf{CUR}_{p, s, d, i, t, v, o}
    =
           EFF_{i, t, v, o}
     \cdot \textbf{FI}_{p, s, d, i, t, v, o}
@@ -560,7 +572,7 @@ the amount of a particular resource Temoa may use in a period.
 """
     collected = sum(
         M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, r]
-        for S_i, S_t, S_v in M.helper_ProcessByPeriodAndOutput.keys()
+        for S_i, S_t, S_v in M.ProcessByPeriodAndOutput.keys()
         for S_s in M.time_season
         for S_d in M.time_of_day
     )
@@ -572,14 +584,11 @@ the amount of a particular resource Temoa may use in a period.
 def BaseloadDiurnal_Constraint(M, p, s, d, t, v):
     r"""
 
-There exists within the electric sector a class of technologies whose
-thermodynamic properties are impossible to change over a short period of time
-(e.g.  hourly or daily).  These include coal and nuclear power plants, which
-take weeks to bring to an operational state, and similarly require weeks to
-fully shut down.  Temoa models this behavior by forcing technologies in the
-:code:`tech_baseload` set to maintain a constant output for all daily slices.
-Note that this allows the model to (not) use a baseload process in a season, and
-only applies over the :code:`time_of_day` set.
+Some electric generators cannot ramp output over a short period of time (e.g.,
+hourly or daily). Temoa models this behavior by forcing technologies in the
+:code:`tech_baseload` set to maintain a constant output across all times-of-day
+within the same season. Note that the output of a baseload process can vary
+between seasons.
 
 Ideally, this constraint would not be necessary, and baseload processes would
 simply not have a :math:`d` index.  However, implementing the more efficient
@@ -635,25 +644,25 @@ def StorageEnergy_Constraint(M, p, s, d, t, v):
     r"""
 
 This constraint tracks the amount of storage assuming ordered time slices.
-The storage unit is initialized at full charge in the first time slice of each period, 
-and then the charge level is updated each time slice based on the amount of energy 
-stored or discharged. At the end of the last time slice associated with each 
-period, the charge level must be zeroed out.
+The storage unit is initialized at a user-specified charge level (0-100%) in the
+first time slice of each period, and then the charge level is updated each time
+slice based on the amount of energy stored or discharged. At the end of the last
+time slice associated with each period, the charge level must be zeroed out.
 """
     # This is the sum of all input=i sent TO storage tech t of vintage v with
     # output=o in p,s,d
     charge = sum(
         M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
-        for S_i in M.helper_processInputs[p, t, v]
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, S_i]
+        for S_i in M.processInputs[p, t, v]
+        for S_o in M.ProcessOutputsByInput[p, t, v, S_i]
     )
 
     # This is the sum of all output=o withdrawn FROM storage tech t of vintage v
     # with input=i in p,s,d
     discharge = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, S_o]
-        for S_o in M.helper_processOutputs[p, t, v]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, S_o]
+        for S_o in M.processOutputs[p, t, v]
+        for S_i in M.ProcessInputsByOutput[p, t, v, S_o]
     )
 
     stored_energy = charge - discharge
@@ -723,8 +732,8 @@ def StorageChargeRate_Constraint(M, p, s, d, t, v):
     # Calculate energy charge in each time slice
     slice_charge = sum(
         M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
-        for S_i in M.helper_processInputs[p, t, v]
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, S_i]
+        for S_i in M.processInputs[p, t, v]
+        for S_o in M.ProcessOutputsByInput[p, t, v, S_i]
     )
 
     # Maximum energy charge in each time slice
@@ -750,8 +759,8 @@ def StorageDischargeRate_Constraint(M, p, s, d, t, v):
     # Calculate energy discharge in each time slice
     slice_discharge = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, S_o]
-        for S_o in M.helper_processOutputs[p, t, v]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, S_o]
+        for S_o in M.processOutputs[p, t, v]
+        for S_i in M.ProcessInputsByOutput[p, t, v, S_o]
     )
 
     # Maximum energy discharge in each time slice
@@ -777,14 +786,14 @@ the capacity (typically GW) of the storage unit.
 """
     discharge = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, S_o]
-        for S_o in M.helper_processOutputs[p, t, v]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, S_o]
+        for S_o in M.processOutputs[p, t, v]
+        for S_i in M.ProcessInputsByOutput[p, t, v, S_o]
     )
 
     charge = sum(
         M.V_FlowIn[p, s, d, S_i, t, v, S_o] * M.Efficiency[S_i, t, v, S_o]
-        for S_i in M.helper_processInputs[p, t, v]
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, S_i]
+        for S_i in M.processInputs[p, t, v]
+        for S_o in M.ProcessOutputsByInput[p, t, v, S_i]
     )
 
     throughput = charge + discharge
@@ -808,8 +817,8 @@ def RampUpDay_Constraint(M, p, s, d, t, v):
 
 The ramp rate constraint is utilized to limit the rate of electricity generation 
 increase and decrease between two adjacent time slices in order to account for 
-physical limits associated with thermal power plants. Note that this constriant 
-only applies to technologies with ramp capability, which is defined in set 
+physical limits associated with thermal power plants. Note that this constraint 
+only applies to technologies with ramp capability, which is defined in the set 
 :math:`\textbf{T}^{ramp}`. We assume for simplicity the rate limits for both 
 ramp up and down are equal and they do not vary with technology vintage. The 
 ramp rate limits (:math:`r_t`) for technology :math:`t` should be expressed in 
@@ -867,9 +876,8 @@ In Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we assume
 def RampDownDay_Constraint(M, p, s, d, t, v):
     r"""
 
-Similar to Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we use Equation
-:eq:`ramp_down_day` and :eq:`ramp_down_season` to limit ramp down rates between 
-any two adjacent time slices.
+Similar to Equation :eq:`ramp_up_day`, we use Equation :eq:`ramp_down_day` to
+limit ramp down rates between any two adjacent time slices.
 
 .. math::
    \frac{ 
@@ -955,6 +963,9 @@ respectively.
 
 def RampDownSeason_Constraint(M, p, s, t, v):
     r"""
+
+Similar to Equation :eq:`ramp_up_season`, we use Equation :eq:`ramp_down_season`
+to limit ramp down rates between any two adjacent seasons.
 
 .. math::
    \frac{ 
@@ -1050,7 +1061,7 @@ def RampDownPeriod_Constraint(M, p, t, v):
     return Constraint.Skip  # We don't need inter-period ramp up/down constraint.
 
 
-def ReserveMargin_Constraint(M, p, z, s, d):
+def ReserveMargin_Constraint(M, p, s, d):
     r"""
 
 During each period :math:`p`, the sum of the available capacity of all reserve 
@@ -1076,6 +1087,8 @@ we write this equation for all the time-slices defined in the database in each r
    z \in \textbf{C}^{zone}
    :label: reserve_margin
 """
+    if not M.tech_reserve:  # If reserve set empty, skip the constraint
+        return Constraint.Skip
 
     cap_avail = sum(
         value(M.CapacityCredit[p, t])
@@ -1084,17 +1097,17 @@ we write this equation for all the time-slices defined in the database in each r
         * value(M.SegFrac[s, d])
         for t in M.tech_reserve
         # Make sure (p,t) combinations are defined
-        if (p,t) in M.helper_activeCapacityAvailable_pt
+        if (p,t) in M.activeCapacityAvailable_pt
     )
 
     # In most Temoa input databases, demand is endogenous, so we use electricity
     # generation instead.
     total_generation = sum(
         M.V_Activity[p, s, d, t, S_v]
-        for (t,S_v) in M.helper_processReservePeriods[p]
+        for (t,S_v) in M.processReservePeriods[p]
     )
 
-    cap_target = total_generation * (1 + value(M.PlanningReserveMargin[z]))
+    cap_target = total_generation * (1 + value(M.PlanningReserveMargin))
 
     return cap_avail >= cap_target
 
@@ -1127,7 +1140,8 @@ to each emission commodity.
         * M.EmissionActivity[e, S_i, S_t, S_v, S_o]
         for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
         if tmp_e == e
-        if M.ValidActivity(p, S_t, S_v)
+        # EmissionsActivity not indexed by p, so make sure (p,t,v) combos valid
+        if (p, S_t, S_v) in M.processInputs.keys()
         for S_s in M.time_season
         for S_d in M.time_of_day
     )
@@ -1170,14 +1184,14 @@ def MaxActivity_Constraint(M, p, t):
     r"""
 
 The MaxActivity sets an upper bound on the activity from a specific technology. 
-Note that the indices for these constraints are period and tech_all, not tech 
+Note that the indices for these constraints are period and tech, not tech 
 and vintage.
 """
     activity_pt = sum(
         M.V_Activity[p, S_s, S_d, t, S_v]
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.helper_processVintages[p, t]
+        for S_v in M.processVintages[p, t]
     )
     max_act = value(M.MaxActivity[p, t])
     expr = activity_pt <= max_act
@@ -1187,14 +1201,15 @@ and vintage.
 def MinActivity_Constraint(M, p, t):
     r"""
 
-The MinActivity sets a lower bound on the activity from a specific technology.  Note that the indices
-for these constraints are period and tech_all, not tech and vintage.
+The MinActivity sets a lower bound on the activity from a specific technology.
+Note that the indices for these constraints are period and tech, not tech and
+vintage.
 """
     activity_pt = sum(
         M.V_Activity[p, S_s, S_d, t, S_v]
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.helper_processVintages[p, t]
+        for S_v in M.processVintages[p, t]
     )
     min_act = value(M.MinActivity[p, t])
     expr = activity_pt >= min_act
@@ -1202,19 +1217,22 @@ for these constraints are period and tech_all, not tech and vintage.
 
 
 def MinActivityGroup_Constraint(M, p, g):
+    r"""
 
-    g_techs = {}
-    for i in M.GroupOfTechnologies.value:
-        if i[1] == g:
-            g_techs[i[0]] = i[2]
+The MinActivityGroup constraint sets a minimum activity limit for a user-defined
+technology group. Each technology within each group is multiplied by a
+weighting function, which determines what technology activity share can count
+towards the constraint.
+"""
     activity_p = sum(
-        M.V_Activity[p, S_s, S_d, t, S_v] * g_techs[t]
-        for t in g_techs
+        M.V_Activity[p, S_s, S_d, S_t, S_v]
+        * M.MinGenGroupWeight[S_t, g]
+        for S_t in M.tech_groups
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.helper_processVintages[p, t]
+        for S_v in M.processVintages[p, S_t]
     )
-    min_act = value(M.MinGenGroupOfTechnologies_Data[p, g])
+    min_act = value(M.MinGenGroupTarget[p, g])
     expr = activity_p >= min_act
     return expr
 
@@ -1222,9 +1240,9 @@ def MinActivityGroup_Constraint(M, p, g):
 def MaxCapacity_Constraint(M, p, t):
     r"""
 
-The MinCapacity and MaxCapacity constraints set limits on the what the model is
-allowed to (not) have available of a certain technology.  Note that the indices
-for these constraints are period and tech_all, not tech and vintage.
+The MaxCapacity constraint sets a limit on the maximum available capacity of a
+given technology. Note that the indices for these constraints are period and
+tech, not tech and vintage.
 
 .. math::
    :label: MinCapacityCapacityAvailableByPeriodAndTech
@@ -1256,7 +1274,19 @@ def MaxCapacitySet_Constraint(M, p):
 
 
 def MinCapacity_Constraint(M, p, t):
-    r""" See MaxCapacity_Constraint """
+    r"""
+
+The MinCapacity constraint sets a limit on the minimum available capacity of a
+given technology. Note that the indices for these constraints are period and
+tech, not tech and vintage.
+
+.. math::
+   :label: MinCapacityCapacityAvailableByPeriodAndTech
+
+   \textbf{CAPAVL}_{p, t} \ge MIN_{p, t}
+
+   \forall \{p, t\} \in \Theta_{\text{MinCapacity parameter}}
+"""
     min_cap = value(M.MinCapacity[p, t])
     expr = M.V_CapacityAvailableByPeriodAndTech[p, t] >= min_cap
     return expr
@@ -1281,13 +1311,13 @@ TechOutputSplit_Constraint for an analogous explanation.
 """
     inp = sum(
         M.V_FlowIn[p, s, d, i, t, v, S_o] 
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, i]
+        for S_o in M.ProcessOutputsByInput[p, t, v, i]
     )
 
     total_inp = sum(
         M.V_FlowIn[p, s, d, S_i, t, v, S_o]
-        for S_i in M.helper_processInputs[p, t, v]
-        for S_o in M.helper_ProcessOutputsByInput[p, t, v, i]
+        for S_i in M.processInputs[p, t, v]
+        for S_o in M.ProcessOutputsByInput[p, t, v, i]
     )
 
     expr = inp >= M.TechInputSplit[p, i, t] * total_inp
@@ -1328,7 +1358,7 @@ specified shares by model time period. The constraint is formulated as follows:
 """
     out = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, o]
-        for S_i in M.helper_ProcessInputsByOutput[p, t, v, o]
+        for S_i in M.ProcessInputsByOutput[p, t, v, o]
     )
 
     expr = out >= M.TechOutputSplit[p, t, o] * M.V_Activity[p, s, d, t, v]
@@ -1386,7 +1416,7 @@ GlobalDiscountRate and the length of each period.  One may refer to this
 def ParamProcessLifeFraction_rule(M, p, t, v):
     """\
 
-Calculate the fraction of period p that process <t, v> operates.
+Calculate the fraction of period p that process :math:`<t, v>` operates.
 
 For most processes and periods, this will likely be one, but for any process
 that will cease operation (rust out, be decommissioned, etc.) between periods,
