@@ -113,6 +113,7 @@ def db_2_dat(ifile, ofile, options):
 		['set',  'time_of_day',               '',                    '',             0],
 		['set',  'Zones',        	          '',                    '',             0],
 		['set',  'tech_curtailment',          '',                    '',             0],
+		['set',  'tech_reserve',              '',                    '',             0],		
 		['set',  'technologies',              'tech_resource',       'r',            0],
 		['set',  'technologies',              'tech_production',    ['p','pb','ps'], 0],
 		['set',  'technologies',              'tech_baseload',       'pb',           0],
@@ -121,7 +122,10 @@ def db_2_dat(ifile, ofile, options):
 		['set',  'commodities',               'commodity_physical',  'p',            0],
 		['set',  'commodities',               'commodity_emissions', 'e',            0],
 		['set',  'commodities',               'commodity_demand',    'd',            0],
-		['param','MinGenGroupOfTechnologies_Data', '',               '',             2], \
+		['set',  'tech_groups',               '',                    '',             0],		
+		['set',  'groups',                    '',                    '',             0],		
+		['param','MinGenGroupTarget',         '',                    '',             2], 
+		['param','MinGenGroupWeight',         '',                    '',             2], 
 		['param','SegFrac',                   '',                    '',             2],
 		['param','DemandSpecificDistribution','',                    '',             3],
 		['param','CapacityToActivity',        '',                    '',             1],
@@ -174,29 +178,6 @@ def db_2_dat(ifile, ofile, options):
 		if options.mga_weight == 'normalized':
 			write_tech_sector(f)
 			
-		# Added by Hadi, The following 3 bloack, append the techs groups to the .dat file. 
-
-
-		if "MinGenGroupOfTechnologies" in table_exist:
-			cur.execute("SELECT * FROM MinGenGroupOfTechnologies")
-			A=cur.fetchall()
-			if len(A)!=0:
-				f.write("set " +"GroupOfTechnologies" + " := \n")
-				for row in A:
-					f.write(row[0]+"   "+row[1]+"   "+str(row[2])+" \n")
-				f.write(";\n\n")
-		
-
-
-		if "ReserveMargin" in table_exist:
-			cur.execute("SELECT * FROM ReserveMargin")
-			A=cur.fetchall()
-			if len(A)!=0:
-				f.write("set " +"ReserveMargin" + " := \n")
-				for row in A:
-					f.write(row[0]+"   "+row[1]+" \n")
-				f.write(";\n\n")
-
 		
 
 		cur.close()
