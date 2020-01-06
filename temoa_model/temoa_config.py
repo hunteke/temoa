@@ -409,8 +409,12 @@ class TemoaConfig( object ):
 
 		self.lexer = lex.lex(module=self, **kwargs)
 		if self.file_location:
-			with open(self.file_location, encoding="utf8") as f:
-				self.lexer.input(f.read())
+			try:
+				with open(self.file_location, encoding="utf8") as f:
+					self.lexer.input(f.read())
+			except:
+				with open(self.file_location, 'r') as f:
+					self.lexer.input(f.read())
 			while True:
 				tok = self.lexer.token()
 				if not tok: break
