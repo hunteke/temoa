@@ -211,7 +211,7 @@ def temoa_create_model(name="Temoa"):
     M.EmissionLimit = Param(M.time_optimize, M.commodity_emissions)
     M.EmissionActivity_eitvo = Set(dimen=5, initialize=EmissionActivityIndices)
     M.EmissionActivity = Param(M.EmissionActivity_eitvo)
-    M.MinGenGroupWeight = Param(M.tech_groups, M.groups)
+    M.MinGenGroupWeight = Param(M.tech_groups, M.groups, default = 0)
     M.MinGenGroupTarget = Param(M.time_optimize, M.groups)
 
     # Define parameters associated with electric sector operation
