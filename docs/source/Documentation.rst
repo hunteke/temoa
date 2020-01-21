@@ -1,35 +1,3 @@
-.. spelling::
-
-   Affero
-   Fourer
-   Github
-   Graphviz
-   Kallrath
-   Kernighan
-   LoanAnnualize
-   Makhorin
-   PeriodLength
-   PeriodRate
-   Pythonic
-   Sarat
-   Sreepathi
-   TechLifeFrac
-   builtin
-   clickable
-   codebase
-   cogeneration
-   extendable
-   hyperlinks
-   infeasibility
-   inline
-   interoperate
-   matplotlib
-   monospace
-   plugins
-   presolve
-   ruleset
-   toolsets
-   wastebin
 
 
 =======
@@ -250,7 +218,7 @@ several model features via a configuration file:
             MGA slack value: None
         MGA # of iterations: None
        MGA weighting method: None
-  **NOTE: If you are performing MGA runs, navigate to the DAT file and make any modifications to the MGA sets before  proceeding.
+  NOTE: If you are performing MGA runs, navigate to the DAT file and make any modifications to the MGA sets before  proceeding.
   Please press enter to continue or Ctrl+C to quit.
   Notice: Using the CPLEX solver interface.
   Continue Operation? [Press enter to continue or CTRL+C to abort]
@@ -380,7 +348,6 @@ recommend that you populate input tables in the following order:
   * time_of_day: time of day segments modeled in the database
 
 **Group 3: parameters used to define processes within Temoa**
-(in no particular order)
   * GlobalDiscountRate
   * Demand
   * DemandSpecificDistribution
@@ -729,7 +696,7 @@ Sets
    ":math:`\text{T}^p`",":code:`tech_production`","string","techs producing intermediate commodities"
    ":math:`\text{T}^b`",":code:`tech_baseload`","string","baseload electric generators; (:math:`{T}^b \subset T`)"
    ":math:`\text{T}^s`",":code:`tech_storage`","string","storage technologies; (:math:`{T}^s \subset T`)"
-   ":math:`\text{T}^c",":code:`tech_curtailment`","string","technologies with curtailable output; (:math:`{T}^c \subset T`)" 
+   ":math:`\text{T}^c`",":code:`tech_curtailment`","string","technologies with curtailable output; (:math:`{T}^c \subset T`)" 
 
 Temoa uses two different set notation styles, one for code representation and
 one that utilizes standard algebraic notation.  For brevity, the mathematical
@@ -889,7 +856,7 @@ Parameters
            The asterisked (\*) elements are automatically derived by the model
            and are not user-specifiable.
    :header: "Parameter","Temoa Name","Domain","Short Description"
-   :widths: 12, 25, 5, 50
+   :widths: 12, 25, 10, 50
 
    ":math:`\text{CFT}_{s,d,t}`","CapacityFactorTech",":math:`\mathbb{I}`","Technology-specific capacity factor"
    ":math:`\text{CFD}_{s,d,t,v}`","CapacityFactorProcess",":math:`\mathbb{I}`","Process-specific capacity factor"
@@ -943,10 +910,10 @@ efficiency table,\ [#efficiency_table]_ Temoa assumes it is not a valid process
 and will provide the user a warning with pointed debugging information.
 
 
-.. _CapacityFactorDefault:
+.. _CapacityFactorTech:
 
 CapacityFactorTech
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 
 :math:`{CFT}_{s \in S, d \in D, t \in T}`
 
@@ -954,7 +921,7 @@ Temoa indexes the :code:`CapacityFactorTech` parameter by season, time-of-day,
 and technology.
 
 CapacityFactorProcess
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 :math:`{CF}_{s \in S, d \in D, t \in T, v \in V}`
 
@@ -1010,7 +977,7 @@ capital is paid off, these costs are still incurred every year the process
 exists.
 
 Temoa's default objective function assumes the modeler has specified this
-parameter in units of currency per unit capacity (:math:`\tfrac{CUR}{Unit
+parameter in units of currency per unit capacity (:math:`\tfrac{Dollars}{Unit
 Cap}`).
 
 
@@ -1024,7 +991,7 @@ Unlike the :code:`CostFixed` and :code:`CostVariable` parameters,
 :code:`CostInvest` only applies to vintages of technologies within the model
 optimization horizon (:math:`\text{P}^o`).  Like :code:`CostFixed`, 
 :code:`CostInvest` is specified in units of cost per unit of capacity and is
-only used in the default objective function (:math:`\tfrac{$}{Unit Cap}`).
+only used in the default objective function (:math:`\tfrac{Dollars}{Unit Cap}`).
 
 
 CostVariable
@@ -1375,49 +1342,16 @@ Variables
 ---------
 
 .. _table_variable:
+.. csv-table:: Temoa's Main Variables
+   :header: "Variable","Temoa Name","Domain","Short Description"
+   :widths: 20, 15, 15, 60
 
-.. tabularcolumns:: |l|L|c|l|
-
-.. raw:: latex
-
-   \begin{threeparttable}
-   \capstart\caption{Temoa's Main Variables}
-
-   \begin{tabulary}{\linewidth}{| l | p{3cm} | c | l |}
-   \hline
-   \textbf{Variable} & \textbf{Temoa Name} & \textbf{Domain} & \textbf{Short Description}
-   \\\hline
-
-   $FI_{p,s,d,i,t,v,o}$ & V\_FlowIn & $\mathbb{R}^+_0$   & Commodity flow into a tech to produce a given output
-   \\\hline
-
-   $FO_{p,s,d,i,t,v,o}$ & V\_FlowOut & $\mathbb{R}^+_0$  & Commodity flow out of a tech based on a given input
-   \\\hline
-
-   $ACT_{p,s,d,t,v}$    & V\_Activity & $\mathbb{R}^+_0$ & Total tech commodity production in each (s, d) tuple
-   \\\hline
-
-   $CAP_{t,v}$          & V\_Capacity & $\mathbb{R}^+_0$ & Required tech capacity to support associated activity
-   \\\hline
-
-   $CAPAVL_{p,t}$       & V\_CapacityAvailable\-ByPeriodAndTech & $\mathbb{R}^+_0$ & The Capacity of technology $t$ available in period $p$
-   \\\hline
-   \end{tabulary}
-
-   \end{threeparttable}
-
-.. only:: html
-
-   .. csv-table:: Temoa's Main Variables
-      :header: "Variable","Temoa Name","Domain","Short Description"
-      :widths: 15, 15, 10, 60
-
-      ":math:`FI_{p,s,d,i,t,v,o}`","V\_FlowIn",":math:`\mathbb{R}^+_0`","Commodity flow into a tech to produce a given output"
-      ":math:`FO_{p,s,d,i,t,v,o}`","V_FlowOut",":math:`\mathbb{R}^+_0`","Commodity flow out of a tech based on a given input"
-      ":math:`CUR_{p,s,d,i,t,v,o}`","V_Curtailment",":math:`\mathbb{R}^+_0`","Commodity flow out of a tech that is curtailed"
-      ":math:`ACT_{p,s,d,t,v}`","V_Activity",":math:`\mathbb{R}^+_0`","Total tech commodity production in each (s, d) tuple"
-      ":math:`CAP_{t,v}`","V_Capacity",":math:`\mathbb{R}^+_0`","Required tech capacity to support associated activity"
-      ":math:`CAPAVL_{p,t}`","V_CapacityAvailable\-ByPeriodAndTech",":math:`\mathbb{R}^+_0`","The Capacity of technology :math:`t` available in period :math:`p`"
+   ":math:`FI_{p,s,d,i,t,v,o}`","V\_FlowIn",":math:`\mathbb{R}^+_0`","Commodity flow into a tech to produce a given output"
+   ":math:`FO_{p,s,d,i,t,v,o}`","V_FlowOut",":math:`\mathbb{R}^+_0`","Commodity flow out of a tech based on a given input"
+   ":math:`CUR_{p,s,d,i,t,v,o}`","V_Curtailment",":math:`\mathbb{R}^+_0`","Commodity flow out of a tech that is curtailed"
+   ":math:`ACT_{p,s,d,t,v}`","V_Activity",":math:`\mathbb{R}^+_0`","Total tech commodity production in each (s, d) tuple"
+   ":math:`CAP_{t,v}`","V_Capacity",":math:`\mathbb{R}^+_0`","Required tech capacity to support associated activity"
+   ":math:`CAPAVL_{p,t}`","V_CapacityAvailableByPeriodAndTech",":math:`\mathbb{R}^+_0`","The Capacity of technology :math:`t` available in period :math:`p`"
 
 
 The most fundamental variables in the Temoa formulation are :math:`FlowIn` and
@@ -1473,7 +1407,7 @@ pulled directly from the docstrings embedded in :code:`temoa_rules.py`.
 .. _DecisionVariables:
 
 Constraints Defining Derived Decision Variables
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 These first two constraints elucidate the relationship among decision variables
 in the model.  There is some overlap with the rest of the constraints, but these
@@ -1514,7 +1448,15 @@ phenomena.
 
 .. autofunction:: temoa_rules.DemandActivity_Constraint
 
-.. autofunction:: temoa_rules.Storage_Constraint
+.. autofunction:: temoa_rules.StorageEnergy_Constraint
+
+.. autofunction:: temoa_rules.StorageEnergyUpperBound_Constraint
+
+.. autofunction:: temoa_rules.StorageChargeRate_Constraint
+
+.. autofunction:: temoa_rules.StorageDischargeRate_Constraint
+
+.. autofunction:: temoa_rules.StorageThroughput_Constraint
 
 .. autofunction:: temoa_rules.RampUpDay_Constraint
 
@@ -1543,7 +1485,17 @@ operation, but allow the modeler some further degree of system specification.
 
 .. autofunction:: temoa_rules.EmissionLimit_Constraint
 
+.. autofunction:: temoa_rules.GrowthRateConstraint_rule
+
+.. autofunction:: temoa_rules.MaxActivity_Constraint
+
+.. autofunction:: temoa_rules.MinActivity_Constraint
+
+.. autofunction:: temoa_rules.MinActivityGroup_Constraint
+
 .. _MaxCapacity_Constraint:
+
+.. autofunction:: temoa_rules.MaxCapacitySet_Constraint
 
 .. autofunction:: temoa_rules.MaxCapacity_Constraint
 
@@ -1833,7 +1785,6 @@ Over a sparse-index, the constraint implementation changes only slightly:
 
    .. code-block:: python
       :linenos:
-      :emphasize-lines: 2-5,15
 
       def Demand_Constraint ( M, p, s, d, dem ):
          supply = sum(

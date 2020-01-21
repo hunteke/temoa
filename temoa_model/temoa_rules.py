@@ -709,7 +709,7 @@ time slice associated with each period, the charge level must be zeroed out.
 def StorageEnergyUpperBound_Constraint(M, p, s, d, t, v):
     r"""
 
-This constraint ensures that the amount of energy stored does not exceed 
+This constraint ensures that the amount of energy stored does not exceed
 the upper bound set by the energy capacity of the storage device.
 """
     energy_capacity = (
@@ -725,9 +725,9 @@ the upper bound set by the energy capacity of the storage device.
 
 def StorageChargeRate_Constraint(M, p, s, d, t, v):
     r"""
-	
-    This constraint ensures that the charge rate of the storage unit
-	is limited by the power capacity (typically GW) of the storage unit.
+
+    This constraint ensures that the charge rate of the storage unit is
+    limited by the power capacity (typically GW) of the storage unit.
 """
     # Calculate energy charge in each time slice
     slice_charge = sum(
@@ -1079,8 +1079,8 @@ we write this equation for all the time-slices defined in the database in each r
       SEG_{s^*,d^*} \cdot C2A_t }
    \geq
    \sum_{t \in T^{res}} { 
-      \sum_{t \in v^{vintage}} {\textbf{ACT}_{p, s, d, t, v  \cdot
-   (1 + RES_z)
+      \sum_{t \in v^{vintage}} \textbf{ACT}_{p, s, d, t, v}} \cdot
+      (1 + RES_z)
    \\
    \forall
    p \in \textbf{P}^o,
@@ -1243,13 +1243,6 @@ def MaxCapacity_Constraint(M, p, t):
 The MaxCapacity constraint sets a limit on the maximum available capacity of a
 given technology. Note that the indices for these constraints are period and
 tech, not tech and vintage.
-
-.. math::
-   :label: MinCapacityCapacityAvailableByPeriodAndTech
-
-   \textbf{CAPAVL}_{p, t} \ge MIN_{p, t}
-
-   \forall \{p, t\} \in \Theta_{\text{MinCapacity parameter}}
 
 .. math::
    :label: MaxCapacity
