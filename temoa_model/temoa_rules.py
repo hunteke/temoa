@@ -52,7 +52,7 @@ accounting exercise for the modeler.
    \textbf{ACT}_{p, s, d, t, v} = \sum_{I, O} \textbf{FO}_{p,s,d,i,t,v,o}
 
    \\
-   \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{Activity}}
 """
     return sum( \
         M.V_FlowOut[p, s, d, S_i, t, v, S_o] \
@@ -91,7 +91,7 @@ possibility.
        \sum_{I, O} \textbf{CUR}_{p,s,d,i,t,v,o}
 
    \\
-   \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{Activity}}
 
 
 
@@ -222,7 +222,7 @@ that exist prior to the optimization horizon to user-specified values.
 
    \textbf{CAP}_{t, v} = ECAP_{t, v}
 
-   \forall \{t, v\} \in \Theta_{\text{existing}}
+   \forall \{t, v\} \in \Theta_{\text{ExistingCapacity}}
 """
     expr = M.V_Capacity[t, v] == M.ExistingCapacity[t, v]
     return expr
@@ -411,7 +411,7 @@ each time slice.
    {DEM}_{p, dem} \cdot {DSD}_{s, d, dem}
 
    \\
-   \forall \{p, s, d, dem\} \in \Theta_{\text{demand}}
+   \forall \{p, s, d, dem\} \in \Theta_{\text{Demand}}
 
 Note that the validity of this constraint relies on the fact that the
 :math:`C^d` set is distinct from both :math:`C^e` and :math:`C^p`. In other
@@ -457,7 +457,7 @@ slice and demand.  This is transparently handled by the :math:`\Theta` superset.
       DEM_{p, s_0, d_0, dem} \cdot \sum_{I} \textbf{FO}_{p, s, d, i, t, v, dem}
 
    \\
-   \forall \{p, s, d, t, v, dem, s_0, d_0\} \in \Theta_{\text{demand activity}}
+   \forall \{p, s, d, t, v, dem, s_0, d_0\} \in \Theta_{\text{DemandActivity}}
 """
     if (s,d,dem) not in M.DemandSpecificDistribution.sparse_keys():
         return Constraint.Skip
@@ -493,7 +493,7 @@ level.
    \sum_{T, V, O} \textbf{FI}_{p, s, d, c, t, v, o}
 
    \\
-   \forall \{p, s, d, c\} \in \Theta_{\text{commodity balance}}
+   \forall \{p, s, d, c\} \in \Theta_{\text{CommodityBalance}}
 """
     if c in M.commodity_demand:
         return Constraint.Skip
@@ -542,7 +542,7 @@ necessary to track explicitly in scenarios that include a high renewable target.
     \cdot \textbf{FI}_{p, s, d, i, t, v, o}
 
    \\
-   \forall \{p, s, d, i, t, v, o\} \in \Theta_{\text{valid process flows}}
+   \forall \{p, s, d, i, t, v, o\} \in \Theta_{\text{ProcessBalance}}
 """
 
     if t in M.tech_curtailment:
@@ -568,7 +568,7 @@ the amount of a particular resource Temoa may use in a period.
 
    \sum_{S, D, I, t \in T^r, V} \textbf{FO}_{p, s, d, i, t, v, c} \le RSC_{p, c}
 
-   \forall \{p, c\} \in \Theta_{\text{resource bound parameter}}
+   \forall \{p, c\} \in \Theta_{\text{ResourceExtraction}}
 """
     collected = sum(
         M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, r]
@@ -604,7 +604,7 @@ functionality is currently on the Temoa TODO list.
    \cdot \textbf{ACT}_{p, s, D_0, t, v}
 
    \\
-   \forall \{p, s, d, t, v\} \in \Theta_{\text{baseload}}
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{BaseloadDiurnal}}
 """
     # Question: How to set the different times of day equal to each other?
 
@@ -1131,7 +1131,7 @@ to each emission commodity.
      ELM_{p, e}
 
    \\
-   \forall \{p, e\} \in ELM_{ind}
+   \forall \{p, e\} \in \Theta_{\text{EmissionLimit}}
 """
     emission_limit = M.EmissionLimit[p, e]
 
@@ -1159,6 +1159,24 @@ to each emission commodity.
 
 
 def GrowthRateConstraint_rule(M, p, t):
+    r"""
+
+This constraint sets an upper bound growth rate on technology-specific capacity.
+
+.. math::
+   :label: GrowthRate
+
+   CAPAVL_{p_{i},t} \le GRM \cdot CAPAVL_{p_{i-1},t} + GRS,
+
+   \\
+   \forall \{p, t\} \in \Theta_{\text{GrowthRate}}
+
+where :math:`GRM` is the maximum growth rate, and should be specified as 
+:math:`(1+r)` and :math:`GRS` is the growth rate seed, which has units of 
+capacity. Without the seed, any technology with zero capacity in the first time 
+period would be restricted to zero capacity for the remainder of the time 
+horizon.
+"""
     GRS = value(M.GrowthRateSeed[t])
     GRM = value(M.GrowthRateMax[t])
     CapPT = M.V_CapacityAvailableByPeriodAndTech
@@ -1186,6 +1204,13 @@ def MaxActivity_Constraint(M, p, t):
 The MaxActivity sets an upper bound on the activity from a specific technology. 
 Note that the indices for these constraints are period and tech, not tech 
 and vintage.
+
+.. math::
+   :label: MaxActivity
+
+   \sum_{S,D,V} \textbf{ACT}_{p,s,d,t,v} \le MAXACT_{p, t}
+
+   \forall \{p, t\} \in \Theta_{\text{MaxActivity}}
 """
     activity_pt = sum(
         M.V_Activity[p, S_s, S_d, t, S_v]
@@ -1204,6 +1229,13 @@ def MinActivity_Constraint(M, p, t):
 The MinActivity sets a lower bound on the activity from a specific technology.
 Note that the indices for these constraints are period and tech, not tech and
 vintage.
+
+.. math::
+   :label: MinActivity
+
+   \sum_{S,D,V} \textbf{ACT}_{p,s,d,t,v} \ge MINACT_{p, t}
+
+   \forall \{p, t\} \in \Theta_{\text{MinActivity}}
 """
     activity_pt = sum(
         M.V_Activity[p, S_s, S_d, t, S_v]
@@ -1223,6 +1255,16 @@ The MinActivityGroup constraint sets a minimum activity limit for a user-defined
 technology group. Each technology within each group is multiplied by a
 weighting function, which determines what technology activity share can count
 towards the constraint.
+
+.. math::
+   :label: MinActivityGroup
+
+   \sum_{S,D,T,V} \textbf{ACT}_{p,s,d,t,v} \cdot  \ge MGGT_{p, g}
+
+   \forall \{p, g\} \in \Theta_{\text{MinActivityGroup}}
+
+where :math:`g` represents the assigned technology group and :math:`MGGT` 
+refers to the :code:`MinGenGroupTarget` parameter.
 """
     activity_p = sum(
         M.V_Activity[p, S_s, S_d, S_t, S_v]
@@ -1249,7 +1291,7 @@ tech, not tech and vintage.
 
    \textbf{CAPAVL}_{p, t} \le MAX_{p, t}
 
-   \forall \{p, t\} \in \Theta_{\text{MaxCapacity parameter}}
+   \forall \{p, t\} \in \Theta_{\text{MaxCapacity}}
 """
     max_cap = value(M.MaxCapacity[p, t])
     expr = M.V_CapacityAvailableByPeriodAndTech[p, t] <= max_cap
@@ -1278,7 +1320,7 @@ tech, not tech and vintage.
 
    \textbf{CAPAVL}_{p, t} \ge MIN_{p, t}
 
-   \forall \{p, t\} \in \Theta_{\text{MinCapacity parameter}}
+   \forall \{p, t\} \in \Theta_{\text{MinCapacity}}
 """
     min_cap = value(M.MinCapacity[p, t])
     expr = M.V_CapacityAvailableByPeriodAndTech[p, t] >= min_cap
@@ -1347,7 +1389,7 @@ specified shares by model time period. The constraint is formulated as follows:
    \geq
      SPL_{p, t, o} \cdot \textbf{ACT}_{p, s, d, t, v}
 
-   \forall \{p, s, d, t, v, o\} \in \Theta_{\text{split output}}
+   \forall \{p, s, d, t, v, o\} \in \Theta_{\text{TechOutputSplit}}
 """
     out = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, o]
