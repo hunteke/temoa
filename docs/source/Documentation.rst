@@ -110,153 +110,114 @@ to let us know the issue on our `mailing list`_\ .
 Quick Start
 ===========
 
-Temoa is built with Sandia National Laboratories' Pyomo project, which is in
-turn built with Python.  Thus, one must first install these software elements:
 
-#. Python v2.7 (http://python.org/)
+Installing Software Elements
+----------------------------
 
-   * Temoa requires v2.7. We recommend installing a Python distribution, like 
-     Anaconda (https://www.continuum.io/anaconda-overview)
+Temoa is implemented in `Pyomo <https://www.pyomo.org/>`_, which is in turn
+written in `Python <http://www.python.org/>`_. Consequently, Temoa will run on
+Linux, Mac, Windows, or any operating system that Pyomo supports. There are
+several open source software elements required to run Temoa. The easiest way to
+install these elements is to create a conda environment in which to run the
+model. Creating a customized environment ensures that the latest version of
+Temoa is compatible with the required software elements. To begin, you need to
+have conda installed either via `miniconda
+<https://docs.conda.io/en/latest/miniconda.html>`_ or
+`anaconda <https://www.anaconda.com/distribution/>`_.
+Next, download the `environment.yml
+<https://github.com/TemoaProject/temoa/blob/energysystem/environment.yml>`_ file
+from our `Github repo <https://github.com/TemoaProject/temoa>`_, and place it in
+a new directory named ‘temoa-py3.’ Create this new directory in a location where
+you wish to store the environment. Navigate to this directory and execute the
+following from the command line:
 
-#. A linear program solver
+.. parsed-literal::
+  $ conda env create
 
-   * Any solver for which Pyomo has a plugin will work.
-   * For ease of integration, we recommend the `GNU Linear Programming Kit`_,
-     with two caveats:
+Then activate the environment as follows:
 
-     #.  The GLPK project does not directly provide a Windows version.  We
-         suggest `WinGLPK`_.
+.. parsed-literal::
+  $ source activate temoa-py3
 
-     #. For larger data sets you may need to invest in a commercial
-        solver.\ [#glpk_presolve]_
+More information on virtual environments can be found `here
+<https://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/>`_.
+This new conda environment contains several elements, including Python 3, a
+compatible version of Pyomo, matplotlib, numpy, scipy, and two free solvers
+(`GLPK <https://www.gnu.org/software/glpk/>`_ and `CBC
+<https://github.com/coin-or/Cbc>`_). Windows users: the CBC solver is not
+available for Windows through conda. Thus, in order to install the environment
+properly, the last line of the ‘environment.yml’ file specifying ‘coincbc’
+should be deleted. A few notes for on the choice of solvers. Different solvers
+have widely varying solution times. If you plan to run Temoa with large datasets
+and/or conduct uncertainty analysis, you may want to consider installing
+commercial linear solvers such as `CPLEX
+<https://www.ibm.com/analytics/cplex-optimizer>`_ or `Gurobi
+<https://www.gurobi.com/>`_. Both offer free academic licenses. Another option
+is to run CPLEX on the `NEOS <https://neos-server.org/neos/>`_ server.
 
-#. Pyomo (http://www.pyomo.org/)
-
-   * Pyomo is a set of Python Optimization libraries. 
-
-After the above 3 items are installed and tested, download Temoa from our `Github 
-repo`_. You can either install git and clone the repository or just download the 
-current repsitory as a zip file.  Then run Temoa from your operating
-system's command line interface.  (In the examples below, lines beginning with the
-dollar symbol '``$``' canonically represent a Unix command line.  Windows
-prompts will likely end with a right caret '``>``'.)
-
-There are three ways to run the model, each of which is detailed below. Note that 
+There are three ways to run the model, each of which is detailed below. Note that
 the example commands utilize 'temoa_utopia', a commonly used test case for ESOMs.
 
-**Option 1 (basic):**
-Uses Pyomo's own scripts and provides basic solver output:
+Obtaining Temoa
+---------------
+
+Now that you have functioning environment, you need to obtain the source code
+for Temoa. There are a couple of options for obtaining and running Temoa from
+GitHub. If you want to simply run the model, you can download Temoa from GitHub
+as a zip file. Navigate to `our GitHub repository
+<https://github.com/TemoaProject/temoa>`_, and click the green ‘clone or
+download’ button near the top-right corner. Select ‘Download ZIP,’ and you can
+download the entire Temoa ‘energysystem’ (our main branch) to your local machine.
+The second option creates a local copy of the model source code in our GitHub
+repository. This is a two step process: first install git and then ‘clone’ the
+repository. Under Linux, git can be installed through the default package
+manager. Git for Windows and Mac can be downloaded from the `Git website
+<https://git-scm.com/download/>`_. To clone the Temoa repository, navigate to
+the directory where you want the model to reside and type the following from the
+prompt:
 
 .. parsed-literal::
-  $ **pyomo solve --solver=<solver> temoa_model/temoa_model.py  data_files/utopia-15.dat**
-  [    0.00] Setting up Pyomo environment
-  [    0.00] Applying Pyomo preprocessing actions
-  [    0.01] Creating model
-  [    0.27] Applying solver
-  [    0.59] Processing results
-    Number of solutions: 1
-    Solution Information
-      Gap: 0.0
-      Status: optimal
-      Function Value: 37048.4102322
-    Solver results file: results.yml
+  $ git clone https://github.com/TemoaProject/temoa/
 
-This option will only work with a text ('DAT') file as input. 
-Results are placed in a yaml file within the top-level 'temoa' directory.
+Note that cloning the repository will supply the latest version of the code, and
+allow you to archive changes to the code and data in your own local git
+repository.
 
+A few basic input data files are included in the ‘temoa/data_files’ folder.
+Additional Temoa-compatible datasets are available in `this separate GitHub
+repo <https://github.com/TemoaProject/data>`_.
 
-**Option 2 (basic +):**
-In this case, a Temoa solve is invoked using our own code rather than Pyomo:
+The installation procedures above are meant to be generic and should work across
+different platforms. Nonetheless, system-specific ambiguities and unexpected
+conditions inevitably arise. Please use the `Temoa forum
+<https://groups.google.com/forum/#!forum/temoa-project>`_ to ask for help.
 
-.. parsed-literal::
-  $ **python temoa_model/  data_files/utopia-15.dat**
-  Notice: Using the CPLEX solver interface.
-  Continue Operation? [Press enter to continue or CTRL+C to abort]
-
-  [    0.04] Reading data files.
-  [    0.25] Creating Temoa model instance.
-  [    0.19] Solving.
-  [    0.26] Calculating reporting variables and formatting results.
-  Model name: The Temoa Energy System Model
-  Objective function value (TotalCost): 37048.4102322
-  Non-zero variable values:
-     56.75475172950841      Costs[V_DiscountedFixedCostsByProcess,E01,1960]
-    117.72911673378935      Costs[V_DiscountedFixedCostsByProcess,E01,1970]
-   [ ... output trimmed for brevity ... ]
-
-This option is similar to invoking :code:`pyomo solve`, except that the shell output 
-follows our own formatting rather than Pyomo's yaml output. As above, it only
-works with a DAT file as input. This is often a convenient option when trying to 
-debug model enhancements or working with small input datasets.
-
-
-**Option 3 (full-featured):**
-Invokes python directly, and gives the user access to 
-several model features via a configuration file:
+Running Temoa
+-------------
+The most basic way to run Temoa is with an input data (DAT) file:
 
 .. parsed-literal::
-  $ **python  temoa_model/  --config=temoa_model/config_sample**
-  1 .db DD file(s) converted
-  
-  -------------------------
-                Config file: /Users/jdecarolis/temoa/temoa_model/config_sample
-                 Input file: /Users/jdecarolis/temoa/db_io/temoa_utopia.dat
-                Output file: /Users/jdecarolis/temoa/db_io/temoa_utopia.sqlite
-                   Scenario: test_run
-         Spreadsheet output: True
-  
-  -------------------------
-     Citation output status: None
-      Version output status: False
-  
-  -------------------------
-     Selected solver status: cplex
-     Solver LP write status: False
-      Pyomo LP write status: False
-  
-  -------------------------
-            MGA slack value: None
-        MGA # of iterations: None
-       MGA weighting method: None
-  NOTE: If you are performing MGA runs, navigate to the DAT file and make any modifications to the MGA sets before  proceeding.
-  Please press enter to continue or Ctrl+C to quit.
-  Notice: Using the CPLEX solver interface.
-  Continue Operation? [Press enter to continue or CTRL+C to abort]
-  
-  [    0.04] Reading data files.
-  [    0.24] Creating Temoa model instance.
-  [    0.19] Solving.
-  [    0.39] Calculating reporting variables and formatting results.
-  Model name: The Temoa Energy System Model
-  Objective function value (TotalCost): 37048.4102322
-  Non-zero variable values:
-       56.75475172950841      Costs[V_DiscountedFixedCostsByProcess,E01,1960]
-      117.72911673378935      Costs[V_DiscountedFixedCostsByProcess,E01,1970]
-  
-  
-In this case, Temoa returns a summary of selected options for the model run. 
-Running the model with a config file allows the user to (1) use a sqlite 
-database for storing input and output data, (2) create a formatted Excel 
-output file, (3) return the log file produced during model execution, 
-(4) return the lp file utilized by the solver, and (5) to execute modeling-
-to-generate alternatives (MGA).
+  $ python temoa_model/ /path/to/dat/file
 
-**Option 4 (Compact)**
-
-You can also copy the files in the :code:`temoa_model` directory into an 
-executable archive in order to quickly share with others. To create the archive, 
-run the following command from the top-level :code:`temoa` directory (this only 
-needs to be done once):
+This option will simply run the model and output the results to the shell. To
+make sure the model is functioning correctly, try running with the ‘Utopia’
+dataset:
 
 .. parsed-literal::
-  $ **python create_archive.py**
+  $ python temoa_model/ data_files/utopia-15.dat
 
-This makes the model more portable by placing all contents in a single file. Now 
-it is possible to execute the model with the 
-following simply command:
+To run the model with more features, use a configuration (‘config’) file. An
+example config file called ‘config_sample’ resides within the ‘temoa_model’
+folder. Running the model with a config file allows the user to (1) use a sqlite
+database for storing input and output data, (2) create a formatted Excel output
+file, (2) specify the solver to use, (3) return the log file produced during
+model execution, (4) return the lp file utilized by the solver, and (5) to
+execute modeling-to-generate alternatives (MGA). Note that if you do not have
+access to a commercial solver, it may be faster run cplex on the NEOS server.
+To do so, simply specify cplex as the solver and uncomment the ‘–neos’ flag.
 
 .. parsed-literal::
-  $ **./temoa.py  data_files/temoa_utopia-15.dat**
+  $ python temoa_model/ --config=temoa_model/config_sample
 
 **For general help, use --help:**
 
@@ -274,7 +235,7 @@ following simply command:
     -h, --help            show this help message and exit
     --path_to_logs PATH_TO_LOGS
                           Path to where debug logs will be generated by default.
-                          See folder debug_logs in db_io.
+                          See folder debug_logs in data_files.
     --config CONFIG       Path to file containing configuration information.
     --solver {bilevel_blp_global,bilevel_blp_local,bilevel_ld,cplex,mpec_minlp,mpec_nlp,openopt,ps}
                           Which backend solver to use. See 'pyomo --help-
@@ -2501,7 +2462,7 @@ should meet a basic standard of quality:
 .. _sources: https://en.wikipedia.org/wiki/Mathematical_optimization
 .. _GAMS: http://www.gams.com/
 .. _AMPL: http://www.ampl.com/
-.. _PDF: http://temoaproject.org/download/TemoaDocumentation.pdf
+.. _PDF: https://temoacloud.com/wp-content/uploads/2020/02/toolsforenergymodeloptimizationandanalysistemoa.pdf
 .. _HTML: http://temoaproject.org/docs/
 .. _GitHub Issue tracker: https://github.com/TemoaProject/temoa/issues
 .. _HTML version: http://temoaproject.org/docs/

@@ -11,9 +11,9 @@ sys.path.insert(0, os.path.abspath('../../temoa_model/'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'Temoa'
+project = 'Tools for Energy Model Optimization and Analysis (Temoa)'
 copyright = '2020, NC State University'
-author = 'Joe DeCarolis'
+author = 'Joe DeCarolis, Kevin Hunter'
 
 # The short X.Y version
 version = ''
@@ -105,4 +105,5 @@ pygments_style = 'sphinx'
 #]
 
 html_theme = "sphinx_rtd_theme"
-html_logo = "Temoa_logo.png"
+html_logo = "images/Temoa_logo_color_small.png"
+latex_logo = 'images/TemoaLogo_grayscale.png'
