@@ -672,7 +672,14 @@ time slice associated with each period, the charge level must be zeroed out.
     # the last time slice of the last season must zero out
     if d == M.time_of_day.last() and s == M.time_season.last():
         d_prev = M.time_of_day.prev(d)
-        expr = M.V_StorageLevel[p, s, d_prev, t, v] + stored_energy == 0
+        initial_storage = (
+            M.StorageInit[t]
+            * M.V_Capacity[t, v]
+            * M.StorageDuration[t]
+            * M.CapacityToActivity[t]
+            * value(M.ProcessLifeFrac[p, t, v])
+        )
+        expr = M.V_StorageLevel[p, s, d_prev, t, v] + stored_energy == initial_storage
 
     # First time slice of the first season (i.e., start of period), starts at full charge
     elif d == M.time_of_day.first() and s == M.time_season.first():
