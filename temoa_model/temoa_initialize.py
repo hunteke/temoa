@@ -841,8 +841,8 @@ def FlowInStorageVariableIndices ( M ):
 def CurtailmentVariableIndices ( M ):
 	return M.activeCurtailment_psditvo
 
-def ActivityVariableIndices ( M ):
-	activity_indices = set(
+def CapacityConstraintIndices ( M ):
+	capacity_indices = set(
 	  (p, s, d, t, v)
 
 	  for p, t, v in M.activeActivity_ptv
@@ -850,10 +850,8 @@ def ActivityVariableIndices ( M ):
 	  for d in M.time_of_day
 	)
 
-	return activity_indices
+	return capacity_indices
 
-def ActivityByPeriodAndProcessVarIndices ( M ):
-	return M.activeActivity_ptv
 
 # ---------------------------------------------------------------
 # Create sparse indices for constraints.
@@ -927,6 +925,7 @@ def CommodityBalanceConstraintIndices ( M ):
 	)
 
 	return indices
+
 
 def StorageVariableIndices ( M ):
 	indices = set(

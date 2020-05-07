@@ -128,23 +128,11 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	x   = 1 + GDR    # convenience variable, nothing more
 
 	# Extract optimal decision variable values related to commodity flow:
-	for p, s, d, t, v in m.V_Activity:
-		val = value( m.V_Activity[p, s, d, t, v] )
-		if abs(val) < epsilon: continue
-
-		svars['V_Activity'][p, s, d, t, v] = val
-
 	for p, s, d, t, v in m.V_StorageLevel:
 		val = value( m.V_StorageLevel[p, s, d, t, v] )
 		if abs(val) < epsilon: continue
 
 		svars['V_StorageLevel'][p, s, d, t, v] = val
-		
-	for p, t, v in m.V_ActivityByPeriodAndProcess:
-		val = value( m.V_ActivityByPeriodAndProcess[p, t, v] )
-		if abs(val) < epsilon: continue
-
-		svars['V_ActivityByPeriodAndProcess'][p, t, v] = val
 
 	#vflow_in is defined only for storage techs
 	for p, s, d, i, t, v, o in m.V_FlowIn:
@@ -231,7 +219,13 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		svars[	'Costs'	][ 'V_DiscountedFixedCostsByProcess', t, v] += fcost
 		
 	for p, t, v in m.CostVariable.sparse_iterkeys():
-		vcost = value( m.V_ActivityByPeriodAndProcess[p, t, v] )
+		vcost = sum(
+			value (m.V_FlowOut[p, s, d, S_i, t, v, S_o])
+			for S_i in m.processInputs[p, t, v]
+			for S_o in m.ProcessOutputsByInput[p, t, v, S_i]
+			for s in m.time_season
+			for d in m.time_of_day
+		)
 		if abs(vcost) < epsilon: continue
 
 		vcost *= value( m.CostVariable[p, t, v] )

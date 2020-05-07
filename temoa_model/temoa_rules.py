@@ -29,37 +29,6 @@ from temoa_initialize import *
 # and constraints below.
 # ---------------------------------------------------------------
 
-def Activity_Constraint(M, p, s, d, t, v):
-    r"""
-
-The Activity constraint defines the Activity convenience variable.  The Activity
-variable is mainly used in the objective function to calculate the cost
-associated with use of a technology.  This constraint sums the 
-:math:`\textbf{FO}_{p,s,d,i,t,v,o}` over all input and output commodities.
-
-There is one caveat to keep in mind in regards to the Activity variable: if
-there is more than one output, there is currently no attempt by Temoa to convert
-to a common unit of measurement.  For example, common measurements for heat
-include mass of steam at a given temperature, or total BTUs, while electricity
-is generally measured in a variant of watt-hours.  Reconciling these units of
-measurement, as for example with a cogeneration plant, is currently left as an
-accounting exercise for the modeler.
-
-.. math::
-   :label: Activity
-
-   \textbf{ACT}_{p, s, d, t, v} = \sum_{I, O} \textbf{FO}_{p,s,d,i,t,v,o}
-
-   \\
-   \forall \{p, s, d, t, v\} \in \Theta_{\text{Activity}}
-"""
-    return sum( \
-        M.V_FlowOut[p, s, d, S_i, t, v, S_o] \
-        for S_i in M.processInputs[p, t, v] \
-        for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
-    ) \
-        == M.V_Activity[p, s, d, t, v]
-
 def Capacity_Constraint(M, p, s, d, t, v):
     r"""
 
@@ -85,7 +54,7 @@ possibility.
        \right )
        \cdot \textbf{CAP}_{t, v}
    =
-       \textbf{ACT}_{p, s, d, t, v}
+       \sum_{I, O} \textbf{FO}_{p, s, d,i, t, v, o}
        +
        \sum_{I, O} \textbf{CUR}_{p,s,d,i,t,v,o}
 
@@ -99,13 +68,20 @@ possibility.
         return Constraint.Skip
     # The expressions below are defined in-line to minimize the amount of
     # expression cloning taking place with Pyomo.
+    
+    useful_activity = sum( 
+    M.V_FlowOut[p, s, d, S_i, t, v, S_o] 
+    for S_i in M.processInputs[p, t, v] 
+    for S_o in M.ProcessOutputsByInput[p, t, v, S_i]
+    )
+
     if t in M.tech_curtailment:
         # If technologies are present in the curtailment set, then enough
         # capacity must be available to cover both activity and curtailment.
         return value(M.CapacityFactorProcess[s, d, t, v]) \
             * value(M.CapacityToActivity[t]) * value(M.SegFrac[s, d]) \
             * value(M.ProcessLifeFrac[p, t, v]) \
-            * M.V_Capacity[t, v] == M.V_Activity[p, s, d, t, v] + sum( \
+            * M.V_Capacity[t, v] == useful_activity + sum( \
             M.V_Curtailment[p, s, d, S_i, t, v, S_o] \
             for S_i in M.processInputs[p, t, v] \
             for S_o in M.ProcessOutputsByInput[p, t, v, S_i])
@@ -114,37 +90,7 @@ possibility.
         * value(M.CapacityToActivity[t]) \
         * value(M.SegFrac[s, d]) \
         * value(M.ProcessLifeFrac[p, t, v]) \
-        * M.V_Capacity[t, v] >= M.V_Activity[p, s, d, t, v]
-
-def ActivityByPeriodAndProcess_Constraint(M, p, t, v):
-    r"""
-    
-    This constraint creates a derived variable in which the activity variable 
-	is summed over the season and time-of-day time slices:
-
-    .. math::
-    :label: ActivityByPeriodAndProcess
-
-    \textbf{ACT}_{p, t, v} = \sum_{I, O} \textbf{ACT}_{p,s,d,t,v}
-
-    \\
-    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
-	"""
-    if p < v or v not in M.processVintages[p, t]:
-        return Constraint.Skip
-
-    activity = sum(
-        M.V_Activity[p, S_s, S_d, t, v]
-        for S_s in M.time_season
-        for S_d in M.time_of_day
-    )
-
-    if int is type(activity):
-        return Constraint.Skip
-
-    expr = M.V_ActivityByPeriodAndProcess[p, t, v] == activity
-    return expr
-
+        * M.V_Capacity[t, v] >= useful_activity
 
 # This is required for MGA objective function
 def ActivityByTech_Constraint(M, t):
@@ -156,17 +102,17 @@ def ActivityByTech_Constraint(M, t):
     .. math::
     :label: ActivityByTech
 
-    \textbf{ACT}_{t} = \sum_{I, O} \textbf{ACT}_{p,s,d,t,v}
+    \textbf{ACT}_{t} = \sum_{P, S, D, I, V, O} \textbf{FO}_{p, s, d,i, t, v, o}
 
     \\
-    \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+    \forall \{t\} \in T
 	"""
-
-    activity = sum(
-        M.V_Activity[S_p, S_s, S_d, t, S_v]
-        for S_p, S_v in M.processTechs[t]
-        for S_s in M.time_season
-        for S_d in M.time_of_day
+    activity = sum( M.V_FlowOut[S_p, s, d, S_i, t, S_v, S_o]
+      for S_p, S_v in M.processTechs[t]
+      for S_i in M.processInputs[S_p, t, S_v]
+      for S_o in M.ProcessOutputsByInput[S_p, t, S_v, S_i]
+      for s in M.time_season
+      for d in M.time_of_day
     )
 
     if int is type(activity):
@@ -316,7 +262,7 @@ loan rates and periods.
      }{
        GDR
      }
-     \cdot \textbf{ACT}_{t, v}
+     \cdot \sum_{S, D, I, O} \textbf{FO}_{p, s, d, i, t, v, o}
      \right )
 
 """
@@ -369,7 +315,7 @@ def PeriodCost_rule(M, p):
     )
 
     variable_costs = sum(
-        M.V_ActivityByPeriodAndProcess[p, S_t, S_v]
+        M.V_FlowOut[p, s, d, S_i, S_t, S_v, S_o]
         * (
             value(M.CostVariable[p, S_t, S_v])
             * (
@@ -380,6 +326,10 @@ def PeriodCost_rule(M, p):
         )
         for S_p, S_t, S_v in M.CostVariable.sparse_iterkeys()
         if S_p == p
+        for S_i in M.processInputs[S_p, S_t, S_v]
+        for S_o in M.ProcessOutputsByInput[S_p, S_t, S_v, S_i]
+        for s in M.time_season
+        for d in M.time_of_day       
     )
 
     period_costs = loan_costs + fixed_costs + variable_costs
@@ -570,10 +520,10 @@ functionality is currently on the Temoa TODO list.
    :label: BaseloadDaily
 
          SEG_{s, D_0}
-   \cdot \textbf{ACT}_{p, s, d, t, v}
+   \cdot \sum_{I, O} \textbf{FO}_{p, s, d,i, t, v, o}
    =
          SEG_{s, d}
-   \cdot \textbf{ACT}_{p, s, D_0, t, v}
+   \cdot \sum_{I, O} \textbf{FO}_{p, s, D_0,i, t, v, o}
 
    \\
    \forall \{p, s, d, t, v\} \in \Theta_{\text{BaseloadDiurnal}}
@@ -605,10 +555,23 @@ functionality is currently on the Temoa TODO list.
     # So:   (ActA / SegA) == (ActB / SegB)
     #   computationally, however, multiplication is cheaper than division, so:
     #       (ActA * SegB) == (ActB * SegA)
-    expr = (
-        M.V_Activity[p, s, d, t, v] * M.SegFrac[s, d_0]
-        == M.V_Activity[p, s, d_0, t, v] * M.SegFrac[s, d]
+    activity_sd = sum( \
+        M.V_FlowOut[p, s, d, S_i, t, v, S_o] \
+        for S_i in M.processInputs[p, t, v] \
+        for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
     )
+
+    activity_sd_0 = sum( \
+        M.V_FlowOut[p, s, d_0, S_i, t, v, S_o] \
+        for S_i in M.processInputs[p, t, v] \
+        for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
+    )
+
+    expr = (
+        activity_sd * M.SegFrac[s, d_0]
+        == activity_sd_0 * M.SegFrac[s, d]
+    ) 
+
     return expr
 
 
@@ -816,13 +779,13 @@ In Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we assume
 
 .. math::
    \frac{ 
-       \textbf{ACT}_{p, s, d_{i + 1}, t, v} 
+       \sum_{I, O} \textbf{FO}_{p, s, d_{i + 1}, i, t, v, o}
        }{
        SEG_{s, d_{i + 1}} \cdot C2A_t 
        }
    -
    \frac{ 
-       \textbf{ACT}_{p, s, d_i, t, v} 
+       \sum_{I, O} \textbf{FO}_{p, s, d_i, i, t, v, o}
        }{
        SEG_{s, d_i} \cdot C2A_t 
        }
@@ -837,12 +800,23 @@ In Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we assume
    v \in \textbf{V}
    :label: ramp_up_day
 """
-
     if d != M.time_of_day.first():
         d_prev = M.time_of_day.prev(d)
+        activity_sd_prev = sum( \
+            M.V_FlowOut[p, s, d_prev, S_i, t, v, S_o] \
+            for S_i in M.processInputs[p, t, v] \
+            for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
+        )        
+
+        activity_sd = sum( \
+            M.V_FlowOut[p, s, d, S_i, t, v, S_o] \
+            for S_i in M.processInputs[p, t, v] \
+            for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
+        )  
+
         expr_left = (
-            M.V_Activity[p, s, d, t, v] / value(M.SegFrac[s, d])
-            - M.V_Activity[p, s, d_prev, t, v] / value(M.SegFrac[s, d_prev])
+            activity_sd / value(M.SegFrac[s, d])
+            - activity_sd_prev / value(M.SegFrac[s, d_prev])
         ) / value(M.CapacityToActivity[t])
         expr_right = M.V_Capacity[t, v] * value(M.RampUp[t])
         expr = expr_left <= expr_right
@@ -860,13 +834,13 @@ limit ramp down rates between any two adjacent time slices.
 
 .. math::
    \frac{ 
-       \textbf{ACT}_{p, s, d_{i + 1}, t, v} 
+       \sum_{I, O} \textbf{FO}_{p, s, d_{i + 1}, i, t, v, o}
        }{
        SEG_{s, d_{i + 1}} \cdot C2A_t 
        }
    -
    \frac{ 
-       \textbf{ACT}_{p, s, d_i, t, v} 
+       \sum_{I, O} \textbf{FO}_{p, s, d_i, i, t, v, o}
        }{
        SEG_{s, d_i} \cdot C2A_t 
        }
@@ -883,9 +857,21 @@ limit ramp down rates between any two adjacent time slices.
 """
     if d != M.time_of_day.first():
         d_prev = M.time_of_day.prev(d)
+        activity_sd_prev = sum( \
+            M.V_FlowOut[p, s, d_prev, S_i, t, v, S_o] \
+            for S_i in M.processInputs[p, t, v] \
+            for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
+        )        
+
+        activity_sd = sum( \
+            M.V_FlowOut[p, s, d, S_i, t, v, S_o] \
+            for S_i in M.processInputs[p, t, v] \
+            for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
+        )         
+        
         expr_left = (
-            M.V_Activity[p, s, d, t, v] / value(M.SegFrac[s, d])
-            - M.V_Activity[p, s, d_prev, t, v] / value(M.SegFrac[s, d_prev])
+            activity_sd / value(M.SegFrac[s, d])
+            - activity_sd_prev / value(M.SegFrac[s, d_prev])
         ) / value(M.CapacityToActivity[t])
         expr_right = -(M.V_Capacity[t, v] * value(M.RampDown[t]))
         expr = expr_left >= expr_right
@@ -903,13 +889,13 @@ respectively.
 
 .. math::
    \frac{ 
-       \textbf{ACT}_{p, s_{i + 1}, d_1, t, v} 
+       \sum_{I, O} \textbf{FO}_{p, s_{i + 1}, d_1, i, t, v, o} 
        }{
        SEG_{s_{i + 1}, d_1} \cdot C2A_t 
        }
    -
    \frac{ 
-       \textbf{ACT}_{p, s_i, d_{nd}, t, v} 
+       \sum_{I, O} \textbf{FO}_{p, s_i, d_{nd}, i, t, v, o}
        }{
        SEG_{s_i, d_{nd}} \cdot C2A_t 
        }
@@ -928,9 +914,22 @@ respectively.
         s_prev = M.time_season.prev(s)
         d_first = M.time_of_day.first()
         d_last = M.time_of_day.last()
+
+        activity_sd_first = sum( \
+            M.V_FlowOut[p, s, d_first, S_i, t, v, S_o] \
+            for S_i in M.processInputs[p, t, v] \
+            for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
+        )        
+
+        activity_s_prev_d_last = sum( \
+            M.V_FlowOut[p, s_prev, d_last, S_i, t, v, S_o] \
+            for S_i in M.processInputs[p, t, v] \
+            for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
+        )
+
         expr_left = (
-            M.V_Activity[p, s, d_first, t, v] / M.SegFrac[s, d_first]
-            - M.V_Activity[p, s_prev, d_last, t, v] / M.SegFrac[s_prev, d_last]
+            activity_sd_first / M.SegFrac[s, d_first]
+            - activity_s_prev_d_last / M.SegFrac[s_prev, d_last]
         ) / value(M.CapacityToActivity[t])
         expr_right = M.V_Capacity[t, v] * value(M.RampUp[t])
         expr = expr_left <= expr_right
@@ -948,13 +947,13 @@ to limit ramp down rates between any two adjacent seasons.
 
 .. math::
    \frac{ 
-       \textbf{ACT}_{p, s_{i + 1}, d_1, t, v} 
+       \sum_{I, O} \textbf{FO}_{p, s_{i + 1}, d_1, i, t, v, o} 
        }{
        SEG_{s_{i + 1}, d_1} \cdot C2A_t 
        }
    -
    \frac{ 
-       \textbf{ACT}_{p, s_i, d_{nd}, t, v} 
+       \sum_{I, O} \textbf{FO}_{p, s_i, d_{nd}, i, t, v, o} 
        }{
        SEG_{s_i, d_{nd}} \cdot C2A_t 
        }
@@ -973,9 +972,22 @@ to limit ramp down rates between any two adjacent seasons.
         s_prev = M.time_season.prev(s)
         d_first = M.time_of_day.first()
         d_last = M.time_of_day.last()
+
+        activity_sd_first = sum( \
+            M.V_FlowOut[p, s, d_first, S_i, t, v, S_o] \
+            for S_i in M.processInputs[p, t, v] \
+            for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
+        )        
+
+        activity_s_prev_d_last = sum( \
+            M.V_FlowOut[p, s_prev, d_last, S_i, t, v, S_o] \
+            for S_i in M.processInputs[p, t, v] \
+            for S_o in M.ProcessOutputsByInput[p, t, v, S_i] \
+        )
+
         expr_left = (
-            M.V_Activity[p, s, d_first, t, v] / value(M.SegFrac[s, d_first])
-            - M.V_Activity[p, s_prev, d_last, t, v] / value(M.SegFrac[s_prev, d_last])
+            activity_sd_first / value(M.SegFrac[s, d_first])
+            - activity_s_prev_d_last / value(M.SegFrac[s_prev, d_last])
         ) / value(M.CapacityToActivity[t])
         expr_right = -(M.V_Capacity[t, v] * value(M.RampDown[t]))
         expr = expr_left >= expr_right
@@ -1058,7 +1070,7 @@ we write this equation for all the time-slices defined in the database in each r
       SEG_{s^*,d^*} \cdot C2A_t }
    \geq
    \sum_{t \in T^{res}} { 
-      \sum_{t \in v^{vintage}} \textbf{ACT}_{p, s, d, t, v}} \cdot
+      \sum_{t \in v^{vintage}} \sum_{I, O} \textbf{FO}_{p, s, d, i, t, v, o}  \cdot
       (1 + RES_z)
    \\
    \forall
@@ -1082,8 +1094,10 @@ we write this equation for all the time-slices defined in the database in each r
     # In most Temoa input databases, demand is endogenous, so we use electricity
     # generation instead.
     total_generation = sum(
-        M.V_Activity[p, s, d, t, S_v]
-        for (t,S_v) in M.processReservePeriods[p]
+        M.V_FlowOut[p, s, d, S_i, t, S_v, S_o] 
+        for (t,S_v) in M.processReservePeriods[p] 
+        for S_i in M.processInputs[p, t, S_v] 
+        for S_o in M.ProcessOutputsByInput[p, t, S_v, S_i] 
     )
 
     cap_target = total_generation * (1 + value(M.PlanningReserveMargin))
@@ -1187,15 +1201,17 @@ and vintage.
 .. math::
    :label: MaxActivity
 
-   \sum_{S,D,V} \textbf{ACT}_{p,s,d,t,v} \le MAXACT_{p, t}
+   \sum_{S,D,I,V,O} \textbf{FO}_{p, s, d, i, t, v, o}  \le MAXACT_{p, t}
 
    \forall \{p, t\} \in \Theta_{\text{MaxActivity}}
 """
-    activity_pt = sum(
-        M.V_Activity[p, S_s, S_d, t, S_v]
-        for S_s in M.time_season
-        for S_d in M.time_of_day
-        for S_v in M.processVintages[p, t]
+    activity_pt = sum( 
+        M.V_FlowOut[p, s, d, S_i, t, S_v, S_o]
+        for S_v in M.processVintages[p, t] 
+        for S_i in M.processInputs[p, t, S_v] 
+        for S_o in M.ProcessOutputsByInput[p, t, S_v, S_i] 
+        for s in M.time_season
+        for d in M.time_of_day
     )
     max_act = value(M.MaxActivity[p, t])
     expr = activity_pt <= max_act
@@ -1212,15 +1228,17 @@ vintage.
 .. math::
    :label: MinActivity
 
-   \sum_{S,D,V} \textbf{ACT}_{p,s,d,t,v} \ge MINACT_{p, t}
+   \sum_{S,D,I,V,O} \textbf{FO}_{p, s, d, i, t, v, o} \ge MINACT_{p, t}
 
    \forall \{p, t\} \in \Theta_{\text{MinActivity}}
 """
-    activity_pt = sum(
-        M.V_Activity[p, S_s, S_d, t, S_v]
+    activity_pt = sum( 
+        M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, S_o]
+        for S_v in M.processVintages[p, t] 
+        for S_i in M.processInputs[p, t, S_v] 
+        for S_o in M.ProcessOutputsByInput[p, t, S_v, S_i] 
         for S_s in M.time_season
         for S_d in M.time_of_day
-        for S_v in M.processVintages[p, t]
     )
     min_act = value(M.MinActivity[p, t])
     expr = activity_pt >= min_act
@@ -1238,20 +1256,21 @@ towards the constraint.
 .. math::
    :label: MinActivityGroup
 
-   \sum_{S,D,T,V} \textbf{ACT}_{p,s,d,t,v} \cdot WEIGHT_t \ge MGGT_{p, g}
+   \sum_{S,D,I,V,O} \textbf{FO}_{p, s, d, i, t, v, o} \cdot WEIGHT_{t} \ge MGGT_{p, g}
 
    \forall \{p, g\} \in \Theta_{\text{MinActivityGroup}}
 
 where :math:`g` represents the assigned technology group and :math:`MGGT` 
 refers to the :code:`MinGenGroupTarget` parameter.
 """
-    activity_p = sum(
-        M.V_Activity[p, S_s, S_d, S_t, S_v]
-        * M.MinGenGroupWeight[S_t, g]
+    activity_p = sum( 
+        M.V_FlowOut[p, s, d, S_i, S_t, S_v, S_o] * M.MinGenGroupWeight[S_t, g]
         for S_t in M.tech_groups
-        for S_s in M.time_season
-        for S_d in M.time_of_day
         for S_v in M.processVintages[p, S_t]
+        for S_i in M.processInputs[p, S_t, S_v] 
+        for S_o in M.ProcessOutputsByInput[p, S_t, S_v, S_i] 
+        for s in M.time_season
+        for d in M.time_of_day
     )
     min_act = value(M.MinGenGroupTarget[p, g])
     expr = activity_p >= min_act
@@ -1366,7 +1385,7 @@ specified shares by model time period. The constraint is formulated as follows:
 
      \sum_{I} \textbf{FO}_{p, s, d, i, t, v, o}
    \geq
-     SPL_{p, t, o} \cdot \textbf{ACT}_{p, s, d, t, v}
+     SPL_{p, t, o} \cdot \sum_{I, O} \textbf{FO}_{p, s, d, i, t, v, o}    
 
    \forall \{p, s, d, t, v, o\} \in \Theta_{\text{TechOutputSplit}}
 """
@@ -1375,7 +1394,13 @@ specified shares by model time period. The constraint is formulated as follows:
         for S_i in M.ProcessInputsByOutput[p, t, v, o]
     )
 
-    expr = out >= M.TechOutputSplit[p, t, o] * M.V_Activity[p, s, d, t, v]
+    total_out = sum(
+      M.V_FlowOut[p, s, d, S_i, t, v, S_o]
+      for S_i in M.processInputs[p, t, v]
+      for S_o in M.ProcessOutputsByInput[p, t, v, S_i]
+    )
+    
+    expr = out >= M.TechOutputSplit[p, t, o] * total_out
     return expr
 
 

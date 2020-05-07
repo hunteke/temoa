@@ -245,18 +245,9 @@ def temoa_create_model(name="Temoa"):
     M.V_StorageLevel = Var(M.StorageLevel_psdtv, domain=NonNegativeReals)
 
     # Derived decision variables
-    M.ActivityVar_psdtv = Set(dimen=5, initialize=ActivityVariableIndices)
-    M.V_Activity = Var(M.ActivityVar_psdtv, domain=NonNegativeReals)
 
     M.CapacityVar_tv = Set(dimen=2, initialize=CapacityVariableIndices)
     M.V_Capacity = Var(M.CapacityVar_tv, domain=NonNegativeReals)
-
-    M.ActivityByPeriodAndProcessVar_ptv = Set(
-        dimen=3, initialize=ActivityByPeriodAndProcessVarIndices
-    )
-    M.V_ActivityByPeriodAndProcess = Var(
-        M.ActivityByPeriodAndProcessVar_ptv, domain=NonNegativeReals
-    )
 
     M.CapacityAvailableVar_pt = Set(
         dimen=2, initialize=CapacityAvailableVariableIndices
@@ -282,14 +273,9 @@ def temoa_create_model(name="Temoa"):
     # ---------------------------------------------------------------
 
     # Declare constraints to calculate derived decision variables
+    M.CapacityConstraint_psdtv = Set(dimen=5, initialize=CapacityConstraintIndices)
 
-    M.ActivityConstraint = Constraint(M.ActivityVar_psdtv, rule=Activity_Constraint)
-
-    M.CapacityConstraint = Constraint(M.ActivityVar_psdtv, rule=Capacity_Constraint)
-
-    M.ActivityByPeriodAndProcessConstraint = Constraint(
-        M.ActivityByPeriodAndProcessVar_ptv, rule=ActivityByPeriodAndProcess_Constraint
-    )
+    M.CapacityConstraint = Constraint(M.CapacityConstraint_psdtv, rule=Capacity_Constraint)
 
     M.ActivityByTechConstraint = Constraint(M.tech_all, rule=ActivityByTech_Constraint)
 
