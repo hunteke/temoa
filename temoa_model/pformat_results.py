@@ -133,8 +133,9 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		if abs(val) < epsilon: continue
 
 		svars['V_StorageLevel'][p, s, d, t, v] = val
+		
 
-	#vflow_in is defined only for storage techs
+	# vflow_in is defined only for storage techs
 	for p, s, d, i, t, v, o in m.V_FlowIn:
 		val_in = value( m.V_FlowIn[p, s, d, i, t, v, o] )
 		if abs(val_in) < epsilon: continue
@@ -148,7 +149,6 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 		svars['V_FlowOut'][p, s, d, i, t, v, o] = val_out
 
-		#This is the line that populates Output_VFlow_In table for non-storage techs
 		if t not in m.tech_storage:
 			val_in = value( m.V_FlowOut[p, s, d, i, t, v, o] ) / value(m.Efficiency[i, t, v, o]) 
 			svars['V_FlowIn'][p, s, d, i, t, v, o] = val_in
@@ -159,7 +159,20 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		for e in emissions:
 			evalue = val_out * m.EmissionActivity[e, i, t, v, o]
 			svars[ 'V_EmissionActivityByPeriodAndProcess' ][p, e, t, v] += evalue
+	
+	for p, i, t, v, o in m.V_FlowOutAnnual:
+		for s in m.time_season:
+			for d in m.time_of_day:
+				val_out = value( m.V_FlowOutAnnual[p, i, t, v, o] ) * value( m.SegFrac[s , d ])
+				if abs(val_out) < epsilon: continue
+				svars['V_FlowOut'][p, s, d, i, t, v, o] = val_out
 
+				if (i, t, v, o) not in emission_keys: continue
+				emissions = emission_keys[i, t, v, o]
+				for e in emissions:
+					evalue = val_out * m.EmissionActivity[e, i, t, v, o]
+					svars[ 'V_EmissionActivityByPeriodAndProcess' ][p, e, t, v] += evalue	
+	
 	for p, s, d, i, t, v, o in m.V_Curtailment:		
 		val = value( m.V_Curtailment[p, s, d, i, t, v, o] )
 		if abs(val) < epsilon: continue
@@ -219,13 +232,21 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		svars[	'Costs'	][ 'V_DiscountedFixedCostsByProcess', t, v] += fcost
 		
 	for p, t, v in m.CostVariable.sparse_iterkeys():
-		vcost = sum(
-			value (m.V_FlowOut[p, s, d, S_i, t, v, S_o])
-			for S_i in m.processInputs[p, t, v]
-			for S_o in m.ProcessOutputsByInput[p, t, v, S_i]
-			for s in m.time_season
-			for d in m.time_of_day
-		)
+		if t not in m.tech_annual:
+			vcost = sum(
+				value (m.V_FlowOut[p, S_s, S_d, S_i, t, v, S_o])
+				for S_i in m.processInputs[p, t, v]
+				for S_o in m.ProcessOutputsByInput[p, t, v, S_i]
+				for S_s in m.time_season
+				for S_d in m.time_of_day
+			)
+		
+		else:
+			vcost = sum(
+				value (m.V_FlowOutAnnual[p, S_i, t, v, S_o])
+				for S_i in m.processInputs[p, t, v]
+				for S_o in m.ProcessOutputsByInput[p, t, v, S_i]
+			)			
 		if abs(vcost) < epsilon: continue
 
 		vcost *= value( m.CostVariable[p, t, v] )
