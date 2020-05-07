@@ -146,24 +146,30 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 		svars['V_ActivityByPeriodAndProcess'][p, t, v] = val
 
+	#vflow_in is defined only for storage techs
 	for p, s, d, i, t, v, o in m.V_FlowIn:
-		val = value( m.V_FlowIn[p, s, d, i, t, v, o] )
-		if abs(val) < epsilon: continue
+		val_in = value( m.V_FlowIn[p, s, d, i, t, v, o] )
+		if abs(val_in) < epsilon: continue
 
-		svars['V_FlowIn'][p, s, d, i, t, v, o] = val
+		svars['V_FlowIn'][p, s, d, i, t, v, o] = val_in
+
 
 	for p, s, d, i, t, v, o in m.V_FlowOut:
-		val = value( m.V_FlowOut[p, s, d, i, t, v, o] )
-		if abs(val) < epsilon: continue
+		val_out = value( m.V_FlowOut[p, s, d, i, t, v, o] )
+		if abs(val_out) < epsilon: continue
 
-		svars['V_FlowOut'][p, s, d, i, t, v, o] = val
+		svars['V_FlowOut'][p, s, d, i, t, v, o] = val_out
 
+		#This is the line that populates Output_VFlow_In table for non-storage techs
+		if t not in m.tech_storage:
+			val_in = value( m.V_FlowOut[p, s, d, i, t, v, o] ) / value(m.Efficiency[i, t, v, o]) 
+			svars['V_FlowIn'][p, s, d, i, t, v, o] = val_in
 
 		if (i, t, v, o) not in emission_keys: continue
 
 		emissions = emission_keys[i, t, v, o]
 		for e in emissions:
-			evalue = val * m.EmissionActivity[e, i, t, v, o]
+			evalue = val_out * m.EmissionActivity[e, i, t, v, o]
 			svars[ 'V_EmissionActivityByPeriodAndProcess' ][p, e, t, v] += evalue
 
 	for p, s, d, i, t, v, o in m.V_Curtailment:		

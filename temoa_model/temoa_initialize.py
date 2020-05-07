@@ -53,6 +53,7 @@ class TemoaModel( AbstractModel ):
 		self.processOutputs = dict()
 		self.processLoans = dict()
 		self.activeFlow_psditvo = None
+		self.activeFlowInStorage_psditvo = None
 		self.activeCurtailment_psditvo = None
 		self.activeActivity_ptv = None
 		self.activeCapacity_tv = None
@@ -636,6 +637,19 @@ def CreateSparseDicts ( M ):
 	  for d in M.time_of_day
 	)
 
+	M.activeFlowInStorage_psditvo = set(
+	  (p, s, d, i, t, v, o)
+
+	  for p,t in M.processVintages.keys() if t in M.tech_storage
+	  for v in M.processVintages[ p, t ]
+	  for i in M.processInputs[ p, t, v ]
+	  for o in M.ProcessOutputsByInput[ p, t, v, i ]
+	  for s in M.time_season
+	  for d in M.time_of_day
+	)
+
+
+
 	M.activeCurtailment_psditvo = set(
 	   (p, s, d, i, t, v, o)
 
@@ -820,6 +834,10 @@ def CapacityAvailableVariableIndices ( M ):
 def FlowVariableIndices ( M ):
 	return M.activeFlow_psditvo
 
+def FlowInStorageVariableIndices ( M ):
+	return M.activeFlowInStorage_psditvo
+
+
 def CurtailmentVariableIndices ( M ):
 	return M.activeCurtailment_psditvo
 
@@ -908,20 +926,6 @@ def CommodityBalanceConstraintIndices ( M ):
 	  for d in M.time_of_day
 	)
 
-	return indices
-
-def ProcessBalanceConstraintIndices ( M ):
-	indices = set(
-	  (p, s, d, i, t, v, o)
-
-	  for p,t in M.processVintages.keys()
-	  if t not in M.tech_storage
-	  for v in M.processVintages[ p, t ]
-	  for i in M.processInputs[ p, t, v ]
-	  for o in M.ProcessOutputsByInput[p, t, v, i]
-	  for s in M.time_season
-	  for d in M.time_of_day
-	)
 	return indices
 
 def StorageVariableIndices ( M ):

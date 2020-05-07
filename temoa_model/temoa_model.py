@@ -234,12 +234,13 @@ def temoa_create_model(name="Temoa"):
     # ---------------------------------------------------------------
     # Define base decision variables
     M.FlowVar_psditvo = Set(dimen=7, initialize=FlowVariableIndices)
-    M.V_FlowIn = Var(M.FlowVar_psditvo, domain=NonNegativeReals)
     M.V_FlowOut = Var(M.FlowVar_psditvo, domain=NonNegativeReals)
 
     M.CurtailmentVar_psditvo = Set(dimen=7, initialize=CurtailmentVariableIndices)
     M.V_Curtailment = Var(M.CurtailmentVar_psditvo, domain=NonNegativeReals)
 
+    M.FlowInStorage_psditvo = Set(dimen=7, initialize=FlowInStorageVariableIndices)
+    M.V_FlowIn = Var(M.FlowInStorage_psditvo, domain=NonNegativeReals)
     M.StorageLevel_psdtv = Set(dimen=5, initialize=StorageVariableIndices)
     M.V_StorageLevel = Var(M.StorageLevel_psdtv, domain=NonNegativeReals)
 
@@ -321,13 +322,6 @@ def temoa_create_model(name="Temoa"):
     )
     M.CommodityBalanceConstraint = Constraint(
         M.CommodityBalanceConstraint_psdc, rule=CommodityBalance_Constraint
-    )
-
-    M.ProcessBalanceConstraint_psditvo = Set(
-        dimen=7, initialize=ProcessBalanceConstraintIndices
-    )
-    M.ProcessBalanceConstraint = Constraint(
-        M.ProcessBalanceConstraint_psditvo, rule=ProcessBalance_Constraint
     )
 
     M.ResourceConstraint_pr = Set(

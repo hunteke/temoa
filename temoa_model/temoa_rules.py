@@ -24,7 +24,6 @@ received this license file.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import division
 
 from temoa_initialize import *
-
 # ---------------------------------------------------------------
 # Define the derived variables used in the objective function
 # and constraints below.
@@ -483,24 +482,38 @@ Where the Demand constraint :eq:`Demand` ensures that end-use demands are met,
 the CommodityBalance constraint ensures that the endogenous system demands are
 met.  This constraint requires the total production of a given commodity
 to equal the amount consumed, thus ensuring an energy balance at the system
-level.  
+level. In the updated version of Temoa, the activity variables 
+:math:`textbf{FI}_{p, s, d, i, t, v, c}` is defined only for storage technologies. 
+This change requires having separate expressions for calculating the 
+consumption of commodity :math:`c` : one expressions using 
+:math:`textbf{FI}_{p, s, d, i, t, v, c}` for storage technologies, and one 
+expression using :math:textbf{FO}_{p, s, d, i, t, v, c}/EF_{i,t,v,o} for regular 
+non-storage technologies. The devision by :math:`EF_{c,t,v,o}` is applied to the 
+output flows of downstream processes that consume commodity :math:`c`.
 
 .. math::
-   :label: CommodityBalance
+  generation = consumption 
 
-   \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, c}
-   =
-   \sum_{T, V, O} \textbf{FI}_{p, s, d, c, t, v, o}
+ \sum_{I,T, V} \textbf{FO}_{p, s, d, i, t, v, c}
+  =
+ \sum_{T\textsuperscript{s}, V, I} \textbf{FI}_{p, s, d, c, t, v, i} +
+ \sum_{T-T\textsuperscript{s}, V, O} \textbf{FO}_{p, s, d, c, t, v, o} /EF_{c,t,v,o}
 
-   \\
-   \forall \{p, s, d, c\} \in \Theta_{\text{CommodityBalance}}
+ \\
+ \forall \{p, s, d, c\} \in \Theta_{\text{CommodityBalance}}
 """
     if c in M.commodity_demand:
         return Constraint.Skip
 
-    vflow_in = sum(
+    vflow_in_ToStorage = sum(
         M.V_FlowIn[p, s, d, c, S_t, S_v, S_o]
-        for S_t, S_v in M.commodityDStreamProcess[p, c]
+        for S_t, S_v in M.commodityDStreamProcess[p, c] if S_t in M.tech_storage
+        for S_o in M.ProcessOutputsByInput[p, S_t, S_v, c]
+    )
+    
+    vflow_in_ToNonStorage = sum(
+        M.V_FlowOut[p, s, d, c, S_t, S_v, S_o] / value(M.Efficiency[c, S_t, S_v, S_o])
+        for S_t, S_v in M.commodityDStreamProcess[p, c] if S_t not in M.tech_storage
         for S_o in M.ProcessOutputsByInput[p, S_t, S_v, c]
     )
 
@@ -510,51 +523,10 @@ level.
         for S_i in M.ProcessInputsByOutput[p, S_t, S_v, c]
     )
 
-    CommodityBalanceConstraintErrorCheck(vflow_out, vflow_in, p, s, d, c)
+    CommodityBalanceConstraintErrorCheck(vflow_out, vflow_in_ToStorage +  vflow_in_ToNonStorage, p, s, d, c)
 
-    expr = vflow_out == vflow_in
+    expr = vflow_out == vflow_in_ToStorage +  vflow_in_ToNonStorage
     return expr
-
-
-def ProcessBalance_Constraint(M, p, s, d, i, t, v, o):
-    r"""
-
-The ProcessBalance constraint is one of the most fundamental constraints in Temoa.  
-It defines the basic relationship between the energy entering a process 
-(:math:`\textbf{FI}`) and the energy leaving a process (:math:`\textbf{FO}`). This 
-constraint sets the :code:`FlowOut` variable, upon which all other constraints rely.
-
-This constraint requires that the output energy of a given process is equal to 
-the product of its input energy and conversion efficiency. Note that the
-curtailment variable shown below only applies to technologies are members of the
-curtailment set. As noted in the :code:`Capacity_Constraint`, curtailment is
-necessary to track explicitly in scenarios that include a high renewable target. 
-
-
-.. math::
-   :label: ProcessBalance
-
-          \textbf{FO}_{p, s, d, i, t, v, o}
-          +
-          \textbf{CUR}_{p, s, d, i, t, v, o}
-   =
-          EFF_{i, t, v, o}
-    \cdot \textbf{FI}_{p, s, d, i, t, v, o}
-
-   \\
-   \forall \{p, s, d, i, t, v, o\} \in \Theta_{\text{ProcessBalance}}
-"""
-
-    if t in M.tech_curtailment:
-        return M.V_FlowOut[p, s, d, i, t, v, o] + \
-            M.V_Curtailment[p, s, d, i, t, v, o] == \
-            M.V_FlowIn[p, s, d, i, t, v, o] * \
-            value(M.Efficiency[i, t, v, o])
-
-    else:
-        return M.V_FlowOut[p, s, d, i, t, v, o] == \
-            M.V_FlowIn[p, s, d, i, t, v, o] * \
-            value(M.Efficiency[i, t, v, o])
 
 
 def ResourceExtraction_Constraint(M, p, r):
@@ -1131,7 +1103,7 @@ to each emission commodity.
 .. math::
    :label: EmissionLimit
 
-   \sum_{I,T,V,O|{e,i,t,v,o} \in EAC_{ind}} \left (
+   \sum_{S,D,I,T,V,O|{e,i,t,v,o} \in EAC_{ind}} \left (
        EAC_{e, i, t, v, o} \cdot \textbf{FO}_{p, s, d, i, t, v, o}
      \right )
      \le
@@ -1266,7 +1238,7 @@ towards the constraint.
 .. math::
    :label: MinActivityGroup
 
-   \sum_{S,D,T,V} \textbf{ACT}_{p,s,d,t,v} \cdot  \ge MGGT_{p, g}
+   \sum_{S,D,T,V} \textbf{ACT}_{p,s,d,t,v} \cdot WEIGHT_t \ge MGGT_{p, g}
 
    \forall \{p, g\} \in \Theta_{\text{MinActivityGroup}}
 
@@ -1352,12 +1324,12 @@ producing a single output. These shares can vary by model time period. See
 TechOutputSplit_Constraint for an analogous explanation.
 """
     inp = sum(
-        M.V_FlowIn[p, s, d, i, t, v, S_o] 
+        M.V_FlowOut[p, s, d, i, t, v, S_o] / value(M.Efficiency[i, t, v, S_o])
         for S_o in M.ProcessOutputsByInput[p, t, v, i]
     )
 
     total_inp = sum(
-        M.V_FlowIn[p, s, d, S_i, t, v, S_o]
+        M.V_FlowOut[p, s, d, S_i, t, v, S_o] / value(M.Efficiency[S_i, t, v, S_o])
         for S_i in M.processInputs[p, t, v]
         for S_o in M.ProcessOutputsByInput[p, t, v, i]
     )
