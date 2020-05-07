@@ -50,7 +50,7 @@ from pyomo.environ import DataPortal
 from pformat_results import pformat_results
 
 from collections import defaultdict
-from temoa_rules import TotalCost_rule
+from temoa_rules import TotalCost_rule, ActivityByTech_Constraint
 from temoa_mga   import ActivityObj_rule, SlackedObjective_rule, PreviousAct_rule
 import traceback
 
@@ -163,7 +163,9 @@ class TemoaSolver(object):
 		# we choose here (FirstObj) will be copied to the output file.
 		temoaInstance1.instance.FirstObj = Objective( rule=TotalCost_rule, sense=minimize )
 		temoaInstance1.instance.preprocess()
-
+		temoaInstance1.instance.V_ActivityByTech = Var(temoaInstance1.instance.tech_all, domain=NonNegativeReals)
+		temoaMGAInstance.instance.ActivityByTechConstraint = Constraint(M.tech_all, rule=ActivityByTech_Constraint)
+		
 		for k in temoaInstance1.solve_temoa_instance():
 			# yield "<div>" + k + "</div>"
 			yield k
