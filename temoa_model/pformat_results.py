@@ -166,7 +166,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 				val_out = value( m.V_FlowOutAnnual[p, i, t, v, o] ) * value( m.SegFrac[s , d ])
 				if abs(val_out) < epsilon: continue
 				svars['V_FlowOut'][p, s, d, i, t, v, o] = val_out
-
+				svars['V_FlowIn'][p, s, d, i, t, v, o] = val_out / value(m.Efficiency[i, t, v, o])
 				if (i, t, v, o) not in emission_keys: continue
 				emissions = emission_keys[i, t, v, o]
 				for e in emissions:
