@@ -177,6 +177,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		val = value( m.V_Curtailment[p, s, d, i, t, v, o] )
 		if abs(val) < epsilon: continue
 		svars['V_Curtailment'][p, s, d, i, t, v, o] = val
+		svars['V_FlowIn'][p, s, d, i, t, v, o] = (val + value( m.V_FlowOut[p, s, d, i, t, v, o] )) / value(m.Efficiency[i, t, v, o])
 
 	# Extract optimal decision variable values related to capacity:
 	for t, v in m.V_Capacity:
