@@ -1,28 +1,40 @@
 This directory contains the documentation (in ReST format) for the Temoa
-Project.  Provided you have installed sphinx into your coopr checkout, it should
-be as simple as running make:
+Project.
 
-$ make
- -> Error/Help output, showing possible formats
+1. Installation
 
-  # to make both the PDF version and a single HTML version of the documentation
-$ make latexpdf singlehtml
+Several software elements are required in order to produce this ReST documentation,
+which can be installed with a combination of conda and pip:
 
-In order to generate the formatted source code that is linked to the algebraic equations, run the following:
+$ vconda install sphinx
+$ pip install sphinx-rtd-theme
+$ pip install sphinxcontrib-bibtex
+In order to install the spelling module, you need to first install pyenchant, which in
+turn requires HomeBrew:
+$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+Then install pyenchant:
+$ brew install enchant
+Then spelling module:
+$ pip install sphinxcontrib-spelling
+Also need to install LaTex itself. On a Mac, that would be MacTeX, which must be manually
+downloaded and installed: https://www.tug.org/mactex/mactex-download.html
 
+2. Produce documentation
+
+From the /docs folder, execute the following to generate the html documentation:
 $ make html
 
-This generates the ‘_modules’ folder, which needs to be placed on the website.
+To generate the PDF documentation, from the same folder, execute the following:
 
-Notes
-* Cover page info appears in conf.py
-* TemoaDocumentation.pdf goes in temoaproject.org/download folder
-* After running ‘make singlehtml’, place resultant ‘index.html’ file in ‘temoaproject.org/docs' folder
-* After running ‘make html’, place ‘_modules’ folder in ‘temoaproject.org/docs' folder
+$ make latexpdf
+
+Sometimes this automatic PDF generation fails. If that is the case, navigate to /tmp/TemoaDocumentationBuild/
+and manually generate the pdf:
+
+$ pdflatex toolsforenergymodeloptimizationandanalysistemoa.pdf
+
+There seems to be an issue near line 81 with \begin{document}.
 
 
 
-If you need to install sphinx, you can use Coopr's virtual instance of
-easy_install:
 
-$ coopr/bin/easy_install -U sphinx

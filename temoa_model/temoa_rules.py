@@ -34,8 +34,8 @@ def Capacity_Constraint(M, p, s, d, t, v):
 This constraint ensures that the capacity of a given process is sufficient
 to support its activity across all time periods and time slices. The calculation
 on the left hand side of the equality is the maximum amount of energy a process
-can produce in the timeslice ``<s``,\ ``d>``. Note that the curtailment variable
-shown below only applies to technologies are members of the curtailment set.
+can produce in the timeslice :code:`(s,d)`. Note that the curtailment variable
+shown below only applies to technologies that are members of the curtailment set.
 Curtailment is necessary to track explicitly in scenarios that include a high
 renewable target. Without it, the model can generate more activity than is used
 to meet demand, and have all activity (including the portion curtailed) count
@@ -52,13 +52,13 @@ possibility.
          \cdot \text{TLF}_{p, t, v}
        \right )
        \cdot \textbf{CAP}_{t, v}
-   =
+       =
        \sum_{I, O} \textbf{FO}_{p, s, d,i, t, v, o}
        +
        \sum_{I, O} \textbf{CUR}_{p,s,d,i,t,v,o}
 
    \\
-   \forall \{p, s, d, t, v\} \in \Theta_{\text{Activity}}
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{FO}}
 
 
 
@@ -94,14 +94,15 @@ possibility.
 def CapacityAnnual_Constraint(M, p, t, v):
     r"""
 Similar to Capacity_Constraint, but for technologies belonging to the
-tech_annual set. Technologies in the tech_annual set have constant output
+:code:`tech_annual`  set. Technologies in the tech_annual set have constant output
 across different timeslices within a year, so we do not need to ensure
 that installed capacity is sufficient across all timeslices, thus saving
 some computational effort. Instead, annual output is sufficient to calculate
 capacity.
 
 .. math::
-   :label: Capacity
+   :label: CapacityAnnual
+
        \left (
                \text{CFP}_{t, v}
          \cdot \text{C2A}_{t}
@@ -109,10 +110,12 @@ capacity.
        \right )
        \cdot \textbf{CAP}_{t, v}
    =
-       \sum_{I, O} \textbf{FOannual}_{p, i, t, v, o}
+       \sum_{I, O} \textbf{FOA}_{p, i, t, v, o}
 
    \\
-   \forall \{p, t, v\} \in \Theta_{\text{Activity}} 
+   \forall \{p, t, v\} \in \Theta_{\text{Activity}}
+
+
 """
     CF = 1 #placeholder CF
 
@@ -129,30 +132,26 @@ capacity.
 
 def ActivityByTech_Constraint(M, t):
     r"""
-    This constraint is utilized by the MGA objective function and defines
-    the total activity of a technology over the planning horizon. If the
-    technology does not belong to tech_annual set,
+This constraint is utilized by the MGA objective function and defines
+the total activity of a technology over the planning horizon. The first version
+below applies to technologies with variable output at the timeslice level,
+and the second version applies to technologies with constant annual output
+in the :code:`tech_annual` set.
 
-    .. math::
-    :label: ActivityByTech
+.. math::
+   :label: ActivityByTech
 
-    \textbf{ACT}_{t} = \sum_{P, S, D, I, V, O} \textbf{FO}_{p, s, d,i, t, v, o}
+       \textbf{ACT}_{t} = \sum_{P, S, D, I, V, O} \textbf{FO}_{p, s, d,i, t, v, o}
 
-    \\
-    \forall \{t\} \not\in T\textsuperscript{Annual}
+       \\
+       \forall t \not\in T^{a}
 
-    Otherwise if the technology does belong to the tech_annual set,
+       \textbf{ACT}_{t} = \sum_{P, I, V, O} \textbf{FOA}_{p, i, t, v, o}
 
-    .. math::
-    :label: ActivityByTech
+       \\
+       \forall t \in T^{a}
 
-    \textbf{ACT}_{t} = \sum_{P, I, V, O} \textbf{FOannual}_{p, i, t, v, o}
-
-    \\
-    \forall \{t\} \in T\textsuperscript{Annual}
-
-
-	"""
+"""
     if t not in M.tech_annual:
       activity = sum( M.V_FlowOut[S_p, s, d, S_i, t, S_v, S_o]
           for S_p, S_v in M.processTechs[t]
@@ -184,10 +183,10 @@ with an end-of-life (EOL) on a period boundary, all of its capacity is available
 for use in all periods in which it is active (the process' TLF is 1). However,
 for any process with an EOL that falls between periods, Temoa makes the
 simplifying assumption that the available capacity from the expiring technology
-is available through the whole period, but only as much percentage as its
-lifespan through the period.  For example, if a process expires 3 years into an
-8 year period, then only :math:`\frac{3}{8}` of the installed capacity is
-available for use throughout the period.
+is available through the whole period in proportion to its remaining lifetime.
+For example, if a process expires 3 years into an 8-year model time period,
+then only :math:`\frac{3}{8}` of the installed capacity is available for use
+throughout the period.
 
 .. math::
    :label: CapacityAvailable
@@ -264,7 +263,7 @@ pollutant, model time period, and technology.
 def TotalCost_rule(M):
     r"""
 
-Using the :code:`Activity` and :code:`Capacity` variables, the Temoa objective
+Using the :code:`FlowOut` and :code:`Capacity` variables, the Temoa objective
 function calculates the cost of energy supply, under the assumption that capital 
 costs are paid through loans. This implementation sums up all the costs incurred, 
 and is defined as :math:`C_{tot} = C_{loans} + C_{fixed} + C_{variable}`. Each 
@@ -275,15 +274,15 @@ The calculation of each term is given below.
 .. math::
    :label: obj_loan
 
-   C_{loans} = \sum_{t, v \in \Theta_{IC}} \left (
-     \left [
+   C_{loans} = \sum_{t, v \in \Theta_{IC}} \left(
+     \left[
              IC_{t, v}
        \cdot LA_{t, v}
-       \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-{LLN}_{t, v}})}{GDR}
+       \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-{LLN}_{t, v}}){GDR}
        \cdot \frac{ 1-(1+GDR)^{-LPA_{t,v}} }{ 1-(1+GDR)^{-LP_{t,v}} }
-     \right ]
+     \right]
      \cdot \textbf{CAP}_{t, v}
-     \right )
+     \right)
 
 Note that capital costs (:math:`{IC}_{t,v}`) are handled in several steps. First, each capital cost 
 is amortized using the loan rate (i.e., technology-specific discount rate) and loan 
@@ -326,7 +325,7 @@ loan rates and periods.
      }
 
      \cdot \sum_{S,D,I, O} \textbf{FO}_{p, s, d,i, t, v, o}
-     \right )+\sum_{p, t, v \in \Theta_{VC}} \left (
+     \right )+ \sum_{p, t, v \in \Theta_{VC}} \left (
            MC_{p, t, v}
      \cdot
      \frac{
@@ -334,7 +333,7 @@ loan rates and periods.
      }{
        GDR
      }
-     \cdot \sum_{I, O} \textbf{FOannual}_{p,i, t, v, o}
+     \cdot \sum_{I, O} \textbf{FOA}_{p,i, t, v, o}
      \right )
 
 """
@@ -437,24 +436,23 @@ def Demand_Constraint(M, p, s, d, dem):
 The Demand constraint drives the model.  This constraint ensures that supply at
 least meets the demand specified by the Demand parameter in all periods and
 slices, by ensuring that the sum of all the demand output commodity (:math:`c`)
-generated by :math:`\textbf{FO}+\textbf{FOannual}` must meet the modeler-specified 
-demand, in each time slice.
+generated by both commodity flow at the time slice level (:math:`\textbf{FO}`) and
+the annual level (:math:`\textbf{FOA}`) must meet the modeler-specified demand
+in each time slice.
 
 .. math::
    :label: Demand
 
-   \sum_{I, T-T\textsuperscript{annual}, V} \textbf{FO}_{p, s, d, i, t, v, dem} + 
-   SEG_{s,d} \cdot  \sum_{I, T\textsuperscript{annual}, V} \textbf{FOannual}_{p, i, t, v, dem}
-   =
-
-  {DEM}_{p, dem} \cdot {DSD}_{s, d, dem}
+       \sum_{I, T^{a}, V} \textbf{FO}_{p, s, d, i, t, v, dem} +
+       SEG_{s,d} \cdot  \sum_{I, T^{a}, V} \textbf{FOA}_{p, i, t, v, dem}
+       =
+       {DEM}_{p, dem} \cdot {DSD}_{s, d, dem}
 
 Note that the validity of this constraint relies on the fact that the
 :math:`C^d` set is distinct from both :math:`C^e` and :math:`C^p`. In other
 words, an end-use demand must only be an end-use demand.  Note that if an output
 could satisfy both an end-use and internal system demand, then the output from
-:math:`\textbf{FO} and \textbf{FOannual}` would be double counted.
-
+:math:`\textbf{FO}` and :math:`\textbf{FOA}` would be double counted.
 """
     if (s,d,dem) not in M.DemandSpecificDistribution.sparse_keys():
         return Constraint.Skip
@@ -480,11 +478,11 @@ could satisfy both an end-use and internal system demand, then the output from
 def DemandActivity_Constraint(M, p, s, d, t, v, dem, s_0, d_0):
     r"""
 
-For end-use demands, it is unreasonable to let the optimizer only allow use in a
-single time slice.  For instance, if household A buys a natural gas furnace
-while household B buys an electric furnace, then both units should be used
-throughout the year.  Without this constraint, the model might choose to only
-use the electric furnace during the day, and the natural gas furnace during the
+For end-use demands, it is unreasonable to let the model arbitrarily shift the
+use of demand technologies across time slices. For instance, if household A buys
+a natural gas furnace while household B buys an electric furnace, then both units
+should be used throughout the year.  Without this constraint, the model might choose
+to only use the electric furnace during the day, and the natural gas furnace during the
 night.
 
 This constraint ensures that the ratio of a process activity to demand is
@@ -504,7 +502,7 @@ slice and demand.  This is transparently handled by the :math:`\Theta` superset.
 
 Note that this constraint is only applied to the demand commodities with diurnal 
 variations, and therefore the equation above only includes :math:`\textbf{FO}` 
-and not  :math:`\textbf{FOannual}`
+and not  :math:`\textbf{FOA}`
 """
     if (s,d,dem) not in M.DemandSpecificDistribution.sparse_keys():
         return Constraint.Skip
@@ -529,46 +527,49 @@ Where the Demand constraint :eq:`Demand` ensures that end-use demands are met,
 the CommodityBalance constraint ensures that the endogenous system demands are
 met.  This constraint requires the total production of a given commodity
 to equal the amount consumed, thus ensuring an energy balance at the system
-level. Note that the FlowIn variable :math:`textbf{FI}_{p, s, d, i, t, v, c}`
-is defined only for storage technologies. Furthermore, we need to account
-for output commodity flow from processes that have constant annual output 
-(members of the tech_annual set) and those that have varying output across
-seasons and times of day. Thus, separate expressions are required in order 
-to account for the consumption of commodity :math:`c` by the downstream
-process. For the commodity flow into storage technologies, we use 
-:math:`textbf{FI}_{p, s, d, i, t, v, c}`. For commodity flow into non-storage
-processes with time varying output, we use 
-:math:`textbf{FO}_{p, s, d, i, t, v, c}/EFF_{i,t,v,o}` The division by
-:math:`EFF_{c,t,v,o}` is applied to the output flows that consume 
-commodity :math:`c` to determine input flows. Finally, we need to account
-for the consumption of commodity :math:`c` by the processes in 
-:math:`tech_annual`. Since the commodity flow of these processes is on an
-annual basis, we use :math:`SEG_{s,d}` to calculate the consumption of
-commodity :math:`c` in time-slice :math:`(s,d)` from the annual flows. 
-Formulating an expression for the production of commodity :math:`c` is
-more straightforward, and is simply calculated by 
-:math:`textbf{FO}_{p, s, d, i, t, v, c}`. 
+level. In this most general form of the constraint, the energy commodity being
+balanced has variable production at the time slice level. The energy commodity
+can then be consumed by three types of processes: storage stechnologies, non-storage
+technologies with output that varies at the time slice level, and non-storage
+technologies with constant annual output.
 
-Note that this version of the constraint is most general, as it allows
-the production of a given commodity to vary at the timeslice level. For
-commodities that are exclusively produced at a constant annual rate, the
-CommodityBalanceAnnual_Constraint is used, which is simplified and reduces
-computational burden.
+Separate expressions are required in order to account for the consumption of
+commodity :math:`c` by downstream processes. For the commodity flow into storage
+technologies, we use :math:`\textbf{FI}_{p, s, d, i, t, v, c}`. Note that the FlowIn
+variable is defined only for storage technologies, and is required because storage
+technologies balance production and consumption across time slices rather than
+within a single time slice. For commodity flows into non-storage processes with time
+varying output, we use :math:`\textbf{FO}_{p, s, d, i, t, v, c}/EFF_{i,t,v,o}`.
+The division by :math:`EFF_{c,t,v,o}` is applied to the output flows that consume
+commodity :math:`c` to determine input flows. Finally, we need to account
+for the consumption of commodity :math:`c` by the processes in
+:code:`tech_annual`. Since the commodity flow of these processes is on an
+annual basis, we use :math:`SEG_{s,d}` to calculate the consumption of
+commodity :math:`c` in time-slice :math:`(s,d)` from the annual flows.
+Formulating an expression for the production of commodity :math:`c` is
+more straightforward, and is simply calculated by
+:math:`\textbf{FO}_{p, s, d, i, t, v, c}`.
+
+For commodities that are exclusively produced at a constant annual rate, the
+:code:`CommodityBalanceAnnual_Constraint` is used, which is simplified and
+reduces computational burden.
+
+*production = consumption*
 
 .. math::
-  production = consumption 
+   :label: CommodityBalance
 
- \sum_{I,T, V} \textbf{FO}_{p, s, d, i, t, v, c}
-  =
- \sum_{T\textsuperscript{s}, V, I} \textbf{FI}_{p, s, d, c, t, v, o}
- +
- \sum_{T-T\textsuperscript{s}, V, O} \textbf{FO}_{p, s, d, c, t, v, o} /EFF_{c,t,v,o}
- +  
- SEG_{s,d} \cdot 
- \sum_{I, T\textsuperscript{annual}, V} \textbf{FOannual}_{p, c, t, v, o} /EFF_{c,t,v,o}
+       \sum_{I,T, V} \textbf{FO}_{p, s, d, i, t, v, c}
+       =
+       \sum_{T^{s}, V, I} \textbf{FIS}_{p, s, d, c, t, v, o}
+       +
+       \sum_{T-T^{s}, V, O} \textbf{FO}_{p, s, d, c, t, v, o} /EFF_{c,t,v,o}
+       +
+       SEG_{s,d} \cdot
+       \sum_{I, T^{a}, V} \textbf{FOA}_{p, c, t, v, o} /EFF_{c,t,v,o}
 
- \\
- \forall \{p, c\} \in \Theta_{\text{CommodityBalance}}
+       \\
+       \forall \{p, c\} \in \Theta_{\text{CommodityBalance}}
 """
     if c in M.commodity_demand:
         return Constraint.Skip
@@ -616,19 +617,23 @@ constraint improves computational performance for commodities that do not
 need to be balanced at the timeslice level.
 
 While the commodity :math:`c` can only be produced by technologies in the
-:math:`tech_annual` set, it can be consumed by any technology in the
-:math:`T-T\textsuperscript{s}` set:
+:code:`tech_annual` set, it can be consumed by any technology in the
+:math:`T-T^{s}` set.
 
-  production = consumption 
+*production = consumption*
 
- \sum_{I,T, V} \textbf{FOannual}_{p, i, t, v, c}
-  =
- \sum_{S, D, T-T\textsuperscript{s}, V, O} \textbf{FO}_{p, s, d, c, t, v, o} /EFF_{c,t,v,o}
- +
- \sum_{I, T\textsuperscript{annual}, V, O} \textbf{FOannual}_{p, c, t, v, o} /EFF_{c,t,v,o}
- 
- \\
- \forall \{p, c\} \in \Theta_{\text{CommodityBalanceAnnual}}
+.. math::
+   :label: CommodityBalanceAnnual
+
+       \sum_{I,T, V} \textbf{FOA}_{p, i, t, v, c}
+        =
+       \sum_{S, D, T-T^{s}, V, O} \textbf{FO}_{p, s, d, c, t, v, o} /EFF_{c,t,v,o}
+       +
+       \sum_{I, T^{a}, V, O} \textbf{FOA}_{p, c, t, v, o} /EFF_{c,t,v,o}
+
+       \\
+       \forall \{p, c\} \in \Theta_{\text{CommodityBalanceAnnual}}
+
 """
     if c in M.commodity_demand:
         return Constraint.Skip
@@ -661,18 +666,19 @@ While the commodity :math:`c` can only be produced by technologies in the
 def ResourceExtraction_Constraint(M, p, r):
     r"""
 The ResourceExtraction constraint allows a modeler to specify an annual limit on
-the amount of a particular resource Temoa may use in a period.
+the amount of a particular resource Temoa may use in a period. The first version
+of the constraint pertains to technologies with variable output at the time slice
+level, and the second version pertains to technologies with constant annual output
+belonging to the :code:`tech_annual` set.
 
 .. math::
    :label: ResourceExtraction
 
-   \sum_{S, D, I, t \in T^r \& t \not \in T^{annual}, V} \textbf{FO}_{p, s, d, i, t, v, c} \le RSC_{p, c}
+   \sum_{S, D, I, t \in T^r \& t \not \in T^{a}, V} \textbf{FO}_{p, s, d, i, t, v, c} \le RSC_{p, c}
 
    \forall \{p, c\} \in \Theta_{\text{ResourceExtraction}}
 
-   or, for resource extraction technologies with constant annual output:
-
-   \sum_{I, t \in T^r \& t \in T^{annual}, V} \textbf{FOannual}_{p, i, t, v, c} \le RSC_{p, c}
+   \sum_{I, t \in T^r \& t \in T^{a}, V} \textbf{FOA}_{p, i, t, v, c} \le RSC_{p, c}
 
    \forall \{p, c\} \in \Theta_{\text{ResourceExtraction}}
 """
@@ -950,7 +956,7 @@ The ramp rate constraint is utilized to limit the rate of electricity generation
 increase and decrease between two adjacent time slices in order to account for 
 physical limits associated with thermal power plants. Note that this constraint 
 only applies to technologies with ramp capability, which is defined in the set 
-:math:`\textbf{T}^{ramp}`. We assume for simplicity the rate limits for both 
+:math:`T^{m}`. We assume for simplicity the rate limits for both
 ramp up and down are equal and they do not vary with technology vintage. The 
 ramp rate limits (:math:`r_t`) for technology :math:`t` should be expressed in 
 percentage of its rated capacity.
@@ -985,7 +991,7 @@ In Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we assume
    p \in \textbf{P}^o,
    s \in \textbf{S},
    d_i, d_{i + 1} \in \textbf{D},
-   t \in \textbf{T}^{ramp},
+   t \in \textbf{T}^{m},
    v \in \textbf{V}
    :label: ramp_up_day
 """
@@ -1040,7 +1046,7 @@ limit ramp down rates between any two adjacent time slices.
    p \in \textbf{P}^o,
    s \in \textbf{S},
    d_i, d_{i + 1} \in \textbf{D},
-   t \in \textbf{T}^{ramp},
+   t \in \textbf{T}^{m},
    v \in \textbf{V}
    :label: ramp_down_day
 """
@@ -1095,7 +1101,7 @@ respectively.
    p \in \textbf{P}^o,
    s_i, s_{i + 1} \in \textbf{S},
    d_1, d_{nd} \in \textbf{D},
-   t \in \textbf{T}^{ramp},
+   t \in \textbf{T}^{m},
    v \in \textbf{V}
    :label: ramp_up_season
 """
@@ -1153,7 +1159,7 @@ to limit ramp down rates between any two adjacent seasons.
    p \in \textbf{P}^o,
    s_i, s_{i + 1} \in \textbf{S},
    d_1, d_{nd} \in \textbf{D},
-   t \in \textbf{T}^{ramp},
+   t \in \textbf{T}^{m},
    v \in \textbf{V}
    :label: ramp_down_season
 """
@@ -1244,28 +1250,29 @@ def RampDownPeriod_Constraint(M, p, t, v):
 def ReserveMargin_Constraint(M, p, s, d):
     r"""
 
-During each period :math:`p`, the sum of the available capacity of all reserve 
-technologies :math:`\sum_{t \in T^{res}} \textbf{CAPAVL}_{p,t}`, which are 
-defined in the set :math:`\textbf{T}^{res}`, should exceed the peak load by 
-:math:`RES_z`, the regional reserve margin. Note that the reserve 
-margin is expressed in percentage of the peak load. Generally speaking, in 
-a database we may not know the peak demand before running the model, therefore, 
+During each period :math:`p`, the sum of the available capacity of all reserve
+technologies :math:`\sum_{t \in T^{e}} \textbf{CAPAVL}_{p,t}`, which are
+defined in the set :math:`\textbf{T}^{e}`, should exceed the peak load by
+:math:`RES`, the regional reserve margin. Note that the reserve
+margin is expressed in percentage of the peak load. Generally speaking, in
+a database we may not know the peak demand before running the model, therefore,
 we write this equation for all the time-slices defined in the database in each region.
 
 .. math::
-   \sum_{t \in T^{res}} {
-      CC_t \cdot
-      \textbf{CAPAVL}_{p,t} \cdot
-      SEG_{s^*,d^*} \cdot C2A_t }
-   \geq
-   \sum_{t \in T^{res}} { 
-      \sum_{t \in v^{vintage}} \sum_{I, O} \textbf{FO}_{p, s, d, i, t, v, o}  \cdot
-      (1 + RES_z)
-   \\
-   \forall
-   p \in \textbf{P}^o,
-   z \in \textbf{C}^{zone}
    :label: reserve_margin
+
+       \sum_{t \in T^{e}} {
+       CC_t \cdot
+       \textbf{CAPAVL}_{p,t} \cdot
+       SEG_{s^*,d^*} \cdot C2A_t }
+       \geq
+       \sum_{ t \in T^{e},V,I,O } {
+           \textbf{FO}_{p, s, d, i, t, v, o}  \cdot (1 + RES)
+       }
+
+       \\
+       \forall p \in \textbf{P}^o
+
 """
     if not M.tech_reserve:  # If reserve set empty, skip the constraint
         return Constraint.Skip
@@ -1301,31 +1308,25 @@ A modeler can track emissions through use of the :code:`commodity_emissions`
 set and :code:`EmissionActivity` parameter.  The :math:`EAC` parameter is
 analogous to the efficiency table, tying emissions to a unit of activity.  The
 EmissionLimit constraint allows the modeler to assign an upper bound per period
-to each emission commodity.
+to each emission commodity. Note that this constraint sums emissions from
+technologies with output varying at the time slice and those with constant annual
+output in separate terms.
 
 .. math::
    :label: EmissionLimit
 
-   \sum_{S,D,I,T,V,O|{e,i,t,v,o} \in EAC_{ind}} \left (
+       \sum_{S,D,I,T,V,O|{e,i,t,v,o} \in EAC} \left (
        EAC_{e, i, t, v, o} \cdot \textbf{FO}_{p, s, d, i, t, v, o}
-     \right )
-     \le
-     ELM_{p, e}
+       \right )
+       +
+       \sum_{I,T,V,O|{e,i,t \in T^{a},v,o} \in EAC} \left (
+       EAC_{e, i, t, v, o} \cdot \textbf{FOA}_{p, i, t, v, o}
+       \right )
+       \le
+       ELM_{p, e}
 
-   \\
-   \forall \{p, e\} \in \Theta_{\text{EmissionLimit}}
-
-   or, for technologies with constant annual output in the
-   :math:`t \in T^{annual}` set:
-
-   \sum_{I,T,V,O|{e,i,t \in T^{annual},v,o} \in EAC_{ind}} \left (
-       EAC_{e, i, t, v, o} \cdot \textbf{FOannual}_{p, i, t, v, o}
-     \right )
-     \le
-     ELM_{p, e}
-
-   \\
-   \forall \{p, e\} \in \Theta_{\text{EmissionLimit}}
+       \\
+       \forall \{p, e\} \in \Theta_{\text{EmissionLimit}}
 
 """
     emission_limit = M.EmissionLimit[p, e]
@@ -1373,7 +1374,7 @@ This constraint sets an upper bound growth rate on technology-specific capacity.
 .. math::
    :label: GrowthRate
 
-   CAPAVL_{p_{i},t} \le GRM \cdot CAPAVL_{p_{i-1},t} + GRS,
+   CAPAVL_{p_{i},t} \le GRM \cdot CAPAVL_{p_{i-1},t} + GRS
 
    \\
    \forall \{p, t\} \in \Theta_{\text{GrowthRate}}
@@ -1410,7 +1411,10 @@ def MaxActivity_Constraint(M, p, t):
 
 The MaxActivity sets an upper bound on the activity from a specific technology. 
 Note that the indices for these constraints are period and tech, not tech 
-and vintage.
+and vintage. The first version of the constraint pertains to technologies with
+variable output at the time slice level, and the second version pertains to
+technologies with constant annual output belonging to the :code:`tech_annual`
+set.
 
 .. math::
    :label: MaxActivity
@@ -1419,12 +1423,9 @@ and vintage.
 
    \forall \{p, t\} \in \Theta_{\text{MaxActivity}}
 
-   or, for technologies with constant annual output in the
-   :math:`t \in T^{annual}` set: 
+   \sum_{I,V,O} \textbf{FOA}_{p, i, t, v, o}  \le MAXACT_{p, t}
 
-   \sum_{I,V,O} \textbf{FOannual}_{p, i, t, v, o}  \le MAXACT_{p, t}
-
-   \forall \{p, t\} \in \Theta_{\text{MaxActivity}}
+   \forall \{p, t \in T^{a}\} \in \Theta_{\text{MaxActivity}}
 
 """
     try:
@@ -1454,7 +1455,10 @@ def MinActivity_Constraint(M, p, t):
 
 The MinActivity sets a lower bound on the activity from a specific technology.
 Note that the indices for these constraints are period and tech, not tech and
-vintage.
+vintage. The first version of the constraint pertains to technologies with
+variable output at the time slice level, and the second version pertains to
+technologies with constant annual output belonging to the :code:`tech_annual`
+set.
 
 .. math::
    :label: MinActivity
@@ -1463,12 +1467,9 @@ vintage.
 
    \forall \{p, t\} \in \Theta_{\text{MinActivity}}
 
-   or, for technologies with constant annual output in the
-   :math:`t \in T^{annual}` set:
+   \sum_{I,V,O} \textbf{FOA}_{p, i, t, v, o} \ge MINACT_{p, t}
 
-   \sum_{I,V,O} \textbf{FOannual}_{p, i, t, v, o} \ge MINACT_{p, t}
-
-   \forall \{p, t\} \in \Theta_{\text{MinActivity}}
+   \forall \{p, t \in T^{a}\} \in \Theta_{\text{MinActivity}}
 
 """
 
@@ -1505,11 +1506,11 @@ towards the constraint.
 .. math::
    :label: MinActivityGroup
 
-   \sum_{S,D,I,T,V,O} \textbf{FO}_{p, s, d, i, t, v, o} \cdot WEIGHT_{t}|_{t \not \in T^{annual}} 
-   + \sum_{I,T,V,O} \textbf{FOannual}_{p, i, t, v, o} \cdot WEIGHT_{t}|_{t \in T^{annual}}    
-   \ge MGGT_{p, g}
+       \sum_{S,D,I,T,V,O} \textbf{FO}_{p, s, d, i, t, v, o} \cdot WEIGHT_{t|t \not \in T^{a}}
+       + \sum_{I,T,V,O} \textbf{FOA}_{p, i, t, v, o} \cdot WEIGHT_{t \in T^{a}}
+       \ge MGGT_{p, g}
 
-   \forall \{p, g\} \in \Theta_{\text{MinActivityGroup}}
+       \forall \{p, g\} \in \Theta_{\text{MinActivityGroup}}
 
 where :math:`g` represents the assigned technology group and :math:`MGGT` 
 refers to the :code:`MinGenGroupTarget` parameter.
@@ -1605,7 +1606,7 @@ Allows users to specify fixed or minimum shares of commodity inputs to a process
 producing a single output. These shares can vary by model time period. See 
 TechOutputSplit_Constraint for an analogous explanation. Under this constraint,
 only the technologies with variable output at the timeslice level (i.e.,
-NOT in the :math:`tech_annual` set) are considered. 
+NOT in the :code:`tech_annual` set) are considered.
 """
     inp = sum(
         M.V_FlowOut[p, s, d, i, t, v, S_o] / value(M.Efficiency[i, t, v, S_o])
@@ -1666,16 +1667,16 @@ Note that it is possible to specify output shares that sum to less than unity. I
 cases, the model optimizes the remaining share. In addition, it is possible to change the
 specified shares by model time period. Under this constraint, only the
 technologies with variable output at the timeslice level (i.e., NOT in the
-:math:`tech_annual` set) are considered.
+:code:`tech_annual` set) are considered.
 
 The constraint is formulated as follows:
 
 .. math::
    :label: TechOutputSplit
 
-     \sum_{I, t \not \in T^{annual}} \textbf{FO}_{p, s, d, i, t, v, o}
+     \sum_{I, t \not \in T^{a}} \textbf{FO}_{p, s, d, i, t, v, o}
    \geq
-     SPL_{p, t, o} \cdot \sum_{I, O, t \not \in T^{annual}} \textbf{FO}_{p, s, d, i, t, v, o}
+     SPL_{p, t, o} \cdot \sum_{I, O, t \not \in T^{a}} \textbf{FO}_{p, s, d, i, t, v, o}
 
    \forall \{p, s, d, t, v, o\} \in \Theta_{\text{TechOutputSplit}}
 """
@@ -1702,11 +1703,11 @@ output (i.e., members of the :math:`tech_annual` set) are considered.
 .. math::
    :label: TechOutputSplitAnnual
 
-     \sum_{I, t \in T^{annual}} \textbf{FOannual}_{p, i, t, v, o}
-     
+     \sum_{I, t \in T^{a}} \textbf{FOA}_{p, i, t, v, o}
+
    \geq
-   
-     SPL_{p, t, o} \cdot \sum_{I, O, t \in T^{annual}} \textbf{FOannual}_{p, s, d, i, t, v, o}    
+
+     SPL_{p, t, o} \cdot \sum_{I, O, t \in T^{a}} \textbf{FOA}_{p, s, d, i, t, v, o}
 
    \forall \{p, t, v, o\} \in \Theta_{\text{TechOutputSplitAnnual}}
 """

@@ -70,12 +70,12 @@ have a freely available model, and to create an ecosystem of freely shared data
 and model inputs.
 
 For a longer explanation, please see :cite:`Hunter_etal_2013` (available from
-`temoaproject.org`_).  In summary, ESOM-based analyses are (1) impossible to
-validate, (2) complex enough as to be non-repeatable without electronic access to
-**exact** versions of code *and* data input, and (3) often do a poor job addressing 
-uncertainty. We believe that ESOM-based analyses should be completely open,
-independently reproducible, electronically available, and address uncertainty
-about the future.
+the `project website <https://temoacloud.com/publications/>`_.  In summary,
+ESOM-based analyses are (1) impossible to validate, (2) complex enough as to be
+non-repeatable without electronic access to **exact** versions of code *and* data
+input, and (3) often do a poor job addressing uncertainty. We believe that
+ESOM-based analyses should be completely open, independently reproducible,
+electronically available, and address uncertainty about the future.
 
 
 Temoa Origin and Pronunciation
@@ -126,7 +126,7 @@ have conda installed either via `miniconda
 `anaconda <https://www.anaconda.com/distribution/>`_.
 Next, download the `environment.yml
 <https://github.com/TemoaProject/temoa/blob/energysystem/environment.yml>`_ file
-from our `Github repo <https://github.com/TemoaProject/temoa>`_, and place it in
+from our `Github repo <https://github.com/TemoaProject/temoa>`__, and place it in
 a new directory named ‘temoa-py3.’ Create this new directory in a location where
 you wish to store the environment. Navigate to this directory and execute the
 following from the command line:
@@ -137,7 +137,7 @@ following from the command line:
 Then activate the environment as follows:
 
 .. parsed-literal::
-  $ source activate temoa-py3
+  $ conda activate temoa-py3
 
 More information on virtual environments can be found `here
 <https://uoa-eresearch.github.io/eresearch-cookbook/recipe/2014/11/20/conda/>`_.
@@ -164,14 +164,13 @@ Obtaining Temoa
 Now that you have functioning environment, you need to obtain the source code
 for Temoa. There are a couple of options for obtaining and running Temoa from
 GitHub. If you want to simply run the model, you can download Temoa from GitHub
-as a zip file. Navigate to `our GitHub repository
-<https://github.com/TemoaProject/temoa>`_, and click the green ‘clone or
-download’ button near the top-right corner. Select ‘Download ZIP,’ and you can
-download the entire Temoa ‘energysystem’ (our main branch) to your local machine.
-The second option creates a local copy of the model source code in our GitHub
-repository. This is a two step process: first install git and then ‘clone’ the
-repository. Under Linux, git can be installed through the default package
-manager. Git for Windows and Mac can be downloaded from the `Git website
+as a zip file. Navigate to our `Github repo <https://github.com/TemoaProject/temoa>`__,
+and click the green ‘clone or download’ button near the top-right corner. Select
+‘Download ZIP,’ and you can download the entire Temoa ‘energysystem’ (our main branch)
+to your local machine. The second option creates a local copy of the model source
+code in our GitHub repository. This is a two step process: first install git and
+then ‘clone’ the repository. Under Linux, git can be installed through the default
+package manager. Git for Windows and Mac can be downloaded from the `Git website
 <https://git-scm.com/download/>`_. To clone the Temoa repository, navigate to
 the directory where you want the model to reside and type the following from the
 prompt:
@@ -558,10 +557,10 @@ Conventions
    Take, for example, this excerpt from the Temoa default objective function:
 
    .. math::
-      C_{variable} = \sum_{p, t, v \in \Theta_{VC}} \left (
+      C_{variable} = \sum_{p, s, d, i, t, v, o \in \Theta_{VC}} \left (
               {VC}_{p, t, v}
         \cdot R_p
-        \cdot \textbf{ACT}_{t, v}
+        \cdot \textbf{FO}_{p, s, d, i, t, v, o}
         \right )
 
    Note that :math:`C_{variable}` is not bold, as it is a temporary variable
@@ -573,8 +572,8 @@ Conventions
 
    .. math::
 
-      C_{variable} = \sum_{p, t, v \in \Theta_{VC}} \left (
-              \textbf{ACT}_{t, v}
+      C_{variable} = \sum_{p, s, d, i, t, v, o \in \Theta_{VC}} \left (
+              \textbf{FO}_{p, s, d, i, t, v, o}
         \cdot {VC}_{p, t, v}
         \cdot R_p
         \right )
@@ -587,18 +586,20 @@ Conventions
 
    .. math::
 
-          \left (
-                  {CF}_{t, v}
-            \cdot {C2A}_{t}
-            \cdot {SEG}_{s, d}
-            \cdot {TLF}_{p, t, v}
-          \right )
-          \cdot \textbf{CAP}_{t, v}
-      \ge
-          \textbf{ACT}_{p, s, d, t, v}
+       \left (
+               \text{CFP}_{t, v}
+         \cdot \text{C2A}_{t}
+         \cdot \text{SEG}_{s, d}
+         \cdot \text{TLF}_{p, t, v}
+       \right )
+       \cdot \textbf{CAP}_{t, v}
+       =
+       \sum_{I, O} \textbf{FO}_{p, s, d,i, t, v, o}
+       +
+       \sum_{I, O} \textbf{CUR}_{p,s,d,i,t,v,o}
 
-      \\
-      \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+       \\
+       \forall \{p, s, d, t, v\} \in \Theta_{\text{FO}}
 
  * We use the word 'slice' to refer to the tuple of season and time of day
    :math:`\{s,d\}`. For example, "winter-night".
@@ -656,8 +657,11 @@ Sets
    ":math:`\text{T}^r`",":code:`tech_resource`","string","resource extraction techs"
    ":math:`\text{T}^p`",":code:`tech_production`","string","techs producing intermediate commodities"
    ":math:`\text{T}^b`",":code:`tech_baseload`","string","baseload electric generators; (:math:`{T}^b \subset T`)"
+   ":math:`\text{T}^m`",":code:`tech_ramp`","string","electric generators with a ramp rate limit; (:math:`{T}^m \subset T`)"
+   ":math:`\text{T}^e`",":code:`tech_reserve`","string","electric generators contributing to the reserve margin requirement; (:math:`{T}^e \subset T`)"
    ":math:`\text{T}^s`",":code:`tech_storage`","string","storage technologies; (:math:`{T}^s \subset T`)"
    ":math:`\text{T}^c`",":code:`tech_curtailment`","string","technologies with curtailable output; (:math:`{T}^c \subset T`)" 
+   ":math:`\text{T}^a`",":code:`tech_annual`","string","technologies that produce constant annual output; (:math:`{T}^a \subset T`)" 
 
 Temoa uses two different set notation styles, one for code representation and
 one that utilizes standard algebraic notation.  For brevity, the mathematical
@@ -789,18 +793,28 @@ Demand constraint class (explained in :ref:`NetworkConstraints` and
 for the exact indices for which the modeler specified end-use demands via the
 Demand parameter.
 
-Summations also occur in a sparse manner.  Take equation :eq:`Activity` as an
-example (described in :ref:`DecisionVariables`):
+Summations also occur in a sparse manner.  For example, let's take another look at
+the :eq:`Capacity` Constraint:
 
 .. math::
 
-   \textbf{ACT}_{p, s, d, t, v} = \sum_{I, O} \textbf{FO}_{p,s,d,i,t,v,o}
+       \left (
+               \text{CFP}_{t, v}
+         \cdot \text{C2A}_{t}
+         \cdot \text{SEG}_{s, d}
+         \cdot \text{TLF}_{p, t, v}
+       \right )
+       \cdot \textbf{CAP}_{t, v}
+   =
+       \sum_{I, O} \textbf{FO}_{p, s, d,i, t, v, o}
+       +
+       \sum_{I, O} \textbf{CUR}_{p,s,d,i,t,v,o}
 
    \\
-   \forall \{p, s, d, t, v\} \in \Theta_{\text{activity}}
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{FO}}
 
-It defines the Activity variable for every valid combination of :math:`\{p,
-s, d, t, v\}` as the sum over all inputs and outputs of the FlowOut variable.  A
+It defines the Capacity variable for every valid combination of :math:`\{p, v\}`,
+and includes the sum over all inputs and outputs of the FlowOut variable.  A
 naive implementation of this equation might include nonsensical items in each
 summation, such as an input of vehicle miles traveled and an output of
 sunlight for a wind powered turbine.  However, in this context, summing over the
@@ -1259,8 +1273,8 @@ Note that this parameter is the implementation of the single "characteristic
 year" optimization per period concept discussed in the :ref:`Sets` section.
 
 
-\*TechLifeFrac
-^^^^^^^^^^^^^^
+\*ProcessLifeFrac
+^^^^^^^^^^^^^^^^^
 
 :math:`{TLF}_{p \in P,t \in T,v \in V}`
 
@@ -1295,7 +1309,7 @@ activity indices for the process.  Namely, :math:`p \in \{2010, 2012\}` as
 In combination with the :code:`PeriodRate` parameter, this parameter is used to
 implement the "single characteristic year" simplification.  Specifically,
 instead of trying to account for partial period decommissioning, Temoa assumes
-that processes can only produce :code:`TechLifeFrac` of their installed
+that processes can only produce :code:`ProcessLifeFrac` of their installed
 capacity.
 
 
@@ -1307,31 +1321,32 @@ Variables
    :header: "Variable","Temoa Name","Domain","Short Description"
    :widths: 20, 15, 15, 60
 
-   ":math:`FI_{p,s,d,i,t,v,o}`","V\_FlowIn",":math:`\mathbb{R}^+_0`","Commodity flow into a tech to produce a given output"
-   ":math:`FO_{p,s,d,i,t,v,o}`","V_FlowOut",":math:`\mathbb{R}^+_0`","Commodity flow out of a tech based on a given input"
+   ":math:`FO_{p,s,d,i,t,v,o}`","V_FlowOut",":math:`\mathbb{R}^+_0`","Commodity flow by time slice out of a tech based on a given input"
+   ":math:`FOA_{p,s,d,i,t,v,o}`","V_FlowOutAnnual",":math:`\mathbb{R}^+_0`","Annual commodity flow out of a tech based on a given input"
+   ":math:`FIS_{p,s,d,i,t,v,o}`","V\_FlowInStorage",":math:`\mathbb{R}^+_0`","Commodity flow into a storage tech to produce a given output"
    ":math:`CUR_{p,s,d,i,t,v,o}`","V_Curtailment",":math:`\mathbb{R}^+_0`","Commodity flow out of a tech that is curtailed"
-   ":math:`ACT_{p,s,d,t,v}`","V_Activity",":math:`\mathbb{R}^+_0`","Total tech commodity production in each (s, d) tuple"
    ":math:`CAP_{t,v}`","V_Capacity",":math:`\mathbb{R}^+_0`","Required tech capacity to support associated activity"
    ":math:`CAPAVL_{p,t}`","V_CapacityAvailableByPeriodAndTech",":math:`\mathbb{R}^+_0`","The Capacity of technology :math:`t` available in period :math:`p`"
 
 
-The most fundamental variables in the Temoa formulation are :math:`FlowIn` and
-:math:`FlowOut`.  They describe the commodity flows into and out of a process in
-a given time slice.  They are related through the ProcessBalance constraint
-:eq:`ProcessBalance`, which in essence, guarantees the conservation of energy
-for each process.
+The most fundamental variables in the Temoa formulation is the :math:`FlowOut` variable.
+It describes the commodity flows out of a process in a given time slice. The :math:`FlowIn`to
+a given process is related to :math:`FlowOut` as follows:
 
-The Activity variable is defined as the sum over all inputs and outputs of a
-process in a given time slice (see equation :eq:`Activity`).  At this time, one
-potential "gotcha" is that for a process with multiple inputs or outputs, there
-is no attempt to reconcile energy units: Temoa assumes all inputs are
-comparable, and has no understanding of units.  The onus is on the modeler to
-ensure that all inputs and outputs have similar units.
+.. math::
+
+    \sum_{I,T, V} \textbf{FO}_{p, s, d, i, t, v, c}
+    =
+    \sum_{T, V, O} \textbf{FO}_{p, s, d, c, t, v, o} /EFF_{c,t,v,o}
+
+The only exception to the relationship above are storage technologies, whose
+production and consumption occur across different time slices, and therefore
+require an explicit :math:`FlowIn` variable.
 
 The Capacity variable is used in the objective function as the amount of
 capacity of a process to build.  It is indexed for each process, and Temoa
-constrains the Capacity variable to at least be able to meet the Activity of
-that process in all time slices in which it is active :eq:`Capacity`.
+constrains the Capacity variable to be able to meet the total commodity
+flow out of that process in all time slices in which it is active :eq:`Capacity`.
 
 Finally, CapacityAvailableByPeriodAndTech is a convenience variable that is
 not strictly necessary, but used where the individual vintages of a technology
@@ -1344,25 +1359,33 @@ section.
 
 .. _Constraints:
 
-Constraints
------------
+Equations
+---------
 
-There are 4 main equations that govern the flow of energy through the model
-network.  The DemandConstraint ensures that the supply meets demand in every
-time slice.  For each process, the ProcessBalance ensures at least as much
-energy enters a process as leaves it (conservation of energy at the process
-level).  Between processes, the CommodityBalance ensures that at least as much
-of a commodity is generated as is demanded by other process inputs.
+There are four main equations that govern the flow of energy through the model
+network.  The :code:`Demand_Constrant` :eq:`Demand` ensures that the supply meets demand in every
+time slice.  For each process, the :code:`Capacity_Constraint` :eq:`Capacity` ensures that there is
+sufficient capacity to meet the optimal commodity flows across all time slices. Between
+processes, the :code:`CommodityBalance_Constraint` :eq:`CommodityBalance` ensures that global commodity
+production across the energy system is sufficient to meet the intermediate demand
+for that commodity. Finally, the objective function :eq:`obj_loan` drives the model to
+minimize the system-wide cost of energy supply by optimizing the deployment and utilization
+of energy technologies across the system.
 
-In combination, those three constraints ensure the flow of energy through the
-system.  The final calculation, the objective function, is what puts a cost to
-the actions prescribed by the model.
+One additional point regarding the model formulation. Technologies that
+produce constant annual output can be placed in the :code:`tech_annual` set.
+While not required, doing so improves computational performance by eliminating the
+season and time of day :code:`(s,d)` indices associated with these technologies.
+In order to ensure the model functions correctly with these simplified technologies,
+slightly different formulations of the capacity and commodity balance constraints
+are required. See the :code:`CommodityBalanceAnnual_Constraint` :eq:`CommodityBalanceAnnual` 
+and :code:`CapacityAnnual_Constraint` :eq:`CapacityAnnual` below for details.
 
 The rest of this section defines each model constraint, with a rationale for
 existence.  We use the implementation-specific names for the constraints to
-highlight the organization of the functions within the actual code. They are
-listed roughly in order of importance. Note that the definitions below are
-pulled directly from the docstrings embedded in :code:`temoa_rules.py`.
+highlight the organization of the functions within the actual code. Note that
+the definitions below are pulled directly from the docstrings embedded in
+:code:`temoa_rules.py`.
 
 
 .. _DecisionVariables:
@@ -1370,15 +1393,18 @@ pulled directly from the docstrings embedded in :code:`temoa_rules.py`.
 Constraints Defining Derived Decision Variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These first two constraints elucidate the relationship among decision variables
-in the model.  There is some overlap with the rest of the constraints, but these
-are unique enough to warrant special attention to a Temoa modeler.
-
-.. autofunction:: temoa_rules.Activity_Constraint
+These first four constraints define derived variables that are used within
+the model. The :code:`Capacity_Constraint` and :code:`CapacityAnnual_Constraint`
+are particularly important because they define the relationship between installed
+capacity and allowable commodity flow.
 
 .. autofunction:: temoa_rules.Capacity_Constraint
 
+.. autofunction:: temoa_rules.CapacityAnnual_Constraint
+
 .. autofunction:: temoa_rules.CapacityAvailableByPeriodAndTech_Constraint
+
+.. autofunction:: temoa_rules.ActivityByTech_Constraint
 
 
 .. _NetworkConstraints:
@@ -1386,24 +1412,21 @@ are unique enough to warrant special attention to a Temoa modeler.
 Network Constraints
 ^^^^^^^^^^^^^^^^^^^
 
-These three constraints define the core of the Temoa model.  Together, they
-create the algebraic network.  The Demand constraint drives the "right side" of
-the energy system map, the ProcessBalance constraint ensures flow through a
-process, and the CommodityBalance constraint ensures flow between processes.
+These three constraints define the core of the Temoa model; together, they
+define the algebraic energy system network.
 
 .. autofunction:: temoa_rules.Demand_Constraint
 
-.. autofunction:: temoa_rules.ProcessBalance_Constraint
-
 .. autofunction:: temoa_rules.CommodityBalance_Constraint
+
+.. autofunction:: temoa_rules.CommodityBalanceAnnual_Constraint
 
 
 Physical and Operational Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-These three constraints fine-tune the algebraic map created by the three
-previous constraints, based on various physical and operational real-world
-phenomena.
+These constraints fine-tune the model formulation to account for
+various physical and operational real-world phenomena.
 
 .. autofunction:: temoa_rules.BaseloadDiurnal_Constraint
 
@@ -1421,9 +1444,9 @@ phenomena.
 
 .. autofunction:: temoa_rules.RampUpDay_Constraint
 
-.. autofunction:: temoa_rules.RampUpSeason_Constraint
-
 .. autofunction:: temoa_rules.RampDownDay_Constraint
+
+.. autofunction:: temoa_rules.RampUpSeason_Constraint
 
 .. autofunction:: temoa_rules.RampDownSeason_Constraint
 
