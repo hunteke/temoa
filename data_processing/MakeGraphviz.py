@@ -126,7 +126,7 @@ class GraphvizDiagramGenerator(object):
 				ecarriers.add((row['input_comm'], commodity_fmt % (row['input_comm'], period)))
 				usedc.add(row['input_comm'])
 			else:
-				cap = V_Cap2.ix[row['tech']].capacity
+				cap = V_Cap2.loc[row['tech']].capacity
 				xnodes.add((row['tech'], tech_attr_fmt % (row['tech'], cap, row['tech'], period)))
 			udflows.add((row['input_comm'], row['tech']))	
 
