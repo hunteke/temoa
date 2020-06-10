@@ -456,8 +456,7 @@ could satisfy both an end-use and internal system demand, then the output from
 """
     if (s,d,dem) not in M.DemandSpecificDistribution.sparse_keys():
         return Constraint.Skip
-    supply = 0
-    supply_annual = 0
+
     supply = sum(
         M.V_FlowOut[p, s, d, S_i, S_t, S_v, dem]
         for S_t, S_v in M.commodityUStreamProcess[p, dem] if S_t not in M.tech_annual
@@ -1330,9 +1329,6 @@ output in separate terms.
 
 """
     emission_limit = M.EmissionLimit[p, e]
-
-    actual_emissions = 0
-    actual_emissions_annual = 0
     
     actual_emissions = sum(
         M.V_FlowOut[p, S_s, S_d, S_i, S_t, S_v, S_o]
@@ -1515,8 +1511,6 @@ towards the constraint.
 where :math:`g` represents the assigned technology group and :math:`MGGT` 
 refers to the :code:`MinGenGroupTarget` parameter.
 """
-    activity_p = 0
-    activity_p_annual = 0
 
     activity_p = sum( 
         M.V_FlowOut[p, s, d, S_i, S_t, S_v, S_o] * M.MinGenGroupWeight[S_t, g]
