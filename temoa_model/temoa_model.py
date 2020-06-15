@@ -217,8 +217,8 @@ def temoa_create_model(name="Temoa"):
     M.RampDown = Param(M.tech_ramping)
     M.CapacityCredit = Param(M.time_optimize, M.tech_all, default=1)
     M.PlanningReserveMargin = Param(default=0.2)
-    # Storage duration is expressed as fraction of a year (default = 8hrs).
-    M.StorageDuration = Param(M.tech_storage, default=0.00091324200913242009)
+    # Storage duration is expressed in hours
+    M.StorageDuration = Param(M.tech_storage, default=4)
     # Initial storage charge level, expressed as fraction of full energy capacity
     M.StorageInit = Param(M.tech_storage, default=1)
 

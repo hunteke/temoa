@@ -804,8 +804,9 @@ time slice associated with each period, the charge level must be zeroed out.
         initial_storage = (
             M.StorageInit[t]
             * M.V_Capacity[t, v]
-            * M.StorageDuration[t]
             * M.CapacityToActivity[t]
+            * (M.StorageDuration[t] / 8760)
+            * sum(M.SegFrac[s,S_d] for S_d in M.time_of_day) * 365
             * value(M.ProcessLifeFrac[p, t, v])
         )
         expr = M.V_StorageLevel[p, s, d_prev, t, v] + stored_energy == initial_storage
@@ -815,8 +816,9 @@ time slice associated with each period, the charge level must be zeroed out.
         initial_storage = (
             M.StorageInit[t]
             * M.V_Capacity[t, v]
-            * M.StorageDuration[t]
             * M.CapacityToActivity[t]
+            * (M.StorageDuration[t] / 8760)
+            * sum(M.SegFrac[s,S_d] for S_d in M.time_of_day) * 365
             * value(M.ProcessLifeFrac[p, t, v])
         )
         expr = M.V_StorageLevel[p, s, d, t, v] == initial_storage + stored_energy
@@ -841,17 +843,18 @@ time slice associated with each period, the charge level must be zeroed out.
 
     return expr
 
-
 def StorageEnergyUpperBound_Constraint(M, p, s, d, t, v):
     r"""
 
 This constraint ensures that the amount of energy stored does not exceed
 the upper bound set by the energy capacity of the storage device.
 """
+
     energy_capacity = (
         M.V_Capacity[t, v]
-        * M.StorageDuration[t]
         * M.CapacityToActivity[t]
+        * (M.StorageDuration[t] / 8760)
+        * sum(M.SegFrac[s,S_d] for S_d in M.time_of_day) * 365
         * value(M.ProcessLifeFrac[p, t, v])
     )
     expr = M.V_StorageLevel[p, s, d, t, v] <= energy_capacity
