@@ -274,15 +274,14 @@ The calculation of each term is given below.
 .. math::
    :label: obj_loan
 
-   C_{loans} = \sum_{t, v \in \Theta_{IC}} \left(
-     \left[
-             IC_{t, v}
-       \cdot LA_{t, v}
-       \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-{LLN}_{t, v}}){GDR}
-       \cdot \frac{ 1-(1+GDR)^{-LPA_{t,v}} }{ 1-(1+GDR)^{-LP_{t,v}} }
-     \right]
+   C_{loans} = \sum_{t, v \in \Theta_{IC}} \left (
+     \left [
+             IC_{t, v} \cdot LA_{t, v}
+             \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-LLN_{t, v}})}{GDR}
+             \cdot \frac{ 1-(1+GDR)^{-LPA_{t,v}} }{ 1-(1+GDR)^{-LP_{t,v}} }
+     \right ]
      \cdot \textbf{CAP}_{t, v}
-     \right)
+     \right )
 
 Note that capital costs (:math:`{IC}_{t,v}`) are handled in several steps. First, each capital cost 
 is amortized using the loan rate (i.e., technology-specific discount rate) and loan 
@@ -1060,48 +1059,44 @@ def RampUpDay_Constraint(M, p, s, d, t, v):
 
     r"""
 
-The ramp rate constraint is utilized to limit the rate of electricity generation 
-increase and decrease between two adjacent time slices in order to account for 
-physical limits associated with thermal power plants. Note that this constraint 
-only applies to technologies with ramp capability, which is defined in the set 
+The ramp rate constraint is utilized to limit the rate of electricity generation
+increase and decrease between two adjacent time slices in order to account for
+physical limits associated with thermal power plants. Note that this constraint
+only applies to technologies with ramp capability, which is defined in the set
 :math:`T^{m}`. We assume for simplicity the rate limits for both
-ramp up and down are equal and they do not vary with technology vintage. The 
-ramp rate limits (:math:`r_t`) for technology :math:`t` should be expressed in 
+ramp up and down are equal and they do not vary with technology vintage. The
+ramp rate limits (:math:`r_t`) for technology :math:`t` should be expressed in
 percentage of its rated capacity.
 
-Note that when :math:`d_{nd}` is the last time-of-day, :math:`d_{nd + 1} \not \in 
-\textbf{D}`, i.e., if one time slice is the last time-of-day in a season and the 
-other time slice is the first time-of-day in the next season, the ramp rate 
-limits between these two time slices can not be expressed by :eq:`ramp_up_day`. 
-Therefore, the ramp rate constraints between two adjacent seasons are 
-represented in :eq:`ramp_up_season`. 
+Note that when :math:`d_{nd}` is the last time-of-day, :math:`d_{nd + 1} \not \in
+\textbf{D}`, i.e., if one time slice is the last time-of-day in a season and the
+other time slice is the first time-of-day in the next season, the ramp rate
+limits between these two time slices can not be expressed by :code:`RampUpDay`.
+Therefore, the ramp rate constraints between two adjacent seasons are
+represented in :code:`RampUpSeason`.
 
-In Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we assume 
+In the :code:`RampUpDay` and :code:`RampUpSeason` constraints, we assume
 :math:`\textbf{S} = \{s_i, i = 1, 2, \cdots, ns\}` and 
 :math:`\textbf{D} = \{d_i, i=1, 2, \cdots, nd\}`.
 
 .. math::
-   \frac{ 
-       \sum_{I, O} \textbf{FO}_{p, s, d_{i + 1}, i, t, v, o}
-       }{
-       SEG_{s, d_{i + 1}} \cdot C2A_t 
-       }
-   -
-   \frac{ 
-       \sum_{I, O} \textbf{FO}_{p, s, d_i, i, t, v, o}
-       }{
-       SEG_{s, d_i} \cdot C2A_t 
-       }
-   \leq
-   r_t \cdot \textbf{CAPAVL}_{p,t}
-   \\
-   \forall 
-   p \in \textbf{P}^o,
-   s \in \textbf{S},
-   d_i, d_{i + 1} \in \textbf{D},
-   t \in \textbf{T}^{m},
-   v \in \textbf{V}
-   :label: ramp_up_day
+   :label: RampUpDay
+
+      \frac{
+          \sum_{I, O} \textbf{FO}_{p, s, d_{i + 1}, i, t, v, o}
+          }{
+          SEG_{s, d_{i + 1}} \cdot C2A_t
+          }
+      -
+      \frac{
+          \sum_{I, O} \textbf{FO}_{p, s, d_i, i, t, v, o}
+          }{
+          SEG_{s, d_i} \cdot C2A_t
+          }
+      \leq
+      r_t \cdot \textbf{CAPAVL}_{p,t}
+      \\
+      \forall \{p, s, d, t, v\} \in \Theta_{\text{RampUpDay}}
 """
     if d != M.time_of_day.first():
         d_prev = M.time_of_day.prev(d)
@@ -1132,31 +1127,27 @@ In Equation :eq:`ramp_up_day` and :eq:`ramp_up_season`, we assume
 def RampDownDay_Constraint(M, p, s, d, t, v):
     r"""
 
-Similar to Equation :eq:`ramp_up_day`, we use Equation :eq:`ramp_down_day` to
-limit ramp down rates between any two adjacent time slices.
+Similar to the :code`RampUpDay` constraint, we use the :code:`RampDownDay`
+constraint to limit ramp down rates between any two adjacent time slices.
 
 .. math::
-   \frac{ 
-       \sum_{I, O} \textbf{FO}_{p, s, d_{i + 1}, i, t, v, o}
-       }{
-       SEG_{s, d_{i + 1}} \cdot C2A_t 
-       }
-   -
-   \frac{ 
-       \sum_{I, O} \textbf{FO}_{p, s, d_i, i, t, v, o}
-       }{
-       SEG_{s, d_i} \cdot C2A_t 
-       }
-   \geq
-   -r_t \cdot \textbf{CAPAVL}_{p,t}
-   \\
-   \forall 
-   p \in \textbf{P}^o,
-   s \in \textbf{S},
-   d_i, d_{i + 1} \in \textbf{D},
-   t \in \textbf{T}^{m},
-   v \in \textbf{V}
-   :label: ramp_down_day
+   :label: RampDownDay
+
+      \frac{
+          \sum_{I, O} \textbf{FO}_{p, s, d_{i + 1}, i, t, v, o}
+          }{
+          SEG_{s, d_{i + 1}} \cdot C2A_t
+          }
+      -
+      \frac{
+          \sum_{I, O} \textbf{FO}_{p, s, d_i, i, t, v, o}
+          }{
+          SEG_{s, d_i} \cdot C2A_t
+          }
+      \geq
+      -r_t \cdot \textbf{CAPAVL}_{p,t}
+      \\
+      \forall \{p, s, d, t, v\} \in \Theta_{\text{RampDownDay}}
 """
     if d != M.time_of_day.first():
         d_prev = M.time_of_day.prev(d)
@@ -1187,31 +1178,27 @@ limit ramp down rates between any two adjacent time slices.
 def RampUpSeason_Constraint(M, p, s, t, v):
     r"""
 
-Note that :math:`d_1` and :math:`d_{nd}` represent the first and last time-of-day, 
+Note that :math:`d_1` and :math:`d_{nd}` represent the first and last time-of-day,
 respectively.
 
 .. math::
-   \frac{ 
-       \sum_{I, O} \textbf{FO}_{p, s_{i + 1}, d_1, i, t, v, o} 
-       }{
-       SEG_{s_{i + 1}, d_1} \cdot C2A_t 
-       }
-   -
-   \frac{ 
-       \sum_{I, O} \textbf{FO}_{p, s_i, d_{nd}, i, t, v, o}
-       }{
-       SEG_{s_i, d_{nd}} \cdot C2A_t 
-       }
-   \leq
-   r_t \cdot \textbf{CAPAVL}_{p,t}
-   \\
-   \forall 
-   p \in \textbf{P}^o,
-   s_i, s_{i + 1} \in \textbf{S},
-   d_1, d_{nd} \in \textbf{D},
-   t \in \textbf{T}^{m},
-   v \in \textbf{V}
-   :label: ramp_up_season
+   :label:
+
+      \frac{
+          \sum_{I, O} \textbf{FO}_{p, s_{i + 1}, d_1, i, t, v, o}
+          }{
+          SEG_{s_{i + 1}, d_1} \cdot C2A_t
+          }
+      -
+      \frac{
+          \sum_{I, O} \textbf{FO}_{p, s_i, d_{nd}, i, t, v, o}
+          }{
+          SEG_{s_i, d_{nd}} \cdot C2A_t
+          }
+      \leq
+      r_t \cdot \textbf{CAPAVL}_{p,t}
+      \\
+      \forall \{p, s, t, v\} \in \Theta_{\text{RampUpSeason}}
 """
     if s != M.time_season.first():
         s_prev = M.time_season.prev(s)
@@ -1245,31 +1232,28 @@ respectively.
 def RampDownSeason_Constraint(M, p, s, t, v):
     r"""
 
-Similar to Equation :eq:`ramp_up_season`, we use Equation :eq:`ramp_down_season`
-to limit ramp down rates between any two adjacent seasons.
+Similar to the :code:`RampUpSeason` constraint, we use the
+:code:`RampDownSeason` constraint to limit ramp down rates
+between any two adjacent seasons.
 
 .. math::
-   \frac{ 
-       \sum_{I, O} \textbf{FO}_{p, s_{i + 1}, d_1, i, t, v, o} 
-       }{
-       SEG_{s_{i + 1}, d_1} \cdot C2A_t 
-       }
-   -
-   \frac{ 
-       \sum_{I, O} \textbf{FO}_{p, s_i, d_{nd}, i, t, v, o} 
-       }{
-       SEG_{s_i, d_{nd}} \cdot C2A_t 
-       }
-   \geq
-   -r_t \cdot \textbf{CAPAVL}_{p,t}
-   \\
-   \forall 
-   p \in \textbf{P}^o,
-   s_i, s_{i + 1} \in \textbf{S},
-   d_1, d_{nd} \in \textbf{D},
-   t \in \textbf{T}^{m},
-   v \in \textbf{V}
-   :label: ramp_down_season
+   :label: RampDownSeason
+
+      \frac{
+          \sum_{I, O} \textbf{FO}_{p, s_{i + 1}, d_1, i, t, v, o}
+          }{
+          SEG_{s_{i + 1}, d_1} \cdot C2A_t
+          }
+      -
+      \frac{
+          \sum_{I, O} \textbf{FO}_{p, s_i, d_{nd}, i, t, v, o}
+          }{
+          SEG_{s_i, d_{nd}} \cdot C2A_t
+          }
+      \geq
+      -r_t \cdot \textbf{CAPAVL}_{p,t}
+      \\
+      \forall \{p, s, t, v\} \in \Theta_{\text{RampDownSeason}}
 """
     if s != M.time_season.first():
         s_prev = M.time_season.prev(s)
@@ -1379,7 +1363,7 @@ we write this equation for all the time-slices defined in the database in each r
        }
 
        \\
-       \forall p \in \textbf{P}^o
+       \forall \{p, s, d\} \in \Theta_{\text{ReserveMargin}}
 
 """
     if not M.tech_reserve:  # If reserve set empty, skip the constraint
