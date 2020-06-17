@@ -370,7 +370,7 @@ an archive of visualizations for auditing purposes.  In addition, we
 have taken care to make these intermediate files well-formatted.
 
 To utilize graphviz, make sure it is installed on your local machine. Then 
-navigate to the :code:`db_io` folder, where the graphviz script and database 
+navigate to the :code:`data_processing` folder, where the graphviz script and database
 files reside. To review all of the graphviz options, use the :code:`--help` flag:
 
 .. parsed-literal::
@@ -660,7 +660,7 @@ Sets
    ":math:`\text{T}^m`",":code:`tech_ramp`","string","electric generators with a ramp rate limit; (:math:`{T}^m \subset T`)"
    ":math:`\text{T}^e`",":code:`tech_reserve`","string","electric generators contributing to the reserve margin requirement; (:math:`{T}^e \subset T`)"
    ":math:`\text{T}^s`",":code:`tech_storage`","string","storage technologies; (:math:`{T}^s \subset T`)"
-   ":math:`\text{T}^c`",":code:`tech_curtailment`","string","technologies with curtailable output; (:math:`{T}^c \subset T`)" 
+   ":math:`\text{T}^c`",":code:`tech_curtailment`","string","technologies with curtailable output and no upstream cost; (:math:`{T}^c \subset T`)"
    ":math:`\text{T}^a`",":code:`tech_annual`","string","technologies that produce constant annual output; (:math:`{T}^a \subset T`)" 
 
 Temoa uses two different set notation styles, one for code representation and
@@ -794,7 +794,7 @@ for the exact indices for which the modeler specified end-use demands via the
 Demand parameter.
 
 Summations also occur in a sparse manner.  For example, let's take another look at
-the :eq:`Capacity` Constraint:
+the :code:`Capacity` :eq:`Capacity` Constraint:
 
 .. math::
 
@@ -811,7 +811,7 @@ the :eq:`Capacity` Constraint:
        \sum_{I, O} \textbf{CUR}_{p,s,d,i,t,v,o}
 
    \\
-   \forall \{p, s, d, t, v\} \in \Theta_{\text{FO}}
+   \forall \{p, s, d, t, v\} \in \Theta_{\text{Capacity}}
 
 It defines the Capacity variable for every valid combination of :math:`\{p, v\}`,
 and includes the sum over all inputs and outputs of the FlowOut variable.  A
@@ -855,7 +855,9 @@ Parameters
    ":math:`\text{MAX}_{p,t}`","MaxCapacity",":math:`\mathbb{R}^+_0`","maximum tech-specific capacity by period"
    ":math:`\text{MIN}_{p,t}`","MinCapacity",":math:`\mathbb{R}^+_0`","minimum tech-specific capacity by period"
    ":math:`\text{RSC}_{p,c}`","ResourceBound",":math:`\mathbb{R}^+_0`","Upper bound on resource use"
+   ":math:`\text{SD}_{t}`","StorageDuration",":math:`\mathbb{N}`","Storage duration per technology specified in hours"
    ":math:`\text{SEG}_{s,d}`","SegFrac",":math:`\mathbb{I}`","Fraction of year represented by each (s, d) tuple"
+   ":math:`\text{SI}_{t}`","StorageInit",":math:`\mathbb{I}`","Initial storage charge level expressed as fraction of full charge"
    ":math:`\text{TIS}_{i,t}`","TechInputSplit",":math:`\mathbb{I}`","Technology input fuel ratio"
    ":math:`\text{TOS}_{t,o}`","TechOutputSplit",":math:`\mathbb{I}`","Technology output fuel ratio"
    ":math:`{}^*\text{LA}_{t,v}`","LoanAnnualize",":math:`\mathbb{R}^+_0`","Loan amortization by tech and vintage; based on :math:`DR_t`"
@@ -1170,6 +1172,26 @@ each combination of season and time of day.  The sum of all combinations within
 :code:`SegFrac` must be 1, representing 100% of a year.
 
 
+StorageInit
+^^^^^^^^^^^
+
+:math:`{SI}_{t \in T^{S}}`
+
+The :code:`StorageInit` parameter determines the initial charge level associated
+with each storage technology. The value should be expressed as a fraction between
+0 and 1.
+
+
+StorageDuration
+^^^^^^^^^^^^^^^
+
+:math:`{SD}_{t \in T^{S}}`
+
+The :code:`StorageDuration` parameter represents the number of hours over which
+storage can discharge if it starts at full charge and produces maximum output
+until empty.
+
+
 TechInputSplit
 ^^^^^^^^^^^^^^
 
@@ -1327,31 +1349,81 @@ Variables
    ":math:`CUR_{p,s,d,i,t,v,o}`","V_Curtailment",":math:`\mathbb{R}^+_0`","Commodity flow out of a tech that is curtailed"
    ":math:`CAP_{t,v}`","V_Capacity",":math:`\mathbb{R}^+_0`","Required tech capacity to support associated activity"
    ":math:`CAPAVL_{p,t}`","V_CapacityAvailableByPeriodAndTech",":math:`\mathbb{R}^+_0`","The Capacity of technology :math:`t` available in period :math:`p`"
+   ":math:`SL_{p,s,d,t,v}`","V_StorageLevel",":math:`\mathbb{R}^+_0`","Level of charge associated with storage techs"
+
+V_FlowOut
+^^^^^^^^^
+
+:math:`FO_{p,s,d,i,t,v,o}`
+
+The most fundamental variable in the Temoa formulation is the :code:`V_FlowOut` variable.
+It describes the commodity flow out of a process in a given time slice. To balance input
+and output flows in the :code:`CommodityBalance_Constraint`, the commodity flow into a
+given process can be calculated as :math:`\sum_{T, V, O} \textbf{FO}_{p, s, d, c, t, v, o}
+/EFF_{c,t,v,o}`.
+
+V_FlowOutAnnual
+^^^^^^^^^^^^^^^
+
+:math:`FOA_{p,i,t,v,o}`
+
+Similar to :code:`V_FlowOut`, but used for technologies that are members of the :code:`tech_annual`
+set, whose output does not vary across seasons and times-of-day. Eliminating the :code:`s,d` indices
+for these technologies improves computational performance.
 
 
-The most fundamental variables in the Temoa formulation is the :math:`FlowOut` variable.
-It describes the commodity flows out of a process in a given time slice. The :math:`FlowIn`to
-a given process is related to :math:`FlowOut` as follows:
+V_Curtailment
+^^^^^^^^^^^^^
 
-.. math::
+:math:`CUR_{p,s,d,i,t,v,o}`
 
-    \sum_{I,T, V} \textbf{FO}_{p, s, d, i, t, v, c}
-    =
-    \sum_{T, V, O} \textbf{FO}_{p, s, d, c, t, v, o} /EFF_{c,t,v,o}
+The :code:`V_Curtailment` variable allows for the overproduction and curtailment of technologies belonging
+to the :code:`tech_curtailment` set. Renewables such as wind and solar are often placed in this set. While
+we used to simply formulate the :code:`Capacity` and :code:`CommodityBalance` constraints as inequalities that
+implicitly allowed for curtailment, this simpler approch does not work with renewable targets because the
+curtailed portion of the electricity production counts towards the target, and there is no way to distinguish
+it from the useful production. Including an explicit curtailment term addresses the issue.
 
-The only exception to the relationship above are storage technologies, whose
-production and consumption occur across different time slices, and therefore
-require an explicit :math:`FlowIn` variable.
 
-The Capacity variable is used in the objective function as the amount of
-capacity of a process to build.  It is indexed for each process, and Temoa
-constrains the Capacity variable to be able to meet the total commodity
-flow out of that process in all time slices in which it is active :eq:`Capacity`.
+V_FlowInStorage
+^^^^^^^^^^^^^^^
 
-Finally, CapacityAvailableByPeriodAndTech is a convenience variable that is
+:math:`FIS_{p,s,d,i,t,v,o}`
+
+Because the production and consumption associated with storage techs occur across different
+time slices, the comodity flow into a storage technologiy cannot be discerned from :code:`V_FlowOut`. Thus
+an explicit :math:`FlowIn` variable is required for storage.
+
+V_Capacity
+^^^^^^^^^^
+
+:math:`CAP_{t,v}`
+
+The :code:`V_Capacity` variable determines the required capacity of all processes across the
+user-defined system.  It is indexed for each process (t,v), and Temoa constrains the capacity
+variable to be able to meet the total commodity flow out of that process in all time slices
+in which it is active :eq:`Capacity`.
+
+V_CapacityAvailableByPeriodAndTech
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:math:`CAPAVL_{p,t}`
+
+:code:`CapacityAvailableByPeriodAndTech` is a convenience variable that is
 not strictly necessary, but used where the individual vintages of a technology
 are not warranted (e.g. in calculating the maximum or minimum total capacity
 allowed in a given time period).
+
+V_StorageLevel
+^^^^^^^^^^^^^^
+
+:math:`SL_{p,s,d,t,v}`
+
+The :code:`V_StorageLevel` variable tracks the storage charge level across ordered
+time slices and is critical to ensure that storage charge and dispatch is constrained
+by the energy available in the storage units.
+
+
 
 We explain the equations governing these variables the :ref:`Constraints`
 section.
@@ -1561,7 +1633,7 @@ Anatomy of a Constraint
 -----------------------
 
 To help explain the Pyomo implementation, we discuss a single constraint in
-detail. Consider the demand constraint :eq:`Demand`:
+detail. Consider the :code:`Demand` :eq:`Demand` constraint:
 
 .. math::
    \sum_{I, T, V} \textbf{FO}_{p, s, d, i, t, v, dem}
@@ -1569,7 +1641,7 @@ detail. Consider the demand constraint :eq:`Demand`:
    {DEM}_{p, dem} \cdot {DSD}_{s, d, dem}
 
    \\
-   \forall \{p, s, d, dem\} \in \Theta_{\text{demand}}
+   \forall \{p, s, d, dem\} \in \Theta_{\text{Demand}}
 
 Implementing this with Pyomo requires two pieces, and optionally a third:
 

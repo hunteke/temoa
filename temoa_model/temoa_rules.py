@@ -772,11 +772,72 @@ functionality is currently on the Temoa TODO list.
 def StorageEnergy_Constraint(M, p, s, d, t, v):
     r"""
 
-This constraint tracks the amount of storage assuming ordered time slices.
-The storage unit is initialized at a user-specified charge level (0-100%) in the
-first time slice of each period, and then the charge level is updated each time
-slice based on the amount of energy stored or discharged. At the end of the last
-time slice associated with each period, the charge level must be zeroed out.
+This constraint tracks the storage charge level (:math:`\textbf{SL}_{p, s, d, t, v}`)
+assuming ordered time slices. The storage capacity is initialized at a user-specified
+charge level (0-1) in the first time slice of each period, and then the charge level
+is updated each time slice based on the amount of energy stored or discharged. At the
+end of the last time slice associated with each period, the charge level must equal
+the starting charge level. In the formulation below, note that :math:`\textbf{stored_energy}`
+and :math:`\textbf{initial_energy}` are internal model decision variables.
+
+First, the amount of stored energy in a given time slice is calculated as the
+difference between the amount of energy stored (first term) and the amount of energy
+dispatched (second term). Note that the storage device's roundtrip efficiency is applied
+on the input side:
+
+.. math::
+   :label: StorageEnergy
+
+      \textbf{stored_energy} =
+      \sum_{I, O} \textbf{FIS}_{p, s, d, i, t, v, o} \cdot
+      EFF_{i,t,v,o}
+      -
+      \sum_{I, O} \textbf{FO}_{p, s, d, i, t, v, o}
+
+Next, the initial charge level is calculated. Because the number and duration of time
+slices are user-defined, we need to adjust the storage duration, which is specified in
+hours. First, the hourly duration is divided by the number of hours in a year to obtain
+the duration as a fraction of the year. Since the :math:`C2A` parameter assumes the conversion
+of capacity to annual activity, we need to express the storage duration as fraction of a year.
+Then, :math:`SEG_{s,d}` summed over the time-of-day slices (:math:`d`) multiplied by 365 days /
+yr yields the number of days per season. This step is necessary because conventional time sliced
+models use a single day to represent many days within a given season. Thus, it is necessary to
+scale the storage duration to account for the number of days in each season.
+
+.. math::
+      \textbf{initial_storage} = SI_{t} \cdot \textbf{CAP}_{t,v} \cdot C2A_{t,v} \cdot
+      \frac {SD_{t}}{8760 hrs/yr} \cdot \sum_{d} SEG_{s,d} \cdot 365 days/yr
+
+With :math:`\bf{initial\_storage}` and :math:`\bf{stored\_energy}` calculated, the storage
+charge level (:math:`\textbf{SL}_{p,s,d,t,v}`) is updated, but the update procedure varies
+based on the time slice within each time period. For the first season and time-of-day within
+a given period:
+
+.. math::
+      \textbf{SL}_{p, s, d, t, v} = \textbf{initial_storage} + \textbf{stored_energy}
+
+For the first time-of-day slice in any other season except the first:
+
+.. math::
+      \textbf{SL}_{p, s, d, t, v} =
+      \textbf{SL}_{p, s_{prev}, d_{last}, t, v} + \textbf{stored_energy}
+
+For the last season and time-of-day in the year, the ending storage charge level
+should be equal to the starting charge level:
+
+.. math::
+      \textbf{SL}_{p, s, d, t, v} + \textbf{stored_energy} = \textbf{initial_storage}
+
+For all other time slices not explicitly outlined above:
+
+.. math::
+      \textbf{SL}_{p, s, d, t, v} = \textbf{SL}_{p, s, d_{prev}, t, v} + \textbf{stored_energy}
+
+All equations below are sparsely indexed such that:
+
+.. math::
+      \forall \{p, s, d, t, v\} \in \Theta_{\text{StorageEnergy}}
+
 """
     # This is the sum of all input=i sent TO storage tech t of vintage v with
     # output=o in p,s,d
@@ -811,7 +872,7 @@ time slice associated with each period, the charge level must be zeroed out.
         )
         expr = M.V_StorageLevel[p, s, d_prev, t, v] + stored_energy == initial_storage
 
-    # First time slice of the first season (i.e., start of period), starts at full charge
+    # First time slice of the first season (i.e., start of period), starts at StorageInit level
     elif d == M.time_of_day.first() and s == M.time_season.first():
         initial_storage = (
             M.StorageInit[t]
@@ -847,7 +908,19 @@ def StorageEnergyUpperBound_Constraint(M, p, s, d, t, v):
     r"""
 
 This constraint ensures that the amount of energy stored does not exceed
-the upper bound set by the energy capacity of the storage device.
+the upper bound set by the energy capacity of the storage device, as calculated
+on the right-hand side.
+
+.. math::
+   :label: StorageEnergyUpperBound
+
+      \textbf{SL}_{p, s, d, t, v} \le
+      \textbf{CAP}_{t,v} \cdot C2A_{t,v} \cdot \frac {SD_{t}}{8760 hrs/yr}
+      \cdot \sum_{d} SEG_{s,d} \cdot 365 days/yr
+
+      \\
+      \forall \{p, s, d, t, v\} \in \Theta_{\text{StorageEnergyUpperBound}}
+
 """
 
     energy_capacity = (
@@ -865,8 +938,19 @@ the upper bound set by the energy capacity of the storage device.
 def StorageChargeRate_Constraint(M, p, s, d, t, v):
     r"""
 
-    This constraint ensures that the charge rate of the storage unit is
-    limited by the power capacity (typically GW) of the storage unit.
+This constraint ensures that the charge rate of the storage unit is
+limited by the power capacity (typically GW) of the storage unit.
+
+.. math::
+   :label: StorageChargeRate
+
+      \sum_{I, O} \textbf{FIS}_{p, s, d, i, t, v, o} \cdot EFF_{i,t,v,o}
+      \le
+      \textbf{CAP}_{t,v} \cdot C2A_{t,v} \cdot SEG_{s,d}
+
+      \\
+      \forall \{p, s, d, t, v\} \in \Theta_{\text{StorageChargeRate}}
+
 """
     # Calculate energy charge in each time slice
     slice_charge = sum(
@@ -892,8 +976,18 @@ def StorageChargeRate_Constraint(M, p, s, d, t, v):
 def StorageDischargeRate_Constraint(M, p, s, d, t, v):
     r"""
 
-	This constraint ensures that the discharge rate of the storage unit
-	is limited by the power capacity (typically GW) of the storage unit.
+This constraint ensures that the discharge rate of the storage unit
+is limited by the power capacity (typically GW) of the storage unit.
+
+.. math::
+   :label: StorageDischargeRate
+
+      \sum_{I, O} \textbf{FO}_{p, s, d, i, t, v, o}
+      \le
+      \textbf{CAP}_{t,v} \cdot C2A_{t,v} \cdot SEG_{s,d}
+
+      \\
+      \forall \{p, s, d, t, v\} \in \Theta_{\text{StorageDischargeRate}}
 """
     # Calculate energy discharge in each time slice
     slice_discharge = sum(
@@ -919,9 +1013,21 @@ def StorageDischargeRate_Constraint(M, p, s, d, t, v):
 def StorageThroughput_Constraint(M, p, s, d, t, v):
     r"""
 
-It is not enough to only limit the charge and discharge rate separately. We also 
-need to ensure that the maximum throughput (charge + discharge) does not exceed 
+It is not enough to only limit the charge and discharge rate separately. We also
+need to ensure that the maximum throughput (charge + discharge) does not exceed
 the capacity (typically GW) of the storage unit.
+
+.. math::
+   :label: StorageThroughput
+
+      \sum_{I, O} \textbf{FO}_{p, s, d, i, t, v, o}
+      +
+      \sum_{I, O} \textbf{FIS}_{p, s, d, i, t, v, o} \cdot EFF_{i,t,v,o}
+      \le
+      \textbf{CAP}_{t,v} \cdot C2A_{t,v} \cdot SEG_{s,d}
+
+      \\
+      \forall \{p, s, d, t, v\} \in \Theta_{\text{StorageThroughput}}
 """
     discharge = sum(
         M.V_FlowOut[p, s, d, S_i, t, v, S_o]
