@@ -1,0 +1,17 @@
+.wy-nav-content {
+max-width: 1200px !important;
+}
+
+.eqno {
+    margin-left: 5px;
+    float: right;
+}
+.math .headerlink {
+    display: none;
+    visibility: hidden;
+}
+.math:hover .headerlink {
+    display: inline-block;
+    visibility: visible;
+    margin-right: -0.7em;
+}
