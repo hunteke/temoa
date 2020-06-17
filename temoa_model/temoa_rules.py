@@ -804,7 +804,7 @@ models use a single day to represent many days within a given season. Thus, it i
 scale the storage duration to account for the number of days in each season.
 
 .. math::
-      \textbf{initial_storage} = SI_{t} \cdot \textbf{CAP}_{t,v} \cdot C2A_{t,v} \cdot
+      \textbf{initial_storage} = SI_{t} \cdot \textbf{CAP}_{t,v} \cdot C2A_{t} \cdot
       \frac {SD_{t}}{8760 hrs/yr} \cdot \sum_{d} SEG_{s,d} \cdot 365 days/yr
 
 With :math:`\bf{initial\_storage}` and :math:`\bf{stored\_energy}` calculated, the storage
@@ -914,7 +914,7 @@ on the right-hand side.
    :label: StorageEnergyUpperBound
 
       \textbf{SL}_{p, s, d, t, v} \le
-      \textbf{CAP}_{t,v} \cdot C2A_{t,v} \cdot \frac {SD_{t}}{8760 hrs/yr}
+      \textbf{CAP}_{t,v} \cdot C2A_{t} \cdot \frac {SD_{t}}{8760 hrs/yr}
       \cdot \sum_{d} SEG_{s,d} \cdot 365 days/yr
 
       \\
@@ -945,7 +945,7 @@ limited by the power capacity (typically GW) of the storage unit.
 
       \sum_{I, O} \textbf{FIS}_{p, s, d, i, t, v, o} \cdot EFF_{i,t,v,o}
       \le
-      \textbf{CAP}_{t,v} \cdot C2A_{t,v} \cdot SEG_{s,d}
+      \textbf{CAP}_{t,v} \cdot C2A_{t} \cdot SEG_{s,d}
 
       \\
       \forall \{p, s, d, t, v\} \in \Theta_{\text{StorageChargeRate}}
@@ -983,7 +983,7 @@ is limited by the power capacity (typically GW) of the storage unit.
 
       \sum_{I, O} \textbf{FO}_{p, s, d, i, t, v, o}
       \le
-      \textbf{CAP}_{t,v} \cdot C2A_{t,v} \cdot SEG_{s,d}
+      \textbf{CAP}_{t,v} \cdot C2A_{t} \cdot SEG_{s,d}
 
       \\
       \forall \{p, s, d, t, v\} \in \Theta_{\text{StorageDischargeRate}}
@@ -1023,7 +1023,7 @@ the capacity (typically GW) of the storage unit.
       +
       \sum_{I, O} \textbf{FIS}_{p, s, d, i, t, v, o} \cdot EFF_{i,t,v,o}
       \le
-      \textbf{CAP}_{t,v} \cdot C2A_{t,v} \cdot SEG_{s,d}
+      \textbf{CAP}_{t,v} \cdot C2A_{t} \cdot SEG_{s,d}
 
       \\
       \forall \{p, s, d, t, v\} \in \Theta_{\text{StorageThroughput}}
