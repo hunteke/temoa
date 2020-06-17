@@ -662,6 +662,9 @@ Sets
    ":math:`\text{T}^s`",":code:`tech_storage`","string","storage technologies; (:math:`{T}^s \subset T`)"
    ":math:`\text{T}^c`",":code:`tech_curtailment`","string","technologies with curtailable output and no upstream cost; (:math:`{T}^c \subset T`)"
    ":math:`\text{T}^a`",":code:`tech_annual`","string","technologies that produce constant annual output; (:math:`{T}^a \subset T`)" 
+   ":math:`\text{T}^{cmax}`",":code:`tech_capacity_max`","string","subset of technologies used in MaxCapacitySet constraint; (:math:`{T}^{cmax} \subset T`)"
+   ":math:`\text{T}^{cmin}`",":code:`tech_capacity_min`","string","subset of technologies used in MinCapacitySet constraint; (:math:`{T}^{cmin} \subset T`)"
+
 
 Temoa uses two different set notation styles, one for code representation and
 one that utilizes standard algebraic notation.  For brevity, the mathematical
@@ -1551,11 +1554,13 @@ operation, but allow the modeler some further degree of system specification.
 
 .. _MaxCapacity_Constraint:
 
-.. autofunction:: temoa_rules.MaxCapacitySet_Constraint
-
 .. autofunction:: temoa_rules.MaxCapacity_Constraint
 
+.. autofunction:: temoa_rules.MaxCapacitySet_Constraint
+
 .. autofunction:: temoa_rules.MinCapacity_Constraint
+
+.. autofunction:: temoa_rules.MinCapacitySet_Constraint
 
 .. autofunction:: temoa_rules.ResourceExtraction_Constraint
 

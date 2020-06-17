@@ -1649,7 +1649,11 @@ tech, not tech and vintage.
 
 
 def MaxCapacitySet_Constraint(M, p):
-    r""" See MaxCapacity_Constraint """
+    r"""
+Similar to the :code:`MaxCapacity` constraint, but works on a group of technologies
+specified in the :code:`tech_capacity_max` subset.
+
+"""
     max_cap = value(M.MaxCapacitySum[p])
     aggcap = sum(
         M.V_CapacityAvailableByPeriodAndTech[p, t] for t in M.tech_capacity_max
@@ -1678,7 +1682,11 @@ tech, not tech and vintage.
 
 
 def MinCapacitySet_Constraint(M, p):
-    r""" See MinCapacity_Constraint """
+    r"""
+Similar to the :code:`MinCapacity` constraint, but works on a group of technologies
+specified in the :code:`tech_capacity_min` subset.
+
+"""
     min_cap = value(M.MinCapacitySum[p])
     aggcap = sum(
         M.V_CapacityAvailableByPeriodAndTech[p, t] for t in M.tech_capacity_min
