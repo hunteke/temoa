@@ -994,6 +994,28 @@ def StorageVariableIndices ( M ):
 
 	return indices
 	
+
+def StorageInitIndices ( M ):
+	indices = set(
+		(t, v)
+
+		for p,t in M.storageVintages.keys()
+		for v in M.storageVintages[ p, t ]
+	)
+
+	return indices
+
+
+def StorageInitConstraintIndices ( M ):
+	indices = set(
+		(t,v)
+
+		for t,v in M.StorageInitFrac.sparse_iterkeys()
+	)
+
+	return indices
+
+
 def RampConstraintDayIndices ( M ):
 	indices = set(
 	  (p, s, d, t, v)

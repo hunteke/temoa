@@ -219,8 +219,10 @@ def temoa_create_model(name="Temoa"):
     M.PlanningReserveMargin = Param(default=0.2)
     # Storage duration is expressed in hours
     M.StorageDuration = Param(M.tech_storage, default=4)
-    # Initial storage charge level, expressed as fraction of full energy capacity
-    M.StorageInit = Param(M.tech_storage, default=1)
+    # Initial storage charge level, expressed as fraction of full energy capacity.
+    # If the parameter is not defined, the model optimizes the initial storage charge level.
+    M.StorageInit_tv = Set(dimen=2, initialize=StorageInitIndices)
+    M.StorageInitFrac = Param(M.StorageInit_tv)
 
     # ---------------------------------------------------------------
     # Define Decision Variables.
@@ -243,6 +245,7 @@ def temoa_create_model(name="Temoa"):
     M.V_FlowIn = Var(M.FlowInStorage_psditvo, domain=NonNegativeReals)
     M.StorageLevel_psdtv = Set(dimen=5, initialize=StorageVariableIndices)
     M.V_StorageLevel = Var(M.StorageLevel_psdtv, domain=NonNegativeReals)
+    M.V_StorageInit = Var(M.StorageInit_tv, domain=NonNegativeReals)
 
     # Derived decision variables
 
@@ -351,6 +354,11 @@ def temoa_create_model(name="Temoa"):
 
     M.StorageThroughputConstraint = Constraint(
         M.StorageConstraints_psdtv, rule=StorageThroughput_Constraint
+    )
+
+    M.StorageInitConstraint_tv = Set(dimen=2,initialize=StorageInitConstraintIndices)
+    M.StorageInitConstraint = Constraint(
+        M.StorageInitConstraint_tv, rule=StorageInit_Constraint
     )
 
     M.RampConstraintDay_psdtv = Set(dimen=5, initialize=RampConstraintDayIndices)
