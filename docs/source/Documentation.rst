@@ -860,7 +860,7 @@ Parameters
    ":math:`\text{RSC}_{p,c}`","ResourceBound",":math:`\mathbb{R}^+_0`","Upper bound on resource use"
    ":math:`\text{SD}_{t}`","StorageDuration",":math:`\mathbb{N}`","Storage duration per technology specified in hours"
    ":math:`\text{SEG}_{s,d}`","SegFrac",":math:`\mathbb{I}`","Fraction of year represented by each (s, d) tuple"
-   ":math:`\text{SI}_{t}`","StorageInit",":math:`\mathbb{I}`","Initial storage charge level expressed as fraction of full charge"
+   ":math:`\text{SIF}_{t}`","StorageInitFrac",":math:`\mathbb{I}`","Initial storage charge level expressed as fraction of full charge"
    ":math:`\text{TIS}_{i,t}`","TechInputSplit",":math:`\mathbb{I}`","Technology input fuel ratio"
    ":math:`\text{TOS}_{t,o}`","TechOutputSplit",":math:`\mathbb{I}`","Technology output fuel ratio"
    ":math:`{}^*\text{LA}_{t,v}`","LoanAnnualize",":math:`\mathbb{R}^+_0`","Loan amortization by tech and vintage; based on :math:`DR_t`"
@@ -1175,14 +1175,15 @@ each combination of season and time of day.  The sum of all combinations within
 :code:`SegFrac` must be 1, representing 100% of a year.
 
 
-StorageInit
-^^^^^^^^^^^
+StorageInitFrac
+^^^^^^^^^^^^^^^
 
 :math:`{SI}_{t \in T^{S}}`
 
-The :code:`StorageInit` parameter determines the initial charge level associated
+The :code:`StorageInitFrac` parameter determines the initial charge level associated
 with each storage technology. The value should be expressed as a fraction between
-0 and 1.
+0 and 1. Note that this is an optional parameter and should only be used if the
+user wishes to set the initial charge rather than allowing the model to optimize it.
 
 
 StorageDuration
@@ -1352,7 +1353,8 @@ Variables
    ":math:`CUR_{p,s,d,i,t,v,o}`","V_Curtailment",":math:`\mathbb{R}^+_0`","Commodity flow out of a tech that is curtailed"
    ":math:`CAP_{t,v}`","V_Capacity",":math:`\mathbb{R}^+_0`","Required tech capacity to support associated activity"
    ":math:`CAPAVL_{p,t}`","V_CapacityAvailableByPeriodAndTech",":math:`\mathbb{R}^+_0`","The Capacity of technology :math:`t` available in period :math:`p`"
-   ":math:`SL_{p,s,d,t,v}`","V_StorageLevel",":math:`\mathbb{R}^+_0`","Level of charge associated with storage techs"
+   ":math:`SI_{t,v}`","V_StorageInit",":math:`\mathbb{R}^+_0`","Initial charge level associated with storage techs"
+   ":math:`SL_{p,s,d,t,v}`","V_StorageLevel",":math:`\mathbb{R}^+_0`","Charge level each time slice associated with storage techs"
 
 V_FlowOut
 ^^^^^^^^^
@@ -1416,6 +1418,17 @@ V_CapacityAvailableByPeriodAndTech
 not strictly necessary, but used where the individual vintages of a technology
 are not warranted (e.g. in calculating the maximum or minimum total capacity
 allowed in a given time period).
+
+V_StorageInit
+^^^^^^^^^^^^^
+
+:math:`SI_{t,v}`
+
+The :code:`V_StorageInit` variable determines the initial storage charge level
+at the beginning of the first time slice within a given time period. Each vintage
+of each technology can have a different optimal initial value. Note that
+this value also determines the ending storage charge level at the end of the
+last time slice within each model time period.
 
 V_StorageLevel
 ^^^^^^^^^^^^^^
@@ -1516,6 +1529,8 @@ various physical and operational real-world phenomena.
 .. autofunction:: temoa_rules.StorageDischargeRate_Constraint
 
 .. autofunction:: temoa_rules.StorageThroughput_Constraint
+
+.. autofunction:: temoa_rules.StorageInit_Constraint
 
 .. autofunction:: temoa_rules.RampUpDay_Constraint
 
@@ -2577,6 +2592,4 @@ should meet a basic standard of quality:
 .. _sqlite: https://www.sqlite.org/
 .. _Graphviz: http://www.graphviz.org/
 
-
 .. bibliography:: References.bib
-
