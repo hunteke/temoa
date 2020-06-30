@@ -223,12 +223,12 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		if abs(fcost) < epsilon: continue
 
 		fcost *= value( m.CostFixed[p, t, v] )
-		svars[	'Costs'	][ 'V_UndiscountedFixedCostsByProcess', t, v] += fcost
+		svars[	'Costs'	][ 'V_UndiscountedFixedCostsByProcess', t, v] += fcost * value( MPL[p, t, v] )
 		
 		fcost *= (
 		  value( MPL[p, t, v] ) if not GDR else
 		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, t, v] ))) / GDR)
-		)
+		) 
 
 		svars[	'Costs'	][ 'V_DiscountedFixedCostsByProcess', t, v] += fcost
 		
@@ -251,12 +251,11 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		if abs(vcost) < epsilon: continue
 
 		vcost *= value( m.CostVariable[p, t, v] )
-		svars[	'Costs'	][ 'V_UndiscountedVariableCostsByProcess', t, v] += vcost
-
+		svars[	'Costs'	][ 'V_UndiscountedVariableCostsByProcess', t, v] += vcost * value( MPL[p, t, v] )
 		vcost *= (
 		  value( MPL[p, t, v] ) if not GDR else
 		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, t, v] ))) / GDR)
-		  )
+		  ) 
 		svars[	'Costs'	][ 'V_DiscountedVariableCostsByProcess', t, v] += vcost
 
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
