@@ -187,7 +187,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		svars['V_Capacity'][r, t, v] = val
 
 	for r, p, t in m.V_CapacityAvailableByPeriodAndTech:
-		val = v
+		val = value( m.V_CapacityAvailableByPeriodAndTech[r, p, t] )
 		if abs(val) < epsilon: continue
 		svars['V_CapacityAvailableByPeriodAndTech'][r, p, t] = val
 
