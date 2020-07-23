@@ -51,6 +51,12 @@ def temoa_create_model(name="Temoa"):
     M.time_season = Set(ordered=True)
     M.time_of_day = Set(ordered=True)
 
+    # Define regions
+    M.regions = Set()
+    # valid_regional_indices is the set of all the possible combinations of interregional 
+    # exhanges plus original region indices. If tech_exchange is empty, valid_regional_indices =regions.
+    M.valid_regional_indices = Set(initialize=CreateRegionalIndices)
+
     # Define technology-related sets
     M.tech_resource = Set()
     M.tech_production = Set()
@@ -62,6 +68,7 @@ def temoa_create_model(name="Temoa"):
     M.tech_capacity_min = Set(within=M.tech_all)
     M.tech_capacity_max = Set(within=M.tech_all)
     M.tech_curtailment = Set(within=M.tech_all)
+    M.tech_exchange = Set(within=M.tech_all)
     M.groups = Set(dimen=1) # Define groups for technologies
     M.tech_groups = Set(within=M.tech_all) # Define techs used in groups
     M.tech_annual = Set(within=M.tech_all) # Define techs with constant output
@@ -110,44 +117,44 @@ def temoa_create_model(name="Temoa"):
     # Define demand- and resource-related parameters
     M.DemandDefaultDistribution = Param(M.time_season, M.time_of_day, mutable=True)
     M.DemandSpecificDistribution = Param(
-        M.time_season, M.time_of_day, M.commodity_demand, mutable=True
+        M.regions, M.time_season, M.time_of_day, M.commodity_demand, mutable=True
     )
 
-    M.Demand = Param(M.time_optimize, M.commodity_demand)
+    M.Demand = Param(M.regions, M.time_optimize, M.commodity_demand)
     M.initialize_Demands = BuildAction(rule=CreateDemands)
     
-    M.ResourceBound = Param(M.time_optimize, M.commodity_physical)
+    M.ResourceBound = Param(M.regions, M.time_optimize, M.commodity_physical)
 
     # Define technology performance parameters
-    M.CapacityToActivity = Param(M.tech_all, default=1)
+    M.CapacityToActivity = Param(M.valid_regional_indices, M.tech_all, default=1)
     
-    M.ExistingCapacity = Param(M.tech_all, M.vintage_exist)
+    M.ExistingCapacity = Param(M.valid_regional_indices, M.tech_all, M.vintage_exist)
 
     M.Efficiency = Param(
-        M.commodity_SNG, M.tech_all, M.vintage_all, M.commodity_carrier
+        M.valid_regional_indices, M.commodity_SNG, M.tech_all, M.vintage_all, M.commodity_carrier
     )
     M.validate_UsedEfficiencyIndices = BuildAction(rule=CheckEfficiencyIndices)
 
-    M.CapacityFactor_sdtv = Set(dimen=4, initialize=CapacityFactorProcessIndices)
-    M.CapacityFactorProcess = Param(M.CapacityFactor_sdtv, mutable=True)
+    M.CapacityFactor_rsdtv = Set(dimen=5, initialize=CapacityFactorProcessIndices)
+    M.CapacityFactorProcess = Param(M.CapacityFactor_rsdtv, mutable=True)
 
-    M.CapacityFactor_sdt = Set(dimen=3, initialize=CapacityFactorTechIndices)
-    M.CapacityFactorTech = Param(M.CapacityFactor_sdt, default=1)
+    M.CapacityFactor_rsdt = Set(dimen=4, initialize=CapacityFactorTechIndices)
+    M.CapacityFactorTech = Param(M.CapacityFactor_rsdt, default=1)
 
     M.initialize_CapacityFactors = BuildAction(rule=CreateCapacityFactors)
 
-    M.LifetimeTech = Param(M.tech_all, default=40)
-    M.LifetimeLoanTech = Param(M.tech_all, default=10)
+    M.LifetimeTech = Param(M.valid_regional_indices, M.tech_all, default=40)
+    M.LifetimeLoanTech = Param(M.valid_regional_indices, M.tech_all, default=10)
 
-    M.LifetimeProcess_tv = Set(dimen=2, initialize=LifetimeProcessIndices)
-    M.LifetimeProcess = Param(M.LifetimeProcess_tv, mutable=True)
+    M.LifetimeProcess_rtv = Set(dimen=3, initialize=LifetimeProcessIndices)
+    M.LifetimeProcess = Param(M.LifetimeProcess_rtv, mutable=True)
 
-    M.LifetimeLoanProcess_tv = Set(dimen=2, initialize=LifetimeLoanProcessIndices)
-    M.LifetimeLoanProcess = Param(M.LifetimeLoanProcess_tv, mutable=True)
+    M.LifetimeLoanProcess_rtv = Set(dimen=3, initialize=LifetimeLoanProcessIndices)
+    M.LifetimeLoanProcess = Param(M.LifetimeLoanProcess_rtv, mutable=True)
     M.initialize_Lifetimes = BuildAction(rule=CreateLifetimes)
 
-    M.TechInputSplit = Param(M.time_optimize, M.commodity_physical, M.tech_all)
-    M.TechOutputSplit = Param(M.time_optimize, M.tech_all, M.commodity_carrier)
+    M.TechInputSplit = Param(M.regions, M.time_optimize, M.commodity_physical, M.tech_all)
+    M.TechOutputSplit = Param(M.regions, M.time_optimize, M.tech_all, M.commodity_carrier)
 
     # The method below creates a series of helper functions that are used to
     # perform the sparse matrix of indexing for the parameters, variables, and
@@ -155,74 +162,74 @@ def temoa_create_model(name="Temoa"):
     M.Create_SparseDicts = BuildAction(rule=CreateSparseDicts)
 
     # Define technology cost parameters
-    M.CostFixed_ptv = Set(dimen=3, initialize=CostFixedIndices)
-    M.CostFixed = Param(M.CostFixed_ptv, mutable=True)
+    M.CostFixed_rptv = Set(dimen=4, initialize=CostFixedIndices)
+    M.CostFixed = Param(M.CostFixed_rptv, mutable=True)
 
-    M.CostFixedVintageDefault_tv = Set(
-        dimen=2, initialize=lambda M: set((t, v) for p, t, v in M.CostFixed_ptv)
+    M.CostFixedVintageDefault_rtv = Set(
+        dimen=3, initialize=lambda M: set((r, t, v) for r, p, t, v in M.CostFixed_rptv)
     )
-    M.CostFixedVintageDefault = Param(M.CostFixedVintageDefault_tv)
+    M.CostFixedVintageDefault = Param(M.CostFixedVintageDefault_rtv)
 
-    M.CostInvest_tv = Set(dimen=2, initialize=CostInvestIndices)
-    M.CostInvest = Param(M.CostInvest_tv)
+    M.CostInvest_rtv = Set(dimen=3, initialize=CostInvestIndices)
+    M.CostInvest = Param(M.CostInvest_rtv)
 
-    M.CostVariable_ptv = Set(dimen=3, initialize=CostVariableIndices)
-    M.CostVariable = Param(M.CostVariable_ptv, mutable=True)
+    M.CostVariable_rptv = Set(dimen=4, initialize=CostVariableIndices)
+    M.CostVariable = Param(M.CostVariable_rptv, mutable=True)
 
-    M.CostVariableVintageDefault_tv = Set(
-        dimen=2, initialize=lambda M: set((t, v) for p, t, v in M.CostVariable_ptv)
+    M.CostVariableVintageDefault_rtv = Set(
+        dimen=3, initialize=lambda M: set((r, t, v) for r, p, t, v in M.CostVariable_rptv)
     )
-    M.CostVariableVintageDefault = Param(M.CostVariableVintageDefault_tv)
+    M.CostVariableVintageDefault = Param(M.CostVariableVintageDefault_rtv)
 
     M.initialize_Costs = BuildAction(rule=CreateCosts)
 
-    M.DiscountRate_tv = Set(dimen=2, initialize=lambda M: M.CostInvest.keys())
-    M.DiscountRate = Param(M.DiscountRate_tv, default=0.05)
+    M.DiscountRate_rtv = Set(dimen=3, initialize=lambda M: M.CostInvest.keys())
+    M.DiscountRate = Param(M.DiscountRate_rtv, default=0.05)
 
-    M.Loan_tv = Set(dimen=2, initialize=lambda M: M.CostInvest.keys())
-    M.LoanAnnualize = Param(M.Loan_tv, initialize=ParamLoanAnnualize_rule)
+    M.Loan_rtv = Set(dimen=3, initialize=lambda M: M.CostInvest.keys())
+    M.LoanAnnualize = Param(M.Loan_rtv, initialize=ParamLoanAnnualize_rule)
 
-    M.ModelLoanLife_tv = Set(dimen=2, initialize=lambda M: M.CostInvest.keys())
-    M.ModelLoanLife = Param(M.ModelLoanLife_tv, initialize=ParamModelLoanLife_rule)
+    M.ModelLoanLife_rtv = Set(dimen=3, initialize=lambda M: M.CostInvest.keys())
+    M.ModelLoanLife = Param(M.ModelLoanLife_rtv, initialize=ParamModelLoanLife_rule)
     
-    M.ModelProcessLife_ptv = Set(dimen=3, initialize=ModelProcessLifeIndices)
+    M.ModelProcessLife_rptv = Set(dimen=4, initialize=ModelProcessLifeIndices)
     M.ModelProcessLife = Param(
-        M.ModelProcessLife_ptv, initialize=ParamModelProcessLife_rule
+        M.ModelProcessLife_rptv, initialize=ParamModelProcessLife_rule
     )
     
-    M.LoanLifeFrac_ptv = Set(dimen=3, initialize=LoanLifeFracIndices)
+    M.LoanLifeFrac_rptv = Set(dimen=4, initialize=LoanLifeFracIndices)
     
-    M.ProcessLifeFrac_ptv = Set(dimen=3, initialize=ModelProcessLifeIndices)
+    M.ProcessLifeFrac_rptv = Set(dimen=4, initialize=ModelProcessLifeIndices)
     M.ProcessLifeFrac = Param(
-        M.ProcessLifeFrac_ptv, initialize=ParamProcessLifeFraction_rule
+        M.ProcessLifeFrac_rptv, initialize=ParamProcessLifeFraction_rule
     )
 
     # Define parameters associated with user-defined constraints
-    M.MinCapacity = Param(M.time_optimize, M.tech_all)
-    M.MaxCapacity = Param(M.time_optimize, M.tech_all)
+    M.MinCapacity = Param(M.valid_regional_indices, M.time_optimize, M.tech_all)
+    M.MaxCapacity = Param(M.valid_regional_indices, M.time_optimize, M.tech_all)
     M.MinCapacitySum = Param(M.time_optimize)  # for techs in tech_capacity
     M.MaxCapacitySum = Param(M.time_optimize)  # for techs in tech_capacity
-    M.MaxActivity = Param(M.time_optimize, M.tech_all)
-    M.MinActivity = Param(M.time_optimize, M.tech_all)
-    M.GrowthRateMax = Param(M.tech_all)
-    M.GrowthRateSeed = Param(M.tech_all)
-    M.EmissionLimit = Param(M.time_optimize, M.commodity_emissions)
-    M.EmissionActivity_eitvo = Set(dimen=5, initialize=EmissionActivityIndices)
-    M.EmissionActivity = Param(M.EmissionActivity_eitvo)
+    M.MaxActivity = Param(M.valid_regional_indices, M.time_optimize, M.tech_all)
+    M.MinActivity = Param(M.valid_regional_indices, M.time_optimize, M.tech_all)
+    M.GrowthRateMax = Param(M.valid_regional_indices, M.tech_all)
+    M.GrowthRateSeed = Param(M.valid_regional_indices, M.tech_all)
+    M.EmissionLimit = Param(M.regions, M.time_optimize, M.commodity_emissions)
+    M.EmissionActivity_reitvo = Set(dimen=6, initialize=EmissionActivityIndices)
+    M.EmissionActivity = Param(M.EmissionActivity_reitvo)
     M.MinGenGroupWeight = Param(M.tech_groups, M.groups, default = 0)
     M.MinGenGroupTarget = Param(M.time_optimize, M.groups)
 
     # Define parameters associated with electric sector operation
-    M.RampUp = Param(M.tech_ramping)
-    M.RampDown = Param(M.tech_ramping)
-    M.CapacityCredit = Param(M.time_optimize, M.tech_all, default=1)
-    M.PlanningReserveMargin = Param(default=0.2)
+    M.RampUp = Param(M.regions, M.tech_ramping)
+    M.RampDown = Param(M.regions, M.tech_ramping)
+    M.CapacityCredit = Param(M.valid_regional_indices, M.time_optimize, M.tech_all, default=1)
+    M.PlanningReserveMargin = Param(M.regions, default=0.2)
     # Storage duration is expressed in hours
-    M.StorageDuration = Param(M.tech_storage, default=4)
+    M.StorageDuration = Param(M.regions, M.tech_storage, default=4)
     # Initial storage charge level, expressed as fraction of full energy capacity.
     # If the parameter is not defined, the model optimizes the initial storage charge level.
-    M.StorageInit_tv = Set(dimen=2, initialize=StorageInitIndices)
-    M.StorageInitFrac = Param(M.StorageInit_tv)
+    M.StorageInit_rtv = Set(dimen=3, initialize=StorageInitIndices)
+    M.StorageInitFrac = Param(M.StorageInit_rtv)
 
     # ---------------------------------------------------------------
     # Define Decision Variables.
@@ -233,30 +240,30 @@ def temoa_create_model(name="Temoa"):
     # summed over.
     # ---------------------------------------------------------------
     # Define base decision variables
-    M.FlowVar_psditvo = Set(dimen=7, initialize=FlowVariableIndices)
-    M.V_FlowOut = Var(M.FlowVar_psditvo, domain=NonNegativeReals)
-    M.FlowVarAnnual_pitvo = Set(dimen=5, initialize=FlowVariableAnnualIndices)
-    M.V_FlowOutAnnual = Var(M.FlowVarAnnual_pitvo, domain=NonNegativeReals)
+    M.FlowVar_rpsditvo = Set(dimen=8, initialize=FlowVariableIndices)
+    M.V_FlowOut = Var(M.FlowVar_rpsditvo, domain=NonNegativeReals)
+    M.FlowVarAnnual_rpitvo = Set(dimen=6, initialize=FlowVariableAnnualIndices)
+    M.V_FlowOutAnnual = Var(M.FlowVarAnnual_rpitvo, domain=NonNegativeReals)
 
-    M.CurtailmentVar_psditvo = Set(dimen=7, initialize=CurtailmentVariableIndices)
-    M.V_Curtailment = Var(M.CurtailmentVar_psditvo, domain=NonNegativeReals)
+    M.CurtailmentVar_rpsditvo = Set(dimen=8, initialize=CurtailmentVariableIndices)
+    M.V_Curtailment = Var(M.CurtailmentVar_rpsditvo, domain=NonNegativeReals)
 
-    M.FlowInStorage_psditvo = Set(dimen=7, initialize=FlowInStorageVariableIndices)
-    M.V_FlowIn = Var(M.FlowInStorage_psditvo, domain=NonNegativeReals)
-    M.StorageLevel_psdtv = Set(dimen=5, initialize=StorageVariableIndices)
-    M.V_StorageLevel = Var(M.StorageLevel_psdtv, domain=NonNegativeReals)
-    M.V_StorageInit = Var(M.StorageInit_tv, domain=NonNegativeReals)
+    M.FlowInStorage_rpsditvo = Set(dimen=8, initialize=FlowInStorageVariableIndices)
+    M.V_FlowIn = Var(M.FlowInStorage_rpsditvo, domain=NonNegativeReals)
+    M.StorageLevel_rpsdtv = Set(dimen=6, initialize=StorageVariableIndices)
+    M.V_StorageLevel = Var(M.StorageLevel_rpsdtv, domain=NonNegativeReals)
+    M.V_StorageInit = Var(M.StorageInit_rtv, domain=NonNegativeReals)
 
     # Derived decision variables
 
-    M.CapacityVar_tv = Set(dimen=2, initialize=CapacityVariableIndices)
-    M.V_Capacity = Var(M.CapacityVar_tv, domain=NonNegativeReals)
+    M.CapacityVar_rtv = Set(dimen=3, initialize=CapacityVariableIndices)
+    M.V_Capacity = Var(M.CapacityVar_rtv, domain=NonNegativeReals)
 
-    M.CapacityAvailableVar_pt = Set(
-        dimen=2, initialize=CapacityAvailableVariableIndices
+    M.CapacityAvailableVar_rpt = Set(
+        dimen=3, initialize=CapacityAvailableVariableIndices
     )
     M.V_CapacityAvailableByPeriodAndTech = Var(
-        M.CapacityAvailableVar_pt, domain=NonNegativeReals
+        M.CapacityAvailableVar_rpt, domain=NonNegativeReals
     )
 
     # ---------------------------------------------------------------
@@ -274,91 +281,91 @@ def temoa_create_model(name="Temoa"):
 
     # Declare constraints to calculate derived decision variables
 
-    M.CapacityConstraint_psdtv = Set(dimen=5, initialize=CapacityConstraintIndices)
+    M.CapacityConstraint_rpsdtv = Set(dimen=6, initialize=CapacityConstraintIndices)
     M.CapacityConstraint = Constraint(
-        M.CapacityConstraint_psdtv, rule=Capacity_Constraint)
+        M.CapacityConstraint_rpsdtv, rule=Capacity_Constraint)
 
-    M.CapacityAnnualConstraint_ptv = Set(dimen=3, initialize=CapacityAnnualConstraintIndices)
+    M.CapacityAnnualConstraint_rptv = Set(dimen=4, initialize=CapacityAnnualConstraintIndices)
     M.CapacityAnnualConstraint = Constraint(
-        M.CapacityAnnualConstraint_ptv, rule=CapacityAnnual_Constraint)
+        M.CapacityAnnualConstraint_rptv, rule=CapacityAnnual_Constraint)
 
     M.CapacityAvailableByPeriodAndTechConstraint = Constraint(
-        M.CapacityAvailableVar_pt, rule=CapacityAvailableByPeriodAndTech_Constraint
+        M.CapacityAvailableVar_rpt, rule=CapacityAvailableByPeriodAndTech_Constraint
     )
 
-    M.ExistingCapacityConstraint_tv = Set(
-        dimen=2, initialize=lambda M: M.ExistingCapacity.sparse_iterkeys()
+    M.ExistingCapacityConstraint_rtv = Set(
+        dimen=3, initialize=lambda M: M.ExistingCapacity.sparse_iterkeys()
     )
     M.ExistingCapacityConstraint = Constraint(
-        M.ExistingCapacityConstraint_tv, rule=ExistingCapacity_Constraint
+        M.ExistingCapacityConstraint_rtv, rule=ExistingCapacity_Constraint
     )
 
     # Declare core model constraints that ensure proper system functioning
     # In driving order, starting with the need to meet end-use demands
 
-    M.DemandConstraint_psdc = Set(dimen=4, initialize=DemandConstraintIndices)
-    M.DemandConstraint = Constraint(M.DemandConstraint_psdc, rule=Demand_Constraint)
+    M.DemandConstraint_rpsdc = Set(dimen=5, initialize=DemandConstraintIndices)
+    M.DemandConstraint = Constraint(M.DemandConstraint_rpsdc, rule=Demand_Constraint)
 
-    M.DemandActivityConstraint_psdtv_dem_s0d0 = Set(
-        dimen=8, initialize=DemandActivityConstraintIndices
+    M.DemandActivityConstraint_rpsdtv_dem_s0d0 = Set(
+        dimen=9, initialize=DemandActivityConstraintIndices
     )
     M.DemandActivityConstraint = Constraint(
-        M.DemandActivityConstraint_psdtv_dem_s0d0, rule=DemandActivity_Constraint
+        M.DemandActivityConstraint_rpsdtv_dem_s0d0, rule=DemandActivity_Constraint
     )
 
-    M.CommodityBalanceConstraint_psdc = Set(
-        dimen=4, initialize=CommodityBalanceConstraintIndices
+    M.CommodityBalanceConstraint_rpsdc = Set(
+        dimen=5, initialize=CommodityBalanceConstraintIndices
     )
     M.CommodityBalanceConstraint = Constraint(
-        M.CommodityBalanceConstraint_psdc, rule=CommodityBalance_Constraint
+        M.CommodityBalanceConstraint_rpsdc, rule=CommodityBalance_Constraint
     )
 
-    M.CommodityBalanceAnnualConstraint_pc = Set(
-        dimen=2, initialize=CommodityBalanceAnnualConstraintIndices
+    M.CommodityBalanceAnnualConstraint_rpc = Set(
+        dimen=3, initialize=CommodityBalanceAnnualConstraintIndices
     )
     M.CommodityBalanceAnnualConstraint = Constraint(
-        M.CommodityBalanceAnnualConstraint_pc, rule=CommodityBalanceAnnual_Constraint
+        M.CommodityBalanceAnnualConstraint_rpc, rule=CommodityBalanceAnnual_Constraint
     )    
 
-    M.ResourceConstraint_pr = Set(
-        dimen=2, initialize=lambda M: M.ResourceBound.sparse_iterkeys()
+    M.ResourceConstraint_rpr = Set(
+        dimen=3, initialize=lambda M: M.ResourceBound.sparse_iterkeys()
     )
     M.ResourceExtractionConstraint = Constraint(
-        M.ResourceConstraint_pr, rule=ResourceExtraction_Constraint
+        M.ResourceConstraint_rpr, rule=ResourceExtraction_Constraint
     )
 
-    M.BaseloadDiurnalConstraint_psdtv = Set(
-        dimen=5, initialize=BaseloadDiurnalConstraintIndices
+    M.BaseloadDiurnalConstraint_rpsdtv = Set(
+        dimen=6, initialize=BaseloadDiurnalConstraintIndices
     )
     M.BaseloadDiurnalConstraint = Constraint(
-        M.BaseloadDiurnalConstraint_psdtv, rule=BaseloadDiurnal_Constraint
+        M.BaseloadDiurnalConstraint_rpsdtv, rule=BaseloadDiurnal_Constraint
     )
 
     # This set works for all the storage-related constraints
-    M.StorageConstraints_psdtv = Set(dimen=5, initialize=StorageVariableIndices)
+    M.StorageConstraints_rpsdtv = Set(dimen=6, initialize=StorageVariableIndices)
     M.StorageEnergyConstraint = Constraint(
-        M.StorageConstraints_psdtv, rule=StorageEnergy_Constraint
+        M.StorageConstraints_rpsdtv, rule=StorageEnergy_Constraint
     )
 
     M.StorageEnergyUpperBoundConstraint = Constraint(
-        M.StorageConstraints_psdtv, rule=StorageEnergyUpperBound_Constraint
+        M.StorageConstraints_rpsdtv, rule=StorageEnergyUpperBound_Constraint
     )
 
     M.StorageChargeRateConstraint = Constraint(
-        M.StorageConstraints_psdtv, rule=StorageChargeRate_Constraint
+        M.StorageConstraints_rpsdtv, rule=StorageChargeRate_Constraint
     )
 
     M.StorageDischargeRateConstraint = Constraint(
-        M.StorageConstraints_psdtv, rule=StorageDischargeRate_Constraint
+        M.StorageConstraints_rpsdtv, rule=StorageDischargeRate_Constraint
     )
 
     M.StorageThroughputConstraint = Constraint(
-        M.StorageConstraints_psdtv, rule=StorageThroughput_Constraint
+        M.StorageConstraints_rpsdtv, rule=StorageThroughput_Constraint
     )
 
-    M.StorageInitConstraint_tv = Set(dimen=2,initialize=StorageInitConstraintIndices)
+    M.StorageInitConstraint_rtv = Set(dimen=2,initialize=StorageInitConstraintIndices)
     M.StorageInitConstraint = Constraint(
-        M.StorageInitConstraint_tv, rule=StorageInit_Constraint
+        M.StorageInitConstraint_rtv, rule=StorageInit_Constraint
     )
 
     M.RampConstraintDay_psdtv = Set(dimen=5, initialize=RampConstraintDayIndices)
@@ -385,105 +392,105 @@ def temoa_create_model(name="Temoa"):
         M.RampConstraintPeriod_ptv, rule=RampDownPeriod_Constraint
     )
 
-    M.ReserveMargin_psd = Set(dimen=3, initialize=ReserveMarginIndices)
+    M.ReserveMargin_rpsd = Set(dimen=4, initialize=ReserveMarginIndices)
     M.ReserveMarginConstraint = Constraint(
-        M.ReserveMargin_psd, rule=ReserveMargin_Constraint
+        M.ReserveMargin_rpsd, rule=ReserveMargin_Constraint
     )
 
-    M.EmissionLimitConstraint_pe = Set(
-        dimen=2, initialize=lambda M: M.EmissionLimit.sparse_iterkeys()
+    M.EmissionLimitConstraint_rpe = Set(
+        dimen=3, initialize=lambda M: M.EmissionLimit.sparse_iterkeys()
     )
     M.EmissionLimitConstraint = Constraint(
-        M.EmissionLimitConstraint_pe, rule=EmissionLimit_Constraint
+        M.EmissionLimitConstraint_rpe, rule=EmissionLimit_Constraint
     )
 
     from itertools import product
 
-    M.GrowthRateMaxConstraint_tv = Set(
-        dimen=2,
+    M.GrowthRateMaxConstraint_rtv = Set(
+        dimen=3,
         initialize=lambda M: set(
-            product(M.time_optimize, M.GrowthRateMax.sparse_iterkeys())
+            product(M.valid_regional_indices, M.time_optimize, M.GrowthRateMax.sparse_iterkeys())
         ),
     )
     M.GrowthRateConstraint = Constraint(
-        M.GrowthRateMaxConstraint_tv, rule=GrowthRateConstraint_rule
+        M.GrowthRateMaxConstraint_rtv, rule=GrowthRateConstraint_rule
     )
 
-    M.MaxActivityConstraint_pt = Set(
-        dimen=2, initialize=lambda M: M.MaxActivity.sparse_iterkeys()
+    M.MaxActivityConstraint_rpt = Set(
+        dimen=3, initialize=lambda M: M.MaxActivity.sparse_iterkeys()
     )
     M.MaxActivityConstraint = Constraint(
-        M.MaxActivityConstraint_pt, rule=MaxActivity_Constraint
+        M.MaxActivityConstraint_rpt, rule=MaxActivity_Constraint
     )
 
-    M.MinActivityConstraint_pt = Set(
-        dimen=2, initialize=lambda M: M.MinActivity.sparse_iterkeys()
+    M.MinActivityConstraint_rpt = Set(
+        dimen=3, initialize=lambda M: M.MinActivity.sparse_iterkeys()
     )
     M.MinActivityConstraint = Constraint(
-        M.MinActivityConstraint_pt, rule=MinActivity_Constraint
+        M.MinActivityConstraint_rpt, rule=MinActivity_Constraint
     )
 
-    M.MinActivityGroup_pg = Set(
-        dimen=2, initialize=lambda M: M.MinGenGroupTarget.sparse_iterkeys()
-    )
-    M.MinActivityGroup = Constraint(
-        M.MinActivityGroup_pg, rule=MinActivityGroup_Constraint
-    )
+    #M.MinActivityGroup_pg = Set(
+    #    dimen=2, initialize=lambda M: M.MinGenGroupTarget.sparse_iterkeys()
+    #)
+    #M.MinActivityGroup = Constraint(
+    #    M.MinActivityGroup_pg, rule=MinActivityGroup_Constraint
+    #)
 
-    M.MaxCapacityConstraint_pt = Set(
-        dimen=2, initialize=lambda M: M.MaxCapacity.sparse_iterkeys()
+    M.MaxCapacityConstraint_rpt = Set(
+        dimen=3, initialize=lambda M: M.MaxCapacity.sparse_iterkeys()
     )
     M.MaxCapacityConstraint = Constraint(
-        M.MaxCapacityConstraint_pt, rule=MaxCapacity_Constraint
+        M.MaxCapacityConstraint_rpt, rule=MaxCapacity_Constraint
     )
 
-    M.MaxCapacitySetConstraint_p = Set(
-        dimen=1, initialize=lambda M: M.MaxCapacitySum.sparse_iterkeys()
+    M.MaxCapacitySetConstraint_rp = Set(
+        dimen=2, initialize=lambda M: M.MaxCapacitySum.sparse_iterkeys()
     )
     M.MaxCapacitySetConstraint = Constraint(
-        M.MaxCapacitySetConstraint_p, rule=MaxCapacitySet_Constraint
+        M.MaxCapacitySetConstraint_rp, rule=MaxCapacitySet_Constraint
     )
 
-    M.MinCapacityConstraint_pt = Set(
-        dimen=2, initialize=lambda M: M.MinCapacity.sparse_iterkeys()
+    M.MinCapacityConstraint_rpt = Set(
+        dimen=3, initialize=lambda M: M.MinCapacity.sparse_iterkeys()
     )
     M.MinCapacityConstraint = Constraint(
-        M.MinCapacityConstraint_pt, rule=MinCapacity_Constraint
+        M.MinCapacityConstraint_rpt, rule=MinCapacity_Constraint
     )
 
-    M.MinCapacitySetConstraint_p = Set(
-        dimen=1, initialize=lambda M: M.MinCapacitySum.sparse_iterkeys()
+    M.MinCapacitySetConstraint_rp = Set(
+        dimen=2, initialize=lambda M: M.MinCapacitySum.sparse_iterkeys()
     )
     M.MinCapacitySetConstraint = Constraint(
-        M.MinCapacitySetConstraint_p, rule=MinCapacitySet_Constraint
+        M.MinCapacitySetConstraint_rp, rule=MinCapacitySet_Constraint
     )
 
-    M.TechInputSplitConstraint_psditv = Set(
-        dimen=6, initialize=TechInputSplitConstraintIndices
+    M.TechInputSplitConstraint_rpsditv = Set(
+        dimen=7, initialize=TechInputSplitConstraintIndices
     )
     M.TechInputSplitConstraint = Constraint(
-        M.TechInputSplitConstraint_psditv, rule=TechInputSplit_Constraint
+        M.TechInputSplitConstraint_rpsditv, rule=TechInputSplit_Constraint
     )
 
-    M.TechInputSplitAnnualConstraint_pitv = Set(
-        dimen=4, initialize=TechInputSplitAnnualConstraintIndices
+    M.TechInputSplitAnnualConstraint_rpitv = Set(
+        dimen=5, initialize=TechInputSplitAnnualConstraintIndices
     )
     M.TechInputSplitAnnualConstraint = Constraint(
-        M.TechInputSplitAnnualConstraint_pitv, rule=TechInputSplitAnnual_Constraint
+        M.TechInputSplitAnnualConstraint_rpitv, rule=TechInputSplitAnnual_Constraint
     )
 
-    M.TechOutputSplitConstraint_psdtvo = Set(
-        dimen=6, initialize=TechOutputSplitConstraintIndices
+    M.TechOutputSplitConstraint_rpsdtvo = Set(
+        dimen=7, initialize=TechOutputSplitConstraintIndices
     )
     M.TechOutputSplitConstraint = Constraint(
-        M.TechOutputSplitConstraint_psdtvo, rule=TechOutputSplit_Constraint
+        M.TechOutputSplitConstraint_rpsdtvo, rule=TechOutputSplit_Constraint
     )
 
-    M.TechOutputSplitAnnualConstraint_ptvo = Set(
-        dimen=4, initialize=TechOutputSplitAnnualConstraintIndices
+    M.TechOutputSplitAnnualConstraint_rptvo = Set(
+        dimen=5, initialize=TechOutputSplitAnnualConstraintIndices
     )
     M.TechOutputSplitAnnualConstraint = Constraint(
-        M.TechOutputSplitAnnualConstraint_ptvo, rule=TechOutputSplitAnnual_Constraint
+        M.TechOutputSplitAnnualConstraint_rptvo, rule=TechOutputSplitAnnual_Constraint
     )
     return M
 

@@ -116,9 +116,9 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	con_info = list()
 	epsilon = 1e-9   # threshold for "so small it's zero"
 
-	emission_keys = { (i, t, v, o) : set() for e, i, t, v, o in m.EmissionActivity }
-	for e, i, t, v, o in m.EmissionActivity:
-		emission_keys[(i, t, v, o)].add(e)
+	emission_keys = { (r, i, t, v, o) : set() for r, e, i, t, v, o in m.EmissionActivity }
+	for r, e, i, t, v, o in m.EmissionActivity:
+		emission_keys[(r, i, t, v, o)].add(e)
 	P_0 = min( m.time_optimize )
 	P_e = m.time_future.last()
 	GDR = value( m.GlobalDiscountRate )
@@ -128,68 +128,68 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	x   = 1 + GDR    # convenience variable, nothing more
 
 	# Extract optimal decision variable values related to commodity flow:
-	for p, s, d, t, v in m.V_StorageLevel:
-		val = value( m.V_StorageLevel[p, s, d, t, v] )
+	for r, p, s, d, t, v in m.V_StorageLevel:
+		val = value( m.V_StorageLevel[r, p, s, d, t, v] )
 		if abs(val) < epsilon: continue
 
-		svars['V_StorageLevel'][p, s, d, t, v] = val
+		svars['V_StorageLevel'][r, p, s, d, t, v] = val
 		
 
 	# vflow_in is defined only for storage techs
-	for p, s, d, i, t, v, o in m.V_FlowIn:
-		val_in = value( m.V_FlowIn[p, s, d, i, t, v, o] )
+	for r, p, s, d, i, t, v, o in m.V_FlowIn:
+		val_in = value( m.V_FlowIn[r, p, s, d, i, t, v, o] )
 		if abs(val_in) < epsilon: continue
 
-		svars['V_FlowIn'][p, s, d, i, t, v, o] = val_in
+		svars['V_FlowIn'][r, p, s, d, i, t, v, o] = val_in
 
 
-	for p, s, d, i, t, v, o in m.V_FlowOut:
-		val_out = value( m.V_FlowOut[p, s, d, i, t, v, o] )
+	for r, p, s, d, i, t, v, o in m.V_FlowOut:
+		val_out = value( m.V_FlowOut[r, p, s, d, i, t, v, o] )
 		if abs(val_out) < epsilon: continue
 
-		svars['V_FlowOut'][p, s, d, i, t, v, o] = val_out
+		svars['V_FlowOut'][r, p, s, d, i, t, v, o] = val_out
 
 		if t not in m.tech_storage:
-			val_in = value( m.V_FlowOut[p, s, d, i, t, v, o] ) / value(m.Efficiency[i, t, v, o]) 
-			svars['V_FlowIn'][p, s, d, i, t, v, o] = val_in
+			val_in = value( m.V_FlowOut[r, p, s, d, i, t, v, o] ) / value(m.Efficiency[r, i, t, v, o]) 
+			svars['V_FlowIn'][r, p, s, d, i, t, v, o] = val_in
 
-		if (i, t, v, o) not in emission_keys: continue
+		if (r, i, t, v, o) not in emission_keys: continue
 
-		emissions = emission_keys[i, t, v, o]
+		emissions = emission_keys[r, i, t, v, o]
 		for e in emissions:
-			evalue = val_out * m.EmissionActivity[e, i, t, v, o]
-			svars[ 'V_EmissionActivityByPeriodAndProcess' ][p, e, t, v] += evalue
+			evalue = val_out * m.EmissionActivity[r, e, i, t, v, o]
+			svars[ 'V_EmissionActivityByPeriodAndProcess' ][r, p, e, t, v] += evalue
 	
-	for p, i, t, v, o in m.V_FlowOutAnnual:
+	for r, p, i, t, v, o in m.V_FlowOutAnnual:
 		for s in m.time_season:
 			for d in m.time_of_day:
-				val_out = value( m.V_FlowOutAnnual[p, i, t, v, o] ) * value( m.SegFrac[s , d ])
+				val_out = value( m.V_FlowOutAnnual[r, p, i, t, v, o] ) * value( m.SegFrac[s , d ])
 				if abs(val_out) < epsilon: continue
-				svars['V_FlowOut'][p, s, d, i, t, v, o] = val_out
-				svars['V_FlowIn'][p, s, d, i, t, v, o] = val_out / value(m.Efficiency[i, t, v, o])
-				if (i, t, v, o) not in emission_keys: continue
-				emissions = emission_keys[i, t, v, o]
+				svars['V_FlowOut'][r, p, s, d, i, t, v, o] = val_out
+				svars['V_FlowIn'][r, p, s, d, i, t, v, o] = val_out / value(m.Efficiency[r, i, t, v, o])
+				if (r, i, t, v, o) not in emission_keys: continue
+				emissions = emission_keys[r, i, t, v, o]
 				for e in emissions:
-					evalue = val_out * m.EmissionActivity[e, i, t, v, o]
-					svars[ 'V_EmissionActivityByPeriodAndProcess' ][p, e, t, v] += evalue	
+					evalue = val_out * m.EmissionActivity[r, e, i, t, v, o]
+					svars[ 'V_EmissionActivityByPeriodAndProcess' ][r, p, e, t, v] += evalue	
 	
-	for p, s, d, i, t, v, o in m.V_Curtailment:		
-		val = value( m.V_Curtailment[p, s, d, i, t, v, o] )
+	for r, p, s, d, i, t, v, o in m.V_Curtailment:		
+		val = value( m.V_Curtailment[r, p, s, d, i, t, v, o] )
 		if abs(val) < epsilon: continue
-		svars['V_Curtailment'][p, s, d, i, t, v, o] = val
-		svars['V_FlowIn'][p, s, d, i, t, v, o] = (val + value( m.V_FlowOut[p, s, d, i, t, v, o] )) / value(m.Efficiency[i, t, v, o])
+		svars['V_Curtailment'][r, p, s, d, i, t, v, o] = val
+		svars['V_FlowIn'][r, p, s, d, i, t, v, o] = (val + value( m.V_FlowOut[r, p, s, d, i, t, v, o] )) / value(m.Efficiency[r, i, t, v, o])
 
 	# Extract optimal decision variable values related to capacity:
-	for t, v in m.V_Capacity:
-		val = value( m.V_Capacity[t, v] )
+	for r, t, v in m.V_Capacity:
+		val = value( m.V_Capacity[r, t, v] )
 		if abs(val) < epsilon: continue
 
-		svars['V_Capacity'][t, v] = val
+		svars['V_Capacity'][r, t, v] = val
 
-	for p, t in m.V_CapacityAvailableByPeriodAndTech:
-		val = value( m.V_CapacityAvailableByPeriodAndTech[p, t] )
+	for r, p, t in m.V_CapacityAvailableByPeriodAndTech:
+		val = v
 		if abs(val) < epsilon: continue
-		svars['V_CapacityAvailableByPeriodAndTech'][p, t] = val
+		svars['V_CapacityAvailableByPeriodAndTech'][r, p, t] = val
 
 	# Calculate model costs:	
 	# This is a generic workaround.  Not sure how else to automatically discover 
@@ -197,67 +197,68 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	obj_name, obj_value = objs[0].getname(True), value( objs[0] )	
 	svars[ 'Objective' ]["('"+obj_name+"')"] = obj_value
 
-	for t, v in m.CostInvest.sparse_iterkeys():   # Returns only non-zero values
+	for r, t, v in m.CostInvest.sparse_iterkeys():   # Returns only non-zero values
 	
-		icost = value( m.V_Capacity[t, v] )
+		icost = value( m.V_Capacity[r, t, v] )
 		if abs(icost) < epsilon: continue
-		icost *= value( m.CostInvest[t, v] )*(
+		icost *= value( m.CostInvest[r, t, v] )*(
 			(
-				1 -  x**( -min( value(m.LifetimeProcess[t, v]), P_e - v ) )
+				1 -  x**( -min( value(m.LifetimeProcess[r, t, v]), P_e - v ) )
 			)/(
-				1 -  x**( -value( m.LifetimeProcess[t, v] ) ) 
+				1 -  x**( -value( m.LifetimeProcess[r, t, v] ) ) 
 			)
 		)
-		svars[	'Costs'	][ 'V_UndiscountedInvestmentByProcess', t, v] += icost
+		svars[	'Costs'	][ 'V_UndiscountedInvestmentByProcess', r, t, v] += icost
 
-		icost *= value( m.LoanAnnualize[t, v] )
+		icost *= value( m.LoanAnnualize[r, t, v] )
 		icost *= (
-		  value( LLN[t, v] ) if not GDR else
-		    (x **(P_0 - v + 1) * (1 - x **(-value( LLN[t, v] ))) / GDR)
+		  value( LLN[r, t, v] ) if not GDR else
+		    (x **(P_0 - v + 1) * (1 - x **(-value( LLN[r, t, v] ))) / GDR)
 		)
 
-		svars[	'Costs'	][ 'V_DiscountedInvestmentByProcess', t, v] += icost
+		svars[	'Costs'	][ 'V_DiscountedInvestmentByProcess', r, t, v] += icost
 
-	for p, t, v in m.CostFixed.sparse_iterkeys():
-		fcost = value( m.V_Capacity[t, v] )
+	for r, p, t, v in m.CostFixed.sparse_iterkeys():
+		fcost = value( m.V_Capacity[r, t, v] )
 		if abs(fcost) < epsilon: continue
 
-		fcost *= value( m.CostFixed[p, t, v] )
-		svars[	'Costs'	][ 'V_UndiscountedFixedCostsByProcess', t, v] += fcost * value( MPL[p, t, v] )
+		fcost *= value( m.CostFixed[r, p, t, v] )
+		svars[	'Costs'	][ 'V_UndiscountedFixedCostsByProcess', r, t, v] += fcost * value( MPL[r, p, t, v] )
 		
 		fcost *= (
-		  value( MPL[p, t, v] ) if not GDR else
-		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, t, v] ))) / GDR)
+		  value( MPL[r, p, t, v] ) if not GDR else
+		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[r, p, t, v] ))) / GDR)
 		) 
 
-		svars[	'Costs'	][ 'V_DiscountedFixedCostsByProcess', t, v] += fcost
+		svars[	'Costs'	][ 'V_DiscountedFixedCostsByProcess', r, t, v] += fcost
 		
-	for p, t, v in m.CostVariable.sparse_iterkeys():
+	for r, p, t, v in m.CostVariable.sparse_iterkeys():
 		if t not in m.tech_annual:
 			vcost = sum(
-				value (m.V_FlowOut[p, S_s, S_d, S_i, t, v, S_o])
-				for S_i in m.processInputs[p, t, v]
-				for S_o in m.ProcessOutputsByInput[p, t, v, S_i]
+				value (m.V_FlowOut[r, p, S_s, S_d, S_i, t, v, S_o])
+				for S_i in m.processInputs[r, p, t, v]
+				for S_o in m.ProcessOutputsByInput[r, p, t, v, S_i]
 				for S_s in m.time_season
 				for S_d in m.time_of_day
 			)
 		
 		else:
 			vcost = sum(
-				value (m.V_FlowOutAnnual[p, S_i, t, v, S_o])
-				for S_i in m.processInputs[p, t, v]
-				for S_o in m.ProcessOutputsByInput[p, t, v, S_i]
+				value (m.V_FlowOutAnnual[r, p, S_i, t, v, S_o])
+				for S_i in m.processInputs[r, p, t, v]
+				for S_o in m.ProcessOutputsByInput[r, p, t, v, S_i]
 			)			
 		if abs(vcost) < epsilon: continue
 
-		vcost *= value( m.CostVariable[p, t, v] )
-		svars[	'Costs'	][ 'V_UndiscountedVariableCostsByProcess', t, v] += vcost * value( MPL[p, t, v] )
+		vcost *= value( m.CostVariable[r, p, t, v] )
+		svars[	'Costs'	][ 'V_UndiscountedVariableCostsByProcess', r, t, v] += vcost * value( MPL[r, p, t, v] )
 		vcost *= (
-		  value( MPL[p, t, v] ) if not GDR else
-		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[p, t, v] ))) / GDR)
+		  value( MPL[r, p, t, v] ) if not GDR else
+		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[r, p, t, v] ))) / GDR)
 		  ) 
-		svars[	'Costs'	][ 'V_DiscountedVariableCostsByProcess', t, v] += vcost
+		svars[	'Costs'	][ 'V_DiscountedVariableCostsByProcess', r, t, v] += vcost
 
+	
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
 
 	msg = ( 'Model name: %s\n'
@@ -306,11 +307,10 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 			   "V_EmissionActivityByPeriodAndProcess" : "Output_Emissions", \
 			   "Objective"  : "Output_Objective", \
 			   "Costs"      : "Output_Costs" }
-	
+
 	db_tables = ['time_periods', 'time_season', 'time_of_day', 'technologies', 'commodities',\
 				'LifetimeTech', 'LifetimeProcess', 'Efficiency', 'EmissionActivity', 'ExistingCapacity']
 
-	
 	if isinstance(options, TemoaConfig):	
 		if not options.output:
 			if options.saveTEXTFILE or options.keepPyomoLP:
@@ -387,7 +387,6 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 			dat_to_db(i, con)
 		
 
-		
 		for table in svars.keys() :
 			if table in tables :
 				cur.execute("SELECT DISTINCT scenario FROM '"+tables[table]+"'")
@@ -402,20 +401,26 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 						cur.execute("INSERT INTO "+tables[table]+" \
 									VALUES('"+options.scenario+"',"+key_str+", \
 									"+str(svars[table][key])+");")
-
 				else : # First add 'NULL' for sector then update
 					for key in svars[table].keys() : # Need to loop over keys (rows)
 						key_str = str(key)
 						key_str = key_str[1:-1] # Remove parentheses
-						cur.execute("INSERT INTO "+tables[table]+ \
-									" VALUES('"+options.scenario+"','NULL', \
-									"+key_str+","+str(svars[table][key])+");")
+						if table != 'Costs':
+							cur.execute("INSERT INTO "+tables[table]+ \
+										" VALUES('"+str(key[0])+"', '"+options.scenario+"','NULL', \
+										"+key_str[6:]+","+str(svars[table][key])+");")	
+						else:
+							key_str = str((key[0],key[2],key[3]))
+							key_str = key_str[1:-1] # Remove parentheses
+							cur.execute("INSERT INTO "+tables[table]+ \
+										" VALUES('"+str(key[1])+"', '"+options.scenario+"','NULL', \
+										"+key_str+","+str(svars[table][key])+");")																																	
 					cur.execute("UPDATE "+tables[table]+" SET sector = \
 								(SELECT technologies.sector FROM technologies \
 								WHERE "+tables[table]+".tech = technologies.tech);")
 		con.commit()
-		con.close()			
-		
+		con.close()	
+
 		if options.saveEXCEL or options.saveTEXTFILE or options.keepPyomoLP:
 			for inpu in options.dot_dat:
 				file_ty = re.search(r"\b([\w-]+)\.(\w+)\b", inpu)
