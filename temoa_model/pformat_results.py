@@ -134,14 +134,12 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 		svars['V_StorageLevel'][r, p, s, d, t, v] = val
 		
-
 	# vflow_in is defined only for storage techs
 	for r, p, s, d, i, t, v, o in m.V_FlowIn:
 		val_in = value( m.V_FlowIn[r, p, s, d, i, t, v, o] )
 		if abs(val_in) < epsilon: continue
 
 		svars['V_FlowIn'][r, p, s, d, i, t, v, o] = val_in
-
 
 	for r, p, s, d, i, t, v, o in m.V_FlowOut:
 		val_out = value( m.V_FlowOut[r, p, s, d, i, t, v, o] )
@@ -258,7 +256,6 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		  ) 
 		svars[	'Costs'	][ 'V_DiscountedVariableCostsByProcess', r, t, v] += vcost
 
-	
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
 
 	msg = ( 'Model name: %s\n'
@@ -306,7 +303,8 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 			   "V_CapacityAvailableByPeriodAndTech"   : "Output_CapacityByPeriodAndTech",  \
 			   "V_EmissionActivityByPeriodAndProcess" : "Output_Emissions", \
 			   "Objective"  : "Output_Objective", \
-			   "Costs"      : "Output_Costs" }
+			   "Costs"      : "Output_Costs" 
+			   }
 
 	db_tables = ['time_periods', 'time_season', 'time_of_day', 'technologies', 'commodities',\
 				'LifetimeTech', 'LifetimeProcess', 'Efficiency', 'EmissionActivity', 'ExistingCapacity']
@@ -404,12 +402,12 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 				else : # First add 'NULL' for sector then update
 					for key in svars[table].keys() : # Need to loop over keys (rows)
 						key_str = str(key)
-						key_str = key_str[1:-1] # Remove parentheses
+						key_str = key_str[1:-1] # Remove parentheses						
 						if table != 'Costs':
 							cur.execute("INSERT INTO "+tables[table]+ \
 										" VALUES('"+str(key[0])+"', '"+options.scenario+"','NULL', \
-										"+key_str[6:]+","+str(svars[table][key])+");")	
-						else:
+											"+key_str[key_str.find(',')+1:]+","+str(svars[table][key])+");")	
+						else:						
 							key_str = str((key[0],key[2],key[3]))
 							key_str = key_str[1:-1] # Remove parentheses
 							cur.execute("INSERT INTO "+tables[table]+ \

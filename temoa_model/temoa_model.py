@@ -341,6 +341,12 @@ def temoa_create_model(name="Temoa"):
         M.BaseloadDiurnalConstraint_rpsdtv, rule=BaseloadDiurnal_Constraint
     )
 
+    M.RegionalExchangeCapacityConstraint_rrtv = Set(
+        dimen=4, initialize=RegionalExchangeCapacityConstraintIndices
+    )
+    M.RegionalExchangeCapacityConstraint = Constraint(
+        M.RegionalExchangeCapacityConstraint_rrtv, rule=RegionalExchangeCapacity_Constraint)
+
     # This set works for all the storage-related constraints
     M.StorageConstraints_rpsdtv = Set(dimen=6, initialize=StorageVariableIndices)
     M.StorageEnergyConstraint = Constraint(

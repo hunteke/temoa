@@ -70,6 +70,8 @@ class TemoaModel( AbstractModel ):
 		self.inputsplitVintages = dict()
 		self.outputsplitVintages = dict()
 		self.ProcessByPeriodAndOutput = dict()
+		self.exportRegions = dict()
+		self.importRegions = dict()
 
 # ---------------------------------------------------------------
 # Validation and initialization routines.
@@ -618,6 +620,11 @@ def CreateSparseDicts ( M ):
 				M.ProcessByPeriodAndOutput[r,p,o] = set()
 			if t in M.tech_reserve and (r, p) not in M.processReservePeriods:
 					M.processReservePeriods[r, p] = set()
+			if t in M.tech_exchange and (r[:r.find("-")], p, i) not in M.exportRegions:
+					M.exportRegions[r[:r.find("-")], p, i] = set()	#since t in M.tech_exchange, r here has *-* format (e.g. US-Mexisco). 
+																	#r[:r.find("-")] extracts the region index before the "-". 
+			if t in M.tech_exchange and (r[r.find("-")+1:], p, o) not in M.importRegions:
+					M.importRegions[r[r.find("-")+1:], p, o] = set()
 
 			# Now that all of the keys have been defined, and values initialized
 			# to empty sets, we fill in the appropriate values for each
@@ -646,6 +653,10 @@ def CreateSparseDicts ( M ):
 				M.ProcessByPeriodAndOutput[r,p,o].add(( i,t,v ))
 			if t in M.tech_reserve:
 				M.processReservePeriods[r, p].add( (t,v) )
+			if t in M.tech_exchange:
+				M.exportRegions[r[:r.find("-")], p, i].add((r[r.find("-")+1:], t, v, o))
+			if t in M.tech_exchange:
+				M.importRegions[r[r.find("-")+1:], p, o].add((r[:r.find("-")], t, v, i))
 
 	l_unused_techs = M.tech_all - l_used_techs
 	if l_unused_techs:
@@ -959,6 +970,16 @@ def BaseloadDiurnalConstraintIndices ( M ):
 
 	return indices
 
+def RegionalExchangeCapacityConstraintIndices ( M ):
+	indices = set(
+		(r_e, r_i, t, v)
+
+		for r_e, p, i in M.exportRegions.keys()
+		for r_i, t, v, o in M.exportRegions[r_e, p, i] 
+	)
+
+	return indices
+
 def CommodityBalanceConstraintIndices ( M ):
 	# Generate indices only for those commodities that are produced by
 	# technologies with varying output at the time slice level.
@@ -968,7 +989,8 @@ def CommodityBalanceConstraintIndices ( M ):
 	indices = set(
 	  (r, p, s, d, o)
 
-	  for r, p, o in period_commodity
+	  for r, p, o in period_commodity #r in this line includes interregional transfer combinations (not needed).  
+	  for r in M.regions # this line ensures only the regions are included.
 	  for t, v in M.commodityUStreamProcess[ r, p, o ]
 	  if (r, t) not in M.tech_storage and t not in M.tech_annual
 	  for s in M.time_season
@@ -987,7 +1009,8 @@ def CommodityBalanceAnnualConstraintIndices ( M ):
 	indices = set(
 	  (r, p, o)
 
-	  for r, p, o in period_commodity
+	  for r, p, o in period_commodity #r in this line includes interregional transfer combinations (not needed).  
+	  for r in M.regions # this line ensures only the regions are included.
 	  for t, v in M.commodityUStreamProcess[ r, p, o ]
 	  if (r, t) not in M.tech_storage and t in M.tech_annual
 	)

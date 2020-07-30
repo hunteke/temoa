@@ -571,7 +571,8 @@ reduces computational burden.
        \sum_{I, T^{a}, V} \textbf{FOA}_{r, p, c, t, v, o} /EFF_{r, c,t,v,o}
 
        \\
-       \forall \{r, p, s, d, c\} \in \Theta_{\text{CommodityBalance}}
+       \forall \{r, p, s, d, c\} \in \Theta_{\text{CommodityBalance}}  
+
 """
     if c in M.commodity_demand:
         return Constraint.Skip
@@ -600,15 +601,33 @@ reduces computational burden.
           for S_t, S_v in M.commodityUStreamProcess[r, p, c]
           for S_i in M.ProcessInputsByOutput[r, p, S_t, S_v, c]
       )
+      
+      #export of commodity c from region r to other regions
+      interregional_exports = 0
+      if (r, p, c) in M.exportRegions:
+        interregional_exports = sum(
+          M.V_FlowOut[r+"-"+reg, p, s, d, c, S_t, S_v, S_o]
+          for reg, S_t, S_v, S_o in M.exportRegions[r, p, c]
+          )
+
+      #import of commodity c from other regions into region r
+      interregional_imports = 0
+      if (r, p, c) in M.importRegions:
+        interregional_imports = sum(
+          M.V_FlowOut[reg+"-"+r, p, s, d, S_i, S_t, S_v, c]
+          for reg, S_t, S_v, S_i in M.importRegions[r, p, c]
+          )
+
     except:
       raise Exception('The commodity "'+str(c)+'" can be produced \
       by at least one technology in the tech_annual set and one technology \
       not in the tech_annual set. All the producers of the commodity must \
       either be in tech_annual or not in tech_annual')
 
-    CommodityBalanceConstraintErrorCheck(vflow_out,  vflow_in_ToStorage +  vflow_in_ToNonStorage + vflow_in_ToNonStorageAnnual, r, p, s, d, c)
+    CommodityBalanceConstraintErrorCheck(vflow_out + interregional_imports,  vflow_in_ToStorage +  vflow_in_ToNonStorage + vflow_in_ToNonStorageAnnual + interregional_exports, r, p, s, d, c)
 
-    expr = vflow_out == vflow_in_ToStorage +  vflow_in_ToNonStorage + vflow_in_ToNonStorageAnnual
+    expr = vflow_out + interregional_imports == vflow_in_ToStorage +  vflow_in_ToNonStorage + vflow_in_ToNonStorageAnnual + interregional_exports
+
     return expr
 
 def CommodityBalanceAnnual_Constraint(M, r, p, c):
@@ -660,9 +679,27 @@ While the commodity :math:`c` can only be produced by technologies in the
         for S_i in M.ProcessInputsByOutput[r, p, S_t, S_v, c]
     )
 
-    CommodityBalanceConstraintErrorCheckAnnual(vflow_out,  vflow_in_annual + vflow_in, r, p, c)
+    #export of commodity c from region r to other regions
+    interregional_exports = 0
+    if (r, p, c) in M.exportRegions:
+      interregional_exports = sum(
+        M.V_FlowOutAnnual[str(r)+"-"+str(reg), p, c, S_t, S_v, S_o]
+        for reg, S_t, S_v, S_o in M.exportRegions[r, p, c]
+        )
 
-    expr = vflow_out ==  vflow_in_annual + vflow_in
+    #import of commodity c from other regions into region r
+    interregional_imports = 0
+    if (r, p, c) in M.importRegions:
+      interregional_imports = sum(
+        M.V_FlowOutAnnual[str(reg)+"-"+str(r), p, S_i, S_t, S_v, c]
+        for reg, S_t, S_v, S_i in M.importRegions[r, p, c]
+        )
+
+    CommodityBalanceConstraintErrorCheckAnnual(vflow_out + interregional_imports,  vflow_in_annual + vflow_in + interregional_exports, r, p, c)
+
+    expr = vflow_out + interregional_imports ==  vflow_in_annual + vflow_in + interregional_exports
+
+
     return expr
 
 def ResourceExtraction_Constraint(M, reg, p, r):
@@ -768,6 +805,27 @@ functionality is currently on the Temoa TODO list.
         activity_sd * M.SegFrac[s, d_0]
         == activity_sd_0 * M.SegFrac[s, d]
     ) 
+
+    return expr
+
+def RegionalExchangeCapacity_Constraint(M, r_e, r_i, t, v):
+    r"""
+
+This constraint ensures that the process (t,v) connecting regions 
+r_e and r_i is handled by one capacity variables. 
+
+.. math::
+   :label: RegionalExchangeCapacity
+
+      \textbf{CAP}_{r_e,t,v} 
+      =
+      \textbf{CAP}_{r_i,t,v}
+
+      \\
+      \forall \{r_e, r_i, t, v\} \in \Theta_{\text{RegionalExchangeCapacity}}
+"""
+
+    expr = M.V_Capacity[r_e+"-"+r_i, t, v] == M.V_Capacity[r_i+"-"+r_e, t, v]
 
     return expr
 
