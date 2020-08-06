@@ -216,6 +216,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 		svars[	'Costs'	][ 'V_DiscountedInvestmentByProcess', r, t, v] += icost
 
+
 	for r, p, t, v in m.CostFixed.sparse_iterkeys():
 		fcost = value( m.V_Capacity[r, t, v] )
 		if abs(fcost) < epsilon: continue
@@ -255,6 +256,67 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[r, p, t, v] ))) / GDR)
 		  ) 
 		svars[	'Costs'	][ 'V_DiscountedVariableCostsByProcess', r, t, v] += vcost
+
+	#update the costs of exchange technologies.
+	#Assumption 1: If Ri-Rj appears in the cost tables but Rj-Ri does not, 
+	#then the total costs are distributed between the regions
+	#Ri and Rj proportional to their use of the exchange technology connecting the 
+	#regions. 
+	#Assumption 2: If both the directional entries appear in the cost tables, 
+	#Assumption 1 is no longer applied and the costs are calculated as they 
+	#are entered in the cost tables.
+	# assumption 3: Unlike other output tables in which Ri-Rj and Rj-Ri entries
+	# are allowed in the region column, for the Output_Costs table the region 
+	#to the right of the hyphen sign gets the costs.
+	for i in m.RegionalExchangeCapacityConstraint_rrtv.iterkeys():
+		reg_dir1  = i[0]+"-"+i[1]
+		reg_dir2 = i[1]+"-"+i[0]
+		tech = i[2]
+		vintage  = i[3]
+		key = (reg_dir1, tech, vintage)
+		try: 
+			act_dir1 = value (sum(m.V_FlowOut[reg_dir1, p, s, d, S_i, tech, vintage, S_o]
+				for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir1, tech, vintage])
+				for s in m.time_season
+				for d in m.time_of_day
+				for S_i in m.processInputs[reg_dir1, p, tech, vintage]
+				for S_o in m.ProcessOutputsByInput[reg_dir1, p, tech, vintage, S_i]
+				))
+			act_dir2 = value (sum(m.V_FlowOut[reg_dir2, p, s, d, S_i, tech, vintage, S_o]
+				for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir2, tech, vintage])
+				for s in m.time_season
+				for d in m.time_of_day
+				for S_i in m.processInputs[reg_dir2, p, tech, vintage]
+				for S_o in m.ProcessOutputsByInput[reg_dir2, p, tech, vintage, S_i]
+				))		
+		except:
+			act_dir1 = value (sum(m.V_FlowOutAnnual[reg_dir1, p, S_i, tech, vintage, S_o]
+				for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir1, tech, vintage])
+				for S_i in m.processInputs[reg_dir1, p, tech, vintage]
+				for S_o in m.ProcessOutputsByInput[reg_dir1, p, tech, vintage, S_i]
+				))
+			act_dir2 = value (sum(m.V_FlowOutAnnual[reg_dir2, p, S_i, tech, vintage, S_o]
+				for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir2, tech, vintage])
+				for S_i in m.processInputs[reg_dir2, p, tech, vintage]
+				for S_o in m.ProcessOutputsByInput[reg_dir2, p, tech, vintage, S_i]
+				))				
+		
+		for item in svars[	'Costs'	].keys():
+			if item[2] == tech:
+				opposite_dir = item[1][item[1].find("-")+1:]+"-"+item[1][:item[1].find("-")]
+				if (item[0],opposite_dir,item[2],item[3]) in svars[	'Costs'	].keys():
+					continue #if both directional entries are already in svars[	'Costs'	], they're left intact.
+				if item[1] == reg_dir1:
+					svars[	'Costs'	][(item[0],reg_dir2,item[2],item[3])] = svars[	'Costs'	][item] * act_dir2 / (act_dir1 + act_dir2)
+					svars[	'Costs'	][item] = svars[	'Costs'	][item] * act_dir1 / (act_dir1 + act_dir2)
+
+	#Remove Ri-Rj entries from being populated in the Outputs_Costs. Ri-Rj means a cost
+	#for region Rj
+	for item in svars[	'Costs'	].keys(): 
+		if item[2] in m.tech_exchange:
+			svars[	'Costs'	][(item[0],item[1][item[1].find("-")+1:],item[2],item[3])] = svars[	'Costs'	][item]
+			del svars[	'Costs'	][item]
+
 
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
 
