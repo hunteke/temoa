@@ -4,6 +4,8 @@ import re
 import getopt
 import xlwt
 from xlwt import easyxf 
+import pandas as pd
+from pyam import IamDataFrame
 from collections import defaultdict
 
 def make_excel(ifile, ofile, scenario):
@@ -98,7 +100,10 @@ def make_excel(ifile, ofile, scenario):
 	ostyle = easyxf('alignment: vertical centre, horizontal centre;')
 	ostyle_header = easyxf('alignment: vertical centre, horizontal centre, wrap True;')
 
-	for scene in scenario :	
+	for scene in scenario :
+		# initialize list for output as IamDataFrame
+		_results = []
+
 		book.append(xlwt.Workbook(encoding="utf-8"))
 		for z in sector :
 			for a in tables.keys() :
@@ -135,6 +140,10 @@ def make_excel(ifile, ofile, scenario):
 									sheet[i].write(row, count+2, float(xyz[0]), ostyle)
 								else :
 									sheet[i].write(row, count+2, '-', ostyle)
+
+								# add to list for IamDataFrame output
+								v = f'Emissions|{q}|{x}'
+								_results.append((scene, v, y, xyz[0] or 0, '?'))
 								count += 1
 							row += 1
 							count = 0
@@ -192,6 +201,18 @@ def make_excel(ifile, ofile, scenario):
 		book_no += 1
 		flag1 = None
 		flag2 = None
+
+		# cast results to IamDataFrame and write to xlsx
+		columns = ['scenario', 'variable', 'year', 'value', 'unit']
+		df = IamDataFrame(pd.DataFrame(_results, columns=columns),
+			     		  model='TEMOA', region='World')
+
+		# adding aggregations of the emissions for each species
+		for q in emiss:
+			df.aggregate(f'Emissions|{q}', append=True)
+
+		# write IamDataFrame to xlsx
+		df.to_excel(ofile+'.xlsx')
 
 	cur.close()
 	con.close()
