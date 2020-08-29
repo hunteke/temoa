@@ -1,5 +1,5 @@
 import sqlite3
-import sys, os
+import sys, itertools
 import re
 import getopt
 import xlwt
@@ -190,6 +190,11 @@ def make_excel(ifile, ofile, scenario):
 							else :
 								sheet[i].write(row, count+1, '-', ostyle)
 							count += 1
+
+							# add to list for IamDataFrame output
+							v = f'{tables[a][0]}|{z}|{x}'
+							_results.append((scene, v, y, xyz[0] or 0, '?'))
+
 						row += 1
 						count = 0
 					row = 0
@@ -207,9 +212,12 @@ def make_excel(ifile, ofile, scenario):
 		df = IamDataFrame(pd.DataFrame(_results, columns=columns),
 			     		  model='TEMOA', region='World')
 
-		# adding aggregations of the emissions for each species
-		for q in emiss:
-			df.aggregate(f'Emissions|{q}', append=True)
+		# adding aggregates of emissions for each species
+		df.aggregate([f'Emissions|{q}' for q in emiss], append=True)
+
+		# adding aggregates of activity/capacity for each sector
+		prod = itertools.product(['Activity', 'Capacity'], sector)
+		df.aggregate([f'{t}|{s}' for t, s in prod], append=True)
 
 		# write IamDataFrame to xlsx
 		df.to_excel(ofile+'.xlsx')
