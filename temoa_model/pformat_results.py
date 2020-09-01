@@ -301,7 +301,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 				for S_o in m.ProcessOutputsByInput[reg_dir2, p, tech, vintage, S_i]
 				))				
 		
-		for item in svars[	'Costs'	].keys():
+		for item in list(svars[	'Costs'	]):
 			if item[2] == tech:
 				opposite_dir = item[1][item[1].find("-")+1:]+"-"+item[1][:item[1].find("-")]
 				if (item[0],opposite_dir,item[2],item[3]) in svars[	'Costs'	].keys():
@@ -312,7 +312,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 
 	#Remove Ri-Rj entries from being populated in the Outputs_Costs. Ri-Rj means a cost
 	#for region Rj
-	for item in svars[	'Costs'	].keys(): 
+	for item in list(svars[	'Costs'	]): 
 		if item[2] in m.tech_exchange:
 			svars[	'Costs'	][(item[0],item[1][item[1].find("-")+1:],item[2],item[3])] = svars[	'Costs'	][item]
 			del svars[	'Costs'	][item]

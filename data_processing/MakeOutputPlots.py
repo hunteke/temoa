@@ -12,10 +12,14 @@ import argparse
 
 class OutputPlotGenerator:
 
-	def __init__(self, path_to_db, scenario, super_categories=False):
+	def __init__(self, path_to_db, region, scenario, super_categories=False):
 		self.db_path = os.path.abspath(path_to_db)
+		if region == 'global':
+			self.region = '%'
+		else:
+			self.region = region
 		self.scenario = scenario
-		self.folder_name =os.path.splitext(os.path.basename(path_to_db))[0] + "_" + scenario + "_plots"
+		self.folder_name =os.path.splitext(os.path.basename(path_to_db))[0] + "_" + region + "_" + scenario + "_plots"
 		# self.extractFromDatabase()
 
 	def extractFromDatabase(self, type):
@@ -25,15 +29,15 @@ class OutputPlotGenerator:
 		con = sqlite3.connect(self.db_path)
 		cur = con.cursor()
 		if (type == 1):
-			cur.execute("SELECT sector, t_periods, tech, capacity FROM Output_CapacityByPeriodAndTech WHERE scenario == '"+self.scenario+"'")
+			cur.execute("SELECT sector, t_periods, tech, capacity FROM Output_CapacityByPeriodAndTech WHERE scenario == '"+self.scenario+"' AND region LIKE '"+self.region+"'")
 			self.capacity_output = cur.fetchall()
 			self.capacity_output = [list(elem) for elem in self.capacity_output]
 		elif (type == 2):
-			cur.execute("SELECT sector, t_periods, tech, SUM(vflow_out) FROM Output_VFlow_Out WHERE scenario == '"+self.scenario+"' GROUP BY sector, t_periods, tech")	
+			cur.execute("SELECT sector, t_periods, tech, SUM(vflow_out) FROM Output_VFlow_Out WHERE scenario == '"+self.scenario+"' AND region LIKE '"+self.region+"' GROUP BY sector, t_periods, tech")	
 			self.output_vflow = cur.fetchall()
 			self.output_vflow = [list(elem) for elem in self.output_vflow]
 		elif (type == 3):
-			cur.execute("SELECT sector, t_periods, emissions_comm, SUM(emissions) FROM Output_Emissions WHERE scenario == '"+self.scenario+"' GROUP BY sector, t_periods, emissions_comm")
+			cur.execute("SELECT sector, t_periods, emissions_comm, SUM(emissions) FROM Output_Emissions WHERE scenario == '"+self.scenario+"' AND region LIKE '"+self.region+"' GROUP BY sector, t_periods, emissions_comm")
 			self.output_emissions = cur.fetchall()
 			self.output_emissions = [list(elem) for elem in self.output_emissions]
 
@@ -140,8 +144,12 @@ class OutputPlotGenerator:
 
 		output_values = self.processData(self.capacity_output, sector, super_categories)
 		
-		title = 'Capacity Plot for ' + sector + ' sector'
-		self.makeStackedBarPlot(output_values, "Years", "Capacity (GW)", 'periods', title)
+		if self.region == '%':
+			title = 'Capacity Plot for ' + sector + ' across all regions'
+		else:
+			title = 'Capacity Plot for ' + sector + ' sector in region ' + self.region 
+
+		self.makeStackedBarPlot(output_values, "Years", "Capacity ", 'periods', title)
 		
 		return outfile2
 
@@ -159,9 +167,13 @@ class OutputPlotGenerator:
 			return ""
 
 		output_values = self.processData(self.output_vflow, sector, super_categories)
+
+		if self.region == '%':
+			title = 'Output Flow Plot for ' + sector + ' across all regions'
+		else:
+			title = 'Output Flow Plot for ' + sector + ' sector in region ' + self.region 		
 		
-		title = 'Output Flow Plot for ' + sector + ' sector'
-		self.makeStackedBarPlot(output_values, "Years", "Activity (PJ)", 'periods', title)
+		self.makeStackedBarPlot(output_values, "Years", "Activity ", 'periods', title)
 		
 		return outfile2;
 
@@ -180,7 +192,11 @@ class OutputPlotGenerator:
 
 		output_values = self.processData(self.output_emissions, sector, super_categories)
 				
-		title = 'Emissions Plot for ' + sector + ' sector'
+		if self.region == '%':
+			title = 'Emissions Plot for ' + sector + ' across all regions'
+		else:
+			title = 'Emissions Plot for ' + sector + ' sector in region ' + self.region 
+
 		self.make_line_plot(output_values.copy(), 'Emissions', title)
 		
 		return outfile2;
@@ -292,6 +308,7 @@ class OutputPlotGenerator:
 def GeneratePlot(args):
 	parser = argparse.ArgumentParser(description="Generate Output Plot")
 	parser.add_argument('-i', '--input', action="store", dest="input", help="Input Database Filename <path>", required=True)
+	parser.add_argument('-r', '--region', action="store", dest="region", help="Region name, input 'global' if global results are desired", required=True)
 	parser.add_argument('-s', '--scenario', action="store", dest="scenario", help="Model run scenario name", required=True)
 	parser.add_argument('-p', '--plot-type', action="store", dest="type", help="Type of Plot to be generated", choices=['capacity', 'flow', 'emissions'], required=True)
 	parser.add_argument('-c', '--sector', action="store", dest="sector", help="Sector for which plot to be generated", required=True)
@@ -300,7 +317,7 @@ def GeneratePlot(args):
 
 	options = parser.parse_args(args)
 
-	result = OutputPlotGenerator(options.input, options.scenario, options.super_categories)
+	result = OutputPlotGenerator(options.input, options.region, options.scenario, options.super_categories)
 	error = ''
 	if (options.type == 'capacity'):
 		error = result.generatePlotForCapacity(options.sector, options.super_categories, options.output_dir)
