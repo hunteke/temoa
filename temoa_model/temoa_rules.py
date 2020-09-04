@@ -1504,26 +1504,38 @@ output in separate terms.
 
 """
     emission_limit = M.EmissionLimit[r, p, e]
+
+     # r can be an individual region (r='US'), or a combination of regions separated by hyphen (r='Mexico-US-Canada'), or 'global'.
+     # Note that regions!=M.regions. We iterate over regions to find actural_emissions and actual_emissions_annual.
+    regions = set(r.split("-"))
+
+    # if r == 'global', the constraint is system-wide
+    if regions == {'global'}:
+      regions = M.regions
+
     
     actual_emissions = sum(
-        M.V_FlowOut[r, p, S_s, S_d, S_i, S_t, S_v, S_o]
-        * M.EmissionActivity[r, e, S_i, S_t, S_v, S_o]
+        M.V_FlowOut[reg, p, S_s, S_d, S_i, S_t, S_v, S_o]
+        * M.EmissionActivity[reg, e, S_i, S_t, S_v, S_o]
+        for reg in regions
         for tmp_r, tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
-        if tmp_e == e and tmp_r == r and S_t not in M.tech_annual
-        # EmissionsActivity not indexed by p, so make sure (p,t,v) combos valid
-        if (r, p, S_t, S_v) in M.processInputs.keys()
+        if tmp_e == e and tmp_r == reg and S_t not in M.tech_annual
+        # EmissionsActivity not indexed by p, so make sure (r,p,t,v) combos valid
+        if (reg, p, S_t, S_v) in M.processInputs.keys()
         for S_s in M.time_season
         for S_d in M.time_of_day
     )
 
     actual_emissions_annual = sum(
-        M.V_FlowOutAnnual[r, p, S_i, S_t, S_v, S_o]
-        * M.EmissionActivity[r, e, S_i, S_t, S_v, S_o]
+        M.V_FlowOutAnnual[reg, p, S_i, S_t, S_v, S_o]
+        * M.EmissionActivity[reg, e, S_i, S_t, S_v, S_o]
+        for reg in regions
         for tmp_r, tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
-        if tmp_e == e and tmp_r == r and S_t in M.tech_annual
-        # EmissionsActivity not indexed by p, so make sure (p,t,v) combos valid
-        if (r, p, S_t, S_v) in M.processInputs.keys()
-    )    
+        if tmp_e == e and tmp_r == reg and S_t in M.tech_annual
+        # EmissionsActivity not indexed by p, so make sure (r,p,t,v) combos valid
+        if (reg, p, S_t, S_v) in M.processInputs.keys()
+    )
+
 
     if int is type(actual_emissions + actual_emissions_annual):
         msg = (

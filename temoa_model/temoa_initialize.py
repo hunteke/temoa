@@ -48,13 +48,13 @@ class TemoaModel( AbstractModel ):
 		self.processInputs  = dict()
 		self.processOutputs = dict()
 		self.processLoans = dict()
-		self.activeFlow_psditvo = None
-		self.activeFlow_pitvo = None
-		self.activeFlowInStorage_psditvo = None
-		self.activeCurtailment_psditvo = None
-		self.activeActivity_ptv = None
-		self.activeCapacity_tv = None
-		self.activeCapacityAvailable_pt = None
+		self.activeFlow_rpsditvo = None
+		self.activeFlow_rpitvo = None
+		self.activeFlowInStorage_rpsditvo = None
+		self.activeCurtailment_rpsditvo = None
+		self.activeActivity_rptv = None
+		self.activeCapacity_rtv = None
+		self.activeCapacityAvailable_rpt = None
 
 		self.commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
 		self.commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
@@ -499,6 +499,8 @@ def init_set_vintage_optimize ( M ):
 def CreateRegionalIndices ( M ):
 	regional_indices = set()
 	for r_i in M.regions:
+		if "-" in r_i:
+			raise Exception("Individual region names can not have '-' in their names: "+str(r_i))
 		for r_j in M.regions:
 			if r_i == r_j:
 				regional_indices.add(r_i)
@@ -533,6 +535,9 @@ def CreateSparseDicts ( M ):
 	# The basis for the dictionaries are the sparse keys defined in the
 	# Efficiency table.
 	for r, i, t, v, o in M.Efficiency.sparse_iterkeys():
+		if "-" in r and t not in M.tech_exchange:
+			raise Exception("Technology "+str(t)+" seems to be an exchange \
+				technology but it is not specified in tech_exchange set")
 		l_process = (r, t, v)
 		l_lifetime = value(M.LifetimeProcess[ l_process ])
 		# Do some error checking for the user.
@@ -770,6 +775,18 @@ def CostInvestIndices ( M ):
 	)
 
 	return indices
+
+def RegionalEmissionLimitIndices ( M ):
+	from itertools import permutations
+	indices = set()
+	for n in range(1,len(M.regions)+1):
+		regional_perms = permutations(M.regions,n)
+		for i in regional_perms:
+			indices.add("-".join(i))
+	indices.add('global')
+
+	return indices
+
 
 def EmissionActivityIndices ( M ):
 	indices = set(
