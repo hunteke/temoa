@@ -340,7 +340,7 @@ def CreateDemands ( M ):
 
 	# Step 0: some setup for a couple of reusable items
 
-	# iget(2): 2 = magic number to specify the fourth column.  Currently the
+	# iget(3): 3 = magic number to specify the fourth column.  Currently the
 	# demand in the tuple (region, s, d, dem)
 	DSD_dem_getter = iget(3)
 
