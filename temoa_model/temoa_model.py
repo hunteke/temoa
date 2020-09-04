@@ -53,9 +53,9 @@ def temoa_create_model(name="Temoa"):
 
     # Define regions
     M.regions = Set()
-    # valid_regional_indices is the set of all the possible combinations of interregional 
-    # exhanges plus original region indices. If tech_exchange is empty, valid_regional_indices =regions.
-    M.valid_regional_indices = Set(initialize=CreateRegionalIndices)
+    # RegionalIndices is the set of all the possible combinations of interregional 
+    # exhanges plus original region indices. If tech_exchange is empty, RegionalIndices =regions.
+    M.RegionalIndices = Set(initialize=CreateRegionalIndices)
 
     # Define technology-related sets
     M.tech_resource = Set()
@@ -126,12 +126,12 @@ def temoa_create_model(name="Temoa"):
     M.ResourceBound = Param(M.regions, M.time_optimize, M.commodity_physical)
 
     # Define technology performance parameters
-    M.CapacityToActivity = Param(M.valid_regional_indices, M.tech_all, default=1)
+    M.CapacityToActivity = Param(M.RegionalIndices, M.tech_all, default=1)
     
-    M.ExistingCapacity = Param(M.valid_regional_indices, M.tech_all, M.vintage_exist)
+    M.ExistingCapacity = Param(M.RegionalIndices, M.tech_all, M.vintage_exist)
 
     M.Efficiency = Param(
-        M.valid_regional_indices, M.commodity_SNG, M.tech_all, M.vintage_all, M.commodity_carrier
+        M.RegionalIndices, M.commodity_SNG, M.tech_all, M.vintage_all, M.commodity_carrier
     )
     M.validate_UsedEfficiencyIndices = BuildAction(rule=CheckEfficiencyIndices)
 
@@ -143,8 +143,8 @@ def temoa_create_model(name="Temoa"):
 
     M.initialize_CapacityFactors = BuildAction(rule=CreateCapacityFactors)
 
-    M.LifetimeTech = Param(M.valid_regional_indices, M.tech_all, default=40)
-    M.LifetimeLoanTech = Param(M.valid_regional_indices, M.tech_all, default=10)
+    M.LifetimeTech = Param(M.RegionalIndices, M.tech_all, default=40)
+    M.LifetimeLoanTech = Param(M.RegionalIndices, M.tech_all, default=10)
 
     M.LifetimeProcess_rtv = Set(dimen=3, initialize=LifetimeProcessIndices)
     M.LifetimeProcess = Param(M.LifetimeProcess_rtv, mutable=True)
@@ -205,14 +205,14 @@ def temoa_create_model(name="Temoa"):
     )
 
     # Define parameters associated with user-defined constraints
-    M.MinCapacity = Param(M.valid_regional_indices, M.time_optimize, M.tech_all)
-    M.MaxCapacity = Param(M.valid_regional_indices, M.time_optimize, M.tech_all)
+    M.MinCapacity = Param(M.RegionalIndices, M.time_optimize, M.tech_all)
+    M.MaxCapacity = Param(M.RegionalIndices, M.time_optimize, M.tech_all)
     M.MinCapacitySum = Param(M.time_optimize)  # for techs in tech_capacity
     M.MaxCapacitySum = Param(M.time_optimize)  # for techs in tech_capacity
-    M.MaxActivity = Param(M.valid_regional_indices, M.time_optimize, M.tech_all)
-    M.MinActivity = Param(M.valid_regional_indices, M.time_optimize, M.tech_all)
-    M.GrowthRateMax = Param(M.valid_regional_indices, M.tech_all)
-    M.GrowthRateSeed = Param(M.valid_regional_indices, M.tech_all)
+    M.MaxActivity = Param(M.RegionalIndices, M.time_optimize, M.tech_all)
+    M.MinActivity = Param(M.RegionalIndices, M.time_optimize, M.tech_all)
+    M.GrowthRateMax = Param(M.RegionalIndices, M.tech_all)
+    M.GrowthRateSeed = Param(M.RegionalIndices, M.tech_all)
     M.RegionalEmissionLimit = Set(initialize=RegionalEmissionLimitIndices)
     M.EmissionLimit = Param(M.RegionalEmissionLimit, M.time_optimize, M.commodity_emissions)
     M.EmissionActivity_reitvo = Set(dimen=6, initialize=EmissionActivityIndices)
@@ -223,7 +223,7 @@ def temoa_create_model(name="Temoa"):
     # Define parameters associated with electric sector operation
     M.RampUp = Param(M.regions, M.tech_ramping)
     M.RampDown = Param(M.regions, M.tech_ramping)
-    M.CapacityCredit = Param(M.valid_regional_indices, M.time_optimize, M.tech_all, default=1)
+    M.CapacityCredit = Param(M.RegionalIndices, M.time_optimize, M.tech_all, default=1)
     M.PlanningReserveMargin = Param(M.regions, default=0.2)
     # Storage duration is expressed in hours
     M.StorageDuration = Param(M.regions, M.tech_storage, default=4)
@@ -416,7 +416,7 @@ def temoa_create_model(name="Temoa"):
     M.GrowthRateMaxConstraint_rtv = Set(
         dimen=3,
         initialize=lambda M: set(
-            product(M.valid_regional_indices, M.time_optimize, M.GrowthRateMax.sparse_iterkeys())
+            product(M.RegionalIndices, M.time_optimize, M.GrowthRateMax.sparse_iterkeys())
         ),
     )
     M.GrowthRateConstraint = Constraint(

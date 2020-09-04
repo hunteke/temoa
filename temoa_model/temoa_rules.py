@@ -156,7 +156,7 @@ in the :code:`tech_annual` set.
 """
     if t not in M.tech_annual:
       activity = sum( M.V_FlowOut[r, S_p, s, d, S_i, t, S_v, S_o]
-          for r in M.valid_regional_indices
+          for r in M.RegionalIndices
           for S_p, S_v in M.processTechs[r,t]
           for S_i in M.processInputs[S_p, t, S_v]
           for S_o in M.ProcessOutputsByInput[S_p, t, S_v, S_i]
@@ -165,7 +165,7 @@ in the :code:`tech_annual` set.
       )
     else:
       activity = sum( M.V_FlowOutAnnual[r, S_p, S_i, t, S_v, S_o]
-          for r in M.valid_regional_indices          
+          for r in M.RegionalIndices          
           for S_p, S_v in M.processTechs[t]
           for S_i in M.processInputs[S_p, t, S_v]
           for S_o in M.ProcessOutputsByInput[S_p, t, S_v, S_i]
