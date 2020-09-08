@@ -341,7 +341,7 @@ def CreateDemands ( M ):
 	# Step 0: some setup for a couple of reusable items
 
 	# iget(3): 3 = magic number to specify the fourth column.  Currently the
-	# demand in the tuple (region, s, d, dem)
+	# demand in the tuple (r, s, d, dem)
 	DSD_dem_getter = iget(3)
 
 	# iget(0): 0 = magic number to specify the first column.  Currently the
@@ -626,7 +626,7 @@ def CreateSparseDicts ( M ):
 			if t in M.tech_reserve and (r, p) not in M.processReservePeriods:
 					M.processReservePeriods[r, p] = set()
 			if t in M.tech_exchange and (r[:r.find("-")], p, i) not in M.exportRegions:
-					M.exportRegions[r[:r.find("-")], p, i] = set()	#since t in M.tech_exchange, r here has *-* format (e.g. US-Mexisco). 
+					M.exportRegions[r[:r.find("-")], p, i] = set()	#since t is in M.tech_exchange, r here has *-* format (e.g. 'US-Mexico'). 
 																	#r[:r.find("-")] extracts the region index before the "-". 
 			if t in M.tech_exchange and (r[r.find("-")+1:], p, o) not in M.importRegions:
 					M.importRegions[r[r.find("-")+1:], p, o] = set()

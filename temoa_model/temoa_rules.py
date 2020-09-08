@@ -556,12 +556,14 @@ For commodities that are exclusively produced at a constant annual rate, the
 :code:`CommodityBalanceAnnual_Constraint` is used, which is simplified and
 reduces computational burden.
 
-*production = consumption*
+*production + imports = consumption + exports*
 
 .. math::
    :label: CommodityBalance
 
-       \sum_{I,T, V} \textbf{FO}_{r, p, s, d, i, t, v, c}
+       \sum_{I, T, V} \textbf{FO}_{r, p, s, d, i, t, v, c}
+       +
+       \textbf{InterregionalImports}
        =
        \sum_{T^{s}, V, I} \textbf{FIS}_{r, p, s, d, c, t, v, o}
        +
@@ -569,6 +571,8 @@ reduces computational burden.
        +
        SEG_{s,d} \cdot
        \sum_{I, T^{a}, V} \textbf{FOA}_{r, p, c, t, v, o} /EFF_{r, c,t,v,o}
+       +
+       \textbf{InterregionalExports}
 
        \\
        \forall \{r, p, s, d, c\} \in \Theta_{\text{CommodityBalance}}  
@@ -1457,7 +1461,7 @@ we write this equation for all the time-slices defined in the database in each r
         * value(M.CapacityToActivity[r, t])
         * value(M.SegFrac[s, d])
         for t in M.tech_reserve
-        # Make sure (p,t) combinations are defined
+        # Make sure (r,p,t) combinations are defined
         if (r,p,t) in M.activeCapacityAvailable_rpt
     )
 
@@ -1593,7 +1597,7 @@ def MaxActivity_Constraint(M, r, p, t):
     r"""
 
 The MaxActivity sets an upper bound on the activity from a specific technology. 
-Note that the indices for these constraints are period and tech, not tech 
+Note that the indices for these constraints are region, period and tech, not tech 
 and vintage. The first version of the constraint pertains to technologies with
 variable output at the time slice level, and the second version pertains to
 technologies with constant annual output belonging to the :code:`tech_annual`
@@ -1637,7 +1641,7 @@ def MinActivity_Constraint(M, r, p, t):
     r"""
 
 The MinActivity sets a lower bound on the activity from a specific technology.
-Note that the indices for these constraints are period and tech, not tech and
+Note that the indices for these constraints are region, period and tech, not tech and
 vintage. The first version of the constraint pertains to technologies with
 variable output at the time slice level, and the second version pertains to
 technologies with constant annual output belonging to the :code:`tech_annual`
@@ -1727,7 +1731,7 @@ def MaxCapacity_Constraint(M, r, p, t):
     r"""
 
 The MaxCapacity constraint sets a limit on the maximum available capacity of a
-given technology. Note that the indices for these constraints are period and
+given technology. Note that the indices for these constraints are region, period and
 tech, not tech and vintage.
 
 .. math::
@@ -1760,7 +1764,7 @@ def MinCapacity_Constraint(M, r, p, t):
     r"""
 
 The MinCapacity constraint sets a limit on the minimum available capacity of a
-given technology. Note that the indices for these constraints are period and
+given technology. Note that the indices for these constraints are region, period and
 tech, not tech and vintage.
 
 .. math::
