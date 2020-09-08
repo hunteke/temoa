@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS "sector_labels" (
 CREATE TABLE IF NOT EXISTS "time_periods" (
 	"t_periods"	integer,
 	"flag"	text,
-	FOREIGN KEY("flag") REFERENCES "time_period_labels"("t_period_labels"),
-	PRIMARY KEY("t_periods")
+	PRIMARY KEY("t_periods"),
+	FOREIGN KEY("flag") REFERENCES "time_period_labels"("t_period_labels")
 );
 CREATE TABLE IF NOT EXISTS "time_season" (
 	"t_season"	text,
@@ -38,148 +38,148 @@ CREATE TABLE IF NOT EXISTS "technologies" (
 	"sector"	text,
 	"tech_desc"	text,
 	"tech_category"	text,
+	PRIMARY KEY("tech"),
 	FOREIGN KEY("sector") REFERENCES "sector_labels"("sector"),
-	FOREIGN KEY("flag") REFERENCES "technology_labels"("tech_labels"),
-	PRIMARY KEY("tech")
+	FOREIGN KEY("flag") REFERENCES "technology_labels"("tech_labels")
 );
 CREATE TABLE IF NOT EXISTS "commodities" (
 	"comm_name"	text,
 	"flag"	text,
 	"comm_desc"	text,
-	FOREIGN KEY("flag") REFERENCES "commodity_labels"("comm_labels"),
-	PRIMARY KEY("comm_name")
+	PRIMARY KEY("comm_name"),
+	FOREIGN KEY("flag") REFERENCES "commodity_labels"("comm_labels")
 );
 CREATE TABLE IF NOT EXISTS "SegFrac" (
 	"season_name"	text,
 	"time_of_day_name"	text,
 	"segfrac"	real CHECK("segfrac" >= 0 AND "segfrac" <= 1),
 	"segfrac_notes"	text,
+	PRIMARY KEY("season_name","time_of_day_name"),
 	FOREIGN KEY("season_name") REFERENCES "time_season"("t_season"),
-	FOREIGN KEY("time_of_day_name") REFERENCES "time_of_day"("t_day"),
-	PRIMARY KEY("season_name","time_of_day_name")
+	FOREIGN KEY("time_of_day_name") REFERENCES "time_of_day"("t_day")
 );
 CREATE TABLE IF NOT EXISTS "GlobalDiscountRate" (
 	"rate"	real
 );
 CREATE TABLE IF NOT EXISTS "CapacityFactorProcess" (
-	"region"	text,
+	"regions"	text,
 	"season_name"	text,
 	"time_of_day_name"	text,
 	"tech"	text,
 	"vintage"	integer,
 	"cf_process"	real CHECK("cf_process" >= 0 AND "cf_process" <= 1),
 	"cf_process_notes"	text,
-	FOREIGN KEY("season_name") REFERENCES "time_season"("t_season"),
+	PRIMARY KEY("regions","season_name","time_of_day_name","tech","vintage"),
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	FOREIGN KEY("time_of_day_name") REFERENCES "time_of_day"("t_day"),
-	PRIMARY KEY("region","season_name","time_of_day_name","tech","vintage")
+	FOREIGN KEY("season_name") REFERENCES "time_season"("t_season"),
+	FOREIGN KEY("time_of_day_name") REFERENCES "time_of_day"("t_day")
 );
 CREATE TABLE IF NOT EXISTS "CapacityFactorTech" (
-	"region"	text,
+	"regions"	text,
 	"season_name"	text,
 	"time_of_day_name"	text,
 	"tech"	text,
 	"cf_tech"	real CHECK("cf_tech" >= 0 AND "cf_tech" <= 1),
 	"cf_tech_notes"	text,
+	PRIMARY KEY("regions","season_name","time_of_day_name","tech"),
 	FOREIGN KEY("season_name") REFERENCES "time_season"("t_season"),
-	FOREIGN KEY("time_of_day_name") REFERENCES "time_of_day"("t_day"),
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","season_name","time_of_day_name","tech")
+	FOREIGN KEY("time_of_day_name") REFERENCES "time_of_day"("t_day")
 );
 CREATE TABLE IF NOT EXISTS "CapacityToActivity" (
-	"region"	text,
+	"regions"	text,
 	"tech"	text,
 	"c2a"	real,
 	"c2a_notes"	TEXT,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","tech")
+	PRIMARY KEY("regions","tech"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "CostFixed" (
-	"region"	text NOT NULL,
+	"regions"	text NOT NULL,
 	"periods"	integer NOT NULL,
 	"tech"	text NOT NULL,
 	"vintage"	integer NOT NULL,
 	"cost_fixed"	real,
 	"cost_fixed_units"	text,
 	"cost_fixed_notes"	text,
-	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
+	PRIMARY KEY("regions","periods","tech","vintage"),
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
-	PRIMARY KEY("region","periods","tech","vintage")
+	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods")
 );
 CREATE TABLE IF NOT EXISTS "CostInvest" (
-	"region"	text,
+	"regions"	text,
 	"tech"	text,
 	"vintage"	integer,
 	"cost_invest"	real,
 	"cost_invest_units"	text,
 	"cost_invest_notes"	text,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	PRIMARY KEY("regions","tech","vintage"),
 	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
-	PRIMARY KEY("region","tech","vintage")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "CostVariable" (
-	"region"	text NOT NULL,
+	"regions"	text NOT NULL,
 	"periods"	integer NOT NULL,
 	"tech"	text NOT NULL,
 	"vintage"	integer NOT NULL,
 	"cost_variable"	real,
 	"cost_variable_units"	text,
 	"cost_variable_notes"	text,
+	PRIMARY KEY("regions","periods","tech","vintage"),
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
 	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
-	PRIMARY KEY("region","periods","tech","vintage")
+	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods")
 );
 CREATE TABLE IF NOT EXISTS "Demand" (
-	"region"	text,
+	"regions"	text,
 	"periods"	integer,
 	"demand_comm"	text,
 	"demand"	real,
 	"demand_units"	text,
 	"demand_notes"	text,
+	PRIMARY KEY("regions","periods","demand_comm"),
 	FOREIGN KEY("demand_comm") REFERENCES "commodities"("comm_name"),
-	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
-	PRIMARY KEY("region","periods","demand_comm")
+	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods")
 );
 CREATE TABLE IF NOT EXISTS "DemandSpecificDistribution" (
-	"region"	text,
+	"regions"	text,
 	"season_name"	text,
 	"time_of_day_name"	text,
 	"demand_name"	text,
 	"dds"	real CHECK("dds" >= 0 AND "dds" <= 1),
 	"dds_notes"	text,
-	FOREIGN KEY("demand_name") REFERENCES "commodities"("comm_name"),
-	FOREIGN KEY("season_name") REFERENCES "time_season"("t_season"),
+	PRIMARY KEY("regions","season_name","time_of_day_name","demand_name"),
 	FOREIGN KEY("time_of_day_name") REFERENCES "time_of_day"("t_day"),
-	PRIMARY KEY("region","season_name","time_of_day_name","demand_name")
+	FOREIGN KEY("season_name") REFERENCES "time_season"("t_season"),
+	FOREIGN KEY("demand_name") REFERENCES "commodities"("comm_name")
 );
 CREATE TABLE IF NOT EXISTS "DiscountRate" (
-	"region"	text,
+	"regions"	text,
 	"tech"	text,
 	"vintage"	integer,
 	"tech_rate"	real,
 	"tech_rate_notes"	text,
+	PRIMARY KEY("regions","tech","vintage"),
 	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","tech","vintage")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "Efficiency" (
-	"region"	text,
+	"regions"	text,
 	"input_comm"	text,
 	"tech"	text,
 	"vintage"	integer,
 	"output_comm"	text,
 	"efficiency"	real CHECK("efficiency" > 0),
 	"eff_notes"	text,
-	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
+	PRIMARY KEY("regions","input_comm","tech","vintage","output_comm"),
 	FOREIGN KEY("output_comm") REFERENCES "commodities"("comm_name"),
-	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","input_comm","tech","vintage","output_comm")
+	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name")
 );
 CREATE TABLE IF NOT EXISTS "EmissionActivity" (
-	"region"	text,
+	"regions"	text,
 	"emis_comm"	text,
 	"input_comm"	text,
 	"tech"	text,
@@ -188,149 +188,149 @@ CREATE TABLE IF NOT EXISTS "EmissionActivity" (
 	"emis_act"	real,
 	"emis_act_units"	text,
 	"emis_act_notes"	text,
-	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
+	PRIMARY KEY("regions","emis_comm","input_comm","tech","vintage","output_comm"),
 	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
 	FOREIGN KEY("output_comm") REFERENCES "commodities"("comm_name"),
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
 	FOREIGN KEY("emis_comm") REFERENCES "commodities"("comm_name"),
-	PRIMARY KEY("region","emis_comm","input_comm","tech","vintage","output_comm")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "EmissionLimit" (
-	"region"	text,
+	"regions"	text,
 	"periods"	integer,
 	"emis_comm"	text,
 	"emis_limit"	real,
 	"emis_limit_units"	text,
 	"emis_limit_notes"	text,
+	PRIMARY KEY("periods","emis_comm"),
 	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("emis_comm") REFERENCES "commodities"("comm_name"),
-	PRIMARY KEY("region","periods","emis_comm")
+	FOREIGN KEY("emis_comm") REFERENCES "commodities"("comm_name")
 );
 CREATE TABLE IF NOT EXISTS "ExistingCapacity" (
-	"region"	text,
+	"regions"	text,
 	"tech"	text,
 	"vintage"	integer,
 	"exist_cap"	real,
 	"exist_cap_units"	text,
 	"exist_cap_notes"	text,
+	PRIMARY KEY("regions","tech","vintage"),
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
-	PRIMARY KEY("region","tech","vintage")
+	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods")
 );
 CREATE TABLE IF NOT EXISTS "GrowthRateSeed" (
-	"region"	text,
+	"regions"	text,
 	"tech"	text,
 	"growthrate_seed"	real,
 	"growthrate_seed_units"	text,
 	"growthrate_seed_notes"	text,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","tech")
+	PRIMARY KEY("regions","tech"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "GrowthRateMax" (
-	"region"	text,
+	"regions"	text,
 	"tech"	text,
 	"growthrate_max"	real,
 	"growthrate_max_notes"	text,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","tech")
+	PRIMARY KEY("regions","tech"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "LifetimeLoanTech" (
-	"region"	text,
+	"regions"	text,
 	"tech"	text,
 	"loan"	real,
 	"loan_notes"	text,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","tech")
+	PRIMARY KEY("regions","tech"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "LifetimeProcess" (
-	"region"	text,
+	"regions"	text,
 	"tech"	text,
 	"vintage"	integer,
 	"life_process"	real,
 	"life_process_notes"	text,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	PRIMARY KEY("regions","tech","vintage"),
 	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
-	PRIMARY KEY("region","tech","vintage")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "LifetimeTech" (
-	"region"	text,
+	"regions"	text,
 	"tech"	text,
 	"life"	real,
 	"life_notes"	text,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","tech")
+	PRIMARY KEY("regions","tech"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "MaxActivity" (
-	"region"	text,
+	"regions"	text,
 	"periods"	integer,
 	"tech"	text,
 	"maxact"	real,
 	"maxact_units"	text,
 	"maxact_notes"	text,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	PRIMARY KEY("regions","periods","tech"),
 	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
-	PRIMARY KEY("region","periods","tech")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "MaxCapacity" (
-	"region"	text,
+	"regions"	text,
 	"periods"	integer,
 	"tech"	text,
 	"maxcap"	real,
 	"maxcap_units"	text,
 	"maxcap_notes"	text,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	PRIMARY KEY("regions","periods","tech"),
 	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
-	PRIMARY KEY("region","periods","tech")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "MinActivity" (
-	"region"	text,
+	"regions"	text,
 	"periods"	integer,
 	"tech"	text,
 	"minact"	real,
 	"minact_units"	text,
 	"minact_notes"	text,
+	PRIMARY KEY("regions","periods","tech"),
 	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","periods","tech")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "MinCapacity" (
-	"region"	text,
+	"regions"	text,
 	"periods"	integer,
 	"tech"	text,
 	"mincap"	real,
 	"mincap_units"	text,
 	"mincap_notes"	text,
+	PRIMARY KEY("regions","periods","tech"),
 	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","periods","tech")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "Output_CapacityByPeriodAndTech" (
-	"region"	text,
+	"regions"	text,
 	"scenario"	text,
 	"sector"	text,
 	"t_periods"	integer,
 	"tech"	text,
 	"capacity"	real,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	FOREIGN KEY("t_periods") REFERENCES "time_periods"("t_periods"),
+	PRIMARY KEY("regions","scenario","t_periods","tech"),
 	FOREIGN KEY("sector") REFERENCES "sector_labels"("sector"),
-	PRIMARY KEY("region","scenario","t_periods","tech")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	FOREIGN KEY("t_periods") REFERENCES "time_periods"("t_periods")
 );
 CREATE TABLE IF NOT EXISTS "Output_Costs" (
-	"region"	text,
+	"regions"	text,
 	"scenario"	text,
 	"sector"	text,
 	"output_name"	text,
 	"tech"	text,
 	"vintage"	integer,
 	"output_cost"	real,
-	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	PRIMARY KEY("regions","scenario","output_name","tech","vintage"),
 	FOREIGN KEY("sector") REFERENCES "sector_labels"("sector"),
-	PRIMARY KEY("region","scenario","output_name","tech","vintage")
+	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 CREATE TABLE IF NOT EXISTS "Output_Curtailment" (
-	"region"	text,
+	"regions"	text,
 	"scenario"	text,
 	"sector"	text,
 	"t_periods"	integer,
@@ -341,17 +341,17 @@ CREATE TABLE IF NOT EXISTS "Output_Curtailment" (
 	"vintage"	integer,
 	"output_comm"	text,
 	"curtailment"	real,
+	PRIMARY KEY("regions","scenario","t_periods","t_season","t_day","input_comm","tech","vintage","output_comm"),
 	FOREIGN KEY("output_comm") REFERENCES "commodities"("comm_name"),
-	FOREIGN KEY("t_periods") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
 	FOREIGN KEY("t_day") REFERENCES "time_of_day"("t_day"),
-	FOREIGN KEY("t_season") REFERENCES "time_periods"("t_periods"),
-	PRIMARY KEY("region","scenario","t_periods","t_season","t_day","input_comm","tech","vintage","output_comm")
+	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
+	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("t_periods") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	FOREIGN KEY("t_season") REFERENCES "time_periods"("t_periods")
 );
 CREATE TABLE IF NOT EXISTS "Output_Emissions" (
-	"region"	text,
+	"regions"	text,
 	"scenario"	text,
 	"sector"	text,
 	"t_periods"	integer,
@@ -359,15 +359,15 @@ CREATE TABLE IF NOT EXISTS "Output_Emissions" (
 	"tech"	text,
 	"vintage"	integer,
 	"emissions"	real,
-	FOREIGN KEY("t_periods") REFERENCES "time_periods"("t_periods"),
+	PRIMARY KEY("regions","scenario","t_periods","emissions_comm","tech","vintage"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
 	FOREIGN KEY("emissions_comm") REFERENCES "EmissionActivity"("emis_comm"),
 	FOREIGN KEY("sector") REFERENCES "sector_labels"("sector"),
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
-	PRIMARY KEY("region","scenario","t_periods","emissions_comm","tech","vintage")
+	FOREIGN KEY("t_periods") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods")
 );
 CREATE TABLE IF NOT EXISTS "Output_VFlow_In" (
-	"region"	text,
+	"regions"	text,
 	"scenario"	text,
 	"sector"	text,
 	"t_periods"	integer,
@@ -378,18 +378,18 @@ CREATE TABLE IF NOT EXISTS "Output_VFlow_In" (
 	"vintage"	integer,
 	"output_comm"	text,
 	"vflow_in"	real,
-	FOREIGN KEY("t_season") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("sector") REFERENCES "sector_labels"("sector"),
-	FOREIGN KEY("t_periods") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("t_day") REFERENCES "time_of_day"("t_day"),
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	PRIMARY KEY("regions","scenario","t_periods","t_season","t_day","input_comm","tech","vintage","output_comm"),
 	FOREIGN KEY("output_comm") REFERENCES "commodities"("comm_name"),
-	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("t_day") REFERENCES "time_of_day"("t_day"),
+	FOREIGN KEY("t_season") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("t_periods") REFERENCES "time_periods"("t_periods"),
 	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
-	PRIMARY KEY("region","scenario","t_periods","t_season","t_day","input_comm","tech","vintage","output_comm")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("sector") REFERENCES "sector_labels"("sector")
 );
 CREATE TABLE IF NOT EXISTS "Output_VFlow_Out" (
-	"region"	text,
+	"regions"	text,
 	"scenario"	text,
 	"sector"	text,
 	"t_periods"	integer,
@@ -400,86 +400,66 @@ CREATE TABLE IF NOT EXISTS "Output_VFlow_Out" (
 	"vintage"	integer,
 	"output_comm"	text,
 	"vflow_out"	real,
-	FOREIGN KEY("t_season") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
+	PRIMARY KEY("regions","scenario","t_periods","t_season","t_day","input_comm","tech","vintage","output_comm"),
+	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
 	FOREIGN KEY("sector") REFERENCES "sector_labels"("sector"),
 	FOREIGN KEY("t_day") REFERENCES "time_of_day"("t_day"),
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	FOREIGN KEY("t_season") REFERENCES "time_periods"("t_periods"),
 	FOREIGN KEY("t_periods") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
-	FOREIGN KEY("output_comm") REFERENCES "commodities"("comm_name"),
-	PRIMARY KEY("region","scenario","t_periods","t_season","t_day","input_comm","tech","vintage","output_comm")
+	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
+	FOREIGN KEY("output_comm") REFERENCES "commodities"("comm_name")
 );
 CREATE TABLE IF NOT EXISTS "Output_V_Capacity" (
-	"region"	text,
+	"regions"	text,
 	"scenario"	text,
 	"sector"	text,
 	"tech"	text,
 	"vintage"	integer,
 	"capacity"	real,
-	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods"),
-	FOREIGN KEY("sector") REFERENCES "sector_labels"("sector"),
+	PRIMARY KEY("regions","scenario","tech","vintage"),
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("region","scenario","tech","vintage")
+	FOREIGN KEY("sector") REFERENCES "sector_labels"("sector"),
+	FOREIGN KEY("vintage") REFERENCES "time_periods"("t_periods")
 );
 CREATE TABLE IF NOT EXISTS "StorageDuration" (
-	"region"	text,
+	"regions"	text,
 	"tech"	text,
 	"duration"	real,
 	"duration_notes"	text,
-	PRIMARY KEY("region","tech")
+	PRIMARY KEY("regions","tech")
 );
 CREATE TABLE IF NOT EXISTS "TechInputSplit" (
-	"region"	TEXT,
+	"regions"	TEXT,
 	"periods"	integer,
 	"input_comm"	text,
 	"tech"	text,
 	"ti_split"	real,
 	"ti_split_notes"	text,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
+	PRIMARY KEY("regions","periods","input_comm","tech"),
 	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
-	PRIMARY KEY("region","periods","input_comm","tech")
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods")
 );
 CREATE TABLE IF NOT EXISTS "TechOutputSplit" (
-	"region"	TEXT,
+	"regions"	TEXT,
 	"periods"	integer,
 	"tech"	text,
 	"output_comm"	text,
 	"to_split"	real,
 	"to_split_notes"	text,
-	FOREIGN KEY("output_comm") REFERENCES "commodities"("comm_name"),
-	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods"),
+	PRIMARY KEY("periods","tech","output_comm"),
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("periods","tech","output_comm")
+	FOREIGN KEY("output_comm") REFERENCES "commodities"("comm_name"),
+	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods")
 );
 CREATE TABLE IF NOT EXISTS "CapacityCredit" (
-	"region"	text,
+	"regions"	text,
 	"periods"	integer,
 	"tech"	text,
 	"cf_tech"	real CHECK("cf_tech" >= 0 AND "cf_tech" <= 1),
 	"cf_tech_notes"	text,
-	PRIMARY KEY("region","periods","tech")
-);
-CREATE TABLE IF NOT EXISTS "MinGenGroupTarget" (
-	"period"	integer,
-	"group_name"	text,
-	"min_act_g"	real,
-	"notes"	text,
-	"region"	text,
-	PRIMARY KEY("period","group_name")
-);
-CREATE TABLE IF NOT EXISTS "MinGenGroupWeight" (
-	"tech"	text,
-	"group_name"	text,
-	"act_fraction"	REAL,
-	"tech_desc"	text,
-	"region"	text,
-	PRIMARY KEY("tech","group_name")
-);
-CREATE TABLE IF NOT EXISTS "PlanningReserveMargin" (
-	"region"	text,
-	"reserve_margin"	REAL
+	PRIMARY KEY("regions","periods","tech")
 );
 CREATE TABLE IF NOT EXISTS "groups" (
 	"group_name"	text,
@@ -487,9 +467,9 @@ CREATE TABLE IF NOT EXISTS "groups" (
 	PRIMARY KEY("group_name")
 );
 CREATE TABLE IF NOT EXISTS "regions" (
-	"region"	TEXT,
+	"regions"	TEXT,
 	"region_note"	TEXT,
-	PRIMARY KEY("region")
+	PRIMARY KEY("regions")
 );
 CREATE TABLE IF NOT EXISTS "tech_reserve" (
 	"tech"	text,
@@ -501,17 +481,45 @@ CREATE TABLE IF NOT EXISTS "Output_Objective" (
 	"objective_name"	text,
 	"total_system_cost"	real
 );
-CREATE TABLE IF NOT EXISTS "tech_annual" (
-	"region"	TEXT,
+CREATE TABLE IF NOT EXISTS "tech_exchange" (
 	"tech"	text,
 	"notes"	TEXT,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("tech","region")
+	PRIMARY KEY("tech"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
+);
+CREATE TABLE IF NOT EXISTS "tech_annual" (
+	"tech"	text,
+	"notes"	TEXT,
+	PRIMARY KEY("tech"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
+);
+CREATE TABLE IF NOT EXISTS "MinGenGroupWeight" (
+	"regions"	text,
+	"tech"	text,
+	"group_name"	text,
+	"act_fraction"	REAL,
+	"tech_desc"	text,
+	PRIMARY KEY("tech","group_name","regions")
+);
+CREATE TABLE IF NOT EXISTS "MinGenGroupTarget" (
+	"regions"	text,
+	"periods"	integer,
+	"group_name"	text,
+	"min_act_g"	real,
+	"notes"	text,
+	PRIMARY KEY("periods","group_name","regions")
+);
+CREATE TABLE IF NOT EXISTS "PlanningReserveMargin" (
+	"regions"	text,
+	"reserve_margin"	REAL,
+	"notes"	TEXT,
+	PRIMARY KEY("regions")
 );
 CREATE TABLE IF NOT EXISTS "tech_curtailment" (
 	"tech"	text,
-	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
-	PRIMARY KEY("tech")
+	"notes"	TEXT,
+	PRIMARY KEY("tech"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
 INSERT INTO "time_period_labels" VALUES ('e','existing vintages');
 INSERT INTO "time_period_labels" VALUES ('f','future');
@@ -778,5 +786,5 @@ INSERT INTO "TechOutputSplit" VALUES ('R1',2025,'S_OILREF','DSL',0.1,'');
 INSERT INTO "TechOutputSplit" VALUES ('R1',2030,'S_OILREF','GSL',0.9,'');
 INSERT INTO "TechOutputSplit" VALUES ('R1',2030,'S_OILREF','DSL',0.1,'');
 INSERT INTO "regions" VALUES ('R1',NULL);
-INSERT INTO "tech_curtailment" VALUES ('S_OILREF');
+INSERT INTO "tech_curtailment" VALUES ('S_OILREF',NULL);
 COMMIT;

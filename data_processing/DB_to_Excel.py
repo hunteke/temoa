@@ -78,7 +78,7 @@ def make_excel(ifile, ofile, scenario):
 						tech_set.add(val[0])
 
 		if k is "Output_VFlow_Out" :
-			cur.execute("SELECT DISTINCT region FROM "+k)
+			cur.execute("SELECT DISTINCT regions FROM "+k)
 			for val in cur :
 				regions.add(val[0])
 
@@ -137,7 +137,7 @@ def make_excel(ifile, ofile, scenario):
 								sheet[i].write(row, 0, x, ostyle)
 								sheet[i].write(row, 1, q, ostyle)
 								for y in period :
-									cur.execute("SELECT sum("+tables[a][1]+") FROM "+a+" WHERE region is '"+r+"' and t_periods is '"+y+"' and scenario is '"+scene+"' and tech is '"+x+"' and emissions_comm is '"+q+"'")
+									cur.execute("SELECT sum("+tables[a][1]+") FROM "+a+" WHERE regions is '"+r+"' and t_periods is '"+y+"' and scenario is '"+scene+"' and tech is '"+x+"' and emissions_comm is '"+q+"'")
 									xyz = cur.fetchone()
 									if xyz[0] is not None :
 										sheet[i].write(row, count+2, float(xyz[0]), ostyle)
@@ -155,7 +155,7 @@ def make_excel(ifile, ofile, scenario):
 							sheet[i].col(col).width_in_pixels = 3300
 						row += 1
 						for x in tech_set :			
-							cur.execute("SELECT output_name, vintage, "+tables[a][1]+" FROM "+a+" WHERE region is '"+r+"' and scenario is '"+scene+"' and tech is '"+x+"'")
+							cur.execute("SELECT output_name, vintage, "+tables[a][1]+" FROM "+a+" WHERE regions is '"+r+"' and scenario is '"+scene+"' and tech is '"+x+"'")
 							for xyz in cur :
 								if xyz[0] is not None :
 									sheet[i].write(row, 0, x, ostyle)
@@ -182,7 +182,7 @@ def make_excel(ifile, ofile, scenario):
 						for x in tech[z] :
 							sheet[i].write(row, 0, x, ostyle)
 							for y in period :
-								cur.execute("SELECT sum("+tables[a][1]+") FROM "+a+" WHERE region is '"+r+"' and t_periods is '"+y+"' and scenario is '"+scene+"' and tech is '"+x+"'")
+								cur.execute("SELECT sum("+tables[a][1]+") FROM "+a+" WHERE regions is '"+r+"' and t_periods is '"+y+"' and scenario is '"+scene+"' and tech is '"+x+"'")
 								xyz = cur.fetchone()
 								if xyz[0] is not None :
 									sheet[i].write(row, count+1, float(xyz[0]), ostyle)

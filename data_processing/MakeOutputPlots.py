@@ -29,15 +29,15 @@ class OutputPlotGenerator:
 		con = sqlite3.connect(self.db_path)
 		cur = con.cursor()
 		if (type == 1):
-			cur.execute("SELECT sector, t_periods, tech, capacity FROM Output_CapacityByPeriodAndTech WHERE scenario == '"+self.scenario+"' AND region LIKE '"+self.region+"'")
+			cur.execute("SELECT sector, t_periods, tech, capacity FROM Output_CapacityByPeriodAndTech WHERE scenario == '"+self.scenario+"' AND regions LIKE '"+self.region+"'")
 			self.capacity_output = cur.fetchall()
 			self.capacity_output = [list(elem) for elem in self.capacity_output]
 		elif (type == 2):
-			cur.execute("SELECT sector, t_periods, tech, SUM(vflow_out) FROM Output_VFlow_Out WHERE scenario == '"+self.scenario+"' AND region LIKE '"+self.region+"' GROUP BY sector, t_periods, tech")	
+			cur.execute("SELECT sector, t_periods, tech, SUM(vflow_out) FROM Output_VFlow_Out WHERE scenario == '"+self.scenario+"' AND regions LIKE '"+self.region+"' GROUP BY sector, t_periods, tech")	
 			self.output_vflow = cur.fetchall()
 			self.output_vflow = [list(elem) for elem in self.output_vflow]
 		elif (type == 3):
-			cur.execute("SELECT sector, t_periods, emissions_comm, SUM(emissions) FROM Output_Emissions WHERE scenario == '"+self.scenario+"' AND region LIKE '"+self.region+"' GROUP BY sector, t_periods, emissions_comm")
+			cur.execute("SELECT sector, t_periods, emissions_comm, SUM(emissions) FROM Output_Emissions WHERE scenario == '"+self.scenario+"' AND regions LIKE '"+self.region+"' GROUP BY sector, t_periods, emissions_comm")
 			self.output_emissions = cur.fetchall()
 			self.output_emissions = [list(elem) for elem in self.output_emissions]
 
