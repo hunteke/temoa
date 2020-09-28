@@ -351,10 +351,11 @@ def PeriodCost_rule(M, p):
     MPL = M.ModelProcessLife
     x = 1 + GDR  # convenience variable, nothing more.
 
-    try:
-      P_0 = value (M.MyopicBaseyear)
-    except:
-      pass
+
+    if  M.MyopicBaseyear.values()!=[]:
+      P_0 = value(M.MyopicBaseyear)
+
+
 
     loan_costs = sum(
         M.V_Capacity[r, S_t, S_v]
