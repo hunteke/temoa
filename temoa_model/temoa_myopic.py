@@ -45,6 +45,9 @@ def myopic_db_generator_solver ( self ):
     cur_org = con_org.cursor()            
     table_list = cur_org.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'Output%'").fetchall()
     time_periods = cur_org.execute("SELECT t_periods FROM time_periods WHERE flag='f'").fetchall()
+    cur_org.execute("DELETE FROM MyopicBaseyear")
+    cur_org.execute("INSERT INTO MyopicBaseyear (year) VALUES ("+str(time_periods[0][0])+")")
+    con_org.commit()
     loc1 = max(loc for loc, val in enumerate(self.options.output) if val == '/')
     loc2 = max(loc for loc, val in enumerate(self.options.output) if val == '.')
     db_name = self.options.output[loc1+1:loc2]
