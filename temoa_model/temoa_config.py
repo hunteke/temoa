@@ -133,6 +133,7 @@ def db_2_dat(ifile, ofile, options):
 		['param','CapacityToActivity',        '',                    '',             2],
 		['param','PlanningReserveMargin',     '',                    '',             2],
 		['param','GlobalDiscountRate',        '',                    '',             0],
+		['param','MyopicBaseyear',            '',                    '',             0],		
 		['param','DiscountRate',              '',                    '',             3],
 		['param','EmissionActivity',          '',                    '',             6],
 		['param','EmissionLimit',             '',                    '',             3],
@@ -164,7 +165,7 @@ def db_2_dat(ifile, ofile, options):
 	with open(ofile, 'w') as f:
 		f.write('data ;\n\n')
 		#connect to the database
-		con = sqlite3.connect(ifile)
+		con = sqlite3.connect(ifile, isolation_level=None)
 		cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 		con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
 	
@@ -180,7 +181,18 @@ def db_2_dat(ifile, ofile, options):
 		if options.mga_weight == 'normalized':
 			write_tech_sector(f)
 			
-		
+		# Making sure the database is empty from the begining for a myopic solve
+		if options.myopic:
+   			cur.execute("DELETE FROM Output_CapacityByPeriodAndTech WHERE scenario="+"'"+str(options.scenario)+"'")
+   			cur.execute("DELETE FROM Output_Emissions WHERE scenario="+"'"+str(options.scenario)+"'")
+   			cur.execute("DELETE FROM Output_Costs WHERE scenario="+"'"+str(options.scenario)+"'")
+   			cur.execute("DELETE FROM Output_Objective WHERE scenario="+"'"+str(options.scenario)+"'")
+   			cur.execute("DELETE FROM Output_VFlow_In WHERE scenario="+"'"+str(options.scenario)+"'")
+   			cur.execute("DELETE FROM Output_VFlow_Out WHERE scenario="+"'"+str(options.scenario)+"'")
+   			cur.execute("DELETE FROM Output_V_Capacity WHERE scenario="+"'"+str(options.scenario)+"'")
+   			cur.execute("DELETE FROM Output_Curtailment WHERE scenario="+"'"+str(options.scenario)+"'")
+   			cur.execute("VACUUM")
+   			con.commit()			
 
 		cur.close()
 		con.close()
@@ -200,6 +212,8 @@ class TemoaConfig( object ):
 		'neos',
 		'keep_pyomo_lp_file',
 		'saveEXCEL',
+		'myopic'
+		'keep_myopic_databases'
 		'saveTEXTFILE',
 		'mgaslack',
 		'mgaiter',
@@ -226,6 +240,8 @@ class TemoaConfig( object ):
 		self.output           = None # May update to a list if multiple output is required.
 		self.scenario         = None
 		self.saveEXCEL        = False
+		self.myopic           = False
+		self.KeepMyopicDBs    = False		
 		self.saveTEXTFILE     = False
 		self.how_to_cite      = None
 		self.version          = False
@@ -266,6 +282,8 @@ class TemoaConfig( object ):
 		msg += '{:>{}s}: {}\n'.format('Output file', width, self.output)
 		msg += '{:>{}s}: {}\n'.format('Scenario', width, self.scenario)	
 		msg += '{:>{}s}: {}\n'.format('Spreadsheet output', width, self.saveEXCEL)
+		msg += '{:>{}s}: {}\n'.format('Myopic scheme', width, self.myopic)
+		msg += '{:>{}s}: {}\n'.format('Retain myopic databases', width, self.KeepMyopicDBs)
 		msg += spacer
 		msg += '{:>{}s}: {}\n'.format('Citation output status', width, self.how_to_cite)
 		msg += '{:>{}s}: {}\n'.format('NEOS status', width, self.neos)
@@ -300,6 +318,14 @@ class TemoaConfig( object ):
 	def t_saveEXCEL(self, t):
 		r'--saveEXCEL\b'
 		self.saveEXCEL = True
+
+	def t_myopic(self, t):
+		r'--myopic\b'
+		self.myopic = True		
+
+	def t_keep_myopic_databases(self, t):
+		r'--keep_myopic_databases\b'
+		self.KeepMyopicDBs = True			
 	
 	def t_saveTEXTFILE(self, t):
 		r'--saveTEXTFILE\b'

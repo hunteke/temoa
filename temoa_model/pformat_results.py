@@ -127,6 +127,19 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	LLN = m.LifetimeLoanProcess
 	x   = 1 + GDR    # convenience variable, nothing more
 
+	if 'temoa_model/config_sample_myopic' in options.file_location:
+		original_dbpath = options.output
+		con = sqlite3.connect(original_dbpath)
+		cur = con.cursor()
+		time_periods = cur.execute("SELECT t_periods FROM time_periods WHERE flag='f'").fetchall()
+		P_0 = time_periods[0][0]
+		P_e = time_periods[-1][0]
+		# We need to know if a myopic run is the last run or not. 
+		P_e_time_optimize = time_periods[-2][0]
+		P_e_current = int(options.file_location.split("_")[-1])
+		con.commit()
+		con.close()
+
 	# Extract optimal decision variable values related to commodity flow:
 	for r, p, s, d, t, v in m.V_StorageLevel:
 		val = value( m.V_StorageLevel[r, p, s, d, t, v] )
@@ -178,11 +191,17 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		svars['V_FlowIn'][r, p, s, d, i, t, v, o] = (val + value( m.V_FlowOut[r, p, s, d, i, t, v, o] )) / value(m.Efficiency[r, i, t, v, o])
 
 	# Extract optimal decision variable values related to capacity:
-	for r, t, v in m.V_Capacity:
-		val = value( m.V_Capacity[r, t, v] )
-		if abs(val) < epsilon: continue
-
-		svars['V_Capacity'][r, t, v] = val
+	if 'temoa_model/config_sample_myopic' not in options.file_location:
+		for r, t, v in m.V_Capacity:
+			val = value( m.V_Capacity[r, t, v] )
+			if abs(val) < epsilon: continue
+			svars['V_Capacity'][r, t, v] = val
+	else:
+		for r, t, v in m.V_Capacity:
+			if v in m.time_optimize:
+				val = value( m.V_Capacity[r, t, v] )
+				if abs(val) < epsilon: continue
+				svars['V_Capacity'][r, t, v] = val
 
 	for r, p, t in m.V_CapacityAvailableByPeriodAndTech:
 		val = value( m.V_CapacityAvailableByPeriodAndTech[r, p, t] )
@@ -190,132 +209,135 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		svars['V_CapacityAvailableByPeriodAndTech'][r, p, t] = val
 
 	# Calculate model costs:	
-	# This is a generic workaround.  Not sure how else to automatically discover 
-    # the objective name
-	obj_name, obj_value = objs[0].getname(True), value( objs[0] )	
-	svars[ 'Objective' ]["('"+obj_name+"')"] = obj_value
+	if 'temoa_model/config_sample_myopic' not in options.file_location: 
+		# This is a generic workaround.  Not sure how else to automatically discover 
+		# the objective name
+		obj_name, obj_value = objs[0].getname(True), value( objs[0] )
+		svars[ 'Objective' ]["('"+obj_name+"')"] = obj_value
 
-	for r, t, v in m.CostInvest.sparse_iterkeys():   # Returns only non-zero values
+		for r, t, v in m.CostInvest.sparse_iterkeys():   # Returns only non-zero values
+
+			icost = value( m.V_Capacity[r, t, v] )
+			if abs(icost) < epsilon: continue
+			icost *= value( m.CostInvest[r, t, v] )*(
+				(
+					1 -  x**( -min( value(m.LifetimeProcess[r, t, v]), P_e - v ) )
+				)/(
+					1 -  x**( -value( m.LifetimeProcess[r, t, v] ) ) 
+				)
+			)
+			svars[	'Costs'	][ 'V_UndiscountedInvestmentByProcess', r, t, v] += icost
 	
-		icost = value( m.V_Capacity[r, t, v] )
-		if abs(icost) < epsilon: continue
-		icost *= value( m.CostInvest[r, t, v] )*(
-			(
-				1 -  x**( -min( value(m.LifetimeProcess[r, t, v]), P_e - v ) )
-			)/(
-				1 -  x**( -value( m.LifetimeProcess[r, t, v] ) ) 
+			icost *= value( m.LoanAnnualize[r, t, v] )
+			icost *= (
+			  value( LLN[r, t, v] ) if not GDR else
+			    (x **(P_0 - v + 1) * (1 - x **(-value( LLN[r, t, v] ))) / GDR)
 			)
-		)
-		svars[	'Costs'	][ 'V_UndiscountedInvestmentByProcess', r, t, v] += icost
-
-		icost *= value( m.LoanAnnualize[r, t, v] )
-		icost *= (
-		  value( LLN[r, t, v] ) if not GDR else
-		    (x **(P_0 - v + 1) * (1 - x **(-value( LLN[r, t, v] ))) / GDR)
-		)
-
-		svars[	'Costs'	][ 'V_DiscountedInvestmentByProcess', r, t, v] += icost
+	
+			svars[	'Costs'	][ 'V_DiscountedInvestmentByProcess', r, t, v] += icost
 
 
-	for r, p, t, v in m.CostFixed.sparse_iterkeys():
-		fcost = value( m.V_Capacity[r, t, v] )
-		if abs(fcost) < epsilon: continue
-
-		fcost *= value( m.CostFixed[r, p, t, v] )
-		svars[	'Costs'	][ 'V_UndiscountedFixedCostsByProcess', r, t, v] += fcost * value( MPL[r, p, t, v] )
+		for r, p, t, v in m.CostFixed.sparse_iterkeys():
+			fcost = value( m.V_Capacity[r, t, v] )
+			if abs(fcost) < epsilon: continue
+	
+			fcost *= value( m.CostFixed[r, p, t, v] )
+			svars[	'Costs'	][ 'V_UndiscountedFixedCostsByProcess', r, t, v] += fcost * value( MPL[r, p, t, v] )
+			
+			fcost *= (
+			  value( MPL[r, p, t, v] ) if not GDR else
+			    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[r, p, t, v] ))) / GDR)
+			) 
+	
+			svars[	'Costs'	][ 'V_DiscountedFixedCostsByProcess', r, t, v] += fcost
 		
-		fcost *= (
-		  value( MPL[r, p, t, v] ) if not GDR else
-		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[r, p, t, v] ))) / GDR)
-		) 
+		for r, p, t, v in m.CostVariable.sparse_iterkeys():
+			if t not in m.tech_annual:
+				vcost = sum(
+					value (m.V_FlowOut[r, p, S_s, S_d, S_i, t, v, S_o])
+					for S_i in m.processInputs[r, p, t, v]
+					for S_o in m.ProcessOutputsByInput[r, p, t, v, S_i]
+					for S_s in m.time_season
+					for S_d in m.time_of_day
+				)
+			else:
+				vcost = sum(
+					value (m.V_FlowOutAnnual[r, p, S_i, t, v, S_o])
+					for S_i in m.processInputs[r, p, t, v]
+					for S_o in m.ProcessOutputsByInput[r, p, t, v, S_i]
+				)			
+			if abs(vcost) < epsilon: continue
+	
+			vcost *= value( m.CostVariable[r, p, t, v] )
+			svars[	'Costs'	][ 'V_UndiscountedVariableCostsByProcess', r, t, v] += vcost * value( MPL[r, p, t, v] )
+			vcost *= (
+			  value( MPL[r, p, t, v] ) if not GDR else
+			    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[r, p, t, v] ))) / GDR)
+			  ) 
+			svars[	'Costs'	][ 'V_DiscountedVariableCostsByProcess', r, t, v] += vcost
 
-		svars[	'Costs'	][ 'V_DiscountedFixedCostsByProcess', r, t, v] += fcost
-		
-	for r, p, t, v in m.CostVariable.sparse_iterkeys():
-		if t not in m.tech_annual:
-			vcost = sum(
-				value (m.V_FlowOut[r, p, S_s, S_d, S_i, t, v, S_o])
-				for S_i in m.processInputs[r, p, t, v]
-				for S_o in m.ProcessOutputsByInput[r, p, t, v, S_i]
-				for S_s in m.time_season
-				for S_d in m.time_of_day
-			)
-		
-		else:
-			vcost = sum(
-				value (m.V_FlowOutAnnual[r, p, S_i, t, v, S_o])
-				for S_i in m.processInputs[r, p, t, v]
-				for S_o in m.ProcessOutputsByInput[r, p, t, v, S_i]
-			)			
-		if abs(vcost) < epsilon: continue
 
-		vcost *= value( m.CostVariable[r, p, t, v] )
-		svars[	'Costs'	][ 'V_UndiscountedVariableCostsByProcess', r, t, v] += vcost * value( MPL[r, p, t, v] )
-		vcost *= (
-		  value( MPL[r, p, t, v] ) if not GDR else
-		    (x **(P_0 - p + 1) * (1 - x **(-value( MPL[r, p, t, v] ))) / GDR)
-		  ) 
-		svars[	'Costs'	][ 'V_DiscountedVariableCostsByProcess', r, t, v] += vcost
 
-	#update the costs of exchange technologies.
-	#Assumption 1: If Ri-Rj appears in the cost tables but Rj-Ri does not, 
-	#then the total costs are distributed between the regions
-	#Ri and Rj proportional to their use of the exchange technology connecting the 
-	#regions. 
-	#Assumption 2: If both the directional entries appear in the cost tables, 
-	#Assumption 1 is no longer applied and the costs are calculated as they 
-	#are entered in the cost tables.
-	# assumption 3: Unlike other output tables in which Ri-Rj and Rj-Ri entries
-	# are allowed in the region column, for the Output_Costs table the region 
-	#to the right of the hyphen sign gets the costs.
-	for i in m.RegionalExchangeCapacityConstraint_rrtv.iterkeys():
-		reg_dir1  = i[0]+"-"+i[1]
-		reg_dir2 = i[1]+"-"+i[0]
-		tech = i[2]
-		vintage  = i[3]
-		key = (reg_dir1, tech, vintage)
-		try: 
-			act_dir1 = value (sum(m.V_FlowOut[reg_dir1, p, s, d, S_i, tech, vintage, S_o]
-				for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir1, tech, vintage])
-				for s in m.time_season
-				for d in m.time_of_day
-				for S_i in m.processInputs[reg_dir1, p, tech, vintage]
-				for S_o in m.ProcessOutputsByInput[reg_dir1, p, tech, vintage, S_i]
-				))
-			act_dir2 = value (sum(m.V_FlowOut[reg_dir2, p, s, d, S_i, tech, vintage, S_o]
-				for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir2, tech, vintage])
-				for s in m.time_season
-				for d in m.time_of_day
-				for S_i in m.processInputs[reg_dir2, p, tech, vintage]
-				for S_o in m.ProcessOutputsByInput[reg_dir2, p, tech, vintage, S_i]
-				))		
-		except:
-			act_dir1 = value (sum(m.V_FlowOutAnnual[reg_dir1, p, S_i, tech, vintage, S_o]
-				for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir1, tech, vintage])
-				for S_i in m.processInputs[reg_dir1, p, tech, vintage]
-				for S_o in m.ProcessOutputsByInput[reg_dir1, p, tech, vintage, S_i]
-				))
-			act_dir2 = value (sum(m.V_FlowOutAnnual[reg_dir2, p, S_i, tech, vintage, S_o]
-				for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir2, tech, vintage])
-				for S_i in m.processInputs[reg_dir2, p, tech, vintage]
-				for S_o in m.ProcessOutputsByInput[reg_dir2, p, tech, vintage, S_i]
-				))				
-		
-		for item in list(svars[	'Costs'	]):
-			if item[2] == tech:
-				opposite_dir = item[1][item[1].find("-")+1:]+"-"+item[1][:item[1].find("-")]
-				if (item[0],opposite_dir,item[2],item[3]) in svars[	'Costs'	].keys():
-					continue #if both directional entries are already in svars[	'Costs'	], they're left intact.
-				if item[1] == reg_dir1:
-					svars[	'Costs'	][(item[0],reg_dir2,item[2],item[3])] = svars[	'Costs'	][item] * act_dir2 / (act_dir1 + act_dir2)
-					svars[	'Costs'	][item] = svars[	'Costs'	][item] * act_dir1 / (act_dir1 + act_dir2)
+		#update the costs of exchange technologies.
+		#Assumption 1: If Ri-Rj appears in the cost tables but Rj-Ri does not, 
+		#then the total costs are distributed between the regions
+		#Ri and Rj proportional to their use of the exchange technology connecting the 
+		#regions. 
+		#Assumption 2: If both the directional entries appear in the cost tables, 
+		#Assumption 1 is no longer applied and the costs are calculated as they 
+		#are entered in the cost tables.
+		# assumption 3: Unlike other output tables in which Ri-Rj and Rj-Ri entries
+		# are allowed in the region column, for the Output_Costs table the region 
+		#to the right of the hyphen sign gets the costs.
+		for i in m.RegionalExchangeCapacityConstraint_rrtv.iterkeys():
+			reg_dir1  = i[0]+"-"+i[1]
+			reg_dir2 = i[1]+"-"+i[0]
+			tech = i[2]
+			vintage  = i[3]
+			key = (reg_dir1, tech, vintage)
+			try: 
+				act_dir1 = value (sum(m.V_FlowOut[reg_dir1, p, s, d, S_i, tech, vintage, S_o]
+					for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir1, tech, vintage])
+					for s in m.time_season
+					for d in m.time_of_day
+					for S_i in m.processInputs[reg_dir1, p, tech, vintage]
+					for S_o in m.ProcessOutputsByInput[reg_dir1, p, tech, vintage, S_i]
+					))
+				act_dir2 = value (sum(m.V_FlowOut[reg_dir2, p, s, d, S_i, tech, vintage, S_o]
+					for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir2, tech, vintage])
+					for s in m.time_season
+					for d in m.time_of_day
+					for S_i in m.processInputs[reg_dir2, p, tech, vintage]
+					for S_o in m.ProcessOutputsByInput[reg_dir2, p, tech, vintage, S_i]
+					))		
+			except:
+				act_dir1 = value (sum(m.V_FlowOutAnnual[reg_dir1, p, S_i, tech, vintage, S_o]
+					for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir1, tech, vintage])
+					for S_i in m.processInputs[reg_dir1, p, tech, vintage]
+					for S_o in m.ProcessOutputsByInput[reg_dir1, p, tech, vintage, S_i]
+					))
+				act_dir2 = value (sum(m.V_FlowOutAnnual[reg_dir2, p, S_i, tech, vintage, S_o]
+					for p in m.time_optimize if p < vintage + value(m.LifetimeProcess[reg_dir2, tech, vintage])
+					for S_i in m.processInputs[reg_dir2, p, tech, vintage]
+					for S_o in m.ProcessOutputsByInput[reg_dir2, p, tech, vintage, S_i]
+					))				
+			
+			for item in list(svars[	'Costs'	]):
+				if item[2] == tech:
+					opposite_dir = item[1][item[1].find("-")+1:]+"-"+item[1][:item[1].find("-")]
+					if (item[0],opposite_dir,item[2],item[3]) in svars[	'Costs'	].keys():
+						continue #if both directional entries are already in svars[	'Costs'	], they're left intact.
+					if item[1] == reg_dir1:
+						svars[	'Costs'	][(item[0],reg_dir2,item[2],item[3])] = svars[	'Costs'	][item] * act_dir2 / (act_dir1 + act_dir2)
+						svars[	'Costs'	][item] = svars[	'Costs'	][item] * act_dir1 / (act_dir1 + act_dir2)
 
-	#Remove Ri-Rj entries from being populated in the Outputs_Costs. Ri-Rj means a cost
-	#for region Rj
-	for item in list(svars[	'Costs'	]): 
-		if item[2] in m.tech_exchange:
-			svars[	'Costs'	][(item[0],item[1][item[1].find("-")+1:],item[2],item[3])] = svars[	'Costs'	][item]
-			del svars[	'Costs'	][item]
+
+		#Remove Ri-Rj entries from being populated in the Outputs_Costs. Ri-Rj means a cost
+		#for region Rj
+		for item in list(svars[	'Costs'	]): 
+			if item[2] in m.tech_exchange:
+				svars[	'Costs'	][(item[0],item[1][item[1].find("-")+1:],item[2],item[3])] = svars[	'Costs'	][item]
+				del svars[	'Costs'	][item]
 
 
 	collect_result_data( Cons, con_info, epsilon=1e-9 )
@@ -324,7 +346,8 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	   'Objective function value (%s): %s\n'
 	   'Non-zero variable values:\n'
 	)
-	output.write( msg % (m.name, obj_name, obj_value) )
+	if 'temoa_model/config_sample_myopic' not in options.file_location:
+		output.write( msg % (m.name, obj_name, obj_value) )
 
 	def make_var_list ( variables ):
 		var_list = []
@@ -450,8 +473,10 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		for table in svars.keys() :
 			if table in tables :
 				cur.execute("SELECT DISTINCT scenario FROM '"+tables[table]+"'")
-				for val in cur : 
-					if options.scenario == val[0]: # If scenario exists, delete
+				for val in cur :
+					# If scenario exists, delete unless it's a myopic run (for myopic, the scenario results are deleted
+					# before the run in temoa_config.py)
+					if options.scenario == val[0] and 'temoa_model/config_sample_myopic' not in options.file_location:
 						cur.execute("DELETE FROM "+tables[table]+" \
 									WHERE scenario is '"+options.scenario+"'") 
 				if table == 'Objective' : # Only table without sector info

@@ -139,7 +139,8 @@ class TemoaSolver(object):
 				.format( self.options.solver ))
 			if SE.isatty():
 				SE.write( "Please press enter to continue or Ctrl+C to quit." )
-				raw_input()
+				if 'temoa_model/config_sample_myopic' not in options.file_location:
+					raw_input()
 
 
 	'''
@@ -223,16 +224,26 @@ class TemoaSolver(object):
 	This function is called when MGA option is not specified.
 	'''
 	def solveWithoutMGA(self):
+		
 		temoaInstance1 = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
-		for k in temoaInstance1.create_temoa_instance():
-			# yield "<div>" + k + "</div>"
-			yield k
-			#yield " " * 1024
-		for k in temoaInstance1.solve_temoa_instance():
-			# yield "<div>" + k + "</div>"
-			yield k
-			#yield " " * 1024
-		temoaInstance1.handle_files(log_name='Complete_OutputLog.log')
+
+		if self.options.myopic:
+
+			print ('This run is myopic ...')
+			from temoa_myopic import myopic_db_generator_solver
+			myopic_db_generator_solver ( self )
+
+		else:
+
+			for k in temoaInstance1.create_temoa_instance():
+				# yield "<div>" + k + "</div>"
+				yield k
+				#yield " " * 1024
+			for k in temoaInstance1.solve_temoa_instance():
+				# yield "<div>" + k + "</div>"
+				yield k
+				#yield " " * 1024
+			temoaInstance1.handle_files(log_name='Complete_OutputLog.log')
 
 	'''
 	This funciton creates and solves TemoaSolverInstance.
@@ -378,7 +389,7 @@ class TemoaSolverInstance(object):
 				SE.write( '\r[%8.2f\n' % duration() )
 				self.txt_file.write( '[%8.2f]\n' % duration() )
 				yield formatted_results.getvalue() + '\n'
-				SO.write( formatted_results.getvalue() )
+				#SO.write( formatted_results.getvalue() )
 				self.txt_file.write( formatted_results.getvalue() )
 			else:
 				yield '\r---------- Not solving: no available solver\n'
@@ -548,7 +559,9 @@ def parse_args ( ):
 	SE.write("Continue Operation? [Press enter to continue or CTRL+C to abort]\n")
 	SE.flush()
 	try:  #make compatible with Python 2.7 or 3
-		raw_input() # Give the user a chance to confirm input
+		if 'temoa_model/config_sample_myopic' not in options.file_location:
+			# 
+			raw_input() # Give the user a chance to confirm input
 	except:
 		input()
 		

@@ -232,6 +232,8 @@ def temoa_create_model(name="Temoa"):
     M.StorageInit_rtv = Set(dimen=3, initialize=StorageInitIndices)
     M.StorageInitFrac = Param(M.StorageInit_rtv)
 
+    M.MyopicBaseyear = Param()
+
     # ---------------------------------------------------------------
     # Define Decision Variables.
     # Decision variables are optimized in order to minimize cost.
