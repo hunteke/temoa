@@ -352,7 +352,7 @@ def PeriodCost_rule(M, p):
     x = 1 + GDR  # convenience variable, nothing more.
 
 
-    if  M.MyopicBaseyear.values()!=[]:
+    if  value(M.MyopicBaseyear) != 0:
       P_0 = value(M.MyopicBaseyear)
 
 

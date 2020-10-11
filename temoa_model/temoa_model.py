@@ -232,7 +232,7 @@ def temoa_create_model(name="Temoa"):
     M.StorageInit_rtv = Set(dimen=3, initialize=StorageInitIndices)
     M.StorageInitFrac = Param(M.StorageInit_rtv)
 
-    M.MyopicBaseyear = Param()
+    M.MyopicBaseyear = Param(default=0, mutable=True)
 
     # ---------------------------------------------------------------
     # Define Decision Variables.
