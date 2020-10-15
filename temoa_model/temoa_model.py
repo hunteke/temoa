@@ -418,7 +418,7 @@ def temoa_create_model(name="Temoa"):
     M.GrowthRateMaxConstraint_rtv = Set(
         dimen=3,
         initialize=lambda M: set(
-            product(M.RegionalIndices, M.time_optimize, M.GrowthRateMax.sparse_iterkeys())
+            product(M.time_optimize, M.GrowthRateMax.sparse_iterkeys())
         ),
     )
     M.GrowthRateConstraint = Constraint(
