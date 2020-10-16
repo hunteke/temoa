@@ -1559,7 +1559,7 @@ output in separate terms.
     return expr
 
 
-def GrowthRateConstraint_rule(M, r, p, t):
+def GrowthRateConstraint_rule(M, p, r, t):
     r"""
 
 This constraint sets an upper bound growth rate on technology-specific capacity.
