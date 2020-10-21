@@ -217,7 +217,7 @@ def temoa_create_model(name="Temoa"):
     M.EmissionLimit = Param(M.RegionalEmissionLimit, M.time_optimize, M.commodity_emissions)
     M.EmissionActivity_reitvo = Set(dimen=6, initialize=EmissionActivityIndices)
     M.EmissionActivity = Param(M.EmissionActivity_reitvo)
-    M.MinGenGroupWeight = Param(M.tech_groups, M.groups, default = 0)
+    M.MinGenGroupWeight = Param(M.RegionalIndices, M.tech_groups, M.groups, default = 0)
     M.MinGenGroupTarget = Param(M.time_optimize, M.groups)
 
     # Define parameters associated with electric sector operation
@@ -439,12 +439,12 @@ def temoa_create_model(name="Temoa"):
         M.MinActivityConstraint_rpt, rule=MinActivity_Constraint
     )
 
-    #M.MinActivityGroup_pg = Set(
-    #    dimen=2, initialize=lambda M: M.MinGenGroupTarget.sparse_iterkeys()
-    #)
-    #M.MinActivityGroup = Constraint(
-    #    M.MinActivityGroup_pg, rule=MinActivityGroup_Constraint
-    #)
+    M.MinActivityGroup_pg = Set(
+        dimen=2, initialize=lambda M: M.MinGenGroupTarget.sparse_iterkeys()
+    )
+    M.MinActivityGroup = Constraint(
+        M.MinActivityGroup_pg, rule=MinActivityGroup_Constraint
+    )
 
     M.MaxCapacityConstraint_rpt = Set(
         dimen=3, initialize=lambda M: M.MaxCapacity.sparse_iterkeys()
