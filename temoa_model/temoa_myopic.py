@@ -48,10 +48,10 @@ def myopic_db_generator_solver ( self ):
     cur_org.execute("DELETE FROM MyopicBaseyear")
     cur_org.execute("INSERT INTO MyopicBaseyear (year) VALUES ("+str(time_periods[0][0])+")")
     con_org.commit()
-    loc1 = max(loc for loc, val in enumerate(self.options.output) if val == '/')
+    loc1 = max(loc for loc, val in enumerate(self.options.output) if val == '/' or val=='\\')
     loc2 = max(loc for loc, val in enumerate(self.options.output) if val == '.')
     db_name = self.options.output[loc1+1:loc2]
-    copyfile(db_path_org, self.options.path_to_db_io+"/"+db_name+"_blank"+self.options.output[loc2:])
+    copyfile(db_path_org, os.path.join(self.options.path_to_db_io,db_name)+"_blank"+self.options.output[loc2:])
 
     # group 1 consists of non output tables in which "periods" is a column name 
     tables_group1 = ['CostFixed','CostVariable','Demand','EmissionLimit','MaxActivity','MaxCapacity', \
@@ -94,8 +94,8 @@ def myopic_db_generator_solver ( self ):
         for j in range(i-(N-1),i+1):
             new_myopic_name += "_"+str(time_periods[j][0])
 
-        new_db_loc = self.options.path_to_db_io+"/"+db_name+new_myopic_name+self.options.output[loc2:]
-        copyfile(self.options.path_to_db_io+"/"+db_name+"_blank"+self.options.output[loc2:], new_db_loc)
+        new_db_loc = os.path.join(self.options.path_to_db_io, db_name)+new_myopic_name+self.options.output[loc2:]
+        copyfile(os.path.join(self.options.path_to_db_io, db_name) +"_blank"+self.options.output[loc2:], new_db_loc)
         con = sqlite3.connect(new_db_loc)
         cur = con.cursor()
         table_list.sort()
@@ -263,8 +263,8 @@ def myopic_db_generator_solver ( self ):
         # the database is ready. It is run via a temporary config file in 
         # a perfect foresight fashion.
         # ---------------------------------------------------------------
-        new_config = os.getcwd()+"/temoa_model/config_sample"+new_myopic_name
-        ifile = open(os.getcwd()+"/temoa_model/config_sample")
+        new_config = os.path.join(os.getcwd(), "temoa_model", "config_sample")+new_myopic_name
+        ifile = open(os.path.join(os.getcwd(), "temoa_model", "config_sample"), encoding='utf8')
         ofile = open(new_config,'w')
         for line in ifile:
             new_line = line.replace("--input=data_files/"+db_name, "--input=data_files/"+db_name+new_myopic_name)
@@ -276,10 +276,10 @@ def myopic_db_generator_solver ( self ):
         ofile.close()
         os.system("python temoa_model/ --config=temoa_model/config_sample"+new_myopic_name)
         # delete the temporary config file
-        os.system("rm -rf temoa_model/config_sample"+new_myopic_name)
+        os.remove(new_config)
         if not self.options.KeepMyopicDBs:
-            os.system("rm -rf "+new_db_loc)
-            os.system("rm -rf "+self.options.path_to_db_io+"/"+db_name+new_myopic_name+".dat")
+            os.remove(new_db_loc)
+            os.remove(os.path.join(self.options.path_to_db_io, db_name) +new_myopic_name+".dat")
 
     
-    os.system("rm -rf "+self.options.path_to_db_io+"/"+db_name+"_blank"+self.options.output[loc2:])    
+    os.remove(os.path.join(self.options.path_to_db_io,db_name)+"_blank"+self.options.output[loc2:])    

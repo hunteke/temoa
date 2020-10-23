@@ -139,7 +139,7 @@ class TemoaSolver(object):
 				.format( self.options.solver ))
 			if SE.isatty():
 				SE.write( "Please press enter to continue or Ctrl+C to quit." )
-				if 'temoa_model/config_sample_myopic' not in options.file_location:
+				if os.path.join('temoa_model','config_sample_myopic') not in options.file_location:
 					raw_input()
 
 
@@ -559,7 +559,7 @@ def parse_args ( ):
 	SE.write("Continue Operation? [Press enter to continue or CTRL+C to abort]\n")
 	SE.flush()
 	try:  #make compatible with Python 2.7 or 3
-		if 'temoa_model/config_sample_myopic' not in options.file_location:
+		if os.path.join('temoa_model', 'config_sample_myopic') not in options.file_location:
 			# 
 			raw_input() # Give the user a chance to confirm input
 	except:
