@@ -36,6 +36,7 @@ from shutil import copyfile
 import os
 import sys
 from IPython import embed as IP
+import io
 
 def myopic_db_generator_solver ( self ):
     global db_path_org
@@ -279,14 +280,22 @@ def myopic_db_generator_solver ( self ):
         # a perfect foresight fashion.
         # ---------------------------------------------------------------
         new_config = os.path.join(os.getcwd(), "temoa_model", "config_sample")+new_myopic_name
-        ifile = open(os.path.join(os.getcwd(), "temoa_model", "config_sample"))
+        if version<3:
+            ifile = io.open(os.path.join(os.getcwd(), "temoa_model", "config_sample"), encoding='utf-8')
+        else:
+            ifile = open(os.path.join(os.getcwd(), "temoa_model", "config_sample"), encoding='utf-8')
+
         ofile = open(new_config,'w')
         for line in ifile:
             new_line = line.replace("--input=data_files/"+db_name, "--input=data_files/"+db_name+new_myopic_name)
             # the temporary config file is created from the original config file. Since for individual periods we are 
             # going to have a standard run, '--rollinghorizon' needs to be commented out. 
             new_line = new_line.replace("--myopic","#--myopic")
-            ofile.write(new_line)
+            if version<3:
+                ofile.write(new_line.encode('utf-8'))
+            else:
+                ofile.write(new_line)
+
         ifile.close()
         ofile.close()
         os.system("python temoa_model/ --config=temoa_model/config_sample"+new_myopic_name)
