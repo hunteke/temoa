@@ -186,7 +186,7 @@ def myopic_db_generator_solver ( self ):
             # (note that the model throws a warning if (t,v) is an existing vintage but it doesn't appear in ExistingCapacity)
             cur.execute("DELETE FROM Efficiency \
                          WHERE vintage <= "+str(time_periods[i-N][0])+" AND vintage NOT IN (SELECT \
-                         vintage FROM ExistingCapacity WHERE Efficiency.tech=ExistingCapacity.tech);")
+                         vintage FROM ExistingCapacity WHERE Efficiency.tech=ExistingCapacity.tech AND Efficiency.regions=ExistingCapacity.regions);")
 
             iterval = 0
             while len(cur.execute("SELECT * FROM Efficiency WHERE output_comm NOT IN (SELECT input_comm FROM Efficiency)\
@@ -248,11 +248,12 @@ def myopic_db_generator_solver ( self ):
                     # If (t,v) is not found in the Efficiecny table, deelte it from all the other tables
                     # For the EmissionActivity, (i,t,v,o) tuple must be checked.
                     if table[0] == 'EmissionActivity':
-                        cur.execute("DELETE FROM EmissionActivity WHERE input_comm || tech || vintage || output_comm \
-                                    NOT IN (SELECT input_comm || tech || vintage || output_comm FROM Efficiency)")                        
+                        cur.execute("DELETE FROM EmissionActivity WHERE regions || input_comm || tech || vintage || output_comm \
+                                    NOT IN (SELECT regions || input_comm || tech || vintage || output_comm FROM Efficiency)")                        
                     else:
                         cur.execute("DELETE FROM "+str(table[0])+" WHERE tech IN (SELECT tech FROM Efficiency) AND vintage \
-                                 NOT IN (SELECT vintage FROM Efficiency WHERE Efficiency.tech="+str(table[0])+".tech);")
+                                 NOT IN (SELECT vintage FROM Efficiency WHERE Efficiency.tech="+str(table[0])+".tech \
+                                 AND Efficiency.regions="+str(table[0])+".regions);")
             #except:
             #    raise Exception(table[0],j)
             except:
