@@ -227,7 +227,7 @@ class TemoaSolver(object):
 		
 		temoaInstance1 = TemoaSolverInstance(self.model, self.optimizer, self.options, self.txt_file)
 
-		if self.options.myopic:
+		if hasattr(self.options, 'myopic') and self.options.myopic:
 
 			print ('This run is myopic ...')
 			from temoa_myopic import myopic_db_generator_solver

@@ -127,7 +127,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	LLN = m.LifetimeLoanProcess
 	x   = 1 + GDR    # convenience variable, nothing more
 
-	if os.path.join('temoa_model', 'config_sample_myopic') in options.file_location:
+	if hasattr(options, 'file_location') and os.path.join('temoa_model', 'config_sample_myopic') in options.file_location:
 		original_dbpath = options.output
 		con = sqlite3.connect(original_dbpath)
 		cur = con.cursor()
@@ -191,7 +191,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		svars['V_FlowIn'][r, p, s, d, i, t, v, o] = (val + value( m.V_FlowOut[r, p, s, d, i, t, v, o] )) / value(m.Efficiency[r, i, t, v, o])
 
 	# Extract optimal decision variable values related to capacity:
-	if os.path.join('temoa_model', 'config_sample_myopic') not in options.file_location:
+	if hasattr(options, 'file_location') and os.path.join('temoa_model', 'config_sample_myopic') not in options.file_location:
 		for r, t, v in m.V_Capacity:
 			val = value( m.V_Capacity[r, t, v] )
 			if abs(val) < epsilon: continue
@@ -209,7 +209,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		svars['V_CapacityAvailableByPeriodAndTech'][r, p, t] = val
 
 	# Calculate model costs:	
-	if os.path.join('temoa_model', 'config_sample_myopic') not in options.file_location: 
+	if hasattr(options, 'file_location') and os.path.join('temoa_model', 'config_sample_myopic') not in options.file_location: 
 		# This is a generic workaround.  Not sure how else to automatically discover 
 		# the objective name
 		obj_name, obj_value = objs[0].getname(True), value( objs[0] )
@@ -346,7 +346,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	   'Objective function value (%s): %s\n'
 	   'Non-zero variable values:\n'
 	)
-	if os.path.join('temoa_model', 'config_sample_myopic') not in options.file_location:
+	if hasattr(options, 'file_location') and os.path.join('temoa_model', 'config_sample_myopic') not in options.file_location:
 		output.write( msg % (m.name, obj_name, obj_value) )
 
 	def make_var_list ( variables ):
@@ -476,7 +476,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 				for val in cur :
 					# If scenario exists, delete unless it's a myopic run (for myopic, the scenario results are deleted
 					# before the run in temoa_config.py)
-					if options.scenario == val[0] and os.path.join('temoa_model', 'config_sample_myopic') not in options.file_location:
+					if hasattr(options, 'file_location') and options.scenario == val[0] and os.path.join('temoa_model', 'config_sample_myopic') not in options.file_location:
 						cur.execute("DELETE FROM "+tables[table]+" \
 									WHERE scenario is '"+options.scenario+"'") 
 				if table == 'Objective' : # Only table without sector info
