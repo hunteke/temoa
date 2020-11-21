@@ -17,4 +17,8 @@ dependencies:
     - pydoe
     - pyutilib=5.8
     - glpk
+    - python-graphviz
+    - ipykernel
+    - jupyter
+    - jupyter_contrib_nbextensions
     - coincbc
