@@ -21,4 +21,5 @@ dependencies:
     - ipykernel
     - jupyter
     - jupyter_contrib_nbextensions
+    - seaborn
     - coincbc
