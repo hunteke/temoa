@@ -26,7 +26,7 @@ Create and activate the Temoa environment, as follows:
 
 	```(temoa-py3) $ jupyter nbextension enable hide_input/main```
 
-	Once these extensions are enabled, open notebooks as follows.
+	Once these extensions are enabled, navigate to the `temoa/data_processing/` folder and then open notebooks as follows.
 
 	```(temoa-py3) $ jupyter notebook```
 
