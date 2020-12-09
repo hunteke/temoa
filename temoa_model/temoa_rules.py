@@ -1458,7 +1458,7 @@ we write this equation for all the time-slices defined in the database in each r
        \forall \{r, p, s, d\} \in \Theta_{\text{ReserveMargin}}
 
 """
-    if not M.tech_reserve:  # If reserve set empty, skip the constraint
+    if (not M.tech_reserve) or ((r,p) not in M.processReservePeriods.keys()):  # If reserve set empty or if r,p not in M.processReservePeriod.keys(), skip the constraint
         return Constraint.Skip
 
     cap_avail = sum(
