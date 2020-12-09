@@ -414,32 +414,32 @@ def CreateDemands ( M ):
 		# DSD._constructed = True
 
 	# Step 5
-	for r in M.regions:	
-		for dem in used_dems:
-			keys = (k for k in DSD.sparse_iterkeys() if DSD_dem_getter(k) == dem and  DSD_region_getter(k) == r)
-			total = sum( DSD[ i ] for i in keys )
-			if abs(value(total) - 1.0) > 0.001:
-			# We can't explicitly test for "!= 1.0" because of incremental rounding
-			# errors associated with the specification of demand shares by time slice, 
-			# but we check to make sure it is within the specified tolerance.
-	
-				keys = [k for k in DSD.sparse_iterkeys() if DSD_dem_getter(k) == dem and  DSD_region_getter(k) == r]
-				key_padding = max(map( get_str_padding, keys ))
-	
-				format = "%%-%ds = %%s" % key_padding
-					# Works out to something like "%-25s = %s"
-	
-				items = sorted( (k, DSD[k]) for k in keys )
-				items = '\n   '.join( format % (str(k), v) for k, v in items )
-	
-				msg = ('The values of the DemandSpecificDistribution parameter do not '
-				  'sum to 1.  The DemandSpecificDistribution specifies how end-use '
-				  'demands are distributed per time-slice (i.e., time_season, '
-				  'time_of_day).  Within each end-use Demand, then, the distribution '
-				  'must total to 1.\n\n   Demand-specific distribution in error: '
-				  ' {}\n\n   {}\n\tsum = {}')
-	
-				raise Exception( msg.format(dem, items, total) )
+	used_reg_dems = set((r, dem) for r, p, dem in M.Demand.sparse_iterkeys())
+	for (r, dem) in used_reg_dems:
+		keys = (k for k in DSD.sparse_iterkeys() if DSD_dem_getter(k) == dem and  DSD_region_getter(k) == r)
+		total = sum( DSD[ i ] for i in keys )
+		if abs(value(total) - 1.0) > 0.001:
+		# We can't explicitly test for "!= 1.0" because of incremental rounding
+		# errors associated with the specification of demand shares by time slice, 
+		# but we check to make sure it is within the specified tolerance.
+
+			keys = [k for k in DSD.sparse_iterkeys() if DSD_dem_getter(k) == dem and  DSD_region_getter(k) == r]
+			key_padding = max(map( get_str_padding, keys ))
+
+			format = "%%-%ds = %%s" % key_padding
+				# Works out to something like "%-25s = %s"
+
+			items = sorted( (k, DSD[k]) for k in keys )
+			items = '\n   '.join( format % (str(k), v) for k, v in items )
+
+			msg = ('The values of the DemandSpecificDistribution parameter do not '
+			  'sum to 1.  The DemandSpecificDistribution specifies how end-use '
+			  'demands are distributed per time-slice (i.e., time_season, '
+			  'time_of_day).  Within each end-use Demand, then, the distribution '
+			  'must total to 1.\n\n   Demand-specific distribution in error: '
+			  ' {}\n\n   {}\n\tsum = {}')
+
+			raise Exception( msg.format(dem, items, total) )
 
 
 def CreateCosts ( M ):
@@ -1007,7 +1007,7 @@ def CommodityBalanceConstraintIndices ( M ):
 	  (r, p, s, d, o)
 
 	  for r, p, o in period_commodity #r in this line includes interregional transfer combinations (not needed).  
-	  for r in M.regions # this line ensures only the regions are included.
+	  if r in M.regions # this line ensures only the regions are included.
 	  for t, v in M.commodityUStreamProcess[ r, p, o ]
 	  if (r, t) not in M.tech_storage and t not in M.tech_annual
 	  for s in M.time_season
@@ -1027,7 +1027,7 @@ def CommodityBalanceAnnualConstraintIndices ( M ):
 	  (r, p, o)
 
 	  for r, p, o in period_commodity #r in this line includes interregional transfer combinations (not needed).  
-	  for r in M.regions # this line ensures only the regions are included.
+	  if r in M.regions # this line ensures only the regions are included.
 	  for t, v in M.commodityUStreamProcess[ r, p, o ]
 	  if (r, t) not in M.tech_storage and t in M.tech_annual
 	)
