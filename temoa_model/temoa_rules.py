@@ -208,7 +208,6 @@ throughout the period.
     expr = M.V_CapacityAvailableByPeriodAndTech[r, p, t] == cap_avail
     return expr
 
-
 def ExistingCapacity_Constraint(M, r, t, v):
     r"""
 
@@ -1462,13 +1461,18 @@ we write this equation for all the time-slices defined in the database in each r
         return Constraint.Skip
 
     cap_avail = sum(
-        value(M.CapacityCredit[r, p, t])
-        * M.V_CapacityAvailableByPeriodAndTech[r, p, t]
+        value(M.CapacityCredit[r, p, t, v])
+        * M.ProcessLifeFrac[r, p, t, v]
+        * M.V_Capacity[r, t, v]
         * value(M.CapacityToActivity[r, t])
         * value(M.SegFrac[s, d])
         for t in M.tech_reserve
-        # Make sure (r,p,t) combinations are defined
-        if (r,p,t) in M.activeCapacityAvailable_rpt
+        if (r, p, t) in M.processVintages.keys()
+        for v in M.processVintages[r, p, t] 
+        # Make sure (r,p,t,v) combinations are defined
+        if (r,p,t,v) in M.activeCapacityAvailable_rptv
+
+
     )
 
     # In most Temoa input databases, demand is endogenous, so we use electricity

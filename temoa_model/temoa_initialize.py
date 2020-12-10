@@ -55,7 +55,7 @@ class TemoaModel( AbstractModel ):
 		self.activeActivity_rptv = None
 		self.activeCapacity_rtv = None
 		self.activeCapacityAvailable_rpt = None
-
+		self.activeCapacityAvailable_rptv = None
 		self.commodityDStreamProcess  = dict() # The downstream process of a commodity during a period
 		self.commodityUStreamProcess  = dict() # The upstream process of a commodity during a period
 		self.ProcessInputsByOutput = dict()
@@ -735,6 +735,12 @@ def CreateSparseDicts ( M ):
 	  if M.processVintages[ r, p, t ]
 	)
 
+	M.activeCapacityAvailable_rptv = set(
+	  (r, p, t, v)
+
+	  for r,p,t in M.processVintages.keys()
+	  for v in M.processVintages[ r, p, t ]
+	)
 # ---------------------------------------------------------------
 # Create sparse parameter indices.
 # These functions are called from temoa_model.py and use the sparse keys 
@@ -895,6 +901,9 @@ def CapacityVariableIndices ( M ):
 
 def CapacityAvailableVariableIndices ( M ):
 	return M.activeCapacityAvailable_rpt
+
+def CapacityAvailableVariableIndicesVintage ( M ):
+	return M.activeCapacityAvailable_rptv
 
 def FlowVariableIndices ( M ):
 	return M.activeFlow_rpsditvo

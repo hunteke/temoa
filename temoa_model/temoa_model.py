@@ -223,7 +223,7 @@ def temoa_create_model(name="Temoa"):
     # Define parameters associated with electric sector operation
     M.RampUp = Param(M.regions, M.tech_ramping)
     M.RampDown = Param(M.regions, M.tech_ramping)
-    M.CapacityCredit = Param(M.RegionalIndices, M.time_optimize, M.tech_all, default=1)
+    M.CapacityCredit = Param(M.RegionalIndices, M.time_optimize, M.tech_all, M.vintage_all, default=1)
     M.PlanningReserveMargin = Param(M.regions, default=0.2)
     # Storage duration is expressed in hours
     M.StorageDuration = Param(M.regions, M.tech_storage, default=4)
