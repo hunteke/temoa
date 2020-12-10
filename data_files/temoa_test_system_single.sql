@@ -457,9 +457,10 @@ CREATE TABLE IF NOT EXISTS "CapacityCredit" (
 	"regions"	text,
 	"periods"	integer,
 	"tech"	text,
+	"vintage" integer,
 	"cf_tech"	real CHECK("cf_tech" >= 0 AND "cf_tech" <= 1),
 	"cf_tech_notes"	text,
-	PRIMARY KEY("regions","periods","tech")
+	PRIMARY KEY("regions","periods","tech","vintage")
 );
 CREATE TABLE IF NOT EXISTS "groups" (
 	"group_name"	text,
