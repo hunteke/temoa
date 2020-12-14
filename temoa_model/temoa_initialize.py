@@ -663,6 +663,23 @@ def CreateSparseDicts ( M ):
 			if t in M.tech_exchange:
 				M.importRegions[r[r.find("-")+1:], p, o].add((r[:r.find("-")], t, v, i))
 
+	for (r, i, t, v, o) in M.Efficiency.sparse_iterkeys():
+		if t in M.tech_exchange:
+			reg = r.split('-')[0]
+			for (r1, i1, t1, v1, o1) in M.Efficiency.sparse_iterkeys():
+				if (r1==reg) & (o1==i):
+					for p in M.time_optimize:
+						if (r1, p, o1) not in M.commodityDStreamProcess:
+							msg = ('The {} process in region {} has no downstream process other '
+								'than a transport ({}) process. This will cause the commodity balance '
+								'constraint to fail. Add a dummy technology downstream of the {} '
+								'process to the Efficiency table to avoid this issue. '
+								'The dummy technology should have the same region and vintage as the {} process, '
+								'an efficiency of 100%, with the {} commodity as the input and output. '
+								'The dummy technology may also need a corresponding row in the ExistingCapacity '
+								'table with capacity values that equal the {} technology.')
+							raise Exception( msg.format(t1, r1, t, t1, t1, o1, t1) )
+
 	l_unused_techs = M.tech_all - l_used_techs
 	if l_unused_techs:
 		msg = ("Notice: '{}' specified as technology, but it is not utilized in "
