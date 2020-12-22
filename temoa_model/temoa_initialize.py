@@ -50,6 +50,8 @@ class TemoaModel( AbstractModel ):
 		self.processLoans = dict()
 		self.activeFlow_rpsditvo = None
 		self.activeFlow_rpitvo = None
+		self.activeFlex_rpsditvo = None
+		self.activeFlex_rpitvo = None
 		self.activeFlowInStorage_rpsditvo = None
 		self.activeCurtailment_rpsditvo = None
 		self.activeActivity_rptv = None
@@ -72,6 +74,8 @@ class TemoaModel( AbstractModel ):
 		self.ProcessByPeriodAndOutput = dict()
 		self.exportRegions = dict()
 		self.importRegions = dict()
+		self.flex_commodities = set()
+
 
 # ---------------------------------------------------------------
 # Validation and initialization routines.
@@ -572,6 +576,9 @@ def CreateSparseDicts ( M ):
 
 		l_used_techs.add( t )
 
+		if t in M.tech_flex:
+			M.flex_commodities.add(o)
+
 		# Add in the period (p) index, since it's not included in the efficiency
 		# table.
 		for p in M.time_optimize:
@@ -702,6 +709,26 @@ def CreateSparseDicts ( M ):
 	  (r, p, i, t, v, o)
 
 	  for r,p,t in M.processVintages.keys() if t in M.tech_annual
+	  for v in M.processVintages[ r, p, t ]
+	  for i in M.processInputs[ r, p, t, v ]
+	  for o in M.ProcessOutputsByInput[ r, p, t, v, i ]
+	)
+
+	M.activeFlex_rpsditvo = set(
+	  (r, p, s, d, i, t, v, o)
+
+	  for r,p,t in M.processVintages.keys() if (t not in M.tech_annual) and (t in M.tech_flex)
+	  for v in M.processVintages[ r, p, t ]
+	  for i in M.processInputs[ r, p, t, v ]
+	  for o in M.ProcessOutputsByInput[ r, p, t, v, i ]
+	  for s in M.time_season
+	  for d in M.time_of_day
+	)
+
+	M.activeFlex_rpitvo = set(
+	  (r, p, i, t, v, o)
+
+	  for r,p,t in M.processVintages.keys() if (t in M.tech_annual) and (t in M.tech_flex)
 	  for v in M.processVintages[ r, p, t ]
 	  for i in M.processInputs[ r, p, t, v ]
 	  for o in M.ProcessOutputsByInput[ r, p, t, v, i ]
@@ -928,6 +955,12 @@ def FlowVariableIndices ( M ):
 
 def FlowVariableAnnualIndices ( M ):
 	return M.activeFlow_rpitvo
+
+def FlexVariablelIndices ( M ):
+	return M.activeFlex_rpsditvo
+
+def FlexVariableAnnualIndices ( M ):
+	return M.activeFlex_rpitvo
 
 def FlowInStorageVariableIndices ( M ):
 	return M.activeFlowInStorage_rpsditvo

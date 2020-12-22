@@ -68,6 +68,7 @@ def temoa_create_model(name="Temoa"):
     M.tech_capacity_min = Set(within=M.tech_all)
     M.tech_capacity_max = Set(within=M.tech_all)
     M.tech_curtailment = Set(within=M.tech_all)
+    M.tech_flex = Set(within=M.tech_all)
     M.tech_exchange = Set(within=M.tech_all)
     M.groups = Set(dimen=1) # Define groups for technologies
     M.tech_groups = Set(within=M.tech_all) # Define techs used in groups
@@ -247,6 +248,11 @@ def temoa_create_model(name="Temoa"):
     M.V_FlowOut = Var(M.FlowVar_rpsditvo, domain=NonNegativeReals)
     M.FlowVarAnnual_rpitvo = Set(dimen=6, initialize=FlowVariableAnnualIndices)
     M.V_FlowOutAnnual = Var(M.FlowVarAnnual_rpitvo, domain=NonNegativeReals)
+
+    M.FlexVar_rpsditvo = Set(dimen=8, initialize=FlexVariablelIndices)
+    M.V_Flex = Var(M.FlexVar_rpsditvo, domain=NonNegativeReals)
+    M.FlexVarAnnual_rpitvo = Set(dimen=6, initialize=FlexVariableAnnualIndices)
+    M.V_FlexAnnual = Var(M.FlexVarAnnual_rpitvo, domain=NonNegativeReals)
 
     M.CurtailmentVar_rpsditvo = Set(dimen=8, initialize=CurtailmentVariableIndices)
     M.V_Curtailment = Var(M.CurtailmentVar_rpsditvo, domain=NonNegativeReals)
