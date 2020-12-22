@@ -235,6 +235,7 @@ This constraint creates a derived variable that tracks the total emissions by
 pollutant, model time period, and technology.
 """
     if t not in M.tech_annual:
+
       emission_total = sum(
           M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, S_o]
           * M.EmissionActivity[e, S_i, t, S_v, S_o]
@@ -557,18 +558,35 @@ Formulating an expression for the production of commodity :math:`c` is
 more straightforward, and is simply calculated by
 :math:`\textbf{FO}_{r, p, s, d, i, t, v, c}`.
 
+In some cases, the overproduction of a commodity may be required, such
+that the supply exceeds the endogenous demand. Refineries represent a
+common example, where the share of different refined products are governed
+by TechOutputSplit, but total production is driven by a particular commodity
+like gasoline. Such a situtation can result in the overproduction of other
+refined products, such as diesel or kerosene. In such cases, we need to
+track the excess production of these commodities. To do so, the technology
+producing the excess commodity should be added to the :code:`tech_flex` set.
+This flexible technology designation will activate a slack variable
+(:math:`\textbf{FX}_{r, p, s, d, i, t, v, c})representing
+the excess production in the :code:`CommodityBalanceAnnual_Constraint`. Note
+that the :code:`tech_flex` set is different from :code:`tech_curtailment` set;
+the latter is technology- rather than commodity-focused and is used in the
+:code:`Capacity_Constraint` to track output that is used to produce useful
+output and the amount curtailed, and to ensure that the installed capacity
+covers both.
+
 For commodities that are exclusively produced at a constant annual rate, the
 :code:`CommodityBalanceAnnual_Constraint` is used, which is simplified and
 reduces computational burden.
 
-*production + imports = consumption + exports*
+*production + imports = consumption + exports + excess*
 
 .. math::
    :label: CommodityBalance
 
        \sum_{I, T, V} \textbf{FO}_{r, p, s, d, i, t, v, c}
        +
-       \textbf{InterregionalImports}
+       \sum_{reg} \textbf{FIM}_{reg-r, p, s, d, i, t, v, c} \forall reg\neqr
        =
        \sum_{T^{s}, V, I} \textbf{FIS}_{r, p, s, d, c, t, v, o}
        +
@@ -577,10 +595,12 @@ reduces computational burden.
        SEG_{s,d} \cdot
        \sum_{I, T^{a}, V} \textbf{FOA}_{r, p, c, t, v, o} /EFF_{r, c,t,v,o}
        +
-       \textbf{InterregionalExports}
+       \sum_{reg} \textbf{FEX}_{r-reg, p, s, d, c, t, v, o} \forall reg\neqr
+       +
+       \textbf{FX}_{r, p, s, d, i, t, v, c}
 
        \\
-       \forall \{r, p, s, d, c\} \in \Theta_{\text{CommodityBalance}}  
+       \forall \{r, p, s, d, c\} \in \Theta_{\text{CommodityBalance}}   
 
 """
     if c in M.commodity_demand:
@@ -627,15 +647,25 @@ reduces computational burden.
           for reg, S_t, S_v, S_i in M.importRegions[r, p, c]
           )
 
+      v_out_excess = 0
+      if c in M.flex_commodities:
+        v_out_excess = sum(
+            M.V_Flex[r, p, s, d, S_i, S_t, S_v, c]
+            for S_t, S_v in M.commodityUStreamProcess[r, p, c] if S_t not in M.tech_storage and S_t not in M.tech_annual and S_t in M.tech_flex
+            for S_i in M.ProcessInputsByOutput[r, p, S_t, S_v, c]
+        )
+        
     except:
       raise Exception('The commodity "'+str(c)+'" can be produced \
       by at least one technology in the tech_annual set and one technology \
       not in the tech_annual set. All the producers of the commodity must \
       either be in tech_annual or not in tech_annual')
 
-    CommodityBalanceConstraintErrorCheck(vflow_out + interregional_imports,  vflow_in_ToStorage +  vflow_in_ToNonStorage + vflow_in_ToNonStorageAnnual + interregional_exports, r, p, s, d, c)
+    
 
-    expr = vflow_out + interregional_imports == vflow_in_ToStorage +  vflow_in_ToNonStorage + vflow_in_ToNonStorageAnnual + interregional_exports
+    CommodityBalanceConstraintErrorCheck(vflow_out + interregional_imports,  vflow_in_ToStorage +  vflow_in_ToNonStorage + vflow_in_ToNonStorageAnnual + interregional_exports + v_out_excess, r, p, s, d, c)
+
+    expr = vflow_out + interregional_imports == vflow_in_ToStorage +  vflow_in_ToNonStorage + vflow_in_ToNonStorageAnnual + interregional_exports + v_out_excess
 
     return expr
 
@@ -650,16 +680,22 @@ While the commodity :math:`c` can only be produced by technologies in the
 :code:`tech_annual` set, it can be consumed by any technology in the
 :math:`T-T^{s}` set.
 
-*production = consumption*
+*production + imports = consumption + exports + excess*
 
 .. math::
    :label: CommodityBalanceAnnual
 
        \sum_{I,T, V} \textbf{FOA}_{r, p, i, t, v, c}
+        +
+       \sum_{reg} \textbf{FIM}_{reg-r, p, i, t, v, c} \forall reg\neqr
         =
        \sum_{S, D, T-T^{s}, V, O} \textbf{FO}_{r, p, s, d, c, t, v, o} /EFF_{r, c,t,v,o}
        +
        \sum_{I, T^{a}, V, O} \textbf{FOA}_{r, p, c, t, v, o} /EFF_{r, c,t,v,o}
+       +
+       \sum_{reg} \textbf{FEX}_{r-reg, p, c, t, v, o} \forall reg\neqr
+       +
+       \textbf{FX}_{r, p, i, t, v, c}
 
        \\
        \forall \{r, p, c\} \in \Theta_{\text{CommodityBalanceAnnual}}
@@ -704,9 +740,17 @@ While the commodity :math:`c` can only be produced by technologies in the
         for reg, S_t, S_v, S_i in M.importRegions[r, p, c]
         )
 
-    CommodityBalanceConstraintErrorCheckAnnual(vflow_out + interregional_imports,  vflow_in_annual + vflow_in + interregional_exports, r, p, c)
+    v_out_excess = 0
+    if c in M.flex_commodities:
+      v_out_excess = sum(
+        M.V_FlexAnnual[r, p, S_i, S_t, S_v, c]
+        for S_t, S_v in M.commodityUStreamProcess[r, p, c] if S_t in M.tech_flex and S_t in M.tech_annual
+        for S_i in M.ProcessInputsByOutput[r, p, S_t, S_v, c]
+    )
 
-    expr = vflow_out + interregional_imports ==  vflow_in_annual + vflow_in + interregional_exports
+    CommodityBalanceConstraintErrorCheckAnnual(vflow_out + interregional_imports,  vflow_in_annual + vflow_in + interregional_exports + v_out_excess, r, p, c)
+
+    expr = vflow_out + interregional_imports ==  vflow_in_annual + vflow_in + interregional_exports + v_out_excess
 
 
     return expr
@@ -1549,7 +1593,6 @@ output in separate terms.
         # EmissionsActivity not indexed by p, so make sure (r,p,t,v) combos valid
         if (reg, p, S_t, S_v) in M.processInputs.keys()
     )
-
 
     if int is type(actual_emissions + actual_emissions_annual):
         msg = (
