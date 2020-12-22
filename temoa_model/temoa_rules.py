@@ -1584,6 +1584,30 @@ output in separate terms.
         for S_d in M.time_of_day
     )
 
+    actual_emissions_flex = sum(
+        M.V_Flex[reg, p, S_s, S_d, S_i, S_t, S_v, S_o]
+        * M.EmissionActivity[reg, e, S_i, S_t, S_v, S_o]
+        for reg in regions
+        for tmp_r, tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
+        if tmp_e == e and tmp_r == reg and S_t not in M.tech_annual and S_t in M.tech_flex and S_o in M.flex_commodities
+        # EmissionsActivity not indexed by p, so make sure (r,p,t,v) combos valid
+        if (reg, p, S_t, S_v) in M.processInputs.keys()
+        for S_s in M.time_season
+        for S_d in M.time_of_day
+    )
+
+    actual_emissions_curtail = sum(
+        M.V_Curtailment[reg, p, S_s, S_d, S_i, S_t, S_v, S_o]
+        * M.EmissionActivity[reg, e, S_i, S_t, S_v, S_o]
+        for reg in regions
+        for tmp_r, tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
+        if tmp_e == e and tmp_r == reg and S_t not in M.tech_annual and S_t in M.tech_curtailment
+        # EmissionsActivity not indexed by p, so make sure (r,p,t,v) combos valid
+        if (reg, p, S_t, S_v) in M.processInputs.keys()
+        for S_s in M.time_season
+        for S_d in M.time_of_day
+    )
+
     actual_emissions_annual = sum(
         M.V_FlowOutAnnual[reg, p, S_i, S_t, S_v, S_o]
         * M.EmissionActivity[reg, e, S_i, S_t, S_v, S_o]
@@ -1594,7 +1618,17 @@ output in separate terms.
         if (reg, p, S_t, S_v) in M.processInputs.keys()
     )
 
-    if int is type(actual_emissions + actual_emissions_annual):
+    actual_emissions_flex_annual = sum(
+        M.V_FlexAnnual[reg, p, S_i, S_t, S_v, S_o]
+        * M.EmissionActivity[reg, e, S_i, S_t, S_v, S_o]
+        for reg in regions
+        for tmp_r, tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
+        if tmp_e == e and tmp_r == reg and S_t in M.tech_annual and S_t in M.tech_flex and S_o in M.flex_commodities
+        # EmissionsActivity not indexed by p, so make sure (r,p,t,v) combos valid
+        if (reg, p, S_t, S_v) in M.processInputs.keys()
+    )
+
+    if int is type(actual_emissions + actual_emissions_annual + actual_emissions_flex + actual_emissions_curtail + actual_emissions_flex_annual):
         msg = (
             "Warning: No technology produces emission '%s', though limit was "
             "specified as %s.\n"
@@ -1602,7 +1636,7 @@ output in separate terms.
         SE.write(msg % (e, emission_limit))
         return Constraint.Skip
 
-    expr = actual_emissions + actual_emissions_annual <= emission_limit
+    expr = actual_emissions + actual_emissions_annual + actual_emissions_flex + actual_emissions_curtail + actual_emissions_flex_annual <= emission_limit
     return expr
 
 
