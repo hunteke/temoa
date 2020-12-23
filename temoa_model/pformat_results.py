@@ -190,6 +190,28 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		svars['V_Curtailment'][r, p, s, d, i, t, v, o] = val
 		svars['V_FlowIn'][r, p, s, d, i, t, v, o] = (val + value( m.V_FlowOut[r, p, s, d, i, t, v, o] )) / value(m.Efficiency[r, i, t, v, o])
 
+		if (r, i, t, v, o) not in emission_keys: continue
+
+		emissions = emission_keys[r, i, t, v, o]
+		for e in emissions:
+			evalue = val * m.EmissionActivity[r, e, i, t, v, o]
+			svars[ 'V_EmissionActivityByPeriodAndProcess' ][r, p, e, t, v] += evalue
+			
+	for r, p, i, t, v, o in m.V_FlexAnnual:
+		for s in m.time_season:
+			for d in m.time_of_day:
+				val_out = value( m.V_FlexAnnual[r, p, i, t, v, o] ) * value( m.SegFrac[s , d ])
+				if abs(val_out) < epsilon: continue
+				svars['V_Curtailment'][r, p, s, d, i, t, v, o] = val_out
+				svars['V_FlowOut'][r, p, s, d, i, t, v, o] -= val_out
+
+
+	for r, p, s, d, i, t, v, o in m.V_Flex:
+		val_out = value( m.V_Flex[r, p, s, d, i, t, v, o] )
+		if abs(val_out) < epsilon: continue
+		svars['V_Curtailment'][r, p, s, d, i, t, v, o] = val_out
+		svars['V_FlowOut'][r, p, s, d, i, t, v, o] -= val_out
+
 	# Extract optimal decision variable values related to capacity:
 	if hasattr(options, 'file_location') and os.path.join('temoa_model', 'config_sample_myopic') not in options.file_location:
 		for r, t, v in m.V_Capacity:
