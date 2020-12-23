@@ -522,6 +522,12 @@ CREATE TABLE IF NOT EXISTS "tech_curtailment" (
 	PRIMARY KEY("tech"),
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
+CREATE TABLE IF NOT EXISTS "tech_flex" (
+	"tech"	text,
+	"notes"	TEXT,
+	PRIMARY KEY("tech"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
+);
 INSERT INTO "time_period_labels" VALUES ('e','existing vintages');
 INSERT INTO "time_period_labels" VALUES ('f','future');
 INSERT INTO "technology_labels" VALUES ('r','resource technology');

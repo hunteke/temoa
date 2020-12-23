@@ -84,6 +84,12 @@ CREATE TABLE "tech_curtailment" (
 	PRIMARY KEY("tech"),
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
 );
+CREATE TABLE "tech_flex" (
+	"tech"	text,
+	"notes"	TEXT,
+	PRIMARY KEY("tech"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech")
+);
 INSERT INTO `tech_curtailment` VALUES ('S_OILREF',NULL);
 CREATE TABLE "tech_annual" (
 	"tech"	text,
