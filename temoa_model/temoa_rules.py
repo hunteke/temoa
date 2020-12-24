@@ -227,40 +227,6 @@ that exist prior to the optimization horizon to user-specified values.
     expr = M.V_Capacity[r, t, v] == M.ExistingCapacity[r, t, v]
     return expr
 
-# We need to delete this rule. It's not in use by any other object.
-def EmissionActivityByPeriodAndTech_Constraint(M, e, p, t):
-    r"""
-
-This constraint creates a derived variable that tracks the total emissions by
-pollutant, model time period, and technology.
-"""
-    if t not in M.tech_annual:
-
-      emission_total = sum(
-          M.V_FlowOut[p, S_s, S_d, S_i, t, S_v, S_o]
-          * M.EmissionActivity[e, S_i, t, S_v, S_o]
-          for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
-          if tmp_e == e and S_t == t
-          if (p, S_t, S_v) in M.processInputs.keys()
-          for S_s in M.time_season
-          for S_d in M.time_of_day
-      )
-    else:
-      emission_total = sum(
-          M.V_FlowOutAnnual[p, S_i, t, S_v, S_o]
-          * M.EmissionActivity[e, S_i, t, S_v, S_o]
-          for tmp_e, S_i, S_t, S_v, S_o in M.EmissionActivity.sparse_iterkeys()
-          if tmp_e == e and S_t == t
-          if (p, S_t, S_v) in M.processInputs.keys()
-      )      
-
-    if type(emission_total) is int:
-        return Constraint.Skip
-
-    expr = M.V_EmissionActivityByPeriodAndTech[e, p, t] == emission_total
-    return expr
-
-
 # ---------------------------------------------------------------
 # Define the Objective Function
 # ---------------------------------------------------------------
