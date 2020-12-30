@@ -391,6 +391,8 @@ class TemoaSolverInstance(object):
 				yield formatted_results.getvalue() + '\n'
 				#SO.write( formatted_results.getvalue() )
 				self.txt_file.write( formatted_results.getvalue() )
+				if formatted_results.getvalue()=='No solution found.':
+					SE.write( formatted_results.getvalue() + '\n')
 			else:
 				yield '\r---------- Not solving: no available solver\n'
 				SE.write( '\r---------- Not solving: no available solver\n' )
