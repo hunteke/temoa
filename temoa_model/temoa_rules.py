@@ -24,6 +24,7 @@ received this license file.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import division
 
 from temoa_initialize import *
+
 # ---------------------------------------------------------------
 # Define the derived variables used in the objective function
 # and constraints below.

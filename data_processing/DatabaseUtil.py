@@ -4,24 +4,24 @@ import sys
 import re
 import pandas as pd
 
+
 class DatabaseUtil(object):
 	def __init__(self, databasePath, scenario=None):
 		self.database = os.path.abspath(databasePath)
 		self.scenario = scenario
-		if (not os.path.exists(self.database)):
+		if not os.path.exists(self.database):
 			raise ValueError("The database file path doesn't exist")
 		
 		if self.isDataBaseFile(self.database):
 			try:
 				self.con = sqlite3.connect(self.database)
 				self.cur = self.con.cursor()
-				self.con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
-			except:
+				self.con.text_factory = str  # this ensures data is explored with the correct UTF-8 encoding
+			except Exception as e:
 				raise ValueError('Unable to connect to database')
 		elif self.database.endswith('.dat'):
 			self.con = None
 			self.cur = None
-		
 
 	def close(self):
 		if (self.cur):
@@ -50,12 +50,12 @@ class DatabaseUtil(object):
 
 		test2 = []
 		eff_flag = False
-		with open (self.database) as f :
+		with open (self.database) as f:
 			for line in f:
 				if eff_flag is False and re.search("^\s*param\s+efficiency\s*[:][=]", line, flags = re.I) : 
 					#Search for the line param Efficiency := (The script recognizes the commodities specified in this section)
 					eff_flag = True
-				elif eff_flag :
+				elif eff_flag:
 					line = re.sub("[#].*$", " ", line)
 					if re.search("^\s*;\s*$", line)	:
 						break #  Finish searching this section when encounter a ';'
