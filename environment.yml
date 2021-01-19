@@ -22,4 +22,5 @@ dependencies:
     - jupyter
     - jupyter_contrib_nbextensions
     - seaborn
+    - tabulate
     - coincbc
