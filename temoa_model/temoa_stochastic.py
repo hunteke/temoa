@@ -25,13 +25,16 @@ from temoa_initialize import Var, Objective, Constraint, NonNegativeReals, minim
 from temoa_model import temoa_create_model
 from temoa_rules import PeriodCost_rule
 from temoa_run import parse_args
+from pformat_results import pformat_results
 from pyomo.environ import *
 from pyomo.pysp.scenariotree.manager import \
     ScenarioTreeManagerClientSerial
 from pyomo.pysp.ef import create_ef_instance
 from pyomo.opt import SolverFactory
 from time import time
-import os, sys
+import os
+import sys
+
 
 def return_CP_and_path(p_data):
     # return_CP_and_path(p_data) -> dict(), dict()
@@ -149,7 +152,7 @@ def solve_ef(p_model, p_data, temoa_options = None):
         # Write to database
         if hasattr(temoa_options, 'output'):
             sys.path.append(options.model_location)
-            from pformat_results import pformat_results
+
             # from temoa_config import TemoaConfig
             # temoa_options = TemoaConfig()
             # temoa_options.config = temoa_options.config

@@ -11,8 +11,8 @@ def get_tperiods(inp_f):
 	if not file_ty :
 		raise "The file type %s is not recognized." % inp_f
 		
-	elif file_ty.group(2) not in ("db", "sqlite", "sqlite3", "sqlitedb") :
-		raise "Please specify a database for finding scenarios"
+	elif file_ty.group(2) not in ("db", "sqlite", "sqlite3", "sqlitedb"):
+		raise Exception("Please specify a database for finding scenarios")
 
 	periods_list = {}
 	periods_set = set()
@@ -20,7 +20,7 @@ def get_tperiods(inp_f):
 	
 	con = sqlite3.connect(inp_f)
 	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
-	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
+	con.text_factory = str  # this ensures data is explored with the correct UTF-8 encoding
 
 	print(inp_f)
 	cur.execute("SELECT DISTINCT scenario FROM Output_VFlow_Out")
@@ -45,7 +45,7 @@ def get_scenario(inp_f):
 		raise "The file type %s is not recognized." % inp_f
 		
 	elif file_ty.group(2) not in ("db", "sqlite", "sqlite3", "sqlitedb") :
-		raise "Please specify a database for finding scenarios"
+		raise Exception("Please specify a database for finding scenarios")
 
 	scene_list = {}
 	scene_set = set()
@@ -194,22 +194,21 @@ def is_db_overwritten(db_file, inp_dat_file):
 	cur = con.cursor()   # A database cursor enables traversal over DB records
 	con.text_factory = str # This ensures data is explored with UTF-8 encoding
 
-	### Copy tables from Input File to DB file.
+	# Copy tables from Input File to DB file.
 	# IF output file is empty database.
 	cur.execute("SELECT * FROM technologies")
-	is_db_empty = False #False for empty db file
+	is_db_empty = False  # False for empty db file
 	for elem in cur:
-		is_db_empty = True #True for non-empty db file
+		is_db_empty = True  # True for non-empty db file
 		break
-		
-		
-	if is_db_empty: #This file could be schema with populated results from previous run. Or it could be a normal db file.
+	# This file could be schema with populated results from previous run. Or it could be a normal db file.
+	if is_db_empty:
 		cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='input_file';")
 		does_input_file_table_exist = False
-		for i in cur: # This means that the 'input_file' table exists in db.
+		for i in cur:  # This means that the 'input_file' table exists in db.
 			does_input_file_table_exist = True
-		if does_input_file_table_exist: #This block distinguishes normal database from schema.
-			#This is schema file. 
+		if does_input_file_table_exist:  # This block distinguishes normal database from schema.
+			# This is schema file.
 			cur.execute("SELECT file FROM input_file WHERE id is '1';")
 			for i in cur:
 				tagged_file = i[0]
@@ -219,18 +218,19 @@ def is_db_overwritten(db_file, inp_dat_file):
 			con.close()			
 			
 			if tagged_file == inp_dat_file.split(".")[0] + ".dat":
-				#If Input_file name matches, no overwriting.
+				# If Input_file name matches, no overwriting.
 				return False
 			else:
-				#If not a match, delete output tables and update input_file. Return True
+				# If not a match, delete output tables and update input_file. Return True
 				return True
 	
 	cur.close()
 	con.close()
 	
 	return False
-	
-def help_user() :
+
+
+def help_user():
 	print('''Use as:
 	python get_comm_tech.py -i (or --input) <input filename>
 	| -c (or --comm) To get a dict of commodities
@@ -249,7 +249,7 @@ def get_info(inputs):
 	tperiods_flag = False
 	
 	if inputs is None:
-		raise "no arguments found"
+		raise Exception("no arguments found")
 		
 	for opt, arg in inputs.items():
 	    
@@ -265,32 +265,31 @@ def get_info(inputs):
 			scene = True
 		elif opt in ("-p", "--period"):
 			tperiods_flag = True
-		elif opt in ("-h", "--help") :
+		elif opt in ("-h", "--help"):
 			help_user()                          
 			sys.exit(2)
 		
 	if inp_file is None:
-		raise "Input file not specified"
-	
-	
+		raise Exception("Input file not specified")
+
 	if tperiods_flag:
 		if comm_flag or scene or tech_flag:
-			raise "can only use one flag at a time"
+			raise Exception("can only use one flag at a time")
 	
-	if (comm_flag and tech_flag) or (comm_flag and scene) or(scene and tech_flag) or(comm_flag and tech_flag and scene) :
-		raise "can only use one flag at a time"
+	if (comm_flag and tech_flag) or (comm_flag and scene) or(scene and tech_flag) or(comm_flag and tech_flag and scene):
+		raise Exception("can only use one flag at a time")
 	if not comm_flag and not tech_flag and not scene and not tperiods_flag:
-		raise "flag not specified"
+		raise Exception("flag not specified")
 		
-	file_ty = re.search(r"(\w+)\.(\w+)\b", inp_file) # Extract the input filename and extension
+	file_ty = re.search(r"(\w+)\.(\w+)\b", inp_file)  # Extract the input filename and extension
 	
-	if not file_ty :
-		raise "The file type %s is not recognized." % inp_f
+	if not file_ty:
+		raise Exception("The file type {} is not recognized.".format(file_ty))
 		
-	elif file_ty.group(2) in ("db", "sqlite", "sqlite3", "sqlitedb") :
+	elif file_ty.group(2) in ("db", "sqlite", "sqlite3", "sqlitedb"):
 		db_or_dat = False
 
-	elif file_ty.group(2) in ("dat", "txt") :
+	elif file_ty.group(2) in ("dat", "txt"):
 		db_or_dat = True
 		
 	else :
@@ -309,7 +308,7 @@ def get_info(inputs):
 		
 	if scene:
 		if db_or_dat:
-			raise "Please specify a database for finding scenarios"
+			raise Exception("Please specify a database for finding scenarios")
 		return get_scenario(inp_file)
 		
 if __name__ == "__main__":	

@@ -30,7 +30,14 @@ __all__ = ('pformat_results', 'stringify_data')
 
 from collections import defaultdict
 from sys import stderr as SE, stdout as SO
+import sys
+
+# Need line below to import DB_to_Excel.py
+sys.path.append('./data_processing')
+
 from temoa_config import TemoaConfig
+from DB_to_Excel import make_excel
+
 from shutil import rmtree
 import sqlite3
 import os

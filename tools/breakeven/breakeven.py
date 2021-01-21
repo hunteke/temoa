@@ -8,9 +8,16 @@ from collections import OrderedDict, defaultdict
 from time import time
 import pandas as pd
 from IPython import embed as IP
+from temoa_model import temoa_create_model
+from pyomo.core.base import Var, Constraint, Objective, maximize, minimize
+from pyomo.repn import generate_canonical_repn
+
+import cplex, CplexSolverError
+from openpyxl import Workbook
+import cplex
 
 def return_Temoa_model():
-    from temoa_model import temoa_create_model
+
     model = temoa_create_model()
 
     model.dual  = Suffix(direction=Suffix.IMPORT)
@@ -30,8 +37,7 @@ def return_c_vector(block, unfixed):
     # Note that this function is adapted function collect_linear_terms defined
     # in pyomo/repn/collect.py.
     from pyutilib.misc import Bunch
-    from pyomo.core.base import  Var, Constraint, Objective, maximize, minimize
-    from pyomo.repn import generate_canonical_repn
+
     #
     # Variables are constraints of block
     # Constraints are unfixed variables of block and the parent model.
@@ -143,7 +149,7 @@ def sensitivity(dat, techs):
     # cost as screen outputs. Note that the Pyomo suffix sometimes returns 
     # anomalous values, and that's why I create another function, 
     # sensitivity_api() to use Python API for CPLEX.
-    from temoa_model import temoa_create_model
+
     model = temoa_create_model()
     
     model.dual  = Suffix(direction=Suffix.IMPORT)
@@ -261,7 +267,7 @@ def sensitivity_api(instance, techs, algorithm=None):
     # because I am using Python API for CPLEX here, it only works when the 
     # solver is CPLEX. I also updated the returned value and now it is a pandas 
     # DataFramework, which supports fast csv creation.
-    import cplex
+
     instance.write('tmp.lp', io_options={'symbolic_solver_labels':True})
     c = cplex.Cplex('tmp.lp')
     os.remove('tmp.lp')
@@ -602,8 +608,7 @@ def sen_range_api(tech, vintage, scales, list_dat):
     # Given a range of scaling factor for coefficient of a specific V_Capacity, 
     # returns objective value, reduced cost, capacity etc. for each scaling 
     # factor
-    from openpyxl import Workbook
-    import cplex
+
     target_year = vintage
     target_tech = tech
     target_var0 = 'V_Capacity(' + target_tech + '_' + str(target_year) + ')'
@@ -918,7 +923,7 @@ def sen_range(tech, vintage, scales, dat):
         wb.save(fname + '.xlsx')
 
 def explore_Cost_marginal(dat):
-    from temoa_model import temoa_create_model
+
     model = temoa_create_model()
     
     model.dual  = Suffix(direction=Suffix.IMPORT)

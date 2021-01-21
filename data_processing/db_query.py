@@ -21,12 +21,12 @@ def send_query(inp_f, query_string):
 		con.close()
 		return "Query Result: %s" % "".join(db_result)
 
-	except sqlite3.Error, e:
+	except sqlite3.Error as e:
 		print("Error in Query %s" % e.args[0])
 		return "Query Result: Error in Query %s" % e.args[0]
 		
 		
-def help_user() :
+def help_user():
 	print('''Use as:
 	python db_query.py -i (or --input) <input database name>
 	| -q (or --query) <sqlite query>
@@ -53,7 +53,7 @@ def get_flags(inputs):
 			sys.exit(2)
 		
 	if inp_file is None:
-		raise "Input file not specified"
+		raise Exception("Input file not specified")
 	
 	file_ty = re.search(r"(\w+)\.(\w+)\b", inp_file) # Extract the input filename and extension
 	
