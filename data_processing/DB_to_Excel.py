@@ -2,31 +2,10 @@ import sqlite3
 import sys, os
 import re
 import getopt
-import xlwt
-from xlwt import easyxf 
-from collections import defaultdict
-from IPython import embed as IP
-def make_excel(ifile, ofile, scenario):
-	tech = defaultdict(list)
-	regions = set()	
-	tech_set = set()
-	sector = set()
-	period = []
-	emiss = set()
-	row = 0
-	count = 0
-	sheet = []
-	book = []
-	book_no = 0
-	flag = None
-	flag1 = None
-	flag2 = None
-	i = 0 # Sheet ID
-	header = ['Technologies', ]
-	header_emiss = []
-	header_v = ['Technologies', 'Output Name', 'Vintage', 'Cost']
-	tables = {"Output_VFlow_Out" : ["Activity", "vflow_out"], "Output_CapacityByPeriodAndTech" : ["Capacity", "capacity"], "Output_Emissions" : ["Emissions", "emissions"], "Output_Costs" : ["Costs", "output_cost"]}
+import pandas as pd
+import xlsxwriter
 
+def make_excel(ifile, ofile, scenario):
 	
 	if ifile is None :
 		raise "You did not specify the input file, remember to use '-i' option"
@@ -40,168 +19,88 @@ def make_excel(ifile, ofile, scenario):
 	if ofile is None :
 		ofile = file_type.group(1)
 		print("Look for output in %s_*.xls" % ofile)
-		
-		
+
 	con = sqlite3.connect(ifile)
 	cur = con.cursor()   # a database cursor is a control structure that enables traversal over the records in a database
 	con.text_factory = str #this ensures data is explored with the correct UTF-8 encoding
+	scenario = scenario.pop()
+	writer = pd.ExcelWriter(ofile+'.xlsx', engine = 'xlsxwriter', options={'strings_to_formulas': False})
 
-	for k in tables.keys() :
-		if not scenario :
-			cur.execute("SELECT DISTINCT scenario FROM "+k)
-			for val in cur :
-				scenario.add(val[0])
-		
-		for axy in cur.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='technologies';") :
-			if axy[0] :
-				fields = [ads[1] for ads in cur.execute('PRAGMA table_info(technologies)')]
-				if 'sector' in fields :
-					cur.execute("SELECT sector FROM technologies")
-					for val in cur :
-						sector.add(val[0])
-					if not sector :
-						sector.add('0')
-					else :
-						flag = 1
-		
-		if flag is None :
-			cur.execute("SELECT DISTINCT tech FROM "+k)
-			for val in cur :
-				tech['0'].append(val[0])
-				tech_set.add(val[0])
-		else :
-			for x in sector :
-				cur.execute("SELECT DISTINCT tech  FROM technologies WHERE sector is '"+x+"'")
-				for val in cur :
-					if val[0] not in tech[x] :
-						tech[x].append(val[0])
-						tech_set.add(val[0])
+	workbook  = writer.book
 
-		if k is "Output_VFlow_Out" :
-			cur.execute("SELECT DISTINCT regions FROM "+k)
-			for val in cur :
-				regions.add(val[0])
+	header_format = workbook.add_format({'bold': True,'text_wrap': True,'align': 'left',})
 
-		if k is "Output_Emissions" :
-			cur.execute("SELECT DISTINCT emissions_comm FROM "+k)
-			for val in cur :
-				emiss.add(val[0])
-		
-		if k is "Output_Costs" :
-			pass
-		else:#if k is not "Output_V_Capacity":
-			cur.execute("SELECT DISTINCT t_periods FROM "+k)
-			for val in cur :
-				val = str(val[0])
-				if val not in period :
-					period.append(val)
-					header.append(val)
-	header[1:].sort()
-	period.sort()
-	header_emiss = header[:]
-	header_emiss.insert(1, "Emission Commodity")
+	query = "SELECT DISTINCT Efficiency.regions, Efficiency.tech, technologies.sector FROM Efficiency \
+	INNER JOIN technologies ON Efficiency.tech=technologies.tech"
+	all_techs = pd.read_sql_query(query, con)
 
-	ostyle = easyxf('alignment: vertical centre, horizontal centre;')
-	ostyle_header = easyxf('alignment: vertical centre, horizontal centre, wrap True;')
+	query = "SELECT regions, tech, sector, t_periods, capacity FROM Output_CapacityByPeriodAndTech WHERE scenario='" + scenario + "'"
+	df_capacity = pd.read_sql_query(query, con)
+	for sector in sorted(df_capacity['sector'].unique()):
+		df_capacity_sector = df_capacity[df_capacity['sector']==sector]
+		df_capacity_sector = df_capacity_sector.drop(columns=['sector']).pivot_table(values='capacity', index=['regions', 'tech'], columns='t_periods')
+		df_capacity_sector.reset_index(inplace=True)
+		sector_techs = all_techs[all_techs['sector']==sector]
+		df_capacity_sector = pd.merge(sector_techs[['regions','tech']], df_capacity_sector, on=['regions','tech'], how='left')
+		df_capacity_sector.rename(columns={'regions':'Region','tech':'Technology'}, inplace=True)
+		df_capacity_sector.to_excel(writer, sheet_name='Capacity_' + sector, index=False, encoding='utf-8', startrow=1, header=False)
+		worksheet = writer.sheets['Capacity_' + sector]
+		worksheet.set_column('A:A', 10)
+		worksheet.set_column('B:B', 10)
+		for col, val in enumerate(df_capacity_sector.columns.values):
+			worksheet.write(0, col, val, header_format)
 
-	for scene in scenario :	
-		book.append(xlwt.Workbook(encoding="utf-8"))
-		
-		for r in regions:
-			for z in sector :
-				for a in tables.keys() :
-					if z is '0' :
-						sheet_name = str(tables[a][0])
-						if a is "Output_Costs" :
-							flag2 = '1'
-						if a is "Output_Emissions" :
-							flag1 = '1'
-					elif (a is "Output_Costs" and flag2 is None) :
-						sheet_name = str(tables[a][0])
-						flag2 = '1'
-					elif (a is "Output_Emissions" and flag1 is None) :
-						sheet_name = str(tables[a][0])
-						flag1 = '1'
-					elif (a is "Output_Costs" and flag2 is not None) or (a is "Output_Emissions" and flag1 is not None) :
-						continue
-					else :
-						sheet_name = str(tables[a][0])+"_"+str(z)+"_"+str(r)
-					sheet.append(book[book_no].add_sheet(sheet_name))
-					if a is "Output_Emissions" and flag1 is '1':
-						for col in range(0, len(header_emiss)) :
-							sheet[i].write(row, col, header_emiss[col], ostyle_header)
-							sheet[i].col(col).width_in_pixels = 3300
-						row += 1
-						for x in tech_set :
-							for q in emiss :
-								sheet[i].write(row, 0, x, ostyle)
-								sheet[i].write(row, 1, q, ostyle)
-								for y in period :
-									cur.execute("SELECT sum("+tables[a][1]+") FROM "+a+" WHERE regions is '"+r+"' and t_periods is '"+y+"' and scenario is '"+scene+"' and tech is '"+x+"' and emissions_comm is '"+q+"'")
-									xyz = cur.fetchone()
-									if xyz[0] is not None :
-										sheet[i].write(row, count+2, float(xyz[0]), ostyle)
-									else :
-										sheet[i].write(row, count+2, '-', ostyle)
-									count += 1
-								row += 1
-								count = 0
-						row = 0
-						i += 1
-						flag1 = '2'
-					elif a is "Output_Costs" and flag2 is '1':
-						for col in range(0, len(header_v)) :
-							sheet[i].write(row, col, header_v[col], ostyle_header)
-							sheet[i].col(col).width_in_pixels = 3300
-						row += 1
-						for x in tech_set :			
-							cur.execute("SELECT output_name, vintage, "+tables[a][1]+" FROM "+a+" WHERE regions is '"+r+"' and scenario is '"+scene+"' and tech is '"+x+"'")
-							for xyz in cur :
-								if xyz[0] is not None :
-									sheet[i].write(row, 0, x, ostyle)
-									sheet[i].write(row, count+1, xyz[0], ostyle)
-									sheet[i].write(row, count+2, xyz[1], ostyle)
-									sheet[i].write(row, count+3, xyz[2], ostyle)
-								else :
-									sheet[i].write(row, 0, x, ostyle)
-									sheet[i].write(row, count+1, '-', ostyle)
-									sheet[i].write(row, count+2, '-', ostyle)
-									sheet[i].write(row, count+3, '-', ostyle)
-								row += 1
-							count = 0
-						row = 0
-						i += 1
-						flag2 = '2'
-					elif (a is "Output_Costs" and flag2 is '2') or (a is "Output_Emissions" and flag1 is '2'):
-						pass
-					elif a is not "Output_V_Capacity":
-						for col in range(0, len(header)) :
-							sheet[i].write(row, col, header[col], ostyle_header)
-							sheet[i].col(col).width_in_pixels = 3300
-						row += 1
-						for x in tech[z] :
-							sheet[i].write(row, 0, x, ostyle)
-							for y in period :
-								cur.execute("SELECT sum("+tables[a][1]+") FROM "+a+" WHERE regions is '"+r+"' and t_periods is '"+y+"' and scenario is '"+scene+"' and tech is '"+x+"'")
-								xyz = cur.fetchone()
-								if xyz[0] is not None :
-									sheet[i].write(row, count+1, float(xyz[0]), ostyle)
-								else :
-									sheet[i].write(row, count+1, '-', ostyle)
-								count += 1
-							row += 1
-							count = 0
-						row = 0
-						i += 1
-				
-		
-		if len(scenario) is 1:
-			book[book_no].save(ofile+".xls")
-		else :
-			book[book_no].save(ofile+"_"+scene+".xls")
-		book_no += 1
-		flag1 = None
-		flag2 = None
+	query = "SELECT regions, tech, sector, t_periods, sum(vflow_out) as vflow_out FROM Output_VFlow_Out WHERE scenario='" + scenario + "' GROUP BY \
+	regions, tech, sector, t_periods"
+	df_activity = pd.read_sql_query(query, con)
+	for sector in sorted(df_activity['sector'].unique()):
+		df_activity_sector = df_activity[df_activity['sector']==sector]
+		df_activity_sector = df_activity_sector.drop(columns=['sector']).pivot_table(values='vflow_out', index=['regions', 'tech'], columns='t_periods')
+		df_activity_sector.reset_index(inplace=True)
+		sector_techs = all_techs[all_techs['sector']==sector]
+		df_activity_sector = pd.merge(sector_techs[['regions','tech']], df_activity_sector, on=['regions','tech'], how='left')
+		df_activity_sector.rename(columns={'regions':'Region','tech':'Technology'}, inplace=True)
+		df_activity_sector.to_excel(writer, sheet_name='Activity_' + sector, index=False, encoding='utf-8', startrow=1, header=False)
+		worksheet = writer.sheets['Activity_' + sector]
+		worksheet.set_column('A:A', 10)
+		worksheet.set_column('B:B', 10)
+		for col, val in enumerate(df_activity_sector.columns.values):
+			worksheet.write(0, col, val, header_format)
+
+	query = "SELECT DISTINCT EmissionActivity.regions, EmissionActivity.tech, EmissionActivity.emis_comm as emissions_comm, technologies.sector FROM EmissionActivity \
+	INNER JOIN technologies ON EmissionActivity.tech=technologies.tech"
+	all_emis_techs = pd.read_sql_query(query, con)
+
+	query = "SELECT regions, tech, sector, t_periods, emissions_comm, sum(emissions) as emissions FROM Output_Emissions WHERE scenario='" + scenario + "' GROUP BY \
+	regions, tech, sector, t_periods, emissions_comm"
+	df_emissions = pd.read_sql_query(query, con)
+	df_emissions = df_emissions.pivot_table(values='emissions', index=['regions', 'tech', 'sector','emissions_comm'], columns='t_periods')
+	df_emissions.reset_index(inplace=True)
+	df_emissions = pd.merge(all_emis_techs, df_emissions, on=['regions','tech', 'sector', 'emissions_comm'], how='left')
+	df_emissions.rename(columns={'regions':'Region', 'tech':'Technology', 'emissions_comm':'Emission Commodity', 'sector':'Sector'}, inplace=True)
+	df_emissions.to_excel(writer, sheet_name='Emissions', index=False, encoding='utf-8', startrow=1, header=False)
+	worksheet = writer.sheets['Emissions']
+	worksheet.set_column('A:A', 10)
+	worksheet.set_column('B:B', 10)
+	worksheet.set_column('C:C', 10)
+	worksheet.set_column('D:D', 20)
+	for col, val in enumerate(df_emissions.columns.values):
+		worksheet.write(0, col, val, header_format)
+
+	query = "SELECT regions, tech, sector, output_name,  vintage, output_cost FROM Output_Costs WHERE output_name LIKE '%V_Discounted%' AND scenario='" + scenario + "'"
+	df_costs = pd.read_sql_query(query, con)
+	df_costs.columns = ['Region', 'Technology', 'Sector','Output Name', 'Vintage', 'Cost']
+	df_costs.to_excel(writer, sheet_name='Costs', index=False, encoding='utf-8', startrow=1, header=False)
+	worksheet = writer.sheets['Costs']
+	worksheet.set_column('A:A', 10)
+	worksheet.set_column('B:B', 10)
+	worksheet.set_column('C:C', 10)
+	worksheet.set_column('D:D', 30)
+	for col, val in enumerate(df_costs.columns.values):
+		worksheet.write(0, col, val, header_format)
+
+	writer.save()
+
 
 	cur.close()
 	con.close()
