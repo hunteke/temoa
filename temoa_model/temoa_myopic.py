@@ -100,6 +100,7 @@ def myopic_db_generator_solver ( self ):
         con = sqlite3.connect(new_db_loc)
         cur = con.cursor()
         table_list.sort()
+
         # ---------------------------------------------------------------
         # Start modifying the Efficiency table
         # ---------------------------------------------------------------
@@ -156,7 +157,6 @@ def myopic_db_generator_solver ( self ):
         # time_periods is the only non output table with "t_periods" as a column
 
         cur.execute("DELETE FROM time_periods WHERE t_periods > "+str(time_periods[i][0])+";")
-
 
         
         # ---------------------------------------------------------------
@@ -265,6 +265,24 @@ def myopic_db_generator_solver ( self ):
         cur.execute("DELETE FROM commodities WHERE flag!='e' AND comm_name NOT IN (SELECT input_comm from Efficiency UNION SELECT output_comm from Efficiency);")
         cur.execute("INSERT INTO `time_periods` (t_periods,flag) VALUES ("+str(time_periods[i+1][0])+",'f');")
         cur.execute("UPDATE `time_periods` SET flag='e' WHERE t_periods < "+str(time_periods[i-(N-1)][0]))
+
+        # --------------------------------------------------------------------------------------------------
+        # Update the maximum resource table to include flows that already contribute to resource consumption
+        # --------------------------------------------------------------------------------------------------
+        if i!=(N-1):
+            resource_constraints_org = pd.read_sql_query("SELECT regions, tech, maxres FROM MaxResource", con_org)
+            for ind,row in resource_constraints_org.iterrows():
+                df_existing_resources = pd.read_sql_query("SELECT sum(vflow_out) FROM Output_VFlow_Out \
+                                                        WHERE regions='" + row['regions'] + "' AND \
+                                                        tech='" + row['tech'] + "' AND \
+                                                        scenario="+"'"+str(self.options.scenario)+"' AND \
+                                                        vintage < "+str(time_periods[i-(N-1)][0]), con_org)
+                updated_resource = row['maxres'] - df_existing_resources.iloc[0,0]
+                query = "UPDATE MaxResource SET maxres=" + str(updated_resource) + " WHERE regions='"\
+                + row['regions'] + "' AND tech='" + row['tech'] + "'"
+                cur.execute(query)
+
+
         con.commit()
         con.close()
 

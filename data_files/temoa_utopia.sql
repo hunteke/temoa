@@ -984,4 +984,15 @@ CREATE TABLE "CapacityCredit" (
 	"cf_tech_notes"	text,
 	PRIMARY KEY("regions","periods","tech","vintage")
 );
+CREATE TABLE "MaxResource" (
+	"regions"	text,
+	"tech"	text,
+	"maxres"	real,
+	"maxres_units"	text,
+	"maxres_notes"	text,
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	PRIMARY KEY("regions","tech")
+);
+#INSERT INTO `MaxResource` VALUES ('utopia','IMPGSL1',60,'','');
+
 COMMIT;

@@ -1800,6 +1800,44 @@ tech, not tech and vintage.
     return expr
 
 
+def MaxResource_Constraint(M, r, t):
+    r"""
+
+The MaxResource constraint sets a limit on the maximum available resource of a
+given technology across all model time periods. Note that the indices for these 
+constraints are region and tech.
+
+.. math::
+   :label: MaxResource
+
+   \textbf{CAPAVL}_{r, p, t} \le MAX_{r, p, t}
+
+   \forall \{r, p, t\} \in \Theta_{\text{MaxCapacity}}
+"""
+    max_resource = value(M.MaxResource[r, t])
+    try:
+      activity_rt = sum( 
+          M.V_FlowOut[r, p, s, d, S_i, t, S_v, S_o]
+          for p in M.time_optimize
+          for S_v in M.processVintages[r, p, t] 
+          for S_i in M.processInputs[r, p, t, S_v] 
+          for S_o in M.ProcessOutputsByInput[r, p, t, S_v, S_i] 
+          for s in M.time_season
+          for d in M.time_of_day
+      )
+    except:
+      activity_rt = sum( 
+          M.V_FlowOutAnnual[r, p, S_i, t, S_v, S_o]
+          for p in M.time_optimize
+          for S_v in M.processVintages[r, p, t] 
+          for S_i in M.processInputs[r, p, t, S_v] 
+          for S_o in M.ProcessOutputsByInput[r, p, t, S_v, S_i] 
+      )  
+
+    expr = activity_rt <= max_resource
+    return expr
+
+
 def MaxCapacitySet_Constraint(M, p):
     r"""
 Similar to the :code:`MaxCapacity` constraint, but works on a group of technologies

@@ -213,6 +213,7 @@ def temoa_create_model(name="Temoa"):
     # Define parameters associated with user-defined constraints
     M.MinCapacity = Param(M.RegionalIndices, M.time_optimize, M.tech_all)
     M.MaxCapacity = Param(M.RegionalIndices, M.time_optimize, M.tech_all)
+    M.MaxResource = Param(M.RegionalIndices, M.tech_all)
     M.MinCapacitySum = Param(M.time_optimize)  # for techs in tech_capacity
     M.MaxCapacitySum = Param(M.time_optimize)  # for techs in tech_capacity
     M.MaxActivity = Param(M.RegionalIndices, M.time_optimize, M.tech_all)
@@ -462,6 +463,13 @@ def temoa_create_model(name="Temoa"):
     )
     M.MaxCapacityConstraint = Constraint(
         M.MaxCapacityConstraint_rpt, rule=MaxCapacity_Constraint
+    )
+
+    M.MaxResourceConstraint_rt = Set(
+        dimen=2, initialize=lambda M: M.MaxResource.sparse_iterkeys()
+    )
+    M.MaxResourceConstraint = Constraint(
+        M.MaxResourceConstraint_rt, rule=MaxResource_Constraint
     )
 
     M.MaxCapacitySetConstraint_rp = Set(

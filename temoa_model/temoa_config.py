@@ -145,6 +145,7 @@ def db_2_dat(ifile, ofile, options):
 		['param','MaxCapacity',               '',                    '',             3],
 		['param','MaxActivity',               '',                    '',             3],
 		['param','MinActivity',               '',                    '',             3],
+		['param','MaxResource',               '',                    '',             2],
 		['param','GrowthRateMax',             '',                    '',             2],
 		['param','GrowthRateSeed',            '',                    '',             2],
 		['param','LifetimeTech',              '',                    '',             2],
