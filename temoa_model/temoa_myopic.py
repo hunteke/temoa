@@ -269,7 +269,7 @@ def myopic_db_generator_solver ( self ):
         # --------------------------------------------------------------------------------------------------
         # Update the maximum resource table to include flows that already contribute to resource consumption
         # --------------------------------------------------------------------------------------------------
-        if i!=(N-1):
+        if (i!=(N-1)) & ('MaxResource' in [x[0] for x in table_list]):
             resource_constraints_org = pd.read_sql_query("SELECT regions, tech, maxres FROM MaxResource", con_org)
             for ind,row in resource_constraints_org.iterrows():
                 df_existing_resources = pd.read_sql_query("SELECT sum(vflow_out) FROM Output_VFlow_Out \
