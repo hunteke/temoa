@@ -1819,6 +1819,7 @@ constraints are region and tech.
       activity_rt = sum( 
           M.V_FlowOut[r, p, s, d, S_i, t, S_v, S_o]
           for p in M.time_optimize
+          if (r, p, t) in M.processVintages.keys()
           for S_v in M.processVintages[r, p, t] 
           for S_i in M.processInputs[r, p, t, S_v] 
           for S_o in M.ProcessOutputsByInput[r, p, t, S_v, S_i] 
@@ -1829,6 +1830,7 @@ constraints are region and tech.
       activity_rt = sum( 
           M.V_FlowOutAnnual[r, p, S_i, t, S_v, S_o]
           for p in M.time_optimize
+          if (r, p, t) in M.processVintages.keys()
           for S_v in M.processVintages[r, p, t] 
           for S_i in M.processInputs[r, p, t, S_v] 
           for S_o in M.ProcessOutputsByInput[r, p, t, S_v, S_i] 
