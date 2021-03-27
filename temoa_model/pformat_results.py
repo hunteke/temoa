@@ -30,14 +30,6 @@ __all__ = ('pformat_results', 'stringify_data')
 
 from collections import defaultdict
 from sys import stderr as SE, stdout as SO
-import sys
-
-# Need line below to import DB_to_Excel.py
-sys.path.append('./data_processing')
-
-from temoa_config import TemoaConfig
-from DB_to_Excel import make_excel
-
 from shutil import rmtree
 import sqlite3
 import os
@@ -45,8 +37,11 @@ import re
 import subprocess
 import sys
 
-# Need line below to import DB_to_Excel.py
-sys.path.append('./data_processing')
+from temoa_config import TemoaConfig
+
+# Need line below to import DB_to_Excel.py from data_processing
+sys.path.append(os.path.join(os.getcwd(), 'data_processing'))
+from DB_to_Excel import make_excel
 
 # Ensure compatibility with Python 2.7 and 3
 try:
@@ -55,7 +50,6 @@ except ImportError:
     from io import StringIO
 
 from pyomo.core import value
-from IPython import embed as IP
 
 
 def stringify_data ( data, ostream=SO, format='plain' ):
@@ -546,9 +540,9 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 			if options.saveEXCEL:
 				file_type = re.search(r"([\w-]+)\.(\w+)\b", options.output)
 				file_n = file_type.group(1)
-				from DB_to_Excel import make_excel
 				temp_scenario = set()
 				temp_scenario.add(options.scenario)
+				#make_excel function imported near the top
 				make_excel(options.output, new_dir+os.sep+options.scenario, temp_scenario)
 				#os.system("python data_processing"+os.sep+"DB_to_Excel.py -i \
 				#		  ""+options.output+" \
