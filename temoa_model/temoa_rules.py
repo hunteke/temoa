@@ -157,19 +157,20 @@ in the :code:`tech_annual` set.
 """
     if t not in M.tech_annual:
         indices = []
-        for xx in M.FlowVar_rpsditvo:
-            if t in xx:
-                indices.append(xx)
-        activity = sum( M.V_FlowOut[xx]
-              for xx in indices
+        for s_index in M.FlowVar_rpsditvo:
+            if t in s_index:
+                indices.append(s_index)
+        activity = sum( M.V_FlowOut[s_index]
+              for s_index in indices
           )
     else:
-      activity = sum( M.V_FlowOutAnnual[r, S_p, S_i, t, S_v, S_o]
-          for r in M.RegionalIndices
-          for S_p, S_v in M.processTechs[t]
-          for S_i in M.processInputs[S_p, t, S_v]
-          for S_o in M.ProcessOutputsByInput[S_p, t, S_v, S_i]
-      )
+        indices = []
+        for s_index in M.FlowVarAnnual_rpitvo:
+            if t in s_index:
+                indices.append(s_index)
+        activity = sum( M.V_FlowOutAnnual[s_index]
+              for s_index in indices
+          )
 
     if int is type(activity):
         return Constraint.Skip
