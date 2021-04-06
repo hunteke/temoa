@@ -417,7 +417,7 @@ class TemoaSolverInstance(object):
 		if isinstance(self.options, TemoaConfig) and self.options.saveTEXTFILE:
 			for inpu in self.options.dot_dat:
 				file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
-			new_dir = self.options.path_to_db_io+os.sep+file_ty.group(1)+'_'+self.options.scenario+'_model'
+			new_dir = self.options.path_to_data+os.sep+file_ty.group(1)+'_'+self.options.scenario+'_model'
 			if path.isfile(self.options.path_to_logs+os.sep+log_name) and path.exists(new_dir):
 				copyfile(self.options.path_to_logs+os.sep+log_name, new_dir+os.sep+self.options.scenario+'_OutputLog.log')
 
@@ -425,7 +425,7 @@ class TemoaSolverInstance(object):
 			for inpu in self.options.dot_dat:
 				file_ty = reg_exp.search(r"\b([\w-]+)\.(\w+)\b", inpu)
 
-			new_dir = self.options.path_to_db_io+os.sep+file_ty.group(1)+'_'+self.options.scenario+'_model'
+			new_dir = self.options.path_to_data+os.sep+file_ty.group(1)+'_'+self.options.scenario+'_model'
 
 			for files in os.listdir(self.options.path_to_lp_files):
 				if files.endswith(".lp"):

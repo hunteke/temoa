@@ -18,9 +18,9 @@
 # This scenario name is used to store results within the output .sqlite file
 --scenario=test_run
 
-# Path to the “db_io” folder (Mandatory) 
+# Path to folder containing input dataset (Mandatory)
 # This is the location where database files reside
---path_to_db_io=data_files
+--path_to_data=data_files
 
 # Solve Myopically (Optional)
 # Allows user to solve one model time period at a time, sequentially

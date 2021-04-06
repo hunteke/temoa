@@ -423,7 +423,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 				for inpu in options.dot_dat:
 					print(inpu)
 					file_ty = re.search(r"\b([\w-]+)\.(\w+)\b", inpu)
-				new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+				new_dir = options.path_to_data+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
 				if os.path.exists( new_dir ):
 					rmtree( new_dir )
 				os.mkdir(new_dir)
@@ -532,7 +532,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		if options.saveEXCEL or options.saveTEXTFILE or options.keepPyomoLP:
 			for inpu in options.dot_dat:
 				file_ty = re.search(r"\b([\w-]+)\.(\w+)\b", inpu)
-			new_dir = options.path_to_db_io+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
+			new_dir = options.path_to_data+os.sep+file_ty.group(1)+'_'+options.scenario+'_model'
 			if os.path.exists( new_dir ):
 				rmtree( new_dir )
 			os.mkdir(new_dir)
