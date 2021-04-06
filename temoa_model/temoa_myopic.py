@@ -216,10 +216,13 @@ def myopic_db_generator_solver ( self ):
             try:
                 cur.execute("UPDATE "+str(table[0])+" SET tech = TRIM(tech, CHAR(37,10));")
                 # If t doesn't exist in Efficiency table after the deletions made above, 
-                # it is deleted from other tables.
+                # it is deleted from other tables.                
                 cur.execute("DELETE FROM "+str(table[0])+" WHERE tech NOT IN (SELECT tech FROM Efficiency);")
                 cursor = con.execute("SELECT * FROM "+str(table[0]))
                 names = list(map(lambda x: x[0], cursor.description))
+                if 'regions' in names:
+                    query = "DELETE FROM "+str(table[0])+" WHERE (regions, tech) NOT IN (SELECT DISTINCT regions, tech FROM Efficiency)"
+                    cur.execute(query)
                 if 'vintage' in names:                
                     if table[0]!='ExistingCapacity':
                         for j in range(N-1,-1,-1):
