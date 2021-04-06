@@ -277,10 +277,13 @@ def myopic_db_generator_solver ( self ):
                                                         tech='" + row['tech'] + "' AND \
                                                         scenario="+"'"+str(self.options.scenario)+"' AND \
                                                         vintage < "+str(time_periods[i-(N-1)][0]), con_org)
-                updated_resource = row['maxres'] - df_existing_resources.iloc[0,0]
-                query = "UPDATE MaxResource SET maxres=" + str(updated_resource) + " WHERE regions='"\
-                + row['regions'] + "' AND tech='" + row['tech'] + "'"
-                cur.execute(query)
+                try: 
+                    updated_resource = row['maxres'] - df_existing_resources.iloc[0,0]
+                    query = "UPDATE MaxResource SET maxres=" + str(updated_resource) + " WHERE regions='"\
+                    + row['regions'] + "' AND tech='" + row['tech'] + "'"
+                    cur.execute(query)
+                except:
+                    pass
 
 
         con.commit()
