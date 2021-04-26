@@ -312,7 +312,7 @@ class GraphvizDiagramGenerator(object):
 		return self.outDir, outputName + '.'+ outputFormat
 
 	# Function for generating the Input Graph
-	def createCompleteInputGraph(self, inp_tech=None, inp_comm=None, outputFormat='svg') :
+	def createCompleteInputGraph(self, region, inp_tech=None, inp_comm=None, outputFormat='svg') :
 		self.__log__('createCompleteInputGraph: started with inp_tech = ' + str(inp_tech)+ ' and inp_comm = ' + str(inp_comm))
 		outputName = self.qName
 		if (not (inp_tech is None)):
@@ -330,7 +330,7 @@ class GraphvizDiagramGenerator(object):
 		nodes, tech, ltech, to_tech, from_tech = set(), set(), set(), set(), set()
 
 		if DatabaseUtil.isDataBaseFile(self.dbFile):
-			res = self.dbUtil.getCommoditiesAndTech(inp_comm, inp_tech)
+			res = self.dbUtil.getCommoditiesAndTech(inp_comm, inp_tech, region)
 		else:
 			res = self.dbUtil.readFromDatFile(inp_comm, inp_tech)
 
@@ -369,7 +369,7 @@ if __name__ == '__main__':
 	graphGen.connect()
 	graphGen.setGraphicOptions(greyFlag = input['grey_flag'], splinevar = input['splinevar'])
 	if (input['scenario_name'] is None):
-		res = graphGen.createCompleteInputGraph()
+		res = graphGen.createCompleteInputGraph(input['region'])
 	elif (input['inp_technology'] is None and input['inp_commodity'] is None):
 		res = graphGen.CreateMainResultsDiagram(input['period'])
 	elif (input['inp_commodity'] is None):

@@ -110,7 +110,7 @@ class DatabaseUtil(object):
 		return result
 
 	# TODO: Merge this with next function (getExistingTechnologiesForCommodity)
-	def getCommoditiesAndTech(self, inp_comm, inp_tech):
+	def getCommoditiesAndTech(self, inp_comm, inp_tech, region):
 		if (self.cur is None):
 			raise ValueError("Invalid Operation For dat file")
 		if inp_comm is None and inp_tech is None :
@@ -126,7 +126,7 @@ class DatabaseUtil(object):
 			else :
 				inp_tech = "'"+inp_tech+"'"
 
-		self.cur.execute("SELECT input_comm, tech, output_comm FROM Efficiency WHERE input_comm is "+inp_comm+" or output_comm is "+inp_comm+" or tech is "+inp_tech)
+		self.cur.execute("SELECT input_comm, tech, output_comm FROM Efficiency WHERE regions is "+region+" and (input_comm is "+inp_comm+" or output_comm is "+inp_comm+" or tech is "+inp_tech+")")
 		return pd.DataFrame(self.cur.fetchall(), columns = ['input_comm', 'tech', 'output_comm'])
 
 	def getExistingTechnologiesForCommodity(self, comm, comm_type='input'):
