@@ -198,6 +198,8 @@ class DatabaseUtil(object):
 		if period is None:
 			columns.append('t_periods')
 		columns.append('capacity')
+		columns.append('regions')
+
 		query = "SELECT "+columns[0]
 
 		for col in columns[1:]:
@@ -206,15 +208,20 @@ class DatabaseUtil(object):
 		query += " FROM Output_CapacityByPeriodAndTech WHERE scenario == '"+self.scenario+"'"
 
 		if (region):
-			query += " AND regions LIKE '%" + region + "%'"
-		if not tech is None:
+			query += " AND regions LIKE '" + region + "%'"
+		if (tech):
 			query += " AND tech is '"+tech+"'"
-		if not period is None:
+		if (period):
 			query += " AND t_periods == '"+str(period)+"'"
 
 		self.cur.execute(query)
 		result = pd.DataFrame(self.cur.fetchall(), columns=columns)
-		if (len(columns) == 1):
+		if region is None:
+			mask = result['regions'].str.contains('-')
+			result.loc[mask, 'capacity'] /=2
+
+		result.drop(columns=['regions'], inplace=True)
+		if (len(columns) == 2):
 			return result.sum()
 		else:
 			return result.groupby(by='tech').sum().reset_index()
