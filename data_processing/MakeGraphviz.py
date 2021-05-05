@@ -378,7 +378,7 @@ if __name__ == '__main__':
 	graphGen.connect()
 	graphGen.setGraphicOptions(greyFlag = input['grey_flag'], splinevar = input['splinevar'])
 	if (input['scenario_name'] is None):
-		res = graphGen.createCompleteInputGraph(input['region'])
+		res = graphGen.createCompleteInputGraph(input['region'], input['inp_technology'], input['inp_commodity'])
 	elif (input['inp_technology'] is None and input['inp_commodity'] is None):
 		res = graphGen.CreateMainResultsDiagram(input['period'], input['region'])
 	elif (input['inp_commodity'] is None):
