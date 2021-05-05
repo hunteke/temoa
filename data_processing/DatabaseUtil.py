@@ -293,14 +293,14 @@ class DatabaseUtil(object):
 
 		query = "SELECT OF.input_comm, OF.output_comm, OF.vintage, OF.regions,\
 	SUM(OF.vflow_in) vflow_in, SUM(OFO.vflow_out) vflow_out, OC.capacity \
-FROM Output_VFlow_In AS OF \
-INNER JOIN Output_VFlow_Out AS OFO \
+FROM (SELECT regions, scenario, sector, t_periods, input_comm, tech, vintage, output_comm, sum(vflow_in) AS vflow_in \
+ FROM Output_VFlow_In GROUP BY regions, scenario, sector, t_periods, input_comm, tech, vintage, output_comm) AS OF \
+INNER JOIN (SELECT regions, scenario, sector, t_periods, input_comm, tech, vintage, output_comm, sum(vflow_out) AS vflow_out \
+ FROM Output_VFlow_Out GROUP BY regions, scenario, sector, t_periods, input_comm, tech, vintage, output_comm) AS OFO \
 ON  \
     OF.regions = OFO.regions AND \
 	OF.scenario = OFO.scenario AND \
 	OF.t_periods = OFO.t_periods AND \
-	OF.t_season = OFO.t_season AND \
-	OF.t_day = OFO.t_day AND \
 	OF.tech = OFO.tech AND \
 	OF.input_comm = OFO.input_comm AND \
 	OF.vintage = OFO.vintage AND \
