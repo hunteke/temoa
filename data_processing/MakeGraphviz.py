@@ -322,13 +322,25 @@ class GraphvizDiagramGenerator(object):
 	def createCompleteInputGraph(self, region, inp_tech=None, inp_comm=None, outputFormat='svg') :
 		self.__log__('createCompleteInputGraph: started with inp_tech = ' + str(inp_tech)+ ' and inp_comm = ' + str(inp_comm))
 		outputName = self.qName
+
+		if (inp_tech):
+			outputName += "_"+str(inp_tech)
+			if (not os.path.exists(os.path.join(self.outDir, self.folder['tech']))):
+				os.makedirs( os.path.join(self.outDir, self.folder['tech']) )
+			outputName = os.path.join(self.folder['tech'], outputName)
+		elif (inp_comm):
+			outputName += "_"+str(inp_comm)
+			if (not os.path.exists(os.path.join(self.outDir, self.folder['comm']))):
+				os.makedirs( os.path.join(self.outDir, self.folder['comm']) )
+			outputName = os.path.join(self.folder['comm'], outputName)
+		else:
+			if (not os.path.exists(os.path.join(self.outDir, self.folder['results']))):
+				os.makedirs( os.path.join(self.outDir, self.folder['results']) )
+			outputName = os.path.join(self.folder['results'], outputName)
+		
 		if (self.region):
 			outputName += '_' + self.region
-		if (not (inp_tech is None)):
-			outputName += "_"+str(inp_tech)
-		if (not (inp_comm is None)):
-			outputName += "_"+str(inp_comm)
-
+			
 		outputName = os.path.join(self.outDir, outputName)
 		if (self.greyFlag):
 			outputName += '.grey'
@@ -367,7 +379,6 @@ class GraphvizDiagramGenerator(object):
 			oedges = "".join('%s;\n\t\t' % x for x in from_tech),
 			snodes = ";".join('"%s"' %x for x in ltech),
 		)
-
 		self.__generateGraph__(quick_run_dot_fmt, args, outputName, outputFormat)
 		self.__log__ ("createCompleteInputGraph: graph generated, returning")
 		return self.outDir, outputName + '.' + outputFormat
