@@ -1636,13 +1636,15 @@ horizon.
         return Constraint.Skip
 
     if p == periods[0]:
-        expr = CapPT[r, p, t] <= GRS
+        expr = CapPT[r, p, t] <= GRS * GRM
 
     else:
         p_prev = periods.index(p)
         p_prev = periods[p_prev - 1]
-
-        expr = CapPT[r, p, t] <= GRM * CapPT[r, p_prev, t] + GRS
+        if (r, p_prev, t) in CapPT.keys():
+            expr = CapPT[r, p, t] <= GRM * CapPT[r, p_prev, t]
+        else:
+            expr = CapPT[r, p, t] <= GRS * GRM
 
     return expr
 
