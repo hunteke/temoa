@@ -36,6 +36,7 @@ import os
 import re
 import subprocess
 import sys
+import pandas as pd
 
 from temoa_config import TemoaConfig
 
@@ -104,12 +105,23 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 		# epsilon = absolute value below which to ignore a result
 		results = defaultdict(list)
 		for name, data in cgroup.items():
-			if not (abs( data['Value'] ) > epsilon ): continue
+			if 'Value' not in data.keys() or (abs( data['Value'] ) < epsilon ) : continue
 
 			# name looks like "Something[some,index]"
 			group, index = name[:-1].split('[')
 			results[ group ].append( (name.replace("'", ''), data['Value']) )
 		clist.extend( t for i in sorted( results ) for t in sorted(results[i]))
+
+		supp_outputs_df = pd.DataFrame.from_dict(cgroup, orient='index')
+		supp_outputs_df = supp_outputs_df.loc[(supp_outputs_df != 0).any(axis=1)]
+		if 'Dual' in supp_outputs_df.columns:
+			duals = supp_outputs_df['Dual'].copy()
+			duals = -duals
+			duals = duals[duals>epsilon]
+			duals.index.name = 'constraint_name'
+			duals = duals.to_frame()
+			duals.loc[:,'scenario'] = options.scenario
+			return duals
 
 	#Create a dictionary in which to store "solved" variable values
 	svars = defaultdict( lambda: defaultdict( float ))   
@@ -363,7 +375,7 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 				del svars[	'Costs'	][item]
 
 
-	collect_result_data( Cons, con_info, epsilon=1e-9 )
+	duals = collect_result_data( Cons, con_info, epsilon=1e-9 )
 
 	msg = ( 'Model name: %s\n'
 	   'Objective function value (%s): %s\n'
@@ -526,6 +538,14 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 					cur.execute("UPDATE "+tables[table]+" SET sector = \
 								(SELECT technologies.sector FROM technologies \
 								WHERE "+tables[table]+".tech = technologies.tech);")
+
+		#WRITE DUALS RESULTS
+		overwrite_keys = [str(tuple(x)) for x in duals.reset_index()[['constraint_name','scenario']].to_records(index=False)]
+		#delete records that will be overwritten by new duals dataframe
+		cur.execute("DELETE FROM Output_Duals WHERE (constraint_name, scenario) IN (VALUES " + ','.join(overwrite_keys) + ")")
+		#write new records from new duals dataframe
+		duals.to_sql('Output_Duals',con, if_exists='append')
+
 		con.commit()
 		con.close()	
 
