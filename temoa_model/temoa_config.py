@@ -129,6 +129,7 @@ def db_2_dat(ifile, ofile, options):
 		['set',  'groups',                    '',                    '',             0],
 		['param','MinGenGroupTarget',         '',                    '',             2],
 		['param','MinGenGroupWeight',         '',                    '',             3],
+		['param','LinkedTechnologies',        '',                    '',             3],
 		['param','SegFrac',                   '',                    '',             2],
 		['param','DemandSpecificDistribution','',                    '',             4],
 		['param','CapacityToActivity',        '',                    '',             2],

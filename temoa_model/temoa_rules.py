@@ -2095,3 +2095,33 @@ def ParamLoanAnnualize_rule(M, r, t, v):
     annualized_rate = dr / (1.0 - (1.0 + dr) ** (-lln))
 
     return annualized_rate
+
+
+
+def LinkedEmissionsTechnologies_Constraint(M, r, p, s, d, t, v, e):
+    r"""
+This constraint ensures that the activity of the linked technology 
+equals the emissions activity times the  activity of the primary technology,
+as definied in the LinkedTechnologies table. This is key to describing carbon
+capture technologies where CO2 is a by-product of a technology that can be used
+as a physical commodity downstream. Note that the primary and linked technologies
+cannot be part of the tech_annual set. It is implicit that the primary region 
+defined corresponds the linked technology as well. 
+
+""" 
+    primary_flow = sum(
+    M.V_FlowOut[r, p, s, d, S_i, t, v, S_o]*M.EmissionActivity[r, e, S_i, t, v, S_o]
+    for S_i in M.processInputs[r, p, t, v]
+    for S_o in M.ProcessOutputsByInput[r, p, t, v, S_i]
+    )
+
+    linked_t = M.LinkedTechnologies[r, t, e]
+    linked_flow = sum(
+    M.V_FlowOut[r, p, s, d, S_i, linked_t, v, S_o]
+    for S_i in M.processInputs[r, p, linked_t, v]
+    for S_o in M.ProcessOutputsByInput[r, p, linked_t, v, S_i]
+    )
+
+    expr = -primary_flow == linked_flow
+    return expr
+
