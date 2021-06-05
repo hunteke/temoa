@@ -990,7 +990,7 @@ def LinkedTechnologiesConstraintIndices ( M ):
 	  (r, p, s, d, t, v, e)
 
 	  for r, t, e in M.LinkedTechnologies.sparse_iterkeys() 
-	  for p in M.time_optimize
+	  for p in M.time_optimize if (r, p, t) in M.processVintages.keys()
 	  for v in M.processVintages[ r, p, t ] if (r, p, t, v) in M.activeActivity_rptv
 	  for s in M.time_season
 	  for d in M.time_of_day
