@@ -225,7 +225,7 @@ def temoa_create_model(name="Temoa"):
     M.EmissionActivity = Param(M.EmissionActivity_reitvo)
     M.MinGenGroupWeight = Param(M.RegionalIndices, M.tech_groups, M.groups, default = 0)
     M.MinGenGroupTarget = Param(M.time_optimize, M.groups)
-    M.LinkedTechnologies = Param(M.RegionalIndices, M.tech_all, M.commodity_emissions)
+    M.LinkedTechs = Param(M.RegionalIndices, M.tech_all, M.commodity_emissions)
 
     # Define parameters associated with electric sector operation
     M.RampUp = Param(M.regions, M.tech_ramping)
@@ -520,9 +520,9 @@ def temoa_create_model(name="Temoa"):
     M.TechOutputSplitAnnualConstraint = Constraint(
         M.TechOutputSplitAnnualConstraint_rptvo, rule=TechOutputSplitAnnual_Constraint
     )
-    M.LinkedEmissionsTechnologiesConstraint_rpsdtve = Set(dimen=7, initialize=LinkedTechnologiesConstraintIndices)
-    M.LinkedEmissionsTechnologiesConstraint = Constraint(
-        M.LinkedEmissionsTechnologiesConstraint_rpsdtve, rule=LinkedEmissionsTechnologies_Constraint)
+    M.LinkedEmissionsTechConstraint_rpsdtve = Set(dimen=7, initialize=LinkedTechConstraintIndices)
+    M.LinkedEmissionsTechConstraint = Constraint(
+        M.LinkedEmissionsTechConstraint_rpsdtve, rule=LinkedEmissionsTech_Constraint)
     return M
 
 

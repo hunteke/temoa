@@ -985,11 +985,11 @@ def CapacityConstraintIndices ( M ):
 
 	return capacity_indices
 
-def LinkedTechnologiesConstraintIndices ( M ):
-	linkedtechnology_indices = set(
+def LinkedTechConstraintIndices ( M ):
+	linkedtech_indices = set(
 	  (r, p, s, d, t, v, e)
 
-	  for r, t, e in M.LinkedTechnologies.sparse_iterkeys() 
+	  for r, t, e in M.LinkedTechs.sparse_iterkeys() 
 	  for p in M.time_optimize if (r, p, t) in M.processVintages.keys()
 	  for v in M.processVintages[ r, p, t ] if (r, p, t, v) in M.activeActivity_rptv
 	  for s in M.time_season
@@ -997,7 +997,7 @@ def LinkedTechnologiesConstraintIndices ( M ):
 
 	)
 
-	return linkedtechnology_indices
+	return linkedtech_indices
 
 def CapacityAnnualConstraintIndices ( M ):
 	capacity_indices = set(

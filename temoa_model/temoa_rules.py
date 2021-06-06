@@ -1773,7 +1773,7 @@ refers to the :code:`MinGenGroupTarget` parameter.
     activity_p_annual = sum(
         M.V_FlowOutAnnual[r, p, S_i, S_t, S_v, S_o] * M.MinGenGroupWeight[r, S_t, g]
         for r in M.RegionalIndices
-        for S_t in M.tech_groups if (S_t in M.tech_annual) and ((r, p, S_t) in M.processVintages.keys())        
+        for S_t in M.tech_groups if (S_t in M.tech_annual) and ((r, p, S_t) in M.processVintages.keys())
         for S_v in M.processVintages[r, p, S_t]
         for S_i in M.processInputs[r, p, S_t, S_v]
         for S_o in M.ProcessOutputsByInput[r, p, S_t, S_v, S_i]
@@ -2098,24 +2098,35 @@ def ParamLoanAnnualize_rule(M, r, t, v):
 
 
 
-def LinkedEmissionsTechnologies_Constraint(M, r, p, s, d, t, v, e):
+def LinkedEmissionsTech_Constraint(M, r, p, s, d, t, v, e):
     r"""
-This constraint ensures that the activity of the linked technology 
-equals the emissions activity times the  activity of the primary technology,
-as definied in the LinkedTechnologies table. This is key to describing carbon
-capture technologies where CO2 is a by-product of a technology that can be used
-as a physical commodity downstream. Note that the primary and linked technologies
-cannot be part of the tech_annual set. It is implicit that the primary region 
-defined corresponds the linked technology as well. 
+This constraint is necessary for carbon capture technologies that produce
+CO2 as an emissions commodity, but the CO2 also serves as a physical
+input commodity to a downstream process, such as synthetic fuel production.
+To accomplish this, a dummy technology is linked to the CO2-producing
+technology, converting the emissions activity into a physical commodity
+amount as follows:
 
-""" 
+.. math::
+   :label: LinkedEmissionsTech
+
+     - \sum_{I, O} \textbf{FO}_{r, p, s, d, i, t, v, o} \cdot EAC_{r, e, i, t, v, o}
+     = \sum_{I, O} \textbf{FO}_{r, p, s, d, i, t, v, o}
+
+    \forall \{r, p, s, d, t, v, e\} \in \Theta_{\text{LinkedTechs}}
+
+The relationship between the primary and linked technologies is given
+in the :code:`LinkedTechs` table. Note that the primary and linked
+technologies cannot be part of the :code:`tech_annual` set. It is implicit that
+the primary region corresponds to the linked technology as well.
+"""
     primary_flow = sum(
     M.V_FlowOut[r, p, s, d, S_i, t, v, S_o]*M.EmissionActivity[r, e, S_i, t, v, S_o]
     for S_i in M.processInputs[r, p, t, v]
     for S_o in M.ProcessOutputsByInput[r, p, t, v, S_i]
     )
 
-    linked_t = M.LinkedTechnologies[r, t, e]
+    linked_t = M.LinkedTechs[r, t, e]
     linked_flow = sum(
     M.V_FlowOut[r, p, s, d, S_i, linked_t, v, S_o]
     for S_i in M.processInputs[r, p, linked_t, v]
