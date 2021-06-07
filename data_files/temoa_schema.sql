@@ -547,4 +547,15 @@ CREATE TABLE "MaxResource" (
 	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
 	PRIMARY KEY("regions","tech")
 );
+CREATE TABLE "LinkedTechs" (
+	"primary_region"	text,
+	"primary_tech"	text,
+	"emis_comm" text, 
+ 	"linked_tech"	text,
+	"tech_linked_notes"	text,
+	FOREIGN KEY("primary_tech") REFERENCES "technologies"("tech"),
+	FOREIGN KEY("linked_tech") REFERENCES "technologies"("tech"),
+	FOREIGN KEY("emis_comm") REFERENCES "commodities"("comm_name"),
+	PRIMARY KEY("primary_region","primary_tech", "emis_comm")
+);
 COMMIT;
