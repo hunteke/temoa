@@ -2118,15 +2118,25 @@ amount as follows:
 The relationship between the primary and linked technologies is given
 in the :code:`LinkedTechs` table. Note that the primary and linked
 technologies cannot be part of the :code:`tech_annual` set. It is implicit that
-the primary region corresponds to the linked technology as well.
+the primary region corresponds to the linked technology as well. The lifetimes
+of the primary and linked technologies should be specified and identical. 
 """
+    linked_t = M.LinkedTechs[r, t, e]
+    if (r,t,v) in M.LifetimeProcess.keys() and M.LifetimeProcess[r, linked_t,v] != M.LifetimeProcess[r, t,v]:
+        msg = ('the LifetimeProcess values of the primary and linked technologies '
+          'in the LinkedTechs table have to be specified and identical')
+        raise Exception( msg )
+    if (r,t) in M.LifetimeTech.keys() and M.LifetimeTech[r, linked_t] != M.LifetimeTech[r, t]:
+        msg = ('the LifetimeTech values of the primary and linked technologies '
+          'in the LinkedTechs table have to be specified and identical')
+        raise Exception( msg )
+
     primary_flow = sum(
     M.V_FlowOut[r, p, s, d, S_i, t, v, S_o]*M.EmissionActivity[r, e, S_i, t, v, S_o]
     for S_i in M.processInputs[r, p, t, v]
     for S_o in M.ProcessOutputsByInput[r, p, t, v, S_i]
     )
 
-    linked_t = M.LinkedTechs[r, t, e]
     linked_flow = sum(
     M.V_FlowOut[r, p, s, d, S_i, linked_t, v, S_o]
     for S_i in M.processInputs[r, p, linked_t, v]
