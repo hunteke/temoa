@@ -363,8 +363,9 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 					if (item[0],opposite_dir,item[2],item[3]) in svars[	'Costs'	].keys():
 						continue #if both directional entries are already in svars[	'Costs'	], they're left intact.
 					if item[1] == reg_dir1:
-						svars[	'Costs'	][(item[0],reg_dir2,item[2],item[3])] = svars[	'Costs'	][item] * act_dir2 / (act_dir1 + act_dir2)
-						svars[	'Costs'	][item] = svars[	'Costs'	][item] * act_dir1 / (act_dir1 + act_dir2)
+						if (act_dir1+act_dir2)>0:
+							svars[	'Costs'	][(item[0],reg_dir2,item[2],item[3])] = svars[	'Costs'	][item] * act_dir2 / (act_dir1 + act_dir2)
+							svars[	'Costs'	][item] = svars[	'Costs'	][item] * act_dir1 / (act_dir1 + act_dir2)
 
 
 		#Remove Ri-Rj entries from being populated in the Outputs_Costs. Ri-Rj means a cost
