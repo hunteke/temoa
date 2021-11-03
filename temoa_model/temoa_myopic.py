@@ -63,29 +63,11 @@ def myopic_db_generator_solver ( self ):
     
     version = int(sys.version[0])
 
-    if version >= 3:
-        while True:
-          try:
-            N = int(input("Enter the number of years that are to be included in each individual myopic run: "))
-            if 1 <= N <= len(time_periods)-2:
-                break
-            else:
-                print ("The integer must be between 1 and "+str(time_periods[-2][0]))
-          except ValueError:
-              print("Please input integer only...")  
-              continue    
+    N = self.options.myopic_years
+    if 1 <= int(N) <= len(time_periods)-2:
+        N = int(N)
     else:
-        while True:
-          try:
-            N = raw_input("Enter the number of years that are to be included in each individual myopic run: ")
-            if 1 <= int(N) <= len(time_periods)-2:
-                N = int(N)
-                break
-            else:
-                print ("The integer must be between 1 and "+str(len(time_periods)-2))
-          except ValueError:
-              print("Please input integer only...")  
-              continue        
+        print ("Error: The number of myopic years must between 1 and "+str(len(time_periods)-2))
 
     for i in range(N-1,len(time_periods)-1):
 

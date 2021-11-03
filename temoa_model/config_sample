@@ -26,6 +26,7 @@
 # Allows user to solve one model time period at a time, sequentially
 # Default operation is "perfect foresight"
 #--myopic
+#--myopic_years=2
 #--keep_myopic_databases
 
 
