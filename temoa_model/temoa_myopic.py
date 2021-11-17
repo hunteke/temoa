@@ -126,15 +126,17 @@ def myopic_db_generator_solver ( self ):
         # Start modifying other tables.
         # ---------------------------------------------------------------
         for table in tables_group1:
-            cur.execute("DELETE FROM "+table +" WHERE periods > "+str(time_periods[i][0])+" OR periods < "+str(time_periods[i-(N-1)][0])+";")
+            if table in [x[0] for x in table_list]:
+                cur.execute("DELETE FROM "+table +" WHERE periods > "+str(time_periods[i][0])+" OR periods < "+str(time_periods[i-(N-1)][0])+";")
 
 
         for table in tables_group2:
-            if table == 'CostInvest' or table == 'DiscountRate':
-                cur.execute("UPDATE "+table+" SET tech = TRIM(tech);")
-                cur.execute("DELETE FROM "+table +" WHERE vintage > "+str(time_periods[i][0])+";")
-            else:
-                cur.execute("DELETE FROM "+table +" WHERE vintage > "+str(time_periods[i][0])+";")
+            if table in [x[0] for x in table_list]:
+                if table == 'CostInvest' or table == 'DiscountRate':
+                    cur.execute("UPDATE "+table+" SET tech = TRIM(tech);")
+                    cur.execute("DELETE FROM "+table +" WHERE vintage > "+str(time_periods[i][0])+";")
+                else:
+                    cur.execute("DELETE FROM "+table +" WHERE vintage > "+str(time_periods[i][0])+";")
 
         # time_periods is the only non output table with "t_periods" as a column
 
