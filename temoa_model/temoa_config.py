@@ -219,7 +219,7 @@ class TemoaConfig( object ):
 		'keep_pyomo_lp_file',
 		'saveEXCEL',
 		'myopic'
-		'myopic_years'
+		'myopic_periods'
 		'keep_myopic_databases'
 		'saveTEXTFILE',
 		'mgaslack',
@@ -248,7 +248,7 @@ class TemoaConfig( object ):
 		self.scenario         = None
 		self.saveEXCEL        = False
 		self.myopic           = False
-		self.myopic_years     = 0
+		self.myopic_periods     = 0
 		self.KeepMyopicDBs    = False
 		self.saveTEXTFILE     = False
 		self.how_to_cite      = None
@@ -291,7 +291,7 @@ class TemoaConfig( object ):
 		msg += '{:>{}s}: {}\n'.format('Scenario', width, self.scenario)
 		msg += '{:>{}s}: {}\n'.format('Spreadsheet output', width, self.saveEXCEL)
 		msg += '{:>{}s}: {}\n'.format('Myopic scheme', width, self.myopic)
-		msg += '{:>{}s}: {}\n'.format('Myopic years', width, self.myopic_years)
+		msg += '{:>{}s}: {}\n'.format('Myopic years', width, self.myopic_periods)
 		msg += '{:>{}s}: {}\n'.format('Retain myopic databases', width, self.KeepMyopicDBs)
 		msg += spacer
 		msg += '{:>{}s}: {}\n'.format('Citation output status', width, self.how_to_cite)
@@ -332,9 +332,9 @@ class TemoaConfig( object ):
 		r'--myopic\b'
 		self.myopic = True
 
-	def t_myopic_years(self, t):
-		r'--myopic_years[\s\=]+[\d]+'
-		self.myopic_years = int(t.value.replace('=', ' ').split()[1])
+	def t_myopic_periods(self, t):
+		r'--myopic_periods[\s\=]+[\d]+'
+		self.myopic_periods = int(t.value.replace('=', ' ').split()[1])
 
 	def t_keep_myopic_databases(self, t):
 		r'--keep_myopic_databases\b'

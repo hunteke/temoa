@@ -63,7 +63,7 @@ def myopic_db_generator_solver ( self ):
     
     version = int(sys.version[0])
 
-    N = self.options.myopic_years
+    N = self.options.myopic_periods
     if 1 <= int(N) <= len(time_periods)-2:
         N = int(N)
     else:
