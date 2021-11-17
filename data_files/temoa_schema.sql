@@ -112,6 +112,18 @@ CREATE TABLE "TechInputSplit" (
 	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
 	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods")
 );
+CREATE TABLE "TechInputSplitAverage" (
+	"regions"	TEXT,
+	"periods"	integer,
+	"input_comm"	text,
+	"tech"	text,
+	"ti_split"	real,
+	"ti_split_notes"	text,
+	PRIMARY KEY("regions","periods","input_comm","tech"),
+	FOREIGN KEY("input_comm") REFERENCES "commodities"("comm_name"),
+	FOREIGN KEY("tech") REFERENCES "technologies"("tech"),
+	FOREIGN KEY("periods") REFERENCES "time_periods"("t_periods")
+);
 CREATE TABLE "StorageDuration" (
 	"regions"	text,
 	"tech"	text,
