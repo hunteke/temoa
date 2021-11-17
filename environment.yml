@@ -24,5 +24,6 @@ dependencies:
     - seaborn
     - tabulate
     - xlsxwriter
+    - plotly
     - coincbc
     - pyam
