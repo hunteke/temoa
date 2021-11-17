@@ -196,6 +196,7 @@ def db_2_dat(ifile, ofile, options):
 			cur.execute("DELETE FROM Output_VFlow_Out WHERE scenario="+"'"+str(options.scenario)+"'")
 			cur.execute("DELETE FROM Output_V_Capacity WHERE scenario="+"'"+str(options.scenario)+"'")
 			cur.execute("DELETE FROM Output_Curtailment WHERE scenario="+"'"+str(options.scenario)+"'")
+			cur.execute("DELETE FROM Output_Duals WHERE scenario="+"'"+str(options.scenario)+"'")
 			cur.execute("VACUUM")
 			con.commit()
 
@@ -247,7 +248,7 @@ class TemoaConfig( object ):
 		self.scenario         = None
 		self.saveEXCEL        = False
 		self.myopic           = False
-		self.myopic_years     = None
+		self.myopic_years     = 0
 		self.KeepMyopicDBs    = False
 		self.saveTEXTFILE     = False
 		self.how_to_cite      = None
