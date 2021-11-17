@@ -74,6 +74,7 @@ class TemoaModel( AbstractModel ):
 		self.storageVintages = dict()
 		self.rampVintages = dict()
 		self.inputsplitVintages = dict()
+		self.inputsplitaverageVintages = dict()
 		self.outputsplitVintages = dict()
 		self.ProcessByPeriodAndOutput = dict()
 		self.exportRegions = dict()
@@ -630,8 +631,8 @@ def CreateSparseDicts ( M ):
 				M.rampVintages[r, p,t] = set()
 			if (r, p, i, t) in M.TechInputSplit.sparse_iterkeys() and (r, p, i, t) not in M.inputsplitVintages:
 				M.inputsplitVintages[r,p,i,t] = set()
-			if (r, p, i, t) in M.TechInputSplitAverage.sparse_iterkeys() and (r, p, i, t) not in M.inputsplitVintages:
-				M.inputsplitVintages[r,p,i,t] = set()
+			if (r, p, i, t) in M.TechInputSplitAverage.sparse_iterkeys() and (r, p, i, t) not in M.inputsplitaverageVintages:
+				M.inputsplitaverageVintages[r,p,i,t] = set()
 			if (r, p, t, o) in M.TechOutputSplit.sparse_iterkeys() and (r, p, t, o) not in M.outputsplitVintages:
 				M.outputsplitVintages[r,p,t,o] = set()
 			if t in M.tech_resource and (r,p,o) not in M.ProcessByPeriodAndOutput:
@@ -666,7 +667,7 @@ def CreateSparseDicts ( M ):
 			if (r, p, i, t) in M.TechInputSplit.sparse_iterkeys():
 				M.inputsplitVintages[r,p,i,t].add( v )
 			if (r, p, i, t) in M.TechInputSplitAverage.sparse_iterkeys():
-				M.inputsplitVintages[r,p,i,t].add( v )
+				M.inputsplitaverageVintages[r,p,i,t].add( v )
 			if (r, p, t, o) in M.TechOutputSplit.sparse_iterkeys():
 				M.outputsplitVintages[r,p,t,o].add( v )
 			if t in M.tech_resource:
@@ -1220,10 +1221,9 @@ def TechInputSplitAverageConstraintIndices ( M ):
 	indices = set(
 	  (r, p, i, t, v)
 
-	  for r, p, i, t in M.inputsplitVintages.keys() if t in M.tech_variable 
-	  for v in M.inputsplitVintages[ r, p, i, t ]
+	  for r, p, i, t in M.inputsplitaverageVintages.keys() if t in M.tech_variable 
+	  for v in M.inputsplitaverageVintages[ r, p, i, t ]
 	)
-
 	return indices	
 
 def TechOutputSplitConstraintIndices ( M ):
