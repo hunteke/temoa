@@ -248,8 +248,8 @@ The calculation of each term is given below.
    C_{loans} = \sum_{r, t, v \in \Theta_{IC}} \left (
      \left [
              IC_{r, t, v} \cdot LA_{r, t, v}
-             \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-LLN_{r, t, v}})}{GDR}
-             \cdot \frac{ 1-(1+GDR)^{-LPA_{r,t,v}} }{ 1-(1+GDR)^{-LP_{r,t,v}} }
+             \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-LLN_{r, t, v}})}{GDR} \right. \right.
+             \\ \left. \left. \cdot \frac{ 1-(1+GDR)^{-LPA_{r,t,v}} }{ 1-(1+GDR)^{-LP_{r,t,v}} }
      \right ]
      \cdot \textbf{CAP}_{r, t, v}
      \right )
@@ -285,17 +285,15 @@ loan rates and periods.
 .. math::
    :label: obj_variable
 
-   C_{variable} = \sum_{r, p, t, v \in \Theta_{VC}} \left (
+   &C_{variable} = \\ &\quad \sum_{r, p, t, v \in \Theta_{VC}} \left (
            MC_{r, p, t, v}
      \cdot
      \frac{
        (1 + GDR)^{P_0 - p + 1} \cdot (1 - (1 + GDR)^{-{MPL}_{r,p,t,v}})
      }{
        GDR
-     }
-
-     \cdot \sum_{S,D,I, O} \textbf{FO}_{r, p, s, d,i, t, v, o}
-     \right )+ \sum_{r, p, t, v \in \Theta_{VC}} \left (
+     }\cdot \sum_{S,D,I, O} \textbf{FO}_{r, p, s, d,i, t, v, o}
+     \right ) \\ &\quad + \sum_{r, p, t, v \in \Theta_{VC}} \left (
            MC_{r, p, t, v}
      \cdot
      \frac{
@@ -534,7 +532,7 @@ refined products, such as diesel or kerosene. In such cases, we need to
 track the excess production of these commodities. To do so, the technology
 producing the excess commodity should be added to the :code:`tech_flex` set.
 This flexible technology designation will activate a slack variable
-(:math:`\textbf{FX}_{r, p, s, d, i, t, v, c})representing
+(:math:`\textbf{FX}_{r, p, s, d, i, t, v, c}`)representing
 the excess production in the :code:`CommodityBalanceAnnual_Constraint`. Note
 that the :code:`tech_flex` set is different from :code:`tech_curtailment` set;
 the latter is technology- rather than commodity-focused and is used in the
@@ -553,21 +551,20 @@ reduces computational burden.
 
        \sum_{I, T, V} \textbf{FO}_{r, p, s, d, i, t, v, c}
        +
-       \sum_{reg} \textbf{FIM}_{reg-r, p, s, d, i, t, v, c} \forall reg\neqr
-       =
-       \sum_{T^{s}, V, I} \textbf{FIS}_{r, p, s, d, c, t, v, o}
+       &\sum_{reg} \textbf{FIM}_{reg-r, p, s, d, i, t, v, c} \forall reg
+       = \\
+       &\sum_{T^{s}, V, I} \textbf{FIS}_{r, p, s, d, c, t, v, o}
        +
        \sum_{T-T^{s}, V, O} \textbf{FO}_{r, p, s, d, c, t, v, o} /EFF_{r, c,t,v,o}
-       +
-       SEG_{s,d} \cdot
-       \sum_{I, T^{a}, V} \textbf{FOA}_{r, p, c, t, v, o} /EFF_{r, c,t,v,o}
-       +
-       \sum_{reg} \textbf{FEX}_{r-reg, p, s, d, c, t, v, o} \forall reg\neqr
+       \\
+       &\quad + SEG_{s,d} \cdot
+       \sum_{I, T^{a}, V} \textbf{FOA}_{r, p, c, t, v, o} /EFF_{r, c,t,v,o} \\
+       &\quad + \sum_{reg} \textbf{FEX}_{r-reg, p, s, d, c, t, v, o} \forall reg
        +
        \textbf{FX}_{r, p, s, d, i, t, v, c}
 
        \\
-       \forall \{r, p, s, d, c\} \in \Theta_{\text{CommodityBalance}}
+       &\forall \{r, p, s, d, c\} \in \Theta_{\text{CommodityBalance}}
 
 """
     if c in M.commodity_demand:
@@ -654,18 +651,18 @@ While the commodity :math:`c` can only be produced by technologies in the
 
        \sum_{I,T, V} \textbf{FOA}_{r, p, i, t, v, c}
         +
-       \sum_{reg} \textbf{FIM}_{reg-r, p, i, t, v, c} \forall reg\neqr
-        =
-       \sum_{S, D, T-T^{s}, V, O} \textbf{FO}_{r, p, s, d, c, t, v, o} /EFF_{r, c,t,v,o}
+       &\sum_{reg} \textbf{FIM}_{reg-r, p, i, t, v, c} \forall reg
+        = \\
+       &\sum_{S, D, T-T^{s}, V, O} \textbf{FO}_{r, p, s, d, c, t, v, o} /EFF_{r, c,t,v,o}
        +
        \sum_{I, T^{a}, V, O} \textbf{FOA}_{r, p, c, t, v, o} /EFF_{r, c,t,v,o}
-       +
-       \sum_{reg} \textbf{FEX}_{r-reg, p, c, t, v, o} \forall reg\neqr
+       \\ &+
+       \sum_{reg} \textbf{FEX}_{r-reg, p, c, t, v, o} \forall reg
        +
        \textbf{FX}_{r, p, i, t, v, c}
 
        \\
-       \forall \{r, p, c\} \in \Theta_{\text{CommodityBalanceAnnual}}
+       &\forall \{r, p, c\} \in \Theta_{\text{CommodityBalanceAnnual}}
 
 """
     if c in M.commodity_demand:
@@ -858,7 +855,7 @@ assuming ordered time slices. The initial storage charge level is optimized
 for the first time slice in each period, and then the charge level is updated each time
 slice based on the amount of energy stored or discharged. At the end of the last time
 slice associated with each period, the charge level must equal the starting charge level.
-In the formulation below, note that :math:`\textbf{stored_energy}` is an internal model
+In the formulation below, note that :math:`\textbf{stored\_energy}` is an internal model
 decision variable.
 
 First, the amount of stored energy in a given time slice is calculated as the
@@ -869,36 +866,36 @@ on the input side:
 .. math::
    :label: StorageEnergy
 
-      \textbf{stored_energy} =
+      \textbf{stored\_energy} =
       \sum_{I, O} \textbf{FIS}_{r, p, s, d, i, t, v, o} \cdot
       EFF_{r,i,t,v,o}
       -
       \sum_{I, O} \textbf{FO}_{r, p, s, d, i, t, v, o}
 
-With :math:`\bf{stored\_energy}` calculated, the storage
+With :math:`\textbf{stored\_energy}` calculated, the storage
 charge level (:math:`\textbf{SL}_{r,p,s,d,t,v}`) is updated, but the update procedure varies
 based on the time slice within each time period. For the first season and time-of-day within
 a given period:
 
 .. math::
-      \textbf{SL}_{r, p, s, d, t, v} = \textbf{SI}_{r,t,v} + \textbf{stored_energy}
+      \textbf{SL}_{r, p, s, d, t, v} = \textbf{SI}_{r,t,v} + \textbf{stored\_energy}
 
 For the first time-of-day slice in any other season except the first:
 
 .. math::
       \textbf{SL}_{r, p, s, d, t, v} =
-      \textbf{SL}_{r, p, s_{prev}, d_{last}, t, v} + \textbf{stored_energy}
+      \textbf{SL}_{r, p, s_{prev}, d_{last}, t, v} + \textbf{stored\_energy}
 
 For the last season and time-of-day in the year, the ending storage charge level
 should be equal to the starting charge level:
 
 .. math::
-      \textbf{SL}_{r, p, s, d, t, v} + \textbf{stored_energy} = \textbf{SI}_{r,t,v}
+      \textbf{SL}_{r, p, s, d, t, v} + \textbf{stored\_energy} = \textbf{SI}_{r,t,v}
 
 For all other time slices not explicitly outlined above:
 
 .. math::
-      \textbf{SL}_{r, p, s, d, t, v} = \textbf{SL}_{r, p, s, d_{prev}, t, v} + \textbf{stored_energy}
+      \textbf{SL}_{r, p, s, d, t, v} = \textbf{SL}_{r, p, s, d_{prev}, t, v} + \textbf{stored\_energy}
 
 All equations below are sparsely indexed such that:
 
@@ -1516,16 +1513,16 @@ output in separate terms.
 
        \sum_{S,D,I,T,V,O|{r,e,i,t,v,o} \in EAC} \left (
        EAC_{r, e, i, t, v, o} \cdot \textbf{FO}_{r, p, s, d, i, t, v, o}
-       \right )
+       \right ) & \\
        +
-       \sum_{I,T,V,O|{r,e,i,t \in T^{a},v,o} \in EAC} \left (
-       EAC_{r, e, i, t, v, o} \cdot \textbf{FOA}_{r, p, i, t, v, o}
-       \right )
+       \sum_{I,T,V,O|{r,e,i,t \in T^{a},v,o} \in EAC} (
+       EAC_{r, e, i, t, v, o} \cdot & \textbf{FOA}_{r, p, i, t, v, o}
+        )
        \le
        ELM_{r, p, e}
 
        \\
-       \forall \{r, p, e\} \in \Theta_{\text{EmissionLimit}}
+       & \forall \{r, p, e\} \in \Theta_{\text{EmissionLimit}}
 
 """
     emission_limit = M.EmissionLimit[r, p, e]

@@ -638,7 +638,7 @@ Sets
              asterisked (\*) elements are automatically derived by the model and
              are not user-specifiable.
    :header: "Set","Temoa Name","Data Type","Short Description"
-   :widths: 10, 25, 15, 50
+   :widths: 8, 28, 14, 50
 
    ":math:`{}^*\text{C}`",":code:`commodity_all`","string","union of all commodity sets"
    ":math:`\text{C}^d`",":code:`commodity_demand`","string","end-use demand commodities"
@@ -834,7 +834,7 @@ Parameters
            The asterisked (\*) elements are automatically derived by the model
            and are not user-specifiable.
    :header: "Parameter","Temoa Name","Domain","Short Description"
-   :widths: 12, 25, 10, 50
+   :widths: 14, 27, 10, 49
 
    ":math:`\text{CFT}_{s,d,t}`","CapacityFactorTech",":math:`\mathbb{I}`","Technology-specific capacity factor"
    ":math:`\text{CFD}_{s,d,t,v}`","CapacityFactorProcess",":math:`\mathbb{I}`","Process-specific capacity factor"
@@ -1095,7 +1095,7 @@ GlobalDiscountRate
 
 :math:`{GDR}`
 
-Because Temoa is a cpaacity expansion model, it must account for the time value
+Because Temoa is a capacity expansion model, it must account for the time value
 of money. The future value (FV) of a sum of currency is related to the net\
 present value (NPV) via the formula:
 
@@ -1345,7 +1345,7 @@ Variables
 .. _table_variable:
 .. csv-table:: Temoa's Main Variables
    :header: "Variable","Temoa Name","Domain","Short Description"
-   :widths: 20, 15, 15, 60
+   :widths: 18, 22, 10, 50
 
    ":math:`FO_{p,s,d,i,t,v,o}`","V_FlowOut",":math:`\mathbb{R}^+_0`","Commodity flow by time slice out of a tech based on a given input"
    ":math:`FOA_{p,s,d,i,t,v,o}`","V_FlowOutAnnual",":math:`\mathbb{R}^+_0`","Annual commodity flow out of a tech based on a given input"
