@@ -3,6 +3,7 @@ channels:
     - defaults
     - conda-forge
 dependencies:
+    # Requirements for core model functionality
     - python=3.7.3
     - pyomo=5.5
     - pyomo.extras
@@ -25,5 +26,13 @@ dependencies:
     - tabulate
     - xlsxwriter
     - plotly
-    - coincbc
     - pyam
+    # Below required to update documentation
+    - sphinx
+    - sphinx_rtd_theme
+    - sphinxcontrib-htmlhelp
+    - sphinxcontrib-serializinghtml
+    - sphinxcontrib-bibtex
+    # cbc solver below cannot be installed via Conda on Windows
+    - coincbc
+
