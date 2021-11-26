@@ -498,38 +498,10 @@ can be broken down into process-specific elements.  For example, the coal power 
 takes as input coal and produces electricity, and is subject to various costs
 (e.g. variable costs) and constraints (e.g. efficiency) along the way.
 
-.. graphviz::
-   :alt: A single process, with various engineering characteristics.
-
-   digraph coal {
-   	rankdir = "LR" ;
-   	node [ style="filled", shape="circle" ] ;
-   	edge [ arrowhead="vee", labelfontcolor="lightgreen" ] ;
-
-   	coal [ label="coal" ];
-   	coal_plant [ shape="none", style="rounded", label=<
-   <font color="#666666" face="Helvetica Bold">
-   <table border="0" cellborder="0" cellspacing="0">
-   	<tr>
-   		<td cellpadding="4" align="center" bgcolor="green4"><font color="#ffffff">Process: coal_power_plant</font></td>
-   	</tr>
-   	<tr><td></td></tr>
-   	<tr><td align="left">installed capacity</td></tr>
-   	<tr><td align="left">efficiency</td></tr>
-   	<tr><td align="left">install cost</td></tr>
-   	<tr><td align="left">fixed cost</td></tr>
-   	<tr><td align="left">variable cost</td></tr>
-   	<tr><td align="left">emission per unit activity</td></tr>
-   	<tr><td align="left">useful life</td></tr>
-   	<tr><td align="left">loan life</td></tr>
-   	<tr><td align="left">...</td></tr>
-   </table>
-   </font>> ] ;
-   	electricity [ label="electricity" ];
-
-   	coal -> coal_plant [ label="Input, (V_FlowIn)" ];
-   	coal_plant -> electricity [ label="Output, (V_FlowOut)"];
-   }
+.. figure:: images/coal_process.png
+   :align: center
+   :figclass: center
+   :figwidth: 60%
 
 
 The modeler defines the processes and engineering characteristics through an
