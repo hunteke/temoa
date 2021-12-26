@@ -86,7 +86,6 @@ def temoa_create_model(name="Temoa"):
     M.commodity_physical = Set()
     M.commodity_carrier = M.commodity_physical | M.commodity_demand
     M.commodity_all = M.commodity_carrier | M.commodity_emissions
-    M.commodity_SNG = M.commodity_physical | M.commodity_emissions
 
     # Define sets for MGA weighting
     M.tech_mga = Set(within=M.tech_all)
@@ -137,7 +136,7 @@ def temoa_create_model(name="Temoa"):
     M.ExistingCapacity = Param(M.RegionalIndices, M.tech_all, M.vintage_exist)
 
     M.Efficiency = Param(
-        M.RegionalIndices, M.commodity_SNG, M.tech_all, M.vintage_all, M.commodity_carrier
+        M.RegionalIndices, M.commodity_physical, M.tech_all, M.vintage_all, M.commodity_carrier
     )
     M.validate_UsedEfficiencyIndices = BuildAction(rule=CheckEfficiencyIndices)
 

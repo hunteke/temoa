@@ -223,10 +223,6 @@ def CheckEfficiencyIndices ( M ):
 	c_outputs  = set( o for r, i, t, v, o in M.Efficiency.sparse_iterkeys() )
 
 	symdiff = c_physical.symmetric_difference( M.commodity_physical )
-	for i in M.commodity_emissions.keys(): #For letting emission commodities as input cmmodities in the efficiency table
-		if i in symdiff:
-			symdiff.remove(i)
-
 	if symdiff:
 		msg = ('Unused or unspecified physical carriers.  Either add or remove '
 		  'the following elements to the Set commodity_physical.'
