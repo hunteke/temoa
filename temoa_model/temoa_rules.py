@@ -50,13 +50,13 @@ possibility.
                \text{CFP}_{r, t, v}
          \cdot \text{C2A}_{r, t}
          \cdot \text{SEG}_{s, d}
-         \cdot \text{TLF}_{r, p, t, v}
+         \cdot \text{PLF}_{r, p, t, v}
        \right )
        \cdot \textbf{CAP}_{r, t, v}
        =
-       \sum_{I, O} \textbf{FO}_{r, p, s, d,i, t, v, o}
+       \sum_{I, O} \textbf{FO}_{r, p, s, d, i, t, v, o}
        +
-       \sum_{I, O} \textbf{CUR}_{r, p,s,d,i,t,v,o}
+       \sum_{I, O} \textbf{CUR}_{r, p, s, d, i, t, v, o}
 
    \\
    \forall \{r, p, s, d, t, v\} \in \Theta_{\text{FO}}
@@ -108,14 +108,14 @@ capacity.
        \left (
                \text{CFP}_{r, t, v}
          \cdot \text{C2A}_{r, t}
-         \cdot \text{TLF}_{r, p, t, v}
+         \cdot \text{PLF}_{r, p, t, v}
        \right )
        \cdot \textbf{CAP}_{r, t, v}
    =
-       \sum_{I, O} \textbf{FOA}_{r, p, i, t, v, o}
+       \sum_{I, O} \textbf{FOA}_{r, p, i, t \in T^{a}, v, o}
 
    \\
-   \forall \{r, p, t, v\} \in \Theta_{\text{Activity}}
+   \forall \{r, p, t \in T^{a}, v\} \in \Theta_{\text{Activity}}
 
 
 """
@@ -145,13 +145,11 @@ in the :code:`tech_annual` set.
    :label: ActivityByTech
 
        \textbf{ACT}_{t} = \sum_{R, P, S, D, I, V, O} \textbf{FO}_{r, p, s, d,i, t, v, o}
-
-       \\
+       \;
        \forall t \not\in T^{a}
 
        \textbf{ACT}_{t} = \sum_{R, P, I, V, O} \textbf{FOA}_{r, p, i, t, v, o}
-
-       \\
+       \;
        \forall t \in T^{a}
 
 """
@@ -185,7 +183,7 @@ def CapacityAvailableByPeriodAndTech_Constraint(M, r, p, t):
 The :math:`\textbf{CAPAVL}` variable is nominally for reporting solution values,
 but is also used in the Max and Min constraint calculations.  For any process
 with an end-of-life (EOL) on a period boundary, all of its capacity is available
-for use in all periods in which it is active (the process' TLF is 1). However,
+for use in all periods in which it is active (the process' PLF is 1). However,
 for any process with an EOL that falls between periods, Temoa makes the
 simplifying assumption that the available capacity from the expiring technology
 is available through the whole period in proportion to its remaining lifetime.
@@ -196,10 +194,10 @@ throughout the period.
 .. math::
    :label: CapacityAvailable
 
-   \textbf{CAPAVL}_{r, p, t} = \sum_{V} {TLF}_{r, p, t, v} \cdot \textbf{CAP}
+   \textbf{CAPAVL}_{r, p, t} = \sum_{V} {PLF}_{r, p, t, v} \cdot \textbf{CAP}_{r, t, v}
 
    \\
-   \forall p \in \text{P}^o, t \in T, r \in R
+   \forall p \in \text{P}^o, r \in R, t \in T
 """
     cap_avail = sum(
         value(M.ProcessLifeFrac[r, p, t, S_v]) * M.V_Capacity[r, t, S_v]
@@ -247,9 +245,9 @@ The calculation of each term is given below.
 
    C_{loans} = \sum_{r, t, v \in \Theta_{IC}} \left (
      \left [
-             IC_{r, t, v} \cdot LA_{r, t, v}
-             \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-LLN_{r, t, v}})}{GDR} \right. \right.
-             \\ \left. \left. \cdot \frac{ 1-(1+GDR)^{-LPA_{r,t,v}} }{ 1-(1+GDR)^{-LP_{r,t,v}} }
+             CI_{r, t, v} \cdot LA_{r, t, v}
+             \cdot \frac{(1 + GDR)^{P_0 - v +1} \cdot (1 - (1 + GDR)^{-LLP_{r, t, v}})}{GDR} \right. \right.
+             \\ \left. \left. \cdot \frac{ 1-(1+GDR)^{-LPA_{r,t,v}} }{ 1-(1+GDR)^{-LTP_{r,t,v}} }
      \right ]
      \cdot \textbf{CAP}_{r, t, v}
      \right )
@@ -260,11 +258,11 @@ period. Second, the annual stream of payments is converted into a lump sum using
 the global discount rate and loan period. Third, the new lump sum is amortized
 at the global discount rate and technology lifetime. Fourth, loan payments beyond
 the model time horizon are removed and the lump sum recalculated. The terms used
-in Steps 3-4 are :math:`\frac{ GDR }{ 1-(1+GDR)^{-LP_{r,t,v} } }\cdot
-\frac{ 1-(1+GDR)^{-LPA_{t,v}} }{ GDR }`. The product simplifies to
-:math:`\frac{ 1-(1+GDR)^{-LPA_{r,t,v}} }{ 1-(1+GDR)^{-LP_{r,t,v}} }`, where
+in Steps 3-4 are :math:`\frac{ GDR }{ 1-(1+GDR)^{-LTP_{r,t,v} } }\cdot
+\frac{ 1-(1+GDR)^{-LPA_{t,v}} }{ GDR }`. The product simplifies to 
+:math:`\frac{ 1-(1+GDR)^{-LPA_{r,t,v}} }{ 1-(1+GDR)^{-LTP_{r,t,v}} }`, where 
 :math:`LPA_{r,t,v}` represents the active lifetime of process t in region r :math:`(r,t,v)`
-before the end of the model horizon, and :math:`LP_{r,t,v}` represents the full
+before the end of the model horizon, and :math:`LTP_{r,t,v}` represents the full
 lifetime of a regional process :math:`(r,t,v)`. Fifth, the lump sum is discounted back to the
 beginning of the horizon (:math:`P_0`) using the global discount rate. While an
 explicit salvage term is not included, this approach properly captures the capital
@@ -274,9 +272,9 @@ loan rates and periods.
 .. math::
    :label: obj_fixed
 
-   C_{fixed} = \sum_{r, p, t, v \in \Theta_{FC}} \left (
+   C_{fixed} = \sum_{r, p, t, v \in \Theta_{CF}} \left (
      \left [
-             FC_{r, p, t, v}
+             CF_{r, p, t, v}
        \cdot \frac{(1 + GDR)^{P_0 - p +1} \cdot (1 - (1 + GDR)^{-{MPL}_{r, t, v}})}{GDR}
      \right ]
      \cdot \textbf{CAP}_{r, t, v}
@@ -285,23 +283,23 @@ loan rates and periods.
 .. math::
    :label: obj_variable
 
-   &C_{variable} = \\ &\quad \sum_{r, p, t, v \in \Theta_{VC}} \left (
-           MC_{r, p, t, v}
+   &C_{variable} = \\ &\quad \sum_{r, p, t, v \in \Theta_{CV}} \left (
+           CV_{r, p, t, v}
      \cdot
      \frac{
        (1 + GDR)^{P_0 - p + 1} \cdot (1 - (1 + GDR)^{-{MPL}_{r,p,t,v}})
      }{
        GDR
      }\cdot \sum_{S,D,I, O} \textbf{FO}_{r, p, s, d,i, t, v, o}
-     \right ) \\ &\quad + \sum_{r, p, t, v \in \Theta_{VC}} \left (
-           MC_{r, p, t, v}
+     \right ) \\ &\quad + \sum_{r, p, t \not \in T^{a}, v \in \Theta_{VC}} \left (
+           CV_{r, p, t, v}
      \cdot
      \frac{
        (1 + GDR)^{P_0 - p + 1} \cdot (1 - (1 + GDR)^{-{MPL}_{r,p,t,v}})
      }{
        GDR
      }
-     \cdot \sum_{I, O} \textbf{FOA}_{r, p,i, t, v, o}
+     \cdot \sum_{I, O} \textbf{FOA}_{r, p,i, t \in T^{a}, v, o}
      \right )
 
 """
@@ -417,10 +415,10 @@ in each time slice.
 .. math::
    :label: Demand
 
-       \sum_{I, T^{a}, V} \textbf{FO}_{r, p, s, d, i, t, v, dem} +
-       SEG_{s,d} \cdot  \sum_{I, T^{a}, V} \textbf{FOA}_{r, p, i, t, v, dem}
+       \sum_{I, T-T^{a}, V} \textbf{FO}_{r, p, s, d, i, t \not \in T^{a}, v, dem} +
+       SEG_{s,d} \cdot  \sum_{I, T^{a}, V} \textbf{FOA}_{r, p, i, t \in T^{a}, v, dem}
        =
-       {DEM}_{p, dem} \cdot {DSD}_{s, d, dem}
+       {DEM}_{r, p, dem} \cdot {DSD}_{r, s, d, dem}
 
 Note that the validity of this constraint relies on the fact that the
 :math:`C^d` set is distinct from both :math:`C^e` and :math:`C^p`. In other
@@ -466,9 +464,9 @@ slice and demand.  This is transparently handled by the :math:`\Theta` superset.
 .. math::
    :label: DemandActivity
 
-      DEM_{r, p, s, d, dem} \cdot \sum_{I} \textbf{FO}_{r, p, s_0, d_0, i, t, v, dem}
+      DEM_{r, p, s, d, dem} \cdot \sum_{I} \textbf{FO}_{r, p, s_0, d_0, i, t \not \in T^{a}, v, dem}
    =
-      DEM_{r, p, s_0, d_0, dem} \cdot \sum_{I} \textbf{FO}_{r, p, s, d, i, t, v, dem}
+      DEM_{r, p, s_0, d_0, dem} \cdot \sum_{I} \textbf{FO}_{r, p, s, d, i, t \not \in T^{a}, v, dem}
 
    \\
    \forall \{r, p, s, d, t, v, dem, s_0, d_0\} \in \Theta_{\text{DemandActivity}}
@@ -502,7 +500,7 @@ met.  This constraint requires the total production of a given commodity
 to equal the amount consumed, thus ensuring an energy balance at the system
 level. In this most general form of the constraint, the energy commodity being
 balanced has variable production at the time slice level. The energy commodity
-can then be consumed by three types of processes: storage stechnologies, non-storage
+can then be consumed by three types of processes: storage technologies, non-storage
 technologies with output that varies at the time slice level, and non-storage
 technologies with constant annual output.
 
@@ -532,7 +530,7 @@ refined products, such as diesel or kerosene. In such cases, we need to
 track the excess production of these commodities. To do so, the technology
 producing the excess commodity should be added to the :code:`tech_flex` set.
 This flexible technology designation will activate a slack variable
-(:math:`\textbf{FX}_{r, p, s, d, i, t, v, c}`)representing
+(:math:`\textbf{FLX}_{r, p, s, d, i, t, v, c}`) representing
 the excess production in the :code:`CommodityBalanceAnnual_Constraint`. Note
 that the :code:`tech_flex` set is different from :code:`tech_curtailment` set;
 the latter is technology- rather than commodity-focused and is used in the
@@ -540,7 +538,14 @@ the latter is technology- rather than commodity-focused and is used in the
 output and the amount curtailed, and to ensure that the installed capacity
 covers both.
 
-For commodities that are exclusively produced at a constant annual rate, the
+This constraint also accounts for imports and exports between regions
+when solving multi-regional systems. The import (:math:`\textbf{FIM}`) and export
+(:math:`\textbf{FEX}`) variables are created on-the-fly by summing the 
+:math:`\textbf{FO}` variables over the appropriate import and export regions,
+respectively, which are defined in :code:`temoa_initialize.py` by parsing the 
+:code:`tech_exchange` processes.
+
+Finally, for commodities that are exclusively produced at a constant annual rate, the
 :code:`CommodityBalanceAnnual_Constraint` is used, which is simplified and
 reduces computational burden.
 
@@ -551,17 +556,17 @@ reduces computational burden.
 
        \sum_{I, T, V} \textbf{FO}_{r, p, s, d, i, t, v, c}
        +
-       &\sum_{reg} \textbf{FIM}_{reg-r, p, s, d, i, t, v, c} \forall reg
-       = \\
-       &\sum_{T^{s}, V, I} \textbf{FIS}_{r, p, s, d, c, t, v, o}
-       +
+       &\sum_{reg} \textbf{FIM}_{r-reg, p, s, d, i, t, v, c} \; \forall reg \neq r
+       \\
+       = &\sum_{T^{s}, V, I} \textbf{FIS}_{r, p, s, d, c, t, v, o}
+       \\ &\quad +
        \sum_{T-T^{s}, V, O} \textbf{FO}_{r, p, s, d, c, t, v, o} /EFF_{r, c,t,v,o}
        \\
-       &\quad + SEG_{s,d} \cdot
-       \sum_{I, T^{a}, V} \textbf{FOA}_{r, p, c, t, v, o} /EFF_{r, c,t,v,o} \\
-       &\quad + \sum_{reg} \textbf{FEX}_{r-reg, p, s, d, c, t, v, o} \forall reg
-       +
-       \textbf{FX}_{r, p, s, d, i, t, v, c}
+       &\quad + \; SEG_{s,d} \cdot
+       \sum_{I, T^{a}, V} \textbf{FOA}_{r, p, c, t \in T^{a}, v, o} /EFF_{r, c,t,v,o} \\
+       &\quad + \sum_{reg} \textbf{FEX}_{r-reg, p, s, d, c, t, v, o} \; \forall reg \neq r
+       \\ &\quad + \;
+       \textbf{FLX}_{r, p, s, d, i, t, v, c}
 
        \\
        &\forall \{r, p, s, d, c\} \in \Theta_{\text{CommodityBalance}}
@@ -649,16 +654,16 @@ While the commodity :math:`c` can only be produced by technologies in the
 .. math::
    :label: CommodityBalanceAnnual
 
-       \sum_{I,T, V} \textbf{FOA}_{r, p, i, t, v, c}
+       \sum_{I,T, V} \textbf{FOA}_{r, p, i, t \in T^{a}, v, c}
         +
-       &\sum_{reg} \textbf{FIM}_{reg-r, p, i, t, v, c} \forall reg
-        = \\
+       &\sum_{reg} \textbf{FIM}_{reg-r, p, i, t, v, c} \; \forall reg \neq r
+       \\ =
        &\sum_{S, D, T-T^{s}, V, O} \textbf{FO}_{r, p, s, d, c, t, v, o} /EFF_{r, c,t,v,o}
-       +
-       \sum_{I, T^{a}, V, O} \textbf{FOA}_{r, p, c, t, v, o} /EFF_{r, c,t,v,o}
+       \\ + &\quad
+       \sum_{I, T^{a}, V, O} \textbf{FOA}_{r, p, c, t \in T^{a}, v, o} /EFF_{r, c,t,v,o}
        \\ &+
-       \sum_{reg} \textbf{FEX}_{r-reg, p, c, t, v, o} \forall reg
-       +
+       \sum_{reg} \textbf{FEX}_{r-reg, p, c, t, v, o} \; \forall reg \neq r
+       \\ &+
        \textbf{FX}_{r, p, i, t, v, c}
 
        \\
@@ -1176,7 +1181,7 @@ represented in :code:`RampUpSeason`.
 
 In the :code:`RampUpDay` and :code:`RampUpSeason` constraints, we assume
 :math:`\textbf{S} = \{s_i, i = 1, 2, \cdots, ns\}` and
-:math:`\textbf{D} = \{d_i, i=1, 2, \cdots, nd\}`.
+:math:`\textbf{D} = \{d_i, i = 1, 2, \cdots, nd\}`.
 
 .. math::
    :label: RampUpDay
@@ -1442,9 +1447,9 @@ def ReserveMargin_Constraint(M, r, p, s, d):
     r"""
 
 During each period :math:`p`, the sum of the available capacity of all reserve
-technologies :math:`\sum_{t \in T^{e}} \textbf{CAPAVL}_{r,p,t}`, which are
-defined in the set :math:`\textbf{T}^{r,e}`, should exceed the peak load by
-:math:`RES`, the regional reserve margin. Note that the reserve
+technologies :math:`\sum_{t \in T^{res}} \textbf{CAPAVL}_{r,p,t}`, which are
+defined in the set :math:`\textbf{T}^{res}`, should exceed the peak load by
+:math:`PRM`, the region-specific planning reserve margin. Note that the reserve
 margin is expressed in percentage of the peak load. Generally speaking, in
 a database we may not know the peak demand before running the model, therefore,
 we write this equation for all the time-slices defined in the database in each region.
@@ -1452,13 +1457,13 @@ we write this equation for all the time-slices defined in the database in each r
 .. math::
    :label: reserve_margin
 
-       \sum_{t \in T^{r,e}} {
+       \sum_{t \in T^{res}} {
        CC_{t,r} \cdot
        \textbf{CAPAVL}_{p,t} \cdot
        SEG_{s^*,d^*} \cdot C2A_{r,t} }
        \geq
        \sum_{ t \in T^{r,e},V,I,O } {
-           \textbf{FO}_{r, p, s, d, i, t, v, o}  \cdot (1 + RES_r)
+           \textbf{FO}_{r, p, s, d, i, t, v, o}  \cdot (1 + PRM_r)
        }
 
        \\
@@ -1516,7 +1521,7 @@ output in separate terms.
        \right ) & \\
        +
        \sum_{I,T,V,O|{r,e,i,t \in T^{a},v,o} \in EAC} (
-       EAC_{r, e, i, t, v, o} \cdot & \textbf{FOA}_{r, p, i, t, v, o}
+       EAC_{r, e, i, t, v, o} \cdot & \textbf{FOA}_{r, p, i, t \in T^{a}, v, o}
         )
        \le
        ELM_{r, p, e}
@@ -1659,11 +1664,11 @@ set.
 .. math::
    :label: MaxActivity
 
-   \sum_{S,D,I,V,O} \textbf{FO}_{r, p, s, d, i, t, v, o}  \le MAXACT_{r, p, t}
+   \sum_{S,D,I,V,O} \textbf{FO}_{r, p, s, d, i, t, v, o}  \le MAA_{r, p, t}
 
    \forall \{r, p, t\} \in \Theta_{\text{MaxActivity}}
 
-   \sum_{I,V,O} \textbf{FOA}_{r, p, i, t, v, o}  \le MAXACT_{r, p, t}
+   \sum_{I,V,O} \textbf{FOA}_{r, p, i, t \in T^{a}, v, o}  \le MAA_{r, p, t}
 
    \forall \{r, p, t \in T^{a}\} \in \Theta_{\text{MaxActivity}}
 
@@ -1703,11 +1708,11 @@ set.
 .. math::
    :label: MinActivity
 
-   \sum_{S,D,I,V,O} \textbf{FO}_{r, p, s, d, i, t, v, o} \ge MINACT_{r, p, t}
+   \sum_{S,D,I,V,O} \textbf{FO}_{r, p, s, d, i, t, v, o} \ge MIA_{r, p, t}
 
    \forall \{r, p, t\} \in \Theta_{\text{MinActivity}}
 
-   \sum_{I,V,O} \textbf{FOA}_{r, p, i, t, v, o} \ge MINACT_{r, p, t}
+   \sum_{I,V,O} \textbf{FOA}_{r, p, i, t, v, o} \ge MIA_{r, p, t}
 
    \forall \{r, p, t \in T^{a}\} \in \Theta_{\text{MinActivity}}
 
@@ -1740,19 +1745,19 @@ def MinActivityGroup_Constraint(M, p, g):
 
 The MinActivityGroup constraint sets a minimum activity limit for a user-defined
 technology group. Each technology within each group is multiplied by a
-weighting function, which determines what technology activity share can count
-towards the constraint.
+weighting function (:math:`MGW_{r,t}`), which determines the technology activity
+share that can count towards the constraint.
 
 .. math::
    :label: MinActivityGroup
 
-       \sum_{S,D,I,T,V,O} \textbf{FO}_{p, s, d, i, t, v, o} \cdot WEIGHT_{t|t \not \in T^{a}}
-       + \sum_{I,T,V,O} \textbf{FOA}_{p, i, t, v, o} \cdot WEIGHT_{t \in T^{a}}
-       \ge MGGT_{p, g}
+       \sum_{S,D,I,T,V,O} \textbf{FO}_{p, s, d, i, t, v, o} \cdot MGW_{t|t \not \in T^{a}}
+       + \sum_{I,T,V,O} \textbf{FOA}_{p, i, t \in T^{a}, v, o} \cdot MGW_{t \in T^{a}}
+       \ge MGT_{p, g}
 
        \forall \{p, g\} \in \Theta_{\text{MinActivityGroup}}
 
-where :math:`g` represents the assigned technology group and :math:`MGGT`
+where :math:`g` represents the assigned technology group and :math:`MGT_r`
 refers to the :code:`MinGenGroupTarget` parameter.
 """
 
@@ -1792,7 +1797,7 @@ tech, not tech and vintage.
 .. math::
    :label: MaxCapacity
 
-   \textbf{CAPAVL}_{r, p, t} \le MAX_{r, p, t}
+   \textbf{CAPAVL}_{r, p, t} \le MAC_{r, p, t}
 
    \forall \{r, p, t\} \in \Theta_{\text{MaxCapacity}}
 """
@@ -1811,9 +1816,9 @@ constraints are region and tech.
 .. math::
    :label: MaxResource
 
-   \textbf{CAPAVL}_{r, p, t} \le MAX_{r, p, t}
+   \sum_{P} \textbf{CAPAVL}_{r, p, t} \le MAR_{r, t}
 
-   \forall \{r, p, t\} \in \Theta_{\text{MaxCapacity}}
+   \forall \{r, t\} \in \Theta_{\text{MaxCapacity}}
 """
     max_resource = value(M.MaxResource[r, t])
     try:
@@ -1865,7 +1870,7 @@ tech, not tech and vintage.
 .. math::
    :label: MinCapacityCapacityAvailableByPeriodAndTech
 
-   \textbf{CAPAVL}_{r, p, t} \ge MIN_{r, p, t}
+   \textbf{CAPAVL}_{r, p, t} \ge MIC_{r, p, t}
 
    \forall \{r, p, t\} \in \Theta_{\text{MinCapacity}}
 """
@@ -1939,7 +1944,7 @@ producing a single output. Under this constraint, only the technologies with var
 output at the timeslice level (i.e., NOT in the :code:`tech_annual` set) are considered.
 This constraint differs from TechInputSplit as it specifies shares on an annual basis,
 so even though it applies to technologies with variable output at the timeslice level, 
-the constraint only fixes the input over the course of a year. 
+the constraint only fixes the input shares over the course of a year. 
 """
 
     inp = sum(
@@ -1993,7 +1998,7 @@ The constraint is formulated as follows:
 
      \sum_{I, t \not \in T^{a}} \textbf{FO}_{r, p, s, d, i, t, v, o}
    \geq
-     SPL_{r, p, t, o} \cdot \sum_{I, O, t \not \in T^{a}} \textbf{FO}_{r, p, s, d, i, t, v, o}
+     TOS_{r, p, t, o} \cdot \sum_{I, O, t \not \in T^{a}} \textbf{FO}_{r, p, s, d, i, t, v, o}
 
    \forall \{r, p, s, d, t, v, o\} \in \Theta_{\text{TechOutputSplit}}
 """
@@ -2020,13 +2025,13 @@ output (i.e., members of the :math:`tech_annual` set) are considered.
 .. math::
    :label: TechOutputSplitAnnual
 
-     \sum_{I, t \in T^{a}} \textbf{FOA}_{r, p, i, t, v, o}
+     \sum_{I, T^{a}} \textbf{FOA}_{r, p, i, t \in T^{a}, v, o}
 
    \geq
 
-     SPL_{r, p, t, o} \cdot \sum_{I, O, t \in T^{a}} \textbf{FOA}_{r, p, s, d, i, t, v, o}
+     TOS_{r, p, t, o} \cdot \sum_{I, O, T^{a}} \textbf{FOA}_{r, p, s, d, i, t \in T^{a}, v, o}
 
-   \forall \{r, p, t, v, o\} \in \Theta_{\text{TechOutputSplitAnnual}}
+   \forall \{r, p, t \in T^{a}, v, o\} \in \Theta_{\text{TechOutputSplitAnnual}}
 """
     out = sum(
         M.V_FlowOutAnnual[r, p, S_i, t, v, o]
