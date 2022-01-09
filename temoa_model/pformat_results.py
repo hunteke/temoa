@@ -135,7 +135,6 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 	P_0 = min( m.time_optimize )
 	P_e = m.time_future.last()
 	GDR = value( m.GlobalDiscountRate )
-	MLL = m.ModelLoanLife
 	MPL = m.ModelProcessLife
 	LLN = m.LifetimeLoanProcess
 	x   = 1 + GDR    # convenience variable, nothing more

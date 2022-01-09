@@ -883,23 +883,6 @@ def EmissionActivityByPeriodAndTechVariableIndices ( M ):
 
 	return indices	
 	
-def LoanLifeFracIndices ( M ):
-	"""\
-Returns the set of (region, period, tech, vintage) tuples of process loans that die
-between period boundaries.  The tuple indicates the last period in which a
-process is active.
-"""
-	l_periods = set( M.time_optimize )
-	l_max_year = max( M.time_future )
-
-	indices = set()
-	for r, t, v in M.LifetimeLoanProcess.sparse_iterkeys():
-		l_death_year = v + value(M.LifetimeLoanProcess[r, t, v])
-		if l_death_year < l_max_year and l_death_year not in l_periods:
-			p = max( yy for yy in M.time_optimize if yy < l_death_year )
-			indices.add( (r, p, t, v) )
-
-	return indices
 
 def ModelProcessLifeIndices ( M ):
 	"""\

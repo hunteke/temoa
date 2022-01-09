@@ -115,7 +115,6 @@ def temoa_create_model(name="Temoa"):
 
     # Define time-related parameters
     M.PeriodLength = Param(M.time_optimize, initialize=ParamPeriodLength)
-    M.PeriodRate = Param(M.time_optimize, initialize=ParamPeriodRate)
     M.SegFrac = Param(M.time_season, M.time_of_day)
     M.validate_SegFrac = BuildAction(rule=validate_SegFrac)
 
@@ -195,15 +194,11 @@ def temoa_create_model(name="Temoa"):
     M.Loan_rtv = Set(dimen=3, initialize=lambda M: M.CostInvest.keys())
     M.LoanAnnualize = Param(M.Loan_rtv, initialize=ParamLoanAnnualize_rule)
 
-    M.ModelLoanLife_rtv = Set(dimen=3, initialize=lambda M: M.CostInvest.keys())
-    M.ModelLoanLife = Param(M.ModelLoanLife_rtv, initialize=ParamModelLoanLife_rule)
     
     M.ModelProcessLife_rptv = Set(dimen=4, initialize=ModelProcessLifeIndices)
     M.ModelProcessLife = Param(
         M.ModelProcessLife_rptv, initialize=ParamModelProcessLife_rule
     )
-    
-    M.LoanLifeFrac_rptv = Set(dimen=4, initialize=LoanLifeFracIndices)
     
     M.ProcessLifeFrac_rptv = Set(dimen=4, initialize=ModelProcessLifeIndices)
     M.ProcessLifeFrac = Param(

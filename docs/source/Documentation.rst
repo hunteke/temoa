@@ -850,7 +850,7 @@ Parameters
    ":math:`\text{EFF}_{r,i,t,v,o}`","Efficiency",":math:`\mathbb{R}^+_0`","Tech- and commodity-specific efficiency"
    ":math:`\text{EAC}_{r,i,t,v,o,e}`","EmissionActivity",":math:`\mathbb{R}`","Tech-specific emissions rate"
    ":math:`\text{ELM}_{r,p,e}`","EmissionLimit",":math:`\mathbb{R}^+_0`","Emissions limit by region and period"
-   ":math:`\text{EC}_{r,t,v}`","ExistingCapacity",":math:`\mathbb{R}^+_0`","Pre-existing capacity"
+   ":math:`\text{ECAP}_{r,t,v}`","ExistingCapacity",":math:`\mathbb{R}^+_0`","Pre-existing capacity"
    ":math:`\text{GDR}`","GlobalDiscountRate",":math:`\mathbb{R}`","Global rate used to calculate present cost"
    ":math:`\text{GRM}_{r,t}`","GrowthRateMax",":math:`\mathbb{R}`","Global rate used to calculate present cost"
    ":math:`\text{GRS}_{r,t}`","GrowthRateSeed",":math:`\mathbb{R}`","Global rate used to calculate present cost"
@@ -880,12 +880,9 @@ Parameters
    ":math:`\text{TISA}_{r,i,t}`","TechInputSplitAverage",":math:`\mathbb{I}`","Average annual technology input fuel ratio"   
    ":math:`\text{TOS}_{r,t,o}`","TechOutputSplit",":math:`\mathbb{I}`","Technology output fuel ratio at time slice level"
    ":math:`{}^*\text{LA}_{t,v}`","LoanAnnualize",":math:`\mathbb{R}^+_0`","Loan amortization by tech and vintage; based on :math:`DR_t`"
-   ":math:`{}^*\text{MLL}_{r,t,v}`","ModelLoanLife",":math:`\mathbb{N}`","Smaller of remaining model horizon or process loan life"
    ":math:`{}^*\text{MPL}_{p,t,v}`","ModelProcessLife",":math:`\mathbb{N}`","Smaller of remaining model horizon or process tech life"
    ":math:`{}^*\text{PLF}_{r,p,t,v}`","ProcessLifeFrac",":math:`\mathbb{I}`","Fraction of available process capacity by region and period "
    ":math:`{}^*\text{LEN}_p`","PeriodLength",":math:`\mathbb{N}`","Number of years in period :math:`p`"
-   ":math:`{}^*\text{PR}_p`","PeriodRate",":math:`\mathbb{R}`","Converts future annual cost to discounted period cost"
-
 
 
 .. _influential_efficiency:
@@ -1107,7 +1104,7 @@ fits within the modeler-specified limit of emission :math:`e` in time period
 ExistingCapacity
 ^^^^^^^^^^^^^^^^
 
-:math:`{EC}_{r \in R, t \in T, v \in \text{P}^e}`
+:math:`{ECAP}_{r \in R, t \in T, v \in \text{P}^e}`
 
 The :code:`ExistingCapacity` parameter defines the capacity installed prior to the
 beginning of :code:`time_optimize`. Note that processes with existing capacity
@@ -1467,16 +1464,6 @@ calculated via the formula:
    \forall \{t, v\} \in \Theta_\text{CostInvest}
 
 
-ModelLoanLife
-^^^^^^^^^^^^^
-
-:math:`{MLL}_{r \in R, t \in T, v \in P}`
-
-The :code:`ModelLoanLife` parameter is internally-derived by the model and represents
-the loan term taken as the lesser of the loan period and the difference between the end
-of the model time horizon and the technology vintage.
-
-
 ModelProcessLife
 ^^^^^^^^^^^^^^^^
 
@@ -1530,24 +1517,6 @@ Note that LEN is only defined for elements in :math:`\text{P}^o`, and is
 specifically not defined for the final element in :math:`\text{P}^f`.
 
 
-\*PeriodRate
-^^^^^^^^^^^^
-
-:math:`R_{p \in P}`
-
-Temoa optimizes a single characteristic year within a period, and calculates
-the total time period cost associated with all years within the time period.
-The :code:`PeriodRate` is calculated as the sum of annual discount factors
-within a period as follows:
-
-.. math::
-
-   R_p = \sum_{y = 0}^{{LEN}_p} \frac{1}{{(1 + GDR)}^{(P_0 - p - y)}}
-
-   \\
-   \forall p \in P
-
-
 \*ProcessLifeFrac
 ^^^^^^^^^^^^^^^^^
 
@@ -1580,12 +1549,6 @@ activity indices for the process.  Namely, :math:`p \in \{2010, 2012\}` as
 :math:`\{p, t, v\} \in \{\{2010, car, 2010\}, \{2012, car,
 2010\}\}`.  The values would be :math:`{TLF}_{2010, car, 2010} = 1`, and
 :math:`{TLF}_{2012, car, 2010} = \frac{3}{8}`.
-
-In combination with the :code:`PeriodRate` parameter, this parameter is used to
-implement the "single characteristic year" simplification.  Specifically,
-instead of trying to account for partial period decommissioning, Temoa assumes
-that processes can only produce :code:`ProcessLifeFrac` of their installed
-capacity.
 
 
 Variables

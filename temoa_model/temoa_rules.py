@@ -310,7 +310,6 @@ def PeriodCost_rule(M, p):
     P_0 = min(M.time_optimize)
     P_e = M.time_future.last()  # End point of modeled horizon
     GDR = value(M.GlobalDiscountRate)
-    MLL = M.ModelLoanLife
     MPL = M.ModelProcessLife
     x = 1 + GDR  # convenience variable, nothing more.
 
@@ -2050,13 +2049,6 @@ output (i.e., members of the :math:`tech_annual` set) are considered.
 # ---------------------------------------------------------------
 # Define rule-based parameters
 # ---------------------------------------------------------------
-def ParamModelLoanLife_rule(M, r, t, v):
-    loan_length = value(M.LifetimeLoanProcess[r, t, v])
-    mll = min(loan_length, max(M.time_future) - v)
-
-    return mll
-
-
 def ParamModelProcessLife_rule(M, r, p, t, v):
     life_length = value(M.LifetimeProcess[r, t, v])
     tpl = min(v + life_length - p, value(M.PeriodLength[p]))
@@ -2076,23 +2068,6 @@ def ParamPeriodLength(M, p):
     length = periods[i + 1] - periods[i]
 
     return length
-
-
-def ParamPeriodRate(M, p):
-    """\
-
-The "Period Rate" is a multiplier against the costs incurred within a period to
-bring the time-value back to the base year.  The parameter PeriodRate is not
-directly specified by the modeler, but is a convenience calculation based on the
-GlobalDiscountRate and the length of each period.  One may refer to this
-(pseudo) parameter via M.PeriodRate[ a_period ]
-"""
-    rate_multiplier = sum(
-        (1 + M.GlobalDiscountRate) ** (M.time_optimize.first() - p - y)
-        for y in range(0, M.PeriodLength[p])
-    )
-
-    return value(rate_multiplier)
 
 
 def ParamProcessLifeFraction_rule(M, r, p, t, v):
