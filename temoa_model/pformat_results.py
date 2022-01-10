@@ -120,8 +120,9 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 			duals = duals[duals>epsilon]
 			duals.index.name = 'constraint_name'
 			duals = duals.to_frame()
-			duals.loc[:,'scenario'] = options.scenario
-			return duals
+			if hasattr(options, 'scenario'):
+				duals.loc[:,'scenario'] = options.scenario
+				return duals
 
 	#Create a dictionary in which to store "solved" variable values
 	svars = defaultdict( lambda: defaultdict( float ))   
