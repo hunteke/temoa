@@ -375,8 +375,8 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 				svars[	'Costs'	][(item[0],item[1][item[1].find("-")+1:],item[2],item[3])] = svars[	'Costs'	][item]
 				del svars[	'Costs'	][item]
 
-
-	duals = collect_result_data( Cons, con_info, epsilon=1e-9 )
+	if options.saveDUALS:
+		duals = collect_result_data( Cons, con_info, epsilon=1e-9 )
 
 	msg = ( 'Model name: %s\n'
 	   'Objective function value (%s): %s\n'
@@ -541,11 +541,12 @@ def pformat_results ( pyomo_instance, pyomo_result, options ):
 								WHERE "+tables[table]+".tech = technologies.tech);")
 
 		#WRITE DUALS RESULTS
-		overwrite_keys = [str(tuple(x)) for x in duals.reset_index()[['constraint_name','scenario']].to_records(index=False)]
-		#delete records that will be overwritten by new duals dataframe
-		cur.execute("DELETE FROM Output_Duals WHERE (constraint_name, scenario) IN (VALUES " + ','.join(overwrite_keys) + ")")
-		#write new records from new duals dataframe
-		duals.to_sql('Output_Duals',con, if_exists='append')
+		if options.saveDUALS:
+			overwrite_keys = [str(tuple(x)) for x in duals.reset_index()[['constraint_name','scenario']].to_records(index=False)]
+			#delete records that will be overwritten by new duals dataframe
+			cur.execute("DELETE FROM Output_Duals WHERE (constraint_name, scenario) IN (VALUES " + ','.join(overwrite_keys) + ")")
+			#write new records from new duals dataframe
+			duals.to_sql('Output_Duals',con, if_exists='append')
 
 		con.commit()
 		con.close()	

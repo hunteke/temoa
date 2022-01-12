@@ -29,6 +29,9 @@
 #--myopic_periods=2
 #--keep_myopic_databases
 
+# Report Duals (Optional) 
+# Store Duals results in the output .sqlite file
+#--saveDUALS
 
 # Spreadsheet Output (Optional) 
 # Direct model output to a spreadsheet

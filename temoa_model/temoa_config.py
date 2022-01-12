@@ -221,6 +221,7 @@ class TemoaConfig( object ):
 		'myopic'
 		'myopic_periods'
 		'keep_myopic_databases'
+		'saveDUALS'
 		'saveTEXTFILE',
 		'mgaslack',
 		'mgaiter',
@@ -250,6 +251,7 @@ class TemoaConfig( object ):
 		self.myopic           = False
 		self.myopic_periods     = 0
 		self.KeepMyopicDBs    = False
+		self.saveDUALS     	  = False
 		self.saveTEXTFILE     = False
 		self.how_to_cite      = None
 		self.version          = False
@@ -327,6 +329,10 @@ class TemoaConfig( object ):
 	def t_saveEXCEL(self, t):
 		r'--saveEXCEL\b'
 		self.saveEXCEL = True
+
+	def t_saveDUALS(self, t):
+		r'--saveDUALS\b'
+		self.saveDUALS = True
 
 	def t_myopic(self, t):
 		r'--myopic\b'
