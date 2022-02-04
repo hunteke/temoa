@@ -96,12 +96,15 @@ def myopic_db_generator_solver ( self ):
                      AND vintage IN (SELECT vintage FROM LifetimeProcess WHERE LifetimeProcess.life_process+\
                      LifetimeProcess.vintage<="+str(time_periods[i-(N-1)][0])+");")
         
-        # Delete row from Efficiency if (t,v) retires at the begining of current period (which is time_periods[i][0])
-        cur.execute("DELETE FROM Efficiency WHERE tech IN (SELECT tech FROM LifetimeTech WHERE \
-                     LifetimeTech.life+Efficiency.vintage<="+str(time_periods[i-(N-1)][0])+") AND \
-                     vintage NOT IN (SELECT vintage FROM LifetimeProcess WHERE LifetimeProcess.tech\
-                     =Efficiency.tech);")
-        
+        # # Delete row from Efficiency if (t,v) retires at the begining of current period (which is time_periods[i][0])
+        query = "DELETE FROM Efficiency \
+        WHERE (Efficiency.regions, input_comm, Efficiency.tech, vintage, output_comm) IN \
+        (SELECT DISTINCT Efficiency.regions, input_comm, Efficiency.tech, vintage, output_comm \
+        FROM Efficiency INNER JOIN LifetimeTech ON (LifetimeTech.regions=Efficiency.regions AND LifetimeTech.tech=Efficiency.tech) \
+        WHERE Efficiency.vintage + LifetimeTech.life <= "+str(time_periods[i-(N-1)][0])+")\
+        AND vintage NOT IN (SELECT vintage FROM LifetimeProcess WHERE LifetimeProcess.tech=Efficiency.tech)"
+        cur.execute(query)
+
         # If row is not deleted via the last two DELETE commands, it might still be invalid for period
         #  time_periods[i][0] since they can have model default lifetime of 40 years. 
         cur.execute("DELETE FROM Efficiency WHERE tech IN (SELECT tech FROM Efficiency WHERE \
