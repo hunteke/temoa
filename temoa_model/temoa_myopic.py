@@ -257,7 +257,11 @@ def myopic_db_generator_solver ( self ):
                 cursor = con.execute("SELECT * FROM "+str(table[0]))
                 names = list(map(lambda x: x[0], cursor.description))
                 if 'regions' in names:
-                    query = "DELETE FROM "+str(table[0])+" WHERE (regions, tech) NOT IN (SELECT DISTINCT regions, tech FROM Efficiency)"
+                    query = "DELETE FROM "+str(table[0])+" WHERE (regions, tech) NOT IN (SELECT DISTINCT regions, tech FROM Efficiency) \
+                    AND regions!='global'"
+                    cur.execute(query)
+                    query = "DELETE FROM "+str(table[0])+" WHERE tech NOT IN (SELECT tech FROM Efficiency) \
+                    AND regions='global'"
                     cur.execute(query)
                 
                 if 'vintage' in names:                

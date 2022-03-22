@@ -1672,9 +1672,17 @@ set.
    \forall \{r, p, t \in T^{a}\} \in \Theta_{\text{MaxActivity}}
 
 """
+	# r can be an individual region (r='US'), or a combination of regions separated by hyphen (r='Mexico-US-Canada'), or 'global'.
+    # if r == 'global', the constraint is system-wide
+    if r == 'global':
+      reg = M.regions
+    else:
+      reg = [r]
+
     try:
       activity_rpt = sum(
           M.V_FlowOut[r, p, s, d, S_i, t, S_v, S_o]
+          for r in reg if '-' not in r
           for S_v in M.processVintages[r, p, t]
           for S_i in M.processInputs[r, p, t, S_v]
           for S_o in M.ProcessOutputsByInput[r, p, t, S_v, S_i]
@@ -1684,6 +1692,7 @@ set.
     except:
       activity_rpt = sum(
           M.V_FlowOutAnnual[r, p, S_i, t, S_v, S_o]
+          for r in reg if '-' not in r
           for S_v in M.processVintages[r, p, t]
           for S_i in M.processInputs[r, p, t, S_v]
           for S_o in M.ProcessOutputsByInput[r, p, t, S_v, S_i]
@@ -1716,10 +1725,17 @@ set.
    \forall \{r, p, t \in T^{a}\} \in \Theta_{\text{MinActivity}}
 
 """
+	# r can be an individual region (r='US'), or a combination of regions separated by hyphen (r='Mexico-US-Canada'), or 'global'.
+    # if r == 'global', the constraint is system-wide
+    if r == 'global':
+      reg = M.regions
+    else:
+      reg = [r]
 
     try:
       activity_rpt = sum(
           M.V_FlowOut[r, p, s, d, S_i, t, S_v, S_o]
+          for r in reg if '-' not in r
           for S_v in M.processVintages[r, p, t]
           for S_i in M.processInputs[r, p, t, S_v]
           for S_o in M.ProcessOutputsByInput[r, p, t, S_v, S_i]
@@ -1729,6 +1745,7 @@ set.
     except:
       activity_rpt = sum(
           M.V_FlowOutAnnual[r, p, S_i, t, S_v, S_o]
+          for r in reg if '-' not in r
           for S_v in M.processVintages[r, p, t]
           for S_i in M.processInputs[r, p, t, S_v]
           for S_o in M.ProcessOutputsByInput[r, p, t, S_v, S_i]
