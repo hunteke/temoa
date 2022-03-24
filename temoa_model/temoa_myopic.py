@@ -166,6 +166,7 @@ def myopic_db_generator_solver ( self ):
                 capacity < 0 AND " + dict_table_column[table] + " = "+str(time_periods[j-1][0])+";"
                 cur_org.execute(query)
 
+                #if linked tech exists but primary tech does not
                 df_linkedtechs = pd.read_sql_query("SELECT * FROM " + table + "  \
                                                              WHERE scenario="+"'"+str(self.options.scenario)+"' AND \
                                                              tech in (SELECT linked_tech FROM LinkedTechs) AND " + \
@@ -190,7 +191,33 @@ def myopic_db_generator_solver ( self ):
                                 tech = '" + row['tech'] + "' AND regions = '" + row['regions'] + "' AND " + \
                                 dict_table_column[table] + " = "+str(time_periods[j-1][0])
                                 cur_org.execute(query)
+                
 
+                #if primary tech exists but linked tech does not
+                df_primarytechs = pd.read_sql_query("SELECT * FROM " + table + "  \
+                                                             WHERE scenario="+"'"+str(self.options.scenario)+"' AND \
+                                                             tech in (SELECT primary_tech FROM LinkedTechs) AND " + \
+                                                             dict_table_column[table] + " = "+str(time_periods[j-1][0])+";", con_org)
+                for ind, row in df_primarytechs.iterrows():
+                    linked_tech = pd.read_sql_query("SELECT linked_tech FROM LinkedTechs WHERE primary_region = '" +  row['regions'] + \
+                        "' AND primary_tech = '" + row['tech'] + "'", con_org)
+                    linked_tech = linked_tech['linked_tech'].values[0]
+                    df_linked_tech = pd.read_sql_query("SELECT * FROM " + table + " \
+                                                             WHERE scenario="+"'"+str(self.options.scenario)+"' AND \
+                                                             tech = '" + linked_tech + "' AND \
+                                                             regions = '" + row['regions'] + "' AND " + \
+                                                             dict_table_column[table] + " = "+str(time_periods[j-1][0])+";", con_org)
+                    if len(df_linked_tech)==0:
+                        query = "DELETE FROM " + table + " WHERE scenario="+"'"+str(self.options.scenario)+"' AND \
+                        tech = '" + row['tech'] + "' AND regions = '" + row['regions'] + "' AND " + \
+                        dict_table_column[table] + " = "+str(time_periods[j-1][0])
+                        cur_org.execute(query)
+                        if table=='Output_V_Capacity':
+                            for aux_table in ['Output_VFlow_Out', 'Output_VFlow_In']:
+                                query = "DELETE FROM " + aux_table + " WHERE scenario="+"'"+str(self.options.scenario)+"' AND \
+                                tech = '" + row['tech'] + "' AND regions = '" + row['regions'] + "' AND " + \
+                                dict_table_column[table] + " = "+str(time_periods[j-1][0])
+                                cur_org.execute(query)
 
         # ---------------------------------------------------------------
         # Add the buildups from the previous period to the ExistingCapacity
