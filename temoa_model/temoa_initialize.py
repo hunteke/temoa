@@ -837,8 +837,9 @@ def RegionalGlobalInitializedIndices ( M ):
 	for n in range(1,len(M.regions)+1):
 		regional_perms = permutations(M.regions,n)
 		for i in regional_perms:
-			indices.add("-".join(i))
+			indices.add("+".join(i))
 	indices.add('global')
+	indices = indices.union(M.RegionalIndices)
 
 	return indices
 
