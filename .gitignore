@@ -1,1 +1,6 @@
 *.pyc
+data_files/debug_logs/*.log
+data_files/debug_logs/lp_files/*
+data_files/untracked_data/
+.DS_Store
+*.ipynb_checkpoints
